@@ -51,7 +51,6 @@ import {
     MUT_COLOR_MISSENSE,
 } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { toPromise } from 'cbioportal-frontend-commons';
 
 export interface IUserSelectionsProps {
     store: StudyViewPageStore;
@@ -463,6 +462,28 @@ export default class UserSelections extends React.Component<
             const f = this.renderTreatmentFilter(
                 this.props.filter.patientTreatmentGroupFilters,
                 'PATIENT_TREATMENT_GROUPS'
+            );
+            components.push(f);
+        }
+
+        if (
+            this.props.filter.sampleTreatmentTargetFilters &&
+            this.props.filter.sampleTreatmentTargetFilters.filters.length > 0
+        ) {
+            const f = this.renderTreatmentFilter(
+                this.props.filter.sampleTreatmentTargetFilters,
+                'SAMPLE_TREATMENT_TARGET'
+            );
+            components.push(f);
+        }
+
+        if (
+            this.props.filter.patientTreatmentTargetFilters &&
+            this.props.filter.patientTreatmentTargetFilters.filters.length > 0
+        ) {
+            const f = this.renderTreatmentFilter(
+                this.props.filter.patientTreatmentTargetFilters,
+                'PATIENT_TREATMENT_TARGET'
             );
             components.push(f);
         }

@@ -22,7 +22,7 @@ import {
     configureHtanOhsuTimeline,
     configureTimelineToxicityColors,
     sortTracks,
-} from 'pages/patientView/timeline2/timeline_helpers';
+} from 'pages/patientView/timeline/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
 
 export interface ISampleMetaDeta {
@@ -31,7 +31,7 @@ export interface ISampleMetaDeta {
     label: { [sampleId: string]: string };
 }
 
-export interface ITimeline2Props {
+export interface ITimelineProps {
     dataStore: PatientViewMutationsDataStore;
     data: ClinicalEvent[];
     caseMetaData: ISampleMetaDeta;
@@ -42,14 +42,14 @@ export interface ITimeline2Props {
     headerWidth?: number;
 }
 
-const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
+const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
     function({
         data,
         caseMetaData,
         sampleManager,
         width,
         headerWidth,
-    }: ITimeline2Props) {
+    }: ITimelineProps) {
         const [events, setEvents] = useState<
             TimelineTrackSpecification[] | null
         >(null);

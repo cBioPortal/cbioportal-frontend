@@ -20,6 +20,11 @@ export default class ValidationStatusColumnFormatter {
             className: 'wildtype',
             tooltip: 'Wildtype',
         };
+        const ONECALLER = {
+            text: 'O',
+            className: 'onecaller',
+            tooltip: 'Only one variant caller identified this variant.',
+        };
 
         return {
             valid: VALID,
@@ -31,6 +36,7 @@ export default class ValidationStatusColumnFormatter {
             none: UNKNOWN,
             na: UNKNOWN,
             'n/a': UNKNOWN,
+            onecaller: ONECALLER,
         };
     }
 

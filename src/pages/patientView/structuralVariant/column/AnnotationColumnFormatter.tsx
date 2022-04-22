@@ -165,7 +165,8 @@ export default class AnnotationColumnFormatter {
             structuralVariantData[0].site2EntrezGeneId,
             uniqueSampleKeyToTumorType![
                 structuralVariantData[0].uniqueSampleKey
-            ]
+            ],
+            structuralVariantData[0].variantClass.toUpperCase() as any
         );
 
         if (oncoKbData.indicatorMap[id]) {

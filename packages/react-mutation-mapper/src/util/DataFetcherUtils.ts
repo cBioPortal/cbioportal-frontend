@@ -33,7 +33,22 @@ export const ONCOKB_DEFAULT_DATA: IOncoKbData = {
 export const USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB = false;
 
 export const ONCOKB_DEFAULT_INFO: OncoKBInfo = {
-    apiVersion: 'v1.0.0',
+    apiVersion: {
+        version: 'v1.0.0',
+        major: 1,
+        minor: 0,
+        patch: 0,
+        stable: true,
+        suffixTokens: [],
+    },
+    appVersion: {
+        version: 'v1.0.0',
+        major: 1,
+        minor: 0,
+        patch: 0,
+        stable: true,
+        suffixTokens: [],
+    },
     dataVersion: {
         version: 'v2.0',
         date: '12/19/2019',

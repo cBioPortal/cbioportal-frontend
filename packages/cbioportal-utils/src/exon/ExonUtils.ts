@@ -1,13 +1,28 @@
 import { Exon, UntranslatedRegion } from 'genome-nexus-ts-api-client';
 import { ExonDatum } from '../model/Exon';
 
+export type ExonLocation = {
+    nucleotideLocation: number;
+    aminoAcidLocation: number;
+};
+
+export type ExonLength = {
+    nucleotideLength?: number;
+    aminoAcidLength: number;
+};
+
 export function extractExonInformation(
     exons: Exon[],
     utrs: UntranslatedRegion[],
     proteinLength: number
 ): ExonDatum[] {
     let totalLength = 0;
-    const exonLocList: { exonRank: number; length: number }[] = [];
+    const exonLocList: {
+        exonRank: number;
+        length: number;
+        startLocation: number;
+        endLocation: number;
+    }[] = [];
     exons.forEach(exon => {
         let utrStartSitesWithinExon = false;
         for (let j = 0; j < utrs.length; j++) {
@@ -27,6 +42,8 @@ export function extractExonInformation(
                     exonLocList.push({
                         exonRank: exon.rank,
                         length: aaLength,
+                        startLocation: exon.exonStart,
+                        endLocation: exon.exonEnd,
                     });
                     totalLength += aaLength;
                 }
@@ -36,7 +53,12 @@ export function extractExonInformation(
         // if there are no utr start sites within exon
         if (!utrStartSitesWithinExon) {
             const aaLength = (exon.exonEnd - exon.exonStart + 1) / 3;
-            exonLocList.push({ exonRank: exon.rank, length: aaLength });
+            exonLocList.push({
+                exonRank: exon.rank,
+                length: aaLength,
+                startLocation: exon.exonStart,
+                endLocation: exon.exonEnd,
+            });
             totalLength += aaLength;
         }
     });
@@ -54,6 +76,8 @@ export function extractExonInformation(
             rank: exon.exonRank,
             length: exon.length,
             start: startOfExon,
+            genomicLocationStart: exon.startLocation,
+            genomicLocationEnd: exon.endLocation,
         };
         startOfExon += exon.length;
         return exonDatum;
@@ -64,64 +88,63 @@ export function extractExonInformation(
 // Generate exon location description by exon location number.
 // Description should follow this format: "Nucleotide xx of amino acid xx".
 // Also need to make it clear which location is inclusive for start position and last end position
-export function formatExonLocation(exonLocation: number, index?: number) {
+export function formatExonLocation(
+    exonLocation: number,
+    index?: number
+): ExonLocation {
     const numNucleotidesOver = Math.round(exonLocation * 3) % 3;
     // first exon starts at 1st nucleotide of amino acid 1
     if (index === 0) {
-        return 'Nucleotide 1 of amino acid 1';
+        return { nucleotideLocation: 1, aminoAcidLocation: 1 };
     } else if (index !== 0 && index !== undefined) {
         // exon start location should be next nucleotide from previous end location
         // we should use floor() to get integer part 'x' from 'x.zzzzzzz'(e.g. 4.333333), use round() will get 'x+1' sometimes
         if (numNucleotidesOver === 0) {
-            return (
-                'Nucleotide 1 of amino acid ' +
-                (Math.floor(exonLocation) + 1).toString()
-            );
+            return {
+                nucleotideLocation: 1,
+                aminoAcidLocation: Math.floor(exonLocation) + 1,
+            };
         } else if (numNucleotidesOver === 1) {
-            return (
-                'Nucleotide 2 of amino acid ' +
-                (Math.floor(exonLocation) + 1).toString()
-            );
+            return {
+                nucleotideLocation: 2,
+                aminoAcidLocation: Math.floor(exonLocation) + 1,
+            };
         } else {
-            return (
-                'Nucleotide 3 of amino acid ' +
-                (Math.floor(exonLocation) + 1).toString()
-            );
+            return {
+                nucleotideLocation: 3,
+                aminoAcidLocation: Math.floor(exonLocation) + 1,
+            };
         }
     } else {
         // exon end location
         if (numNucleotidesOver === 0) {
-            return (
-                'Nucleotide 3 of amino acid ' +
-                Math.floor(exonLocation).toString()
-            );
+            return {
+                nucleotideLocation: 3,
+                aminoAcidLocation: Math.floor(exonLocation),
+            };
         } else if (numNucleotidesOver === 1) {
-            return (
-                'Nucleotide 1 of amino acid ' +
-                (Math.floor(exonLocation) + 1).toString()
-            );
+            return {
+                nucleotideLocation: 1,
+                aminoAcidLocation: Math.floor(exonLocation) + 1,
+            };
         } else {
-            return (
-                'Nucleotide 2 of amino acid ' +
-                (Math.floor(exonLocation) + 1).toString()
-            );
+            return {
+                nucleotideLocation: 2,
+                aminoAcidLocation: Math.floor(exonLocation) + 1,
+            };
         }
     }
 }
 
 // Generate exon length description by exon length
 // Description should follow this format: "xx amino acids and xx nucleotides".
-export function formatExonLength(exonLength: number) {
+export function formatExonLength(exonLength: number): ExonLength {
     const numNucleotidesOver = Math.round(exonLength * 3) % 3;
     if (numNucleotidesOver === 0) {
-        return Math.floor(exonLength).toString() + ' amino acids';
+        return { aminoAcidLength: Math.floor(exonLength) };
     } else if (numNucleotidesOver === 1) {
-        return (
-            Math.floor(exonLength).toString() + ' amino acids and 1 nucleotide'
-        );
+        return { aminoAcidLength: Math.floor(exonLength), nucleotideLength: 1 };
     } else {
-        return (
-            Math.floor(exonLength).toString() + ' amino acids and 2 nucleotides'
-        );
+        return { aminoAcidLength: Math.floor(exonLength), nucleotideLength: 2 };
     }
 }

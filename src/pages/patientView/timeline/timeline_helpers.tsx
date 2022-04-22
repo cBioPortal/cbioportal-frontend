@@ -13,14 +13,14 @@ import {
 import {
     getEventColor,
     getSampleInfo,
-} from 'pages/patientView/timeline2/TimelineWrapperUtils';
+} from 'pages/patientView/timeline/TimelineWrapperUtils';
 import React from 'react';
 import _ from 'lodash';
 import SampleMarker, {
     MultipleSampleMarker,
-} from 'pages/patientView/timeline2/SampleMarker';
+} from 'pages/patientView/timeline/SampleMarker';
 import SampleManager from 'pages/patientView/SampleManager';
-import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
+import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { getColor } from 'cbioportal-frontend-commons';
 import ReactMarkdown from 'react-markdown';
@@ -366,58 +366,82 @@ export function buildBaseConfig(
                     // we want a custom tooltip for samples, which includes clinical data
                     // not included in the timeline event
                     cat.renderTooltip = function(event: TimelineEvent) {
-                        const hoveredSample = event.event.attributes.find(
-                            (att: any) => att.key === 'SAMPLE_ID'
-                        );
+                        try {
+                            const hoveredSample = event.event.attributes.find(
+                                (att: any) => att.key === 'SAMPLE_ID'
+                            );
 
-                        if (!hoveredSample || !hoveredSample.value) {
-                            return null;
-                        }
-
-                        const sampleWithClinicalData = sampleManager.samples.find(
-                            sample => {
-                                return sample.id === hoveredSample.value;
+                            if (!hoveredSample || !hoveredSample.value) {
+                                return null;
                             }
-                        );
 
-                        if (sampleWithClinicalData) {
+                            const sampleWithClinicalData = sampleManager.samples.find(
+                                sample => {
+                                    return sample.id === hoveredSample.value;
+                                }
+                            );
+
+                            const attributes = event.event.attributes.map(
+                                attr => ({
+                                    key: attr.key,
+                                    value: attr.value,
+                                })
+                            );
+
+                            // if we have clinical data, then add that in to attributes
+                            sampleWithClinicalData &&
+                                sampleWithClinicalData.clinicalData.forEach(
+                                    d => {
+                                        attributes.push({
+                                            key: d.clinicalAttributeId,
+                                            value: d.value,
+                                        });
+                                    }
+                                );
+
+                            // put them in order by key
+                            const orderedAttributes = _.orderBy(
+                                attributes,
+                                attr => attr.key
+                            );
+
                             return (
                                 <table>
                                     <tbody>
-                                        <tr>
-                                            <th>SAMPLE ID</th>
-                                            <td>{sampleWithClinicalData.id}</td>
-                                        </tr>
-                                        {sampleWithClinicalData.clinicalData.map(
-                                            d => {
-                                                return (
-                                                    <tr>
-                                                        <th>
-                                                            {d.clinicalAttributeId
-                                                                .toUpperCase()
-                                                                .replace(
-                                                                    /_/g,
-                                                                    ' '
-                                                                )}
-                                                        </th>
-                                                        <td>
-                                                            {' '}
-                                                            <ReactMarkdown
-                                                                allowedElements={[
-                                                                    'p',
-                                                                    'a',
-                                                                ]}
-                                                                linkTarget={
-                                                                    '_blank'
-                                                                }
-                                                            >
-                                                                {d.value}
-                                                            </ReactMarkdown>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            }
+                                        {sampleWithClinicalData && (
+                                            <tr>
+                                                <th>SAMPLE ID</th>
+                                                <td>
+                                                    {sampleWithClinicalData.id}
+                                                </td>
+                                            </tr>
                                         )}
+
+                                        {orderedAttributes?.map(attr => {
+                                            return (
+                                                <tr>
+                                                    <th>
+                                                        {attr.key
+                                                            .toUpperCase()
+                                                            .replace(/_/g, ' ')}
+                                                    </th>
+                                                    <td>
+                                                        {' '}
+                                                        <ReactMarkdown
+                                                            allowedElements={[
+                                                                'p',
+                                                                'a',
+                                                            ]}
+                                                            linkTarget={
+                                                                '_blank'
+                                                            }
+                                                        >
+                                                            {attr.value}
+                                                        </ReactMarkdown>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                         <tr>
                                             <th>START DATE</th>
                                             <td className={'nowrap'}>
@@ -427,8 +451,12 @@ export function buildBaseConfig(
                                     </tbody>
                                 </table>
                             );
-                        } else {
-                            return null;
+                        } catch (ex) {
+                            console.log(
+                                'ERROR: Failed to render Timeline tooltip',
+                                ex
+                            );
+                            return <div>Error rendering tooltip</div>;
                         }
                     };
 

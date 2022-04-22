@@ -1266,6 +1266,10 @@ export function generateMutationIdByEvent(m: Mutation): string {
 }
 
 export function generateStructuralVariantId(s: StructuralVariant): string {
+    // NOTE: We need to sort because
+    // data contains inconsistent ordering of
+    // site1 and site2
+    // we want to treat either ordering as the same variant
     return [
         s.site1HugoSymbol,
         s.site2HugoSymbol,
@@ -1274,7 +1278,9 @@ export function generateStructuralVariantId(s: StructuralVariant): string {
         s.site1Chromosome,
         s.site2Chromosome,
         s.variantClass,
-    ].join('_');
+    ]
+        .sort()
+        .join('_');
 }
 
 export function generateMutationIdByGeneAndProteinChangeAndEvent(
@@ -1429,9 +1435,9 @@ export async function getHierarchyData(
     });
 }
 
-export function getGenomeNexusUrl(studies: CancerStudy[]) {
-    // default reference genome is GRCh37
-    // if the study is based on GRCh38, return GRCh38 genome nexus url
+export function getGenomeBuildFromStudies(studies: CancerStudy[]) {
+    // default reference genome is hg19(GRCh37)
+    // if the all studies are based on hg38, return hg38(GRCh38)
     if (studies) {
         if (
             _.every(
@@ -1445,8 +1451,18 @@ export function getGenomeNexusUrl(studies: CancerStudy[]) {
                     )
             )
         ) {
-            return getServerConfig().genomenexus_url_grch38!;
+            return REFERENCE_GENOME.grch38.UCSC;
         }
+    }
+    return REFERENCE_GENOME.grch37.UCSC;
+}
+
+export function getGenomeNexusUrl(studies: CancerStudy[]) {
+    // default reference genome is GRCh37
+    // if the study is based on GRCh38, return GRCh38 genome nexus url
+    const genomeBuild = getGenomeBuildFromStudies(studies);
+    if (genomeBuild === REFERENCE_GENOME.grch38.UCSC) {
+        return getServerConfig().genomenexus_url_grch38!;
     }
     return getServerConfig().genomenexus_url!;
 }

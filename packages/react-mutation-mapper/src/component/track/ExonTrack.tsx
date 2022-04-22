@@ -34,6 +34,15 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
             : undefined;
     }
 
+    @computed get chromosome(): string {
+        return this.props.store.ensemblTranscriptLookUp.result?.body
+            ?.seq_region_name;
+    }
+
+    @computed get genomeBuild(): string {
+        return this.props.store.genomeBuild;
+    }
+
     @computed get exonSpecs(): TrackItemSpec[] {
         if (!this.transcriptId || !this.transcript) {
             return [];
@@ -52,12 +61,18 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
             ? exonInfo.map((exon: ExonDatum, index: number) => {
                   const startCodon = exon.start;
                   const endCodon = exon.start + exon.length;
-                  const exonLength = exon.length;
-                  const isSkippable = Number.isInteger(exonLength);
-                  const stringStart = formatExonLocation(startCodon, index);
-                  const stringEnd = formatExonLocation(endCodon);
-                  const stringLength = formatExonLength(exonLength);
-
+                  const exonStartLocation = formatExonLocation(
+                      startCodon,
+                      index
+                  );
+                  const exonEndLocation = formatExonLocation(endCodon);
+                  const exonLength = formatExonLength(exon.length);
+                  const link = this.chromosome
+                      ? `https://igv.org/app/?locus=chr${this.chromosome}:${exon.genomicLocationStart}-${exon.genomicLocationEnd}&genome=${this.genomeBuild}`
+                      : 'https://igv.org';
+                  const linkText = this.chromosome
+                      ? `${this.genomeBuild}:chr${this.chromosome}:${exon.genomicLocationStart} - ${exon.genomicLocationEnd}`
+                      : `${exon.genomicLocationStart} - ${exon.genomicLocationEnd}`;
                   return {
                       color: altColors[index % 2],
                       startCodon: startCodon,
@@ -67,11 +82,51 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
                       tooltip: (
                           <span>
                               <h5> Exon {exon.rank} </h5>
-                              Start: {stringStart}
+                              Start: Nucleotide{' '}
+                              <strong>
+                                  {exonStartLocation.nucleotideLocation}
+                              </strong>{' '}
+                              of amino acid{' '}
+                              <strong>
+                                  {exonStartLocation.aminoAcidLocation}
+                              </strong>
                               <br></br>
-                              End: {stringEnd}
+                              End: Nucleotide{' '}
+                              <strong>
+                                  {exonEndLocation.nucleotideLocation}
+                              </strong>{' '}
+                              of amino acid{' '}
+                              <strong>
+                                  {exonEndLocation.aminoAcidLocation}
+                              </strong>
                               <br></br>
-                              Length: {stringLength}
+                              Length:{' '}
+                              <strong>{exonLength.aminoAcidLength}</strong>{' '}
+                              amino acids{' '}
+                              {exonLength.nucleotideLength && (
+                                  <>
+                                      {' '}
+                                      and{' '}
+                                      <strong>
+                                          {exonLength.nucleotideLength}
+                                      </strong>{' '}
+                                      nucleotides
+                                  </>
+                              )}
+                              <br></br>
+                              Genomic location:
+                              {` `}
+                              <a
+                                  target="_blank"
+                                  href={link}
+                                  rel="noopener noreferrer"
+                              >
+                                  <>
+                                      {linkText}
+                                      {` `}
+                                      <i className="fa fa-external-link" />
+                                  </>
+                              </a>
                           </span>
                       ),
                   };

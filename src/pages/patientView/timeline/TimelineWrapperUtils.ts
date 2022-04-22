@@ -1,5 +1,5 @@
 import { TimelineEvent } from 'cbioportal-clinical-timeline';
-import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
+import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
 import _ from 'lodash';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 

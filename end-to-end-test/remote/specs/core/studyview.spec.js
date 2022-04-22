@@ -74,7 +74,7 @@ describe('study laml_tcga tests', () => {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         waitForNetworkQuiet();
-        const res = browser.checkElement('#mainColumn');
+        const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
 
@@ -82,16 +82,18 @@ describe('study laml_tcga tests', () => {
         assert($(STUDY_SUMMARY_RAW_DATA_DOWNLOAD).isExisting());
     });
 
-    it('when quickly adding charts, each chart should get proper data.', () => {
+    it('when quickly adding charts, each chart should get proper data.', function() {
+        this.retries(0);
+
         toStudyViewSummaryTab();
         waitForStudyViewSelectedInfo();
         $(ADD_CHART_BUTTON).click();
         // Wait for the data frequency is calculated
         waitForNetworkQuiet();
-        // Click on three options
-        $("[data-test='add-chart-option-fab'] input").click();
-        $("[data-test='add-chart-option-basophils-cell-count'] input").click();
-        $("[data-test='add-chart-option-blast-count'] input").click();
+
+        // Add three charts
+        $("[data-test='add-chart-option-cancer-type'] input").click();
+        $("[data-test='add-chart-option-case-lists'] input").click();
 
         // Pause a bit time to let the page render the charts
         waitForStudyView();
@@ -252,23 +254,15 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
     it('check add chart button doesnt exist on heatmap', () => {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
         waitForNetworkQuiet(30000);
-        $('#studyViewTabs a.tabAnchor_heatmaps').waitForDisplayed({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
-        $('#studyViewTabs a.tabAnchor_heatmaps').click();
-        assert(!$(ADD_CHART_BUTTON).isExisting());
-    });
-    it('should hide add chart button on clinical data tab', () => {
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
-        waitForNetworkQuiet(30000);
+
         $('#studyViewTabs a.tabAnchor_clinicalData').waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $('#studyViewTabs a.tabAnchor_clinicalData').click();
 
-        // unfortunately we just re-use button for columns instead of changing component
-        // so only way to test identity of button is to look at its contents
-        assert.equal(getTextFromElement(ADD_CHART_BUTTON), 'Columns ▾');
+        assert($('button=Charts ▾').isExisting());
+
+        $('#studyViewTabs a.tabAnchor_clinicalData').click();
+        assert(!$('button=Charts ▾').isExisting());
     });
 });
 

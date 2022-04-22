@@ -140,8 +140,10 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             CNA_GENES_TABLE: 80,
             PATIENT_TREATMENTS_TABLE: 75,
             PATIENT_TREATMENT_GROUPS_TABLE: 75,
+            PATIENT_TREATMENT_TARGET_TABLE: 75,
             SAMPLE_TREATMENTS_TABLE: 75,
             SAMPLE_TREATMENT_GROUPS_TABLE: 75,
+            SAMPLE_TREATMENT_TARGET_TABLE: 75,
             CANCER_STUDIES: 70,
             SEQUENCED: 60,
             HAS_CNA_DATA: 50,
@@ -192,6 +194,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_home_page_unauthorized_studies_global_message:
         'The study is unauthorized. You need to request access.',
+    comparison_categorical_na_values: 'NA',
 };
 
 export default ServerConfigDefaults;

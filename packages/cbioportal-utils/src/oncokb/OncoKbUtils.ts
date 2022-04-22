@@ -79,9 +79,10 @@ export function generateQueryVariant(
 export function generateQueryStructuralVariantId(
     site1EntrezGeneId: number,
     site2EntrezGeneId: number | undefined,
-    tumorType: string | null
+    tumorType: string | null,
+    structuralVariantType: keyof typeof StructuralVariantType
 ): string {
-    let id = `${site1EntrezGeneId}_${site2EntrezGeneId}`;
+    let id = `${site1EntrezGeneId}_${site2EntrezGeneId}_${structuralVariantType}`;
     if (tumorType) {
         id = `${id}_${tumorType}`;
     }
@@ -267,7 +268,8 @@ export function generateAnnotateStructuralVariantQueryFromGenes(
         id: generateQueryStructuralVariantId(
             site1EntrezGeneId,
             site2EntrezGeneId,
-            tumorType
+            tumorType,
+            structuralVariantType
         ),
         geneA: {
             entrezGeneId: site1EntrezGeneId,

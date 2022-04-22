@@ -60,6 +60,7 @@ import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationT
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
     filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
+    genomeBuild?: string;
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
@@ -95,6 +96,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
                 enableOncoKb: mutationMapperConfig.show_oncokb,
                 filterAppliersOverride:
                     mutationMapperStoreConfig.filterAppliersOverride,
+                genomeBuild: mutationMapperStoreConfig.genomeBuild,
             },
             getMutations,
             getTranscriptId

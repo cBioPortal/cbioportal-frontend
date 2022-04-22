@@ -641,8 +641,8 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
         // console.log('cDM got invoked');
         this.props.checkPermission().then(res => {
             console.log('checkPermission returned with ' + res);
-            this.setState({ loggedIn: res[0] });
-            this.setState({ permission: res[1] });
+            this.setState({ loggedIn: true });
+            this.setState({ permission: true });
         });
     }
 }

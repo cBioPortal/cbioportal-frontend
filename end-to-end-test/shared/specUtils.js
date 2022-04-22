@@ -703,4 +703,5 @@ module.exports = {
     openAlterationTypeSelectionMenu,
     strIsNumeric,
     jq,
+    setServerConfiguration,
 };
