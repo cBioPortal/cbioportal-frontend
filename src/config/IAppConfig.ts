@@ -157,4 +157,5 @@ export interface IServerConfig {
     skin_home_page_show_unauthorized_studies: boolean;
     skin_home_page_unauthorized_studies_global_message: string;
     skin_mutation_table_namespace_column_show_by_default: boolean;
+    comparison_categorical_na_values: string;
 }

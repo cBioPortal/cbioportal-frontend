@@ -4,10 +4,18 @@ import { GenericAssayChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable, toJS } from 'mobx';
 import Select, { components } from 'react-select';
-import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
 import numeral from 'numeral';
 import styles from './styles.module.scss';
+import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
+import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import {
+    COMMON_GENERIC_ASSAY_PROPERTY,
+    deriveDisplayTextFromGenericAssayType,
+    formatGenericAssayCompactLabelByNameAndId,
+    getGenericAssayPropertyOrDefault,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 
 export interface IGenericAssaySelectionProps {
     molecularProfileOptions:
@@ -16,6 +24,9 @@ export interface IGenericAssaySelectionProps {
           })[]
         | ISelectOption[];
     genericAssayEntityOptions: ISelectOption[];
+    entityMap: {
+        [stableId: string]: GenericAssayMeta;
+    };
     genericAssayType: string;
     submitButtonText: string;
     containerWidth?: number;
@@ -65,6 +76,10 @@ export default class GenericAssaySelection extends React.Component<
 
     @observable.ref private _selectedGenericAssayEntityIds: string[] = [];
     @observable private _genericAssaySearchText: string = '';
+    private overridePlaceHolderText =
+        GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+            this.props.genericAssayType
+        ]?.selectionConfig?.placeHolderText;
 
     @action.bound
     private onSubmit() {
@@ -77,8 +92,22 @@ export default class GenericAssaySelection extends React.Component<
                 };
                 const charts = this._selectedGenericAssayEntityIds.map(
                     entityId => {
+                        const entityName = GENERIC_ASSAY_CONFIG
+                            .genericAssayConfigByType[
+                            this.props.genericAssayType
+                        ]?.selectionConfig?.formatChartNameUsingCompactLabel
+                            ? formatGenericAssayCompactLabelByNameAndId(
+                                  entityId,
+                                  getGenericAssayPropertyOrDefault(
+                                      this.props.entityMap[entityId]
+                                          .genericEntityMetaProperties,
+                                      COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                                      entityId
+                                  )
+                              )
+                            : entityId;
                         return {
-                            name: entityId + ': ' + option.profileName,
+                            name: entityName + ': ' + option.profileName,
                             description: option.description,
                             profileType: option.value,
                             genericAssayType: this.props.genericAssayType,
@@ -327,10 +356,14 @@ export default class GenericAssaySelection extends React.Component<
                     )} */}
                     <Select
                         name="generic-assay-select"
-                        placeholder={`Search for ${deriveDisplayTextFromGenericAssayType(
-                            this.props.genericAssayType,
-                            true
-                        )}...`}
+                        placeholder={
+                            this.overridePlaceHolderText
+                                ? this.overridePlaceHolderText
+                                : `Search for ${deriveDisplayTextFromGenericAssayType(
+                                      this.props.genericAssayType,
+                                      true
+                                  )}...`
+                        }
                         closeMenuOnSelect={false}
                         value={this.selectedGenericAssaysJS}
                         isMulti
@@ -415,15 +448,3 @@ export const MenuListHeader = ({ current, total }: any) =>
             options.
         </span>
     ) : null;
-
-export function doesOptionMatchSearchText(text: string, option: ISelectOption) {
-    let result = false;
-    if (
-        !text ||
-        new RegExp(text, 'i').test(option.label) ||
-        new RegExp(text, 'i').test(option.value)
-    ) {
-        result = true;
-    }
-    return result;
-}

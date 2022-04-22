@@ -10,6 +10,7 @@ import {
     reaction,
     runInAction,
     makeObservable,
+    autorun,
 } from 'mobx';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
@@ -77,23 +78,19 @@ export function initStore(
 
     setWindowVariable('resultsViewPageStore', resultsViewPageStore);
 
-    reaction(
-        () => [resultsViewPageStore.studyIds, resultsViewPageStore.oqlText],
-        () => {
-            if (
-                resultsViewPageStore.studyIds.isComplete &&
-                resultsViewPageStore.oqlText
-            ) {
-                trackQuery(
-                    resultsViewPageStore.studyIds.result!,
-                    resultsViewPageStore.oqlText,
-                    resultsViewPageStore.hugoGeneSymbols,
-                    resultsViewPageStore.queriedVirtualStudies.result!.length >
-                        0
-                );
-            }
+    autorun(() => {
+        if (
+            resultsViewPageStore.studyIds.isComplete &&
+            resultsViewPageStore.oqlText
+        ) {
+            trackQuery(
+                resultsViewPageStore.studyIds.result!,
+                resultsViewPageStore.oqlText,
+                resultsViewPageStore.hugoGeneSymbols,
+                resultsViewPageStore.queriedVirtualStudies.result!.length > 0
+            );
         }
-    );
+    });
 
     return resultsViewPageStore;
 }

@@ -61,6 +61,12 @@ export type AndedSampleTreatmentFilters = {
     'filters': Array < OredSampleTreatmentFilters >
 
 };
+export type BinsGeneratorConfig = {
+    'anchorValue': number
+
+        'binSize': number
+
+};
 export type CaseListDataCount = {
     'count': number
 
@@ -117,6 +123,10 @@ export type ClinicalDataBinCountFilter = {
 };
 export type ClinicalDataBinFilter = {
     'attributeId': string
+
+        'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
+
+        'binsGeneratorConfig': BinsGeneratorConfig
 
         'customBins': Array < number >
 
@@ -401,7 +411,11 @@ export type GenericAssayDataBinCountFilter = {
 
 };
 export type GenericAssayDataBinFilter = {
-    'customBins': Array < number >
+    'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
+
+        'binsGeneratorConfig': BinsGeneratorConfig
+
+        'customBins': Array < number >
 
         'disableLogScale': boolean
 
@@ -541,7 +555,11 @@ export type GenomicDataBinCountFilter = {
 
 };
 export type GenomicDataBinFilter = {
-    'customBins': Array < number >
+    'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
+
+        'binsGeneratorConfig': BinsGeneratorConfig
+
+        'customBins': Array < number >
 
         'disableLogScale': boolean
 
@@ -877,11 +895,15 @@ export type StudyViewFilter = {
 
         'patientTreatmentGroupFilters': AndedPatientTreatmentFilters
 
+        'patientTreatmentTargetFilters': AndedPatientTreatmentFilters
+
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'sampleTreatmentFilters': AndedSampleTreatmentFilters
 
         'sampleTreatmentGroupFilters': AndedSampleTreatmentFilters
+
+        'sampleTreatmentTargetFilters': AndedSampleTreatmentFilters
 
         'studyIds': Array < string >
 

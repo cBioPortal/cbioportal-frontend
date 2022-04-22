@@ -35,9 +35,11 @@ import SuccessBanner from '../infoBanner/SuccessBanner';
 import { serializeEvent, trackEvent } from '../../../shared/lib/tracking';
 import classNames from 'classnames';
 import GeneLevelSelection from './geneLevelSelection/GeneLevelSelection';
-import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import GenericAssaySelection from './genericAssaySelection/GenericAssaySelection';
-import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    deriveDisplayTextFromGenericAssayType,
+    makeGenericAssayOption,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
 import classnames from 'classnames';
@@ -525,7 +527,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             this.selectedGenericAssayProfileIdByType.get(type)
                     )?.profileIds || [];
 
-                const entitityMap = molecularProfileIdsInType.reduce(
+                const entityMap = molecularProfileIdsInType.reduce(
                     (acc, profileId) => {
                         this.props.store.genericAssayEntitiesGroupedByProfileId.result![
                             profileId
@@ -537,8 +539,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     {} as { [stableId: string]: GenericAssayMeta }
                 );
 
-                const genericAssayEntityOptions = _.map(entitityMap, entity =>
-                    makeGenericAssayOption(entity, false)
+                const genericAssayEntityOptions = _.map(
+                    entityMap,
+                    makeGenericAssayOption
                 );
 
                 const shouldShowChartOptionTable =
@@ -569,6 +572,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             genericAssayEntityOptions={
                                 genericAssayEntityOptions
                             }
+                            entityMap={entityMap}
                             onChartSubmit={this.onGenericAssaySubmit}
                             onSelectGenericAssayProfile={profileId =>
                                 this.onSelectGenericAssayProfileByType(
@@ -732,7 +736,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 (attr1.datatype === 'NUMBER' && attr2.datatype === 'STRING') ||
                 (attr1.datatype === 'STRING' && attr2.datatype === 'NUMBER')
             ) {
-                text = 'Add violin plot table';
+                text = 'Add violin/box plot table';
                 type = 'violin';
 
                 if (attr1.datatype === 'STRING') {

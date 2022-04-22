@@ -11,8 +11,14 @@ import styles from './styles.module.scss';
 import autobind from 'autobind-decorator';
 import { GenericAssayEnrichmentsTableDataStore } from './GenericAssayEnrichmentsTableDataStore';
 import { GenericAssayEnrichmentRow } from 'shared/model/EnrichmentRow';
+import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import {
+    deriveDisplayTextFromGenericAssayType,
+    formatGenericAssayCompactLabelByNameAndId,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IGenericAssayEnrichmentTableProps {
+    genericAssayType: string;
     visibleOrderedColumnNames?: string[];
     customColumns?: { [id: string]: GenericAssayEnrichmentTableColumn };
     data: GenericAssayEnrichmentRow[];
@@ -63,6 +69,15 @@ export default class GenericAssayEnrichmentsTable extends React.Component<
         this.props.dataStore.setHighlighted(d);
     }
 
+    private get entityTitle() {
+        return (
+            GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                this.props.genericAssayType
+            ]?.globalConfig?.entityTitle ||
+            deriveDisplayTextFromGenericAssayType(this.props.genericAssayType)
+        );
+    }
+
     @computed get columns(): {
         [columnEnum: string]: GenericAssayEnrichmentTableColumn;
     } {
@@ -71,13 +86,20 @@ export default class GenericAssayEnrichmentsTable extends React.Component<
         } = this.props.customColumns || {};
 
         columns[GenericAssayEnrichmentTableColumnType.ENTITY_ID] = {
-            name: 'Entity Name',
-            render: (d: GenericAssayEnrichmentRow) => (
-                <span className={styles.StableId}>
-                    <b>{d.entityName}</b>
-                </span>
-            ),
-            tooltip: <span>Entity Name</span>,
+            name: this.entityTitle,
+            render: (d: GenericAssayEnrichmentRow) => {
+                return (
+                    <span className={styles.StableId}>
+                        <b>
+                            {formatGenericAssayCompactLabelByNameAndId(
+                                d.stableId,
+                                d.entityName
+                            )}
+                        </b>
+                    </span>
+                );
+            },
+            tooltip: <span>{this.entityTitle}</span>,
             filter: (
                 d: GenericAssayEnrichmentRow,
                 filterString: string,

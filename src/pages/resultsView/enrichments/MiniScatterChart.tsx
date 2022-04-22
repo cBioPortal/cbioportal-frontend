@@ -34,19 +34,17 @@ export interface IMiniScatterChartProps {
     selectedSet: { [selectedIds: string]: any };
     // give either onGeneNameClick or onGenericAssayEntityClick
     onGeneNameClick?: (hugoGeneSymbol: string, entrezGeneId: number) => void;
-    onGenericAssayEntityClick?: (stableId: string) => void;
 }
 
 @observer
-export default class MiniScatterChart extends React.Component<
-    IMiniScatterChartProps,
-    {}
-> {
+export default class MiniScatterChart<
+    P extends IMiniScatterChartProps
+> extends React.Component<P, {}> {
     @observable tooltipModel: any = null;
     @observable private svgContainer: any = null;
     private dragging = false;
 
-    constructor(props: IMiniScatterChartProps) {
+    constructor(props: any) {
         super(props);
         makeObservable(this);
     }
@@ -59,33 +57,19 @@ export default class MiniScatterChart extends React.Component<
                 : null;
     }
 
-    @computed get isGenericAssay() {
-        return !!this.props.onGenericAssayEntityClick;
+    protected handleSelection(points: any, bounds: any, props: any) {
+        this.props.onSelection(
+            points[0].data.map((d: any) => d.hugoGeneSymbol)
+        );
     }
 
-    private handleSelection(points: any, bounds: any, props: any) {
-        if (this.isGenericAssay) {
-            this.props.onSelection(points[0].data.map((d: any) => d.stableId));
-        } else {
-            this.props.onSelection(
-                points[0].data.map((d: any) => d.hugoGeneSymbol)
-            );
-        }
-    }
-
-    @autobind private handleSelectionCleared() {
+    @autobind protected handleSelectionCleared() {
         if (this.tooltipModel) {
-            if (this.isGenericAssay) {
-                this.props.onGenericAssayEntityClick!(
-                    this.tooltipModel.stableId
+            if (this.props.onGeneNameClick) {
+                this.props.onGeneNameClick(
+                    this.tooltipModel.hugoGeneSymbol,
+                    this.tooltipModel.entrezGeneId
                 );
-            } else {
-                if (this.props.onGeneNameClick) {
-                    this.props.onGeneNameClick(
-                        this.tooltipModel.hugoGeneSymbol,
-                        this.tooltipModel.entrezGeneId
-                    );
-                }
             }
         }
         this.props.onSelectionCleared();
@@ -101,6 +85,10 @@ export default class MiniScatterChart extends React.Component<
         this.tooltipModel = null;
     }
 
+    protected get tooltipTitle() {
+        return `Gene: ${this.tooltipModel.hugoGeneSymbol}`;
+    }
+
     @autobind private getTooltip() {
         if (this.tooltipModel) {
             return (
@@ -109,10 +97,7 @@ export default class MiniScatterChart extends React.Component<
                     positionLeft={this.tooltipModel.x + 15}
                     positionTop={this.tooltipModel.y - 33}
                 >
-                    {this.isGenericAssay
-                        ? `Entity: ${this.tooltipModel.entityName ||
-                              this.tooltipModel.stableId}`
-                        : `Gene: ${this.tooltipModel.hugoGeneSymbol}`}
+                    {this.tooltipTitle}
                     <br />
                     Log Ratio: {formatLogOddsRatio(this.tooltipModel.logRatio)}
                     <br />
@@ -170,6 +155,18 @@ export default class MiniScatterChart extends React.Component<
         } else {
             return this.props.xAxisRightLabel;
         }
+    }
+
+    protected get scatterFillColorFunction() {
+        return (datum: any) => {
+            if (datum.hugoGeneSymbol in this.props.selectedSet) {
+                return '#FE9929';
+            } else if (datum.qValue < 0.05) {
+                return '#58ACFA';
+            } else {
+                return '#D3D3D3';
+            }
+        };
     }
 
     public render() {
@@ -272,26 +269,7 @@ export default class MiniScatterChart extends React.Component<
                                 <HoverablePoint
                                     onMouseOver={this.onPointMouseOver}
                                     onMouseOut={this.onPointMouseOut}
-                                    fill={(datum: any) => {
-                                        if (
-                                            this.isGenericAssay &&
-                                            datum.stableId in
-                                                this.props.selectedSet
-                                        ) {
-                                            return '#FE9929';
-                                        }
-                                        if (
-                                            !this.isGenericAssay &&
-                                            datum.hugoGeneSymbol in
-                                                this.props.selectedSet
-                                        ) {
-                                            return '#FE9929';
-                                        } else if (datum.qValue < 0.05) {
-                                            return '#58ACFA';
-                                        } else {
-                                            return '#D3D3D3';
-                                        }
-                                    }}
+                                    fill={this.scatterFillColorFunction}
                                 />
                             }
                         />

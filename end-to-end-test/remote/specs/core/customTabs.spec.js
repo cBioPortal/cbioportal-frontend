@@ -45,7 +45,7 @@ function goToUrlWithCustomTabConfig(url, custom_tabs) {
 
 function runTests(pageName, url, tabLocation) {
     describe(`${pageName} Custom Tabs`, () => {
-        it('Sync and async hide/show works', function() {
+        it.skip('Sync and async hide/show works', function() {
             this.retries(0);
 
             goToUrlWithCustomTabConfig(url, customTabBase(tabLocation));

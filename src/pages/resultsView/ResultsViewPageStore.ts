@@ -5879,12 +5879,16 @@ export class ResultsViewPageStore
                 [] as StructuralVariantFilter['sampleMolecularIdentifiers']
             );
 
-            return client.fetchStructuralVariantsUsingPOST({
-                structuralVariantFilter: {
-                    entrezGeneIds: [q.entrezGeneId],
-                    sampleMolecularIdentifiers: filters,
-                } as StructuralVariantFilter,
-            });
+            if (_.isEmpty(filters)) {
+                return [];
+            } else {
+                return client.fetchStructuralVariantsUsingPOST({
+                    structuralVariantFilter: {
+                        entrezGeneIds: [q.entrezGeneId],
+                        sampleMolecularIdentifiers: filters,
+                    } as StructuralVariantFilter,
+                });
+            }
         },
     }));
 
