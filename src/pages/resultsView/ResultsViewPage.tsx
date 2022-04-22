@@ -400,37 +400,40 @@ export default class ResultsViewPage extends React.Component<
                             linkText={'Pathways'}
                         >
                             {showPM ? (
-                                <MSKTabs
-                                    id="mutationsPageTabs"
-                                    activeTabId={this.activePathwaysTab}
-                                    onTabClick={(id: string) => {this.activePathwaysTab = id;}}
-                                    className="pillTabs resultsPageMutationsGeneTabs"
-                                    arrowStyle={{ 'line-height': 0.8 }}
-                                    tabButtonStyle="pills"
-                                    unmountOnHide={true}
-                                >
-                                    <MSKTab
-                                        key='PathwayMapper'
-                                        id='PathwayMapper'
-                                        linkText='PathwayMapper'
+                                <>
+                                    <span style={{float: 'left', paddingRight: 10}}>Choose Pathway Source:</span>
+                                    <MSKTabs
+                                        id="mutationsPageTabs"
+                                        activeTabId={this.activePathwaysTab}
+                                        onTabClick={(id: string) => {this.activePathwaysTab = id;}}
+                                        className="pillTabs resultsPageMutationsGeneTabs"
+                                        arrowStyle={{ 'line-height': 0.8 }}
+                                        tabButtonStyle="pills"
+                                        unmountOnHide={true}
                                     >
-                                        <ResultsViewPathwayMapper
-                                            store={store}
-                                            appStore={this.props.appStore}
-                                            urlWrapper={this.urlWrapper}
-                                        />
-                                    </MSKTab>
-                                    <MSKTab
-                                        key='NDEx'
-                                        id='NDEx'
-                                        linkText='NDEx'
-                                    >
-                                        <IFrameLoader
-                                            height={800}
-                                            url={`${this.resultsViewPageStore.remoteNdexUrl.result}`}
-                                        />
-                                    </MSKTab>
-                                </MSKTabs>
+                                        <MSKTab
+                                            key='PathwayMapper'
+                                            id='PathwayMapper'
+                                            linkText='PathwayMapper'
+                                        >
+                                            <ResultsViewPathwayMapper
+                                                store={store}
+                                                appStore={this.props.appStore}
+                                                urlWrapper={this.urlWrapper}
+                                            />
+                                        </MSKTab>
+                                        <MSKTab
+                                            key='NDEx'
+                                            id='NDEx'
+                                            linkText='NDEx'
+                                        >
+                                            <IFrameLoader
+                                                height={800}
+                                                url={`${this.resultsViewPageStore.remoteNdexUrl.result}`}
+                                            />
+                                        </MSKTab>
+                                    </MSKTabs>
+                                </>
                             ) : (
                                 <LoadingIndicator
                                     isLoading={true}
