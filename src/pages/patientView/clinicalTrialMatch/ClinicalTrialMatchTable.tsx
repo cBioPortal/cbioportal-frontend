@@ -116,7 +116,7 @@ class CollapseList extends React.PureComponent<
                 res.push(str[i]);
             }
         }
-        return res.map(i => <div>{i}</div>);
+        return res.map(i => <div key={-1}>{i}</div>);
     }
 
     asHiddenListElement(str: String[]) {
@@ -125,7 +125,7 @@ class CollapseList extends React.PureComponent<
             for (var i = this.NUM_LIST_ELEMENTS; i < str.length; i++) {
                 res.push(str[i]);
             }
-            return res.map(i => <div>{i}</div>);
+            return res.map(i => <div key={res.indexOf(i)}>{i}</div>);
         } else {
             return <div></div>;
         }
@@ -453,6 +453,7 @@ export class ClinicalTrialMatchTable extends React.Component<
                                 size="big"
                             ></LoadingIndicator>
                             <ClinicalTrialMatchTableComponent
+                                showCopyDownload={false}
                                 data={this.props.clinicalTrialMatches}
                                 columns={this._columns}
                                 initialItemsPerPage={this.ENTRIES_PER_PAGE}
@@ -460,10 +461,6 @@ export class ClinicalTrialMatchTable extends React.Component<
                         </div>
                         <div>
                             Powered by{' '}
-                            <a href="https://oncokb.org/" target="_blank">
-                                OncoKB
-                            </a>{' '}
-                            &{' '}
                             <a
                                 href="https://clinicaltrials.gov/"
                                 target="_blank"

@@ -32,6 +32,7 @@ export function cityHasRecord(city: City): boolean {
 
 export function findCity(city: Location): City | undefined {
     var worldCities = require('./worldCities.json');
+
     var cityMatches = worldCities.filter((cityObject: City) => {
         return city.LocationCity === cityObject.city;
     });
@@ -41,6 +42,10 @@ export function findCity(city: Location): City | undefined {
                 city.LocationCity === cityObject.city &&
                 city.LocationState === cityObject.admin_name
             );
+        });
+    } else if (cityMatches.length === 0) {
+        var cityMatch: City = worldCities.find((cityObject: City) => {
+            return city.LocationCity === cityObject.city_ascii;
         });
     } else {
         var cityMatch: City = cityMatches[0];
