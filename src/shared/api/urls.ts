@@ -208,7 +208,10 @@ export function getProxyUrlIfNecessary(url: any) {
 }
 
 export function getOncoKbApiUrl() {
-    return buildCBioPortalAPIUrl(`proxy/A8F74CD7851BDEE8DCD2E86AB4E2A711`);
+    return (
+        localStorage.oncokbOverride ||
+        buildCBioPortalAPIUrl(`proxy/A8F74CD7851BDEE8DCD2E86AB4E2A711`)
+    );
 }
 
 export function getInstituteLogoUrl() {
