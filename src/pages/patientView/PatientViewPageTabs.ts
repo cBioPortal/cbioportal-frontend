@@ -10,6 +10,7 @@ export enum PatientViewPageTabs {
     MutationalSignatures = 'mutationalSignatures',
     TherapyRecommendation = 'therapyRecommendation',
     Mtb = 'mtb',
+    FollowUp = 'followUp',
     ClinicalTrialsGov = 'clinicaltrialsGov',
     PathwayMapper = 'pathways',
 }

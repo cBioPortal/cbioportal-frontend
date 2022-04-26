@@ -200,7 +200,11 @@ import {
 import { getServerConfig } from 'config/config';
 import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 
-import { IMtb, IDeletions } from '../../../shared/model/TherapyRecommendation';
+import {
+    IMtb,
+    IDeletions,
+    IFollowUp,
+} from '../../../shared/model/TherapyRecommendation';
 import {
     StudyListEntry,
     StudyList,
@@ -227,6 +231,9 @@ import {
     fetchMtbsUsingGET,
     updateMtbUsingPUT,
     deleteMtbUsingDELETE,
+    fetchFollowupUsingGET,
+    updateFollowupUsingPUT,
+    deleteFollowupUsingDELETE,
     checkPermissionUsingGET,
 } from 'shared/api/TherapyRecommendationAPI';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
@@ -2522,6 +2529,19 @@ export class PatientViewPageStore {
         []
     );
 
+    readonly followups = remoteData<IFollowUp[]>(
+        {
+            invoke: () => {
+                return fetchFollowupUsingGET(
+                    this.getMtbJsonStoreUrl(
+                        'followup/' + this.getSafePatientId()
+                    )
+                );
+            },
+        },
+        []
+    );
+
     readonly mtbs = remoteData<IMtb[]>(
         {
             invoke: () => {
@@ -2544,9 +2564,20 @@ export class PatientViewPageStore {
         );
     };
 
+    updateFollowUps = (followUps: IFollowUp[]) => {
+        console.log('update');
+
+        updateFollowupUsingPUT(
+            this.getSafePatientId(),
+            this.getMtbJsonStoreUrl('followup/' + this.getSafePatientId()),
+            followUps
+        );
+    };
+
     readonly deletions: IDeletions = {
         mtb: [],
         therapyRecommendation: [],
+        followUp: [],
     };
 
     deleteMtbs = (deletions: IDeletions) => {
@@ -2555,6 +2586,15 @@ export class PatientViewPageStore {
             this.getSafePatientId(),
             this.getSafeStudyId(),
             this.getMtbJsonStoreUrl(this.getSafePatientId()),
+            deletions
+        );
+    };
+
+    deleteFollowUps = (deletions: IDeletions) => {
+        console.log('delete');
+        deleteFollowupUsingDELETE(
+            this.getSafePatientId(),
+            this.getMtbJsonStoreUrl('followup/' + this.getSafePatientId()),
             deletions
         );
     };

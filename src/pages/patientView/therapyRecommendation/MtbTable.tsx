@@ -372,6 +372,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     cnaOncoKbData={this.props.cnaOncoKbData}
                     pubMedCache={this.props.pubMedCache}
                     isDisabled={this.isDisabled(mtb) || !this.state.permission}
+                    showButtons={true}
                 />
             ),
             width: this.columnWidths[ColumnKey.THERAPYRECOMMENDATIONS],
