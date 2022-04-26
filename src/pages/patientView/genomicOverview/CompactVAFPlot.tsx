@@ -22,7 +22,7 @@ export interface ICompactVAFPlotProps {
 
 export class CompactVAFPlot extends React.Component<ICompactVAFPlotProps> {
     public static defaultProps: Partial<ICompactVAFPlotProps> = {
-        thumbnailComponent: <i className="fa fa-bar-chart" />,
+        thumbnailComponent: <i className="fa fa-bar-chart vafPlotThumbnail" />,
     };
 
     private genePanelManager: GenePanelManager;

@@ -315,7 +315,7 @@ export default class GenomicOverview extends React.Component<
         const cnaTrack = tracks.find(t => t.name === CNA_TRACK_NAME);
 
         return (
-            <div>
+            <div className="genomicOverviewTracksContainer">
                 <div style={{ display: 'flex' }}>
                     <CustomIgvColumn
                         classname={styles.compactIgvColumn}
