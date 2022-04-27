@@ -28,6 +28,7 @@ import {
     ClinicalDataCountSummary,
     DataBin,
     getHeightByDimension,
+    getRangeFromDataBins,
     getTableHeightByDimension,
     getWidthByDimension,
     logScalePossible,
@@ -1038,6 +1039,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 const chartInfo = this.props.store.getXvsYViolinChartInfo(
                     this.props.chartMeta!.uniqueKey
                 )!;
+                const violinFilter = (
+                    this.props.store.filters.clinicalDataFilters || []
+                ).find(
+                    x =>
+                        x.attributeId ===
+                        chartInfo.numericalAttr.clinicalAttributeId
+                );
                 return () => {
                     const isLoading =
                         (this.props.store.clinicalDataBinPromises[
@@ -1064,6 +1072,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 min: this.props.promise.result.data.axisStart,
                                 max: this.props.promise.result.data.axisEnd,
                             }}
+                            violinFilterRange={
+                                violinFilter &&
+                                getRangeFromDataBins(violinFilter.values)
+                            }
                             rows={this.props.promise.result.data.rows || []}
                             showViolin={this.props.violinPlotChecked!}
                             showBox={this.props.boxPlotChecked!}
