@@ -2,6 +2,7 @@ import * as $ from 'jquery';
 import _ from 'underscore';
 import * as React from 'react';
 import * as styleConsts from './clinicalAttributesStyleConsts.ts';
+import { isString } from 'lodash';
 
 /**
  * Functions for dealing with clinical attributes.
@@ -253,7 +254,7 @@ function getSpanElementsFromCleanData(clinicalAttributesCleanDerived) {
         });
 
     return sortedKeys.map(key => {
-        let value = clinicalAttributesCleanDerived[key];
+        let value = replaceArray(clinicalAttributesCleanDerived[key]);
         const [prefix, middle, suffix] = styleConsts.stringBuilder(
             value,
             key,
@@ -299,6 +300,21 @@ function addFirstOrderClass() {
         $(orderSortedAttributes[0]).addClass('first-order');
     });
 }
+
+const replaceArray = function(replaceString) {
+    if (!isString(replaceString)) {
+        return replaceString;
+    }
+    const search = ['Ã¤', 'Ã¼', 'Ã¶', 'Ã„', 'Ã–', 'Ãœ', 'ÃŸ'];
+    const replace = ['ä', 'ü', 'ö', 'Ä', 'Ö', 'Ü', 'ß'];
+    let regex;
+    for (let i = 0; i < search.length; i++) {
+        regex = new RegExp(search[i], 'g');
+        replaceString = replaceString.replace(regex, replace[i]);
+        replaceString.re;
+    }
+    return replaceString;
+};
 
 export {
     cleanAndDerive,
