@@ -220,7 +220,7 @@ export const GENETIC_TRACK_GROUP_INDEX = 1;
 export const CLINICAL_TRACK_GROUP_INDEX = 0;
 
 export interface IOncoprintProps {
-    oncoprintRef?: (oncoprint: OncoprintJS) => void;
+    broadcastOncoprintJsRef?: (oncoprint: OncoprintJS) => void;
 
     clinicalTracks: ClinicalTrackSpec[];
     geneticTracks: GeneticTrackSpec[];
@@ -283,7 +283,7 @@ export interface IOncoprintProps {
 @observer
 export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private div: HTMLDivElement;
-    public oncoprint: OncoprintJS | undefined;
+    public oncoprintJs: OncoprintJS | undefined;
     private trackSpecKeyToTrackId: { [key: string]: TrackId };
     private lastTransitionProps: IOncoprintProps;
 
@@ -335,27 +335,27 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
 
     private refreshOncoprint(props: IOncoprintProps) {
         const now = performance.now();
-        if (!this.oncoprint) {
+        if (!this.oncoprintJs) {
             // instantiate new one
-            this.oncoprint = new OncoprintJS(
+            this.oncoprintJs = new OncoprintJS(
                 `#${props.divId}`,
                 props.width,
                 props.initParams
             );
-            this.oncoprint.setTrackGroupLegendOrder([
+            this.oncoprintJs.setTrackGroupLegendOrder([
                 GENETIC_TRACK_GROUP_INDEX,
                 CLINICAL_TRACK_GROUP_INDEX,
             ]);
-            (window as any).frontendOnc = this.oncoprint;
-            if (props.oncoprintRef) {
-                props.oncoprintRef(this.oncoprint);
+            (window as any).frontendOnc = this.oncoprintJs;
+            if (props.broadcastOncoprintJsRef) {
+                props.broadcastOncoprintJsRef(this.oncoprintJs);
             }
         }
-        if (!this.oncoprint.webgl_unavailable) {
+        if (!this.oncoprintJs.webgl_unavailable) {
             transition(
                 props,
                 this.lastTransitionProps || {},
-                this.oncoprint,
+                this.oncoprintJs,
                 () => this.trackSpecKeyToTrackId,
                 () => {
                     return this.props.molecularProfileIdToMolecularProfile;
@@ -375,9 +375,9 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     }
 
     componentWillUnmount() {
-        if (this.oncoprint) {
-            this.oncoprint.destroy();
-            this.oncoprint = undefined;
+        if (this.oncoprintJs) {
+            this.oncoprintJs.destroy();
+            this.oncoprintJs = undefined;
         }
     }
 

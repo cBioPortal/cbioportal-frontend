@@ -38,7 +38,6 @@ import {
     ClinicalDataEnrichmentWithQ,
     getStatisticalCautionInfo,
 } from './GroupComparisonUtils';
-import MultipleCategoryBarPlot from '../../shared/components/plots/MultipleCategoryBarPlot';
 import ReactSelect from 'react-select1';
 import { MakeMobxView } from 'shared/components/MobxView';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
@@ -49,6 +48,9 @@ import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
 import { getComparisonCategoricalNaValue } from './ClinicalDataUtils';
+import CategoryPlot, {
+    CategoryPlotType,
+} from 'pages/groupComparison/CategoryPlot';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -94,17 +96,19 @@ export class ClinicalDataEnrichmentStore extends SimpleGetterLazyMobXTableApplic
     }
 }
 
-export enum PlotType {
-    Bar = 'Bar',
-    StackedBar = 'StackedBar',
-    PercentageStackedBar = 'PercentageStackedBar',
-}
-
-export const plotTypeOptions = [
-    { value: PlotType.Bar, label: 'Bar chart' },
-    { value: PlotType.StackedBar, label: 'Stacked bar chart' },
-    { value: PlotType.PercentageStackedBar, label: '100% stacked bar chart' },
+export const categoryPlotTypeOptions = [
+    { value: CategoryPlotType.Bar, label: 'Bar chart' },
+    { value: CategoryPlotType.StackedBar, label: 'Stacked bar chart' },
+    {
+        value: CategoryPlotType.PercentageStackedBar,
+        label: '100% stacked bar chart',
+    },
+    { value: CategoryPlotType.Heatmap, label: 'Heatmap' },
 ];
+
+function isNumerical(datatype?: string) {
+    return datatype && datatype.toLowerCase() === 'number';
+}
 
 @observer
 export default class ClinicalData extends React.Component<
@@ -237,10 +241,7 @@ export default class ClinicalData extends React.Component<
     );
 
     @computed get showLogScaleControls() {
-        return (
-            this.highlightedRow!.clinicalAttribute.datatype.toLowerCase() ===
-            'number'
-        );
+        return isNumerical(this.highlightedRow!.clinicalAttribute.datatype);
     }
 
     @observable private logScale = false;
@@ -411,7 +412,7 @@ export default class ClinicalData extends React.Component<
                         });
                     }
                 }
-                if (attribute.datatype.toLowerCase() === 'number') {
+                if (isNumerical(attribute.datatype)) {
                     for (const d of axisData_Data) {
                         d.value = parseFloat(d.value as string); // we know its a string bc all clinical data comes back as string
                     }
@@ -634,11 +635,23 @@ export default class ClinicalData extends React.Component<
         );
     }
 
-    @observable plotType: PlotType = PlotType.PercentageStackedBar;
+    @computed get groupToColor() {
+        let groups = this.props.store?.activeGroups?.result;
+        if (!groups) {
+            return {};
+        }
+        return groups.reduce((result, ag) => {
+            result[ag.nameWithOrdinal as string] = ag.color;
+            return result;
+        }, {} as any);
+    }
+
+    @observable categoryPlotType: CategoryPlotType =
+        CategoryPlotType.PercentageStackedBar;
 
     @action.bound
     private onPlotTypeSelect(option: any) {
-        this.plotType = option.value;
+        this.categoryPlotType = option.value;
     }
 
     @computed private get getUtilitiesMenu() {
@@ -659,9 +672,9 @@ export default class ClinicalData extends React.Component<
                         >
                             <ReactSelect
                                 name="discrete-vs-discrete-plot-type"
-                                value={this.plotType}
+                                value={this.categoryPlotType}
                                 onChange={this.onPlotTypeSelect}
-                                options={plotTypeOptions}
+                                options={categoryPlotTypeOptions}
                                 clearable={false}
                                 searchable={true}
                             />
@@ -678,18 +691,19 @@ export default class ClinicalData extends React.Component<
                         />
                         Swap Axes
                     </label>
-                    {!this.showLogScaleControls && (
-                        <label className="checkbox-inline">
-                            <input
-                                type="checkbox"
-                                name="horizontalBars"
-                                checked={this.horizontalBars}
-                                onClick={this.onClickhorizontalBars}
-                                data-test="HorizontalBars"
-                            />
-                            Horizontal Bars
-                        </label>
-                    )}
+                    {!this.showLogScaleControls &&
+                        this.categoryPlotType !== CategoryPlotType.Heatmap && (
+                            <label className="checkbox-inline">
+                                <input
+                                    type="checkbox"
+                                    name="horizontalBars"
+                                    checked={this.horizontalBars}
+                                    onClick={this.onClickhorizontalBars}
+                                    data-test="HorizontalBars"
+                                />
+                                Horizontal Bars
+                            </label>
+                        )}
                     {this.showLogScaleControls && (
                         <label className="checkbox-inline">
                             <input
@@ -734,8 +748,11 @@ export default class ClinicalData extends React.Component<
         }
         const promises = [this.horzAxisDataPromise, this.vertAxisDataPromise];
         const groupStatus = getRemoteDataGroupStatus(...promises);
-        const isPercentage = this.plotType === PlotType.PercentageStackedBar;
-        const isStacked = isPercentage || this.plotType === PlotType.StackedBar;
+        const isPercentage =
+            this.categoryPlotType === CategoryPlotType.PercentageStackedBar;
+        const isStacked =
+            isPercentage ||
+            this.categoryPlotType === CategoryPlotType.StackedBar;
         switch (groupStatus) {
             case 'pending':
                 return (
@@ -757,8 +774,7 @@ export default class ClinicalData extends React.Component<
 
                 let plotElt: any = null;
                 if (
-                    this.highlightedRow!.clinicalAttribute.datatype.toLowerCase() ===
-                    'number'
+                    isNumerical(this.highlightedRow!.clinicalAttribute.datatype)
                 ) {
                     if (this.boxPlotData.isComplete) {
                         plotElt = (
@@ -800,7 +816,8 @@ export default class ClinicalData extends React.Component<
                     }
                 } else {
                     plotElt = (
-                        <MultipleCategoryBarPlot
+                        <CategoryPlot
+                            type={this.categoryPlotType}
                             svgId={SVG_ID}
                             horzData={
                                 (this.horzAxisDataPromise
@@ -819,6 +836,7 @@ export default class ClinicalData extends React.Component<
                                     .result! as IStringAxisData).categoryOrder
                             }
                             categoryToColor={this.categoryToColor}
+                            groupToColor={this.groupToColor}
                             barWidth={20}
                             domainPadding={20}
                             chartBase={500}

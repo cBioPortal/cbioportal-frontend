@@ -23,7 +23,7 @@ import {
 } from './AlterationEnrichmentsTable';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
-import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
+import { IMultipleCategoryBarPlotData } from 'pages/groupComparison/MultipleCategoryBarPlot';
 import { getTextColor } from '../../groupComparison/OverlapUtils';
 import { TruncatedText } from 'cbioportal-frontend-commons';
 import {
