@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Observer, observer } from 'mobx-react';
-import { IStringAxisData } from '../../../pages/resultsView/plots/PlotsTabUtils';
 import { computed, makeObservable, observable } from 'mobx';
 import { bind } from 'bind-decorator';
 import {
@@ -22,17 +21,18 @@ import {
     VictoryGroup,
 } from 'victory';
 import { tickFormatNumeral } from 'cbioportal-frontend-commons';
-import { makeUniqueColorGetter } from './PlotUtils';
+import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
 import {
     makePlotData,
     makeBarSpecs,
     sortDataByCategory,
-} from './MultipleCategoryBarPlotUtils';
+} from '../../shared/components/plots/MultipleCategoryBarPlotUtils';
 import * as ReactDOM from 'react-dom';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
-import WindowStore from '../window/WindowStore';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
+import { IStringAxisData } from 'pages/resultsView/plots/PlotsTabUtils';
+import WindowStore from 'shared/components/window/WindowStore';
 
 export interface IMultipleCategoryBarPlotProps {
     svgId?: string;
