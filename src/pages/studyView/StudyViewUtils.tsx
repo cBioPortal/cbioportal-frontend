@@ -3569,6 +3569,42 @@ export function getUserGroupColor(
         : undefined;
 }
 
+export function getRangeFromDataBins(bins: DataFilterValue[]) {
+    const numericals = bins.filter(
+        value => value.start !== undefined || value.end !== undefined
+    );
+
+    if (numericals.length === 0) {
+        return undefined;
+    }
+
+    // merge numericals into one interval
+    const min = numericals[0].start;
+    const max = numericals[numericals.length - 1].end;
+
+    return {
+        min,
+        max,
+    };
+
+    /*const allNumericals = bins.filter(
+        bin => bin.start !== undefined || bin.end !== undefined
+    );
+
+    const binBounds = _.chain(allNumericals)
+        .flatMap(bin => [bin.start, bin.end]) // put starts and ends into a list
+        .filter(x => x !== undefined && x !== null)
+        .value() as number[]; // get rid of any non-numbers;
+
+    let min = Number.POSITIVE_INFINITY;
+    let max = Number.NEGATIVE_INFINITY;
+    for (const b of binBounds) {
+        min = Math.min(b, min);
+        max = Math.max(b, max);
+    }
+    return {min, max};*/
+}
+
 export async function updateCustomIntervalFilter(
     newRange: { start?: number; end?: number },
     chartMeta: Pick<ChartMeta, 'uniqueKey'>,

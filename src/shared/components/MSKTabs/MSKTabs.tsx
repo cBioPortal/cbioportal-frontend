@@ -19,12 +19,13 @@ import { ReactChild } from 'react';
 import { observer } from 'mobx-react';
 import MemoizedHandlerFactory from '../../lib/MemoizedHandlerFactory';
 import URL from 'url';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export interface IMSKTabProps {
     inactive?: boolean;
     id: string;
     linkText: string | JSX.Element;
+    linkTooltip?: string | JSX.Element;
     activeId?: string;
     className?: string;
     hide?: boolean | (() => boolean);
@@ -405,6 +406,17 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
                 const href = this.getTabHref(tab.props.id);
 
+                const linkContent = tab.props.linkTooltip ? (
+                    <DefaultTooltip
+                        overlay={tab.props.linkTooltip}
+                        placement="top"
+                    >
+                        <span>{tab.props.linkText}</span>
+                    </DefaultTooltip>
+                ) : (
+                    tab.props.linkText
+                );
+
                 pages[currentPage - 1].push(
                     <li
                         key={tab.props.id}
@@ -422,7 +434,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                             href={href}
                             style={tab.props.anchorStyle}
                         >
-                            {tab.props.linkText}
+                            {linkContent}
                             {closeButton}
                         </a>
                     </li>
