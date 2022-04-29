@@ -363,6 +363,9 @@ export interface AnnotatedMutation extends Mutation {
     oncoKbOncogenic: string;
     isHotspot: boolean;
     simplifiedMutationType: SimplifiedMutationType;
+    // following is a cloodge for when we need to
+    // make synthetic mutations to represent structural variants
+    structuralVariant?: AnnotatedStructuralVariant;
 }
 
 export interface AnnotatedStructuralVariant extends StructuralVariant {
@@ -3443,6 +3446,7 @@ export class ResultsViewPageStore
                                 )
                         );
                     }
+
                     let filteredStructuralVariants = compileStructuralVariants(
                         structuralVariantsGroups,
                         this.mutationsTabFilteringSettings.excludeVus,
