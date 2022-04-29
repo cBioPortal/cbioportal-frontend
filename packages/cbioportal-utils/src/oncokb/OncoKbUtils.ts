@@ -173,8 +173,9 @@ export function generateCopyNumberAlterationQuery(
     } as AnnotateCopyNumberAlterationQuery;
 }
 
-const FUSION_REGEX = '(\\w+)-(\\w+)(\\s+fusion)?';
+const FUSION_REGEX = '(\\w+)-(\\w+)(\\s+fusion)?'; // AARON: this is not accurate anymore.  can we just change it though? depends on consistency of format
 const INTRAGENIC_REGEX = '(\\w+)-intragenic';
+const TWO_GENE_REGEXP = /\(([^-]*)-([^\)]*)\)/;
 
 export function generateAnnotateStructuralVariantQuery(
     entrezGeneId: number,
@@ -189,9 +190,34 @@ export function generateAnnotateStructuralVariantQuery(
         proteinChange,
         mutationType
     );
+
+    const twoGeneResult = TWO_GENE_REGEXP.exec(proteinChange);
+
+    // AARON: the problem is that in injecting SVs into mutation collection, we lose sv info. for example site1 and site2 genes
+    // this is actually pretty good because then it is compatible with filtering and counting in mutation page
+    // but when we need to treat them like SVs again (here) we then have to parse that out from proteinChange
+    // the protein change data seems to be different now and thus is defeating our parsing
+
+    if (twoGeneResult) {
+        return {
+            id: id,
+            geneA: {
+                hugoSymbol: twoGeneResult![1],
+            },
+            geneB: {
+                hugoSymbol: twoGeneResult![2],
+            },
+            structuralVariantType: 'FUSION', // SHOULD THIS BE FUSION OR DELETION?
+            functionalFusion: true,
+            tumorType: tumorType,
+            evidenceTypes: evidenceTypes,
+        } as AnnotateStructuralVariantQuery;
+    }
+
     const intragenicResult = new RegExp(INTRAGENIC_REGEX, 'gi').exec(
         proteinChange
     );
+
     if (intragenicResult) {
         return {
             id: id,
