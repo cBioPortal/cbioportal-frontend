@@ -52,6 +52,7 @@ import {
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
+    deriveStructuralVariantType,
 } from 'cbioportal-utils';
 import {
     GenomeNexusAPI,
@@ -100,6 +101,7 @@ import {
     makeIsHotspotForOncoprint,
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
+    buildProteinChange,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -368,6 +370,9 @@ export interface AnnotatedMutation extends Mutation {
     oncoKbOncogenic: string;
     isHotspot: boolean;
     simplifiedMutationType: SimplifiedMutationType;
+    // following is a cloodge for when we need to
+    // make synthetic mutations to represent structural variants
+    structuralVariant?: AnnotatedStructuralVariant;
 }
 
 export interface AnnotatedStructuralVariant extends StructuralVariant {
@@ -3537,6 +3542,7 @@ export class ResultsViewPageStore
                                 )
                         );
                     }
+
                     let filteredStructuralVariants = compileStructuralVariants(
                         structuralVariantsGroups,
                         this.mutationsTabFilteringSettings.excludeVus,
@@ -3562,7 +3568,9 @@ export class ResultsViewPageStore
                             mutationType: CanonicalMutationType.FUSION,
                             ncbiBuild: structuralVariant.ncbiBuild,
                             patientId: structuralVariant.patientId,
-                            proteinChange: structuralVariant.eventInfo,
+                            proteinChange: buildProteinChange(
+                                structuralVariant
+                            ),
                             sampleId: structuralVariant.sampleId,
                             startPosition: structuralVariant.site1Position,
                             studyId: structuralVariant.studyId,
@@ -3570,6 +3578,7 @@ export class ResultsViewPageStore
                                 structuralVariant.uniquePatientKey,
                             uniqueSampleKey: structuralVariant.uniqueSampleKey,
                             variantType: structuralVariant.variantClass,
+                            mutationStatus: structuralVariant.svStatus,
                             gene: {
                                 entrezGeneId:
                                     structuralVariant.site1EntrezGeneId,
@@ -3582,6 +3591,7 @@ export class ResultsViewPageStore
                             isHotspot: structuralVariant.isHotspot,
                             simplifiedMutationType:
                                 CanonicalMutationType.FUSION,
+                            structuralVariant,
                         } as AnnotatedMutation;
 
                         mutationsByGene[hugoGeneSymbol].push(mutation);
@@ -5525,7 +5535,7 @@ export class ResultsViewPageStore
                                 structuralVariant.uniqueSampleKey,
                                 {}
                             ),
-                            structuralVariant.variantClass.toUpperCase() as any
+                            deriveStructuralVariantType(structuralVariant)
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
                             id

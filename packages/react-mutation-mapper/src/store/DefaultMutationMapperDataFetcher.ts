@@ -344,6 +344,7 @@ export class DefaultMutationMapperDataFetcher
             ),
             'id'
         );
+
         const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
             _.map(
                 queryVariants.filter(
@@ -356,6 +357,8 @@ export class DefaultMutationMapperDataFetcher
                         getEntrezGeneId(mutation),
                         getTumorType(mutation),
                         mutation.proteinChange,
+                        /* @ts-ignore */
+                        mutation.structuralVariant,
                         mutation.mutationType,
                         evidenceTypes
                     );
