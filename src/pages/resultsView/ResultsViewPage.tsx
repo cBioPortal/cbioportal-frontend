@@ -418,7 +418,7 @@ export default class ResultsViewPage extends React.Component<
                                             linkTooltip='PathwayMapper shows
                                             pathways from over fifty cancer
                                             related pathways and provides an
-                                            editor for creating new ones.'
+                                            editor for creating new ones'
                                         >
                                             <ResultsViewPathwayMapper
                                                 store={store}
@@ -433,7 +433,7 @@ export default class ResultsViewPage extends React.Component<
                                             linkTooltip='NDEx shows thousands of
                                             pathways from a broad range of
                                             sources using a combination of
-                                            manual and automated curation.'
+                                            manual and automated curation'
                                         >
                                             <IFrameLoader
                                                 height={800}
