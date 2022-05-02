@@ -167,10 +167,12 @@ export function initializeAPIClients() {
     cachePostMethods(GenomeNexusAPI, [], /POST$/);
     cachePostMethods(GenomeNexusAPIInternal, [], /POST$/);
     cachePostMethods(OncoKbAPI);
-    maskApiRequests(OncoKbAPI, getOncoKbApiUrl(), {
-        'X-Proxy-User-Agreement':
-            'I/We do NOT use this obfuscated proxy to programmatically obtain private OncoKB data. I/We know that I/we should get a valid data access token by registering at https://www.oncokb.org/account/register.',
-    });
+
+    _.isEmpty(localStorage.oncokbOverride) &&
+        maskApiRequests(OncoKbAPI, getOncoKbApiUrl(), {
+            'X-Proxy-User-Agreement':
+                'I/We do NOT use this obfuscated proxy to programmatically obtain private OncoKB data. I/We know that I/we should get a valid data access token by registering at https://www.oncokb.org/account/register.',
+        });
 
     if (getServerConfig().enable_request_body_gzip_compression) {
         compressRequestBodies(
