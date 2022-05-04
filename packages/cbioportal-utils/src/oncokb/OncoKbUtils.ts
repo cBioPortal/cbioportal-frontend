@@ -7,6 +7,7 @@ import {
     LevelOfEvidence,
 } from 'oncokb-ts-api-client';
 import { EvidenceType, OncoKbCardDataType } from '../model/OncoKB';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2', '1', '0'],
@@ -175,12 +176,13 @@ export function generateCopyNumberAlterationQuery(
 
 const FUSION_REGEX = '(\\w+)-(\\w+)(\\s+fusion)?'; // AARON: this is not accurate anymore.  can we just change it though? depends on consistency of format
 const INTRAGENIC_REGEX = '(\\w+)-intragenic';
-const TWO_GENE_REGEXP = /\(([^-]*)-([^\)]*)\)/;
+const TWO_GENE_REGEXP = /^\(([^-]*)-([^\)]*)\)/;
 
 export function generateAnnotateStructuralVariantQuery(
     entrezGeneId: number,
     tumorType: string | null,
     proteinChange: string,
+    structuralVariant: StructuralVariant,
     mutationType?: string,
     evidenceTypes?: EvidenceType[]
 ): AnnotateStructuralVariantQuery {
@@ -198,68 +200,24 @@ export function generateAnnotateStructuralVariantQuery(
     // but when we need to treat them like SVs again (here) we then have to parse that out from proteinChange
     // the protein change data seems to be different now and thus is defeating our parsing
 
-    if (twoGeneResult) {
-        return {
-            id: id,
-            geneA: {
-                hugoSymbol: twoGeneResult![1],
-            },
-            geneB: {
-                hugoSymbol: twoGeneResult![2],
-            },
-            structuralVariantType: 'FUSION', // SHOULD THIS BE FUSION OR DELETION?
-            functionalFusion: true,
-            tumorType: tumorType,
-            evidenceTypes: evidenceTypes,
-        } as AnnotateStructuralVariantQuery;
-    }
+    // SVs will sometimes have only 1 gene (intragenic).
+    // could be site1 or site 2
+    const genes = [];
+    structuralVariant.site1HugoSymbol &&
+        genes.push(structuralVariant.site1HugoSymbol);
+    structuralVariant.site2HugoSymbol &&
+        genes.push(structuralVariant.site2HugoSymbol);
 
-    const intragenicResult = new RegExp(INTRAGENIC_REGEX, 'gi').exec(
-        proteinChange
-    );
-
-    if (intragenicResult) {
-        return {
-            id: id,
-            geneA: {
-                hugoSymbol: intragenicResult![1],
-            },
-            geneB: {
-                hugoSymbol: intragenicResult![1],
-            },
-            structuralVariantType: 'DELETION',
-            functionalFusion: false,
-            tumorType: tumorType,
-            evidenceTypes: evidenceTypes,
-        } as AnnotateStructuralVariantQuery;
-    }
-    const fusionResult = new RegExp(FUSION_REGEX, 'gi').exec(proteinChange);
-    if (fusionResult) {
-        return {
-            id: id,
-            geneA: {
-                hugoSymbol: fusionResult![1],
-            },
-            geneB: {
-                hugoSymbol: fusionResult![2],
-            },
-            structuralVariantType: 'FUSION',
-            functionalFusion: true,
-            tumorType: tumorType,
-            evidenceTypes: evidenceTypes,
-        } as AnnotateStructuralVariantQuery;
-    }
-    // we need to take a look what other fusion the table possibly includes
     return {
         id: id,
         geneA: {
-            hugoSymbol: proteinChange,
+            hugoSymbol: genes[0],
         },
         geneB: {
-            hugoSymbol: proteinChange,
+            hugoSymbol: genes[1] || genes[0],
         },
-        structuralVariantType: 'FUSION',
-        functionalFusion: false,
+        structuralVariantType: structuralVariant.variantClass,
+        functionalFusion: genes.length > 1, // if its only one gene, it's intagenic and thus not a functional fusion
         tumorType: tumorType,
         evidenceTypes: evidenceTypes,
     } as AnnotateStructuralVariantQuery;

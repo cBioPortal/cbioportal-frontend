@@ -935,6 +935,7 @@ export async function queryOncoKbData(
     client: OncoKbAPI = oncokbClient,
     evidenceTypes?: EvidenceType[]
 ) {
+    debugger;
     const mutationQueryVariants = _.uniqBy(
         _.map(
             annotationQueries.filter(
@@ -954,23 +955,6 @@ export async function queryOncoKbData(
         ),
         'id'
     );
-    const structuralQueryVariants = _.uniqBy(
-        _.map(
-            annotationQueries.filter(
-                mutation => mutation.mutationType === fusionMutationType
-            ),
-            (mutation: OncoKbAnnotationQuery) => {
-                return generateAnnotateStructuralVariantQuery(
-                    mutation.entrezGeneId,
-                    mutation.tumorType,
-                    mutation.alteration,
-                    mutation.mutationType,
-                    evidenceTypes
-                );
-            }
-        ),
-        'id'
-    );
 
     const mutationQueryResult: IndicatorQueryResp[] = await chunkCalls(
         chunk =>
@@ -981,17 +965,8 @@ export async function queryOncoKbData(
         250
     );
 
-    const structuralVariantQueryResult =
-        structuralQueryVariants.length === 0
-            ? []
-            : await client.annotateStructuralVariantsPostUsingPOST_1({
-                  body: structuralQueryVariants,
-              });
-
     const oncoKbData: IOncoKbData = {
-        indicatorMap: generateIdToIndicatorMap(
-            mutationQueryResult.concat(structuralVariantQueryResult)
-        ),
+        indicatorMap: generateIdToIndicatorMap(mutationQueryResult),
     };
 
     return oncoKbData;
@@ -2041,4 +2016,22 @@ export function filterAndAnnotateMutations(
         germline,
         vusAndGermline,
     };
+}
+
+export function buildProteinChange(sv: StructuralVariant) {
+    const genes: string[] = [];
+
+    if (sv.site1HugoSymbol) {
+        genes.push(sv.site1HugoSymbol);
+    }
+
+    if (sv.site2HugoSymbol && sv.site1HugoSymbol !== sv.site2HugoSymbol) {
+        genes.push(sv.site2HugoSymbol);
+    }
+
+    if (genes.length === 2) {
+        return `(${genes[0]}-${genes[1]}) Fusion`;
+    } else {
+        return `(${genes[0]}) intragenic`;
+    }
 }
