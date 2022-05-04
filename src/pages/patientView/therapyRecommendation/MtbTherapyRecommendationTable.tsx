@@ -41,6 +41,7 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
 import { getServerConfig } from 'config/config';
+import TherapyRecommendationFormOtherMtb from './form/TherapyRecommendationFormOtherMtb';
 
 export type ITherapyRecommendationProps = {
     patientId: string;
@@ -65,6 +66,7 @@ export type ITherapyRecommendationProps = {
         newIndex: number
     ) => boolean;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    fhirsparkData?: ITherapyRecommendation[];
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
     isDisabled: boolean;
@@ -125,6 +127,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
         | undefined;
     @observable backupTherapyRecommendation: ITherapyRecommendation | undefined;
     @observable showOncoKBForm: boolean;
+    @observable showOtherMtbForm: boolean;
 
     private _columns = [
         {
@@ -543,6 +546,13 @@ export default class MtbTherapyRecommendationTable extends React.Component<
         this.showOncoKBForm = true;
     }
 
+    private openAddOtherMtbForm() {
+        console.group('Adding from FhirSpark');
+        console.log('FhirSpark Data ' + this.props.fhirsparkData);
+        console.groupEnd();
+        this.showOtherMtbForm = true;
+    }
+
     public onHideOncoKbForm(
         newTherapyRecommendations?:
             | ITherapyRecommendation
@@ -550,6 +560,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
     ) {
         if (!_.isArray(newTherapyRecommendations)) {
             this.showOncoKBForm = false;
+            this.showOtherMtbForm = false;
             this.selectedTherapyRecommendation = newTherapyRecommendations;
             //this.onHideAddEditForm(newTherapyRecommendations);
         } else {
@@ -717,6 +728,20 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             </Button>
                         </Else>
                     </If>
+                    <Button
+                        type="button"
+                        className={
+                            'btn btn-default ' + styles.addOtherMtbButton
+                        }
+                        disabled={this.props.isDisabled}
+                        onClick={() => this.openAddOtherMtbForm()}
+                    >
+                        <i
+                            className={`fa fa-plus ${styles.marginLeft}`}
+                            aria-hidden="true"
+                        ></i>{' '}
+                        Add from other MTB
+                    </Button>
                     {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test (Update)</Button> */}
                 </p>
                 {this.selectedTherapyRecommendation && (
@@ -766,6 +791,29 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             this.onHideOncoKbForm(therapyRecommendations);
                         }}
                         title="Add therapy recommendation from OncoKB"
+                        userEmailAddress={getServerConfig().user_email_address}
+                    />
+                )}
+                {this.showOtherMtbForm && (
+                    <TherapyRecommendationFormOtherMtb
+                        show={this.showOtherMtbForm}
+                        patientID={this.props.patientId}
+                        mutations={this.props.mutations}
+                        indexedVariantAnnotations={
+                            this.props.indexedVariantAnnotations
+                        }
+                        indexedMyVariantInfoAnnotations={
+                            this.props.indexedMyVariantInfoAnnotations
+                        }
+                        cna={this.props.cna}
+                        onHide={(
+                            therapyRecommendations?:
+                                | ITherapyRecommendation
+                                | ITherapyRecommendation[]
+                        ) => {
+                            this.onHideOncoKbForm(therapyRecommendations);
+                        }}
+                        title="Add therapy recommendation from other MTB"
                         userEmailAddress={getServerConfig().user_email_address}
                     />
                 )}
