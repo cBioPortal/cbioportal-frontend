@@ -795,8 +795,6 @@ export type ReferenceGenomeGene = {
 
         'hugoGeneSymbol': string
 
-        'length': number
-
         'referenceGenomeId': number
 
         'start': number
