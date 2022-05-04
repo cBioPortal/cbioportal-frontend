@@ -97,6 +97,7 @@ import {
     makeIsHotspotForOncoprint,
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
+    buildProteinChange,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -3472,7 +3473,9 @@ export class ResultsViewPageStore
                             mutationType: CanonicalMutationType.FUSION,
                             ncbiBuild: structuralVariant.ncbiBuild,
                             patientId: structuralVariant.patientId,
-                            proteinChange: structuralVariant.eventInfo,
+                            proteinChange: buildProteinChange(
+                                structuralVariant
+                            ),
                             sampleId: structuralVariant.sampleId,
                             startPosition: structuralVariant.site1Position,
                             studyId: structuralVariant.studyId,
@@ -3480,6 +3483,7 @@ export class ResultsViewPageStore
                                 structuralVariant.uniquePatientKey,
                             uniqueSampleKey: structuralVariant.uniqueSampleKey,
                             variantType: structuralVariant.variantClass,
+                            mutationStatus: structuralVariant.svStatus,
                             gene: {
                                 entrezGeneId:
                                     structuralVariant.site1EntrezGeneId,
@@ -3492,6 +3496,7 @@ export class ResultsViewPageStore
                             isHotspot: structuralVariant.isHotspot,
                             simplifiedMutationType:
                                 CanonicalMutationType.FUSION,
+                            structuralVariant,
                         } as AnnotatedMutation;
 
                         mutationsByGene[hugoGeneSymbol].push(mutation);
