@@ -56,12 +56,12 @@ export function groupEventsByPosition(events: TimelineEvent[]) {
     });
 }
 
-export function renderSuperscript(number: number) {
+export function renderSuperscript(number: number, y: number = 0) {
     return (
-        <g transform={'translate(3 -8)'}>
+        <g transform={'translate(3 -18)'}>
             <text
                 x={1}
-                y={0}
+                y={y}
                 dy={'1em'}
                 className="noselect"
                 style={{
@@ -177,8 +177,8 @@ export function renderPoint(
         if (events.length > 1) {
             contents = (
                 <>
-                    {renderSuperscript(events.length)}
-                    {renderStack(events.map(eventColorGetter))}
+                    {renderSuperscript(events.length, y)}
+                    {renderStack(events.map(eventColorGetter), y)}
                 </>
             );
         } else {
