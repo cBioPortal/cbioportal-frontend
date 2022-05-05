@@ -2,7 +2,8 @@ import { assert } from 'chai';
 
 import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import {
-    calcSegmentTrackHeight,
+    calcIgvTrackHeight,
+    featuresWithoutFunctions,
     generateSegmentFeatures,
     generateSegmentFileContent,
     getModifiedTrackNames,
@@ -142,102 +143,105 @@ describe('IGVUtils', () => {
         });
 
         it('generates proper segment features for non-empty input', () => {
-            assert.deepEqual(generateSegmentFeatures(segments), [
-                {
-                    sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
-                    patient: 'TCGA-13-1510',
-                    start: 3218610,
-                    end: 4734076,
-                    value: -0.6819,
-                    study: 'ov_tcga_pub',
-                    sample: 'TCGA-13-1510-01',
-                    chr: '1',
-                    numberOfProbes: 941,
-                },
-                {
-                    sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
-                    patient: 'TCGA-13-1510',
-                    start: 4734514,
-                    end: 4735056,
-                    value: -2.742,
-                    study: 'ov_tcga_pub',
-                    sample: 'TCGA-13-1510-01',
-                    chr: '1',
-                    numberOfProbes: 2,
-                },
-                {
-                    sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
-                    patient: 'TCGA-13-1510',
-                    start: 4735908,
-                    end: 12155936,
-                    value: -0.6566,
-                    study: 'ov_tcga_pub',
-                    sample: 'TCGA-13-1510-01',
-                    chr: '1',
-                    numberOfProbes: 3984,
-                },
-                {
-                    sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
-                    patient: 'TCGA-13-1510',
-                    start: 12156236,
-                    end: 12262792,
-                    value: 0.1393,
-                    study: 'ov_tcga_pub',
-                    sample: 'TCGA-13-1510-01',
-                    chr: '1',
-                    numberOfProbes: 77,
-                },
-                {
-                    sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
-                    patient: 'TCGA-13-1510',
-                    start: 12264355,
-                    end: 26281561,
-                    value: -0.6842,
-                    study: 'ov_tcga_pub',
-                    sample: 'TCGA-13-1510-01',
-                    chr: '1',
-                    numberOfProbes: 7347,
-                },
-                {
-                    sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
-                    patient: 'TCGA-13-1510',
-                    start: 26282396,
-                    end: 26355640,
-                    value: 0.1718,
-                    study: 'ov_tcga_pub',
-                    sample: 'TCGA-13-1510-01',
-                    chr: '1',
-                    numberOfProbes: 41,
-                },
-                {
-                    sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
-                    patient: 'TCGA-13-1510',
-                    start: 26361404,
-                    end: 30593096,
-                    value: -0.6302,
-                    study: 'ov_tcga_pub',
-                    sample: 'TCGA-13-1510-01',
-                    chr: 'X',
-                    numberOfProbes: 1833,
-                },
-                {
-                    sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
-                    patient: 'TCGA-13-1510',
-                    start: 30593355,
-                    end: 35255680,
-                    value: 0.103,
-                    study: 'ov_tcga_pub',
-                    sample: 'TCGA-13-1510-01',
-                    chr: 'Y',
-                    numberOfProbes: 2587,
-                },
-            ]);
+            assert.deepEqual(
+                featuresWithoutFunctions(generateSegmentFeatures(segments)),
+                [
+                    {
+                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        patient: 'TCGA-13-1510',
+                        start: 3218610,
+                        end: 4734076,
+                        value: -0.6819,
+                        study: 'ov_tcga_pub',
+                        sample: 'TCGA-13-1510-01',
+                        chr: '1',
+                        numberOfProbes: 941,
+                    },
+                    {
+                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        patient: 'TCGA-13-1510',
+                        start: 4734514,
+                        end: 4735056,
+                        value: -2.742,
+                        study: 'ov_tcga_pub',
+                        sample: 'TCGA-13-1510-01',
+                        chr: '1',
+                        numberOfProbes: 2,
+                    },
+                    {
+                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        patient: 'TCGA-13-1510',
+                        start: 4735908,
+                        end: 12155936,
+                        value: -0.6566,
+                        study: 'ov_tcga_pub',
+                        sample: 'TCGA-13-1510-01',
+                        chr: '1',
+                        numberOfProbes: 3984,
+                    },
+                    {
+                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        patient: 'TCGA-13-1510',
+                        start: 12156236,
+                        end: 12262792,
+                        value: 0.1393,
+                        study: 'ov_tcga_pub',
+                        sample: 'TCGA-13-1510-01',
+                        chr: '1',
+                        numberOfProbes: 77,
+                    },
+                    {
+                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        patient: 'TCGA-13-1510',
+                        start: 12264355,
+                        end: 26281561,
+                        value: -0.6842,
+                        study: 'ov_tcga_pub',
+                        sample: 'TCGA-13-1510-01',
+                        chr: '1',
+                        numberOfProbes: 7347,
+                    },
+                    {
+                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        patient: 'TCGA-13-1510',
+                        start: 26282396,
+                        end: 26355640,
+                        value: 0.1718,
+                        study: 'ov_tcga_pub',
+                        sample: 'TCGA-13-1510-01',
+                        chr: '1',
+                        numberOfProbes: 41,
+                    },
+                    {
+                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        patient: 'TCGA-13-1510',
+                        start: 26361404,
+                        end: 30593096,
+                        value: -0.6302,
+                        study: 'ov_tcga_pub',
+                        sample: 'TCGA-13-1510-01',
+                        chr: 'X',
+                        numberOfProbes: 1833,
+                    },
+                    {
+                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        patient: 'TCGA-13-1510',
+                        start: 30593355,
+                        end: 35255680,
+                        value: 0.103,
+                        study: 'ov_tcga_pub',
+                        sample: 'TCGA-13-1510-01',
+                        chr: 'Y',
+                        numberOfProbes: 2587,
+                    },
+                ]
+            );
         });
     });
 
-    describe('calcSegmentTrackHeight', () => {
+    describe('calcIgvTrackHeight', () => {
         it('returns the default min height for the empty input', () => {
-            assert.equal(calcSegmentTrackHeight([]), 25);
+            assert.equal(calcIgvTrackHeight([]), 25);
         });
 
         it('returns the default min height for an input with too few samples', () => {
@@ -246,7 +250,7 @@ describe('IGVUtils', () => {
                 { sampleKey: 'sample2' },
             ];
 
-            assert.equal(calcSegmentTrackHeight(features), 25);
+            assert.equal(calcIgvTrackHeight(features), 25);
         });
 
         it('returns a value between min and max for moderate number of samples', () => {
@@ -255,7 +259,7 @@ describe('IGVUtils', () => {
                 sampleKey: `sample${key}`,
             }));
 
-            assert.equal(calcSegmentTrackHeight(features), 200);
+            assert.equal(calcIgvTrackHeight(features), 200);
         });
 
         it('returns the default max height for large number of samples', () => {
@@ -264,7 +268,7 @@ describe('IGVUtils', () => {
                 sampleKey: `sample${key}`,
             }));
 
-            assert.equal(calcSegmentTrackHeight(features), 600);
+            assert.equal(calcIgvTrackHeight(features), 600);
         });
     });
 

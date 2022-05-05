@@ -109,6 +109,9 @@ export default class PatientViewPage extends React.Component<
 
     public patientViewPageStore: PatientViewPageStore;
 
+    @observable
+    public activeLocus: string | undefined;
+
     constructor(props: IPatientViewPageProps) {
         super(props);
         makeObservable(this);
@@ -237,6 +240,18 @@ export default class PatientViewPage extends React.Component<
         }
         // otherwise do nothing, we want default behavior of link
         // namely that href will open in a new window/tab
+    }
+
+    @action.bound
+    public handleLocusChange(locus: string) {
+        if (this.activeLocus !== locus) {
+            this.activeLocus = locus;
+        }
+    }
+
+    @action.bound
+    public handleCNATableGeneClick(hugoGeneSymbol: string) {
+        this.handleLocusChange(hugoGeneSymbol);
     }
 
     @action.bound
@@ -460,6 +475,7 @@ export default class PatientViewPage extends React.Component<
     onMutationTableRowClick(d: Mutation[]) {
         if (d.length) {
             this.patientViewMutationDataStore.toggleSelectedMutation(d[0]);
+            this.handleLocusChange(d[0].gene.hugoGeneSymbol);
         }
     }
     @autobind
