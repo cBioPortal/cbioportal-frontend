@@ -29,9 +29,7 @@ import {
     makeBoxScatterPlotData,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
-import BoxScatterPlot, {
-    IBoxScatterPlotData,
-} from 'shared/components/plots/BoxScatterPlot';
+import { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
 import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
 import {
     CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
@@ -48,6 +46,11 @@ import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
 import { getComparisonCategoricalNaValue } from './ClinicalDataUtils';
+import {
+    ClinicalNumericalDataVisualisation,
+    ClinicalNumericalVisualisationType,
+} from 'pages/groupComparison/ClinicalNumericalDataVisualisation';
+import { SummaryStatisticsTable } from './SummaryStatisticsTable';
 import CategoryPlot, {
     CategoryPlotType,
 } from 'pages/groupComparison/CategoryPlot';
@@ -58,7 +61,10 @@ export interface IClinicalDataProps {
 
 const SVG_ID = 'clinical-plot-svg';
 
-class PlotsTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
+export const numericalVisualisationTypeOptions = [
+    { value: ClinicalNumericalVisualisationType.Plot, label: 'Plot' },
+    { value: ClinicalNumericalVisualisationType.Table, label: 'Table' },
+];
 
 export class ClinicalDataEnrichmentStore extends SimpleGetterLazyMobXTableApplicationDataStore<
     ClinicalDataEnrichmentWithQ
@@ -583,44 +589,9 @@ export default class ClinicalData extends React.Component<
     }
 
     @computed get boxPlotTooltip() {
-        return (d: any) => {
-            return (
-                <table className="table table-striped">
-                    <thead>
-                        <tr>
-                            <th colSpan={2}>
-                                {
-                                    this.boxPlotData.result!.data[d.eventKey]
-                                        .label
-                                }
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Maximum</td>
-                            <td>{d.max}</td>
-                        </tr>
-                        <tr>
-                            <td>75% (q3)</td>
-                            <td>{d.q3}</td>
-                        </tr>
-                        <tr>
-                            <td>Median</td>
-                            <td>{d.median}</td>
-                        </tr>
-                        <tr>
-                            <td>25% (q1)</td>
-                            <td>{d.q1}</td>
-                        </tr>
-                        <tr>
-                            <td>Minimum</td>
-                            <td>{d.min}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            );
-        };
+        return (data: any[], labels: string[]) => (
+            <SummaryStatisticsTable data={data} labels={labels} />
+        );
     }
 
     @computed get categoryToColor() {
@@ -649,9 +620,17 @@ export default class ClinicalData extends React.Component<
     @observable categoryPlotType: CategoryPlotType =
         CategoryPlotType.PercentageStackedBar;
 
+    @observable numericalVisualisationType: ClinicalNumericalVisualisationType =
+        ClinicalNumericalVisualisationType.Plot;
+
     @action.bound
     private onPlotTypeSelect(option: any) {
         this.categoryPlotType = option.value;
+    }
+
+    @action.bound
+    private onNumericalVisualisationTypeSelect(option: any) {
+        this.numericalVisualisationType = option.value;
     }
 
     @computed private get getUtilitiesMenu() {
@@ -660,6 +639,33 @@ export default class ClinicalData extends React.Component<
         }
         return (
             <div style={{ marginBottom: '10px' }}>
+                {isNumerical(
+                    this.highlightedRow!.clinicalAttribute.datatype
+                ) && (
+                    <>
+                        <div
+                            className="form-group"
+                            style={{ display: 'flex', alignItems: 'center' }}
+                        >
+                            <label>Visualisation type</label>
+                            <div
+                                style={{ width: 240, marginLeft: 5 }}
+                                data-test="numericalVisualisationTypeSelector"
+                            >
+                                <ReactSelect
+                                    name="numerical-visualisation-type"
+                                    value={this.numericalVisualisationType}
+                                    onChange={
+                                        this.onNumericalVisualisationTypeSelect
+                                    }
+                                    options={numericalVisualisationTypeOptions}
+                                    clearable={false}
+                                    searchable={true}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
                 {!this.showLogScaleControls && (
                     <div
                         className="form-group"
@@ -682,15 +688,18 @@ export default class ClinicalData extends React.Component<
                     </div>
                 )}
                 <div>
-                    <label className="checkbox-inline">
-                        <input
-                            type="checkbox"
-                            checked={this.swapAxes}
-                            onClick={this.onClickSwapAxes}
-                            data-test="SwapAxes"
-                        />
-                        Swap Axes
-                    </label>
+                    {this.numericalVisualisationType !==
+                        ClinicalNumericalVisualisationType.Table && (
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                checked={this.swapAxes}
+                                onClick={this.onClickSwapAxes}
+                                data-test="SwapAxes"
+                            />
+                            Swap Axes
+                        </label>
+                    )}
                     {!this.showLogScaleControls &&
                         this.categoryPlotType !== CategoryPlotType.Heatmap && (
                             <label className="checkbox-inline">
@@ -778,7 +787,8 @@ export default class ClinicalData extends React.Component<
                 ) {
                     if (this.boxPlotData.isComplete) {
                         plotElt = (
-                            <PlotsTabBoxPlot
+                            <ClinicalNumericalDataVisualisation
+                                type={this.numericalVisualisationType}
                                 svgId={SVG_ID}
                                 domainPadding={75}
                                 boxWidth={
@@ -889,6 +899,15 @@ export default class ClinicalData extends React.Component<
 
     @autobind
     private toolbar() {
+        const numerical = isNumerical(
+            this.highlightedRow!.clinicalAttribute.datatype
+        );
+        const visualiseAsTable =
+            this.numericalVisualisationType ===
+            ClinicalNumericalVisualisationType.Table;
+        if (numerical && visualiseAsTable) {
+            return <></>;
+        }
         return (
             <div style={{ textAlign: 'center', position: 'relative' }}>
                 <DownloadControls

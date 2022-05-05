@@ -77,7 +77,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     zIndexSortBy?: ((d: D) => any)[]; // second argument to _.sortBy
     symbol?: string | ((d: D) => string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     scatterPlotTooltip?: (d: D) => JSX.Element;
-    boxPlotTooltip?: (d: BoxModel) => JSX.Element;
+    boxPlotTooltip?: (stats: BoxModel[], labels: string[]) => JSX.Element;
     legendData?: LegendDataWithId<D>[];
     logScale?: IAxisLogScaleParams | undefined; // log scale along the point data axis
     excludeLimitValuesFromBoxPlot?: boolean;
@@ -754,67 +754,21 @@ export default class BoxScatterPlot<
     }
 
     @computed get boxPlotData(): BoxModel[] {
-        const boxCalculationFilter = this.props.boxCalculationFilter;
+        const calcBoxSizes = (box: any, i: number) => {
+            if (this.props.horizontal) {
+                box.y = this.categoryCoord(i);
+            } else {
+                box.x = this.categoryCoord(i);
+            }
+        };
 
-        // when limit values are shown in the legend, exclude
-        // these points from influencing the shape of the box plots
-        let boxData = _.cloneDeep(this.props.data);
-        if (this.props.excludeLimitValuesFromBoxPlot) {
-            _.each(boxData, (o: IBoxScatterPlotData<D>) => {
-                o.data = _.filter(
-                    o.data,
-                    (p: IBoxScatterPlotPoint) => !dataPointIsLimited(p)
-                );
-            });
-        }
-
-        return boxData
-            .map(d =>
-                calculateBoxPlotModel(
-                    d.data.reduce((data, next) => {
-                        if (
-                            !boxCalculationFilter ||
-                            (boxCalculationFilter && boxCalculationFilter(next))
-                        ) {
-                            // filter out values in calculating boxes, if a filter is specified ^^
-                            if (this.props.logScale) {
-                                data.push(
-                                    this.props.logScale.fLogScale(next.value, 0)
-                                );
-                            } else {
-                                data.push(next.value);
-                            }
-                        }
-                        return data;
-                    }, [] as number[])
-                )
-            )
-            .map((model, i) => {
-                // create boxes, importantly we dont filter at this step because
-                //  we need the indexes to be intact and correpond to the index in the input data,
-                //  in order to properly determine the x/y coordinates
-                const box: BoxModel = {
-                    min: model.whiskerLower,
-                    max: model.whiskerUpper,
-                    median: model.median,
-                    q1: model.q1,
-                    q3: model.q3,
-                };
-                if (this.props.horizontal) {
-                    box.y = this.categoryCoord(i);
-                } else {
-                    box.x = this.categoryCoord(i);
-                }
-                return box;
-            })
-            .filter(box => {
-                // filter out not well-defined boxes
-                return logicalAnd(
-                    ['min', 'max', 'median', 'q1', 'q3'].map(key => {
-                        return !isNaN((box as any)[key]);
-                    })
-                );
-            });
+        return toBoxPlotData(
+            this.props.data,
+            this.props.boxCalculationFilter,
+            this.props.excludeLimitValuesFromBoxPlot,
+            this.props.logScale,
+            calcBoxSizes
+        );
     }
 
     @action.bound
@@ -963,7 +917,12 @@ export default class BoxScatterPlot<
                 >
                     <div>
                         {this.props.boxPlotTooltip(
-                            this.boxPlotTooltipModel.datum
+                            [this.boxPlotTooltipModel.datum],
+                            [
+                                this.props.data[
+                                    this.boxPlotTooltipModel.datum.eventKey
+                                ].label,
+                            ]
                         )}
                     </div>
                 </Popover>,
@@ -986,4 +945,66 @@ export default class BoxScatterPlot<
             </div>
         );
     }
+}
+
+export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
+    data: IBoxScatterPlotData<D>[],
+    boxCalculationFilter?: (d: D) => boolean,
+    excludeLimitValuesFromBoxPlot?: any,
+    logScale?: any,
+    calcBoxSizes?: (box: BoxModel, i: number) => void
+) {
+    // when limit values are shown in the legend, exclude
+    // these points from influencing the shape of the box plots
+    let boxData = _.clone(data);
+    if (excludeLimitValuesFromBoxPlot) {
+        _.each(boxData, (o: IBoxScatterPlotData<D>) => {
+            o.data = _.filter(
+                o.data,
+                (p: IBoxScatterPlotPoint) => !dataPointIsLimited(p)
+            );
+        });
+    }
+
+    return boxData
+        .map(d =>
+            calculateBoxPlotModel(
+                d.data.reduce((data, next) => {
+                    if (
+                        !boxCalculationFilter ||
+                        (boxCalculationFilter && boxCalculationFilter(next))
+                    ) {
+                        // filter out values in calculating boxes, if a filter is specified ^^
+                        if (logScale) {
+                            data.push(logScale.fLogScale(next.value, 0));
+                        } else {
+                            data.push(next.value);
+                        }
+                    }
+                    return data;
+                }, [] as number[])
+            )
+        )
+        .map((model, i) => {
+            // create boxes, importantly we dont filter at this step because
+            //  we need the indexes to be intact and correpond to the index in the input data,
+            //  in order to properly determine the x/y coordinates
+            const box: BoxModel = {
+                min: model.whiskerLower,
+                max: model.whiskerUpper,
+                median: model.median,
+                q1: model.q1,
+                q3: model.q3,
+            };
+            calcBoxSizes && calcBoxSizes(box, i);
+            return box;
+        })
+        .filter(box => {
+            // filter out not well-defined boxes
+            return logicalAnd(
+                ['min', 'max', 'median', 'q1', 'q3'].map(key => {
+                    return !isNaN((box as any)[key]);
+                })
+            );
+        });
 }
