@@ -772,6 +772,9 @@ export function tabs(
                         pageComponent.patientViewPageStore.cnaOncoKbData
                     }
                     pubMedCache={pageComponent.patientViewPageStore.pubMedCache}
+                    otherMtbs={
+                        pageComponent.patientViewPageStore.otherMtbs.result
+                    }
                 />
             </MSKTab>
         );

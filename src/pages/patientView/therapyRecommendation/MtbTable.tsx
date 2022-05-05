@@ -51,6 +51,7 @@ export type IMtbProps = {
     sampleManager: SampleManager | null;
     oncoKbAvailable: boolean;
     mtbs: IMtb[];
+    otherMtbs: ITherapyRecommendation[];
     deletions: IDeletions;
     containerWidth: number;
     onDeleteData: (deletions: IDeletions) => void;
@@ -64,6 +65,7 @@ export type IMtbProps = {
 
 export type IMtbState = {
     mtbs: IMtb[];
+    otherMtbs: ITherapyRecommendation[];
     deletions: IDeletions;
     loggedIn: boolean;
     permission: boolean;
@@ -88,6 +90,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
         super(props);
         this.state = {
             mtbs: props.mtbs,
+            otherMtbs: props.otherMtbs,
             deletions: props.deletions,
             loggedIn: false,
             permission: false,
@@ -364,6 +367,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     sampleManager={this.props.sampleManager}
                     oncoKbAvailable={this.props.oncoKbAvailable}
                     therapyRecommendations={mtb.therapyRecommendations}
+                    otherMtbs={this.props.otherMtbs}
                     containerWidth={WindowStore.size.width - 20}
                     onDelete={this.therapyRecommendationOnDelete(mtb.id)}
                     onAddOrEdit={this.therapyRecommendationOnAddOrEdit(mtb.id)}

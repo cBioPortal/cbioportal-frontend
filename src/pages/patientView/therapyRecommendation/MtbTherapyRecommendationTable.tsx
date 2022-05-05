@@ -58,6 +58,7 @@ export type ITherapyRecommendationProps = {
     sampleManager: SampleManager | null;
     oncoKbAvailable: boolean;
     therapyRecommendations: ITherapyRecommendation[];
+    otherMtbs: ITherapyRecommendation[];
     containerWidth: number;
     onDelete: (therapyRecommendation: ITherapyRecommendation) => boolean;
     onAddOrEdit: (therapyRecommendation?: ITherapyRecommendation) => boolean;
@@ -66,7 +67,6 @@ export type ITherapyRecommendationProps = {
         newIndex: number
     ) => boolean;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
-    fhirsparkData?: ITherapyRecommendation[];
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
     isDisabled: boolean;
@@ -548,7 +548,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
 
     private openAddOtherMtbForm() {
         console.group('Adding from FhirSpark');
-        console.log('FhirSpark Data ' + this.props.fhirsparkData);
+        console.log('FhirSpark Data ', this.props.otherMtbs);
         console.groupEnd();
         this.showOtherMtbForm = true;
     }
@@ -799,6 +799,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                         show={this.showOtherMtbForm}
                         patientID={this.props.patientId}
                         mutations={this.props.mutations}
+                        fhirsparkResult={this.props.otherMtbs}
                         indexedVariantAnnotations={
                             this.props.indexedVariantAnnotations
                         }
