@@ -1,17 +1,10 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Modal, Button } from 'react-bootstrap';
-import {
-    ITherapyRecommendation,
-    EvidenceLevel,
-    IGeneticAlteration,
-} from 'shared/model/TherapyRecommendation';
+import { ITherapyRecommendation } from 'shared/model/TherapyRecommendation';
 import Select from 'react-select';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { getNewTherapyRecommendation } from '../TherapyRecommendationTableUtils';
 import { DiscreteCopyNumberData, Mutation } from 'cbioportal-ts-api-client';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
-import AlleleFreqColumnFormatter from 'pages/patientView/mutation/column/AlleleFreqColumnFormatter';
 
 interface ITherapyRecommendationFormOtherMtbProps {
     show: boolean;
@@ -130,24 +123,13 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                                     classNamePrefix="select"
                                     onChange={(selectedOption: {
                                         label: string;
-                                        value: {
-                                            result: ITherapyRecommendation;
-                                            treatmentIndex: number;
-                                        };
+                                        value: ITherapyRecommendation;
                                     }) => {
-                                        console.log(selectedOption);
                                         selectedTherapyRecommendation =
-                                            selectedOption.value.result;
+                                            selectedOption.value;
                                     }}
                                     formatGroupLabel={(data: any) => (
-                                        <div
-                                            style={groupStyles}
-                                            // onClick={(e: any) => {
-                                            //     e.stopPropagation();
-                                            //     e.preventDefault();
-                                            //     console.log('Group heading clicked', data);
-                                            // }}
-                                        >
+                                        <div style={groupStyles}>
                                             <span>{data.label}</span>
                                             <span style={groupBadgeStyles}>
                                                 {data.options.length}
@@ -167,20 +149,6 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                             }}
                         >
                             Dismiss
-                        </Button>
-                        <Button
-                            type="button"
-                            bsStyle="info"
-                            onClick={() => {
-                                window.confirm(
-                                    'Are you sure you wish to add all entries automatically?'
-                                ) &&
-                                    this.props.onHide(
-                                        this.props.fhirsparkResult
-                                    );
-                            }}
-                        >
-                            Add all entries
                         </Button>
                         <Button
                             type="button"

@@ -596,6 +596,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
             this.props.onAddOrEdit(newTherapyRecommendation);
         }
         this.showOncoKBForm = false;
+        this.showOtherMtbForm = false;
         this.updateTherapyRecommendationTable();
     }
 
