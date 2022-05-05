@@ -28,6 +28,7 @@ import { createQueryStore } from 'shared/lib/createQueryStore';
 import _ from 'lodash';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
 import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 interface QuerySummaryProps {
     routingStore: ExtendedRouterStore;
@@ -264,7 +265,7 @@ export default class QuerySummary extends React.Component<
                     onSubmit={this.onSubmit}
                     forkedMode={false}
                     showQuickSearchTab={false}
-                    showDownloadTab={false}
+                    showDownloadTab={shouldShowDownloadAndCopyControls()}
                     showAlerts={true}
                     modifyQueryParams={this.props.store.modifyQueryParams}
                     getQueryStore={() =>

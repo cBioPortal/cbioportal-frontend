@@ -22,6 +22,7 @@ import {
     getTextWidth,
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
+import AppConfig from 'appConfig';
 
 export interface IMiniFrequencyScatterChartData {
     x: number;
@@ -373,18 +374,20 @@ export default class MiniFrequencyScatterChart extends React.Component<
                             }
                         />
                     </VictoryChart>
-                    <DownloadControls
-                        getSvg={() => this.svgContainer}
-                        filename="enrichments-frequency-scatter"
-                        dontFade={true}
-                        type="button"
-                        style={{
-                            position: 'absolute',
-                            top: 10,
-                            right: 10,
-                            zIndex: 0,
-                        }}
-                    />
+                    {!AppConfig.serverConfig.skin_hide_download_controls && (
+                        <DownloadControls
+                            getSvg={() => this.svgContainer}
+                            filename="enrichments-frequency-scatter"
+                            dontFade={true}
+                            type="button"
+                            style={{
+                                position: 'absolute',
+                                top: 10,
+                                right: 10,
+                                zIndex: 0,
+                            }}
+                        />
+                    )}
                 </div>
                 <Observer>{this.getTooltip}</Observer>
             </div>

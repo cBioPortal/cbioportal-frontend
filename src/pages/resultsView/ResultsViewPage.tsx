@@ -68,6 +68,8 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import UserMessager from 'shared/components/userMessager/UserMessage';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export function initStore(
     appStore: AppStore,
@@ -412,7 +414,10 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-            {
+        ];
+
+        if (!AppConfig.serverConfig.skin_hide_download_controls) {
+            tabMap.push({
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {
                     return (
@@ -425,8 +430,8 @@ export default class ResultsViewPage extends React.Component<
                         </MSKTab>
                     );
                 },
-            },
-        ];
+            });
+        }
 
         let filteredTabs = tabMap
             .filter(this.evaluateTabInclusion)
@@ -539,7 +544,7 @@ export default class ResultsViewPage extends React.Component<
                     <QueryAndDownloadTabs
                         forkedMode={false}
                         showQuickSearchTab={false}
-                        showDownloadTab={false}
+                        showDownloadTab={shouldShowDownloadAndCopyControls()}
                         showAlerts={true}
                         getQueryStore={() =>
                             createQueryStore(

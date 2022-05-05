@@ -10,6 +10,8 @@ import { PdbHeader } from 'genome-nexus-ts-api-client';
 import OrganismColumnFormatter from './column/OrganismColumnFormatter';
 import LazyLoadedTableCell from 'shared/lib/LazyLoadedTableCell';
 import { generatePdbInfoSummary } from '../../lib/PdbUtils';
+import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 class PdbChainTableComponent extends LazyMobXTable<IPdbChain> {}
 
@@ -200,7 +202,7 @@ export default class PdbChainTable extends React.Component<
         return (
             <PdbChainTableComponent
                 showColumnVisibility={false}
-                showCopyDownload={false}
+                showCopyDownload={shouldShowDownloadAndCopyControls()}
                 itemsLabel="PDB chain"
                 itemsLabelPlural="PDB chains"
                 paginationProps={{

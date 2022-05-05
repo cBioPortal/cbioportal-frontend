@@ -35,6 +35,7 @@ import {
     IDriverAnnotationControlsState,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
+import AppConfig from 'appConfig';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -1199,7 +1200,9 @@ export default class OncoprintControls extends React.Component<
                     <this.SortMenu />
                     <this.MutationColorMenu />
                     <this.ViewMenu />
-                    <this.DownloadMenu />
+                    {!AppConfig.serverConfig.skin_hide_download_controls && (
+                        <this.DownloadMenu />
+                    )}
                     <this.HorzZoomControls />
                     {this.minimapButton}
                     <ConfirmNgchmModal

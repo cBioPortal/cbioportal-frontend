@@ -5,6 +5,8 @@ import {
     Column,
     default as LazyMobXTable,
 } from '../lazyMobXTable/LazyMobXTable';
+import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 // TODO interface ICosmicTableProps extends IMSKTableProps<CosmicMutation>
 // To avoid duplication, it would be nice here to have an extendable interface for LazyMobXTableProps
@@ -92,7 +94,7 @@ export default class CosmicMutationTable extends React.Component<
                     initialSortColumn={initialSortColumn}
                     initialSortDirection={initialSortDirection}
                     initialItemsPerPage={initialItemsPerPage}
-                    showCopyDownload={false}
+                    showCopyDownload={shouldShowDownloadAndCopyControls()}
                     showColumnVisibility={false}
                     showFilter={false}
                     showPagination={showPagination}

@@ -24,6 +24,7 @@ import { observable, computed, makeObservable, action } from 'mobx';
 import { getServerConfig } from 'config/config';
 import Slider from 'react-rangeslider';
 import styles from 'pages/resultsView/survival/styles.module.scss';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
@@ -269,7 +270,8 @@ export default class SurvivalPrefixTable extends React.Component<
 > {
     private dataStore: SurvivalPrefixTableStore;
     @observable private columnVisibility: { [group: string]: boolean };
-    @observable private patientMinThreshold = getServerConfig().survival_min_group_threshold;
+    @observable private patientMinThreshold = getServerConfig()
+        .survival_min_group_threshold;
 
     constructor(props: ISurvivalPrefixTableProps) {
         super(props);
@@ -372,7 +374,7 @@ export default class SurvivalPrefixTable extends React.Component<
                 paginationProps={{ itemsPerPageOptions: [15] }}
                 initialItemsPerPage={15}
                 copyDownloadProps={{
-                    showCopy: false,
+                    showCopy: shouldShowDownloadAndCopyControls(),
                 }}
                 filterBoxWidth={120}
             />

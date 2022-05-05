@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { If } from 'react-if';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 import classnames from 'classnames';
 import styles from './copyDownloadControls.module.scss';

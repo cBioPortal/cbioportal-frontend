@@ -44,6 +44,7 @@ import styles from './mutationMapper.module.scss';
 import { ProteinImpactType } from 'cbioportal-frontend-commons';
 import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
+import AppConfig from 'appConfig';
 import { PtmSource } from 'cbioportal-utils';
 
 export interface IMutationMapperProps {
@@ -539,6 +540,9 @@ export default class MutationMapper<
                         : undefined
                 }
                 legend={this.legendColorCodes}
+                showDownloadControls={
+                    !AppConfig.serverConfig.skin_hide_download_controls
+                }
             />
         );
     }

@@ -15,6 +15,8 @@ import { bind } from 'bind-decorator';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
+import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface ICoExpressionTableGenesProps {
     referenceGeneticEntity: Gene | Geneset;
@@ -179,7 +181,7 @@ export default class CoExpressionTableGenes extends React.Component<
                     paginationProps={this.paginationProps}
                     initialItemsPerPage={25}
                     copyDownloadProps={{
-                        showCopy: false,
+                        showCopy: shouldShowDownloadAndCopyControls(),
                     }}
                 />
             </div>

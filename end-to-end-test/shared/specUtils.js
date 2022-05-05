@@ -572,7 +572,7 @@ function postDataToUrl(url, data, authenticated = true) {
     if (needToLogin) keycloakLogin(10000);
 }
 
-function keycloakLogin(timeout) {
+function keycloakLogin(timeout = 10000) {
     browser.waitUntil(() => browser.getUrl().includes('/auth/realms/cbio'), {
         timeout,
         timeoutMsg: 'No redirect to Keycloak could be detected.',
@@ -587,10 +587,20 @@ function keycloakLogin(timeout) {
     $('body').waitForDisplayed(timeout);
 }
 
-function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
-    goToUrlAndSetLocalStorage(studyViewUrl, true);
+function openGroupComparison(
+    studyViewUrl,
+    chartDataTest,
+    authenticated = false,
+    timeout
+) {
+    // goto hamburger menu for chart
+    goToUrlAndSetLocalStorage(studyViewUrl, authenticated);
     $('[data-test=summary-tab-content]').waitForDisplayed();
     waitForNetworkQuiet();
+    studyViewChartHoverHamburgerIcon(chartDataTest, timeout);
+
+    // open comparison session
+    const studyViewTabId = browser.getCurrentTabId();
     const chart = '[data-test=' + chartDataTest + ']';
     $(chart).waitForDisplayed({ timeout: timeout || 10000 });
     jsApiHover(chart);
@@ -624,6 +634,28 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     waitForGroupComparisonTabOpen();
 }
 
+function studyViewChartHoverHamburgerIcon(chartDataTest, timeout) {
+    const chart = '[data-test=' + chartDataTest + ']';
+    browser.waitForVisible(chart, timeout || 10000);
+    browser.moveToObject(chart);
+    browser.waitUntil(() => {
+        return browser.isExisting(chart + ' .controls');
+    }, timeout || 10000);
+
+    // move to hamburger icon when present in chart
+    // console.log('');
+    if ($('[data-test=chart-header-hamburger-icon]').isVisible()) {
+        browser.moveToObject('[data-test=chart-header-hamburger-icon]');
+        // wait for the menu available
+        browser.waitForVisible(
+            '[data-test=chart-header-hamburger-icon]' + ' li',
+            timeout || 10000
+        );
+    } else {
+        console.log('Skip opening of hamburger menu');
+    }
+}
+
 function selectElementByText(text) {
     return $(`//*[text()="${text}"]`);
 }
@@ -645,6 +677,13 @@ function strIsNumeric(str) {
     return (
         !isNaN(str) && !isNaN(parseFloat(str)) // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
     ); // ...and ensure strings of whitespace fail
+}
+
+function setServerConfiguration(serverConfig) {
+    browser.localStorage('POST', {
+        key: 'frontendConfig',
+        value: JSON.stringify({ serverConfig: serverConfig }),
+    });
 }
 
 module.exports = {
@@ -697,6 +736,8 @@ module.exports = {
     getPortalUrlFromEnv: getPortalUrlFromEnv,
     openGroupComparison: openGroupComparison,
     selectElementByText: selectElementByText,
+    studyViewChartHoverHamburgerIcon: studyViewChartHoverHamburgerIcon,
+    setServerConfiguration: setServerConfiguration,
     jsApiHover,
     jsApiClick,
     setCheckboxChecked,
