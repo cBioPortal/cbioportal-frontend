@@ -433,7 +433,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
         if (index === -1) {
             newMtbs
                 .find(x => x.id === mtbId)!
-                .therapyRecommendations.push(therapyRecommendationToAdd);
+                .therapyRecommendations.unshift(therapyRecommendationToAdd);
         } else {
             newMtbs
                 .find(x => x.id === mtbId)!
@@ -484,7 +484,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             samples: [],
             author: getAuthor(),
         } as IMtb;
-        newMtbs.push(newMtb);
+        newMtbs.unshift(newMtb);
         this.setState({ mtbs: newMtbs });
     }
 
