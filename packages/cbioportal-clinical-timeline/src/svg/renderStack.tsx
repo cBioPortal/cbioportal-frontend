@@ -60,6 +60,6 @@ function renderCustomStack(width:number, y:number, fills:string[]) {
     }
 }
 
-export function renderStack(fills:string[]) {
-    return renderCustomStack(9, TIMELINE_TRACK_HEIGHT/2, fills);
+export function renderStack(fills:string[], y?:number) {
+    return renderCustomStack(9, y || TIMELINE_TRACK_HEIGHT/2, fills);
 }
