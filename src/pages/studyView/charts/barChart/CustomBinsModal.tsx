@@ -258,7 +258,9 @@ export default class CustomBinsModal extends React.Component<
                                             ((event.currentTarget as unknown) as HTMLInputElement).value =
                                                 '';
                                         } else {
-                                            this.updateBinSize(Number(value));
+                                            this.updateAnchorValue(
+                                                Number(value)
+                                            );
                                         }
                                     }}
                                 />
