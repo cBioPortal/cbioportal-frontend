@@ -1590,17 +1590,26 @@ export class ResultsViewPageStore
     // remoteNdexUrl queries Ndex's iquery. The result is either the full URL to
     // query, or an empty string.
     readonly remoteNdexUrl = remoteData<string>({
-        await: () => [this.studyIds, this.genes, this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
+        await: () => [
+            this.studyIds,
+            this.genes,
+            this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+        ],
         invoke: async () => {
             var result = '';
             const alterationData = this.alterationFrequencyDataForQueryGenes;
 
-            if (this.studyIds.result!.length > 0 && this.genes.result!.length > 0 && this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.length > 0) {
+            if (
+                this.studyIds.result!.length > 0 &&
+                this.genes.result!.length > 0 &&
+                this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!
+                    .length > 0
+            ) {
                 const postData = {
                     // this might be necessary at some point
                     // studyid: this.studyIds.result![0],
                     geneList: this.genes.result!.map(g => g.hugoGeneSymbol),
-                    sourceList:["enrichment"],
+                    sourceList: ['enrichment'],
                     alterationData,
                     /* TODO: disable alteration services for now, until we have
                      * https://github.com/cBioPortal/cbioportal/issues/9305
@@ -1615,16 +1624,22 @@ export class ResultsViewPageStore
 
                 try {
                     urlResponse = (await request
-                        .post('https://iquery-cbio.ucsd.edu/integratedsearch/v1/')
+                        .post(
+                            'https://iquery-cbio.ucsd.edu/integratedsearch/v1/'
+                        )
                         .send(postData)
                         .set('Accept', 'application/json')
-                        .timeout(30000)
-                    ) as any;
+                        .timeout(30000)) as any;
                 } catch (err) {
                     // Just eat the exception. Result will be empty string.
                 }
 
-                if (urlResponse && urlResponse.body && urlResponse.body.webURL && urlResponse.body.webURL.startsWith('https://')) {
+                if (
+                    urlResponse &&
+                    urlResponse.body &&
+                    urlResponse.body.webURL &&
+                    urlResponse.body.webURL.startsWith('https://')
+                ) {
                     result = urlResponse.body.webURL;
                 }
             }

@@ -24,6 +24,11 @@ export enum ResultsViewTab {
     DOWNLOAD = 'download',
 }
 
+export enum ResultsViewPathwaysSubTab {
+    PATHWAY_MAPPER = 'PathwayMapper',
+    NDEX = 'NDEx',
+}
+
 export enum LegacyResultsViewComparisonSubTab {
     MUTATIONS = 'mutations',
     CNA = 'cna',
