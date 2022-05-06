@@ -19,8 +19,7 @@ export enum ResultsViewTab {
     COMPARISON = 'comparison',
     CN_SEGMENTS = 'cnSegments',
     NETWORK = 'network',
-    PATHWAY_MAPPER = 'pathways',
-    NDEX = 'ndex',
+    PATHWAYS = 'pathways',
     EXPRESSION_REDIRECT = 'expression',
     DOWNLOAD = 'download',
 }
@@ -59,7 +58,7 @@ export const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
     co_expression: ResultsViewTab.COEXPRESSION,
     IGV: ResultsViewTab.CN_SEGMENTS,
     network: ResultsViewTab.NETWORK,
-    pathways: ResultsViewTab.PATHWAY_MAPPER,
+    pathways: ResultsViewTab.PATHWAYS,
     expression: ResultsViewTab.EXPRESSION_REDIRECT,
     download: ResultsViewTab.DOWNLOAD,
 };

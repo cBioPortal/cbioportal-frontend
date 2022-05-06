@@ -1615,7 +1615,7 @@ export class ResultsViewPageStore
 
                 try {
                     urlResponse = (await request
-                        .post('https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/')
+                        .post('https://iquery-cbio.ucsd.edu/integratedsearch/v1/')
                         .send(postData)
                         .set('Accept', 'application/json')
                         .timeout(30000)
@@ -1789,6 +1789,8 @@ export class ResultsViewPageStore
         },
     });
 
+    // TODO: there is some duplication here with the same function in
+    // PathwayMapper. Moved it out for re-use in NDEx.
     readonly nonOqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
