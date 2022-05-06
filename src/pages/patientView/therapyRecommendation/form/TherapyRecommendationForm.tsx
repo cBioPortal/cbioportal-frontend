@@ -5,7 +5,7 @@ import {
     ITherapyRecommendation,
     EvidenceLevel,
 } from 'shared/model/TherapyRecommendation';
-import { TherapyRecommendationFormAlterationPositiveInput } from './TherapyRecommendationFormAlterationInput';
+import { TherapyRecommendationFormAlterationInput } from './TherapyRecommendationFormAlterationInput';
 import {
     Mutation,
     ClinicalData,
@@ -64,7 +64,7 @@ export default class TherapyRecommendationForm extends React.Component<
                         <div className="form-group">
                             <h5>Reasoning:</h5>
                             <h6>Genomic alterations:</h6>
-                            <TherapyRecommendationFormAlterationPositiveInput
+                            <TherapyRecommendationFormAlterationInput
                                 data={therapyRecommendation}
                                 mutations={this.props.mutations}
                                 indexedVariantAnnotations={
@@ -77,6 +77,7 @@ export default class TherapyRecommendationForm extends React.Component<
                                 onChange={alterations =>
                                     (therapyRecommendation.reasoning.geneticAlterations = alterations)
                                 }
+                                sampleManager={this.props.sampleManager}
                             />
                             <h6>Clinical data / molecular diagnostics:</h6>
                             <TherapyRecommendationFormClinicalInput

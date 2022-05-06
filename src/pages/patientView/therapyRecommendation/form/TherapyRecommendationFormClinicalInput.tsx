@@ -35,6 +35,7 @@ export default class TherapyRecommendationFormClinicalInput extends React.Compon
             return (
                 <div>
                     <components.Option {...props}>
+                        <span style={{ marginRight: 5 }}>{props.label}</span>
                         <If
                             condition={
                                 typeof props.value === 'object' &&
@@ -76,7 +77,6 @@ export default class TherapyRecommendationFormClinicalInput extends React.Compon
                                 </DefaultTooltip>
                             </Else>
                         </If>
-                        <span style={{ marginLeft: 5 }}>{props.label}</span>
                     </components.Option>
                 </div>
             );
