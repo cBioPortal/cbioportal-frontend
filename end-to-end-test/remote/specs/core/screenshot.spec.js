@@ -32,7 +32,7 @@ function runResultsTestSuite(prefix, options = {}) {
 
     it(`${prefix} igv_tab tab`, function() {
         $('a.tabAnchor_cnSegments').click();
-        $('.igvControlDiv').waitForExist({ timeout: 20000 });
+        $('.igv-column-container').waitForExist({ timeout: 20000 });
         var res = browser.checkElement('.pillTabs');
         assertScreenShotMatch(res);
     });
@@ -258,7 +258,7 @@ describe('patient view page screenshot test', function() {
         var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
         oncokbIndicator.waitForExist({ timeout: 30000 });
         // find vaf plot
-        var vafPlot = $('.vafPlot');
+        var vafPlot = $('.vafPlotThumbnail');
         vafPlot.waitForExist({ timeout: 30000 });
 
         var res = browser.checkElement('#mainColumn');

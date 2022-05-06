@@ -74,6 +74,7 @@ type ICopyNumberTableWrapperProps = {
     onFilterGenes?: (option: GeneFilterOption) => void;
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
+    onGeneClick?: (hugoSymbol: string) => void;
 };
 
 const ANNOTATION_ELEMENT_ID = 'copy-number-annotation';
@@ -163,7 +164,14 @@ export default class CopyNumberTableWrapper extends React.Component<
         columns.push({
             name: 'Gene',
             render: (d: DiscreteCopyNumberData[]) => (
-                <span data-test="cna-table-gene-column">
+                <span
+                    data-test="cna-table-gene-column"
+                    onClick={() =>
+                        this.props.onGeneClick &&
+                        this.props.onGeneClick(d[0].gene.hugoGeneSymbol)
+                    }
+                    style={{ cursor: 'pointer' }}
+                >
                     {d[0].gene.hugoGeneSymbol}
                 </span>
             ),

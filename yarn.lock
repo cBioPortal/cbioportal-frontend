@@ -4418,7 +4418,14 @@
   resolved "https://registry.yarnpkg.com/@types/classnames/-/classnames-0.0.32.tgz#449abcd9a826807811ef101e58df9f83cfc61713"
   integrity sha1-RJq82agmgHgR7xAeWN+fg8/GFxM=
 
-"@types/color-name@^1.1.1":
+"@types/color-convert@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@types/color-convert/-/color-convert-2.0.0.tgz#8f5ee6b9e863dcbee5703f5a517ffb13d3ea4e22"
+  integrity sha512-m7GG7IKKGuJUXvkZ1qqG3ChccdIM/qBBo913z+Xft0nKCX4hAU/IxKwZBU4cpRZ7GS5kV4vOblUkILtSShCPXQ==
+  dependencies:
+    "@types/color-name" "*"
+
+"@types/color-name@*", "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
   integrity sha512-rr+OQyAjxze7GgWrSaJwydHStIhHq2lvY3BOC2Mj7KnzI7XK0Uw1TOOdI9lDoajEbSWLiYgoo4f1R51erQfhPQ==
@@ -8670,14 +8677,6 @@ conventional-recommended-bump@^5.0.0:
     meow "^4.0.0"
     q "^1.5.1"
 
-convert-css-color-name-to-hex@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/convert-css-color-name-to-hex/-/convert-css-color-name-to-hex-0.1.1.tgz#38ac4d27ca470593fd663b18a072a308926a35a2"
-  integrity sha1-OKxNJ8pHBZP9ZjsYoHKjCJJqNaI=
-  dependencies:
-    css-color-names "0.0.3"
-    is-css-color-name "^0.1.1"
-
 convert-source-map@^0.3.3:
   version "0.3.5"
   resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-0.3.5.tgz#f1d802950af7dd2631a1febe0596550c86ab3190"
@@ -9008,16 +9007,6 @@ css-color-keywords@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/css-color-keywords/-/css-color-keywords-1.0.0.tgz#fea2616dc676b2962686b3af8dbdbe180b244e05"
   integrity sha1-/qJhbcZ2spYmhrOvjb2+GAskTgU=
-
-css-color-names@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/css-color-names/-/css-color-names-0.0.2.tgz#fba18e8cff86579572d749c146c47ee83f0ea955"
-  integrity sha1-+6GOjP+GV5Vy10nBRsR+6D8OqVU=
-
-css-color-names@0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/css-color-names/-/css-color-names-0.0.3.tgz#de0cef16f4d8aa8222a320d5b6d7e9bbada7b9f6"
-  integrity sha1-3gzvFvTYqoIioyDVttfpu62nufY=
 
 css-color-names@0.0.4, css-color-names@^0.0.4:
   version "0.0.4"
@@ -13564,9 +13553,10 @@ ignore@^5.1.4:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.8.tgz#f150a8b50a34289b33e22f5889abd4d8016f0e57"
   integrity sha512-BMpfD7PpiETpBl/A6S498BaIJ6Y/ABT93ETbby2fP00v4EbvPBXWEoaR1UBPKs3iR53pJY7EtZk5KACI57i1Uw==
 
-"igv@github:cBioPortal/igv.js#ccaeb7657200c8c1ceb276b53066d47804533418":
-  version "2.5.3-fork.3"
-  resolved "https://codeload.github.com/cBioPortal/igv.js/tar.gz/ccaeb7657200c8c1ceb276b53066d47804533418"
+igv@^2.11.2:
+  version "2.11.2"
+  resolved "https://registry.yarnpkg.com/igv/-/igv-2.11.2.tgz#94bd0e81369bb09e5fe7144d453df91dd2fd5f65"
+  integrity sha512-4TdUGrVmsSMB/s+9uBQv2JNh/s/itMxSz/0rktIKWZ2nvzzSSbcjj6rKK6sgeN7T/bbKxaSYgDFCeyWwpgb5cw==
 
 image-palette@^2.1.0:
   version "2.1.0"
@@ -14007,13 +13997,6 @@ is-core-module@^2.2.0:
   integrity sha512-wShG8vs60jKfPWpF2KZRaAtvt3a20OAn7+IJ6hLPECpSABLcKtFKTTI4ZtH5QcBruBHlq+WsdHWyz0BCZW7svQ==
   dependencies:
     has "^1.0.3"
-
-is-css-color-name@^0.1.1:
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/is-css-color-name/-/is-css-color-name-0.1.3.tgz#ea3b51bc901d8a243d32c9b7873d0680dbbef7f1"
-  integrity sha1-6jtRvJAdiiQ9Msm3hz0GgNu+9/E=
-  dependencies:
-    css-color-names "0.0.2"
 
 is-data-descriptor@^0.1.4:
   version "0.1.4"

@@ -209,7 +209,7 @@ describe('patient view page', function() {
             waitForPatientView();
         });
 
-        it('shows gene panel icon when gene panels are used for patient samples', () => {
+        it.skip('shows gene panel icon when gene panels are used for patient samples', () => {
             assert($('[data-test=cna-track-genepanel-icon-0]').isExisting());
             assert($('[data-test=mut-track-genepanel-icon-5]').isExisting());
         });
@@ -263,7 +263,7 @@ describe('patient view page', function() {
         });
 
         it('shows gene panel icons when gene panels are used', () => {
-            $('svg[data-test=vaf-plot]').moveTo(); // moves pointer to plot thumbnail
+            $('.vafPlotThumbnail').moveTo(); // moves pointer to plot thumbnail
             $('div[role=tooltip] svg[data-test=vaf-plot]').waitForDisplayed();
             var genePanelIcon = $(
                 'svg[data-test=vaf-plot] rect.genepanel-icon'
