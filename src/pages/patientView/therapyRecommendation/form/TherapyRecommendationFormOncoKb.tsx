@@ -284,17 +284,20 @@ export default class TherapyRecommendationFormOncoKb extends React.Component<
             oncoKbResults.push(
                 ...Object.values(this.props.oncoKbResult.result!.indicatorMap!)
             );
+
             oncoKbResults.push(
                 ...Object.values(
                     this.props.cnaOncoKbResult.result!.indicatorMap!
                 )
             );
+
             const groupStyles = {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 fontSize: 18,
             };
+
             const groupBadgeStyles = {
                 backgroundColor: '#EBECF0',
                 borderRadius: '2em',
@@ -305,6 +308,52 @@ export default class TherapyRecommendationFormOncoKb extends React.Component<
                 minWidth: 1,
                 padding: '0.16666666666667em 0.5em',
             };
+
+            const groupedOptions = oncoKbResults.map(result => ({
+                label: result.query.hugoSymbol + ' ' + result.query.alteration,
+                options: result.treatments.map((treatment, treatmentIndex) => ({
+                    label:
+                        treatment.drugs.map(drug => drug.drugName).join(' + ') +
+                        ' (' +
+                        treatment.level.replace('_', ' ') +
+                        ')',
+                    value: {
+                        result,
+                        treatmentIndex,
+                    },
+                })),
+            }));
+
+            const filterOptions = (
+                candidate: { label: string; value: any },
+                input: string
+            ) => {
+                let searchString = input.toLowerCase();
+
+                // default search
+                if (candidate.label.toLowerCase().includes(searchString))
+                    return true;
+
+                // group label search
+                const groups = groupedOptions.filter(group =>
+                    group.label.toLowerCase().includes(searchString)
+                );
+
+                // check options in groups
+                if (groups) {
+                    for (const group of groups) {
+                        if (
+                            group.options.find(
+                                option => option.label == candidate.label
+                            )
+                        )
+                            return true;
+                    }
+                }
+
+                return false;
+            };
+
             return (
                 <Modal
                     show={this.props.show}
@@ -321,33 +370,7 @@ export default class TherapyRecommendationFormOncoKb extends React.Component<
                             <div className="form-group">
                                 <h5>Select OncoKB entry:</h5>
                                 <Select
-                                    options={oncoKbResults.map(result => ({
-                                        label:
-                                            result.query.hugoSymbol +
-                                            ' ' +
-                                            result.query.alteration,
-                                        options: result.treatments.map(
-                                            (treatment, treatmentIndex) => ({
-                                                label:
-                                                    treatment.drugs
-                                                        .map(
-                                                            drug =>
-                                                                drug.drugName
-                                                        )
-                                                        .join(' + ') +
-                                                    ' (' +
-                                                    treatment.level.replace(
-                                                        '_',
-                                                        ' '
-                                                    ) +
-                                                    ')',
-                                                value: {
-                                                    result,
-                                                    treatmentIndex,
-                                                },
-                                            })
-                                        ),
-                                    }))}
+                                    options={groupedOptions}
                                     name="oncoKBResult"
                                     className="basic-select"
                                     classNamePrefix="select"
@@ -380,6 +403,7 @@ export default class TherapyRecommendationFormOncoKb extends React.Component<
                                             </span>
                                         </div>
                                     )}
+                                    filterOption={filterOptions}
                                 />
                             </div>
                         </form>
