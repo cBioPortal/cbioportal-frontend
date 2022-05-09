@@ -140,7 +140,7 @@ th.reactable-header-sort-asc:after {
 
 .rc-tooltip {
     border-radius: $border-radius-base;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: $boxShadow;
     padding: 0;
     opacity: 1;
 
@@ -705,5 +705,27 @@ h2.divider {
         height: 100%;
         width: 100%;
         padding: 30px 10px 10px 10px;
+    }
+}
+
+.displayFlex {
+    display: flex;
+}
+
+// igv overrides
+.igv-ui-popover {
+    border: 1px solid $borderColor;
+    padding: 5px;
+    box-shadow: $boxShadow;
+
+    > div:first-child {
+        background: none;
+        border: none;
+        height: 1px;
+        svg {
+            position: relative;
+            top: 2px;
+            right: -4px;
+        }
     }
 }
