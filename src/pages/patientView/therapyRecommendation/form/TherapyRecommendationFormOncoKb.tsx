@@ -295,13 +295,14 @@ export default class TherapyRecommendationFormOncoKb extends React.Component<
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                fontSize: 18,
+                fontSize: 20,
+                color: '#3786C2',
             };
 
             const groupBadgeStyles = {
-                backgroundColor: '#EBECF0',
+                backgroundColor: '#3786C2',
                 borderRadius: '2em',
-                color: '#172B4D',
+                color: '#FFFFFF',
                 display: 'inline-block',
                 fontSize: 12,
                 lineHeight: '1',
