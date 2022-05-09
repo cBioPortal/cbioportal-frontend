@@ -34,7 +34,11 @@ import {
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
-import { CivicAPI, maskApiRequests } from 'cbioportal-utils';
+import {
+    addCustomHeadersForApiRequests,
+    CivicAPI,
+    maskApiRequests,
+} from 'cbioportal-utils';
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';
 import pako from 'pako';
@@ -168,11 +172,16 @@ export function initializeAPIClients() {
     cachePostMethods(GenomeNexusAPIInternal, [], /POST$/);
     cachePostMethods(OncoKbAPI);
 
-    _.isEmpty(localStorage.oncokbOverride) &&
+    if (_.isEmpty(localStorage.oncokbOverride)) {
         maskApiRequests(OncoKbAPI, getOncoKbApiUrl(), {
             'X-Proxy-User-Agreement':
                 'I/We do NOT use this obfuscated proxy to programmatically obtain private OncoKB data. I/We know that I/we should get a valid data access token by registering at https://www.oncokb.org/account/register.',
         });
+    } else {
+        addCustomHeadersForApiRequests(OncoKbAPI, getOncoKbApiUrl(), {
+            'X-Proxy-User-Agreement': localStorage.oncokbToken,
+        });
+    }
 
     if (getServerConfig().enable_request_body_gzip_compression) {
         compressRequestBodies(
