@@ -4359,8 +4359,7 @@
             "allowEmptyValue": false,
             "enum": [
               "Agent",
-              "AgentClass",
-              "AgentTarget"
+              "AgentClass"
             ]
           }
         ],
@@ -4411,8 +4410,7 @@
             "allowEmptyValue": false,
             "enum": [
               "Agent",
-              "AgentClass",
-              "AgentTarget"
+              "AgentClass"
             ]
           }
         ],
@@ -4460,8 +4458,7 @@
             "allowEmptyValue": false,
             "enum": [
               "Agent",
-              "AgentClass",
-              "AgentTarget"
+              "AgentClass"
             ]
           }
         ],
@@ -4512,8 +4509,7 @@
             "allowEmptyValue": false,
             "enum": [
               "Agent",
-              "AgentClass",
-              "AgentTarget"
+              "AgentClass"
             ]
           }
         ],
@@ -6183,9 +6179,6 @@
         "patientTreatmentGroupFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
-        "patientTreatmentTargetFilters": {
-          "$ref": "#/definitions/AndedPatientTreatmentFilters"
-        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -6196,9 +6189,6 @@
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "sampleTreatmentGroupFilters": {
-          "$ref": "#/definitions/AndedSampleTreatmentFilters"
-        },
-        "sampleTreatmentTargetFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {

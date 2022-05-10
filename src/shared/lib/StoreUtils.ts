@@ -935,7 +935,6 @@ export async function queryOncoKbData(
     client: OncoKbAPI = oncokbClient,
     evidenceTypes?: EvidenceType[]
 ) {
-    debugger;
     const mutationQueryVariants = _.uniqBy(
         _.map(
             annotationQueries.filter(
@@ -2030,8 +2029,8 @@ export function buildProteinChange(sv: StructuralVariant) {
     }
 
     if (genes.length === 2) {
-        return `(${genes[0]}-${genes[1]}) Fusion`;
+        return `${genes[0]}-${genes[1]} Fusion`;
     } else {
-        return `(${genes[0]}) intragenic`;
+        return `${genes[0]} intragenic`;
     }
 }
