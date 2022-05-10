@@ -49,8 +49,7 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                         <Modal.Title>{this.props.title}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        Did not find any mathing recommendations from other MTB
-                        session.
+                        Did not find any mathing recommendation templates.
                     </Modal.Body>
                 </Modal>
             );
@@ -85,7 +84,7 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                     <Modal.Body>
                         <form className="form">
                             <div className="form-group">
-                                <h5>Select entry from other MTB:</h5>
+                                <h5>Select entry from template:</h5>
                                 <Select
                                     options={this.props.fhirsparkResult.map(
                                         result => ({

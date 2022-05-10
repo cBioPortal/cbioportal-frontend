@@ -741,7 +741,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             className={`fa fa-plus ${styles.marginLeft}`}
                             aria-hidden="true"
                         ></i>{' '}
-                        Add from other MTB
+                        Add from template
                     </Button>
                     {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test (Update)</Button> */}
                 </p>
@@ -815,7 +815,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                         ) => {
                             this.onHideOncoKbForm(therapyRecommendations);
                         }}
-                        title="Add therapy recommendation from other MTB"
+                        title="Add therapy recommendation from template"
                         userEmailAddress={getServerConfig().user_email_address}
                     />
                 )}
