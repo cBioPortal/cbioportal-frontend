@@ -193,12 +193,14 @@ export function generateAnnotateStructuralVariantQuery(
         mutationType
     );
 
-    const twoGeneResult = TWO_GENE_REGEXP.exec(proteinChange);
-
-    // AARON: the problem is that in injecting SVs into mutation collection, we lose sv info. for example site1 and site2 genes
-    // this is actually pretty good because then it is compatible with filtering and counting in mutation page
-    // but when we need to treat them like SVs again (here) we then have to parse that out from proteinChange
-    // the protein change data seems to be different now and thus is defeating our parsing
+    const validTypes = [
+        'DELETION',
+        'TRANSLOCATION',
+        'DUPLICATION',
+        'INSERTION',
+        'INVERSION',
+        'FUSION',
+    ];
 
     // SVs will sometimes have only 1 gene (intragenic).
     // could be site1 or site 2
@@ -207,6 +209,20 @@ export function generateAnnotateStructuralVariantQuery(
         genes.push(structuralVariant.site1HugoSymbol);
     structuralVariant.site2HugoSymbol &&
         genes.push(structuralVariant.site2HugoSymbol);
+
+    // this is default
+    let structuralVariantType = 'FUSION';
+
+    // if we only have one gene, we want to use the variantClass field of
+    // structural variant IF it contains a valid type (above)
+    // and if not, just pass unknown
+    if (genes.length < 2) {
+        structuralVariantType = validTypes.includes(
+            structuralVariant.variantClass
+        )
+            ? structuralVariant.variantClass
+            : 'UNKNOWN';
+    }
 
     return {
         id: id,
