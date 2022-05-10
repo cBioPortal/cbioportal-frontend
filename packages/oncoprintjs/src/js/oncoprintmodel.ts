@@ -11,7 +11,7 @@ import _ from "lodash";
 import {RuleSet, RuleSetParams, RuleWithId} from "./oncoprintruleset";
 import {InitParams} from "./oncoprint";
 import {ComputedShapeParams} from "./oncoprintshape";
-import {CaseItem, EntityItem} from "./workers/clustering-worker";
+import {CaseItem, EntityItem} from "./workers/clustering-utils";
 import PrecomputedComparator from "./precomputedcomparator";
 import {calculateHeaderTops, calculateTrackTops} from "./modelutils";
 
@@ -782,14 +782,14 @@ export default class OncoprintModel {
     }
 
     public hideTrackLegends(track_ids:TrackId[]) {
-        track_ids = [].concat(track_ids);
+        track_ids = ([] as TrackId[]).concat(track_ids);
         for (let i=0; i<track_ids.length; i++) {
             this.getRuleSet(track_ids[i]).exclude_from_legend = true;
         }
     }
 
     public showTrackLegends(track_ids:TrackId[]) {
-        track_ids = [].concat(track_ids);
+        track_ids = ([] as TrackId[]).concat(track_ids);
         for (let i=0; i<track_ids.length; i++) {
             this.getRuleSet(track_ids[i]).exclude_from_legend = false;
         }
@@ -841,8 +841,8 @@ export default class OncoprintModel {
 
 
         function z_comparator(shapeA:ComputedShapeParams, shapeB:ComputedShapeParams) {
-            const zA = shapeA.z;
-            const zB = shapeB.z;
+            const zA = shapeA.z as any;
+            const zB = shapeB.z as any;
             if (zA < zB) {
                 return -1;
             } else if (zA > zB) {
@@ -875,7 +875,7 @@ export default class OncoprintModel {
 
     public setTrackImportantIds(track_id:TrackId, ids?:ColumnId[]) {
         if (!ids) {
-            this.track_important_ids[track_id] = undefined;
+            this.track_important_ids[track_id] = undefined as any;
         } else {
             this.track_important_ids[track_id] = ids.reduce(function(map:ColumnProp<boolean>, next_id:ColumnId) {
                 map[next_id] = true;
@@ -1023,7 +1023,7 @@ export default class OncoprintModel {
     }
 
     public isSortAffected(modified_ids:TrackId | TrackId[], group_or_track:"track"|"group") {
-        modified_ids = [].concat(modified_ids);
+        modified_ids = ([] as TrackId[]).concat(modified_ids);
         let group_indexes;
         const self = this;
         if (group_or_track === "track") {
@@ -1107,15 +1107,15 @@ export default class OncoprintModel {
 
     private addTrack(params: LibraryTrackSpec<Datum>) {
         const track_id = params.track_id;
-        this.$track_info_tooltip_elt[track_id] = params.$track_info_tooltip_elt;
+        this.$track_info_tooltip_elt[track_id] = params.$track_info_tooltip_elt as any;
         this.track_custom_options[track_id] = ifndef(params.custom_track_options, []);
         this.track_label[track_id] = ifndef(params.label, "Label");
         this.track_sublabel[track_id] = ifndef(params.sublabel, "");
         this.track_label_color[track_id] = ifndef(params.track_label_color, "black");
-        this.track_label_circle_color[track_id] = params.track_label_circle_color;
-        this.track_label_font_weight[track_id] = params.track_label_font_weight;
+        this.track_label_circle_color[track_id] = params.track_label_circle_color as any;
+        this.track_label_font_weight[track_id] = params.track_label_font_weight as any;
         this.track_label_left_padding[track_id] = ifndef(params.track_label_left_padding, 0);
-        this.track_link_url[track_id] = ifndef(params.link_url, null);
+        this.track_link_url[track_id] = ifndef(params.link_url, null) as any;
         this.track_description[track_id] = ifndef(params.description, "");
         this.cell_height[track_id] = ifndef(params.cell_height, 23);
         this.track_padding[track_id] = ifndef(params.track_padding, 5);
@@ -1170,8 +1170,9 @@ export default class OncoprintModel {
         this.ensureTrackGroupExists(params.target_group);
 
         const group_array = this.track_groups[params.target_group].tracks;
-        const target_index = (params.expansion_of !== undefined
-                ? group_array.indexOf(this.getLastExpansion(params.expansion_of)) + 1
+        const last_expansion = this.getLastExpansion(params.expansion_of);
+        const target_index = (params.expansion_of !== undefined && _.isNumber(last_expansion)
+                ? group_array.indexOf(last_expansion) + 1
                 : group_array.length
         );
         group_array.splice(target_index, 0, track_id);
@@ -1202,13 +1203,13 @@ export default class OncoprintModel {
 
     // get a reference to the array that stores the order of tracks in
     // the same group
-    private _getMajorTrackGroup(track_id:TrackId, return_index:true):number|null;
-    private _getMajorTrackGroup(track_id:TrackId, return_index?:false):TrackGroup|null;
-    private _getMajorTrackGroup(track_id:TrackId, return_index?:boolean) {
+    private _getMajorTrackGroup(track_id:TrackId|null|undefined, return_index:true):number|null;
+    private _getMajorTrackGroup(track_id:TrackId|null|undefined, return_index?:false):TrackGroup|null;
+    private _getMajorTrackGroup(track_id:TrackId|null|undefined, return_index?:boolean) {
         let group;
         let i;
         for (i = 0; i < this.track_groups.length; i++) {
-            if (this.track_groups[i].tracks.indexOf(track_id) > -1) {
+            if (_.isNumber(track_id) && this.track_groups[i].tracks.indexOf(track_id) > -1) {
                 group = this.track_groups[i];
                 break;
             }
@@ -1220,10 +1221,10 @@ export default class OncoprintModel {
         }
     }
     // get an array listing the track IDs that a track can move around
-    private _getEffectiveTrackGroupTracks(track_id:TrackId) {
+    private _getEffectiveTrackGroupTracks(track_id?:TrackId|null) {
         const self = this;
         let group,
-            parent_id = this.track_expansion_parent[track_id];
+            parent_id = track_id ? this.track_expansion_parent[track_id]: undefined;
         if (parent_id === undefined) {
             group = (function(major_group:TrackGroup) {
                 return (major_group === null ? null
@@ -1358,8 +1359,8 @@ export default class OncoprintModel {
         return null;
     };
 
-    public getTrackDatum(track_id:TrackId, id:ColumnId) {
-        const datumById = this.track_id_to_datum.get()[track_id];
+    public getTrackDatum(track_id:TrackId|null|undefined, id:ColumnId) {
+        const datumById = _.isNumber(track_id) ? this.track_id_to_datum.get()[track_id]: undefined;
         if (!datumById) {
             return null;
         }
@@ -1417,7 +1418,7 @@ export default class OncoprintModel {
         }
     }
 
-    public getContainingTrackGroup(track_id:TrackId) {
+    public getContainingTrackGroup(track_id?:TrackId|null) {
         return this._getEffectiveTrackGroupTracks(track_id);
     }
 
@@ -1495,7 +1496,7 @@ export default class OncoprintModel {
         this.column_labels = labels;
     }
 
-    public moveTrack(track_id:TrackId, new_previous_track:TrackId) {
+    public moveTrack(track_id:TrackId|null, new_previous_track:TrackId|null|undefined) {
 
         function moveContiguousValues<T>(uniqArray:T[], first_value:T, last_value:T, new_predecessor:T) {
             const old_start_index = uniqArray.indexOf(first_value),
@@ -1507,7 +1508,7 @@ export default class OncoprintModel {
         }
 
         const track_group = this._getMajorTrackGroup(track_id) as TrackGroup,
-            expansion_parent = this.track_expansion_parent[track_id];
+            expansion_parent = track_id ? this.track_expansion_parent[track_id]: undefined;
 
         let flat_previous_track;
 
@@ -1525,8 +1526,8 @@ export default class OncoprintModel {
         }
 
         // keep the order of expansion siblings up-to-date as well
-        if (this.track_expansion_parent[track_id] !== undefined) {
-            moveContiguousValues(this.track_expansion_tracks[expansion_parent], track_id, track_id, new_previous_track);
+        if (track_id && this.track_expansion_parent[track_id] !== undefined) {
+            moveContiguousValues(expansion_parent ? this.track_expansion_tracks[expansion_parent]: [], track_id, track_id, new_previous_track);
         }
 
         this.track_tops.update();
@@ -1656,11 +1657,11 @@ export default class OncoprintModel {
      * @param track_id - the ID of the track to start from
      * @returns the ID of its last expansion, or the unchanged param if none
      */
-    public getLastExpansion(track_id:TrackId) {
-        let direct_children = this.track_expansion_tracks[track_id];
+    public getLastExpansion(track_id?:TrackId|null) {
+        let direct_children = track_id ? this.track_expansion_tracks[track_id]: undefined;
         while (direct_children && direct_children.length) {
             track_id = direct_children[direct_children.length - 1];
-            direct_children = this.track_expansion_tracks[track_id];
+            direct_children = track_id ? this.track_expansion_tracks[track_id]: undefined;
         }
         return track_id;
     }
@@ -1670,11 +1671,11 @@ export default class OncoprintModel {
     }
 
     public setTrackCustomOptions(track_id:TrackId, options:CustomTrackOption[]|undefined) {
-        this.track_custom_options[track_id] = options;
+        this.track_custom_options[track_id] = options as any;
     }
 
     public setTrackInfoTooltip(track_id:TrackId, $tooltip_elt:JQuery|undefined) {
-        this.$track_info_tooltip_elt[track_id] = $tooltip_elt;
+        this.$track_info_tooltip_elt[track_id] = $tooltip_elt as any;
     }
 
     public $getTrackInfoTooltip(track_id:TrackId) {

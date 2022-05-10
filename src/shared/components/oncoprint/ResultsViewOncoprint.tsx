@@ -53,7 +53,7 @@ import _ from 'lodash';
 import { onMobxPromise, toPromise } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import OncoprintJS, { TrackGroupIndex, TrackId } from 'oncoprintjs';
+import {OncoprintJS, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
@@ -805,7 +805,7 @@ export default class ResultsViewOncoprint extends React.Component<
                     case 'svg':
                         fileDownload(
                             new XMLSerializer().serializeToString(
-                                this.oncoprint.toSVG(false)
+                                this.oncoprint.toSVG(false) as any
                             ),
                             'oncoprint.svg'
                         );
@@ -833,7 +833,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                         : patientKeyToPatient;
                                 const caseIds = this.oncoprint
                                     .getIdOrder()
-                                    .map(
+                                    ?.map(
                                         this.oncoprintAnalysisCaseType ===
                                             OncoprintAnalysisCaseType.SAMPLE
                                             ? (id: string) =>
@@ -842,7 +842,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                                   patientKeyToPatient[id]
                                                       .patientId
                                     );
-                                for (const caseId of caseIds) {
+                                for (const caseId of caseIds || []) {
                                     file += `${caseId}\n`;
                                 }
                                 fileDownload(
@@ -870,7 +870,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                     this.heatmapTracks.result,
                                     this.genericAssayHeatmapTracks.result,
                                     this.genesetHeatmapTracks.result,
-                                    this.oncoprint.getIdOrder(),
+                                    this.oncoprint.getIdOrder() as any,
                                     this.oncoprintAnalysisCaseType ===
                                         OncoprintAnalysisCaseType.SAMPLE
                                         ? (key: string) =>
@@ -972,12 +972,12 @@ export default class ResultsViewOncoprint extends React.Component<
             },
             onClickZoomIn: () => {
                 this.oncoprint.setHorzZoomCentered(
-                    this.oncoprint.getHorzZoom() / 0.7
+                    (this.oncoprint.getHorzZoom() || 0) / 0.7
                 );
             },
             onClickZoomOut: () => {
                 this.oncoprint.setHorzZoomCentered(
-                    this.oncoprint.getHorzZoom() * 0.7
+                    (this.oncoprint.getHorzZoom() || 0) * 0.7
                 );
             },
         };
@@ -1138,7 +1138,7 @@ export default class ResultsViewOncoprint extends React.Component<
         }
 
         this.oncoprint.onHorzZoom(z => (this.horzZoom = z));
-        this.horzZoom = this.oncoprint.getHorzZoom();
+        this.horzZoom = this.oncoprint.getHorzZoom() as any;
         onMobxPromise(this.alteredKeys, (alteredUids: string[]) => {
             this.oncoprint.setHorzZoomToFit(alteredUids);
         });

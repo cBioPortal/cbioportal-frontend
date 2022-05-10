@@ -1,5 +1,5 @@
-import ClusteringWorker from './workers/clustering-worker';
-import {CaseItem, CasesAndEntities, ClusteringMessage, EntityItem} from "./workers/clustering-worker";
+import ClusteringWorker from 'web-worker:./workers/clustering-worker.ts';
+import {CaseItem, CasesAndEntities, ClusteringMessage, EntityItem} from "./workers/clustering-utils";
 
 /**
  * Executes the clustering of casesAndEntitites in the requested

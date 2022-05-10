@@ -200,6 +200,7 @@ function makeUniqueColorGetter(init_used_colors:string[]) {
         if (color) {
             // calling with an argument adds it to the used colors record
             used_colors[color] = true;
+            return color;
         } else {
             // calling without an argument returns a new unused color
             let next_color = colors[index % colors.length];
@@ -239,10 +240,13 @@ function makeNAShapes(z:number):ShapeParams[] {
 const NA_STRING = "na";
 const NA_LABEL = "No data";
 
-function colorToHex(color:string) {
+function colorToHex(color:string | [number, number, number, number]) {
     let r;
     let g;
     let b;
+    if (_.isArray(color) && color.length === 4) {
+        color = `rgba(${color.join(",")})`;
+    }
     const rgba_match = color.match(/^[\s]*rgba\([\s]*([0-9]+)[\s]*,[\s]*([0-9]+)[\s]*,[\s]*([0-9]+)[\s]*,[\s]*([0-9.]+)[\s]*\)[\s]*$/);
     if (rgba_match && rgba_match.length === 5) {
         r = parseInt(rgba_match[1]).toString(16);
@@ -379,7 +383,7 @@ export class RuleSet {
     }
 
     public getRule(rule_id:RuleId):Rule {
-        return this.getRuleWithId(rule_id).rule;
+        return this.getRuleWithId(rule_id)!.rule;
     }
 
     public getRecentlyUsedRules() {
@@ -427,7 +431,7 @@ class LookupRuleSet extends RuleSet {
     private lookup_map_by_key_and_value:{[key:string]:{[value:string]:RuleWithId}} = {};
     private lookup_map_by_key:{[key:string]:RuleWithId} = {};
     private universal_rules:RuleWithId[] = [];
-    private rule_id_to_conditions:{[ruleId:number]:{ key:string, value:string }[] } = {};
+    private rule_id_to_conditions:{[ruleId:number]:{ key:string|null, value:string|null }[] } = {};
 
     public getRulesWithId(datum?:Datum) {
         if (typeof datum === 'undefined') {
@@ -450,7 +454,7 @@ class LookupRuleSet extends RuleSet {
         return ret;
     }
 
-    private indexRuleForLookup(condition_key:string, condition_value:string, rule_with_id:RuleWithId) {
+    private indexRuleForLookup(condition_key:string|null, condition_value:string|null, rule_with_id:RuleWithId) {
         if (condition_key === null) {
             this.universal_rules.push(rule_with_id);
         } else {
@@ -465,16 +469,16 @@ class LookupRuleSet extends RuleSet {
         this.rule_id_to_conditions[rule_with_id.id].push({key: condition_key, value: condition_value});
     };
 
-    public addRule(condition_key:string, condition_value:any, params:RuleParams) {
+    public addRule(condition_key:string|null, condition_value:any, params:RuleParams) {
         const rule_id = this._addRule(params);
 
-        this.indexRuleForLookup(condition_key, condition_value, this.getRuleWithId(rule_id));
+        this.indexRuleForLookup(condition_key, condition_value, this.getRuleWithId(rule_id)!);
 
         return rule_id;
     }
 
-    public linkExistingRule(condition_key:string, condition_value:string, existing_rule_id:RuleId) {
-        this.indexRuleForLookup(condition_key, condition_value, this.getRuleWithId(existing_rule_id));
+    public linkExistingRule(condition_key:string|null, condition_value:string|null, existing_rule_id:RuleId) {
+        this.indexRuleForLookup(condition_key, condition_value, this.getRuleWithId(existing_rule_id)!);
     }
 
     public removeRule(rule_id:RuleId) {
@@ -482,7 +486,7 @@ class LookupRuleSet extends RuleSet {
 
         while (this.rule_id_to_conditions[rule_id].length > 0) {
             var condition = this.rule_id_to_conditions[rule_id].pop();
-            if (condition.key === null) {
+            if (condition?.key === null) {
                 var index = -1;
                 for (var i = 0; i < this.universal_rules.length; i++) {
                     if (this.universal_rules[i].id === rule_id) {
@@ -494,9 +498,9 @@ class LookupRuleSet extends RuleSet {
                     this.universal_rules.splice(index, 1);
                 }
             } else {
-                if (condition.value === null) {
+                if (condition?.value === null) {
                     delete this.lookup_map_by_key[condition.key];
-                } else {
+                } else if (condition) {
                     delete this.lookup_map_by_key_and_value[condition.key][condition.value];
                 }
             }
@@ -569,7 +573,7 @@ class CategoricalRuleSet extends LookupRuleSet {
 
         this.category_key = params.category_key;
         this.category_to_color = cloneShallow(ifndef(params.category_to_color, {}));
-        this.getUnusedColor = makeUniqueColorGetter(objectValues(this.category_to_color).map(colorToHex));
+        this.getUnusedColor = makeUniqueColorGetter(objectValues(this.category_to_color).map(colorToHex)) as any;
         for (const category of Object.keys(this.category_to_color)) {
             const color = this.category_to_color[category];
             this.addCategoryRule(category, color);
@@ -631,7 +635,7 @@ class LinearInterpRuleSet extends ConditionRuleSet {
         this.value_key = params.value_key;
         this.value_range = params.value_range;
         this.log_scale = params.log_scale; // boolean
-        this.type = params.type;
+        this.type = params.type as any;
 
         this.makeInterpFn = function () {
             const range = this.getEffectiveValueRange();
@@ -659,6 +663,10 @@ class LinearInterpRuleSet extends ConditionRuleSet {
                         } else if (rangeType === LinearInterpRangeType.ALL) {
                             range_spread = Math.abs(range[0]) > range[1] ? Math.abs(range[0]) : range[1];
                             return val / range_spread;
+                        }
+                        else {
+                            // this should never happen
+                            return 0;
                         }
                     } else {
                         return (val - range_lower) / range_spread;
@@ -1035,7 +1043,9 @@ export class Rule {
             } else if (shape.type === 'line') {
                 return new Line(shape);
             }
-        });
+
+            return undefined;
+        }) as any;
         this.legend_label = typeof params.legend_label === "undefined" ? "" : params.legend_label;
         this.legend_base_color = params.legend_base_color;
         this.exclude_from_legend = params.exclude_from_legend;

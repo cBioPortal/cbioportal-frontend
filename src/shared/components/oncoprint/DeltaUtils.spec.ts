@@ -11,7 +11,7 @@ import {
 
 import { spy, SinonStub, match, createStubInstance } from 'sinon';
 
-import OncoprintJS from 'oncoprintjs';
+import { OncoprintJS } from 'oncoprintjs';
 import { MolecularProfile, CancerStudy } from 'cbioportal-ts-api-client';
 import {
     CLINICAL_TRACK_GROUP_INDEX,

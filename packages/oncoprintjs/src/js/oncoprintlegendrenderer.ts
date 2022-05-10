@@ -38,7 +38,7 @@ export default class OncoprintLegendView {
 
     constructor (private $div:JQuery, private base_width:number, private base_height:number) {
         this.$svg = $(svgfactory.svg(200,200)).appendTo(this.$div);
-        this.width = $div.width();
+        this.width = $div.width() || 0;
     }
 
     private renderLegend(model:OncoprintModel, target_svg?:SVGElement, show_all?:boolean) {
@@ -73,8 +73,8 @@ export default class OncoprintLegendView {
             const rule_set_group = svgfactory.group(0,y);
             everything_group.appendChild(rule_set_group);
             (function addLabel() {
-                if ((typeof rule_sets[i].legend_label !== 'undefined') && rule_sets[i].legend_label.length > 0) {
-                    const label = svgfactory.text(rule_sets[i].legend_label, 0, 0, 12, 'Arial', 'bold');
+                if ((typeof rule_sets[i].legend_label !== 'undefined') && rule_sets[i].legend_label!.length > 0) {
+                    const label = svgfactory.text(rule_sets[i].legend_label!, 0, 0, 12, 'Arial', 'bold');
                     rule_set_group.appendChild(label);
                     svgfactory.wrapText(label, rule_start_x);
                 }
@@ -95,6 +95,7 @@ export default class OncoprintLegendView {
                 } else if (!labelB) {
                     return 1;
                 }
+                return 0;
             };
 
             rules.sort(function(ruleA, ruleB) {
@@ -130,6 +131,8 @@ export default class OncoprintLegendView {
                         return -1;
                     }
                 }
+
+                return 0;
             });
             for (let j=0; j<rules.length; j++) {
                 const rule = rules[j].rule;
@@ -160,7 +163,7 @@ export default class OncoprintLegendView {
     private ruleToSVGGroup(rule:Rule, model:OncoprintModel, target_svg:SVGElement, target_defs:SVGDefsElement) {
         const root = svgfactory.group(0,0);
         const config = rule.getLegendConfig();
-        if (config.type === 'rule') {
+        if (config?.type === 'rule') {
             const concrete_shapes = rule.apply(config.target, model.getCellWidth(true), this.base_height);
             if (rule.legend_base_color) {
                 // generate backgrounds
@@ -169,18 +172,21 @@ export default class OncoprintLegendView {
             }
             // generate shapes
             for (let i=0; i<concrete_shapes.length; i++) {
-                root.appendChild(svgfactory.fromShape(concrete_shapes[i], 0, 0));
+                const node = svgfactory.fromShape(concrete_shapes[i], 0, 0);
+                if (node) {
+                    root.appendChild(node);
+                }
             }
             if (typeof rule.legend_label !== 'undefined') {
                 const font_size = 12;
                 const text_node = svgfactory.text(rule.legend_label, model.getCellWidth(true) + 5, this.base_height/2, font_size, 'Arial', 'normal');
                 target_svg.appendChild(text_node);
                 const height = text_node.getBBox().height;
-                text_node.setAttribute('y', (parseFloat(text_node.getAttribute('y')) - height/2).toString());
+                text_node.setAttribute('y', (parseFloat(text_node.getAttribute('y') || '0') - height/2).toString());
                 target_svg.removeChild(text_node);
                 root.appendChild(text_node);
             }
-        } else if (config.type === 'number') {
+        } else if (config?.type === 'number') {
             const num_decimal_digits = 2;
             const display_range = config.range.map(function(x) {
                 const num_digit_multiplier = Math.pow(10, num_decimal_digits);
@@ -211,8 +217,8 @@ export default class OncoprintLegendView {
                 points.push([5 + 40*i/mesh, 20-height]);
             }
             points.push([45, 20]);
-            root.appendChild(svgfactory.path(points, fill, fill, linear_gradient));
-        } else if (config.type === 'gradient') {
+            root.appendChild(svgfactory.path(points, fill as any, fill as any, linear_gradient as any));
+        } else if (config?.type === 'gradient') {
             const num_decimal_digits = 2;
             const display_range = config.range.map(function(x) {
                 const num_digit_multiplier = Math.pow(10, num_decimal_digits);
@@ -281,7 +287,7 @@ export default class OncoprintLegendView {
         const root = svgfactory.group((offset_x || 0), (offset_y || 0));
         this.$svg.append(root);
         this.renderLegend(model, root, true);
-        root.parentNode.removeChild(root);
+        root.parentNode?.removeChild(root);
         return root;
     }
 }

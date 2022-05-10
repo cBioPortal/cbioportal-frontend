@@ -75,7 +75,7 @@ export default class OncoprintTrackInfoView {
                         self.tooltip.hideIfNotAlreadyGoingTo(150);
                     });
                 }, 0); // delay to give time for render before adding events
-                const top = label_tops[tracks[i]] + (model.getCellHeight(tracks[i]) - $new_label.outerHeight()) / 2;
+                const top = label_tops[tracks[i]] + (model.getCellHeight(tracks[i]) - ($new_label.outerHeight() || 0)) / 2;
                 $new_label.css({'top': top + 'px'});
                 self.width = Math.max(32, self.width, $new_label[0].clientWidth);
             })();

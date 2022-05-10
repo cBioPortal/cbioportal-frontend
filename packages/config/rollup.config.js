@@ -1,21 +1,22 @@
 import typescript from 'rollup-plugin-typescript2';
 import commonjs from '@rollup/plugin-commonjs';
-// import external from 'rollup-plugin-peer-deps-external';
-import autoExternal from 'rollup-plugin-auto-external';
+import externals from 'rollup-plugin-node-externals';
 import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
 import resolve from '@rollup/plugin-node-resolve';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import url from '@rollup/plugin-url';
+import image from '@rollup/plugin-image';
 import postcssUrl from 'postcss-url';
 import svgr from '@svgr/rollup';
+import workerLoader from 'rollup-plugin-web-worker-loader';
 
 // common rollup config options for all libraries under packages
 export default function getRollupOptions(
     input,
     mainOutput,
     moduleOutput,
-    styles
+    styles,
+    nodeExternalsOptions
 ) {
     return {
         input: input,
@@ -34,7 +35,7 @@ export default function getRollupOptions(
             },
         ],
         plugins: [
-            autoExternal(),
+            externals(nodeExternalsOptions),
             postcss({
                 autoModules: true,
                 extract: styles,
@@ -44,12 +45,13 @@ export default function getRollupOptions(
                     }),
                 ],
             }),
-            url(),
+            image(),
             svgr(),
             typescript({
                 clean: true,
             }),
             json(),
+            workerLoader(),
             commonjs(),
             resolve(),
             sourcemaps(),

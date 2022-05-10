@@ -9,7 +9,8 @@ import {
     IHeatmapTrackSpec,
     IOncoprintProps,
 } from './Oncoprint';
-import OncoprintJS, {
+import {
+    OncoprintJS,
     ICategoricalRuleSetParams,
     SortConfig,
     TrackId,
@@ -971,7 +972,7 @@ function tryRemoveTrack(
         // removeCallback to forget its track ID
         const trackId = trackSpecKeyToTrackId[prevSpec.key];
         if (typeof trackId !== 'undefined') {
-            if (oncoprint.getTracks().includes(trackId)) {
+            if (oncoprint.getTracks()?.includes(trackId)) {
                 oncoprint.removeTrack(trackId);
             }
             delete trackSpecKeyToTrackId[prevSpec.key];
@@ -1131,7 +1132,7 @@ function transitionGeneticTrack(
                 : undefined,
             custom_track_options: nextSpec.customOptions,
         };
-        const newTrackId = oncoprint.addTracks([geneticTrackParams])[0];
+        const newTrackId = (oncoprint.addTracks([geneticTrackParams]) || [])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
 
         if (typeof trackIdForRuleSetSharing.genetic !== 'undefined') {
@@ -1281,9 +1282,9 @@ function transitionClinicalTrack(
             custom_track_options: nextSpec.custom_options,
             track_can_show_gaps: nextSpec.datatype === 'string',
         };
-        trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([
+        trackSpecKeyToTrackId[nextSpec.key] = (oncoprint.addTracks([
             clinicalTrackParams,
-        ])[0];
+        ]) || [])[0];
     } else if (nextSpec && prevSpec) {
         // Transition track
         const trackId = trackSpecKeyToTrackId[nextSpec.key];
@@ -1353,7 +1354,7 @@ function transitionGenesetHeatmapTrack(
             expandButtonTextGetter: (is_expanded: boolean) =>
                 `${is_expanded ? 'More' : 'Show'}  genes`,
         };
-        const newTrackId = oncoprint.addTracks([heatmapTrackParams])[0];
+        const newTrackId = (oncoprint.addTracks([heatmapTrackParams]) || [])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
 
         if (typeof trackIdForRuleSetSharing.genesetHeatmap !== 'undefined') {
@@ -1471,7 +1472,7 @@ export function transitionHeatmapTrack(
                 : undefined,
         };
         // register new track in oncoprint
-        const newTrackId: number = oncoprint.addTracks([heatmapTrackParams])[0];
+        const newTrackId: number = (oncoprint.addTracks([heatmapTrackParams]) || [])[0];
         // store relation between React heatmap track specs and OncoprintJS trackIds
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
 
@@ -1594,7 +1595,7 @@ export function transitionCategoricalTrack(
             track_info: nextSpec.info || '',
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
         };
-        const newTrackId = oncoprint.addTracks([trackParams])[0];
+        const newTrackId = (oncoprint.addTracks([trackParams]) || [])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
         //  add to trackIdForRuleSetSharing under its `molecularProfileId`
         // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing

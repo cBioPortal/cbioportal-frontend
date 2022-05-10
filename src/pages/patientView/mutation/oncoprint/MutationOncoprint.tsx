@@ -17,7 +17,8 @@ import {
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../../../shared/components/ErrorMessage';
 import { computed, observable, makeObservable } from 'mobx';
-import OncoprintJS, {
+import {
+    OncoprintJS,
     ColumnId,
     ColumnLabel,
     InitParams,
@@ -143,7 +144,7 @@ export default class MutationOncoprint extends React.Component<
     private oncoprintRef(oncoprint: OncoprintJS) {
         this.oncoprint = oncoprint;
         this.oncoprint.onHorzZoom(z => (this.horzZoomSliderState = z));
-        this.horzZoomSliderState = this.oncoprint.getHorzZoom();
+        this.horzZoomSliderState = this.oncoprint.getHorzZoom() as any;
         this.oncoprint.onCellMouseOver(
             (uid: string | null, track_id?: TrackId) => {
                 if (
@@ -297,13 +298,13 @@ export default class MutationOncoprint extends React.Component<
     @autobind
     private onClickZoomIn() {
         this.oncoprint &&
-            this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() / 0.7);
+            this.oncoprint.setHorzZoom((this.oncoprint.getHorzZoom() || 0) / 0.7);
     }
 
     @autobind
     private onClickZoomOut() {
         this.oncoprint &&
-            this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() * 0.7);
+            this.oncoprint.setHorzZoom((this.oncoprint.getHorzZoom() || 0) * 0.7);
     }
 
     @computed get mutationKeyToMutation() {
@@ -651,7 +652,7 @@ export default class MutationOncoprint extends React.Component<
                 <DownloadControls
                     filename="vafHeatmap"
                     getSvg={() =>
-                        this.oncoprint ? this.oncoprint.toSVG(true) : null
+                        this.oncoprint ? this.oncoprint.toSVG(true) || null : null
                     }
                     getData={() => {
                         const data = _.flatMap(

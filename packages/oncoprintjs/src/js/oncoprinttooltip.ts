@@ -42,7 +42,7 @@ export default class OncoprintToolTip {
             this.cancelScheduledShow();
             this.show_timeout_id = setTimeout(function() {
                 self.doShow(viewport_x, viewport_y, $contents, fade);
-            }, wait);
+            }, wait) as any;
         } else {
             this.doShow(viewport_x, viewport_y, $contents, fade);
         }
@@ -59,14 +59,14 @@ export default class OncoprintToolTip {
             this.$div.stop().fadeIn('fast');
         }
         // adjust tooltip position based on size of contents
-        let x = viewport_x - (this.center ? this.$div.width()/2 : 0);
-        let y = viewport_y - this.$div.height();
+        let x = viewport_x - (this.center ? (this.$div.width() || 0) /2 : 0);
+        let y = viewport_y - (this.$div.height() || 0);
         // clamp to visible area
         const min_padding = 20;
         y = Math.max(y, min_padding); // make sure not too high
-        y = Math.min(y, $(window).height() - this.$div.height()); // make sure not too low
+        y = Math.min(y, ($(window).height() || 0) - (this.$div.height() || 0)); // make sure not too low
         x = Math.max(x, min_padding); // make sure not too left
-        x = Math.min(x, $(window).width() - this.$div.width() - min_padding); // make sure not too right
+        x = Math.min(x, ($(window).width() || 0) - (this.$div.width() || 0) - min_padding); // make sure not too right
 
         this.$div.css({'top':y, 'left':x, 'z-index':9999});
         this.shown = true;
@@ -111,7 +111,7 @@ export default class OncoprintToolTip {
             this.cancelScheduledHide();
             this.hide_timeout_id = setTimeout(function() {
                 self.doHide();
-            }, wait);
+            }, wait) as any;
         } else {
             this.doHide();
         }

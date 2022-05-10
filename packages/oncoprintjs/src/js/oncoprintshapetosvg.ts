@@ -92,4 +92,5 @@ export default function(oncoprint_shape_computed_params:ComputedShapeParams, off
     } else if (type === 'line') {
         return lineToSVG(oncoprint_shape_computed_params as ComputedLineParams, offset_x, offset_y);
     }
+    return undefined;
 }

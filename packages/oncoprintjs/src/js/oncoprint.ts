@@ -7,7 +7,7 @@ import OncoprintModel, {
     Datum,
     LibraryTrackSpec,
     SortConfig,
-    TrackGroup, TrackGroupHeader,
+    TrackGroupHeader,
     TrackGroupIndex,
     TrackId,
     TrackSortDirection,
@@ -26,12 +26,10 @@ import OncoprintMinimapView, {MinimapViewportSpec} from './oncoprintminimapview'
 
 import svgfactory from './svgfactory';
 
+import _ from 'lodash';
 import $ from "jquery";
 import {clamp} from "./utils";
 import OncoprintHeaderView from "./oncoprintheaderview";
-
-export * from "./oncoprintruleset";
-export * from "./oncoprintmodel";
 
 export type InitParams = {
     init_cell_width?:number;
@@ -46,8 +44,8 @@ export type InitParams = {
 
 export type HorzZoomCallback = (zoom:number)=>void;
 export type MinimapCloseCallback = ()=>void;
-export type CellMouseOverCallback = (uid:ColumnId|null, track_id?:TrackId)=>void;
-export type CellClickCallback = (uid:ColumnId|null, track_id?:TrackId)=>void;
+export type CellMouseOverCallback = (uid?:ColumnId|null, track_id?:TrackId|null)=>void;
+export type CellClickCallback = (uid?:ColumnId|null, track_id?:TrackId|null)=>void;
 export type ClipboardChangeCallback = (ids:ColumnId[])=>void;
 
 const nextTrackId = (function () {
@@ -299,7 +297,7 @@ export default class Oncoprint {
         this.track_options_view = new OncoprintTrackOptionsView($track_options_div,
             function (track_id:TrackId) {
                 // move up
-                const tracks = self.model.getContainingTrackGroup(track_id);
+                const tracks = self.model.getContainingTrackGroup(track_id) || [];
                 const index = tracks.indexOf(track_id);
                 if (index > 0) {
                     let new_previous_track = null;
@@ -312,9 +310,9 @@ export default class Oncoprint {
             function (track_id:TrackId) {
                 // move down
                 const tracks = self.model.getContainingTrackGroup(track_id);
-                const index = tracks.indexOf(track_id);
-                if (index < tracks.length - 1) {
-                    self.moveTrack(track_id, tracks[index+1]);
+                const index = tracks?.indexOf(track_id);
+                if (!_.isEmpty(tracks) && index !== undefined && index < tracks!.length - 1) {
+                    self.moveTrack(track_id, tracks![index+1]);
                 }
             },
             function (track_id:TrackId) {
@@ -353,8 +351,8 @@ export default class Oncoprint {
 
         (function setUpOncoprintScroll(oncoprint) {
             $dummy_scroll_div.scroll(function (e) {
-                const dummy_scroll_left = $dummy_scroll_div.scrollLeft();
-                const dummy_scroll_top = $dummy_scroll_div.scrollTop();
+                const dummy_scroll_left = $dummy_scroll_div.scrollLeft() || 0;
+                const dummy_scroll_top = $dummy_scroll_div.scrollTop() || 0;
                 if (dummy_scroll_left !== self.target_dummy_scroll_left || dummy_scroll_top !== self.target_dummy_scroll_top) {
                     // In setDummyScrollDivScroll, where we intend to set the scroll programmatically without
                     //	triggering the handler, we set target_dummy_scroll_left and target_dummy_scroll_top,
@@ -410,7 +408,7 @@ export default class Oncoprint {
     }
 
     private setHeight() {
-        this.$ctr.css({'min-height': this.cell_view.getVisibleAreaHeight(this.model) + Math.max(this.$legend_div.outerHeight(), (this.$minimap_div.is(":visible") ? this.$minimap_div.outerHeight() : 0)) + 30});
+        this.$ctr.css({'min-height': this.cell_view.getVisibleAreaHeight(this.model) + Math.max(this.$legend_div.outerHeight() || 0, (this.$minimap_div.is(":visible") ? (this.$minimap_div.outerHeight() || 0) : 0)) + 30});
     }
 
     private resizeAndOrganize(onComplete?:()=>void) {
@@ -436,7 +434,7 @@ export default class Oncoprint {
         this.cell_view.setWidth(this.width - cell_div_left - 20, this.model);
 
         this._SetLegendTop();
-        this.legend_view.setWidth(this.width - this.$minimap_div.outerWidth() - 20, this.model);
+        this.legend_view.setWidth(this.width - (this.$minimap_div.outerWidth() || 0) - 20, this.model);
 
         this.setHeight();
         this.$ctr.css({'min-width': this.width});
@@ -480,7 +478,7 @@ export default class Oncoprint {
             return;
         }
         if (visible) {
-            this.$minimap_div.css({'display': 'block', 'top': 0, 'left': $(this.ctr_selector).width() - this.$minimap_div.outerWidth() - 10});
+            this.$minimap_div.css({'display': 'block', 'top': 0, 'left': ($(this.ctr_selector).width() || 0) - (this.$minimap_div.outerWidth() || 0) - 10});
             this.minimap_view.setMinimapVisible(true, this.model, this.cell_view);
         } else {
             this.$minimap_div.css('display', 'none');
@@ -512,7 +510,7 @@ export default class Oncoprint {
 
 
     // methods that propagate/delegate to views
-    public moveTrack(target_track:TrackId, new_previous_track:TrackId) {
+    public moveTrack(target_track:TrackId|null, new_previous_track:TrackId|null|undefined) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
@@ -524,7 +522,14 @@ export default class Oncoprint {
         this.track_info_view.moveTrack(this.model, this.getCellViewHeight);
         this.minimap_view.moveTrack(this.model, this.cell_view);
 
-        if (this.keep_sorted && this.model.isSortAffected([target_track, new_previous_track], "track")) {
+        const modified_ids = [];
+        if (target_track) {
+            modified_ids.push(target_track);
+        }
+        if (new_previous_track) {
+            modified_ids.push(new_previous_track);
+        }
+        if (this.keep_sorted && this.model.isSortAffected(modified_ids, "track")) {
             this.sort();
         }
 
@@ -575,7 +580,7 @@ export default class Oncoprint {
         const track_ids:TrackId[] = [];
         const library_params_list = (params_list as LibraryTrackSpec<Datum>[]).map(function (o) {
             o.track_id = nextTrackId();
-            o.rule_set = OncoprintRuleSet(o.rule_set_params);
+            o.rule_set = OncoprintRuleSet(o.rule_set_params as any);
             track_ids.push(o.track_id);
             return o;
         });
@@ -712,7 +717,7 @@ export default class Oncoprint {
         }
     }
 
-    private doCellMouseOver(uid:ColumnId, track_id:TrackId) {
+    private doCellMouseOver(uid?:ColumnId|null, track_id?:TrackId|null) {
         if (uid !== null) {
             this.highlightTrackLabelOnly(track_id);
         } else {
@@ -723,7 +728,7 @@ export default class Oncoprint {
         }
     }
 
-    private doCellClick(uid:ColumnId, track_id:TrackId) {
+    private doCellClick(uid?:ColumnId|null, track_id?:TrackId|null) {
         for (let i=0; i<this.cell_click_callbacks.length; i++) {
             this.cell_click_callbacks[i](uid, track_id);
         }
@@ -752,7 +757,7 @@ export default class Oncoprint {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
-        this.keep_horz_zoomed_to_fit = this.keep_horz_zoomed_to_fit && still_keep_horz_zoomed_to_fit;
+        this.keep_horz_zoomed_to_fit = (this.keep_horz_zoomed_to_fit && still_keep_horz_zoomed_to_fit) || false;
 
         if (this.model.getHorzZoom() !== z) {
             // Update model if new zoom is different
@@ -1211,7 +1216,7 @@ export default class Oncoprint {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
-        track_ids = [].concat(track_ids);
+        track_ids = ([] as TrackId[]).concat(track_ids);
         this.model.hideTrackLegends(track_ids);
         this.legend_view.hideTrackLegends(this.model);
         this.setLegendTopAfterTimeout();
@@ -1221,7 +1226,7 @@ export default class Oncoprint {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
-        track_ids = [].concat(track_ids);
+        track_ids = ([] as TrackId[]).concat(track_ids);
         this.model.showTrackLegends(track_ids);
         this.legend_view.showTrackLegends(this.model);
         this.setLegendTopAfterTimeout();
@@ -1320,7 +1325,7 @@ export default class Oncoprint {
             bgrect.setAttribute('width', everything_width as any);
             bgrect.setAttribute('height', everything_height as any);
         }
-        root.parentNode.removeChild(root);
+        root.parentNode?.removeChild(root);
 
         return root;
     }
@@ -1333,9 +1338,9 @@ export default class Oncoprint {
 
         const MAX_CANVAS_SIDE = 8192;
         const svg = this.toSVG(true);
-        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        const width = parseInt(svg.getAttribute('width'), 10);
-        const height = parseInt(svg.getAttribute('height'), 10);
+        svg?.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        const width = parseInt(svg?.getAttribute('width') || '0', 10);
+        const height = parseInt(svg?.getAttribute('height') || '0', 10);
         const canvas = document.createElement('canvas');
 
         resolution = resolution || 1;
@@ -1344,16 +1349,18 @@ export default class Oncoprint {
         canvas.setAttribute('height', Math.min(MAX_CANVAS_SIDE, height*resolution).toString());
 
         const container = document.createElement("div");
-        container.appendChild(svg);
+        if (svg) {
+            container.appendChild(svg);
+        }
         const svg_data_str = container.innerHTML;
         const svg_data_uri = "data:image/svg+xml;base64,"+window.btoa(svg_data_str);
 
         const ctx = canvas.getContext('2d');
-        ctx.setTransform(resolution,0,0,resolution,0,0);
+        ctx?.setTransform(resolution,0,0,resolution,0,0);
         const img = new Image();
 
         img.onload = function() {
-            ctx.drawImage(img, 0, 0);
+            ctx?.drawImage(img, 0, 0);
             callback(canvas, truncated);
         };
         img.onerror = function() {
@@ -1373,7 +1380,7 @@ export default class Oncoprint {
         });
     }
 
-    public highlightTrackLabelOnly(track_id:TrackId) {
+    public highlightTrackLabelOnly(track_id?:TrackId|null) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }

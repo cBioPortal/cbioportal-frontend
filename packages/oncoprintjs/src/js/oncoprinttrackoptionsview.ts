@@ -340,7 +340,9 @@ export default class OncoprintTrackOptionsView {
                     } else {
                         $dropdown.append(OncoprintTrackOptionsView.$makeDropdownOption(option.label || "", option.weight || "normal", option.disabled, option.onClick && function (evt) {
                             evt.stopPropagation();
-                            option.onClick(track_id);
+                            if (option.onClick){
+                                option.onClick(track_id);
+                            }
                         }));
                     }
                 })()

@@ -288,21 +288,21 @@ export default class OncoprintMinimapView {
             if (typeof x === "undefined") {
                 self.resize_hover = false;
             } else {
-                if (mouseInRightHorzResizeZone(x, y)) {
+                if (mouseInRightHorzResizeZone(x, y || 0)) {
                     self.resize_hover = "r";
-                } else if (mouseInLeftHorzResizeZone(x, y)) {
+                } else if (mouseInLeftHorzResizeZone(x, y || 0)) {
                     self.resize_hover = "l";
-                } else if (mouseInTopVertResizeZone(x, y)) {
+                } else if (mouseInTopVertResizeZone(x, y || 0)) {
                     self.resize_hover = "t";
-                } else if (mouseInBottomVertResizeZone(x, y)) {
+                } else if (mouseInBottomVertResizeZone(x, y || 0)) {
                     self.resize_hover = "b";
-                } else if (mouseInTopLeftResizeZone(x, y)) {
+                } else if (mouseInTopLeftResizeZone(x, y || 0)) {
                     self.resize_hover = "tl";
-                } else if (mouseInBottomRightResizeZone(x, y)) {
+                } else if (mouseInBottomRightResizeZone(x, y || 0)) {
                     self.resize_hover = "br";
-                } else if (mouseInBottomLeftResizeZone(x, y)) {
+                } else if (mouseInBottomLeftResizeZone(x, y || 0)) {
                     self.resize_hover = "bl";
-                } else if (mouseInTopRightResizeZone(x, y)) {
+                } else if (mouseInTopRightResizeZone(x, y || 0)) {
                     self.resize_hover = "tr";
                 } else {
                     self.resize_hover = false;
@@ -315,15 +315,15 @@ export default class OncoprintMinimapView {
             if (typeof x === "undefined") {
                 cursor_val = 'auto';
             } else {
-                if (mouseInRectDragZone(x, y)) {
+                if (mouseInRectDragZone(x, y || 0)) {
                     cursor_val = 'move';
-                } else if (mouseInRightHorzResizeZone(x, y) || mouseInLeftHorzResizeZone(x, y)) {
+                } else if (mouseInRightHorzResizeZone(x, y || 0) || mouseInLeftHorzResizeZone(x, y || 0)) {
                     cursor_val = 'ew-resize';
-                } else if (mouseInTopVertResizeZone(x, y) || mouseInBottomVertResizeZone(x, y)) {
+                } else if (mouseInTopVertResizeZone(x, y || 0) || mouseInBottomVertResizeZone(x, y || 0)) {
                     cursor_val = 'ns-resize';
-                } else if (mouseInTopLeftResizeZone(x, y) || mouseInBottomRightResizeZone(x, y)) {
+                } else if (mouseInTopLeftResizeZone(x, y || 0) || mouseInBottomRightResizeZone(x, y || 0)) {
                     cursor_val = 'nwse-resize';
-                } else if (mouseInBottomLeftResizeZone(x, y) || mouseInTopRightResizeZone(x, y)) {
+                } else if (mouseInBottomLeftResizeZone(x, y || 0) || mouseInTopRightResizeZone(x, y || 0)) {
                     cursor_val = 'nesw-resize';
                 } else {
                     cursor_val = 'auto';
@@ -360,8 +360,8 @@ export default class OncoprintMinimapView {
 
         $(document).on("mousedown", function (evt) {
             const offset = self.$div.offset();
-            const overlay_mouse_x = evt.pageX - offset.left;
-            const overlay_mouse_y = evt.pageY - offset.top;
+            const overlay_mouse_x = evt.pageX - (offset?.left || 0);
+            const overlay_mouse_y = evt.pageY - (offset?.top || 0);
             const mouse = getCanvasMouse(self, overlay_mouse_x, overlay_mouse_y);
 
             if (!mouse.outside) {
@@ -404,8 +404,8 @@ export default class OncoprintMinimapView {
         });
         $(document).on("mousemove", function (evt) {
             const offset = self.$div.offset();
-            const overlay_mouse_x = evt.pageX - offset.left;
-            const overlay_mouse_y = evt.pageY - offset.top;
+            const overlay_mouse_x = evt.pageX - (offset?.left || 0);
+            const overlay_mouse_y = evt.pageY - (offset?.top || 0);
             const mouse = getCanvasMouse(self, overlay_mouse_x, overlay_mouse_y);
             const mouse_x = mouse.mouse_x;
             const mouse_y = mouse.mouse_y;
@@ -419,7 +419,7 @@ export default class OncoprintMinimapView {
                     const delta_y_scroll = delta_y * y_ratio;
                     drag_callback(self.colToLeft(model, clamp(drag_start_col + delta_col, 0, model.getIdOrder().length-1)), drag_start_vert_scroll + delta_y_scroll);
                 } else {
-                    let render_rect:OverlayRectParams;
+                    let render_rect:OverlayRectParams|undefined;
                     zoom = self.getZoom(model);
                     const max_num_cols = model.getIdOrder().length;
                     const min_num_cols = Math.ceil(cell_view.getVisibleAreaWidth() / (model.getCellWidth(true) + model.getCellPadding(true, true)));
@@ -556,8 +556,8 @@ export default class OncoprintMinimapView {
                             'height': drag_start_rect.height + delta_y,
                         };
                     }
-                    self.current_rect.setParams(render_rect);
-                    self.drawOverlayRect(null, null, self.current_rect);
+                    self.current_rect.setParams(render_rect as any);
+                    self.drawOverlayRect(null as any, null as any, self.current_rect);
                 }
             } else {
                 if (mouse.outside) {
@@ -589,8 +589,8 @@ export default class OncoprintMinimapView {
 
         $(document).on("mouseup", function (evt) {
             const offset = self.$div.offset();
-            const overlay_mouse_x = evt.pageX - offset.left;
-            const overlay_mouse_y = evt.pageY - offset.top;
+            const overlay_mouse_x = evt.pageX - (offset?.left || 0);
+            const overlay_mouse_y = evt.pageY - (offset?.top || 0);
             endDrag();
             const mouse = getCanvasMouse(self, overlay_mouse_x, overlay_mouse_y);
             if (!mouse.outside) {
@@ -649,8 +649,8 @@ export default class OncoprintMinimapView {
         const new_canvas = old_canvas.cloneNode();
         new_canvas.addEventListener("webglcontextlost", this.handleContextLost);
         const parent_node = old_canvas.parentNode;
-        parent_node.removeChild(old_canvas);
-        parent_node.insertBefore(new_canvas, this.$overlay_canvas[0]);
+        parent_node?.removeChild(old_canvas);
+        parent_node?.insertBefore(new_canvas, this.$overlay_canvas[0]);
         this.$canvas = $(new_canvas) as JQuery<HTMLCanvasElement>;
         this.ctx = null;
     }
@@ -693,16 +693,16 @@ export default class OncoprintMinimapView {
     }
 
     private createShaderProgram(vertex_shader:WebGLShader, fragment_shader:WebGLShader) {
-        const program = this.ctx.createProgram();
-        this.ctx.attachShader(program, vertex_shader);
-        this.ctx.attachShader(program, fragment_shader);
+        const program = this.ctx?.createProgram() || {};
+        this.ctx?.attachShader(program, vertex_shader);
+        this.ctx?.attachShader(program, fragment_shader);
 
-        this.ctx.linkProgram(program);
+        this.ctx?.linkProgram(program);
 
-        const success = this.ctx.getProgramParameter(program, this.ctx.LINK_STATUS);
+        const success = this.ctx?.getProgramParameter(program, this.ctx.LINK_STATUS);
         if (!success) {
-            const msg = this.ctx.getProgramInfoLog(program);
-            this.ctx.deleteProgram(program);
+            const msg = this.ctx?.getProgramInfoLog(program);
+            this.ctx?.deleteProgram(program);
             throw "Unable to link shader program: " + msg;
         }
 
@@ -710,14 +710,14 @@ export default class OncoprintMinimapView {
     }
 
     private createShader(source:string, type:"VERTEX_SHADER"|"FRAGMENT_SHADER") {
-        const shader = this.ctx.createShader(this.ctx[type]);
-        this.ctx.shaderSource(shader, source);
-        this.ctx.compileShader(shader);
+        const shader = this.ctx?.createShader(this.ctx[type]) || {};
+        this.ctx?.shaderSource(shader, source);
+        this.ctx?.compileShader(shader);
 
-        const success = this.ctx.getShaderParameter(shader, this.ctx.COMPILE_STATUS);
+        const success = this.ctx?.getShaderParameter(shader, this.ctx.COMPILE_STATUS);
         if (!success) {
-            const msg = this.ctx.getShaderInfoLog(shader);
-            this.ctx.deleteShader(shader);
+            const msg = this.ctx?.getShaderInfoLog(shader);
+            this.ctx?.deleteShader(shader);
             throw "Unable to compile shader: " + msg;
         }
 
@@ -732,7 +732,7 @@ export default class OncoprintMinimapView {
             self.mvMatrix = mvMatrix;
 
             const pMatrix = gl_matrix.mat4.create();
-            gl_matrix.mat4.ortho(pMatrix, 0, self.ctx.viewportWidth, self.ctx.viewportHeight, 0, -5, 1000); // y axis inverted so that y increases down like SVG
+            gl_matrix.mat4.ortho(pMatrix, 0, self.ctx?.viewportWidth, self.ctx?.viewportHeight, 0, -5, 1000); // y axis inverted so that y increases down like SVG
             self.pMatrix = pMatrix;
         })(this);
     }
@@ -777,45 +777,45 @@ export default class OncoprintMinimapView {
         const fragment_shader = this.createShader(fragment_shader_source, 'FRAGMENT_SHADER');
 
         const shader_program = this.createShaderProgram(vertex_shader, fragment_shader) as OncoprintShaderProgram;
-        shader_program.vertexPositionAttribute = this.ctx.getAttribLocation(shader_program, 'aPosVertex');
-        this.ctx.enableVertexAttribArray(shader_program.vertexPositionAttribute);
-        shader_program.vertexColorAttribute = this.ctx.getAttribLocation(shader_program, 'aColVertex');
-        this.ctx.enableVertexAttribArray(shader_program.vertexColorAttribute);
-        shader_program.vertexOncoprintColumnAttribute = this.ctx.getAttribLocation(shader_program, 'aVertexOncoprintColumn');
-        this.ctx.enableVertexAttribArray(shader_program.vertexOncoprintColumnAttribute);
+        shader_program.vertexPositionAttribute = this.ctx?.getAttribLocation(shader_program, 'aPosVertex');
+        this.ctx?.enableVertexAttribArray(shader_program.vertexPositionAttribute);
+        shader_program.vertexColorAttribute = this.ctx?.getAttribLocation(shader_program, 'aColVertex');
+        this.ctx?.enableVertexAttribArray(shader_program.vertexColorAttribute);
+        shader_program.vertexOncoprintColumnAttribute = this.ctx?.getAttribLocation(shader_program, 'aVertexOncoprintColumn');
+        this.ctx?.enableVertexAttribArray(shader_program.vertexOncoprintColumnAttribute);
 
-        shader_program.samplerUniform = this.ctx.getUniformLocation(shader_program, 'uSampler');
-        shader_program.pMatrixUniform = this.ctx.getUniformLocation(shader_program, 'uPMatrix');
-        shader_program.mvMatrixUniform = this.ctx.getUniformLocation(shader_program, 'uMVMatrix');
-        shader_program.columnWidthUniform = this.ctx.getUniformLocation(shader_program, 'columnWidth');
-        shader_program.zoomXUniform = this.ctx.getUniformLocation(shader_program, 'zoomX');
-        shader_program.zoomYUniform = this.ctx.getUniformLocation(shader_program, 'zoomY');
-        shader_program.offsetYUniform = this.ctx.getUniformLocation(shader_program, 'offsetY');
-        shader_program.positionBitPackBaseUniform = this.ctx.getUniformLocation(shader_program, 'positionBitPackBase');
-        shader_program.texSizeUniform = this.ctx.getUniformLocation(shader_program, 'texSize');
+        shader_program.samplerUniform = this.ctx?.getUniformLocation(shader_program, 'uSampler') as any;
+        shader_program.pMatrixUniform = this.ctx?.getUniformLocation(shader_program, 'uPMatrix') as any;
+        shader_program.mvMatrixUniform = this.ctx?.getUniformLocation(shader_program, 'uMVMatrix') as any;
+        shader_program.columnWidthUniform = this.ctx?.getUniformLocation(shader_program, 'columnWidth') as any;
+        shader_program.zoomXUniform = this.ctx?.getUniformLocation(shader_program, 'zoomX') as any;
+        shader_program.zoomYUniform = this.ctx?.getUniformLocation(shader_program, 'zoomY') as any;
+        shader_program.offsetYUniform = this.ctx?.getUniformLocation(shader_program, 'offsetY') as any;
+        shader_program.positionBitPackBaseUniform = this.ctx?.getUniformLocation(shader_program, 'positionBitPackBase') as any;
+        shader_program.texSizeUniform = this.ctx?.getUniformLocation(shader_program, 'texSize') as any;
 
         this.shader_program = shader_program;
     }
 
     private getTrackBuffers(cell_view:OncoprintWebGLCellView, track_id:TrackId) {
-        const pos_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+        const pos_buffer = this.ctx?.createBuffer() as OncoprintTrackBuffer;
         const pos_array = cell_view.vertex_data[track_id].pos_array;
 
-        this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, pos_buffer);
-        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(pos_array), this.ctx.STATIC_DRAW);
+        this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, pos_buffer);
+        this.ctx?.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(pos_array), this.ctx.STATIC_DRAW);
         pos_buffer.itemSize = 1;
         pos_buffer.numItems = pos_array.length / pos_buffer.itemSize;
 
-        const col_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+        const col_buffer = this.ctx?.createBuffer() as OncoprintTrackBuffer;
         const col_array = cell_view.vertex_data[track_id].col_array;
 
-        this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, col_buffer);
-        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(col_array), this.ctx.STATIC_DRAW);
+        this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, col_buffer);
+        this.ctx?.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(col_array), this.ctx.STATIC_DRAW);
         col_buffer.itemSize = 1;
         col_buffer.numItems = col_array.length / col_buffer.itemSize;
 
-        const tex = this.ctx.createTexture();
-        this.ctx.bindTexture(this.ctx.TEXTURE_2D, tex);
+        const tex = this.ctx?.createTexture();
+        this.ctx?.bindTexture(this.ctx.TEXTURE_2D, tex || null);
 
         const color_bank = cell_view.vertex_data[track_id].col_bank;
         const width = Math.pow(2, Math.ceil((Math as any).log2(color_bank.length / 4)));
@@ -823,16 +823,16 @@ export default class OncoprintMinimapView {
             color_bank.push(0);
         }
         const height = 1;
-        this.ctx.texImage2D(this.ctx.TEXTURE_2D, 0, this.ctx.RGBA, width, height, 0, this.ctx.RGBA, this.ctx.UNSIGNED_BYTE, new Uint8Array(color_bank));
-        this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MIN_FILTER, this.ctx.NEAREST);
-        this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MAG_FILTER, this.ctx.NEAREST);
+        this.ctx?.texImage2D(this.ctx.TEXTURE_2D, 0, this.ctx.RGBA, width, height, 0, this.ctx.RGBA, this.ctx.UNSIGNED_BYTE, new Uint8Array(color_bank));
+        this.ctx?.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MIN_FILTER, this.ctx.NEAREST);
+        this.ctx?.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MAG_FILTER, this.ctx.NEAREST);
 
         const color_texture = {'texture': tex, 'size': width};
 
-        const vertex_column_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+        const vertex_column_buffer = this.ctx?.createBuffer() as OncoprintTrackBuffer;
         const vertex_column_array = cell_view.vertex_column_array[track_id];
-        this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, vertex_column_buffer);
-        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(vertex_column_array), this.ctx.STATIC_DRAW);
+        this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, vertex_column_buffer);
+        this.ctx?.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(vertex_column_array), this.ctx.STATIC_DRAW);
         vertex_column_buffer.itemSize = 1;
         vertex_column_buffer.numItems = vertex_column_array.length / vertex_column_buffer.itemSize;
 
@@ -851,8 +851,8 @@ export default class OncoprintMinimapView {
 
         const zoom = this.getZoom(model);
 
-        this.ctx.clearColor(1.0, 1.0, 1.0, 1.0);
-        this.ctx.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
+        this.ctx?.clearColor(1.0, 1.0, 1.0, 1.0);
+        this.ctx?.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
 
         const tracks = model.getTracks();
         for (let i = 0; i < tracks.length; i++) {
@@ -863,29 +863,29 @@ export default class OncoprintMinimapView {
                 continue;
             }
 
-            this.ctx.useProgram(this.shader_program);
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.position);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexPositionAttribute, buffers.position.itemSize, this.ctx.FLOAT, false, 0, 0);
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.color);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexColorAttribute, buffers.color.itemSize, this.ctx.FLOAT, false, 0, 0);
+            this.ctx?.useProgram(this.shader_program);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.position);
+            this.ctx?.vertexAttribPointer(this.shader_program.vertexPositionAttribute, buffers.position.itemSize, this.ctx.FLOAT, false, 0, 0);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.color);
+            this.ctx?.vertexAttribPointer(this.shader_program.vertexColorAttribute, buffers.color.itemSize, this.ctx.FLOAT, false, 0, 0);
 
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.column);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexOncoprintColumnAttribute, buffers.column.itemSize, this.ctx.FLOAT, false, 0, 0);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.column);
+            this.ctx?.vertexAttribPointer(this.shader_program.vertexOncoprintColumnAttribute, buffers.column.itemSize, this.ctx.FLOAT, false, 0, 0);
 
-            this.ctx.activeTexture(this.ctx.TEXTURE0);
-            this.ctx.bindTexture(this.ctx.TEXTURE_2D, buffers.color_tex.texture);
-            this.ctx.uniform1i(this.shader_program.samplerUniform, 0);
-            this.ctx.uniform1f(this.shader_program.texSizeUniform, buffers.color_tex.size);
+            this.ctx?.activeTexture(this.ctx.TEXTURE0);
+            this.ctx?.bindTexture(this.ctx.TEXTURE_2D, buffers.color_tex.texture || null);
+            this.ctx?.uniform1i(this.shader_program.samplerUniform, 0);
+            this.ctx?.uniform1f(this.shader_program.texSizeUniform, buffers.color_tex.size);
 
-            this.ctx.uniformMatrix4fv(this.shader_program.pMatrixUniform, false, this.pMatrix);
-            this.ctx.uniformMatrix4fv(this.shader_program.mvMatrixUniform, false, this.mvMatrix);
-            this.ctx.uniform1f(this.shader_program.columnWidthUniform, model.getCellWidth(true));
-            this.ctx.uniform1f(this.shader_program.zoomXUniform, zoom.x);
-            this.ctx.uniform1f(this.shader_program.zoomYUniform, zoom.y);
-            this.ctx.uniform1f(this.shader_program.offsetYUniform, cell_top);
-            this.ctx.uniform1f(this.shader_program.positionBitPackBaseUniform, cell_view.position_bit_pack_base);
+            this.ctx?.uniformMatrix4fv(this.shader_program.pMatrixUniform, false, this.pMatrix);
+            this.ctx?.uniformMatrix4fv(this.shader_program.mvMatrixUniform, false, this.mvMatrix);
+            this.ctx?.uniform1f(this.shader_program.columnWidthUniform, model.getCellWidth(true));
+            this.ctx?.uniform1f(this.shader_program.zoomXUniform, zoom.x);
+            this.ctx?.uniform1f(this.shader_program.zoomYUniform, zoom.y);
+            this.ctx?.uniform1f(this.shader_program.offsetYUniform, cell_top);
+            this.ctx?.uniform1f(this.shader_program.positionBitPackBaseUniform, cell_view.position_bit_pack_base);
 
-            this.ctx.drawArrays(this.ctx.TRIANGLES, 0, buffers.position.numItems);
+            this.ctx?.drawArrays(this.ctx.TRIANGLES, 0, buffers.position.numItems);
         }
     }
 
@@ -932,49 +932,51 @@ export default class OncoprintMinimapView {
         const canv_width = parseInt(canv.width as any, 10);
         const canv_height = parseInt(canv.height as any, 10);
 
-        // Clear
-        ctx.fillStyle = "rgba(0,0,0,0)";
-        ctx.clearRect(0, 0, canv_width, canv_height);
-        // Draw rectangle
-        ctx.fillStyle = "rgba(255,255,255,0.4)";
-        ctx.fillRect(left, top, width, height);
-        // Draw border line by line
-        const unhover_color = "rgba(0,0,0,0.75)";
-        const hover_color = "rgba(255,0,0,1)";
-        const unhover_width = 1;
-        const hover_width = 2;
-        const top_is_hovered = this.resize_hover === "t" || this.resize_hover === "tr" || this.resize_hover === "tl";
-        const right_is_hovered = this.resize_hover === "r" || this.resize_hover === "tr" || this.resize_hover === "br";
-        const bottom_is_hovered = this.resize_hover === "b" || this.resize_hover === "br" || this.resize_hover === "bl";
-        const left_is_hovered = this.resize_hover === "l" || this.resize_hover === "tl" || this.resize_hover === "bl";
-        // Draw top border
-        ctx.beginPath();
-        ctx.moveTo(left, top);
-        ctx.strokeStyle = top_is_hovered ? hover_color : unhover_color;
-        ctx.lineWidth = top_is_hovered ? hover_width : unhover_width;
-        ctx.lineTo(left+width, top);
-        ctx.stroke();
-        // Draw right border
-        ctx.beginPath();
-        ctx.moveTo(left+width, top);
-        ctx.strokeStyle = right_is_hovered ? hover_color : unhover_color;
-        ctx.lineWidth = right_is_hovered ? hover_width : unhover_width;
-        ctx.lineTo(left+width, top+height);
-        ctx.stroke();
-        // Draw bottom border
-        ctx.beginPath();
-        ctx.moveTo(left+width, top+height);
-        ctx.strokeStyle = bottom_is_hovered ? hover_color : unhover_color;
-        ctx.lineWidth = bottom_is_hovered ? hover_width : unhover_width;
-        ctx.lineTo(left, top+height);
-        ctx.stroke();
-        // Draw left border
-        ctx.beginPath();
-        ctx.moveTo(left, top+height);
-        ctx.strokeStyle = left_is_hovered ? hover_color : unhover_color;
-        ctx.lineWidth = left_is_hovered ? hover_width : unhover_width;
-        ctx.lineTo(left, top);
-        ctx.stroke();
+        if (ctx) {
+            // Clear
+            ctx.fillStyle = "rgba(0,0,0,0)";
+            ctx.clearRect(0, 0, canv_width, canv_height);
+            // Draw rectangle
+            ctx.fillStyle = "rgba(255,255,255,0.4)";
+            ctx.fillRect(left, top, width, height);
+            // Draw border line by line
+            const unhover_color = "rgba(0,0,0,0.75)";
+            const hover_color = "rgba(255,0,0,1)";
+            const unhover_width = 1;
+            const hover_width = 2;
+            const top_is_hovered = this.resize_hover === "t" || this.resize_hover === "tr" || this.resize_hover === "tl";
+            const right_is_hovered = this.resize_hover === "r" || this.resize_hover === "tr" || this.resize_hover === "br";
+            const bottom_is_hovered = this.resize_hover === "b" || this.resize_hover === "br" || this.resize_hover === "bl";
+            const left_is_hovered = this.resize_hover === "l" || this.resize_hover === "tl" || this.resize_hover === "bl";
+            // Draw top border
+            ctx.beginPath();
+            ctx.moveTo(left, top);
+            ctx.strokeStyle = top_is_hovered ? hover_color : unhover_color;
+            ctx.lineWidth = top_is_hovered ? hover_width : unhover_width;
+            ctx.lineTo(left + width, top);
+            ctx.stroke();
+            // Draw right border
+            ctx.beginPath();
+            ctx.moveTo(left + width, top);
+            ctx.strokeStyle = right_is_hovered ? hover_color : unhover_color;
+            ctx.lineWidth = right_is_hovered ? hover_width : unhover_width;
+            ctx.lineTo(left + width, top + height);
+            ctx.stroke();
+            // Draw bottom border
+            ctx.beginPath();
+            ctx.moveTo(left + width, top + height);
+            ctx.strokeStyle = bottom_is_hovered ? hover_color : unhover_color;
+            ctx.lineWidth = bottom_is_hovered ? hover_width : unhover_width;
+            ctx.lineTo(left, top + height);
+            ctx.stroke();
+            // Draw left border
+            ctx.beginPath();
+            ctx.moveTo(left, top + height);
+            ctx.strokeStyle = left_is_hovered ? hover_color : unhover_color;
+            ctx.lineWidth = left_is_hovered ? hover_width : unhover_width;
+            ctx.lineTo(left, top);
+            ctx.stroke();
+        }
 
         this.current_rect.setParams({
             'top':top,

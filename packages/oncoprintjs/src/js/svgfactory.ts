@@ -66,7 +66,7 @@ export default {
         const text = in_dom_text_svg_elt.textContent;
         in_dom_text_svg_elt.textContent = "";
 
-        const words = text.split(" ");
+        const words = text?.split(" ") || [];
         let dy = 0;
         let tspan = makeSVGElement('tspan', {'x':'0', 'dy':dy}) as SVGTSpanElement;
         in_dom_text_svg_elt.appendChild(tspan);
@@ -113,10 +113,10 @@ export default {
         }
         return makeSVGElement('path', {
             'd': pointsStrArray.join(" "),
-            'stroke': linearGradient ? 'url(#'+linearGradient.getAttribute('id')+')' : parsedStroke.rgb,
-            'stroke-opacity': linearGradient ? 0 : parsedStroke.opacity,
-            'fill': linearGradient ? 'url(#'+linearGradient.getAttribute('id')+')' : parsedFill.rgb,
-            'fill-opacity': linearGradient ? 1 : parsedFill.opacity
+            'stroke': linearGradient ? 'url(#'+linearGradient.getAttribute('id')+')' : parsedStroke?.rgb,
+            'stroke-opacity': linearGradient ? 0 : parsedStroke?.opacity,
+            'fill': linearGradient ? 'url(#'+linearGradient.getAttribute('id')+')' : parsedFill?.rgb,
+            'fill-opacity': linearGradient ? 1 : parsedFill?.opacity
         }) as SVGPathElement;
     },
     stop: function (offset:number, color:string) {

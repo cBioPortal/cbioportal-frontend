@@ -1,4 +1,4 @@
-import OncoprintJS, {
+import {
     ICategoricalRuleSetParams,
     IGeneticAlterationRuleSetParams,
     IGradientRuleSetParams,
@@ -230,7 +230,7 @@ export function getHeatmapTrackRuleSetParams(
         value_range,
         colors,
         value_stop_points,
-        null_color: [224, 224, 224, 1],
+        null_color: 'rgba(224,224,224,1)',
         null_legend_label,
         na_legend_label,
         na_shapes: trackSpec.customNaShapes,
@@ -391,9 +391,9 @@ export function getGenericAssayTrackRuleSetParams(
         value_range,
         colors,
         value_stop_points,
-        null_color: [224, 224, 224, 1],
+        null_color: 'rgba(224,224,224,1)',
         category_key: 'category',
-        category_to_color: category_to_color,
+        category_to_color: category_to_color as any,
     };
 }
 
@@ -435,7 +435,7 @@ export function getGenesetHeatmapTrackRuleSetParams() {
             0.8,
             1,
         ],
-        null_color: [224, 224, 224, 1],
+        null_color: 'rgba(224,224,224,1)',
     } as IGradientRuleSetParams;
 }
 
@@ -477,7 +477,7 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
                 type: RuleSetType.STACKED_BAR,
                 value_key: 'attr_val',
                 categories: track.countsCategoryLabels,
-                fills: track.countsCategoryFills,
+                fills: track.countsCategoryFills as any,
             };
             break;
         case 'string':
@@ -489,9 +489,9 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
                     {},
                     track.category_to_color,
                     _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA)
-                ),
+                ) as any,
                 universal_rule_categories: track.universal_rule_categories,
-            };
+            } as any;
             break;
     }
     return params;
@@ -507,7 +507,7 @@ export function getCategoricalTrackRuleSetParams(
         category_to_color: _.mapValues(
             RESERVED_CLINICAL_VALUE_COLORS,
             hexToRGBA
-        ),
+        ) as any,
     };
 }
 

@@ -1,5 +1,11 @@
-export default function extractrgba(str:string) {
+import _ from "lodash";
+
+// TODO duplicate of extractRGBA in (oncoprintshapetovertexes.ts)
+export default function extractrgba(str:string|[number, number, number, number]) {
     let ret = [0, 0, 0, 1];
+    if (_.isArray(str) && str.length === 4) {
+        str = `rgba(${str.join(",")})`;
+    }
     if (str[0] === "#") {
         // hex, convert to rgba
         const r = parseInt(str[1] + str[2], 16);

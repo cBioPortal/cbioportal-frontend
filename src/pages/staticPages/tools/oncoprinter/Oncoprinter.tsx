@@ -8,7 +8,7 @@ import OncoprintControls, {
 } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
 import { getServerConfig } from 'config/config';
-import OncoprintJS from 'oncoprintjs';
+import { OncoprintJS } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import { FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
@@ -245,7 +245,7 @@ export default class Oncoprinter extends React.Component<
                     case 'svg':
                         fileDownload(
                             new XMLSerializer().serializeToString(
-                                this.oncoprint!.toSVG(false)
+                                this.oncoprint!.toSVG(false) as any
                             ),
                             'oncoprint.svg'
                         );
@@ -254,7 +254,7 @@ export default class Oncoprinter extends React.Component<
                         const capitalizedColumnMode = 'Sample';
                         let file = `${capitalizedColumnMode} order in the Oncoprint is:\n`;
                         const caseIds = this.oncoprint!.getIdOrder();
-                        for (const caseId of caseIds) {
+                        for (const caseId of caseIds || []) {
                             file += `${caseId}\n`;
                         }
                         fileDownload(file, `OncoPrintSamples.txt`);
@@ -266,12 +266,12 @@ export default class Oncoprinter extends React.Component<
             },
             onClickZoomIn: () => {
                 this.oncoprint!.setHorzZoomCentered(
-                    this.oncoprint!.getHorzZoom() / 0.7
+                    (this.oncoprint!.getHorzZoom() || 0) / 0.7
                 );
             },
             onClickZoomOut: () => {
                 this.oncoprint!.setHorzZoomCentered(
-                    this.oncoprint!.getHorzZoom() * 0.7
+                    (this.oncoprint!.getHorzZoom() || 0) * 0.7
                 );
             },
             onClickNGCHM: () => {}, // do nothing in oncoprinter mode
@@ -288,7 +288,7 @@ export default class Oncoprinter extends React.Component<
         );
 
         this.oncoprint!.onHorzZoom(z => (this.horzZoom = z));
-        this.horzZoom = this.oncoprint!.getHorzZoom();
+        this.horzZoom = this.oncoprint!.getHorzZoom() as any;
     }
 
     @action.bound

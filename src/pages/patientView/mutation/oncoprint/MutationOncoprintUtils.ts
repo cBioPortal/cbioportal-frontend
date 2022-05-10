@@ -21,12 +21,12 @@ export interface IMutationOncoprintTrackDatum extends IGeneHeatmapTrackDatum {
 export const MUTATION_ONCOPRINT_NA_SHAPES: ShapeParams[] = [
     {
         type: 'rectangle',
-        fill: [255, 255, 255, 1],
+        fill: [255, 255, 255, 1] as any,
         z: 1000,
     },
     {
         type: 'line',
-        stroke: [190, 190, 190, 1],
+        stroke: [190, 190, 190, 1] as any,
         'stroke-width': 1,
         x1: 20,
         x2: 80,

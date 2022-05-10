@@ -10,3 +10,6 @@ declare module 'react-rangeslider';
 declare module 'react-select';
 declare module 'react-file-download';
 declare module 'victory';
+declare module 'gl-matrix';
+declare module 'tayden-clusterfck';
+declare module 'jstat';

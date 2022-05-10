@@ -170,7 +170,7 @@ export default class OncoprintHeaderView {
                         //      in order to update dynamic disabled status and weight
                         $dropdown.empty();
                         // add dropdown options
-                        group.header.options.forEach((option)=>{
+                        group.header?.options.forEach((option)=>{
                             if (option.separator) {
                                 $dropdown.append(OncoprintHeaderView.$makeDropdownSeparator());
                             } else {
@@ -209,7 +209,7 @@ export default class OncoprintHeaderView {
                                 $dropdown.fadeOut(FADE_MS);
                             } else {
                                 populateDropdownOptions();
-                                $dropdown.css('left', $img.offset().left);
+                                $dropdown.css('left', $img.offset()?.left as any);
                                 $img.addClass(TOGGLE_BTN_OPEN_CLASS);
                                 $dropdown.fadeIn(FADE_MS);
                                 this.closeDropdownsExcept($dropdown);

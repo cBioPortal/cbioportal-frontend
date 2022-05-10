@@ -148,8 +148,8 @@ export default class OncoprintWebGLCellView {
                     if (mouse_up_evt) {
                         // its a click
                         const offset = self.$overlay_canvas.offset();
-                        const mouseX = mouse_up_evt.pageX - offset.left;
-                        const mouseY = mouse_up_evt.pageY - offset.top;
+                        const mouseX = mouse_up_evt.pageX - (offset?.left || 0);
+                        const mouseY = mouse_up_evt.pageY - (offset?.top || 0);
                         const overlapping_cells = model.getOverlappingCells(mouseX + self.scroll_x, mouseY + self.scroll_y);
                         if (overlapping_cells === null) {
                             cell_click_callback(null);
@@ -161,14 +161,16 @@ export default class OncoprintWebGLCellView {
                 }
                 const left = Math.min(drag_start_x, drag_end_x);
                 const right = Math.max(drag_start_x, drag_end_x);
-                self.highlight_area_callback(left+self.scroll_x, right+self.scroll_x);
+                if (self.highlight_area_callback) {
+                    self.highlight_area_callback(left+self.scroll_x, right+self.scroll_x);
+                }
             }
 
             function mouseInOverlayCanvas(mouse_x:number, mouse_y:number) {
                 const offset = self.$overlay_canvas.offset();
                 const width = self.$overlay_canvas.width();
                 const height = self.$overlay_canvas.height();
-                return (mouse_x >= offset.left && mouse_x < width + offset.left && mouse_y >= offset.top && mouse_y < height + offset.top);
+                return (mouse_x >= (offset?.left || 0) && mouse_x < (width || 0) + (offset?.left || 0) && mouse_y >= (offset?.top || 0) && mouse_y < (height || 0) + (offset?.top || 0));
             }
 
             self.mouseMoveHandler = function(evt) {
@@ -192,22 +194,22 @@ export default class OncoprintWebGLCellView {
                 self.clearOverlay();
 
                 const offset = self.$overlay_canvas.offset();
-                const mouseX = evt.pageX - offset.left;
-                const mouseY = evt.pageY - offset.top;
+                const mouseX = evt.pageX - (offset?.left || 0);
+                const mouseY = evt.pageY - (offset?.top || 0);
                 let overlapping_cells = model.getOverlappingCells(mouseX + self.scroll_x, mouseY + self.scroll_y);
                 if (!dragging) {
                     const overlapping_data = (overlapping_cells === null ? null : overlapping_cells.ids.map(function(id) {
-                        return model.getTrackDatum(overlapping_cells.track, id);
+                        return model.getTrackDatum(overlapping_cells?.track, id);
                     }));
                     if (overlapping_data !== null) {
                         last_cell_over = overlapping_cells;
-                        cell_over_callback(overlapping_cells.ids[0], overlapping_cells.track);
+                        cell_over_callback(overlapping_cells?.ids[0], overlapping_cells?.track);
 
-                        self.highlightCell(model, overlapping_cells.track, overlapping_cells.ids[0]);
-                        self.highlightColumn(model, overlapping_cells.ids[0]);
+                        self.highlightCell(model, overlapping_cells?.track, overlapping_cells?.ids[0]);
+                        self.highlightColumn(model, overlapping_cells?.ids[0]);
 
                         const clientRect = self.$overlay_canvas[0].getBoundingClientRect();
-                        tooltip.show(250, model.getZoomedColumnLeft(overlapping_cells.ids[0]) + model.getCellWidth() / 2 + clientRect.left - self.scroll_x, model.getCellTops(overlapping_cells.track) + clientRect.top - self.scroll_y, model.getTrackTooltipFn(overlapping_cells.track)(overlapping_data));
+                        tooltip.show(250, model.getZoomedColumnLeft(overlapping_cells?.ids[0] as any) + model.getCellWidth() / 2 + clientRect.left - self.scroll_x, (model.getCellTops(overlapping_cells?.track as any) as any) + clientRect.top - self.scroll_y, model.getTrackTooltipFn(overlapping_cells?.track as any)(overlapping_data));
                     } else {
                         tooltip.hideIfNotAlreadyGoingTo(150);
                         overlapping_cells = null;
@@ -234,7 +236,7 @@ export default class OncoprintWebGLCellView {
                     return;
                 }
                 dragging = true;
-                drag_start_x = evt.pageX - self.$overlay_canvas.offset().left;
+                drag_start_x = evt.pageX - (self.$overlay_canvas.offset()?.left || 0);
                 drag_end_x = drag_start_x;
 
                 tooltip.hide();
@@ -262,8 +264,8 @@ export default class OncoprintWebGLCellView {
         const old_canvas = this.$canvas[0];
         const new_canvas = old_canvas.cloneNode() as HTMLCanvasElement;
         const parent_node = old_canvas.parentNode;
-        parent_node.removeChild(old_canvas);
-        parent_node.insertBefore(new_canvas, parent_node.childNodes[0]); // keep on bottom since we need overlays to not be hidden
+        parent_node?.removeChild(old_canvas);
+        parent_node?.insertBefore(new_canvas, parent_node.childNodes[0]); // keep on bottom since we need overlays to not be hidden
         this.$canvas = $(new_canvas);
         this.ctx = null;
     }
@@ -290,16 +292,16 @@ export default class OncoprintWebGLCellView {
     }
 
     private createShaderProgram(vertex_shader:WebGLShader, fragment_shader:WebGLShader) {
-        const program = this.ctx.createProgram();
-        this.ctx.attachShader(program, vertex_shader);
-        this.ctx.attachShader(program, fragment_shader);
+        const program = this.ctx?.createProgram() || {};
+        this.ctx?.attachShader(program, vertex_shader);
+        this.ctx?.attachShader(program, fragment_shader);
 
-        this.ctx.linkProgram(program);
+        this.ctx?.linkProgram(program);
 
-        const success = this.ctx.getProgramParameter(program, this.ctx.LINK_STATUS);
+        const success = this.ctx?.getProgramParameter(program, this.ctx.LINK_STATUS);
         if (!success) {
-            const msg = this.ctx.getProgramInfoLog(program);
-            this.ctx.deleteProgram(program);
+            const msg = this.ctx?.getProgramInfoLog(program);
+            this.ctx?.deleteProgram(program);
             throw "Unable to link shader program: " + msg;
         }
 
@@ -307,14 +309,14 @@ export default class OncoprintWebGLCellView {
     }
 
     private createShader(source:string, type:"VERTEX_SHADER"|"FRAGMENT_SHADER") {
-        const shader = this.ctx.createShader(this.ctx[type]);
-        this.ctx.shaderSource(shader, source);
-        this.ctx.compileShader(shader);
+        const shader = this.ctx?.createShader(this.ctx[type]) || {};
+        this.ctx?.shaderSource(shader, source);
+        this.ctx?.compileShader(shader);
 
-        const success = this.ctx.getShaderParameter(shader, this.ctx.COMPILE_STATUS);
+        const success = this.ctx?.getShaderParameter(shader, this.ctx.COMPILE_STATUS);
         if (!success) {
-            const msg = this.ctx.getShaderInfoLog(shader);
-            this.ctx.deleteShader(shader);
+            const msg = this.ctx?.getShaderInfoLog(shader);
+            this.ctx?.deleteShader(shader);
             throw "Unable to compile shader: " + msg;
         }
 
@@ -323,20 +325,26 @@ export default class OncoprintWebGLCellView {
 
     private overlayStrokeRect(x:number, y:number, width:number, height:number, color:string) {
         const ctx = this.overlay_ctx;
-        ctx.strokeStyle = color;
-        (ctx as any).strokeWidth = 10;
-        ctx.strokeRect(this.supersampling_ratio*x, this.supersampling_ratio*y, this.supersampling_ratio*width, this.supersampling_ratio*height);
+        if (ctx) {
+            ctx.strokeStyle = color;
+            (ctx as any).strokeWidth = 10;
+            ctx.strokeRect(this.supersampling_ratio*x, this.supersampling_ratio*y, this.supersampling_ratio*width, this.supersampling_ratio*height);
+        }
     }
 
     private overlayFillRect(x:number, y:number, width:number, height:number, color:string) {
         const ctx = this.overlay_ctx;
-        ctx.fillStyle = color;
-        ctx.fillRect(this.supersampling_ratio*x, this.supersampling_ratio*y, this.supersampling_ratio*width, this.supersampling_ratio*height);
+        if (ctx) {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.supersampling_ratio*x, this.supersampling_ratio*y, this.supersampling_ratio*width, this.supersampling_ratio*height);
+        }
     }
 
     public clearOverlay() {
-        this.overlay_ctx.fillStyle = "rgba(0,0,0,0)";
-        this.overlay_ctx.clearRect(0,0,this.$overlay_canvas[0].width, this.$overlay_canvas[0].height);
+        if (this.overlay_ctx) {
+            this.overlay_ctx.fillStyle = "rgba(0,0,0,0)";
+            this.overlay_ctx.clearRect(0, 0, this.$overlay_canvas[0].width, this.$overlay_canvas[0].height);
+        }
     }
 
     private getOverlayContextAndClear() {
@@ -359,7 +367,7 @@ export default class OncoprintWebGLCellView {
             const cell_width = model.getCellWidth();
             const left_padding = (label.left_padding_percent || 0)*cell_width/100;
             let highlightHeight = cell_width*this.supersampling_ratio;
-            let highlightWidth = this.overlay_ctx.measureText(label.text).width + left_padding*this.supersampling_ratio + 20;
+            let highlightWidth = (this.overlay_ctx?.measureText(label.text).width || 0) + left_padding*this.supersampling_ratio + 20;
             let dx = left_padding*this.supersampling_ratio;
             if (label.circle_color) {
                 const circleDiameter = 2*this.getColumnLabelCircleSpec(model).radius*this.supersampling_ratio;
@@ -369,13 +377,15 @@ export default class OncoprintWebGLCellView {
             }
             const origin_x = (model.getZoomedColumnLeft(id) + cell_width/2 - this.scroll_x)*this.supersampling_ratio;
             const origin_y = this.getColumnLabelY(model);
-            this.overlay_ctx.save();
-            this.overlay_ctx.translate(origin_x, origin_y);
-            const angle = this.getColumnLabelAngleRadians(label);
-            this.overlay_ctx.rotate(angle);
-            this.overlay_ctx.fillStyle = "rgba(255,255,0,0.4)";
-            this.overlay_ctx.fillRect(dx,-highlightHeight/2,highlightWidth, highlightHeight);
-            this.overlay_ctx.restore();
+            if (this.overlay_ctx) {
+                this.overlay_ctx.save();
+                this.overlay_ctx.translate(origin_x, origin_y);
+                const angle = this.getColumnLabelAngleRadians(label);
+                this.overlay_ctx.rotate(angle);
+                this.overlay_ctx.fillStyle = "rgba(255,255,0,0.4)";
+                this.overlay_ctx.fillRect(dx, -highlightHeight / 2, highlightWidth, highlightHeight);
+                this.overlay_ctx.restore();
+            }
         }
     }
 
@@ -387,7 +397,7 @@ export default class OncoprintWebGLCellView {
             self.mvMatrix = mvMatrix;
 
             const pMatrix = gl_matrix.mat4.create();
-            gl_matrix.mat4.ortho(pMatrix, 0, self.ctx.viewportWidth, self.ctx.viewportHeight, 0, -5, 1000); // y axis inverted so that y increases down like SVG
+            gl_matrix.mat4.ortho(pMatrix, 0, self.ctx?.viewportWidth, self.ctx?.viewportHeight, 0, -5, 1000); // y axis inverted so that y increases down like SVG
             self.pMatrix = pMatrix;
         })(this);
     }
@@ -502,27 +512,29 @@ export default class OncoprintWebGLCellView {
         const fragment_shader = this.createShader(fragment_shader_source, 'FRAGMENT_SHADER');
 
         const shader_program = this.createShaderProgram(vertex_shader, fragment_shader) as OncoprintShaderProgram;
-        shader_program.vertexPositionAttribute = this.ctx.getAttribLocation(shader_program, 'aPosVertex');
-        this.ctx.enableVertexAttribArray(shader_program.vertexPositionAttribute);
-        shader_program.vertexColorAttribute = this.ctx.getAttribLocation(shader_program, 'aColVertex');
-        this.ctx.enableVertexAttribArray(shader_program.vertexColorAttribute);
-        shader_program.vertexOncoprintColumnAttribute = this.ctx.getAttribLocation(shader_program, 'aVertexOncoprintColumn');
-        this.ctx.enableVertexAttribArray(shader_program.vertexOncoprintColumnAttribute);
+        if (this.ctx) {
+            shader_program.vertexPositionAttribute = this.ctx.getAttribLocation(shader_program, 'aPosVertex');
+            this.ctx.enableVertexAttribArray(shader_program.vertexPositionAttribute);
+            shader_program.vertexColorAttribute = this.ctx.getAttribLocation(shader_program, 'aColVertex');
+            this.ctx.enableVertexAttribArray(shader_program.vertexColorAttribute);
+            shader_program.vertexOncoprintColumnAttribute = this.ctx.getAttribLocation(shader_program, 'aVertexOncoprintColumn');
+            this.ctx.enableVertexAttribArray(shader_program.vertexOncoprintColumnAttribute);
 
-        shader_program.gapSizeUniform = this.ctx.getUniformLocation(shader_program, 'gapSize');
-        shader_program.columnsRightAfterGapsUniform = this.ctx.getUniformLocation(shader_program, 'columnsRightAfterGaps');
-        shader_program.samplerUniform = this.ctx.getUniformLocation(shader_program, 'uSampler');
-        shader_program.pMatrixUniform = this.ctx.getUniformLocation(shader_program, 'uPMatrix');
-        shader_program.mvMatrixUniform = this.ctx.getUniformLocation(shader_program, 'uMVMatrix');
-        shader_program.columnWidthUniform = this.ctx.getUniformLocation(shader_program, 'columnWidth');
-        shader_program.scrollXUniform = this.ctx.getUniformLocation(shader_program, 'scrollX');
-        shader_program.scrollYUniform = this.ctx.getUniformLocation(shader_program, 'scrollY');
-        shader_program.zoomXUniform = this.ctx.getUniformLocation(shader_program, 'zoomX');
-        shader_program.zoomYUniform = this.ctx.getUniformLocation(shader_program, 'zoomY');
-        shader_program.offsetYUniform = this.ctx.getUniformLocation(shader_program, 'offsetY');
-        shader_program.supersamplingRatioUniform = this.ctx.getUniformLocation(shader_program, 'supersamplingRatio');
-        shader_program.positionBitPackBaseUniform = this.ctx.getUniformLocation(shader_program, 'positionBitPackBase');
-        shader_program.texSizeUniform = this.ctx.getUniformLocation(shader_program, 'texSize');
+            shader_program.gapSizeUniform = this.ctx.getUniformLocation(shader_program, 'gapSize') as any;
+            shader_program.columnsRightAfterGapsUniform = this.ctx.getUniformLocation(shader_program, 'columnsRightAfterGaps') as any;
+            shader_program.samplerUniform = this.ctx.getUniformLocation(shader_program, 'uSampler') as any;
+            shader_program.pMatrixUniform = this.ctx.getUniformLocation(shader_program, 'uPMatrix') as any;
+            shader_program.mvMatrixUniform = this.ctx.getUniformLocation(shader_program, 'uMVMatrix') as any;
+            shader_program.columnWidthUniform = this.ctx.getUniformLocation(shader_program, 'columnWidth') as any;
+            shader_program.scrollXUniform = this.ctx.getUniformLocation(shader_program, 'scrollX') as any;
+            shader_program.scrollYUniform = this.ctx.getUniformLocation(shader_program, 'scrollY') as any;
+            shader_program.zoomXUniform = this.ctx.getUniformLocation(shader_program, 'zoomX') as any;
+            shader_program.zoomYUniform = this.ctx.getUniformLocation(shader_program, 'zoomY') as any;
+            shader_program.offsetYUniform = this.ctx.getUniformLocation(shader_program, 'offsetY') as any;
+            shader_program.supersamplingRatioUniform = this.ctx.getUniformLocation(shader_program, 'supersamplingRatio') as any;
+            shader_program.positionBitPackBaseUniform = this.ctx.getUniformLocation(shader_program, 'positionBitPackBase') as any;
+            shader_program.texSizeUniform = this.ctx.getUniformLocation(shader_program, 'texSize') as any;
+        }
 
         this.shader_program = shader_program;
     }
@@ -585,8 +597,8 @@ export default class OncoprintWebGLCellView {
         if (!dont_resize) {
             this.resizeAndClear(model);
         }
-        this.ctx.clearColor(1.0,1.0,1.0,1.0);
-        this.ctx.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
+        this.ctx?.clearColor(1.0,1.0,1.0,1.0);
+        this.ctx?.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
 
         const tracks = model.getTracks();
         for (let i = 0; i < tracks.length; i++) {
@@ -604,35 +616,35 @@ export default class OncoprintWebGLCellView {
             const first_index = this.id_to_first_vertex_index[track_id][horz_first_id_in_window];
             const first_index_out = horz_first_id_after_window === null ? buffers.position.numItems : this.id_to_first_vertex_index[track_id][horz_first_id_after_window];
 
-            this.ctx.useProgram(this.shader_program);
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.position);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexPositionAttribute, buffers.position.itemSize, this.ctx.FLOAT, false, 0, 0);
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.color);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexColorAttribute, buffers.color.itemSize, this.ctx.FLOAT, false, 0, 0);
+            this.ctx?.useProgram(this.shader_program);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.position);
+            this.ctx?.vertexAttribPointer(this.shader_program.vertexPositionAttribute, buffers.position.itemSize, this.ctx.FLOAT, false, 0, 0);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.color);
+            this.ctx?.vertexAttribPointer(this.shader_program.vertexColorAttribute, buffers.color.itemSize, this.ctx.FLOAT, false, 0, 0);
 
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.column);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexOncoprintColumnAttribute, buffers.column.itemSize, this.ctx.FLOAT, false, 0, 0);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.column);
+            this.ctx?.vertexAttribPointer(this.shader_program.vertexOncoprintColumnAttribute, buffers.column.itemSize, this.ctx.FLOAT, false, 0, 0);
 
-            this.ctx.activeTexture(this.ctx.TEXTURE0);
-            this.ctx.bindTexture(this.ctx.TEXTURE_2D, buffers.color_tex.texture);
-            this.ctx.uniform1i(this.shader_program.samplerUniform, 0);
-            this.ctx.uniform1f(this.shader_program.texSizeUniform, buffers.color_tex.size);
+            this.ctx?.activeTexture(this.ctx.TEXTURE0);
+            this.ctx?.bindTexture(this.ctx.TEXTURE_2D, buffers.color_tex.texture);
+            this.ctx?.uniform1i(this.shader_program.samplerUniform, 0);
+            this.ctx?.uniform1f(this.shader_program.texSizeUniform, buffers.color_tex.size);
 
-            this.ctx.uniform1fv(this.shader_program.columnsRightAfterGapsUniform, this.getColumnIndexesAfterAGap(model)); // need min size of 1
-            this.ctx.uniform1f(this.shader_program.gapSizeUniform, model.getGapSize());
+            this.ctx?.uniform1fv(this.shader_program.columnsRightAfterGapsUniform, this.getColumnIndexesAfterAGap(model)); // need min size of 1
+            this.ctx?.uniform1f(this.shader_program.gapSizeUniform, model.getGapSize());
 
-            this.ctx.uniformMatrix4fv(this.shader_program.pMatrixUniform, false, this.pMatrix);
-            this.ctx.uniformMatrix4fv(this.shader_program.mvMatrixUniform, false, this.mvMatrix);
-            this.ctx.uniform1f(this.shader_program.columnWidthUniform, model.getCellWidth(true) + model.getCellPadding(true));
-            this.ctx.uniform1f(this.shader_program.scrollXUniform, scroll_x);
-            this.ctx.uniform1f(this.shader_program.scrollYUniform, scroll_y);
-            this.ctx.uniform1f(this.shader_program.zoomXUniform, zoom_x);
-            this.ctx.uniform1f(this.shader_program.zoomYUniform, zoom_y);
-            this.ctx.uniform1f(this.shader_program.offsetYUniform, cell_top);
-            this.ctx.uniform1f(this.shader_program.supersamplingRatioUniform, this.supersampling_ratio);
-            this.ctx.uniform1f(this.shader_program.positionBitPackBaseUniform, this.position_bit_pack_base);
+            this.ctx?.uniformMatrix4fv(this.shader_program.pMatrixUniform, false, this.pMatrix);
+            this.ctx?.uniformMatrix4fv(this.shader_program.mvMatrixUniform, false, this.mvMatrix);
+            this.ctx?.uniform1f(this.shader_program.columnWidthUniform, model.getCellWidth(true) + model.getCellPadding(true));
+            this.ctx?.uniform1f(this.shader_program.scrollXUniform, scroll_x);
+            this.ctx?.uniform1f(this.shader_program.scrollYUniform, scroll_y);
+            this.ctx?.uniform1f(this.shader_program.zoomXUniform, zoom_x);
+            this.ctx?.uniform1f(this.shader_program.zoomYUniform, zoom_y);
+            this.ctx?.uniform1f(this.shader_program.offsetYUniform, cell_top);
+            this.ctx?.uniform1f(this.shader_program.supersamplingRatioUniform, this.supersampling_ratio);
+            this.ctx?.uniform1f(this.shader_program.positionBitPackBaseUniform, this.position_bit_pack_base);
 
-            this.ctx.drawArrays(this.ctx.TRIANGLES, first_index, first_index_out - first_index);
+            this.ctx?.drawArrays(this.ctx.TRIANGLES, first_index, first_index_out - first_index);
         }
         this.renderColumnLabels(model, id_order.slice(horz_first_id_in_window_index, horz_first_id_after_window_index === -1 ? undefined : horz_first_id_after_window_index));
 
@@ -646,18 +658,22 @@ export default class OncoprintWebGLCellView {
         return model.getCellWidth()/2 + 2;
     }
 
-    private prepareContextForColumnLabelText(model:OncoprintModel, ctx:CanvasRenderingContext2D) {
+    private prepareContextForColumnLabelText(model:OncoprintModel, ctx:CanvasRenderingContext2D|null) {
         const font_size = OncoprintWebGLCellView.getColumnLabelsFontSize(model);
         const font_family = "Arial";
-        ctx.font = (this.supersampling_ratio*font_size)+"px "+font_family;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
+        if (ctx) {
+            ctx.font = (this.supersampling_ratio * font_size) + "px " + font_family;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+        }
     }
 
     private renderColumnLabels(model:OncoprintModel, ids:ColumnId[]) {
         // first clear
-        this.column_label_ctx.fillStyle = "rgba(0,0,0,0)";
-        this.column_label_ctx.clearRect(0,0, this.$column_label_canvas[0].width, this.$column_label_canvas[0].height);
+        if (this.column_label_ctx) {
+            this.column_label_ctx.fillStyle = "rgba(0,0,0,0)";
+            this.column_label_ctx.clearRect(0, 0, this.$column_label_canvas[0].width, this.$column_label_canvas[0].height);
+        }
         this.maximum_column_label_width = 0;
         this.maximum_column_label_height = 0;
 
@@ -677,29 +693,33 @@ export default class OncoprintWebGLCellView {
         this.prepareContextForColumnLabelText(model, this.column_label_ctx);
         for (let i=0; i<ids.length; i++) {
             const label = labels[ids[i]];
-            let label_height = this.column_label_ctx.measureText("m").width/this.supersampling_ratio;
+            let label_height = (this.column_label_ctx?.measureText("m").width || 0)/this.supersampling_ratio;
             if (label) {
                 const origin_x = (x_map[ids[i]] + cell_width/2 - scroll_x)*this.supersampling_ratio;
                 if (label.circle_color) {
                     // draw circle if specified
-                    this.column_label_ctx.save();
+                    this.column_label_ctx?.save();
                     const circleSpec = this.getColumnLabelCircleSpec(model);
                     label_height = Math.max(2*circleSpec.radius, label_height);
-                    this.column_label_ctx.translate(origin_x, origin_y);
-                    this.column_label_ctx.fillStyle = label.circle_color;
-                    this.column_label_ctx.beginPath();
-                    this.column_label_ctx.arc(0, 0, this.supersampling_ratio*circleSpec.radius, 0, 2*Math.PI);
-                    this.column_label_ctx.fill();
-                    this.column_label_ctx.restore();
+                    if (this.column_label_ctx) {
+                        this.column_label_ctx.translate(origin_x, origin_y);
+                        this.column_label_ctx.fillStyle = label.circle_color;
+                        this.column_label_ctx.beginPath();
+                        this.column_label_ctx.arc(0, 0, this.supersampling_ratio * circleSpec.radius, 0, 2 * Math.PI);
+                        this.column_label_ctx.fill();
+                        this.column_label_ctx.restore();
+                    }
                 }
-                this.column_label_ctx.save();
+                this.column_label_ctx?.save();
                 const text_angle = this.getColumnLabelAngleRadians(label);
                 const left_padding = (label.left_padding_percent || 0)*cell_width/100;
-                this.column_label_ctx.translate(origin_x, origin_y);
-                this.column_label_ctx.rotate(text_angle);
-                this.column_label_ctx.fillStyle = label.text_color || "rgba(0,0,0,1)";
-                this.column_label_ctx.fillText(label.text, left_padding*this.supersampling_ratio, 0);
-                const text_width = this.column_label_ctx.measureText(label.text).width/this.supersampling_ratio;
+                if (this.column_label_ctx) {
+                    this.column_label_ctx.translate(origin_x, origin_y);
+                    this.column_label_ctx.rotate(text_angle);
+                    this.column_label_ctx.fillStyle = label.text_color || "rgba(0,0,0,1)";
+                    this.column_label_ctx.fillText(label.text, left_padding * this.supersampling_ratio, 0);
+                }
+                const text_width = (this.column_label_ctx?.measureText(label.text).width || 0)/this.supersampling_ratio;
 
                 this.maximum_column_label_width = Math.max(
                     this.maximum_column_label_width,
@@ -712,7 +732,7 @@ export default class OncoprintWebGLCellView {
                     label_height
                 );
 
-                this.column_label_ctx.restore();
+                this.column_label_ctx?.restore();
             }
         }
     }
@@ -735,15 +755,15 @@ export default class OncoprintWebGLCellView {
         }
         for (let i=0; i<tracks_to_clear.length; i++) {
             if (this.vertex_position_buffer[tracks_to_clear[i]]) {
-                this.ctx.deleteBuffer(this.vertex_position_buffer[tracks_to_clear[i]]);
+                this.ctx?.deleteBuffer(this.vertex_position_buffer[tracks_to_clear[i]]);
                 delete this.vertex_position_buffer[tracks_to_clear[i]];
             }
             if (this.vertex_color_buffer[tracks_to_clear[i]]) {
-                this.ctx.deleteBuffer(this.vertex_color_buffer[tracks_to_clear[i]]);
+                this.ctx?.deleteBuffer(this.vertex_color_buffer[tracks_to_clear[i]]);
                 delete this.vertex_color_buffer[tracks_to_clear[i]];
             }
             if (this.color_texture[tracks_to_clear[i]]) {
-                this.ctx.deleteTexture(this.color_texture[tracks_to_clear[i]].texture);
+                this.ctx?.deleteTexture(this.color_texture[tracks_to_clear[i]].texture);
                 delete this.color_texture[tracks_to_clear[i]];
             }
         }
@@ -758,7 +778,7 @@ export default class OncoprintWebGLCellView {
         }
         for (let i=0; i<tracks_to_clear.length; i++) {
             if (this.vertex_column_buffer[tracks_to_clear[i]]) {
-                this.ctx.deleteBuffer(this.vertex_column_buffer[tracks_to_clear[i]]);
+                this.ctx?.deleteBuffer(this.vertex_column_buffer[tracks_to_clear[i]]);
                 delete this.vertex_column_buffer[tracks_to_clear[i]];
             }
         }
@@ -767,11 +787,11 @@ export default class OncoprintWebGLCellView {
 
     private getTrackBuffers(track_id:TrackId) {
         if (typeof this.vertex_position_buffer[track_id] === 'undefined') {
-            const pos_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+            const pos_buffer = this.ctx?.createBuffer() as OncoprintTrackBuffer;
             const pos_array = this.vertex_data[track_id].pos_array;
 
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, pos_buffer);
-            this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(pos_array), this.ctx.STATIC_DRAW);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, pos_buffer);
+            this.ctx?.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(pos_array), this.ctx.STATIC_DRAW);
             pos_buffer.itemSize = 1;
             pos_buffer.numItems = pos_array.length / pos_buffer.itemSize;
 
@@ -779,11 +799,11 @@ export default class OncoprintWebGLCellView {
         }
 
         if (typeof this.vertex_color_buffer[track_id] === 'undefined') {
-            const col_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+            const col_buffer = this.ctx?.createBuffer() as OncoprintTrackBuffer;
             const col_array = this.vertex_data[track_id].col_array;
 
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, col_buffer);
-            this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(col_array), this.ctx.STATIC_DRAW);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, col_buffer);
+            this.ctx?.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(col_array), this.ctx.STATIC_DRAW);
             col_buffer.itemSize = 1;
             col_buffer.numItems = col_array.length / col_buffer.itemSize;
 
@@ -791,8 +811,8 @@ export default class OncoprintWebGLCellView {
         }
 
         if (typeof this.color_texture[track_id] === "undefined") {
-            const tex = this.ctx.createTexture();
-            this.ctx.bindTexture(this.ctx.TEXTURE_2D, tex);
+            const tex = this.ctx?.createTexture();
+            this.ctx?.bindTexture(this.ctx.TEXTURE_2D, tex || null);
 
             const color_bank = this.vertex_data[track_id].col_bank;
             const width = Math.pow(2,Math.ceil((Math as any).log2(color_bank.length / 4)));
@@ -800,17 +820,17 @@ export default class OncoprintWebGLCellView {
                 color_bank.push(0);
             }
             const height = 1;
-            this.ctx.texImage2D(this.ctx.TEXTURE_2D, 0, this.ctx.RGBA, width, height, 0, this.ctx.RGBA, this.ctx.UNSIGNED_BYTE, new Uint8Array(color_bank));
-            this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MIN_FILTER, this.ctx.NEAREST);
-            this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MAG_FILTER, this.ctx.NEAREST);
-            this.color_texture[track_id] = {'texture': tex, 'size':width};
+            this.ctx?.texImage2D(this.ctx.TEXTURE_2D, 0, this.ctx.RGBA, width, height, 0, this.ctx.RGBA, this.ctx.UNSIGNED_BYTE, new Uint8Array(color_bank));
+            this.ctx?.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MIN_FILTER, this.ctx.NEAREST);
+            this.ctx?.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MAG_FILTER, this.ctx.NEAREST);
+            this.color_texture[track_id] = {'texture': tex as any, 'size':width};
         }
 
         if (typeof this.vertex_column_buffer[track_id] === 'undefined') {
-            const vertex_column_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+            const vertex_column_buffer = this.ctx?.createBuffer() as OncoprintTrackBuffer;
             const vertex_column_array = this.vertex_column_array[track_id];
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, vertex_column_buffer);
-            this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(vertex_column_array), this.ctx.STATIC_DRAW);
+            this.ctx?.bindBuffer(this.ctx.ARRAY_BUFFER, vertex_column_buffer);
+            this.ctx?.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(vertex_column_array), this.ctx.STATIC_DRAW);
             vertex_column_buffer.itemSize = 1;
             vertex_column_buffer.numItems = vertex_column_array.length / vertex_column_buffer.itemSize;
 
@@ -907,7 +927,7 @@ export default class OncoprintWebGLCellView {
                 vertex_col_array.push.apply(vertex_col_array, vertexifiedShapes[hash].color);
             }
         }
-        const color_bank:ColorBank = color_vertexes.reduce(function(arr, next) { return arr.concat(next); }, []);
+        const color_bank:ColorBank = color_vertexes.reduce(function(arr, next) { return arr.concat(next as any); }, []);
         // minimum color bank to avoid webGL texture errors
         if (color_bank.length === 0) {
             color_bank.push(0,0,0,0);
@@ -937,12 +957,12 @@ export default class OncoprintWebGLCellView {
         this.setUpShaders(model);
     }
 
-    private highlightCell(model:OncoprintModel, track_id:TrackId, uid:ColumnId) {
+    private highlightCell(model:OncoprintModel, track_id?:TrackId, uid?:ColumnId) {
         this.overlayStrokeRect(
-            model.getZoomedColumnLeft(uid) - this.scroll_x,
-            model.getCellTops(track_id) - this.scroll_y,
-            model.getCellWidth() + (model.getTrackHasColumnSpacing(track_id) ? 0 : model.getCellPadding()),
-            model.getCellHeight(track_id),
+            model.getZoomedColumnLeft(uid as any) - this.scroll_x,
+            (model.getCellTops(track_id as any) as any) - this.scroll_y,
+            model.getCellWidth() + (model.getTrackHasColumnSpacing(track_id as any) ? 0 : model.getCellPadding()),
+            model.getCellHeight(track_id as any),
             "rgba(0,0,0,1)"
         );
     }
@@ -970,13 +990,13 @@ export default class OncoprintWebGLCellView {
         }
     }
 
-    private highlightColumn(model:OncoprintModel, uid:ColumnId) {
-        const left = model.getZoomedColumnLeft(uid) - this.scroll_x;
+    private highlightColumn(model:OncoprintModel, uid?:ColumnId) {
+        const left = model.getZoomedColumnLeft(uid as any) - this.scroll_x;
         const cell_padding = model.getCellPadding();
         const cell_width = model.getCellWidth();
         const tracks = model.getTracks();
         for (let i=0; i<tracks.length; i++) {
-            if (model.getTrackDatum(tracks[i], uid) !== null) {
+            if (model.getTrackDatum(tracks[i], uid as any) !== null) {
                 this.overlayStrokeRect(
                     left,
                     model.getCellTops(tracks[i]) - this.scroll_y,
@@ -986,7 +1006,7 @@ export default class OncoprintWebGLCellView {
                 );
             }
         }
-        this.overlayColumnLabelHighlight(model, uid);
+        this.overlayColumnLabelHighlight(model, uid as any);
     }
 
     public getViewportOncoprintSpace(model:OncoprintModel) {
@@ -1342,7 +1362,10 @@ export default class OncoprintWebGLCellView {
                     continue;
                 }
                 for (let h=0; h<sl.length; h++) {
-                    root.appendChild(svgfactory.fromShape(sl[h], offset_x, offset_y));
+                    const node = svgfactory.fromShape(sl[h], offset_x, offset_y);
+                    if (node) {
+                        root.appendChild(node);
+                    }
                 }
             }
         }

@@ -29,7 +29,7 @@ export function bucketSort<T>(array:T[], getVector?:(t:T)=>SortingVector, compar
     var max_length_vector:SortingVector = [];
     var proposed_vector;
     for (var i=0; i<array.length; i++) {
-        proposed_vector = getVector(array[i]);
+        proposed_vector = (getVector as any)(array[i]);
         if (proposed_vector.length > max_length_vector.length) {
             max_length_vector = proposed_vector;
         }
@@ -43,7 +43,7 @@ export function bucketSort<T>(array:T[], getVector?:(t:T)=>SortingVector, compar
             bucket_range = current_bucket_ranges[j];
             sorted_result = bucketSortHelper(
                 current_sorted_array,
-                getVector,
+                getVector as any,
                 bucket_range.lower_index_incl,
                 bucket_range.upper_index_excl,
                 vector_index,
@@ -80,7 +80,7 @@ export function stringSort<T>(array:T[], getString?:(t:T)=>string) {
     var data = array.map(function(d) {
         return {
             d: d,
-            vector: stringToVector(getString(d))
+            vector: stringToVector((getString as any)(d))
         };
     });
     // sort

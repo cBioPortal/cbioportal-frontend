@@ -129,9 +129,9 @@ export class Shape {
         for (let i=0; i<param_names.length; i++) {
             const param_name = param_names[i];
             const param_val_map = this.params_with_type[param_name];
-            let param_val = param_val_map.value;
+            let param_val = param_val_map?.value;
             if (param_name !== 'type') {
-                if (param_val_map.type === 'function') {
+                if (param_val_map?.type === 'function') {
                     param_val = (param_val as ParamFunction)(d);
                 }
                 // at this point, param_val is resolved to either a string or number

@@ -35,8 +35,8 @@ export default class OncoprintZoomSlider {
 
     constructor($container:JQuery, params?:Partial<OncoprintZoomSliderParams>) {
         this.$div = $('<div>').css({'position':'absolute',
-            'top': params.top || 0,
-            'left': params.left || 0}).appendTo($container);
+            'top': params?.top || 0,
+            'left': params?.left || 0}).appendTo($container);
         params = params || {};
         params.btn_size = params.btn_size || 13;
         this.onChange = params.onChange || function() {};
@@ -44,7 +44,7 @@ export default class OncoprintZoomSlider {
         this.initialize(params as OncoprintZoomSliderParams);
 
         this.value = params.init_val === undefined ? 0.5 : params.init_val;
-        this.slider_bar_size = (this.orientation === VERTICAL ? params.height : params.width) - 2*params.btn_size;
+        this.slider_bar_size = ((this.orientation === VERTICAL ? params.height : params.width) || 0) - 2*params.btn_size;
         this.updateSliderPos();
     }
 
@@ -90,23 +90,23 @@ export default class OncoprintZoomSlider {
             'min-height':icon_size})
             .appendTo($minus_btn);
         if (params.vertical) {
-            $slider_bar.css({'min-height': params.height - 2 * params.btn_size,
+            $slider_bar.css({'min-height': (params.height || 0) - 2 * params.btn_size,
                 'min-width': Math.round(params.btn_size / 5)});
             $slider.css({'min-height': Math.round(params.btn_size / 2),
                 'min-width': params.btn_size});
 
             $plus_btn.css({'top': 0, 'left': 0});
-            $minus_btn.css({'top': params.height - params.btn_size, 'left': 0});
+            $minus_btn.css({'top': (params.height || 0) - params.btn_size, 'left': 0});
             $slider_bar.css({'top': params.btn_size, 'left': 0.4 * params.btn_size});
             $slider.css({'left': 0});
             this.orientation = VERTICAL;
         } else {
             $slider_bar.css({'min-height': Math.round(params.btn_size / 5),
-                'min-width': params.width - 2 * params.btn_size});
+                'min-width': (params.width || 0) - 2 * params.btn_size});
             $slider.css({'min-height': params.btn_size,
                 'min-width': Math.round(params.btn_size / 2)});
 
-            $plus_btn.css({'top': 0, 'left': params.width - params.btn_size});
+            $plus_btn.css({'top': 0, 'left': (params.width || 0) - params.btn_size});
             $minus_btn.css({'top': 0, 'left': 0});
             $slider_bar.css({'top': 0.4*params.btn_size, 'left': params.btn_size});
             $slider.css({'top': 0});
@@ -180,9 +180,9 @@ export default class OncoprintZoomSlider {
         var $slider = this.$slider;
         var bounds = this.getSliderBounds();
         if (this.orientation === VERTICAL) {
-            $slider.css('top', bounds.bottom*(1-proportion) + bounds.top*proportion);
+            $slider.css('top', (bounds.bottom || 0)*(1-proportion) + (bounds.top || 0)*proportion);
         } else if (this.orientation === HORIZONTAL) {
-            $slider.css('left', bounds.left*(1-proportion) + bounds.right*proportion);
+            $slider.css('left', (bounds.left || 0)*(1-proportion) + (bounds.right || 0)*proportion);
         }
     };
 
