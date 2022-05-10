@@ -174,10 +174,6 @@ export function generateCopyNumberAlterationQuery(
     } as AnnotateCopyNumberAlterationQuery;
 }
 
-const FUSION_REGEX = '(\\w+)-(\\w+)(\\s+fusion)?'; // AARON: this is not accurate anymore.  can we just change it though? depends on consistency of format
-const INTRAGENIC_REGEX = '(\\w+)-intragenic';
-const TWO_GENE_REGEXP = /^\(([^-]*)-([^\)]*)\)/;
-
 export function generateAnnotateStructuralVariantQuery(
     entrezGeneId: number,
     tumorType: string | null,
