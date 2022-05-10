@@ -36,19 +36,15 @@ if (
         // ADD MESSAGE IN FOLLOWING FORMAT
         // UNIQUE ID IS IMPORTANT B/C WE REMEMBER A MESSAGE HAS BEEN SHOWN
         // BASED ON USERS LOCALSTORAGE
-        // {
-        //     dateEnd: 100000000000000,
-        //     content: `<div style="margin:20px;font-size:20px;" class="text-center">
-        //         Help us improve cBioPortal. We rely on your feedback to help prioritize features in the next phase of development. Your 5-10 minutes can influence the future direction of cBioPortal.&nbsp;
-        //         <br/><br/>
-        //         <a target="_blank" class="btn btn-default" data-action="dismiss" href="https://bit.ly/cbioportal-survey-2021">Take Survey</a>
-        //         <a class="btn btn-link text-white" data-action="remind">Remind me later</a>
-        //         <a class="btn btn-link text-white" data-action="dismiss">No thanks</a>
-        //         </div>`,
-        //     showCondition: routingStore =>
-        //         routingStore.location.pathname.length < 2,
-        //     id: '2021_fall_user_survey',
-        // },
+        {
+            dateEnd: 100000000000000,
+            content: `<div style="" class="text-center">
+                The cBioPortal team is hiring a software engineer! <a href="https://externaltalent-mskcc.icims.com/jobs/60607/bioinformatics-software-engineer-i/job?mode=view&mobile=false&width=755&height=500&bga=true&needsRedirect=false&jan1offset=-300&jun1offset=-240" target="_blank">Apply</a> or help us by sharing: <a href="https://twitter.com/inodb/status/1523785054581030912" style="color:lightblue" target="_blank">Twitter</a> <a href="https://www.linkedin.com/feed/update/urn:li:activity:6929550463377813504/" style="color:lightblue" target="_blank">LinkedIn</a>
+             `,
+            showCondition: routingStore =>
+                routingStore.location.pathname.length < 2,
+            id: '2022_hiring',
+        },
     ];
 }
 
