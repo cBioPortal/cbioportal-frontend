@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 
 import {
+    generateAnnotateStructuralVariantQuery,
     generateAnnotateStructuralVariantQueryFromGenes,
     generateQueryVariantId,
     StructuralVariantType,
@@ -56,4 +57,12 @@ describe('OncoKbUtils', () => {
             assert.equal(query.functionalFusion, true);
         });
     });
+
+    // describe('', ()=>{
+    //     it("", ()=>{
+    //        generateAnnotateStructuralVariantQuery(
+    //
+    //        )
+    //     });
+    // });
 });
