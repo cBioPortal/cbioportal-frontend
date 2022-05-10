@@ -619,14 +619,13 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             isLoading={this.isProcessingSaveData}
                             size="big"
                         />
-                        {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test</Button> */}
                     </div>
                 </p>
                 <MtbTableComponent
                     data={this.state.mtbs}
                     columns={this._columns}
                     showCopyDownload={false}
-                    className="mtb-table"
+                    className={styles['mtb-table']}
                 />
                 <SimpleCopyDownloadControls
                     downloadData={() => flattenStringify(this.state.mtbs)}

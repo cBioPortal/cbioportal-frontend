@@ -20,6 +20,7 @@ declare const styles: {
   readonly "loginButton": string;
   readonly "marginLeft": string;
   readonly "marginRight": string;
+  readonly "mtb-table": string;
   readonly "powered": string;
   readonly "reasoningContainer": string;
   readonly "reasoningInfoContainer": string;
