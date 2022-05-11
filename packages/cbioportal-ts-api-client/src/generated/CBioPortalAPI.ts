@@ -801,11 +801,15 @@ export type StudyViewFilter = {
 
         'patientTreatmentGroupFilters': AndedPatientTreatmentFilters
 
+        'patientTreatmentTargetFilters': AndedPatientTreatmentFilters
+
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'sampleTreatmentFilters': AndedSampleTreatmentFilters
 
         'sampleTreatmentGroupFilters': AndedSampleTreatmentFilters
+
+        'sampleTreatmentTargetFilters': AndedSampleTreatmentFilters
 
         'studyIds': Array < string >
 
@@ -7311,7 +7315,7 @@ export default class CBioPortalAPI {
     };
     getContainsTreatmentDataUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -7340,7 +7344,7 @@ export default class CBioPortalAPI {
      */
     getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters: {
         'studyIds': Array < string > ,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7390,7 +7394,7 @@ export default class CBioPortalAPI {
      */
     getContainsTreatmentDataUsingPOST(parameters: {
         'studyIds': Array < string > ,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < boolean > {
@@ -7400,7 +7404,7 @@ export default class CBioPortalAPI {
     };
     getContainsSampleTreatmentDataUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -7429,7 +7433,7 @@ export default class CBioPortalAPI {
      */
     getContainsSampleTreatmentDataUsingPOSTWithHttpInfo(parameters: {
         'studyIds': Array < string > ,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7479,7 +7483,7 @@ export default class CBioPortalAPI {
      */
     getContainsSampleTreatmentDataUsingPOST(parameters: {
         'studyIds': Array < string > ,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < boolean > {
@@ -7489,7 +7493,7 @@ export default class CBioPortalAPI {
     };
     getAllPatientTreatmentsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -7518,7 +7522,7 @@ export default class CBioPortalAPI {
      */
     getAllPatientTreatmentsUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter': StudyViewFilter,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7568,7 +7572,7 @@ export default class CBioPortalAPI {
      */
     getAllPatientTreatmentsUsingPOST(parameters: {
             'studyViewFilter': StudyViewFilter,
-            'tier' ? : "Agent" | "AgentClass",
+            'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < PatientTreatmentRow >
@@ -7579,7 +7583,7 @@ export default class CBioPortalAPI {
         };
     getAllSampleTreatmentsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -7608,7 +7612,7 @@ export default class CBioPortalAPI {
      */
     getAllSampleTreatmentsUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter': StudyViewFilter,
-        'tier' ? : "Agent" | "AgentClass",
+        'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7658,7 +7662,7 @@ export default class CBioPortalAPI {
      */
     getAllSampleTreatmentsUsingPOST(parameters: {
             'studyViewFilter': StudyViewFilter,
-            'tier' ? : "Agent" | "AgentClass",
+            'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < SampleTreatmentRow >
