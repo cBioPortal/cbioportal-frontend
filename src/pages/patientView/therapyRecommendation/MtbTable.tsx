@@ -126,7 +126,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             )}
                             destroyTooltipOnHide={false}
                         >
-                            <i className={'fa fa-user-circle'}></i>
+                            <i className={'fa fa-user-md fa-2x'}></i>
                         </DefaultTooltip>
                     </span>
                     <label

@@ -392,9 +392,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             //onPopupAlign={placeArrowBottomLeft}
                         >
                             <i
-                                className={
-                                    'fa fa-user-circle ' + styles.editIcon
-                                }
+                                className={'fa fa-user-md ' + styles.editIcon}
                             ></i>
                         </DefaultTooltip>
                     </span>
