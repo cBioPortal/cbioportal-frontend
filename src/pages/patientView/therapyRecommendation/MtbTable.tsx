@@ -34,7 +34,7 @@ import Select from 'react-select';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { isMacOs, isSafari } from 'react-device-detect';
 import DatePicker from 'react-date-picker';
-import { LoginModal, LoginButton, UserInfoButton } from './LoginElements';
+import { LoginModal, UserInfoButton } from './LoginElements';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
 export type IMtbProps = {
     patientId: string;
@@ -559,31 +559,16 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
     }
 
     render() {
-        const loginButton = this.state.loggedIn ? (
-            <UserInfoButton
-                className={'btn btn-default ' + styles.loginButton}
-                mtbUrl={this.props.mtbUrl}
-                openLoginModal={() => this.openLoginModal()}
-                checkPermission={() => this.closeLoginModal()}
-            />
-        ) : (
-            <LoginButton
-                className={'btn btn-default ' + styles.loginButton}
-                openLoginModal={() => this.openLoginModal()}
-            />
-        );
-
         return (
             <div>
+                <LoginModal
+                    showLoginModal={this.showLoginModal}
+                    handleClose={() => this.closeLoginModal()}
+                    mtbUrl={this.props.mtbUrl}
+                />
                 <h2 style={{ marginBottom: '0' }}>MTB Sessions</h2>
                 <p className={styles.edit}>
                     <div className="btn-group">
-                        {loginButton}
-                        <LoginModal
-                            showLoginModal={this.showLoginModal}
-                            handleClose={() => this.closeLoginModal()}
-                            mtbUrl={this.props.mtbUrl}
-                        />
                         <Button
                             type="button"
                             className={'btn btn-default ' + styles.addMtbButton}
@@ -609,6 +594,14 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                         >
                             Save Data
                         </Button>
+                        {this.state.loggedIn ? (
+                            <UserInfoButton
+                                mtbUrl={this.props.mtbUrl}
+                                openLoginModal={() => this.openLoginModal()}
+                            />
+                        ) : (
+                            <></>
+                        )}
                         {this.state.successfulSave ? (
                             <div className={styles.successBox}>
                                 Saving data was successful!
@@ -637,7 +630,6 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
     }
 
     componentDidMount() {
-        // console.log('cDM got invoked');
         this.props.checkPermission().then(res => {
             console.log('checkPermission returned with ' + res);
             this.setState({ loggedIn: true });

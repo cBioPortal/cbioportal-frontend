@@ -1,7 +1,5 @@
 import * as React from 'react';
-import * as request from 'superagent';
 import { Modal, Button } from 'react-bootstrap';
-import { DropdownButton, MenuItem } from 'react-bootstrap';
 
 interface ILoginModalProps {
     showLoginModal: boolean;
@@ -10,12 +8,6 @@ interface ILoginModalProps {
 }
 
 export class LoginModal extends React.Component<ILoginModalProps, {}> {
-    private openInTab = () => {
-        let url = this.props.mtbUrl + 'login';
-        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-        if (newWindow) newWindow.opener = null;
-    };
-
     public render() {
         const url = this.props.mtbUrl + 'login';
 
@@ -25,7 +17,7 @@ export class LoginModal extends React.Component<ILoginModalProps, {}> {
                 onHide={this.props.handleClose}
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>MTB Login</Modal.Title>
+                    <Modal.Title>MTB User Information</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <iframe
@@ -45,13 +37,6 @@ export class LoginModal extends React.Component<ILoginModalProps, {}> {
                 <Modal.Footer>
                     <Button
                         type="button"
-                        bsStyle="link"
-                        onClick={this.openInTab}
-                    >
-                        Open in new tab
-                    </Button>
-                    <Button
-                        type="button"
                         bsStyle="primary"
                         onClick={this.props.handleClose}
                     >
@@ -63,62 +48,25 @@ export class LoginModal extends React.Component<ILoginModalProps, {}> {
     }
 }
 
-interface ILoginButtonProps {
-    className: string;
-    openLoginModal: () => void;
-}
-
-export class LoginButton extends React.Component<ILoginButtonProps, {}> {
-    public render() {
-        return (
-            <Button
-                type="button"
-                className={this.props.className}
-                onClick={() => this.props.openLoginModal()}
-            >
-                MTB Login
-            </Button>
-        );
-    }
-}
-
 interface IUserInfoButtonProps {
-    className: string;
     mtbUrl: string;
     openLoginModal: () => void;
-    checkPermission: () => void;
 }
 
 export class UserInfoButton extends React.Component<IUserInfoButtonProps, {}> {
-    private logout() {
-        let seqParam = 'seq=' + new Date().getTime();
-        let logoutUrl = this.props.mtbUrl + 'logout' + '?' + seqParam;
-        console.log('### logout() ### requesting Logout Url: ' + logoutUrl);
-        request
-            .get(logoutUrl)
-            .then(() => {
-                this.props.checkPermission();
-            })
-            .catch(err => {
-                console.group('### MTB ### ERROR catched GETting ' + logoutUrl);
-                console.log(err);
-                console.groupEnd();
-                this.props.checkPermission();
-            });
-    }
-
     public render() {
         return (
-            <DropdownButton
-                id="drop1"
-                className={this.props.className}
-                title="User Info / MTB Logout"
-            >
-                <MenuItem onClick={() => this.props.openLoginModal()}>
-                    Show User Information
-                </MenuItem>
-                <MenuItem onClick={() => this.logout()}>MTB Logout</MenuItem>
-            </DropdownButton>
+            <i
+                className={'fa fa-user-circle'}
+                style={{
+                    float: 'right',
+                    fontSize: '30px',
+                    marginTop: '12px',
+                    marginLeft: '15px',
+                }}
+                onClick={() => this.props.openLoginModal()}
+                title={'Show User Information'}
+            />
         );
     }
 }
