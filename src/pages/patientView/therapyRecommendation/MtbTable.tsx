@@ -632,8 +632,8 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
     componentDidMount() {
         this.props.checkPermission().then(res => {
             console.log('checkPermission returned with ' + res);
-            this.setState({ loggedIn: true });
-            this.setState({ permission: true });
+            this.setState({ loggedIn: res[0] });
+            this.setState({ permission: res[1] });
         });
     }
 }
