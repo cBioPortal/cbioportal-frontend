@@ -5535,6 +5535,9 @@
         "patientTreatmentGroupFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
+        "patientTreatmentTargetFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -5545,6 +5548,9 @@
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "sampleTreatmentGroupFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "sampleTreatmentTargetFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {
