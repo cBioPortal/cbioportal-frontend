@@ -47,6 +47,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     show_mutation_mapper_tool_grch38: true,
     show_transcript_dropdown: false,
     show_signal: true,
+    show_ndex: true,
     survival_show_p_q_values_in_survival_type_table: true,
     survival_min_group_threshold: 3,
     skin_description:

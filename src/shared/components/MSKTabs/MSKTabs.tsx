@@ -409,6 +409,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                 const linkContent = tab.props.linkTooltip ? (
                     <DefaultTooltip
                         overlay={tab.props.linkTooltip}
+                        mouseEnterDelay={0}
                         placement="top"
                     >
                         <span>{tab.props.linkText}</span>
