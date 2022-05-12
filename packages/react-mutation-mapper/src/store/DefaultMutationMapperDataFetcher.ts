@@ -344,26 +344,28 @@ export class DefaultMutationMapperDataFetcher
             ),
             'id'
         );
-        // const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
-        //     _.map(
-        //         queryVariants.filter(
-        //             mutation =>
-        //                 mutation.mutationType?.toUpperCase() ===
-        //                 StructuralVariantType.FUSION
-        //         ),
-        //         (mutation: Mutation) => {
-        //             return generateAnnotateStructuralVariantQuery(
-        //                 getEntrezGeneId(mutation),
-        //                 getTumorType(mutation),
-        //                 mutation.proteinChange,
-        //
-        //                 mutation.mutationType,
-        //                 evidenceTypes
-        //             );
-        //         }
-        //     ),
-        //     'id'
-        // );
+
+        const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
+            _.map(
+                queryVariants.filter(
+                    mutation =>
+                        mutation.mutationType?.toUpperCase() ===
+                        StructuralVariantType.FUSION
+                ),
+                (mutation: Mutation) => {
+                    return generateAnnotateStructuralVariantQuery(
+                        getEntrezGeneId(mutation),
+                        getTumorType(mutation),
+                        mutation.proteinChange,
+                        /* @ts-ignore */
+                        mutation.structuralVariant,
+                        mutation.mutationType,
+                        evidenceTypes
+                    );
+                }
+            ),
+            'id'
+        );
 
         const mutationQueryResult =
             mutationQueryVariants.length === 0
@@ -372,17 +374,17 @@ export class DefaultMutationMapperDataFetcher
                       body: mutationQueryVariants,
                   });
 
-        // const structuralVariantQueryResult =
-        //     structuralQueryVariants.length === 0
-        //         ? []
-        //         : await client.annotateStructuralVariantsPostUsingPOST_1({
-        //               body: structuralQueryVariants,
-        //           });
+        const structuralVariantQueryResult =
+            structuralQueryVariants.length === 0
+                ? []
+                : await client.annotateStructuralVariantsPostUsingPOST_1({
+                      body: structuralQueryVariants,
+                  });
 
         return {
             // generateIdToIndicatorMap(oncokbSearch)
             indicatorMap: _.keyBy(
-                mutationQueryResult,
+                mutationQueryResult.concat(structuralVariantQueryResult),
                 indicator => indicator.query.id
             ),
         };

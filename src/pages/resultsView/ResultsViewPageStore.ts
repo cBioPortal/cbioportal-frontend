@@ -52,6 +52,7 @@ import {
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
+    deriveStructuralVariantType,
 } from 'cbioportal-utils';
 import {
     GenomeNexusAPI,
@@ -5534,7 +5535,7 @@ export class ResultsViewPageStore
                                 structuralVariant.uniqueSampleKey,
                                 {}
                             ),
-                            structuralVariant.variantClass.toUpperCase() as any
+                            deriveStructuralVariantType(structuralVariant)
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
                             id

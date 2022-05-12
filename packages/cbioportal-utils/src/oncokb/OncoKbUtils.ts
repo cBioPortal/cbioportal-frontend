@@ -81,7 +81,7 @@ export function generateQueryStructuralVariantId(
     site1EntrezGeneId: number,
     site2EntrezGeneId: number | undefined,
     tumorType: string | null,
-    structuralVariantType: keyof typeof StructuralVariantType
+    structuralVariantType: string
 ): string {
     let id = `${site1EntrezGeneId}_${site2EntrezGeneId}_${structuralVariantType}`;
     if (tumorType) {
@@ -174,21 +174,9 @@ export function generateCopyNumberAlterationQuery(
     } as AnnotateCopyNumberAlterationQuery;
 }
 
-export function generateAnnotateStructuralVariantQuery(
-    entrezGeneId: number,
-    tumorType: string | null,
-    proteinChange: string,
-    structuralVariant: StructuralVariant,
-    mutationType?: string,
-    evidenceTypes?: EvidenceType[]
-): AnnotateStructuralVariantQuery {
-    const id = generateQueryVariantId(
-        entrezGeneId,
-        tumorType,
-        proteinChange,
-        mutationType
-    );
-
+export function deriveStructuralVariantType(
+    structuralVariant: StructuralVariant
+): string {
     const validTypes = [
         'DELETION',
         'TRANSLOCATION',
@@ -220,6 +208,46 @@ export function generateAnnotateStructuralVariantQuery(
             : 'UNKNOWN';
     }
 
+    return structuralVariantType;
+}
+
+export function generateAnnotateStructuralVariantQuery(
+    entrezGeneId: number,
+    tumorType: string | null,
+    proteinChange: string,
+    structuralVariant: StructuralVariant,
+    mutationType?: string,
+    evidenceTypes?: EvidenceType[]
+): AnnotateStructuralVariantQuery {
+    const id = generateQueryVariantId(
+        entrezGeneId,
+        tumorType,
+        proteinChange,
+        mutationType
+    );
+
+    // SVs will sometimes have only 1 gene (intragenic).
+    // could be site1 or site 2
+    const genes = [];
+    structuralVariant.site1HugoSymbol &&
+        genes.push(structuralVariant.site1HugoSymbol);
+    structuralVariant.site2HugoSymbol &&
+        genes.push(structuralVariant.site2HugoSymbol);
+
+    // this is default
+    let structuralVariantType = deriveStructuralVariantType(structuralVariant);
+
+    // if we only have one gene, we want to use the variantClass field of
+    // structural variant IF it contains a valid type (above)
+    // and if not, just pass unknown
+    if (genes.length < 2) {
+        structuralVariantType = validTypes.includes(
+            structuralVariant.variantClass
+        )
+            ? structuralVariant.variantClass
+            : 'UNKNOWN';
+    }
+
     return {
         id: id,
         geneA: {
@@ -228,7 +256,7 @@ export function generateAnnotateStructuralVariantQuery(
         geneB: {
             hugoSymbol: genes[1] || genes[0],
         },
-        structuralVariantType: structuralVariant.variantClass,
+        structuralVariantType: structuralVariantType,
         functionalFusion: genes.length > 1, // if its only one gene, it's intagenic and thus not a functional fusion
         tumorType: tumorType,
         evidenceTypes: evidenceTypes,
@@ -249,32 +277,45 @@ export function generateAnnotateStructuralVariantQueryFromGenes(
     site1EntrezGeneId: number,
     site2EntrezGeneId: number | undefined,
     tumorType: string | null,
-    structuralVariantType: keyof typeof StructuralVariantType,
+    structuralVariantType: string,
     evidenceTypes?: EvidenceType[]
 ): AnnotateStructuralVariantQuery {
     // For most of the SV in the portal, we can assume they are fusion event. The assumption is based on that user generally will not import none fusion event in database.
     // Intragenic deletion event is similar to fusion event but happens within the same gene. In this case, it's not a functional fusion but rather a deletion.
     // Intragenic event usually is stored in the database with only one gene available, so the site2 usually is undefined or the same as site1.
-    let isIntragenic =
-        (site1EntrezGeneId === site2EntrezGeneId ||
-            site2EntrezGeneId === undefined) &&
-        structuralVariantType === StructuralVariantType.DELETION;
+
+    const genes = _([site1EntrezGeneId, site2EntrezGeneId])
+        .compact()
+        .uniq()
+        .value();
+
+    // this is default
+    let _structuralVariantType = 'FUSION';
+
+    // if we only have one gene, we want to use the variantClass field of
+    // structural variant IF it contains a valid type (above)
+    // and if not, just pass unknown
+    if (genes.length < 2) {
+        _structuralVariantType = validTypes.includes(structuralVariantType)
+            ? structuralVariantType
+            : 'UNKNOWN';
+    }
 
     return {
         id: generateQueryStructuralVariantId(
             site1EntrezGeneId,
             site2EntrezGeneId,
             tumorType,
-            structuralVariantType
+            _structuralVariantType
         ),
         geneA: {
-            entrezGeneId: site1EntrezGeneId,
+            entrezGeneId: genes[0],
         },
         geneB: {
-            entrezGeneId: isIntragenic ? site1EntrezGeneId : site2EntrezGeneId,
+            entrezGeneId: genes[1] || genes[0],
         },
-        structuralVariantType: structuralVariantType,
-        functionalFusion: !isIntragenic,
+        structuralVariantType: _structuralVariantType,
+        functionalFusion: genes.length > 1,
         tumorType,
         evidenceTypes: evidenceTypes,
     } as AnnotateStructuralVariantQuery;
