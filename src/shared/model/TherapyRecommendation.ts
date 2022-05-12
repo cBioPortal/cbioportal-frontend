@@ -97,6 +97,7 @@ export interface IGeneticAlteration {
     clinvar?: number;
     cosmic?: string;
     gnomad?: number;
+    sampleIds?: string[];
 }
 
 export interface IDeletions {
