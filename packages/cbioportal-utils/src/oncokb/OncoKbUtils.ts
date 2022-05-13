@@ -219,36 +219,26 @@ export function generateAnnotateStructuralVariantQuery(
     mutationType?: string,
     evidenceTypes?: EvidenceType[]
 ): AnnotateStructuralVariantQuery {
-    const id = generateQueryVariantId(
-        entrezGeneId,
+    let structuralVariantType = deriveStructuralVariantType(structuralVariant);
+
+    const id = generateQueryStructuralVariantId(
+        structuralVariant.site1EntrezGeneId,
+        structuralVariant.site2EntrezGeneId,
         tumorType,
-        proteinChange,
-        mutationType
+        structuralVariantType
     );
 
     // SVs will sometimes have only 1 gene (intragenic).
     // could be site1 or site 2
     const genes = [];
-    structuralVariant.site1HugoSymbol &&
-        genes.push(structuralVariant.site1HugoSymbol);
-    structuralVariant.site2HugoSymbol &&
-        genes.push(structuralVariant.site2HugoSymbol);
+    structuralVariant.site1EntrezGeneId &&
+        genes.push(structuralVariant.site1EntrezGeneId);
+    structuralVariant.site2EntrezGeneId &&
+        genes.push(structuralVariant.site2EntrezGeneId);
 
     // this is default
-    let structuralVariantType = deriveStructuralVariantType(structuralVariant);
 
-    // if we only have one gene, we want to use the variantClass field of
-    // structural variant IF it contains a valid type (above)
-    // and if not, just pass unknown
-    if (genes.length < 2) {
-        structuralVariantType = validTypes.includes(
-            structuralVariant.variantClass
-        )
-            ? structuralVariant.variantClass
-            : 'UNKNOWN';
-    }
-
-    return {
+    return ({
         id: id,
         geneA: {
             hugoSymbol: genes[0],
@@ -260,7 +250,7 @@ export function generateAnnotateStructuralVariantQuery(
         functionalFusion: genes.length > 1, // if its only one gene, it's intagenic and thus not a functional fusion
         tumorType: tumorType,
         evidenceTypes: evidenceTypes,
-    } as AnnotateStructuralVariantQuery;
+    } as unknown) as AnnotateStructuralVariantQuery;
 }
 
 export enum StructuralVariantType {
@@ -271,54 +261,6 @@ export enum StructuralVariantType {
     INVERSION = 'INVERSION',
     FUSION = 'FUSION',
     UNKNOWN = 'UNKNOWN',
-}
-
-export function generateAnnotateStructuralVariantQueryFromGenes(
-    site1EntrezGeneId: number,
-    site2EntrezGeneId: number | undefined,
-    tumorType: string | null,
-    structuralVariantType: string,
-    evidenceTypes?: EvidenceType[]
-): AnnotateStructuralVariantQuery {
-    // For most of the SV in the portal, we can assume they are fusion event. The assumption is based on that user generally will not import none fusion event in database.
-    // Intragenic deletion event is similar to fusion event but happens within the same gene. In this case, it's not a functional fusion but rather a deletion.
-    // Intragenic event usually is stored in the database with only one gene available, so the site2 usually is undefined or the same as site1.
-
-    const genes = _([site1EntrezGeneId, site2EntrezGeneId])
-        .compact()
-        .uniq()
-        .value();
-
-    // this is default
-    let _structuralVariantType = 'FUSION';
-
-    // if we only have one gene, we want to use the variantClass field of
-    // structural variant IF it contains a valid type (above)
-    // and if not, just pass unknown
-    if (genes.length < 2) {
-        _structuralVariantType = validTypes.includes(structuralVariantType)
-            ? structuralVariantType
-            : 'UNKNOWN';
-    }
-
-    return {
-        id: generateQueryStructuralVariantId(
-            site1EntrezGeneId,
-            site2EntrezGeneId,
-            tumorType,
-            _structuralVariantType
-        ),
-        geneA: {
-            entrezGeneId: genes[0],
-        },
-        geneB: {
-            entrezGeneId: genes[1] || genes[0],
-        },
-        structuralVariantType: _structuralVariantType,
-        functionalFusion: genes.length > 1,
-        tumorType,
-        evidenceTypes: evidenceTypes,
-    } as AnnotateStructuralVariantQuery;
 }
 
 export function calculateOncoKbAvailableDataType(

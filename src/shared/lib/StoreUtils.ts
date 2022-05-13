@@ -55,7 +55,6 @@ import {
     generateQueryVariantId,
     IHotspotIndex,
     IOncoKbData,
-    generateAnnotateStructuralVariantQueryFromGenes,
     isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
@@ -865,14 +864,14 @@ export async function fetchStructuralVariantOncoKbData(
         );
         const queryVariants = _.uniqBy(
             _.map(alterationsToQuery, datum => {
-                return generateAnnotateStructuralVariantQueryFromGenes(
+                return generateAnnotateStructuralVariantQuery(
                     datum.site1EntrezGeneId,
-                    datum.site2EntrezGeneId,
                     cancerTypeForOncoKb(
                         datum.uniqueSampleKey,
                         uniqueSampleKeyToTumorType
                     ),
-                    datum.variantClass.toUpperCase() as any
+                    buildProteinChange(datum),
+                    datum
                 );
             }),
             datum => datum.id
