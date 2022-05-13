@@ -76,7 +76,10 @@ class PanelColumn extends React.Component<PanelColumnFormatterProps, {}> {
     }
 }
 
-const getGenePanelIds = (props: PanelColumnFormatterProps) => {
+const getGenePanelIds = (
+    props: PanelColumnFormatterProps,
+    ignoreUnprofiledGenePanelIds?: boolean
+) => {
     const {
         data,
         sampleToGenePanelId,
@@ -102,7 +105,12 @@ const getGenePanelIds = (props: PanelColumnFormatterProps) => {
             const isMutated = sample.id in mutatedSamples;
             const isProfiled =
                 sample.id in profiledSamples && profiledSamples[sample.id];
-            if (isProfiled && !isMutated) return '';
+            if (
+                (ignoreUnprofiledGenePanelIds && !isProfiled) ||
+                (isProfiled && !isMutated)
+            ) {
+                return '';
+            }
             return sampleToGenePanelId[sample.id] || 'N/A';
         });
 
@@ -121,6 +129,8 @@ export default {
             onSelectGenePanel={props.onSelectGenePanel}
         />
     ),
-    download: (props: PanelColumnFormatterProps) => getGenePanelIds(props),
+    // Exclude not profiled gene panel ids for download
+    download: (props: PanelColumnFormatterProps) =>
+        getGenePanelIds(props, true),
     getGenePanelIds,
 };

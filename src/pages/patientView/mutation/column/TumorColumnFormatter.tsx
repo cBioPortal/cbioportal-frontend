@@ -78,6 +78,7 @@ export default class TumorColumnFormatter {
             return (
                 <li className={isProfiled && !isMutated ? 'invisible' : ''}>
                     {isProfiled ? (
+                        // Sample is profiled AND is mutated
                         sampleManager.getComponentForSample(
                             sample.id,
                             mutatedSamples[sample.id] ? 1 : 0.1,
@@ -87,6 +88,7 @@ export default class TumorColumnFormatter {
                             disableTooltip
                         )
                     ) : (
+                        // Sample is not profiled
                         <SampleInline
                             sample={sample}
                             extraTooltipText={extraTooltipText}
