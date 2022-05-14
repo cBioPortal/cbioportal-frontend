@@ -1191,13 +1191,20 @@ export default class LazyMobXTable<T> extends React.Component<
                     ) : (
                         ''
                     )}
-                    {this.props.showCopyDownload &&
-                    !getServerConfig().skin_hide_download_controls ? (
+                    {this.props.showCopyDownload ? (
                         this.props.downloadDataFetcher ? (
                             <CopyDownloadControls
                                 className="pull-right"
                                 downloadData={this.getDownloadDataPromise}
                                 downloadFilename="table.tsv"
+                                showDownload={
+                                    !getServerConfig()
+                                        .skin_hide_download_controls
+                                }
+                                showCopy={
+                                    !getServerConfig()
+                                        .skin_hide_download_controls
+                                }
                                 {...this.props.copyDownloadProps}
                             />
                         ) : (
@@ -1206,6 +1213,14 @@ export default class LazyMobXTable<T> extends React.Component<
                                 downloadData={this.getDownloadData}
                                 downloadFilename="table.tsv"
                                 controlsStyle="BUTTON"
+                                showDownload={
+                                    !getServerConfig()
+                                        .skin_hide_download_controls
+                                }
+                                showCopy={
+                                    !getServerConfig()
+                                        .skin_hide_download_controls
+                                }
                                 {...this.props.copyDownloadProps}
                             />
                         )

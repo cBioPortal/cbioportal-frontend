@@ -9,6 +9,7 @@ import { observable, action, computed, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import SimpleTable from 'shared/components/simpleTable/SimpleTable';
+import { getServerConfig } from 'config/config';
 
 interface IGenesListProps {
     genePanel: GenePanel;
@@ -151,6 +152,10 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
                         'pull-right',
                         styles.copyDownloadControls
                     )}
+                    showDownload={
+                        !getServerConfig().skin_hide_download_controls
+                    }
+                    showCopy={!getServerConfig().skin_hide_download_controls}
                     downloadData={this.getDownloadData}
                     downloadFilename={`gene_panel_${this.props.genePanel.genePanelId}.tsv`}
                     controlsStyle="BUTTON"

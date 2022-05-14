@@ -77,6 +77,7 @@ import FontAwesome from 'react-fontawesome';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { If, Then, Else } from 'react-if';
 import { ResultsViewTab } from '../ResultsViewPageHelpers';
+import { getServerConfig } from 'config/config';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -1063,6 +1064,12 @@ export default class DownloadTab extends React.Component<
                         controlsStyle="LINK"
                         downloadData={handleDownload}
                         downloadFilename={filename}
+                        showDownload={
+                            !getServerConfig().skin_hide_download_controls
+                        }
+                        showCopy={
+                            !getServerConfig().skin_hide_download_controls
+                        }
                     />
                 </td>
             </tr>
