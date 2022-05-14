@@ -36,7 +36,7 @@ describe('hide download controls feature', function() {
 
             it('covers all tabs with download control tests', () => {
                 const observedTabNames = $$('.tabAnchor')
-                    .filter(a => a.isVisible())
+                    .filter(a => a.isDisplayed())
                     .map(a => a.getText());
                 assert.deepStrictEqual(
                     expectedTabNames,
@@ -88,7 +88,7 @@ describe('hide download controls feature', function() {
 
             it('covers all tabs with download control tests', () => {
                 const observedTabNames = $$('.tabAnchor')
-                    .filter(a => a.isVisible())
+                    .filter(a => a.isDisplayed())
                     .map(a => a.getText());
                 assert.deepStrictEqual(
                     expectedTabNames,
@@ -174,7 +174,7 @@ describe('hide download controls feature', function() {
                     const observedTabNames = $$(
                         '[data-test=ComparisonTabDiv] .tabAnchor'
                     )
-                        .filter(a => a.isVisible())
+                        .filter(a => a.isDisplayed())
                         .map(a => a.getText());
                     assert.deepStrictEqual(
                         expectedTabNames,
@@ -320,7 +320,7 @@ describe('hide download controls feature', function() {
             });
             it('covers all tabs with download control tests', () => {
                 const observedTabNames = $$('.tabAnchor')
-                    .filter(a => a.isVisible())
+                    .filter(a => a.isDisplayed())
                     .map(a => a.getText());
                 assert.deepStrictEqual(
                     expectedTabNames,
@@ -403,7 +403,7 @@ describe('hide download controls feature', function() {
             describe('summary tab', () => {
                 it('covers all tabs with download control tests', () => {
                     const observedTabNames = $$('.tabAnchor')
-                        .filter(a => a.isVisible())
+                        .filter(a => a.isDisplayed())
                         .map(a => a.getText());
                     assert.deepStrictEqual(
                         expectedTabNames,
@@ -510,7 +510,7 @@ describe('hide download controls feature', function() {
             });
             it('covers all tabs with download control tests', () => {
                 const observedTabNames = $$('.tabAnchor')
-                    .filter(a => a.isVisible())
+                    .filter(a => a.isDisplayed())
                     .map(a => a.getText());
                 assert.deepStrictEqual(
                     expectedTabNames,
