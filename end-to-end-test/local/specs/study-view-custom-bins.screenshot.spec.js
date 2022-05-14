@@ -13,8 +13,9 @@ const MUTATION_COUNT_HAMBURGER_ICON = `${MUTATION_COUNT_CHART} [data-test="chart
 const MUTATION_COUNT_MENU = `${MUTATION_COUNT_CHART} [data-test="chart-header-hamburger-icon-menu"]`;
 const CUSTOM_BINS_MENU = `.modal-dialog`;
 const UPDATE_BUTTON = '.btn-sm';
-const BIN_SIZE = 'span=Bin size';
-const MIN_VALUE = 'span=Min value';
+const BIN_SIZE_INPUT = '[data-test=bin-size-input]';
+const MIN_VALUE_INPUT = '[data-test=anchorvalue-input]';
+const CUSTOM_BINS_TEXTAREA = '[data-test=custom-bins-textarea]';
 
 describe('Custom Bins menu in study view chart header', function() {
     beforeEach(() => {
@@ -40,14 +41,9 @@ describe('Custom Bins menu in study view chart header', function() {
 
     it('generates bins using min and bin size input fields', () => {
         selectMenuOption('label=Generate bins');
-        $(BIN_SIZE)
-            .$('..')
-            .$('.input-sm')
-            .setValue('2');
-        $(MIN_VALUE)
-            .$('..')
-            .$('.input-sm')
-            .setValue('2');
+        $(BIN_SIZE_INPUT).waitForExist();
+        $(BIN_SIZE_INPUT).setValue('2');
+        $(MIN_VALUE_INPUT).setValue('2');
         clickUpdate();
         $('body').moveTo();
         const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
@@ -56,7 +52,8 @@ describe('Custom Bins menu in study view chart header', function() {
 
     it('creates custom bins using custom bins input field', () => {
         selectMenuOption('label=Custom bins');
-        $$('.input-sm')[2].setValue('0,10,20,30,40');
+        $(CUSTOM_BINS_TEXTAREA).waitForExist();
+        $(CUSTOM_BINS_TEXTAREA).setValue('0,10,20,30,40');
         clickUpdate();
         $('body').moveTo();
         const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
