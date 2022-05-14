@@ -223,6 +223,7 @@ export default class CustomBinsModal extends React.Component<
                                 <FormControl
                                     type="text"
                                     style={{ width: 70 }}
+                                    data-test={'bin-size-input'}
                                     defaultValue={
                                         this.currentBinsGeneratorConfig.binSize
                                     }
@@ -245,6 +246,7 @@ export default class CustomBinsModal extends React.Component<
                                 <FormControl
                                     type="text"
                                     style={{ width: 70 }}
+                                    data-test={'anchorvalue-input'}
                                     defaultValue={
                                         this.currentBinsGeneratorConfig
                                             .anchorValue
@@ -274,6 +276,7 @@ export default class CustomBinsModal extends React.Component<
                             <textarea
                                 style={{ resize: 'none' }}
                                 rows={5}
+                                data-test={'custom-bins-textarea'}
                                 value={this.currentBinsValue}
                                 className="form-control input-sm"
                                 onChange={event =>
