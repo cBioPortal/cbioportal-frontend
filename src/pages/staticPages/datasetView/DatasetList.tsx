@@ -8,7 +8,6 @@ import { getStudyDownloadListUrl } from '../../../shared/api/urls';
 import { getBrowserWindow, getNCBIlink } from 'cbioportal-frontend-commons';
 import { StudyLink } from '../../../shared/components/StudyLink/StudyLink';
 import { StudyDataDownloadLink } from '../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 interface IDataTableRow {

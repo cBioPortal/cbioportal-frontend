@@ -7,7 +7,6 @@ import {
     action,
     computed,
     observable,
-    reaction,
     runInAction,
     makeObservable,
     autorun,
@@ -70,7 +69,6 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
-import AppConfig from 'appConfig';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 
 export function initStore(
@@ -533,7 +531,7 @@ export default class ResultsViewPage extends React.Component<
             },
         ];
 
-        if (!AppConfig.serverConfig.skin_hide_download_controls) {
+        if (!getServerConfig().skin_hide_download_controls) {
             tabMap.push({
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {

@@ -5,7 +5,6 @@ import {
     Column,
     default as LazyMobXTable,
 } from '../lazyMobXTable/LazyMobXTable';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 // TODO interface ICosmicTableProps extends IMSKTableProps<CosmicMutation>

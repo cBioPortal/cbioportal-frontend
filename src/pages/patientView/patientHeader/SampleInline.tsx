@@ -7,7 +7,6 @@ import {
 import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import './styles.scss';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 interface ISampleInlineProps {

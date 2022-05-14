@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface ISurvivalDescription {

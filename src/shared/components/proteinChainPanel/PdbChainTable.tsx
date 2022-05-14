@@ -10,7 +10,6 @@ import { PdbHeader } from 'genome-nexus-ts-api-client';
 import OrganismColumnFormatter from './column/OrganismColumnFormatter';
 import LazyLoadedTableCell from 'shared/lib/LazyLoadedTableCell';
 import { generatePdbInfoSummary } from '../../lib/PdbUtils';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 class PdbChainTableComponent extends LazyMobXTable<IPdbChain> {}

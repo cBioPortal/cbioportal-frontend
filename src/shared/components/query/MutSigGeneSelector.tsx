@@ -10,7 +10,6 @@ import {
     observable,
     makeObservable,
 } from 'mobx';
-import { expr } from 'mobx-utils';
 import { observer, Observer } from 'mobx-react';
 import EnhancedReactTable from '../enhancedReactTable/EnhancedReactTable';
 import { MutSig } from 'cbioportal-ts-api-client';
@@ -18,7 +17,6 @@ import { IColumnFormatterData } from '../enhancedReactTable/IColumnFormatter';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { Td } from 'reactable';
 import { toPrecision } from '../../lib/FormatUtils';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 class MutSigTable extends EnhancedReactTable<MutSig> {}

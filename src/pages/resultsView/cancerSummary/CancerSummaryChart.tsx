@@ -41,7 +41,7 @@ import URL from 'url';
 import { CANCER_SUMMARY_ALL_GENES } from './CancerSummaryContainer';
 import { ResultsViewURLQueryEnum } from 'pages/resultsView/ResultsViewURLWrapper';
 import ScrollWrapper from './ScrollWrapper';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -882,7 +882,7 @@ export class CancerSummaryChart extends React.Component<
                         </svg>
                     </div>
                 </ScrollWrapper>
-                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                {!getServerConfig().skin_hide_download_controls && (
                     <DownloadControls
                         getSvg={this.getSvg}
                         getData={this.getData}

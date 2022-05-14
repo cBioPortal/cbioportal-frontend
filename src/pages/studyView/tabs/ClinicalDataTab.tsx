@@ -23,8 +23,8 @@ import ProgressIndicator, {
 } from '../../../shared/components/progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
+import { getServerConfig } from 'config/config';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -208,7 +208,7 @@ export class ClinicalDataTab extends React.Component<
                             <ClinicalDataTabTableComponent
                                 initialItemsPerPage={20}
                                 showCopyDownload={
-                                    !AppConfig.serverConfig
+                                    !getServerConfig()
                                         .skin_hide_download_controls
                                 }
                                 showColumnVisibility={false}

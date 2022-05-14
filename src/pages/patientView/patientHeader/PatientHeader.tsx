@@ -1,7 +1,5 @@
 import * as React from 'react';
 import { fromPairs } from 'lodash';
-import { OverlayTrigger, Popover } from 'react-bootstrap';
-
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import { getSpanElements } from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 import {
@@ -9,7 +7,6 @@ import {
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import SampleManager from '../SampleManager';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export type IPatientHeaderProps = {

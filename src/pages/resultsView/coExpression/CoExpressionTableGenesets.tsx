@@ -14,7 +14,6 @@ import InfoIcon from '../../../shared/components/InfoIcon';
 import { bind } from 'bind-decorator';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface ICoExpressionTableGenesetsProps {

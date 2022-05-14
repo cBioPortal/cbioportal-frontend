@@ -1,13 +1,6 @@
 import * as React from 'react';
 import styles from './styles/styles.module.scss';
-import {
-    ObservableMap,
-    toJS,
-    computed,
-    observable,
-    makeObservable,
-} from 'mobx';
-import { expr } from 'mobx-utils';
+import { ObservableMap, observable, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import { Gistic } from 'cbioportal-ts-api-client';
 import EnhancedReactTable from '../enhancedReactTable/EnhancedReactTable';
@@ -17,7 +10,6 @@ import classNames from 'classnames';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { toPrecision } from '../../lib/FormatUtils';
 import { getGeneSymbols, sortByCytoband } from '../../lib/GisticUtils';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 const DEFAULT_NUM_GENES_SHOWN = 5;

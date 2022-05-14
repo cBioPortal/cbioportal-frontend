@@ -19,7 +19,6 @@ import {
 } from 'victory';
 import { QueryStoreComponent } from './QueryStore';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
-import AppConfig from 'appConfig';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 class GenesetsVolcanoTable extends LazyMobXTable<Geneset> {}

@@ -20,7 +20,7 @@ import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import OverlapUpset from './OverlapUpset';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IOverlapProps {
     store: ComparisonStore;
@@ -380,7 +380,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 className="borderedChart posRelative"
             >
                 {this.plotExists &&
-                    !AppConfig.serverConfig.skin_hide_download_controls && (
+                    !getServerConfig().skin_hide_download_controls && (
                         <DownloadControls
                             getSvg={this.getSvg}
                             getData={

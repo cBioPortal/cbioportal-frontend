@@ -21,12 +21,9 @@ import styles from './frequencyPlotStyles.module.scss';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { FormControl } from 'react-bootstrap';
-import {
-    GeneReplacement,
-    QueryStore,
-} from 'shared/components/query/QueryStore';
+import { GeneReplacement } from 'shared/components/query/QueryStore';
 import { EnrichmentsTableDataStore } from './EnrichmentsTableDataStore';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
@@ -271,8 +268,7 @@ export default class GeneBarPlot extends React.Component<
                                 </button>
                             </div>
                         </DefaultTooltip>
-                        {!AppConfig.serverConfig
-                            .skin_hide_download_controls && (
+                        {!getServerConfig().skin_hide_download_controls && (
                             <DownloadControls
                                 getSvg={() => this.svgContainer}
                                 filename={'GroupComparisonGeneFrequencyPlot'}

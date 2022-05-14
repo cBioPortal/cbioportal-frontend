@@ -17,7 +17,7 @@ import _ from 'lodash';
 import { scatterPlotSize } from '../../../shared/components/plots/PlotUtils';
 import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
 import autobind from 'autobind-decorator';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface ICoExpressionPlotProps {
     xAxisGeneticEntity: GeneticEntity;
@@ -341,7 +341,7 @@ export default class CoExpressionPlot extends React.Component<
                         </label>
                     </div>
                 </div>
-                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                {!getServerConfig().skin_hide_download_controls && (
                     <DownloadControls
                         getSvg={this.getSvg}
                         getData={this.getDownloadData}

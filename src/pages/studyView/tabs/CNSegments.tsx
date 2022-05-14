@@ -20,7 +20,7 @@ import WindowStore from 'shared/components/window/WindowStore';
 
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { StudyViewPageStore } from '../StudyViewPageStore';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 @observer
 export default class CNSegments extends React.Component<
@@ -159,7 +159,7 @@ export default class CNSegments extends React.Component<
                 <div style={{ marginBottom: 15, marginLeft: 15 }}>
                     <span>{this.selectionInfo}</span>
                     {!this.hasNoSegmentData &&
-                        !AppConfig.serverConfig.skin_hide_download_controls && (
+                        !getServerConfig().skin_hide_download_controls && (
                             <CNSegmentsDownloader
                                 promise={this.activePromise!}
                                 filename={this.filename}

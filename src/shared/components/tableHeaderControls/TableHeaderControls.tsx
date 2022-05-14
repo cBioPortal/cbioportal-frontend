@@ -1,13 +1,6 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import {
-    Button,
-    ButtonGroup,
-    ButtonToolbar,
-    Form,
-    FormGroup,
-    MenuItem,
-} from 'react-bootstrap';
+import { Button, ButtonGroup, ButtonToolbar } from 'react-bootstrap';
 var ClipboardButton = require('react-clipboard.js');
 var Clipboard = require('clipboard');
 import fileDownload from 'react-file-download';
@@ -21,7 +14,7 @@ import {
     IColumnVisibilityControlsProps,
     ColumnVisibilityControls,
 } from '../columnVisibilityControls/ColumnVisibilityControls';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface ITableHeaderControlsProps {
     tableData?: Array<any>;
@@ -101,8 +94,7 @@ export default class TableHeaderControls extends React.Component<
 
     public static defaultProps: ITableHeaderControlsProps = {
         showSearch: false,
-        showCopyAndDownload: !AppConfig.serverConfig
-            .skin_hide_download_controls,
+        showCopyAndDownload: !getServerConfig().skin_hide_download_controls,
         showPagination: false,
         searchClassName: '',
         copyDownloadClassName: '',

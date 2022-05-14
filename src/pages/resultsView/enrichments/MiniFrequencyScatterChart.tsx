@@ -5,7 +5,6 @@ import autobind from 'autobind-decorator';
 import {
     VictoryAxis,
     VictoryChart,
-    VictoryLabel,
     VictoryScatter,
     VictorySelectionContainer,
     VictoryLine,
@@ -16,13 +15,12 @@ import { toConditionalPrecision } from '../../../shared/lib/NumberUtils';
 import SelectionComponent from './SelectionComponent';
 import HoverablePoint from './HoverablePoint';
 import {
-    axisLabelStyles,
     CBIOPORTAL_VICTORY_THEME,
     DownloadControls,
     getTextWidth,
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IMiniFrequencyScatterChartData {
     x: number;
@@ -374,7 +372,7 @@ export default class MiniFrequencyScatterChart extends React.Component<
                             }
                         />
                     </VictoryChart>
-                    {!AppConfig.serverConfig.skin_hide_download_controls && (
+                    {!getServerConfig().skin_hide_download_controls && (
                         <DownloadControls
                             getSvg={() => this.svgContainer}
                             filename="enrichments-frequency-scatter"

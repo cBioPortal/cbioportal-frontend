@@ -3,7 +3,7 @@ import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { groupTimelineData } from 'pages/patientView/timeline/timelineDataUtils.ts';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 class EventsTable extends LazyMobXTable<{}> {}
 
@@ -63,8 +63,7 @@ const ClinicalEventsTables: React.FunctionComponent<{
                             showColumnVisibility={false}
                             showFilter={true}
                             showCopyDownload={
-                                !AppConfig.serverConfig
-                                    .skin_hide_download_controls
+                                !getServerConfig().skin_hide_download_controls
                             }
                         />
                     </>

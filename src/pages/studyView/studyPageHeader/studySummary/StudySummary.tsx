@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CancerStudy } from 'cbioportal-ts-api-client';
-import { computed, observable, action, makeObservable } from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import classnames from 'classnames';
 import _ from 'lodash';
@@ -13,7 +13,7 @@ import MobxPromise from 'mobxpromise';
 import { StudyDataDownloadLink } from '../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 import { serializeEvent } from '../../../../shared/lib/tracking';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 interface IStudySummaryProps {
     studies: CancerStudy[];
@@ -129,7 +129,7 @@ export default class StudySummary extends React.Component<
                     {this.props.isMixedReferenceGenome &&
                         mixedReferenceGenomeWarning()}
                     {this.props.hasRawDataForDownload &&
-                        !AppConfig.serverConfig.skin_hide_download_controls && (
+                        !getServerConfig().skin_hide_download_controls && (
                             <DefaultTooltip
                                 trigger={['hover']}
                                 placement={'top'}

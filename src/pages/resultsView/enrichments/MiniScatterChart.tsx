@@ -21,7 +21,7 @@ import {
     getTextWidth,
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IMiniScatterChartProps {
     data: any[];
@@ -275,7 +275,7 @@ export default class MiniScatterChart<
                             }
                         />
                     </VictoryChart>
-                    {!AppConfig.serverConfig.skin_hide_download_controls && (
+                    {!getServerConfig().skin_hide_download_controls && (
                         <DownloadControls
                             getSvg={() => this.svgContainer}
                             filename="enrichments-volcano"

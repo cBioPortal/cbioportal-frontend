@@ -43,7 +43,7 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import ReactDOM from 'react-dom';
 import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IMutationOncoprintProps {
     store: PatientViewPageStore;
@@ -649,7 +649,7 @@ export default class MutationOncoprint extends React.Component<
                     </LabeledCheckbox>
                     {this.zoomControls}
                 </div>
-                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                {!getServerConfig().skin_hide_download_controls && (
                     <DownloadControls
                         filename="vafHeatmap"
                         getSvg={() =>

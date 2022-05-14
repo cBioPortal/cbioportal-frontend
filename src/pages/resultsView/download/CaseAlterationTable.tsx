@@ -5,25 +5,17 @@ import {
     default as LazyMobXTable,
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import {
-    OQLLineFilterOutput,
-    UnflattenedOQLLineFilterOutput,
-    MergedTrackLineFilterOutput,
-} from 'shared/lib/oql/oqlfilter';
-import {
-    AnnotatedExtendedAlteration,
-    IQueriedMergedTrackCaseData,
-} from '../ResultsViewPageStore';
+import { OQLLineFilterOutput } from 'shared/lib/oql/oqlfilter';
+import { AnnotatedExtendedAlteration } from '../ResultsViewPageStore';
 import { StudyLink } from 'shared/components/StudyLink/StudyLink';
 import { getPatientViewUrl, getSampleViewUrl } from 'shared/api/urls';
 import styles from './styles.module.scss';
 import proteinChangeStyles from 'shared/components/mutationTable/column/proteinChange.module.scss';
-import { getMultipleGeneResultKey } from '../ResultsViewPageStoreUtils';
 import { AlteredStatus } from 'pages/resultsView/mutualExclusivity/MutualExclusivityUtil';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import { parsedOQLAlterationToSourceOQL } from 'shared/lib/oql/oqlfilter';
 import { insertBetween } from 'shared/lib/ArrayUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface ISubAlteration {
     type: string;
@@ -516,7 +508,7 @@ export default class CaseAlterationTable extends React.Component<
                 showColumnVisibility={true}
                 showFilter={true}
                 showCopyDownload={
-                    !AppConfig.serverConfig.skin_hide_download_controls
+                    !getServerConfig().skin_hide_download_controls
                 }
                 enableHorizontalScroll={true}
                 copyDownloadProps={{

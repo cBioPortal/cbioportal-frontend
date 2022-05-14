@@ -130,7 +130,6 @@ import {
     MenuList,
     MenuListHeader,
 } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
-import AppConfig from 'appConfig';
 import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 

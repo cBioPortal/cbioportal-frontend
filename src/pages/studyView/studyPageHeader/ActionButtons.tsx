@@ -13,7 +13,7 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import classNames from 'classnames';
 import { AppStore } from '../../../AppStore';
 import { serializeEvent } from '../../../shared/lib/tracking';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface ActionButtonsProps {
     loadingComplete: boolean;
@@ -186,7 +186,7 @@ export default class ActionButtons extends React.Component<
                         </button>
                     </DefaultTooltip>
                 </DefaultTooltip>
-                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                {!getServerConfig().skin_hide_download_controls && (
                     <DefaultTooltip
                         trigger={['hover']}
                         placement={'top'}

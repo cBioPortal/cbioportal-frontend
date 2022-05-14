@@ -47,7 +47,6 @@ import {
 } from 'cbioportal-frontend-commons';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
-import AppConfig from 'appConfig';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -586,7 +585,7 @@ export default class SurvivalChart
         return (
             <div className={this.props.className} data-test={'SurvivalChart'}>
                 {this.props.showDownloadButtons &&
-                    !AppConfig.serverConfig.skin_hide_download_controls && (
+                    !getServerConfig().skin_hide_download_controls && (
                         <DownloadControls
                             dontFade={true}
                             filename={this.props.fileName}

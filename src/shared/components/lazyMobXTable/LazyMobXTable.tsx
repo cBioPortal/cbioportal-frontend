@@ -43,7 +43,7 @@ import {
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import { maxPage } from './utils';
 import { inputBoxChangeTimeoutEvent } from '../../lib/EventUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -1192,7 +1192,7 @@ export default class LazyMobXTable<T> extends React.Component<
                         ''
                     )}
                     {this.props.showCopyDownload &&
-                    !AppConfig.serverConfig.skin_hide_download_controls ? (
+                    !getServerConfig().skin_hide_download_controls ? (
                         this.props.downloadDataFetcher ? (
                             <CopyDownloadControls
                                 className="pull-right"
