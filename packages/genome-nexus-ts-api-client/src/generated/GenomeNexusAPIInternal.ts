@@ -242,6 +242,8 @@ export type Hgvs = {
 
         'genomic': Array < string >
 
+        'protein': Array < string >
+
 };
 export type Homozygotes = {
     'hom': number
