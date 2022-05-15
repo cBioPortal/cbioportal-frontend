@@ -14,6 +14,7 @@ import { StudyDataDownloadLink } from '../../../../shared/components/StudyDataDo
 import { serializeEvent } from '../../../../shared/lib/tracking';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 interface IStudySummaryProps {
     studies: CancerStudy[];
@@ -129,7 +130,7 @@ export default class StudySummary extends React.Component<
                     {this.props.isMixedReferenceGenome &&
                         mixedReferenceGenomeWarning()}
                     {this.props.hasRawDataForDownload &&
-                        !getServerConfig().skin_hide_download_controls && (
+                        shouldShowDownloadAndCopyControls() && (
                             <DefaultTooltip
                                 trigger={['hover']}
                                 placement={'top'}

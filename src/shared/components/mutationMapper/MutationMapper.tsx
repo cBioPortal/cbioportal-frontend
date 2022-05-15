@@ -46,6 +46,7 @@ import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
 import { PtmSource } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -544,9 +545,7 @@ export default class MutationMapper<
                         : undefined
                 }
                 legend={this.legendColorCodes}
-                showDownloadControls={
-                    !getServerConfig().skin_hide_download_controls
-                }
+                showDownloadControls={shouldShowDownloadAndCopyControls()}
             />
         );
     }

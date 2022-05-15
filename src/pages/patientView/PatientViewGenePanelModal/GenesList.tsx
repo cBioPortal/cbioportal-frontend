@@ -10,6 +10,7 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import SimpleTable from 'shared/components/simpleTable/SimpleTable';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 interface IGenesListProps {
     genePanel: GenePanel;
@@ -152,10 +153,8 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
                         'pull-right',
                         styles.copyDownloadControls
                     )}
-                    showDownload={
-                        !getServerConfig().skin_hide_download_controls
-                    }
-                    showCopy={!getServerConfig().skin_hide_download_controls}
+                    showDownload={shouldShowDownloadAndCopyControls()}
+                    showCopy={shouldShowDownloadAndCopyControls()}
                     downloadData={this.getDownloadData}
                     downloadFilename={`gene_panel_${this.props.genePanel.genePanelId}.tsv`}
                     controlsStyle="BUTTON"

@@ -4,6 +4,7 @@ import { groupTimelineData } from 'pages/patientView/timeline/timelineDataUtils.
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 class EventsTable extends LazyMobXTable<{}> {}
 
@@ -62,9 +63,7 @@ const ClinicalEventsTables: React.FunctionComponent<{
                             showPagination={false}
                             showColumnVisibility={false}
                             showFilter={true}
-                            showCopyDownload={
-                                !getServerConfig().skin_hide_download_controls
-                            }
+                            showCopyDownload={shouldShowDownloadAndCopyControls()}
                         />
                     </>
                 );

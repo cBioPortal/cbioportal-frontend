@@ -7,6 +7,7 @@ import { CopyDownloadButtons } from './CopyDownloadButtons';
 import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
 import { CopyDownloadQueryLinks } from './CopyDownloadQueryLinks';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 const Clipboard = require('clipboard');
 
 export interface ISimpleCopyDownloadControlsProps
@@ -57,10 +58,8 @@ export class SimpleCopyDownloadControls extends React.Component<
                 <CopyDownloadLinks
                     className={this.props.className}
                     handleDownload={this.handleDownload}
-                    showDownload={
-                        !getServerConfig().skin_hide_download_controls
-                    }
-                    showCopy={!getServerConfig().skin_hide_download_controls}
+                    showDownload={shouldShowDownloadAndCopyControls()}
+                    showCopy={shouldShowDownloadAndCopyControls()}
                     copyLinkRef={this.copyLinkRef}
                     handleCopy={this.handleAfterCopy}
                     copyLabel={this.props.copyLabel}
@@ -73,10 +72,8 @@ export class SimpleCopyDownloadControls extends React.Component<
                 <CopyDownloadQueryLinks
                     className={this.props.className}
                     handleDownload={this.handleDownload}
-                    showDownload={
-                        !getServerConfig().skin_hide_download_controls
-                    }
-                    showCopy={!getServerConfig().skin_hide_download_controls}
+                    showDownload={shouldShowDownloadAndCopyControls()}
+                    showCopy={shouldShowDownloadAndCopyControls()}
                     copyLinkRef={this.copyLinkRef}
                     handleCopy={this.handleAfterCopy}
                     copyLabel={this.props.copyLabel}

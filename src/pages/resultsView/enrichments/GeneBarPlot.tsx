@@ -24,6 +24,7 @@ import { FormControl } from 'react-bootstrap';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
 import { EnrichmentsTableDataStore } from './EnrichmentsTableDataStore';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
@@ -268,7 +269,7 @@ export default class GeneBarPlot extends React.Component<
                                 </button>
                             </div>
                         </DefaultTooltip>
-                        {!getServerConfig().skin_hide_download_controls && (
+                        {shouldShowDownloadAndCopyControls() && (
                             <DownloadControls
                                 getSvg={() => this.svgContainer}
                                 filename={'GroupComparisonGeneFrequencyPlot'}

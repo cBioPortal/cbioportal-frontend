@@ -50,6 +50,7 @@ import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
 import { getComparisonCategoricalNaValue } from './ClinicalDataUtils';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -849,7 +850,7 @@ export default class ClinicalData extends React.Component<
     private toolbar() {
         return (
             <div style={{ textAlign: 'center', position: 'relative' }}>
-                {!getServerConfig().skin_hide_download_controls && (
+                {shouldShowDownloadAndCopyControls() && (
                     <DownloadControls
                         getSvg={this.getSvg}
                         filename={SVG_ID}

@@ -36,6 +36,7 @@ import {
     getGenericAssayPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 class EnrichmentsBoxPlotComponent extends BoxScatterPlot<
     IBoxScatterPlotPoint
@@ -363,7 +364,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
 
             plotElt = (
                 <div className={styles.BoxPlot} data-test="MiniBoxPlot">
-                    {!getServerConfig().skin_hide_download_controls && (
+                    {shouldShowDownloadAndCopyControls() && (
                         <DownloadControls
                             buttons={['SVG', 'PNG', 'Data']}
                             getSvg={() => this.svgContainer}

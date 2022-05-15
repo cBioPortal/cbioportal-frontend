@@ -44,6 +44,7 @@ import ReactDOM from 'react-dom';
 import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IMutationOncoprintProps {
     store: PatientViewPageStore;
@@ -649,7 +650,7 @@ export default class MutationOncoprint extends React.Component<
                     </LabeledCheckbox>
                     {this.zoomControls}
                 </div>
-                {!getServerConfig().skin_hide_download_controls && (
+                {shouldShowDownloadAndCopyControls() && (
                     <DownloadControls
                         filename="vafHeatmap"
                         getSvg={() =>

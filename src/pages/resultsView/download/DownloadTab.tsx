@@ -78,6 +78,7 @@ import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarn
 import { If, Then, Else } from 'react-if';
 import { ResultsViewTab } from '../ResultsViewPageHelpers';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -1064,12 +1065,8 @@ export default class DownloadTab extends React.Component<
                         controlsStyle="LINK"
                         downloadData={handleDownload}
                         downloadFilename={filename}
-                        showDownload={
-                            !getServerConfig().skin_hide_download_controls
-                        }
-                        showCopy={
-                            !getServerConfig().skin_hide_download_controls
-                        }
+                        showDownload={shouldShowDownloadAndCopyControls()}
+                        showCopy={shouldShowDownloadAndCopyControls()}
                     />
                 </td>
             </tr>

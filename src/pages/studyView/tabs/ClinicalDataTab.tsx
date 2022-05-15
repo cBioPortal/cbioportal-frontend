@@ -207,10 +207,7 @@ export class ClinicalDataTab extends React.Component<
                         <Else>
                             <ClinicalDataTabTableComponent
                                 initialItemsPerPage={20}
-                                showCopyDownload={
-                                    !getServerConfig()
-                                        .skin_hide_download_controls
-                                }
+                                showCopyDownload={shouldShowDownloadAndCopyControls()}
                                 showColumnVisibility={false}
                                 data={
                                     this.props.store.getDataForClinicalDataTab

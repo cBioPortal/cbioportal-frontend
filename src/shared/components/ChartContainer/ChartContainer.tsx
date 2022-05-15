@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 interface IChartContainer {
     getSVGElement?: () => SVGElement | null;
@@ -14,7 +15,7 @@ export default class ChartContainer extends React.Component<
     render() {
         return (
             <div className="borderedChart inlineBlock">
-                {!getServerConfig().skin_hide_download_controls && (
+                {shouldShowDownloadAndCopyControls() && (
                     <DownloadControls
                         filename={this.props.exportFileName || 'chart-download'}
                         dontFade={true}

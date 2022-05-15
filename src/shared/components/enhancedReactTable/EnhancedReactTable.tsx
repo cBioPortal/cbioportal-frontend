@@ -23,6 +23,7 @@ import {
 } from './IColumnFormatter';
 import './styles.css';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 /**
  * @author Selcuk Onur Sumer
@@ -264,9 +265,7 @@ export default class EnhancedReactTable<T> extends React.Component<
         return (
             <div className={className}>
                 <TableHeaderControls
-                    showCopyAndDownload={
-                        !getServerConfig().skin_hide_download_controls
-                    }
+                    showCopyAndDownload={shouldShowDownloadAndCopyControls()}
                     showHideShowColumnButton={true}
                     handleInput={this.handleFilterInput}
                     downloadDataGenerator={this.handleDownload}

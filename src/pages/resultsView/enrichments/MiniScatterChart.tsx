@@ -22,6 +22,7 @@ import {
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IMiniScatterChartProps {
     data: any[];
@@ -275,7 +276,7 @@ export default class MiniScatterChart<
                             }
                         />
                     </VictoryChart>
-                    {!getServerConfig().skin_hide_download_controls && (
+                    {shouldShowDownloadAndCopyControls() && (
                         <DownloadControls
                             getSvg={() => this.svgContainer}
                             filename="enrichments-volcano"

@@ -11,6 +11,7 @@ import RightBar from '../../shared/components/rightbar/RightBar';
 import './homePage.scss';
 import autobind from 'autobind-decorator';
 import { createQueryStore } from 'shared/lib/createQueryStore';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 const win = window as any;
 
@@ -63,9 +64,7 @@ export default class HomePage extends React.Component<
                 <QueryAndDownloadTabs
                     getQueryStore={this.getQueryStore}
                     showQuickSearchTab={getServerConfig().quick_search_enabled}
-                    showDownloadTab={
-                        !getServerConfig().skin_hide_download_controls
-                    }
+                    showDownloadTab={shouldShowDownloadAndCopyControls()}
                 />
             </PageLayout>
         );

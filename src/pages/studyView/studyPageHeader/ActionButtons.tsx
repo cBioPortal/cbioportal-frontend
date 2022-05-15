@@ -14,6 +14,7 @@ import classNames from 'classnames';
 import { AppStore } from '../../../AppStore';
 import { serializeEvent } from '../../../shared/lib/tracking';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface ActionButtonsProps {
     loadingComplete: boolean;
@@ -186,7 +187,7 @@ export default class ActionButtons extends React.Component<
                         </button>
                     </DefaultTooltip>
                 </DefaultTooltip>
-                {!getServerConfig().skin_hide_download_controls && (
+                {shouldShowDownloadAndCopyControls() && (
                     <DefaultTooltip
                         trigger={['hover']}
                         placement={'top'}

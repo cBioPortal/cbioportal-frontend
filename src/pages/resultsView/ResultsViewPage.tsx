@@ -531,7 +531,7 @@ export default class ResultsViewPage extends React.Component<
             },
         ];
 
-        if (!getServerConfig().skin_hide_download_controls) {
+        if (shouldShowDownloadAndCopyControls()) {
             tabMap.push({
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {

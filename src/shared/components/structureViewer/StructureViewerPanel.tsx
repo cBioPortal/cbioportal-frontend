@@ -36,6 +36,7 @@ import PyMolScriptGenerator from './PyMolScriptGenerator';
 
 import styles from './structureViewer.module.scss';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IStructureViewerPanelProps extends IProteinImpactTypeColors {
     pdbChainDataStore: ILazyMobXTableApplicationDataStore<IPdbChain>;
@@ -415,7 +416,7 @@ export default class StructureViewerPanel extends React.Component<
         return (
             <div className="row">
                 <div className="col col-sm-6">
-                    {!getServerConfig().skin_hide_download_controls && (
+                    {shouldShowDownloadAndCopyControls() && (
                         <ButtonGroup>
                             <DefaultTooltip
                                 overlay={<span>Download PyMol script</span>}

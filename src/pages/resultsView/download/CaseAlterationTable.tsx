@@ -16,6 +16,7 @@ import { Alteration } from 'shared/lib/oql/oql-parser';
 import { parsedOQLAlterationToSourceOQL } from 'shared/lib/oql/oqlfilter';
 import { insertBetween } from 'shared/lib/ArrayUtils';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface ISubAlteration {
     type: string;
@@ -507,9 +508,7 @@ export default class CaseAlterationTable extends React.Component<
                 showPagination={true}
                 showColumnVisibility={true}
                 showFilter={true}
-                showCopyDownload={
-                    !getServerConfig().skin_hide_download_controls
-                }
+                showCopyDownload={shouldShowDownloadAndCopyControls()}
                 enableHorizontalScroll={true}
                 copyDownloadProps={{
                     downloadFilename: 'alterations_across_samples.tsv',

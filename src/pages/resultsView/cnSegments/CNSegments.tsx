@@ -24,6 +24,7 @@ import {
 import { remoteData } from 'cbioportal-frontend-commons';
 import CaseFilterWarning from 'shared/components/banners/CaseFilterWarning';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 @observer
 export default class CNSegments extends React.Component<
@@ -172,7 +173,7 @@ export default class CNSegments extends React.Component<
                         sequential={true}
                     />
                 </LoadingIndicator>
-                {!getServerConfig().skin_hide_download_controls && (
+                {shouldShowDownloadAndCopyControls() && (
                     <CNSegmentsDownloader
                         promise={this.props.store.cnSegments}
                         filename={this.filename}

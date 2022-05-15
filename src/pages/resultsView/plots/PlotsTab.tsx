@@ -133,6 +133,7 @@ import {
 import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 enum EventKey {
     horz_logScale,
@@ -5319,8 +5320,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 {() => {
                                     if (
                                         this.plotExists &&
-                                        !getServerConfig()
-                                            .skin_hide_download_controls
+                                        shouldShowDownloadAndCopyControls()
                                     ) {
                                         return (
                                             <DownloadControls

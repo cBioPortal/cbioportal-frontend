@@ -3,6 +3,7 @@ import * as React from 'react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IGeneAlteration {
     gene: string;
@@ -103,9 +104,7 @@ export default class GeneAlterationTable extends React.Component<
                 initialItemsPerPage={10}
                 showColumnVisibility={true}
                 showFilter={true}
-                showCopyDownload={
-                    !getServerConfig().skin_hide_download_controls
-                }
+                showCopyDownload={shouldShowDownloadAndCopyControls()}
                 copyDownloadProps={{
                     downloadFilename: 'gene_alteration_frequency.tsv',
                 }}

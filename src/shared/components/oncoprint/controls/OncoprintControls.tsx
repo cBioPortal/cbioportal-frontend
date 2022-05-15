@@ -36,6 +36,7 @@ import {
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -1200,7 +1201,7 @@ export default class OncoprintControls extends React.Component<
                     <this.SortMenu />
                     <this.MutationColorMenu />
                     <this.ViewMenu />
-                    {!getServerConfig().skin_hide_download_controls && (
+                    {shouldShowDownloadAndCopyControls() && (
                         <this.DownloadMenu />
                     )}
                     <this.HorzZoomControls />

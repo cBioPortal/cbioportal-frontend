@@ -47,6 +47,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -585,7 +586,7 @@ export default class SurvivalChart
         return (
             <div className={this.props.className} data-test={'SurvivalChart'}>
                 {this.props.showDownloadButtons &&
-                    !getServerConfig().skin_hide_download_controls && (
+                    shouldShowDownloadAndCopyControls() && (
                         <DownloadControls
                             dontFade={true}
                             filename={this.props.fileName}
