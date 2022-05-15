@@ -492,6 +492,7 @@ describe('hide download controls feature', function() {
                 'DNA Methylation',
                 'Treatment Response',
                 'Mutational Signature',
+                'Generic Assay Patient Test',
             ];
             before(() => {
                 openAndSetProperty(browser.getUrl(), {
@@ -595,6 +596,23 @@ describe('hide download controls feature', function() {
             describe('mutational signature tab', () => {
                 it('global check for icon and occurrence of "Download" as a word', () => {
                     $('.tabAnchor_generic_assay_mutational_signature').click();
+                    $(
+                        '[data-test=GroupComparisonGenericAssayEnrichments]'
+                    ).waitForExist();
+                    $$(
+                        '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
+                    )[5].click(); // first 5 rows is invisible treatment responses
+                    $('[data-test=MiniBoxPlot]').waitForExist();
+                    globalCheck();
+                });
+            });
+            // Activation of the 'Patient Test' tab results in a backend error. Omitting for now.
+            // Inactivation of download tabs is also covered by other Generic Assay tabs.
+            describe.omit('generic assay patient test tab', () => {
+                it('global check for icon and occurrence of "Download" as a word', () => {
+                    $(
+                        '.tabAnchor_generic_assay_generic_assay_patient_test'
+                    ).click();
                     $(
                         '[data-test=GroupComparisonGenericAssayEnrichments]'
                     ).waitForExist();
