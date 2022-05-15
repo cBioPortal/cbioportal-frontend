@@ -63,7 +63,9 @@ export default class HomePage extends React.Component<
                 <QueryAndDownloadTabs
                     getQueryStore={this.getQueryStore}
                     showQuickSearchTab={getServerConfig().quick_search_enabled}
-                    showDownloadTab={!getServerConfig().skin_hide_download_controls}
+                    showDownloadTab={
+                        !getServerConfig().skin_hide_download_controls
+                    }
                 />
             </PageLayout>
         );
