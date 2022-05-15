@@ -20,6 +20,42 @@ const downloadIcon = '.fa-download';
 const downloadCloudIcon = '.fa-cloud-download';
 const clipboardIcon = '.fa-clipboard';
 
+0;
+const globalCheck = () => {
+    assert(
+        !$('*=Download').isExisting(),
+        'The word "Download" occurs on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
+    );
+    assert(
+        !$('*=download').isExisting(),
+        'The word "download" occurs on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
+    );
+    assert(
+        !$(downloadIcon).isExisting(),
+        'A download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
+    );
+    assert(
+        !$(downloadCloudIcon).isExisting(),
+        'A cloud download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
+    );
+    assert(
+        !$(clipboardIcon).isExisting(),
+        'A download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
+    );
+};
+
+const openAndSetProperty = (url, prop) => {
+    goToUrlAndSetLocalStorage(url, true);
+    setServerConfiguration(prop);
+    goToUrlAndSetLocalStorage(url, true);
+};
+
+const waitForTabs = count => {
+    browser.waitUntil(() => {
+        return $$('.tabAnchor').length >= count;
+    }, 300000);
+};
+
 describe('hide download controls feature', function() {
     if (useExternalFrontend) {
         describe('study query page', () => {
@@ -626,38 +662,3 @@ describe('hide download controls feature', function() {
         });
     }
 });
-
-const globalCheck = () => {
-    assert(
-        !$('*=Download').isExisting(),
-        'The word "Download" occurs on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
-    );
-    assert(
-        !$('*=download').isExisting(),
-        'The word "download" occurs on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
-    );
-    assert(
-        !$(downloadIcon).isExisting(),
-        'A download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
-    );
-    assert(
-        !$(downloadCloudIcon).isExisting(),
-        'A cloud download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
-    );
-    assert(
-        !$(clipboardIcon).isExisting(),
-        'A download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
-    );
-};
-
-const openAndSetProperty = (url, prop) => {
-    goToUrlAndSetLocalStorage(url, true);
-    setServerConfiguration(prop);
-    goToUrlAndSetLocalStorage(url, true);
-};
-
-const waitForTabs = count => {
-    browser.waitUntil(() => {
-        return $$('.tabAnchor').length >= count;
-    }, 300000);
-};
