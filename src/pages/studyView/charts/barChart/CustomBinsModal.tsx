@@ -1,11 +1,16 @@
 import * as React from 'react';
-import _ from 'lodash';
+import _, { isInteger, isNumber } from 'lodash';
 import { ChartMeta, customBinsAreValid } from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
-import { observable, computed, makeObservable, action } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
-import { Modal } from 'react-bootstrap';
-import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
+import {
+    ControlLabel,
+    FormControl,
+    FormGroup,
+    Modal,
+    Radio,
+} from 'react-bootstrap';
 import { BinsGeneratorConfig } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import {
     BinMethodOption,
@@ -138,124 +143,145 @@ export default class CustomBinsModal extends React.Component<
 
     render() {
         return (
-            <Modal
-                bsSize={'small'}
-                show={this.props.show}
-                onHide={this.props.onHide}
-                keyboard
-            >
+            <Modal show={this.props.show} onHide={this.props.onHide} keyboard>
                 <Modal.Header closeButton>
                     <Modal.Title>Custom Bins</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <div>
-                        <LabeledCheckbox
-                            checked={
-                                this.currentBinMethod ===
-                                BinMethodOption.QUARTILE
-                            }
-                            onChange={event =>
-                                this.changeBinsCheckbox(
+                        <FormGroup>
+                            <Radio
+                                name="radioGroup"
+                                defaultChecked={true}
+                                checked={
+                                    this.currentBinMethod ===
                                     BinMethodOption.QUARTILE
-                                )
-                            }
-                        >
-                            Quartiles
-                        </LabeledCheckbox>
-                    </div>
-                    <div>
-                        <LabeledCheckbox
-                            checked={
-                                this.currentBinMethod === BinMethodOption.MEDIAN
-                            }
-                            onChange={event =>
-                                this.changeBinsCheckbox(BinMethodOption.MEDIAN)
-                            }
-                        >
-                            Median split
-                        </LabeledCheckbox>
-                    </div>
-                    <div>
-                        <LabeledCheckbox
-                            checked={
-                                this.currentBinMethod ===
-                                BinMethodOption.GENERATE
-                            }
-                            onChange={event =>
-                                this.changeBinsCheckbox(
+                                }
+                                onChange={event =>
+                                    this.changeBinsCheckbox(
+                                        BinMethodOption.QUARTILE
+                                    )
+                                }
+                            >
+                                Quartiles
+                            </Radio>
+                        </FormGroup>
+                        <FormGroup>
+                            <Radio
+                                name="radioGroup"
+                                checked={
+                                    this.currentBinMethod ===
+                                    BinMethodOption.MEDIAN
+                                }
+                                onChange={event =>
+                                    this.changeBinsCheckbox(
+                                        BinMethodOption.MEDIAN
+                                    )
+                                }
+                            >
+                                Median split
+                            </Radio>
+                        </FormGroup>
+                        <FormGroup>
+                            <Radio
+                                name="radioGroup"
+                                checked={
+                                    this.currentBinMethod ===
                                     BinMethodOption.GENERATE
-                                )
-                            }
-                        >
-                            Generate bins
-                        </LabeledCheckbox>
-                        <div style={{ marginLeft: 50 }}>
-                            <span>Bin size</span>
+                                }
+                                onChange={event =>
+                                    this.changeBinsCheckbox(
+                                        BinMethodOption.GENERATE
+                                    )
+                                }
+                            >
+                                Generate bins
+                            </Radio>
+                        </FormGroup>
+                        <FormGroup>
+                            <Radio
+                                name="radioGroup"
+                                checked={
+                                    this.currentBinMethod ===
+                                    BinMethodOption.CUSTOM
+                                }
+                                onChange={event =>
+                                    this.changeBinsCheckbox(
+                                        BinMethodOption.CUSTOM
+                                    )
+                                }
+                            >
+                                Custom bins
+                            </Radio>
+                        </FormGroup>
+                    </div>
+
+                    {this.currentBinMethod === BinMethodOption.GENERATE && (
+                        <div>
+                            <FormGroup>
+                                <ControlLabel>Bin size</ControlLabel>{' '}
+                                <FormControl
+                                    type="text"
+                                    style={{ width: 70 }}
+                                    defaultValue={
+                                        this.currentBinsGeneratorConfig.binSize
+                                    }
+                                    onChange={event => {
+                                        const value = Number(
+                                            ((event.currentTarget as unknown) as HTMLInputElement)
+                                                .value
+                                        );
+                                        if (isNaN(value)) {
+                                            ((event.currentTarget as unknown) as HTMLInputElement).value =
+                                                '';
+                                        } else {
+                                            this.updateBinSize(Number(value));
+                                        }
+                                    }}
+                                />
+                            </FormGroup>
+                            <FormGroup>
+                                <ControlLabel>Min value</ControlLabel>{' '}
+                                <FormControl
+                                    type="text"
+                                    style={{ width: 70 }}
+                                    defaultValue={
+                                        this.currentBinsGeneratorConfig
+                                            .anchorValue
+                                    }
+                                    onChange={event => {
+                                        const value = Number(
+                                            ((event.currentTarget as unknown) as HTMLInputElement)
+                                                .value
+                                        );
+                                        if (isNaN(value)) {
+                                            ((event.currentTarget as unknown) as HTMLInputElement).value =
+                                                '';
+                                        } else {
+                                            this.updateBinSize(Number(value));
+                                        }
+                                    }}
+                                />
+                            </FormGroup>
+                        </div>
+                    )}
+
+                    {this.currentBinMethod === BinMethodOption.CUSTOM && (
+                        <div>
+                            <p>Please specify bin boundaries of the x axis</p>
                             <textarea
-                                style={{
-                                    display: 'inline',
-                                    resize: 'none',
-                                    width: '50px',
-                                    verticalAlign: 'middle',
-                                    textAlign: 'center',
-                                    marginLeft: '20px',
-                                }}
-                                rows={1}
-                                value={this.currentBinsGeneratorConfig.binSize}
+                                style={{ resize: 'none' }}
+                                rows={5}
+                                value={this.currentBinsValue}
                                 className="form-control input-sm"
                                 onChange={event =>
-                                    this.updateBinSize(
-                                        Number(event.currentTarget.value)
-                                    )
+                                    (this.currentBinsValue =
+                                        event.currentTarget.value)
                                 }
                             />
                         </div>
-                        <div style={{ paddingLeft: 50 }}>
-                            <span>Min value</span>
-                            <textarea
-                                style={{
-                                    display: 'inline',
-                                    resize: 'none',
-                                    width: '50px',
-                                    verticalAlign: 'middle',
-                                    textAlign: 'center',
-                                    marginLeft: '9px',
-                                }}
-                                rows={1}
-                                value={
-                                    this.currentBinsGeneratorConfig.anchorValue
-                                }
-                                className="form-control input-sm"
-                                onChange={event =>
-                                    this.updateAnchorValue(
-                                        Number(event.currentTarget.value)
-                                    )
-                                }
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <LabeledCheckbox
-                            checked={
-                                this.currentBinMethod === BinMethodOption.CUSTOM
-                            }
-                            onChange={event =>
-                                this.changeBinsCheckbox(BinMethodOption.CUSTOM)
-                            }
-                        >
-                            Custom bins
-                        </LabeledCheckbox>
-                    </div>
-                    <div>Please specify bin boundaries of the x axis</div>
-                    <textarea
-                        style={{ resize: 'none' }}
-                        rows={5}
-                        value={this.currentBinsValue}
-                        className="form-control input-sm"
-                        onChange={event =>
-                            (this.currentBinsValue = event.currentTarget.value)
-                        }
-                    />
+                    )}
+
                     {!this.contentIsValid && (
                         <div
                             className="alert alert-danger"
