@@ -5623,7 +5623,7 @@ export class StudyViewPageStore
                 uniqueKey: 'SAMPLE_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: true,
-                displayName: 'Treatment by Sample (pre/post)',
+                displayName: 'Treatment per Sample (pre/post)',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
                 ),
@@ -5638,7 +5638,7 @@ export class StudyViewPageStore
                 uniqueKey: 'PATIENT_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: true,
-                displayName: 'Treatment by Patient',
+                displayName: 'Treatment per Patient',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.PATIENT_TREATMENTS_TABLE
                 ),
@@ -5653,7 +5653,7 @@ export class StudyViewPageStore
                 uniqueKey: 'SAMPLE_TREATMENT_GROUPS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: true,
-                displayName: 'Treatment Category by Sample (pre/post)',
+                displayName: 'Treatment Category per Sample (pre/post)',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE
                 ),
@@ -5668,7 +5668,7 @@ export class StudyViewPageStore
                 uniqueKey: 'PATIENT_TREATMENT_GROUPS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: true,
-                displayName: 'Treatment Category by Patient',
+                displayName: 'Treatment Category per Patient',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
                 ),
@@ -5683,7 +5683,7 @@ export class StudyViewPageStore
                 uniqueKey: 'SAMPLE_TREATMENT_TARGET',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: true,
-                displayName: 'Treatment Target by Sample (pre/post)',
+                displayName: 'Treatment Target per Sample (pre/post)',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE
                 ),
@@ -5698,7 +5698,7 @@ export class StudyViewPageStore
                 uniqueKey: 'PATIENT_TREATMENT_TARGET',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: true,
-                displayName: 'Treatment Target by Patient',
+                displayName: 'Treatment Target per Patient',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE
                 ),
