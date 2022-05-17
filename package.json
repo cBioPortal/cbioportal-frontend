@@ -87,7 +87,6 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-image": "^2.1.1",
-    "@svgr/rollup": "^4.2.0",
     "@types/chai": "3.5.2",
     "@types/chai-enzyme": "^0.6.2",
     "@types/chart.js": "^2.4.6",

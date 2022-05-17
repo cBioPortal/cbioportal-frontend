@@ -7,7 +7,6 @@ import resolve from '@rollup/plugin-node-resolve';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import image from '@rollup/plugin-image';
 import postcssUrl from 'postcss-url';
-import svgr from '@svgr/rollup';
 import workerLoader from 'rollup-plugin-web-worker-loader';
 
 // common rollup config options for all libraries under packages
@@ -46,7 +45,6 @@ export default function getRollupOptions(
                 ],
             }),
             image(),
-            svgr(),
             typescript({
                 clean: true,
             }),
