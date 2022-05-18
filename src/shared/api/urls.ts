@@ -183,7 +183,7 @@ export function getMutationAlignerUrlTemplate() {
 }
 
 export function getOncoQueryDocUrl() {
-    return buildCBioPortalPageUrl('/oql');
+    return 'https://docs.cbioportal.org/user-guide/by-page/#oql';
 }
 
 export function trimProtocol(url: string) {
