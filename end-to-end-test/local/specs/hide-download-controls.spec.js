@@ -20,7 +20,6 @@ const downloadIcon = '.fa-download';
 const downloadCloudIcon = '.fa-cloud-download';
 const clipboardIcon = '.fa-clipboard';
 
-0;
 const globalCheck = () => {
     assert(
         !$('*=Download').isExisting(),
