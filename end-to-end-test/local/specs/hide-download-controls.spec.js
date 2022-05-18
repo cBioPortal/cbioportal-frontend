@@ -20,6 +20,8 @@ const downloadIcon = '.fa-download';
 const downloadCloudIcon = '.fa-cloud-download';
 const clipboardIcon = '.fa-clipboard';
 
+console.log('REMOVEME');
+
 const globalCheck = () => {
     assert(
         !$('*=Download').isExisting(),
