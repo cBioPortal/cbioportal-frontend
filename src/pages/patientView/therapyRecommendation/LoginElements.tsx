@@ -57,7 +57,7 @@ export class UserInfoButton extends React.Component<IUserInfoButtonProps, {}> {
     public render() {
         return (
             <i
-                className={'fa fa-user-circle'}
+                className={'fa fa-user-md'}
                 style={{
                     float: 'right',
                     fontSize: '30px',
