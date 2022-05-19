@@ -59,3 +59,4 @@ export * from './theme/cBioPortalTheme';
 export { default as TruncatedText } from './components/truncatedText/TruncatedText';
 export * from './lib/hashString';
 export * from './lib/getColor';
+export * from './components/appContext/AppContext';
