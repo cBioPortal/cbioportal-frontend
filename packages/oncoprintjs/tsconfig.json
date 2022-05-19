@@ -1,16 +1,7 @@
 {
-  "compilerOptions": {
-    "outDir": "./dist/",
-    "allowSyntheticDefaultImports": true,
-    "noImplicitAny": true,
-    "module": "es6",
-    "target": "es2015",
-    "declaration":true
-  },
-  "exclude": ["./node_modules/*"],
+  "extends": "../config/tsconfig.json",
   "include": [
-    "./node_modules/@types/**/*",
-    "./typings/**/*",
-    "./src/**/*"
+    "src",
+    "../typings/**/*"
   ]
 }
