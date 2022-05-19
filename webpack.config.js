@@ -510,7 +510,7 @@ if (isDev || isTest) {
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
-    config.output.publicPath = '//localhost:3000/';
+    config.output.publicPath = `//localhost:${devPort}/`;
 } else {
     config.output.publicPath = '/';
 
