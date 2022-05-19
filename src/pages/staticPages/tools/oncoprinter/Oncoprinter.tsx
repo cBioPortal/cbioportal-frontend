@@ -8,7 +8,7 @@ import OncoprintControls, {
 } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
 import { getServerConfig } from 'config/config';
-import OncoprintJS from 'oncoprintjs';
+import { OncoprintJS } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import { FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';

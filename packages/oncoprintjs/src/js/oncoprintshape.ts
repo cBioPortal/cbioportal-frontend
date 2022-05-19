@@ -114,12 +114,10 @@ export class Shape {
             const param_name = parameters[i];
             const param_val = this.params[param_name];
             if (typeof param_val === 'function') {
-                //@ts-ignore
-                this.params_with_type[param_name] = {'type':'function', 'value':param_val};
+                this.params_with_type[param_name] = {'type':'function', 'value':param_val as any};
                 onlyDependsOnWidthAndHeight = false;
             } else {
-                //@ts-ignore
-                this.params_with_type[param_name] = {'type':'value', 'value': param_val};
+                this.params_with_type[param_name] = {'type':'value', 'value': param_val} as any;
             }
         }
         this.onlyDependsOnWidthAndHeight = onlyDependsOnWidthAndHeight;

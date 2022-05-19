@@ -1,4 +1,4 @@
-import ClusteringWorker from './workers/clustering-worker';
+import ClusteringWorker from 'web-worker:./workers/clustering-worker';
 import {CaseItem, CasesAndEntities, ClusteringMessage, EntityItem} from "./workers/clustering-worker";
 
 /**

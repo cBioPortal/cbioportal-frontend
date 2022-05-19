@@ -17,7 +17,8 @@ import {
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../../../shared/components/ErrorMessage';
 import { computed, observable, makeObservable } from 'mobx';
-import OncoprintJS, {
+import {
+    OncoprintJS,
     ColumnId,
     ColumnLabel,
     InitParams,

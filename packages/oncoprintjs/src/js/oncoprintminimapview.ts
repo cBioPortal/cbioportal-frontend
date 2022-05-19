@@ -197,18 +197,22 @@ export default class OncoprintMinimapView {
         (function setUpZoomToFitButton() {
             const btn_height = self.layout_numbers.horizontal_zoom_area_height - padding;
             const btn_width = self.layout_numbers.vertical_zoom_area_width - padding;
-            const $btn = $('<div>').css({'position': 'absolute',
-                'min-height': btn_height,
-                'min-width': btn_width,
+            const $btn = $('<div>').css({
+                'position': 'absolute',
+                'height': btn_height,
+                'width': btn_width,
                 'outline': 'solid 1px black',
                 'left': self.layout_numbers.canvas_left + width + padding,
                 'top': self.layout_numbers.canvas_top + height + padding,
-                'background-size': (btn_width - 4) + 'px '+ (btn_height - 4) + 'px',
-                'background-position': '2px 2px',
-                'background-image': 'url('+zoomToFitIcon+')',
-                'background-repeat': 'no-repeat',
-                'cursor': 'pointer'}).addClass('oncoprint-zoomtofit-btn')
+                'cursor': 'pointer'
+            }).addClass('oncoprint-zoomtofit-btn')
                 .appendTo($div);
+            $(`<img src="${zoomToFitIcon}" />`).css({
+                'height': btn_height - 4,
+                'width': btn_width - 4,
+                'margin-top': -6,
+                'margin-left': 2,
+            }).appendTo($btn);
             $btn.hover(function () {
                 $(this).css({'background-color': '#cccccc'});
             }, function () {
