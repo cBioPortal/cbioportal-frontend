@@ -600,7 +600,29 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                                 openLoginModal={() => this.openLoginModal()}
                             />
                         ) : (
-                            <></>
+                            <span
+                                className={'fa fa-stack fa-2x'}
+                                style={{
+                                    fontSize: '15px',
+                                    marginTop: '12px',
+                                    marginLeft: '13px',
+                                }}
+                                title="Write access is only available if you are logged in and authorized."
+                            >
+                                <i className={'fa fa-user fa-stack-2x'}></i>
+                                <i
+                                    className={
+                                        'fa fa-exclamation-triangle fa-stack-1x fa-inverse'
+                                    }
+                                    style={{
+                                        color: 'yellow',
+                                        textAlign: 'right',
+                                        bottom: '0px !important',
+                                        position: 'absolute',
+                                        lineHeight: '3em',
+                                    }}
+                                ></i>
+                            </span>
                         )}
                         {this.state.successfulSave ? (
                             <div className={styles.successBox}>
