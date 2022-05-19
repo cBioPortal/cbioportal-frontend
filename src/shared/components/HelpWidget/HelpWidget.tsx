@@ -5,6 +5,7 @@ import { getServerConfig } from 'config/config';
 import classNames from 'classnames';
 
 import { isWebdriver } from 'cbioportal-frontend-commons';
+import { serializeEvent } from 'shared/lib/tracking';
 
 interface IHelpWidgetProps {
     path: string;
@@ -63,7 +64,14 @@ export const HelpWidget: React.FunctionComponent<IHelpWidgetProps> = function({
     );
 
     return (
-        <div className={classNames('helpWidget', styles['widget-wrapper'])}>
+        <div
+            data-event={serializeEvent({
+                action: 'featureSpecificHelpClick',
+                label: conf.regexp,
+                category: 'linkout',
+            })}
+            className={classNames('helpWidget', styles['widget-wrapper'])}
+        >
             {el}
         </div>
     );
