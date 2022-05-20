@@ -211,7 +211,8 @@ export default class CancerStudySelector extends React.Component<
                             this.store.cancerStudies,
                         ]}
                     >
-                        Select Studies for Visualization & Analysis:
+                        Select Studies for Visualization & Analysis: (
+                        <a href={'#'}>Help</a>)
                     </SectionHeader>
 
                     {this.store.selectableStudiesSet.isComplete && (
