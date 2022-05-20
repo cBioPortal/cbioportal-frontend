@@ -58,6 +58,7 @@ declare const styles: {
   readonly "oqlNotice": string;
   readonly "pendingMessage": string;
   readonly "profileName": string;
+  readonly "queryHelp": string;
   readonly "quickSelect": string;
   readonly "radioRow": string;
   readonly "searchTextInput": string;

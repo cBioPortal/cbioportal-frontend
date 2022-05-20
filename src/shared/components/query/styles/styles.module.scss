@@ -191,9 +191,17 @@ div.SelectedStudiesWindow {
 
     div.cancerTypeListContainer,
     div.cancerStudyListContainer {
+        position: relative;
         overflow-y: scroll;
         overflow-x: auto;
         height: 100%;
+
+        .queryHelp {
+            position: absolute;
+            right: 25px;
+            top: 13px;
+            z-index: 100;
+        }
     }
 
     div.cancerStudyListContainer {
