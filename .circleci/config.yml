@@ -177,7 +177,7 @@ jobs:
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
-  
+
   end_to_end_tests_against_master:
     <<: *defaults
     environment:
@@ -191,14 +191,10 @@ jobs:
     working_directory: /tmp/repo
     machine:
       enabled: true
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202201-02
     steps:
       - attach_workspace:
           at: /tmp/
-      - run:
-          # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
-          name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
-          command: pyenv local 3.6.5 && virtualenv venv
       - run:
           name: Setup python libraries
           command: |
@@ -277,10 +273,10 @@ jobs:
       - run:
           name: Change owner of keycloak MySQL database files (needed by cache)
           command: |
-              if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
-                  sudo chmod -R 777 $KC_DB_DATA_DIR && \
-                  sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
-              fi
+            if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
+                sudo chmod -R 777 $KC_DB_DATA_DIR && \
+                sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
+            fi
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data

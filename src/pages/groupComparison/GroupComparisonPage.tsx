@@ -47,6 +47,7 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -138,6 +139,11 @@ export default class GroupComparisonPage extends React.Component<
                     onTabClick={this.urlWrapper.setTabId}
                     className="primaryTabs mainTabs"
                     hrefRoot={buildCBioPortalPageUrl('comparison')}
+                    contentWindowExtra={
+                        <HelpWidget
+                            path={this.props.routing.location.pathname}
+                        />
+                    }
                 >
                     <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
                         <Overlap
