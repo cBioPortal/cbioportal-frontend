@@ -141,6 +141,7 @@ jobs:
           environment:
             JUNIT_REPORT_PATH: ./junit/
             JUNIT_REPORT_NAME: test-results.xml
+            NODE_OPTIONS: --max-old-space-size=4096
             DISABLE_SOURCEMAP: true
             WEBPACK_PARALLEL: false
           when: always

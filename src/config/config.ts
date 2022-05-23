@@ -151,6 +151,24 @@ function cachePostMethods(
     );
 }
 
+export type UrlParamPair = {
+    url: string;
+    params: { [key: string]: string };
+};
+
+export function pairMatchesPath(
+    pair: UrlParamPair,
+    url: string,
+    params: any
+): boolean {
+    return (
+        url.startsWith(pair.url) &&
+        Object.keys(pair.params).filter(
+            k => params[k] && params[k] === pair.params[k]
+        ).length == Object.keys(pair.params).length
+    );
+}
+
 export function initializeAPIClients() {
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
@@ -187,12 +205,18 @@ export function initializeAPIClients() {
         compressRequestBodies(
             CBioPortalAPI,
             [
-                '/mutations/fetch',
-                '/patients/fetch',
-                '/molecular-data/fetch',
-                '/clinical-data/fetch?clinicalDataType=SAMPLE',
-                '/gene-panel-data/fetch',
-                '/clinical-data/fetch?clinicalDataType=PATIENT',
+                { url: '/mutations/fetch', params: {} },
+                { url: '/patients/fetch', params: {} },
+                { url: '/molecular-data/fetch', params: {} },
+                {
+                    url: '/clinical-data/fetch',
+                    params: { clinicalDataType: 'SAMPLE' },
+                },
+                { url: '/gene-panel-data/fetch', params: {} },
+                {
+                    url: '/clinical-data/fetch',
+                    params: { clinicalDataType: 'PATIENT' },
+                },
             ],
             getCbioPortalApiUrl()
         );
@@ -209,10 +233,15 @@ export function initializeAPIClients() {
  */
 function compressRequestBodies(
     apiClient: any,
-    urlsToCompress: string[],
+    urlsToCompress: UrlParamPair[],
     domain: string
 ): void {
-    urlsToCompress = urlsToCompress.map(url => domain + url);
+    urlsToCompress = urlsToCompress.map(pair => {
+        return {
+            url: domain + pair.url,
+            params: pair.params,
+        };
+    });
 
     const oldRequestFunc = apiClient.prototype.request;
 
@@ -229,7 +258,9 @@ function compressRequestBodies(
     ) => {
         if (
             method === 'POST' &&
-            urlsToCompress.filter(match => url.startsWith(match)).length > 0
+            urlsToCompress.filter(pair =>
+                pairMatchesPath(pair, url, queryParameters)
+            ).length > 0
         ) {
             headers['Content-Encoding'] = 'gzip';
             body = pako.gzip(JSON.stringify(body)).buffer;
