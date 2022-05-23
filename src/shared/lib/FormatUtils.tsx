@@ -103,8 +103,9 @@ export function toConditionalPrecisionWithMinimum(
     positiveNumber: number,
     precision: number,
     precisionThreshold: number,
-    minimumExponent: number
-) {
+    minimumExponent: number,
+    prependEqualSign?: boolean
+): string | React.ReactNode {
     if (positiveNumber === 0 || Math.log10(positiveNumber) < minimumExponent) {
         return (
             <span>
@@ -112,10 +113,16 @@ export function toConditionalPrecisionWithMinimum(
             </span>
         );
     } else {
-        return toConditionalPrecision(
+        let transformed = toConditionalPrecision(
             positiveNumber,
             precision,
             precisionThreshold
+        );
+        return (
+            <>
+                {prependEqualSign ? ' = ' : ''}
+                {transformed}
+            </>
         );
     }
 }
