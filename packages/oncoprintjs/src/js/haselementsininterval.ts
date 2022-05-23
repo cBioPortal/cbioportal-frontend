@@ -30,8 +30,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-export default function haselementsininterval<T>(sorted_list:T[], valueFn:(t:T)=>number, lower_inc_val:number, upper_exc_val:number):boolean {
+export default function haselementsininterval<T>(
+    sorted_list: T[],
+    valueFn: (t: T) => number,
+    lower_inc_val: number,
+    upper_exc_val: number
+): boolean {
     // in: sorted_list, a list sorted in increasing order of valueFn
     //     valueFn, a function that takes an element of sorted_list and returns a number
     //     lower_inc and upper_ex: define a half-open interval [lower_inc, upper_exc)
@@ -45,7 +49,7 @@ export default function haselementsininterval<T>(sorted_list:T[], valueFn:(t:T)=
         if (test_lower_inc >= test_upper_exc) {
             break;
         }
-        middle = Math.floor((test_lower_inc + test_upper_exc) / 2)
+        middle = Math.floor((test_lower_inc + test_upper_exc) / 2);
         middle_val = valueFn(sorted_list[middle]);
         if (middle_val >= upper_exc_val) {
             test_upper_exc = middle;
@@ -59,4 +63,4 @@ export default function haselementsininterval<T>(sorted_list:T[], valueFn:(t:T)=
         }
     }
     return ret;
-};
+}

@@ -1,12 +1,11 @@
 export default class CachedProperty<T> {
-    private bound_properties:CachedProperty<any>[] = [];
+    private bound_properties: CachedProperty<any>[] = [];
 
-    constructor(private value:T, private updateFn:(...args:any[])=>T) {
-    }
+    constructor(private value: T, private updateFn: (...args: any[]) => T) {}
 
-    public update(...args:any[]) {
+    public update(...args: any[]) {
         this.value = this.updateFn.apply(null, args);
-        for (let i=0; i<this.bound_properties.length; i++) {
+        for (let i = 0; i < this.bound_properties.length; i++) {
             this.bound_properties[i].update(...args);
         }
     }
@@ -19,7 +18,7 @@ export default class CachedProperty<T> {
         this.update();
         return this.get();
     }
-    public addBoundProperty(cached_property:CachedProperty<any>) {
+    public addBoundProperty(cached_property: CachedProperty<any>) {
         this.bound_properties.push(cached_property);
     }
 }

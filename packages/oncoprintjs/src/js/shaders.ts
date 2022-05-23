@@ -1,6 +1,4 @@
-export function getVertexShaderSource(
-    columnsRightAfterGapsSize:number,
-) {
+export function getVertexShaderSource(columnsRightAfterGapsSize: number) {
     return `precision highp float;
             attribute float aPosVertex;
             attribute float aColVertex;

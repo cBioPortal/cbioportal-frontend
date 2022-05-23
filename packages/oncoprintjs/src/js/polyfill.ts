@@ -30,7 +30,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type OMath = Math & { log2:(x:number)=>number };
-export const OMath:OMath = (Math as any);
+export type OMath = Math & { log2: (x: number) => number };
+export const OMath: OMath = Math as any;
 
-OMath.log2 = OMath.log2 || function(x:number) { return Math.log(x) / Math.LN2; };
+OMath.log2 =
+    OMath.log2 ||
+    function(x: number) {
+        return Math.log(x) / Math.LN2;
+    };

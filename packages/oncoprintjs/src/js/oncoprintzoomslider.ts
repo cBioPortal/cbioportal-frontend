@@ -1,42 +1,49 @@
-import $ from "jquery";
+import $ from 'jquery';
 import MouseMoveEvent = JQuery.MouseMoveEvent;
 import MouseDownEvent = JQuery.MouseDownEvent;
 
-const VERTICAL = "v";
-const HORIZONTAL = "h";
+const VERTICAL = 'v';
+const HORIZONTAL = 'h';
 
-function clamp(x:number) {
+function clamp(x: number) {
     return Math.max(Math.min(x, 1), 0);
 }
 
 export type OncoprintZoomSliderParams = {
-    btn_size: number,
-    horizontal?: boolean,
-    width?:number,
+    btn_size: number;
+    horizontal?: boolean;
+    width?: number;
 
-    vertical?:boolean, // either horizontal and width, or vertical and height, must be set
-    height?:number,
+    vertical?: boolean; // either horizontal and width, or vertical and height, must be set
+    height?: number;
 
-    init_val: number,
-    left:number,
-    top:number,
-    onChange:(val:number)=>void
+    init_val: number;
+    left: number;
+    top: number;
+    onChange: (val: number) => void;
 };
 
 export default class OncoprintZoomSlider {
-    private $div:JQuery;
-    private onChange:OncoprintZoomSliderParams["onChange"];
-    private value:number;
-    private slider_bar_size:number;
-    private orientation:"v"|"h";
-    private $slider:JQuery;
-    private $plus_btn:JQuery;
-    private $minus_btn:JQuery;
+    private $div: JQuery;
+    private onChange: OncoprintZoomSliderParams['onChange'];
+    private value: number;
+    private slider_bar_size: number;
+    private orientation: 'v' | 'h';
+    private $slider: JQuery;
+    private $plus_btn: JQuery;
+    private $minus_btn: JQuery;
 
-    constructor($container:JQuery, params?:Partial<OncoprintZoomSliderParams>) {
-        this.$div = $('<div>').css({'position':'absolute',
-            'top': params.top || 0,
-            'left': params.left || 0}).appendTo($container);
+    constructor(
+        $container: JQuery,
+        params?: Partial<OncoprintZoomSliderParams>
+    ) {
+        this.$div = $('<div>')
+            .css({
+                position: 'absolute',
+                top: params.top || 0,
+                left: params.left || 0,
+            })
+            .appendTo($container);
         params = params || {};
         params.btn_size = params.btn_size || 13;
         this.onChange = params.onChange || function() {};
@@ -44,72 +51,110 @@ export default class OncoprintZoomSlider {
         this.initialize(params as OncoprintZoomSliderParams);
 
         this.value = params.init_val === undefined ? 0.5 : params.init_val;
-        this.slider_bar_size = (this.orientation === VERTICAL ? params.height : params.width) - 2*params.btn_size;
+        this.slider_bar_size =
+            (this.orientation === VERTICAL ? params.height : params.width) -
+            2 * params.btn_size;
         this.updateSliderPos();
     }
 
-    private initialize(params:OncoprintZoomSliderParams) {
+    private initialize(params: OncoprintZoomSliderParams) {
         var $ctr = this.$div;
         var icon_size = Math.round(params.btn_size * 0.7);
-        var icon_padding = Math.round((params.btn_size - icon_size)/2);
-        var $slider_bar = $('<div>').css({'position':'absolute',
-            'background-color':'#ffffff',
-            'outline': 'solid 1px black'}).appendTo($ctr);
-        var $slider = $('<div>').css({'position':'absolute',
-            'background-color':'#ffffff',
-            'border': 'solid 1px black',
-            'border-radius': '3px',
-            'cursor': 'pointer'}).appendTo($ctr);
+        var icon_padding = Math.round((params.btn_size - icon_size) / 2);
+        var $slider_bar = $('<div>')
+            .css({
+                position: 'absolute',
+                'background-color': '#ffffff',
+                outline: 'solid 1px black',
+            })
+            .appendTo($ctr);
+        var $slider = $('<div>')
+            .css({
+                position: 'absolute',
+                'background-color': '#ffffff',
+                border: 'solid 1px black',
+                'border-radius': '3px',
+                cursor: 'pointer',
+            })
+            .appendTo($ctr);
 
-        var $plus_btn = $('<div>').css({'position':'absolute',
-            'min-height': params.btn_size,
-            'min-width': params.btn_size,
-            'background-color':'#ffffff',
-            'border': 'solid 1px black',
-            'border-radius': '3px',
-            'cursor': 'pointer'})
+        var $plus_btn = $('<div>')
+            .css({
+                position: 'absolute',
+                'min-height': params.btn_size,
+                'min-width': params.btn_size,
+                'background-color': '#ffffff',
+                border: 'solid 1px black',
+                'border-radius': '3px',
+                cursor: 'pointer',
+            })
             .appendTo($ctr);
-        $('<span>').addClass("icon fa fa-plus").css({'position':'absolute',
-            'top':icon_padding,
-            'left':icon_padding,
-            'min-width':icon_size,
-            'min-height':icon_size})
+        $('<span>')
+            .addClass('icon fa fa-plus')
+            .css({
+                position: 'absolute',
+                top: icon_padding,
+                left: icon_padding,
+                'min-width': icon_size,
+                'min-height': icon_size,
+            })
             .appendTo($plus_btn);
-        var $minus_btn = $('<div>').css({'position':'absolute',
-            'min-height': params.btn_size,
-            'min-width': params.btn_size,
-            'background-color':'#ffffff',
-            'border': 'solid 1px black',
-            'border-radius': '3px',
-            'cursor': 'pointer'})
+        var $minus_btn = $('<div>')
+            .css({
+                position: 'absolute',
+                'min-height': params.btn_size,
+                'min-width': params.btn_size,
+                'background-color': '#ffffff',
+                border: 'solid 1px black',
+                'border-radius': '3px',
+                cursor: 'pointer',
+            })
             .appendTo($ctr);
-        $('<span>').addClass("icon fa fa-minus").css({'position':'absolute',
-            'top':icon_padding,
-            'left':icon_padding,
-            'min-width':icon_size,
-            'min-height':icon_size})
+        $('<span>')
+            .addClass('icon fa fa-minus')
+            .css({
+                position: 'absolute',
+                top: icon_padding,
+                left: icon_padding,
+                'min-width': icon_size,
+                'min-height': icon_size,
+            })
             .appendTo($minus_btn);
         if (params.vertical) {
-            $slider_bar.css({'min-height': params.height - 2 * params.btn_size,
-                'min-width': Math.round(params.btn_size / 5)});
-            $slider.css({'min-height': Math.round(params.btn_size / 2),
-                'min-width': params.btn_size});
+            $slider_bar.css({
+                'min-height': params.height - 2 * params.btn_size,
+                'min-width': Math.round(params.btn_size / 5),
+            });
+            $slider.css({
+                'min-height': Math.round(params.btn_size / 2),
+                'min-width': params.btn_size,
+            });
 
-            $plus_btn.css({'top': 0, 'left': 0});
-            $minus_btn.css({'top': params.height - params.btn_size, 'left': 0});
-            $slider_bar.css({'top': params.btn_size, 'left': 0.4 * params.btn_size});
-            $slider.css({'left': 0});
+            $plus_btn.css({ top: 0, left: 0 });
+            $minus_btn.css({ top: params.height - params.btn_size, left: 0 });
+            $slider_bar.css({
+                top: params.btn_size,
+                left: 0.4 * params.btn_size,
+            });
+            $slider.css({ left: 0 });
             this.orientation = VERTICAL;
         } else {
-            $slider_bar.css({'min-height': Math.round(params.btn_size / 5),
-                'min-width': params.width - 2 * params.btn_size});
-            $slider.css({'min-height': params.btn_size,
-                'min-width': Math.round(params.btn_size / 2)});
+            $slider_bar.css({
+                'min-height': Math.round(params.btn_size / 5),
+                'min-width': params.width - 2 * params.btn_size,
+            });
+            $slider.css({
+                'min-height': params.btn_size,
+                'min-width': Math.round(params.btn_size / 2),
+            });
 
-            $plus_btn.css({'top': 0, 'left': params.width - params.btn_size});
-            $minus_btn.css({'top': 0, 'left': 0});
-            $slider_bar.css({'top': 0.4*params.btn_size, 'left': params.btn_size});
-            $slider.css({'top': 0});
+            $plus_btn.css({ top: 0, left: params.width - params.btn_size });
+            $minus_btn.css({ top: 0, left: 0 });
+            $slider_bar.css({
+                top: 0.4 * params.btn_size,
+                left: params.btn_size,
+            });
+            $slider.css({ top: 0 });
             this.orientation = HORIZONTAL;
         }
 
@@ -124,23 +169,26 @@ export default class OncoprintZoomSlider {
             params.onChange(self.value);
         });
 
-        [$slider, $plus_btn, $minus_btn].map(function($btn) { $btn.hover(function() {
-            $(this).css({'background-color':'#cccccc'});
-        }, function() {
-            $(this).css({'background-color': '#ffffff'});
-        }); });
-
-
+        [$slider, $plus_btn, $minus_btn].map(function($btn) {
+            $btn.hover(
+                function() {
+                    $(this).css({ 'background-color': '#cccccc' });
+                },
+                function() {
+                    $(this).css({ 'background-color': '#ffffff' });
+                }
+            );
+        });
 
         this.$slider = $slider;
         this.$plus_btn = $plus_btn;
         this.$minus_btn = $minus_btn;
 
         (function setUpSliderDrag() {
-            let start_mouse:number;
-            let start_val:number;
-            let dragging:boolean;
-            function handleSliderDrag(evt:MouseMoveEvent) {
+            let start_mouse: number;
+            let start_val: number;
+            let dragging: boolean;
+            function handleSliderDrag(evt: MouseMoveEvent) {
                 evt.stopPropagation();
                 evt.preventDefault();
                 let delta_mouse;
@@ -158,7 +206,7 @@ export default class OncoprintZoomSlider {
                 }
                 dragging = false;
             }
-            self.$slider.on("mousedown", function (evt:MouseDownEvent) {
+            self.$slider.on('mousedown', function(evt: MouseDownEvent) {
                 if (self.orientation === VERTICAL) {
                     start_mouse = evt.pageY;
                 } else {
@@ -166,38 +214,55 @@ export default class OncoprintZoomSlider {
                 }
                 start_val = self.value;
                 dragging = true;
-                $(document).on("mousemove", handleSliderDrag);
+                $(document).on('mousemove', handleSliderDrag);
             });
-            $(document).on("mouseup click", function () {
-                $(document).off("mousemove", handleSliderDrag);
+            $(document).on('mouseup click', function() {
+                $(document).off('mousemove', handleSliderDrag);
                 stopSliderDrag();
             });
-        })()
-    };
+        })();
+    }
 
     private updateSliderPos() {
         const proportion = this.value;
         var $slider = this.$slider;
         var bounds = this.getSliderBounds();
         if (this.orientation === VERTICAL) {
-            $slider.css('top', bounds.bottom*(1-proportion) + bounds.top*proportion);
+            $slider.css(
+                'top',
+                bounds.bottom * (1 - proportion) + bounds.top * proportion
+            );
         } else if (this.orientation === HORIZONTAL) {
-            $slider.css('left', bounds.left*(1-proportion) + bounds.right*proportion);
+            $slider.css(
+                'left',
+                bounds.left * (1 - proportion) + bounds.right * proportion
+            );
         }
-    };
+    }
 
     private getSliderBounds() {
         if (this.orientation === VERTICAL) {
-            return {bottom: parseInt(this.$minus_btn.css('top'), 10) - parseInt(this.$slider.css('min-height'), 10),
-                top: parseInt(this.$plus_btn.css('top'), 10) + parseInt(this.$plus_btn.css('min-height'), 10)};
+            return {
+                bottom:
+                    parseInt(this.$minus_btn.css('top'), 10) -
+                    parseInt(this.$slider.css('min-height'), 10),
+                top:
+                    parseInt(this.$plus_btn.css('top'), 10) +
+                    parseInt(this.$plus_btn.css('min-height'), 10),
+            };
         } else {
-            return {left: parseInt(this.$minus_btn.css('left'), 10) + parseInt(this.$minus_btn.css('min-width'), 10),
-                right: parseInt(this.$plus_btn.css('left'), 10) - parseInt(this.$slider.css('min-width'), 10)};
+            return {
+                left:
+                    parseInt(this.$minus_btn.css('left'), 10) +
+                    parseInt(this.$minus_btn.css('min-width'), 10),
+                right:
+                    parseInt(this.$plus_btn.css('left'), 10) -
+                    parseInt(this.$slider.css('min-width'), 10),
+            };
         }
-    };
+    }
 
-
-    public setSliderValue(proportion:number) {
+    public setSliderValue(proportion: number) {
         this.value = clamp(proportion);
         this.updateSliderPos();
     }

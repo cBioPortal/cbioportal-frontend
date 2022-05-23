@@ -1,5 +1,10 @@
 import ClusteringWorker from 'web-worker:./workers/clustering-worker';
-import {CaseItem, CasesAndEntities, ClusteringMessage, EntityItem} from "./workers/clustering-worker";
+import {
+    CaseItem,
+    CasesAndEntities,
+    ClusteringMessage,
+    EntityItem,
+} from './workers/clustering-worker';
 
 /**
  * Executes the clustering of casesAndEntitites in the requested
@@ -21,7 +26,10 @@ import {CaseItem, CasesAndEntities, ClusteringMessage, EntityItem} from "./worke
  * @return a deferred which gets resolved with the clustering result
  *   when the clustering is done.
  */
-function _hcluster(casesAndEntitites:ClusteringMessage["casesAndEntities"], dimension:ClusteringMessage["dimension"]) {
+function _hcluster(
+    casesAndEntitites: ClusteringMessage['casesAndEntities'],
+    dimension: ClusteringMessage['dimension']
+) {
     var worker = new ClusteringWorker();
     var message = new Object() as ClusteringMessage;
     //@ts-ignore
@@ -29,8 +37,8 @@ function _hcluster(casesAndEntitites:ClusteringMessage["casesAndEntities"], dime
     message.casesAndEntities = casesAndEntitites;
     message.dimension = dimension;
     worker.postMessage(message);
-    worker.onmessage = function(m:any) {
-        def.resolve(m.data as (CaseItem[])|(EntityItem[]));
+    worker.onmessage = function(m: any) {
+        def.resolve(m.data as CaseItem[] | EntityItem[]);
     };
     return def.promise();
 }
@@ -41,8 +49,10 @@ function _hcluster(casesAndEntitites:ClusteringMessage["casesAndEntities"], dime
  * @return a deferred which gets resolved with the clustering result
  *   when the clustering is done.
  */
-export function hclusterColumns(casesAndEntitites:CasesAndEntities):Promise<CaseItem[]> {
-    return _hcluster(casesAndEntitites, "CASES");
+export function hclusterColumns(
+    casesAndEntitites: CasesAndEntities
+): Promise<CaseItem[]> {
+    return _hcluster(casesAndEntitites, 'CASES');
 }
 
 /**
@@ -51,6 +61,8 @@ export function hclusterColumns(casesAndEntitites:CasesAndEntities):Promise<Case
  * @return a deferred which gets resolved with the clustering result
  *   when the clustering is done.
  */
-export function hclusterTracks(casesAndEntitites:CasesAndEntities):Promise<EntityItem[]> {
-    return _hcluster(casesAndEntitites, "ENTITIES");
+export function hclusterTracks(
+    casesAndEntitites: CasesAndEntities
+): Promise<EntityItem[]> {
+    return _hcluster(casesAndEntitites, 'ENTITIES');
 }

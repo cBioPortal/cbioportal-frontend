@@ -1,6 +1,6 @@
 import OncoprintJS from './oncoprint';
 
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
     window.Oncoprint = OncoprintJS;
 }
 

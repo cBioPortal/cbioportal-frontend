@@ -1,16 +1,19 @@
-import OncoprintModel, {TrackGroupProp, TrackProp} from "./oncoprintmodel";
+import OncoprintModel, { TrackGroupProp, TrackProp } from './oncoprintmodel';
 
-export function calculateTrackTops(model:OncoprintModel, zoomed:boolean) {
+export function calculateTrackTops(model: OncoprintModel, zoomed: boolean) {
     return calculateTrackAndHeaderTops(model, zoomed).trackTops;
 }
 
-export function calculateHeaderTops(model:OncoprintModel, zoomed:boolean) {
+export function calculateHeaderTops(model: OncoprintModel, zoomed: boolean) {
     return calculateTrackAndHeaderTops(model, zoomed).headerTops;
 }
 
-export function calculateTrackAndHeaderTops(model:OncoprintModel, zoomed:boolean) {
-    const trackTops:TrackProp<number> = {};
-    const headerTops:TrackGroupProp<number> = {};
+export function calculateTrackAndHeaderTops(
+    model: OncoprintModel,
+    zoomed: boolean
+) {
+    const trackTops: TrackProp<number> = {};
+    const headerTops: TrackGroupProp<number> = {};
     const groups = model.getTrackGroups();
     let y = 0;
     for (let i = 0; i < groups.length; i++) {
@@ -32,5 +35,5 @@ export function calculateTrackAndHeaderTops(model:OncoprintModel, zoomed:boolean
             y += model.getTrackGroupPadding(!zoomed);
         }
     }
-    return {trackTops, headerTops};
+    return { trackTops, headerTops };
 }

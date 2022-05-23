@@ -9,9 +9,6 @@ export default getRollupOptions(
     // we need to bundle these packages, because these are imported in web workers
     // otherwise web workers cannot find these packages in runtime
     {
-        exclude: [
-            'tayden-clusterfck',
-            'jstat'
-        ]
+        exclude: ['tayden-clusterfck', 'jstat'],
     }
 );

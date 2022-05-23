@@ -5,10 +5,9 @@ export {
     MinimapCloseCallback,
     CellMouseOverCallback,
     CellClickCallback,
-    ClipboardChangeCallback
+    ClipboardChangeCallback,
 } from './js/oncoprint';
 
-export * from "./js/oncoprintruleset";
-export * from "./js/oncoprintmodel";
-export {default as shapeToSvg} from "./js/oncoprintshapetosvg";
-
+export * from './js/oncoprintruleset';
+export * from './js/oncoprintmodel';
+export { default as shapeToSvg } from './js/oncoprintshapetosvg';

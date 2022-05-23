@@ -1,4 +1,9 @@
-export default function binarysearch<T>(array:T[], target_key:number, keyFn:(t:T)=>number, return_closest_lower_if_not_found?:boolean) {
+export default function binarysearch<T>(
+    array: T[],
+    target_key: number,
+    keyFn: (t: T) => number,
+    return_closest_lower_if_not_found?: boolean
+) {
     if (!array.length) {
         return -1; // return -1 for an empty array
     }
@@ -21,7 +26,7 @@ export default function binarysearch<T>(array:T[], target_key:number, keyFn:(t:T
         }
     }
     if (return_closest_lower_if_not_found) {
-        return Math.max(0, lower_incl-1);
+        return Math.max(0, lower_incl - 1);
     } else {
         return -1;
     }
