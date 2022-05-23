@@ -1,18 +1,53 @@
+export enum SearchClauseType {
+    NOT = 'not',
+    AND = 'and',
+    REFERENCE_GENOME = 'reference-genome',
+}
+
 export type SearchClause =
-    | { type: 'not'; data: string }
-    | { type: 'and'; data: string[] };
+    | {
+          type: SearchClauseType.NOT;
+          data: string;
+          field: 'searchTerms';
+      }
+    | {
+          type: SearchClauseType.AND;
+          data: string[];
+          field: 'searchTerms';
+      }
+    | {
+          type: SearchClauseType.REFERENCE_GENOME;
+          data: string;
+          field: 'referenceGenome';
+      };
 
-export type SearchResult = { match: boolean; forced: boolean };
+export type SearchResult = {
+    match: boolean;
+    forced: boolean;
+};
 
-export function parse_search_query(query: string): SearchClause[] {
-    // First eliminate trailing whitespace and reduce every whitespace
-    //	to a single space.
-    query = query
+export function parseSearchQuery(query: string): SearchClause[] {
+    query = cleanUpQuery(query);
+    const phrases = createPhrases(query);
+    return createClauses(phrases);
+}
+
+/**
+ * Eliminate trailing whitespace
+ * and reduce every whitespace to a single space.
+ */
+function cleanUpQuery(query: string) {
+    return query
         .toLowerCase()
         .trim()
         .split(/\s+/g)
         .join(' ');
-    // Now factor out quotation marks and inter-token spaces
+}
+
+/**
+ * Factor out quotation marks and inter-token spaces
+ */
+function createPhrases(query: string) {
     let phrases = [];
     let currInd = 0;
     let nextSpace, nextQuote;
@@ -42,52 +77,99 @@ export function parse_search_query(query: string): SearchClause[] {
             }
         }
     }
-    // Now get the conjunctive clauses, and the negative clauses
-    let clauses: SearchClause[] = [];
-    currInd = 0;
-    let nextOr, nextDash;
+    return phrases;
+}
+
+/**
+ * Create conjunctive, negative and reference genome clauses
+ */
+function createClauses(phrases: string[]) {
+    const clauses: SearchClause[] = [];
+    let currInd = 0;
     while (currInd < phrases.length) {
-        if (phrases[currInd] === '-') {
-            if (currInd < phrases.length - 1) {
-                clauses.push({ type: 'not', data: phrases[currInd + 1] });
-            }
-            currInd = currInd + 2;
+        if (phrases[currInd].startsWith(SearchClauseType.REFERENCE_GENOME)) {
+            currInd = addRefGenomeClause(currInd, phrases, clauses);
+        } else if (phrases[currInd] === '-') {
+            currInd = addNotClause(currInd, phrases, clauses);
         } else {
-            nextOr = phrases.indexOf('or', currInd);
-            nextDash = phrases.indexOf('-', currInd);
-            if (nextOr === -1 && nextDash === -1) {
-                clauses.push({ type: 'and', data: phrases.slice(currInd) });
-                currInd = phrases.length;
-            } else if (nextOr === -1 && nextDash > 0) {
-                clauses.push({
-                    type: 'and',
-                    data: phrases.slice(currInd, nextDash),
-                });
-                currInd = nextDash;
-            } else if (nextOr > 0 && nextDash === -1) {
-                clauses.push({
-                    type: 'and',
-                    data: phrases.slice(currInd, nextOr),
-                });
-                currInd = nextOr + 1;
-            } else {
-                if (nextOr < nextDash) {
-                    clauses.push({
-                        type: 'and',
-                        data: phrases.slice(currInd, nextOr),
-                    });
-                    currInd = nextOr + 1;
-                } else {
-                    clauses.push({
-                        type: 'and',
-                        data: phrases.slice(currInd, nextDash),
-                    });
-                    currInd = nextDash;
-                }
-            }
+            currInd = addAndClause(phrases, currInd, clauses);
         }
     }
     return clauses;
+}
+
+/**
+ * @returns {number} next index
+ **/
+function addRefGenomeClause(
+    currInd: number,
+    phrases: string[],
+    clauses: SearchClause[]
+): number {
+    if (currInd < phrases.length) {
+        clauses.push(referenceGenomeClause(phrases[currInd]));
+    }
+    return currInd + 1;
+}
+
+/**
+ * @returns {number} next index
+ **/
+function addNotClause(
+    currInd: number,
+    phrases: string[],
+    clauses: SearchClause[]
+): number {
+    if (currInd < phrases.length - 1) {
+        clauses.push(notClause(phrases[currInd + 1]));
+    }
+    return currInd + 2;
+}
+
+/**
+ * @returns {number} next index
+ */
+function addAndClause(
+    phrases: string[],
+    currInd: number,
+    clauses: SearchClause[]
+): number {
+    let nextOr = phrases.indexOf('or', currInd);
+    let nextDash = phrases.indexOf('-', currInd);
+    if (nextOr === -1 && nextDash === -1) {
+        clauses.push(andClause(phrases.slice(currInd)));
+        return phrases.length;
+    } else if (nextOr === -1 && nextDash > 0) {
+        clauses.push(andClause(phrases.slice(currInd, nextDash)));
+        return nextDash;
+    } else if (nextOr > 0 && nextDash === -1) {
+        clauses.push(andClause(phrases.slice(currInd, nextOr)));
+        return nextOr + 1;
+    } else {
+        if (nextOr < nextDash) {
+            clauses.push(andClause(phrases.slice(currInd, nextOr)));
+            return nextOr + 1;
+        } else {
+            clauses.push(andClause(phrases.slice(currInd, nextDash)));
+            return nextDash;
+        }
+    }
+}
+
+function notClause(data: string): SearchClause {
+    return { data, type: SearchClauseType.NOT, field: 'searchTerms' };
+}
+
+function andClause(data: string[]): SearchClause {
+    return { data, type: SearchClauseType.AND, field: 'searchTerms' };
+}
+
+function referenceGenomeClause(data: string): SearchClause {
+    return {
+        data: data.split(':')[1],
+        type: SearchClauseType.REFERENCE_GENOME,
+        field: 'referenceGenome',
+    };
 }
 
 export function matchPhrase(phrase: string, fullText: string) {

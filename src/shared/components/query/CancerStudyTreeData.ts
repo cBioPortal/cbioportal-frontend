@@ -25,6 +25,7 @@ export type NodeMetadata = {
     ancestors: CancerTypeWithVisibility[]; // in order of ascending distance from node, ending in root node
     siblings: CancerStudy[]; // descendants of highest level non-root ancestor
     searchTerms: string; // all related text in a single string for easy searching
+    // referenceGenome: string;
 };
 
 export default class CancerStudyTreeData {

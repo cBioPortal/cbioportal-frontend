@@ -11,7 +11,7 @@ import {
 import { QueryStore } from './QueryStore';
 import { computed, action, makeObservable } from 'mobx';
 import {
-    parse_search_query,
+    parseSearchQuery,
     perform_search_single,
     SearchResult,
 } from '../../lib/textQueryUtils';
@@ -47,18 +47,18 @@ export default class StudyListLogic {
 
     @cached @computed get map_node_filterBySearchText() {
         // first compute individual node match results
-        let parsedQuery = parse_search_query(this.store.searchText);
+        let parsedQuery = parseSearchQuery(this.store.searchText);
         let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
 
-        for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
+        for (let [study, meta] of this.store.treeData.map_node_meta.entries()) {
             let searchTerms = meta.searchTerms;
-            if (node.hasOwnProperty('studyId')) {
-                searchTerms += (node as CancerStudy).studyId
-                    ? (node as CancerStudy).studyId
+            if (study.hasOwnProperty('studyId')) {
+                searchTerms += (study as CancerStudy).studyId
+                    ? (study as CancerStudy).studyId
                     : '';
             }
             map_node_searchResult.set(
-                node,
+                study,
                 perform_search_single(parsedQuery, searchTerms)
             );
         }
