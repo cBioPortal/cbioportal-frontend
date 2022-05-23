@@ -12,7 +12,7 @@ import { QueryStore } from './QueryStore';
 import { computed, action, makeObservable } from 'mobx';
 import {
     parseSearchQuery,
-    perform_search_single,
+    performSearchSingle,
     SearchResult,
 } from '../../lib/textQueryUtils';
 import { cached } from 'mobxpromise';
@@ -50,16 +50,16 @@ export default class StudyListLogic {
         let parsedQuery = parseSearchQuery(this.store.searchText);
         let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
 
-        for (let [study, meta] of this.store.treeData.map_node_meta.entries()) {
-            let searchTerms = meta.searchTerms;
+        for (let studyAndMeta of this.store.treeData.map_node_meta.entries()) {
+            const [study, meta] = studyAndMeta;
             if (study.hasOwnProperty('studyId')) {
-                searchTerms += (study as CancerStudy).studyId
-                    ? (study as CancerStudy).studyId
+                meta.searchTerms += (study as CancerStudy).studyId
+                    ? `\n${(study as CancerStudy).studyId}`
                     : '';
             }
             map_node_searchResult.set(
                 study,
-                perform_search_single(parsedQuery, searchTerms)
+                performSearchSingle(parsedQuery, studyAndMeta)
             );
         }
 

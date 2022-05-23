@@ -1,3 +1,6 @@
+import { CancerStudy } from "cbioportal-ts-api-client";
+import {CancerTreeNode, NodeMetadata} from "shared/components/query/CancerStudyTreeData";
+
 export enum SearchClauseType {
     NOT = 'not',
     AND = 'and',
@@ -176,29 +179,19 @@ export function matchPhrase(phrase: string, fullText: string) {
     return fullText.toLowerCase().indexOf(phrase.toLowerCase()) > -1;
 }
 
-export function perform_search_single(
+/**
+ * @returns {boolean} true if the query, considering quotation marks, 'and' and 'or' logic, matches
+ */
+export function performSearchSingle(
     parsed_query: SearchClause[],
-    item: string
-): SearchResult;
-export function perform_search_single<T>(
-    parsed_query: SearchClause[],
-    item: T,
-    matcher: (phrase: string, item: T) => boolean
-): SearchResult;
-export function perform_search_single<T>(
-    parsed_query: SearchClause[],
-    item: T,
-    matcher?: (phrase: string, item: T) => boolean
+    [study, meta]: [CancerTreeNode, NodeMetadata]
 ) {
-    if (!matcher) matcher = matchPhrase as any;
-
-    // return true iff the query, considering quotation marks, 'and' and 'or' logic, matches
     let match = false;
     let hasPositiveClauseType = false;
     let forced = false;
 
     for (let clause of parsed_query) {
-        if (clause.type !== 'not') {
+        if (clause.type !== SearchClauseType.NOT) {
             hasPositiveClauseType = true;
             break;
         }
@@ -207,20 +200,29 @@ export function perform_search_single<T>(
         // if only negative clauses, match by default
         match = true;
     }
-    for (let clause of parsed_query) {
-        if (clause.type === 'not') {
-            if (matcher!(clause.data, item)) {
-                match = false;
-                forced = true;
+    clauseLoop: for (let clause of parsed_query) {
+        switch (clause.type) {
+            case SearchClauseType.NOT:
+                if (matchPhrase(clause.data, meta.searchTerms)) {
+                    match = false;
+                    forced = true;
+                    break clauseLoop;
+                } else {
+                    break;
+                }
+            case SearchClauseType.AND:
+                let clauseMatch = true;
+                for (let phrase of clause.data) {
+                    clauseMatch = clauseMatch && matchPhrase(phrase, meta.searchTerms);
+                }
+                match = match || clauseMatch;
                 break;
-            }
-        } else if (clause.type === 'and') {
-            hasPositiveClauseType = true;
-            let clauseMatch = true;
-            for (let phrase of clause.data) {
-                clauseMatch = clauseMatch && matcher!(phrase, item);
-            }
-            match = match || clauseMatch;
+            case SearchClauseType.REFERENCE_GENOME:
+                const referenceGenome = (study as CancerStudy).referenceGenome;
+                match = !!referenceGenome && referenceGenome === clause.data;
+                break;
+            default:
+                throw new Error('SearchClauseType missing');
         }
     }
     return { match, forced };
