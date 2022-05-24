@@ -28,6 +28,8 @@ import {
     shouldShowGenieWarning,
 } from 'appShell/App/usageAgreements/GenieAgreement';
 import makeRoutes from 'routes';
+import { AppContext } from 'cbioportal-frontend-commons';
+import { IAppContext } from 'cbioportal-frontend-commons';
 
 interface IContainerProps {
     location: Location;
@@ -60,6 +62,13 @@ export default class Container extends React.Component<IContainerProps, {}> {
         );
     }
 
+    get appContext(): IAppContext {
+        return {
+            showDownloadControls: !getServerConfig()
+                .skin_hide_download_controls,
+        };
+    }
+
     render() {
         if (
             !isLocalDBServer() &&
@@ -86,56 +95,58 @@ export default class Container extends React.Component<IContainerProps, {}> {
         }
 
         return (
-            <div>
-                <Helmet>
-                    <meta charSet="utf-8" />
-                    <title>{getServerConfig().skin_title}</title>
-                    <meta
-                        name="description"
-                        content={getServerConfig().skin_description}
-                    />
-                </Helmet>
+            <AppContext.Provider value={this.appContext}>
+                <div>
+                    <Helmet>
+                        <meta charSet="utf-8" />
+                        <title>{getServerConfig().skin_title}</title>
+                        <meta
+                            name="description"
+                            content={getServerConfig().skin_description}
+                        />
+                    </Helmet>
 
-                <div id="pageTopContainer" className="pageTopContainer">
-                    <UserMessager />
+                    <div id="pageTopContainer" className="pageTopContainer">
+                        <UserMessager />
 
-                    {shouldShowStudyViewWarning() && <StudyAgreement />}
+                        {shouldShowStudyViewWarning() && <StudyAgreement />}
 
-                    {shouldShowGenieWarning() && <GenieAgreement />}
+                        {shouldShowGenieWarning() && <GenieAgreement />}
 
-                    <div className="contentWidth">
-                        <PortalHeader appStore={this.appStore} />
-                    </div>
-                </div>
-                <If condition={this.appStore.isErrorCondition}>
-                    <Then>
-                        <div className="contentWrapper">
-                            <ErrorScreen
-                                title={
-                                    formatErrorTitle(
-                                        this.appStore.undismissedSiteErrors
-                                    ) ||
-                                    'Oops. There was an error retrieving data.'
-                                }
-                                body={
-                                    <a href={buildCBioPortalPageUrl('/')}>
-                                        Return to homepage
-                                    </a>
-                                }
-                                errorLog={formatErrorLog(
-                                    this.appStore.undismissedSiteErrors
-                                )}
-                                errorMessages={formatErrorMessages(
-                                    this.appStore.undismissedSiteErrors
-                                )}
-                            />
+                        <div className="contentWidth">
+                            <PortalHeader appStore={this.appStore} />
                         </div>
-                    </Then>
-                    <Else>
-                        <div className="contentWrapper">{makeRoutes()}</div>
-                    </Else>
-                </If>
-            </div>
+                    </div>
+                    <If condition={this.appStore.isErrorCondition}>
+                        <Then>
+                            <div className="contentWrapper">
+                                <ErrorScreen
+                                    title={
+                                        formatErrorTitle(
+                                            this.appStore.undismissedSiteErrors
+                                        ) ||
+                                        'Oops. There was an error retrieving data.'
+                                    }
+                                    body={
+                                        <a href={buildCBioPortalPageUrl('/')}>
+                                            Return to homepage
+                                        </a>
+                                    }
+                                    errorLog={formatErrorLog(
+                                        this.appStore.undismissedSiteErrors
+                                    )}
+                                    errorMessages={formatErrorMessages(
+                                        this.appStore.undismissedSiteErrors
+                                    )}
+                                />
+                            </div>
+                        </Then>
+                        <Else>
+                            <div className="contentWrapper">{makeRoutes()}</div>
+                        </Else>
+                    </If>
+                </div>
+            </AppContext.Provider>
         );
     }
 }

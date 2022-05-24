@@ -6,6 +6,7 @@ import { CopyDownloadLinks } from './CopyDownloadLinks';
 import { CopyDownloadButtons } from './CopyDownloadButtons';
 import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
 import { CopyDownloadQueryLinks } from './CopyDownloadQueryLinks';
+import { AppContext } from 'cbioportal-frontend-commons';
 const Clipboard = require('clipboard');
 
 export interface ISimpleCopyDownloadControlsProps
@@ -51,6 +52,9 @@ export class SimpleCopyDownloadControls extends React.Component<
     }
 
     public render() {
+        if (this.context.showDownloadControls === false) {
+            return null;
+        }
         if (this.props.controlsStyle === 'LINK') {
             return (
                 <CopyDownloadLinks
@@ -134,3 +138,5 @@ export class SimpleCopyDownloadControls extends React.Component<
         }, this.props.copyMessageDuration);
     }
 }
+
+SimpleCopyDownloadControls.contextType = AppContext;
