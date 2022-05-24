@@ -40,7 +40,7 @@ import {
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
 import _ from 'lodash';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 describe('PlotsTabUtils', () => {
     describe('makeClinicalAttributeOptions', () => {

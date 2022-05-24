@@ -191,7 +191,8 @@ import {
     IMutationalSignature,
     IMutationalSignatureMeta,
 } from 'shared/model/MutationalSignature';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+
 import {
     MutationalSignaturesVersion,
     MutationalSignatureStableIdKeyWord,

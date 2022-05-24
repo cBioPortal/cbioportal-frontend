@@ -7,7 +7,7 @@ import {
 import { AlterationTypeConstants } from '../ResultsViewPageStore';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { CLIN_ATTR_DATA_TYPE } from './PlotsTabUtils';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 export type ButtonInfo = {
     selected: boolean;

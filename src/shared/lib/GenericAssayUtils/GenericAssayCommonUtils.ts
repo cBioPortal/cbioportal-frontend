@@ -1,4 +1,3 @@
-import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import client from 'shared/api/cbioportalClientInstance';
 import {
     GenericAssayMetaFilter,
@@ -13,21 +12,17 @@ import {
     doesOptionMatchSearchText,
     ISelectOption,
 } from './GenericAssaySelectionUtils';
-import { GENERIC_ASSAY_CONFIG } from './GenericAssayConfig';
-import Pluralize from 'pluralize';
+import {
+    GENERIC_ASSAY_CONFIG,
+    GenericAssayTypeConstants,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import * as Pluralize from 'pluralize';
 
 export const NOT_APPLICABLE_VALUE = 'NA';
 export const COMMON_GENERIC_ASSAY_PROPERTY = {
     NAME: 'NAME',
     DESCRIPTION: 'DESCRIPTION',
     URL: 'URL',
-};
-
-export const GenericAssayTypeConstants: { [s: string]: string } = {
-    TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
-    MUTATIONAL_SIGNATURE: 'MUTATIONAL_SIGNATURE',
-    ARMLEVEL_CNA: 'ARMLEVEL_CNA',
-    METHYLATION: 'METHYLATION',
 };
 
 export const RESERVED_CATEGORY_ORDER_DICT: {
@@ -51,10 +46,10 @@ export enum GenericAssayDataType {
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
     molecularProfiles: MolecularProfile[]
 ) {
+    // TODO: use AlterationTypeContants here instead of string for GENERIC_ASSAY
+    // we removed it because importing from page store was causing circular dependency
     const genericAssayProfiles = molecularProfiles.filter(
-        profile =>
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.GENERIC_ASSAY
+        profile => profile.molecularAlterationType === 'GENERIC_ASSAY'
     );
 
     const genericAssayProfilesGroupedByGenericAssayType = _.groupBy(
@@ -92,10 +87,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
     molecularProfiles: MolecularProfile[]
 ) {
     const genericAssayProfiles = molecularProfiles.filter(profile => {
-        return (
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.GENERIC_ASSAY
-        );
+        return profile.molecularAlterationType === 'GENERIC_ASSAY';
     });
 
     const genericAssayMetaGroupByMolecularProfileId: {
