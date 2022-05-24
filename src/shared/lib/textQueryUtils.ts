@@ -87,32 +87,26 @@ function createPhrases(query: string) {
  * Create conjunctive, negative and reference genome clauses
  */
 function createClauses(phrases: string[]) {
+
     const clauses: SearchClause[] = [];
+
+    const refGenPhrases = phrases.filter(p => p.startsWith('reference-genome:'));
+    phrases = phrases.filter(p => !p.startsWith('reference-genome:'));
+
+    for (const p of refGenPhrases) {
+        clauses.push(referenceGenomeClause(p));
+    }
+
     let currInd = 0;
     while (currInd < phrases.length) {
-        if (phrases[currInd].startsWith(SearchClauseType.REFERENCE_GENOME)) {
-            currInd = addRefGenomeClause(currInd, phrases, clauses);
-        } else if (phrases[currInd] === '-') {
+        if (phrases[currInd] === '-') {
             currInd = addNotClause(currInd, phrases, clauses);
         } else {
             currInd = addAndClause(phrases, currInd, clauses);
         }
     }
-    return clauses;
-}
 
-/**
- * @returns {number} next index
- **/
-function addRefGenomeClause(
-    currInd: number,
-    phrases: string[],
-    clauses: SearchClause[]
-): number {
-    if (currInd < phrases.length) {
-        clauses.push(referenceGenomeClause(phrases[currInd]));
-    }
-    return currInd + 1;
+    return clauses;
 }
 
 /**
