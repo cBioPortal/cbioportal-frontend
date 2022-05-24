@@ -1,4 +1,5 @@
-import {parseSearchQuery, SearchClause, SearchClauseType} from "shared/lib/textQueryUtils";
+import {parseSearchQuery, performSearchSingle, SearchClause, SearchClauseType} from "shared/lib/textQueryUtils";
+import {CancerTreeNode, NodeMetadata} from "shared/components/query/CancerStudyTreeData";
 
 describe('textQueryUtils', () => {
     describe('parseSearchQuery', () => {
@@ -70,5 +71,105 @@ describe('textQueryUtils', () => {
             expect(result).toEqual(expected);
         });
     });
+
+    describe('performSearchSingle', () => {
+
+        it('matches searchTerms by single conjunctive clause', () => {
+            const expected = {match: true, forced: false};
+            const clauses: SearchClause[] = [
+                {type: SearchClauseType.AND, data: ['match'], field: 'searchTerms'}
+            ];
+            const nodeMetaEntry: [CancerTreeNode, NodeMetadata] = [
+                {referenceGenome: 'hg38'} as CancerTreeNode,
+                {searchTerms: 'foo match bar'} as NodeMetadata
+            ];
+            const result = performSearchSingle(clauses, nodeMetaEntry);
+            expect(result).toEqual(expected);
+        });
+
+        it('matches searchTerms by single negative clause', () => {
+            const expected = {match: true, forced: false};
+            const clauses: SearchClause[] = [
+                {type: SearchClauseType.NOT, data: 'no-match', field: 'searchTerms'}
+            ];
+            const nodeMetaEntry: [CancerTreeNode, NodeMetadata] = [
+                {referenceGenome: 'hg38'} as CancerTreeNode,
+                {searchTerms: 'foo match bar'} as NodeMetadata
+            ];
+            const result = performSearchSingle(clauses, nodeMetaEntry);
+            expect(result).toEqual(expected);
+        });
+
+        it('does not match searchTerms by conjunctive clause', () => {
+            const expected = {match: false, forced: false};
+            const clauses: SearchClause[] = [
+                {type: SearchClauseType.AND, data: ['no-match'], field: 'searchTerms'}
+            ];
+            const nodeMetaEntry: [CancerTreeNode, NodeMetadata] = [
+                {referenceGenome: 'hg38'} as CancerTreeNode,
+                {searchTerms: 'foo match bar'} as NodeMetadata
+            ];
+            const result = performSearchSingle(clauses, nodeMetaEntry);
+            expect(result).toEqual(expected);
+        });
+
+        it('does not match searchTerms by negative clause (forced)', () => {
+            const expected = {match: false, forced: true};
+            const clauses: SearchClause[] = [
+                {type: SearchClauseType.NOT, data: 'match', field: 'searchTerms'}
+            ];
+            const nodeMetaEntry: [CancerTreeNode, NodeMetadata] = [
+                {referenceGenome: 'hg38'} as CancerTreeNode,
+                {searchTerms: 'foo match bar'} as NodeMetadata
+            ];
+            const result = performSearchSingle(clauses, nodeMetaEntry);
+            expect(result).toEqual(expected);
+        });
+
+        it('matches referenceGenome by reference genome clause', () => {
+            const expected = {match: true, forced: false};
+            const clauses: SearchClause[] = [
+                {type: SearchClauseType.REFERENCE_GENOME, data: 'hg2000', field: 'referenceGenome'},
+            ];
+            const nodeMetaEntry: [CancerTreeNode, NodeMetadata] = [
+                {referenceGenome: 'hg2000'} as CancerTreeNode,
+                {searchTerms: 'foo bar'} as NodeMetadata
+            ];
+            const result = performSearchSingle(clauses, nodeMetaEntry);
+            expect(result).toEqual(expected);
+        });
+
+        it('does not match referenceGenome by reference genome clause', () => {
+            const expected = {match: false, forced: false};
+            const clauses: SearchClause[] = [
+                {type: SearchClauseType.REFERENCE_GENOME, data: 'hg2000', field: 'referenceGenome'},
+            ];
+            const nodeMetaEntry: [CancerTreeNode, NodeMetadata] = [
+                {referenceGenome: 'hg42'} as CancerTreeNode,
+                {searchTerms: 'foo bar'} as NodeMetadata
+            ];
+            const result = performSearchSingle(clauses, nodeMetaEntry);
+            expect(result).toEqual(expected);
+        });
+
+        it('matches with mix of negative, conjunctive and reference genome clauses', () => {
+            const expected = {match: true, forced: false};
+            const clauses: SearchClause[] = [
+                {type: SearchClauseType.REFERENCE_GENOME, data: 'hg2000', field: 'referenceGenome'},
+                {type: SearchClauseType.AND, data: ['match1'], field: 'searchTerms'},
+                {type: SearchClauseType.NOT, data: 'match4', field: 'searchTerms'},
+                {type: SearchClauseType.AND, data: ['match5a match5b', 'match6'], field: 'searchTerms'},
+            ];
+            const nodeMetaEntry: [CancerTreeNode, NodeMetadata] = [
+                {referenceGenome: 'hg2000'} as CancerTreeNode,
+                {searchTerms: 'foo bar match1 no-match-4 match5a match5b match6'} as NodeMetadata
+            ];
+            const result = performSearchSingle(clauses, nodeMetaEntry);
+            expect(result).toEqual(expected);
+        });
+
+    });
+
+
 
 });
