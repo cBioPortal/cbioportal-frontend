@@ -50,16 +50,10 @@ export default class StudyListLogic {
         let parsedQuery = parseSearchQuery(this.store.searchText);
         let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
 
-        for (let studyAndMeta of this.store.treeData.map_node_meta.entries()) {
-            const [study, meta] = studyAndMeta;
-            if (study.hasOwnProperty('studyId')) {
-                meta.searchTerms += (study as CancerStudy).studyId
-                    ? `\n${(study as CancerStudy).studyId}`
-                    : '';
-            }
+        for (const study of this.store.treeData.map_node_meta.keys()) {
             map_node_searchResult.set(
                 study,
-                performSearchSingle(parsedQuery, studyAndMeta)
+                performSearchSingle(parsedQuery, study)
             );
         }
 
