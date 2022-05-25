@@ -227,6 +227,7 @@ import {
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
+    BinsGeneratorConfig,
     GenericAssayDataBin,
     GenericAssayDataBinFilter,
     GenericAssayDataCountFilter,
@@ -362,6 +363,13 @@ export type OncokbCancerGene = {
     isCancerGene: boolean;
 };
 
+export enum BinMethodOption {
+    QUARTILE = 'QUARTILE',
+    MEDIAN = 'MEDIAN',
+    GENERATE = 'GENERATE',
+    CUSTOM = 'CUSTOM',
+}
+
 export class StudyViewPageStore
     implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
@@ -383,6 +391,9 @@ export class StudyViewPageStore
     @observable showCustomDataSelectionUI = false;
     @observable numberOfVisibleColorChooserModals = 0;
     @observable userGroupColors: { [groupId: string]: string } = {};
+
+    @observable chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
+    chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
     private getDataBinFilterSet(uniqueKey: string) {
         if (this.isGenericAssayChart(uniqueKey)) {
@@ -3313,18 +3324,55 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    public updateCustomBins(uniqueKey: string, bins: number[]): void {
+    public updateBinMethod(
+        uniqueKey: string,
+        binMethod: BinMethodOption
+    ): void {
+        this.chartsBinMethod[uniqueKey] = binMethod;
+    }
+
+    @action.bound
+    public updateGenerateBinsConfig(
+        uniqueKey: string,
+        binSize: number,
+        anchorValue: number
+    ): void {
+        this.chartsBinsGeneratorConfigs.set(uniqueKey, {
+            binSize,
+            anchorValue,
+        });
+    }
+
+    @action.bound
+    public updateCustomBins(
+        uniqueKey: string,
+        bins: number[],
+        binMethod: BinMethodOption,
+        binsGeneratorConfig: BinsGeneratorConfig
+    ): void {
+        // Persist menu selection for when the menu reopens.
+
+        this.updateGenerateBinsConfig(
+            uniqueKey,
+            binsGeneratorConfig.binSize,
+            binsGeneratorConfig.anchorValue
+        );
+
         if (this.isGeneSpecificChart(uniqueKey)) {
             let newFilter = _.clone(
                 this._genomicDataBinFilterSet.get(uniqueKey)
             )!;
             newFilter.customBins = bins;
+            newFilter.binMethod = binMethod;
+            newFilter.binsGeneratorConfig = binsGeneratorConfig;
             this._genomicDataBinFilterSet.set(uniqueKey, newFilter);
         } else if (this.isGenericAssayChart(uniqueKey)) {
             let newFilter = _.clone(
                 this._genericAssayDataBinFilterSet.get(uniqueKey)
             )!;
             newFilter.customBins = bins;
+            newFilter.binMethod = binMethod;
+            newFilter.binsGeneratorConfig = binsGeneratorConfig;
             this._genericAssayDataBinFilterSet.set(uniqueKey, newFilter);
         } else {
             let newFilter = _.clone(
@@ -3337,6 +3385,8 @@ export class StudyViewPageStore
                     ClinicalDataBinFilter & { showNA?: boolean }
                 >).customBins;
             }
+            newFilter.binMethod = binMethod;
+            newFilter.binsGeneratorConfig = binsGeneratorConfig;
             this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
         }
     }
