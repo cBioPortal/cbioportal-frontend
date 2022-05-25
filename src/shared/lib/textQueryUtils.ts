@@ -1,6 +1,15 @@
 import { CancerStudy } from "cbioportal-ts-api-client";
 import {CancerTreeNode, CancerTypeWithVisibility, NodeMetadata} from "shared/components/query/CancerStudyTreeData";
 
+/**
+ * This field can be extended with additional search filters
+ */
+export const phrasesToSearchFields: {[type: string]: CancerTreeNodeFields[]} = {
+    'reference-genome': ['referenceGenome']
+};
+
+export const defaultSearchFields: CancerTreeNodeFields[] = ['name', 'description', 'studyId'];
+
 export enum SearchClauseType {
     NOT = 'not',
     AND = 'and'
@@ -24,16 +33,6 @@ type AndData = {
     phrase: string;
     fields: CancerTreeNodeFields[]
 };
-
-export const defaultSearchFields: CancerTreeNodeFields[] = ['name', 'description', 'studyId'];
-
-/**
- * This field can be extended with additional filters
- */
-export const phrasesToSearchFields: {[type: string]: CancerTreeNodeFields[]} = {
-    'reference-genome': ['referenceGenome']
-};
-
 
 export type SearchResult = {
     match: boolean;
@@ -170,7 +169,7 @@ function parsePhrase(data: string) {
 
 function createNotClause(data: string): SearchClause {
     const {phrase, fields} = parsePhrase(data);
-    return { data: phrase, type: SearchClauseType.NOT, fields };
+    return { type: SearchClauseType.NOT, data: phrase, fields };
 }
 
 function createAndClause(phrases: string[]): SearchClause {
@@ -178,7 +177,7 @@ function createAndClause(phrases: string[]): SearchClause {
     for(const phrase of phrases) {
         data.push(parsePhrase(phrase));
     }
-    return { data, type: SearchClauseType.AND };
+    return { type: SearchClauseType.AND, data };
 }
 
 export function matchPhrase(phrase: string, fullText: string) {

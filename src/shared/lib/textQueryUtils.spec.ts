@@ -142,7 +142,7 @@ describe('textQueryUtils', () => {
     });
 
     describe('performSearchSingle', () => {
-        it('matches searchTerms by single conjunctive clause', () => {
+        it('matches study by single conjunctive clause', () => {
             const expected = { match: true, forced: false };
             const clauses: SearchClause[] = [
                 {
@@ -155,7 +155,7 @@ describe('textQueryUtils', () => {
             expect(result).toEqual(expected);
         });
 
-        it('matches searchTerms by single negative clause', () => {
+        it('matches study by single negative clause', () => {
             const expected = { match: true, forced: false };
             const clauses: SearchClause[] = [
                 {
@@ -169,7 +169,7 @@ describe('textQueryUtils', () => {
             expect(result).toEqual(expected);
         });
 
-        it('does not match searchTerms by conjunctive clause', () => {
+        it('does not match study when conjunctive clause does not match', () => {
             const expected = { match: false, forced: false };
             const clauses: SearchClause[] = [
                 {
@@ -184,7 +184,7 @@ describe('textQueryUtils', () => {
             expect(result).toEqual(expected);
         });
 
-        it('does not match searchTerms by negative clause (forced)', () => {
+        it('does not match study when negative clause matches (forced match)', () => {
             const expected = { match: false, forced: true };
             const clauses: SearchClause[] = [
                 {
@@ -198,7 +198,7 @@ describe('textQueryUtils', () => {
             expect(result).toEqual(expected);
         });
 
-        it('matches referenceGenome by reference genome clause', () => {
+        it('matches study by reference genome clause', () => {
             const expected = { match: true, forced: false };
             const clauses: SearchClause[] = [
                 {
@@ -217,7 +217,7 @@ describe('textQueryUtils', () => {
             expect(result).toEqual(expected);
         });
 
-        it('does not match referenceGenome by reference genome clause', () => {
+        it('does not match study when reference genome clause differs', () => {
             const expected = { match: false, forced: false };
             const clauses: SearchClause[] = [
                 {
@@ -231,6 +231,20 @@ describe('textQueryUtils', () => {
                 },
             ];
             const studyNode = { referenceGenome: 'hg42' } as CancerTreeNode;
+            const result = performSearchSingle(clauses, studyNode);
+            expect(result).toEqual(expected);
+        });
+
+        it('does not match study when negative reference-genome clause matches (forced match)', () => {
+            const expected = { match: false, forced: true };
+            const clauses: SearchClause[] = [
+                {
+                    type: SearchClauseType.NOT,
+                    data: 'hg2000',
+                    fields: phrasesToSearchFields['reference-genome'],
+                },
+            ];
+            const studyNode = { referenceGenome: 'hg2000' } as CancerTreeNode;
             const result = performSearchSingle(clauses, studyNode);
             expect(result).toEqual(expected);
         });
