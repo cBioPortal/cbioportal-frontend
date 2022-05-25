@@ -35,6 +35,7 @@ import {
 import PyMolScriptGenerator from './PyMolScriptGenerator';
 
 import styles from './structureViewer.module.scss';
+import { AppContext } from 'cbioportal-frontend-commons';
 
 export interface IStructureViewerPanelProps extends IProteinImpactTypeColors {
     pdbChainDataStore: ILazyMobXTableApplicationDataStore<IPdbChain>;
@@ -414,19 +415,21 @@ export default class StructureViewerPanel extends React.Component<
         return (
             <div className="row">
                 <div className="col col-sm-6">
-                    <ButtonGroup>
-                        <DefaultTooltip
-                            overlay={<span>Download PyMol script</span>}
-                            placement="top"
-                        >
-                            <Button
-                                className="btn-sm"
-                                onClick={this.handlePyMolDownload}
+                    {this.context.showDownloadControls === true && (
+                        <ButtonGroup>
+                            <DefaultTooltip
+                                overlay={<span>Download PyMol script</span>}
+                                placement="top"
                             >
-                                <i className="fa fa-cloud-download" /> PyMol
-                            </Button>
-                        </DefaultTooltip>
-                    </ButtonGroup>
+                                <Button
+                                    className="btn-sm"
+                                    onClick={this.handlePyMolDownload}
+                                >
+                                    <i className="fa fa-cloud-download" /> PyMol
+                                </Button>
+                            </DefaultTooltip>
+                        </ButtonGroup>
+                    )}
                 </div>
                 <div className="col col-sm-6">
                     <span className="pull-right">
@@ -931,3 +934,5 @@ export default class StructureViewerPanel extends React.Component<
         return this.proteinScheme !== ProteinScheme.SPACE_FILLING;
     }
 }
+
+StructureViewerPanel.contextType = AppContext;
