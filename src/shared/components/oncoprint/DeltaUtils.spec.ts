@@ -20,7 +20,7 @@ import {
     IHeatmapTrackSpec,
     IOncoprintProps,
 } from './Oncoprint';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 describe('Oncoprint DeltaUtils', () => {
     describe('numTracksWhoseDataChanged', () => {

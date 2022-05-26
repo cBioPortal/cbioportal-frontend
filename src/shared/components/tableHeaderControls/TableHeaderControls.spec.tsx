@@ -29,17 +29,17 @@ describe('TableHeaderControls', () => {
     it('bindCopyButton is called only when there is a copy button and props flag is true', () => {
         let mockInstance = {
             bindCopyButton: sinon.stub(),
-            props: { showCopyAndDownload: true },
+            showCopyAndDownload: true,
             _copyButton: {},
         };
 
         TableHeaderControls.prototype.componentDidMount.apply(mockInstance);
 
-        assert.isTrue(mockInstance.bindCopyButton.calledOnce);
+        assert.isTrue(mockInstance.bindCopyButton.called);
 
         mockInstance = {
             bindCopyButton: sinon.stub(),
-            props: { showCopyAndDownload: false },
+            showCopyAndDownload: false,
             _copyButton: {},
         };
 
