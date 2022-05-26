@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.8.39",
+  "version": "0.8.40",
   "description": "Generic Mutation Mapper",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -27,7 +27,7 @@
     "tcm": "tcm -p src/**/*.module.scss",
     "tcm:watch": "yarn run tcm --watch",
     "prepare": "yarn run build",
-    "test": "cross-env CI=1 jest --env=jsdom --runInBand",
+    "test": "cross-env jest --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit",
     "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
@@ -39,8 +39,8 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-frontend-commons": "^0.5.24",
-    "cbioportal-utils": "^0.3.16",
+    "cbioportal-frontend-commons": "^0.5.25",
+    "cbioportal-utils": "^0.3.17",
     "classnames": "^2.2.5",
     "genome-nexus-ts-api-client": "^1.1.20",
     "jquery": "^3.2.1",

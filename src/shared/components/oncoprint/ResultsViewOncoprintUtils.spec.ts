@@ -10,7 +10,7 @@ import {
     makeProfiledInClinicalAttributes,
 } from './ResultsViewOncoprintUtils';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 describe('ResultsViewOncoprintUtils', () => {
     describe('makeProfiledInClinicalAttributes', () => {

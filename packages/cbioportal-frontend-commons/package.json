@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.5.24",
+  "version": "0.5.25",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -27,7 +27,7 @@
     "tcm": "tcm -p src/**/*.module.scss",
     "tcm:watch": "yarn run tcm --watch",
     "prepare": "yarn run build",
-    "test": "cross-env CI=1 jest --env=jsdom --runInBand",
+    "test": "cross-env jest --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit",
     "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-utils": "^0.3.16",
+    "cbioportal-utils": "^0.3.17",
     "classnames": "^2.2.5",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",

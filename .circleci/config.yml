@@ -139,16 +139,34 @@ jobs:
       - run:
           command: "yarn run test"
           environment:
-            JUNIT_REPORT_PATH: ./junit/
-            JUNIT_REPORT_NAME: test-results.xml
+            JEST_JUNIT_OUTPUT_DIR: ./junit/unit/main/
+            JEST_JUNIT_OUTPUT_NAME: test-results-unit-main.xml
             NODE_OPTIONS: --max-old-space-size=4096
             DISABLE_SOURCEMAP: true
             WEBPACK_PARALLEL: false
           when: always
       - store_test_results:
-          path: /tmp/repo/junit
-      - store_artifacts:
-          path: /tmp/repo/junit
+          path: ./junit/unit/main/
+
+  unit_tests_packages:
+    <<: *defaults
+    steps:
+      #      - run:
+      #          name: "Install yarn at specific version"
+      #          command:
+      #            sudo npm install --global yarn@1.22.4
+      - attach_workspace:
+          at: /tmp/
+      # run tests!
+      - run:
+          command: "yarn run testModulesCI"
+          environment:
+            DISABLE_SOURCEMAP: true
+            NODE_OPTIONS: --max-old-space-size=4096
+            WEBPACK_PARALLEL: false
+          when: always
+      - store_test_results:
+          path: /tmp/junit/module/
 
   check_forgotten_spec_only_statements:
     <<: *defaults
@@ -350,6 +368,9 @@ workflows:
       - unit_tests:
           requires:
             - install
+      - unit_tests_packages:
+            requires:
+              - install
       - end_to_end_tests:
           requires:
             - install
@@ -380,6 +401,9 @@ workflows:
           requires:
             - install
       - unit_tests:
+          requires:
+            - install
+      - unit_tests_packages:
           requires:
             - install
       - end_to_end_tests:
