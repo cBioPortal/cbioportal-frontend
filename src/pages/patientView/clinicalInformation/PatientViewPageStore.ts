@@ -383,6 +383,7 @@ export class PatientViewPageStore {
     @observable
     public isClinicalTrialsLoading: boolean = false;
     public showLoadingScreen: boolean = false;
+    public isTrialResultsZero: boolean = true;
 
     @observable
     public clinicalTrialSerchParams: ClinicalTrialsSearchParams = new ClinicalTrialsSearchParams(
@@ -2811,6 +2812,11 @@ export class PatientViewPageStore {
                     result.push(newTrial);
                 }
                 this.showLoadingScreen = false;
+                if (result.length > 0) {
+                    this.isTrialResultsZero = false;
+                } else {
+                    this.isTrialResultsZero = true;
+                }
                 return result;
             },
         },

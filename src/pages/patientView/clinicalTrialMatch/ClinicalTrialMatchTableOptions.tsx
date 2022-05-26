@@ -55,7 +55,7 @@ const customComponents = {
 interface IClinicalTrialOptionsMatchProps {
     store: PatientViewPageStore;
     show: boolean;
-    onHide: () => void;
+    onHide: (forceClose: boolean) => void;
 }
 
 interface IClinicalTrialOptionsMatchState {
@@ -235,7 +235,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
             <Modal
                 show={this.props.show}
                 onHide={() => {
-                    this.props.onHide();
+                    this.props.onHide(true);
                 }}
             >
                 <Modal.Header closeButton>
@@ -899,7 +899,10 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                 <Modal.Footer>
                     <div style={{ width: '20%', float: 'right' }}>
                         <button
-                            onClick={this.setSearchParams.bind(this)}
+                            onClick={() => {
+                                this.setSearchParams();
+                                this.props.onHide(false);
+                            }}
                             className={'btn btn-default'}
                         >
                             Search
