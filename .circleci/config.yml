@@ -126,7 +126,7 @@ jobs:
       # check that all api responses are still the same
       - run: "bash src/test/check_api_sync.sh"
 
-  unit_tests:
+  unit_tests_main:
     <<: *defaults
     steps:
       #      - run:
@@ -137,7 +137,7 @@ jobs:
           at: /tmp/
       # run tests!
       - run:
-          command: "yarn run test"
+          command: "yarn run testMain"
           environment:
             JEST_JUNIT_OUTPUT_DIR: ./junit/unit/main/
             JEST_JUNIT_OUTPUT_NAME: test-results-unit-main.xml
@@ -365,7 +365,7 @@ workflows:
                 - master
                 - release-*
                 - rc
-      - unit_tests:
+      - unit_tests_main:
           requires:
             - install
       - unit_tests_packages:
@@ -400,7 +400,7 @@ workflows:
       - api_sync:
           requires:
             - install
-      - unit_tests:
+      - unit_tests_main:
           requires:
             - install
       - unit_tests_packages:
