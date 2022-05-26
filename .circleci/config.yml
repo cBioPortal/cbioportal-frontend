@@ -159,7 +159,7 @@ jobs:
           at: /tmp/
       # run tests!
       - run:
-          command: "yarn run testModulesCI"
+          command: "yarn run testPackagesCI"
           environment:
             DISABLE_SOURCEMAP: true
             NODE_OPTIONS: --max-old-space-size=4096
