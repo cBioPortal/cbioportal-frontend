@@ -338,21 +338,21 @@ describe('GenericAssayCommonUtils', () => {
                     DESCRIPTION: 'tp53',
                 },
             };
-            assert.equal(
+            assert.deepEqual(
                 filterGenericAssayEntitiesByGenes(
                     [genericAssayEntity1],
                     TARGET_GENE_LIST
                 ),
                 [genericAssayEntity1]
             );
-            assert.equal(
+            assert.deepEqual(
                 filterGenericAssayEntitiesByGenes(
                     [genericAssayEntity2],
                     TARGET_GENE_LIST
                 ),
                 [genericAssayEntity2]
             );
-            assert.equal(
+            assert.deepEqual(
                 filterGenericAssayEntitiesByGenes(
                     [genericAssayEntity3],
                     TARGET_GENE_LIST

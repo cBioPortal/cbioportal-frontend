@@ -27,7 +27,7 @@
     "tcm": "tcm -p src/**/*.module.scss",
     "tcm:watch": "yarn run tcm --watch",
     "prepare": "yarn run build",
-    "test": "cross-env jest --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit",
+    "test": "cross-env jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
     "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
