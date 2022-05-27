@@ -82,7 +82,7 @@ export function patientViewTabs(
             getPaginationWidth={WindowStore.getWindowWidth}
             onMount={() => console.log('TABS MOUNT')}
             contentWindowExtra={
-                <HelpWidget path={this.props.routing.location.pathname} />
+                <HelpWidget path={urlWrapper.routing.location.pathname} />
             }
         >
             {tabs(pageInstance, sampleManager)}
