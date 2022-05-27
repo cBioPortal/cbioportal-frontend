@@ -37,6 +37,7 @@ import {
 import genomicOverviewStyles from 'pages/patientView/genomicOverview/styles.module.scss';
 import { useCallback, useRef } from 'react';
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
+import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -80,6 +81,9 @@ export function patientViewTabs(
             className="mainTabs"
             getPaginationWidth={WindowStore.getWindowWidth}
             onMount={() => console.log('TABS MOUNT')}
+            contentWindowExtra={
+                <HelpWidget path={this.props.routing.location.pathname} />
+            }
         >
             {tabs(pageInstance, sampleManager)}
         </MSKTabs>
