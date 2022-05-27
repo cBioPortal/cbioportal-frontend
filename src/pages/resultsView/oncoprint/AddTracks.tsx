@@ -267,12 +267,15 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
                 .store.genericAssayEntitiesGroupedByGenericAssayType.result;
             // create one tab for each generic assay type
             tabs = _.map(this.profilesByGenericAssayType, (profiles, type) => {
-                const profileOptions = _.map(profiles, profile => {
-                    return {
-                        value: profile.molecularProfileId,
-                        label: profile.name,
-                    };
-                });
+                const profileOptions = _(profiles)
+                    .map(profile => {
+                        return {
+                            value: profile.molecularProfileId,
+                            label: profile.name,
+                        };
+                    })
+                    .sortBy(l => l.label)
+                    .value();
 
                 // bring gene related options to the front
                 let entities = [];

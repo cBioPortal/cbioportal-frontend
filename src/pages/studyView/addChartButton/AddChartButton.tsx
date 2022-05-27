@@ -602,7 +602,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 );
             }
         );
-        return tabs;
+        // make sure they are sorted for e2e stability
+        return _.sortBy(tabs, t => t.key);
     }
 
     @computed get existSharedCustomData() {
