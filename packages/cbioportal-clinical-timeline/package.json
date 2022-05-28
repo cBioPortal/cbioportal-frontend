@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-clinical-timeline",
   "description": "cBioPortal Clinical Timeline",
-  "version": "0.3.36",
+  "version": "0.3.37",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -27,7 +27,7 @@
     "tcm": "tcm -p src/**/*.module.scss",
     "tcm:watch": "yarn run tcm --watch",
     "prepare": "yarn run build",
-    "test": "cross-env jest --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit",
+    "test": "cross-env jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
     "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-frontend-commons": "^0.5.25",
+    "cbioportal-frontend-commons": "^0.5.26",
     "lodash": "^4.17.11",
     "react-bootstrap": "^0.31.5",
     "react-overlays": "0.7.4",
