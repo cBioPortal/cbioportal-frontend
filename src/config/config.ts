@@ -206,6 +206,7 @@ export function initializeAPIClients() {
             CBioPortalAPI,
             [
                 { url: '/mutations/fetch', params: {} },
+                { url: '/structural-variant/fetch', params: {} },
                 { url: '/patients/fetch', params: {} },
                 { url: '/molecular-data/fetch', params: {} },
                 {
