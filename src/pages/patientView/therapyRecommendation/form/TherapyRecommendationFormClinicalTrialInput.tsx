@@ -73,15 +73,20 @@ const promiseOptions = (
             .end((err, res) => {
                 if (!err && res.ok) {
                     const response = JSON.parse(res.text);
-                    const result = response.result;
-                    const trialResults = result.StudyFieldResponse.Studyfields;
+                    const result = response.StudyFieldsResponse;
+                    console.group('Result from ClinicalTrials.gov');
+                    console.log(response);
+                    console.groupEnd();
+                    const trialResults = result.StudyFields;
                     const ret: MyOption[] = trialResults.map(
                         (trialResult: {
-                            BriefTitle: string;
-                            NCTId: string;
+                            OfficialTitle: string[];
+                            BriefTitle: string[];
+                            NCTId: string[];
+                            Rank: number;
                         }) => {
-                            const trialName = trialResult.BriefTitle;
-                            const trialId = trialResult.NCTId;
+                            const trialName = trialResult.BriefTitle[0];
+                            const trialId = trialResult.NCTId[0];
                             return {
                                 value: {
                                     name: trialName,
