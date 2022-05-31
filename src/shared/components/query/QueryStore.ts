@@ -66,6 +66,7 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
+import { parseSearchQuery, SearchClause } from 'shared/lib/textQueryUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -113,13 +114,6 @@ export function normalizeQuery(geneQuery: string) {
 
 type GenesetId = string;
 
-export enum Focus {
-    Unfocused,
-    ShouldFocus,
-    Focused,
-}
-
-// mobx observable
 export class QueryStore {
     constructor(urlWithInitialParams?: string) {
         getBrowserWindow().activeQueryStore = this;
@@ -254,7 +248,18 @@ export class QueryStore {
 
     @observable transposeDataMatrix = false;
 
-    @observable searchText: string = '';
+    @observable parsedQuery: SearchClause[] = [];
+
+    @computed get searchText(): string {
+        let searchText = this.parsedQuery.map(c => c.toString()).join(' ');
+        console.log(
+            'searchText',
+            searchText,
+            this.parsedQuery.toString,
+            this.parsedQuery.map(q => q.toString)
+        );
+        return searchText;
+    }
 
     @observable private _allSelectedStudyIds: ObservableMap<
         string,
@@ -2144,7 +2149,7 @@ export class QueryStore {
 
     @action setSearchText(searchText: string) {
         this.clearSelectedCancerType();
-        this.searchText = searchText;
+        this.parsedQuery = parseSearchQuery(searchText);
     }
 
     @action clearSelectedCancerType() {
@@ -2274,6 +2279,13 @@ export class QueryStore {
         return new SampleListsInStudyCache();
     }
 }
+
+export enum Focus {
+    Unfocused,
+    ShouldFocus,
+    Focused,
+}
+// mobx observable
 
 export const QueryStoreComponent = ComponentGetsStoreContext(QueryStore);
 

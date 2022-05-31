@@ -1,12 +1,16 @@
 import {
-    defaultSearchFields,
     parseSearchQuery,
     performSearchSingle,
-    phrasesToSearchFields,
+    searchFilters,
     SearchClause,
     SearchClauseType,
+    defaultNodeFields,
 } from 'shared/lib/textQueryUtils';
 import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
+
+const referenceGenomeFields = searchFilters.find(
+    f => f.phrasePrefix === 'reference-genome'
+)!.nodeFields;
 
 describe('textQueryUtils', () => {
     describe('parseSearchQuery', () => {
@@ -14,20 +18,39 @@ describe('textQueryUtils', () => {
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.AND,
-                    data: [{ phrase: 'part1', fields: defaultSearchFields }],
+                    data: [
+                        {
+                            phrase: 'part1',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part1',
+                        },
+                    ],
                 },
             ];
             const result = parseSearchQuery('part1');
             expect(result).toEqual(expected);
         });
 
-        it('creates single clause from search query string', () => {
+        it('creates separate clauses from search query string with OR', () => {
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.AND,
                     data: [
-                        { phrase: 'part1', fields: defaultSearchFields },
-                        { phrase: 'part2', fields: defaultSearchFields },
+                        {
+                            phrase: 'part1',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part1',
+                        },
+                    ],
+                },
+                {
+                    type: SearchClauseType.AND,
+                    data: [
+                        {
+                            phrase: 'part2',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part2',
+                        },
                     ],
                 },
             ];
@@ -40,7 +63,8 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.NOT,
                     data: 'part2',
-                    fields: defaultSearchFields,
+                    fields: defaultNodeFields,
+                    textRepresentation: '- part2',
                 },
             ];
             const result = parseSearchQuery('- part2');
@@ -52,11 +76,18 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.NOT,
                     data: 'part2',
-                    fields: defaultSearchFields,
+                    fields: defaultNodeFields,
+                    textRepresentation: '- part2',
                 },
                 {
                     type: SearchClauseType.AND,
-                    data: [{ phrase: 'part3', fields: defaultSearchFields }],
+                    data: [
+                        {
+                            phrase: 'part3',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part3',
+                        },
+                    ],
                 },
             ];
             const result = parseSearchQuery('- part2 part3');
@@ -68,7 +99,8 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.NOT,
                     data: 'part2a part2b',
-                    fields: defaultSearchFields,
+                    fields: defaultNodeFields,
+                    textRepresentation: '- "part2a part2b"',
                 },
             ];
             const result = parseSearchQuery('- "part2a part2b"');
@@ -80,9 +112,21 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.AND,
                     data: [
-                        { phrase: 'part1', fields: defaultSearchFields },
-                        { phrase: 'part2', fields: defaultSearchFields },
-                        { phrase: 'part3', fields: defaultSearchFields },
+                        {
+                            phrase: 'part1',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part1',
+                        },
+                        {
+                            phrase: 'part2',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part2',
+                        },
+                        {
+                            phrase: 'part3',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part3',
+                        },
                     ],
                 },
             ];
@@ -97,7 +141,8 @@ describe('textQueryUtils', () => {
                     data: [
                         {
                             phrase: 'hg42',
-                            fields: phrasesToSearchFields['reference-genome'],
+                            fields: referenceGenomeFields,
+                            textRepresentation: 'reference-genome:hg42',
                         },
                     ],
                 },
@@ -111,26 +156,37 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.AND,
                     data: [
-                        { phrase: 'part1', fields: defaultSearchFields },
+                        {
+                            phrase: 'part1',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part1',
+                        },
                         {
                             phrase: 'hg2000',
-                            fields: phrasesToSearchFields['reference-genome'],
+                            fields: referenceGenomeFields,
+                            textRepresentation: 'reference-genome:hg2000',
                         },
                     ],
                 },
                 {
                     type: SearchClauseType.NOT,
                     data: 'part4',
-                    fields: defaultSearchFields,
+                    fields: defaultNodeFields,
+                    textRepresentation: '- part4',
                 },
                 {
                     type: SearchClauseType.AND,
                     data: [
                         {
                             phrase: 'part5a part5b',
-                            fields: defaultSearchFields,
+                            fields: defaultNodeFields,
+                            textRepresentation: '"part5a part5b"',
                         },
-                        { phrase: 'part6', fields: defaultSearchFields },
+                        {
+                            phrase: 'part6',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part6',
+                        },
                     ],
                 },
             ];
@@ -147,7 +203,13 @@ describe('textQueryUtils', () => {
             const clauses: SearchClause[] = [
                 {
                     type: SearchClauseType.AND,
-                    data: [{ phrase: 'match', fields: defaultSearchFields }],
+                    data: [
+                        {
+                            phrase: 'match',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'match',
+                        },
+                    ],
                 },
             ];
             const studyNode = { name: 'match' } as CancerTreeNode;
@@ -161,7 +223,8 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.NOT,
                     data: 'no-match',
-                    fields: defaultSearchFields,
+                    fields: defaultNodeFields,
+                    textRepresentation: '- no-match',
                 },
             ];
             const studyNode = { name: 'match' } as CancerTreeNode;
@@ -174,7 +237,13 @@ describe('textQueryUtils', () => {
             const clauses: SearchClause[] = [
                 {
                     type: SearchClauseType.AND,
-                    data: [{ phrase: 'no-match', fields: defaultSearchFields }],
+                    data: [
+                        {
+                            phrase: 'no-match',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'no-match',
+                        },
+                    ],
                 },
             ];
             const studyNode = {
@@ -190,7 +259,8 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.NOT,
                     data: 'match',
-                    fields: defaultSearchFields,
+                    fields: defaultNodeFields,
+                    textRepresentation: '- match',
                 },
             ];
             const studyNode = { studyId: 'match' } as CancerTreeNode;
@@ -206,7 +276,8 @@ describe('textQueryUtils', () => {
                     data: [
                         {
                             phrase: 'hg2000',
-                            fields: phrasesToSearchFields['reference-genome'],
+                            fields: referenceGenomeFields,
+                            textRepresentation: 'reference-genome:hg2000',
                         },
                     ],
                 },
@@ -225,7 +296,8 @@ describe('textQueryUtils', () => {
                     data: [
                         {
                             phrase: 'hg2000',
-                            fields: phrasesToSearchFields['reference-genome'],
+                            fields: referenceGenomeFields,
+                            textRepresentation: 'reference-genome:hg2000',
                         },
                     ],
                 },
@@ -241,7 +313,8 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.NOT,
                     data: 'hg2000',
-                    fields: phrasesToSearchFields['reference-genome'],
+                    fields: referenceGenomeFields,
+                    textRepresentation: '- reference-genome:hg2000',
                 },
             ];
             const studyNode = { referenceGenome: 'hg2000' } as CancerTreeNode;
@@ -255,26 +328,37 @@ describe('textQueryUtils', () => {
                 {
                     type: SearchClauseType.AND,
                     data: [
-                        { phrase: 'match1', fields: defaultSearchFields },
+                        {
+                            phrase: 'match1',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'match1',
+                        },
                         {
                             phrase: 'hg2000',
-                            fields: phrasesToSearchFields['reference-genome'],
+                            fields: referenceGenomeFields,
+                            textRepresentation: 'reference-genome:hg2000',
                         },
                     ],
                 },
                 {
                     type: SearchClauseType.NOT,
                     data: 'no-match-4',
-                    fields: defaultSearchFields,
+                    fields: defaultNodeFields,
+                    textRepresentation: '- no-match-4',
                 },
                 {
                     type: SearchClauseType.AND,
                     data: [
                         {
                             phrase: 'part5a part5b',
-                            fields: defaultSearchFields,
+                            fields: defaultNodeFields,
+                            textRepresentation: '"part5a part5b"',
                         },
-                        { phrase: 'part6', fields: defaultSearchFields },
+                        {
+                            phrase: 'part6',
+                            fields: defaultNodeFields,
+                            textRepresentation: 'part6',
+                        },
                     ],
                 },
             ];

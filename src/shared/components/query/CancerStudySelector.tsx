@@ -19,14 +19,15 @@ import memoize from 'memoize-weak-decorator';
 import { If, Then, Else } from 'react-if';
 import { QueryStore } from './QueryStore';
 import SectionHeader from '../sectionHeader/SectionHeader';
-import { Modal } from 'react-bootstrap';
-import Autosuggest from 'react-bootstrap-autosuggest';
+import { ControlLabel, FormGroup, Modal } from 'react-bootstrap';
 import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from '../../../config/config';
 import { PAN_CAN_SIGNATURE } from './StudyListLogic';
 import QuickSelectButtons from './QuickSelectButtons';
 import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import WindowStore from 'shared/components/window/WindowStore';
+import Autosuggest from 'react-bootstrap-autosuggest';
+import { AutosuggestStudySearch } from 'shared/components/query/AutosuggestStudySearch';
 
 const MIN_LIST_HEIGHT = 200;
 
@@ -204,6 +205,10 @@ export default class CancerStudySelector extends React.Component<
                 data-test="studyList"
                 className={styles.CancerStudySelector}
             >
+                <AutosuggestStudySearch
+                    parsedQuery={this.store.parsedQuery}
+                    onSearch={query => (this.store.parsedQuery = query)}
+                />
                 <FlexRow overflow className={styles.CancerStudySelectorHeader}>
                     <SectionHeader
                         promises={[

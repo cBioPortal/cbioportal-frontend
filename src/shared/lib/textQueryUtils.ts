@@ -1,37 +1,104 @@
-import { CancerStudy } from "cbioportal-ts-api-client";
-import {CancerTreeNode, CancerTypeWithVisibility, NodeMetadata} from "shared/components/query/CancerStudyTreeData";
+import { CancerStudy } from 'cbioportal-ts-api-client';
+import {
+    CancerTreeNode,
+    CancerTypeWithVisibility,
+} from 'shared/components/query/CancerStudyTreeData';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
+import {
+    FilterCheckbox,
+    FilterField,
+    FilterList,
+    FilterText,
+} from 'shared/components/query/FilteredSearch';
+
+export type CancerTreeSearchFilter = {
+    /**
+     * Prefix that marks type of search filter in, as in: <prefix>:<value>
+     */
+    phrasePrefix: string | undefined;
+
+    /**
+     * Study node properties to search in
+     */
+    nodeFields: CancerTreeNodeFields[];
+
+    /**
+     * Filter form config
+     */
+    form: FilterField;
+};
+
+export const defaultNodeFields: CancerTreeNodeFields[] = [
+    'name',
+    'description',
+    'studyId',
+];
+
+export const defaultSearchFilter: CancerTreeSearchFilter = {
+    phrasePrefix: undefined,
+    nodeFields: defaultNodeFields,
+    form: {
+        input: FilterText,
+    },
+};
 
 /**
  * This field can be extended with additional search filters
  */
-export const phrasesToSearchFields: {[type: string]: CancerTreeNodeFields[]} = {
-    'reference-genome': ['referenceGenome']
-};
+export const searchFilters: CancerTreeSearchFilter[] = [
+    /**
+     * Reference genome:
+     */
+    {
+        phrasePrefix: 'reference-genome',
+        nodeFields: ['referenceGenome'],
+        form: {
+            input: FilterCheckbox,
+            // TODO: Make dynamic
+            options: ['hg19', 'hg38'],
+        },
+    },
+    /**
+     * Example queries:
+     */
+    {
+        phrasePrefix: undefined,
+        nodeFields: defaultNodeFields,
+        form: {
+            input: FilterList,
+            options: ServerConfigHelpers.skin_example_study_queries(
+                getServerConfig()!.skin_example_study_queries || ''
+            ),
+        },
+    },
+];
 
-export const defaultSearchFields: CancerTreeNodeFields[] = ['name', 'description', 'studyId'];
+export type CancerTreeNodeFields =
+    | keyof CancerTypeWithVisibility
+    | keyof CancerStudy;
 
 export enum SearchClauseType {
     NOT = 'not',
-    AND = 'and'
+    AND = 'and',
 }
 
-type CancerTreeNodeFields = keyof CancerTypeWithVisibility | keyof CancerStudy;
+export type SearchClause = NotClause | AndClause;
 
-export type SearchClause =
-    {
-        type: SearchClauseType.NOT;
-        data: string;
-        fields: CancerTreeNodeFields[];
-    } |
-    {
-        type: SearchClauseType.AND;
-        data: AndData[]
-    }
-    ;
+export type NotClause = {
+    type: SearchClauseType.NOT;
+    data: string;
+    textRepresentation: string;
+    fields: CancerTreeNodeFields[];
+};
+export type AndClause = {
+    type: SearchClauseType.AND;
+    data: ClauseData[];
+};
 
-type AndData = {
+export type ClauseData = {
     phrase: string;
-    fields: CancerTreeNodeFields[]
+    fields: CancerTreeNodeFields[];
+    textRepresentation: string;
 };
 
 export type SearchResult = {
@@ -153,31 +220,55 @@ function addAndClause(
     }
 }
 
-function parsePhrase(data: string) {
+type Parsed = {
+    phrase: string;
+    fields: CancerTreeNodeFields[];
+};
+
+function parsePhrase(data: string): Parsed {
     const parts: string[] = data.split(':');
     let phrase: string;
     let fields: CancerTreeNodeFields[];
-    if (parts.length === 2 && phrasesToSearchFields[parts[0]]) {
+    let filter = searchFilters.find(sf => sf.phrasePrefix === parts[0]);
+    if (parts.length === 2 && filter?.nodeFields) {
         phrase = parts[1];
-        fields = phrasesToSearchFields[parts[0]];
+        fields = filter.nodeFields;
     } else {
         phrase = parts[0];
-        fields = defaultSearchFields;
+        fields = defaultSearchFilter.nodeFields;
     }
-    return {phrase, fields};
+    return { phrase, fields };
 }
 
 function createNotClause(data: string): SearchClause {
-    const {phrase, fields} = parsePhrase(data);
-    return { type: SearchClauseType.NOT, data: phrase, fields };
+    const { phrase, fields } = parsePhrase(data);
+    const type = SearchClauseType.NOT;
+    let textRepresentation = `- ${enquoteSpaces(data)}`;
+    return {
+        type,
+        data: phrase,
+        fields,
+        textRepresentation,
+    };
 }
 
 function createAndClause(phrases: string[]): SearchClause {
-    const data: AndData[] = [];
-    for(const phrase of phrases) {
-        data.push(parsePhrase(phrase));
+    const data: ClauseData[] = [];
+    for (const phrase of phrases) {
+        const parsedData = parsePhrase(phrase);
+        // TODO: parsed should also return textRepresentation
+        //  --> AndData should something like ClauseData
+        data.push({ ...parsedData, textRepresentation: enquoteSpaces(phrase) });
     }
-    return { type: SearchClauseType.AND, data };
+    const type = SearchClauseType.AND;
+    return {
+        type,
+        data,
+    };
+}
+
+function enquoteSpaces(data: string) {
+    return data.includes(' ') ? `"${data}"` : data;
 }
 
 export function matchPhrase(phrase: string, fullText: string) {
@@ -194,12 +285,17 @@ export function matchPhraseInFields(
         let fieldMatch = false;
         const studyElement = (study as any)[fieldName];
         if (studyElement) {
-            fieldMatch = matchPhrase(phrase, studyElement)
+            fieldMatch = matchPhrase(phrase, studyElement);
         }
         anyFieldMatch = anyFieldMatch || fieldMatch;
     }
     return anyFieldMatch;
 }
+
+type MatchResult = {
+    match: boolean;
+    forced: boolean;
+};
 
 /**
  * @returns {boolean} true if the query, considering quotation marks, 'and' and 'or' logic, matches
@@ -207,7 +303,7 @@ export function matchPhraseInFields(
 export function performSearchSingle(
     parsedQuery: SearchClause[],
     study: CancerTreeNode
-) {
+): MatchResult {
     let match = false;
     let hasPositiveClauseType = false;
     let forced = false;
@@ -229,10 +325,12 @@ export function performSearchSingle(
                 forced = true;
                 break;
             }
-        } else if(clause.type === SearchClauseType.AND) {
+        } else if (clause.type === SearchClauseType.AND) {
             let clauseMatch = true;
             for (const phrase of clause.data) {
-                clauseMatch = clauseMatch && matchPhraseInFields(phrase.phrase, study, phrase.fields);
+                clauseMatch =
+                    clauseMatch &&
+                    matchPhraseInFields(phrase.phrase, study, phrase.fields);
             }
             match = match || clauseMatch;
         }

@@ -47,13 +47,12 @@ export default class StudyListLogic {
 
     @cached @computed get map_node_filterBySearchText() {
         // first compute individual node match results
-        let parsedQuery = parseSearchQuery(this.store.searchText);
         let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
 
         for (const study of this.store.treeData.map_node_meta.keys()) {
             map_node_searchResult.set(
                 study,
-                performSearchSingle(parsedQuery, study)
+                performSearchSingle(this.store.parsedQuery, study)
             );
         }
 
