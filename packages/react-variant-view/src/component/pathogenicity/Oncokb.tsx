@@ -82,7 +82,7 @@ export default class Oncokb extends React.Component<IOncokbProps> {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            OncoKB
+                            OncoKB™
                         </a>{' '}
                         is a precision oncology knowledge base that contains
                         <br />

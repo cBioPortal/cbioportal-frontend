@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { If, Then, Else } from 'react-if';
 
-const oncoKbImg = require('shared/components/annotation/images/oncogenic-only.svg');
-
 const ONCOKB_URL = 'https://oncokb.org';
 
 export function getOncoKBReferenceInfo(
@@ -56,11 +54,7 @@ export function getOncoKBReferenceInfo(
 export function getOncoKBCancerGeneListLinkout() {
     return (
         <a href={`${ONCOKB_URL}/cancerGenes`} target="_blank">
-            OncoKB Cancer Gene List
+            OncoKB™ Cancer Gene List
         </a>
     );
-}
-
-export function getOncoKbImage() {
-    return <img src={oncoKbImg} alt="OncoKB Oncogenic Symbol" />;
 }

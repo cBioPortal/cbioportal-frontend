@@ -76,7 +76,7 @@ export default class TrackSelector extends React.Component<
             [TrackName.OncoKB]: {
                 label: (
                     <span>
-                        OncoKB
+                        OncoKB™
                         {this.isPending(TrackName.OncoKB) && this.loaderIcon()}
                     </span>
                 ),
