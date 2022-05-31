@@ -20,6 +20,7 @@ import TherapyRecommendationFormEvidenceLevelInput from './TherapyRecommendation
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
 import SampleManager from 'pages/patientView/SampleManager';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
+import TherapyRecommendationFormClinicalTrialInput from './TherapyRecommendationFormClinicalTrialInput';
 
 interface ITherapyRecommendationFormProps {
     show: boolean;
@@ -99,6 +100,16 @@ export default class TherapyRecommendationForm extends React.Component<
                                 data={therapyRecommendation}
                                 onChange={drugs =>
                                     (therapyRecommendation.treatments = drugs)
+                                }
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <h5>Clinical Trial(s):</h5>
+                            <TherapyRecommendationFormClinicalTrialInput
+                                data={therapyRecommendation}
+                                onChange={clinicalTrials =>
+                                    (therapyRecommendation.clinicalTrials = clinicalTrials)
                                 }
                             />
                         </div>

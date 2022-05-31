@@ -54,6 +54,12 @@ export interface ITherapyRecommendation {
     author: string;
     treatments: ITreatment[];
     references: IReference[];
+    clinicalTrials: IClinicalTrial[];
+}
+
+export interface IClinicalTrial {
+    name: string;
+    id: string;
 }
 
 export interface IReference {
