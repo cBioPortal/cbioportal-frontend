@@ -772,6 +772,10 @@ export function tabs(
                         pageComponent.patientViewPageStore.cnaOncoKbData
                     }
                     pubMedCache={pageComponent.patientViewPageStore.pubMedCache}
+                    clinicalTrialClipboard={
+                        pageComponent.patientViewPageStore
+                            .clinicalTrialClipboard
+                    }
                 />
             </MSKTab>
         );
@@ -824,6 +828,7 @@ export function tabs(
                     pageComponent.patientViewPageStore.clinicalTrialMatches
                         .result
                 }
+                mtbTabAvailable={pageComponent.shouldShowMtbTab}
             />
         </MSKTab>
     );
