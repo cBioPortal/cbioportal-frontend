@@ -42,13 +42,9 @@ export function groupHotspotsByMutations(
 ): { [pos: number]: Hotspot[] } {
     const hotspotMap: { [pos: number]: Hotspot[] } = {};
 
-    _.keys(mutationsByPosition).forEach(key => {
+    _.forEach(mutationsByPosition, (mutations, key) => {
         const position = Number(key);
-        const hotspots = filterHotspotsByMutations(
-            mutationsByPosition[position],
-            index,
-            filter
-        );
+        const hotspots = filterHotspotsByMutations(mutations, index, filter);
 
         if (hotspots.length > 0) {
             hotspotMap[position] = hotspots;
@@ -87,46 +83,41 @@ export function filterHotspotsByMutations(
     index: IHotspotIndex,
     filter?: (hotspot: Hotspot) => boolean
 ): Hotspot[] {
-    let hotspots: Hotspot[] = [];
-
-    mutations.forEach(mutation => {
-        hotspots = hotspots.concat(
+    return _.flatten(
+        mutations.map(mutation =>
             filterHotspotsByMutation(mutation, index, filter)
-        );
-    });
-
-    return hotspots;
+        )
+    );
 }
 
 export function filterLinearClusterHotspotsByMutations(
     mutations: Mutation[],
     index: IHotspotIndex
 ): Hotspot[] {
-    let hotspots: Hotspot[] = [];
     // if mutation type is splice, get splice hotspot, otherwise get recurrent hotspot
-    mutations.forEach(mutation => {
-        if (
-            mutation.mutationType &&
-            mutation.mutationType.toLowerCase().includes('splice')
-        ) {
-            hotspots = hotspots.concat(
-                filterHotspotsByMutation(mutation, index, (hotspot: Hotspot) =>
-                    hotspot.type.toLowerCase().includes('splice')
-                )
-            );
-        } else {
-            hotspots = hotspots.concat(
-                filterHotspotsByMutation(
+    return _.flatten(
+        mutations.map(mutation => {
+            if (
+                mutation.mutationType &&
+                mutation.mutationType.toLowerCase().includes('splice')
+            ) {
+                return filterHotspotsByMutation(
+                    mutation,
+                    index,
+                    (hotspot: Hotspot) =>
+                        hotspot.type.toLowerCase().includes('splice')
+                );
+            } else {
+                return filterHotspotsByMutation(
                     mutation,
                     index,
                     (hotspot: Hotspot) =>
                         hotspot.type.toLowerCase().includes('single') ||
                         hotspot.type.toLowerCase().includes('indel')
-                )
-            );
-        }
-    });
-    return hotspots;
+                );
+            }
+        })
+    );
 }
 
 export function filter3dHotspotsByMutations(

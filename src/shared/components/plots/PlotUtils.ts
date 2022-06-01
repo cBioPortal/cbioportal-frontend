@@ -56,8 +56,8 @@ export function getBottomLegendHeight(
     const numRows = Math.ceil(legendData.length / legendItemsPerRow);
     let itemsHeight =
         Math.max(...legendData.map(getLegendDataHeight)) * numRows;
-    // add room for between rows
-    itemsHeight += 20 * (numRows - 1);
+    // add room around rows
+    itemsHeight += 15 * numRows;
 
     let titleHeight = 0;
     if (_legendTitle) {
@@ -69,8 +69,8 @@ export function getBottomLegendHeight(
                 CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize + 'px'
             )
         );
-        // add room for between lines
-        titleHeight += 10 * (legendTitle.length - 1);
+        // add room around lines
+        titleHeight += 10 * legendTitle.length;
     }
 
     return Math.max(itemsHeight, titleHeight);
