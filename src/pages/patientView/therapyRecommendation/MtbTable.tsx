@@ -6,6 +6,7 @@ import {
     IMtb,
     MtbState,
     IDeletions,
+    IClinicalTrial,
 } from '../../../shared/model/TherapyRecommendation';
 import { computed, makeObservable, observable } from 'mobx';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
@@ -60,6 +61,7 @@ export type IMtbProps = {
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
+    clinicalTrialClipboard: IClinicalTrial[];
 };
 
 export type IMtbState = {
@@ -372,6 +374,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     cnaOncoKbData={this.props.cnaOncoKbData}
                     pubMedCache={this.props.pubMedCache}
                     isDisabled={this.isDisabled(mtb) || !this.state.permission}
+                    clinicalTrialClipboard={this.props.clinicalTrialClipboard}
                 />
             ),
             width: this.columnWidths[ColumnKey.THERAPYRECOMMENDATIONS],

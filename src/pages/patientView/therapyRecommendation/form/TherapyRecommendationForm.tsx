@@ -4,6 +4,7 @@ import { Modal, Button } from 'react-bootstrap';
 import {
     ITherapyRecommendation,
     EvidenceLevel,
+    IClinicalTrial,
 } from 'shared/model/TherapyRecommendation';
 import { TherapyRecommendationFormAlterationInput } from './TherapyRecommendationFormAlterationInput';
 import {
@@ -39,6 +40,7 @@ interface ITherapyRecommendationFormProps {
     title: string;
     userEmailAddress: string;
     onHide: (newTherapyRecommendation?: ITherapyRecommendation) => void;
+    clinicalTrialClipboard: IClinicalTrial[];
 }
 
 export default class TherapyRecommendationForm extends React.Component<
@@ -110,6 +112,9 @@ export default class TherapyRecommendationForm extends React.Component<
                                 data={therapyRecommendation}
                                 onChange={clinicalTrials =>
                                     (therapyRecommendation.clinicalTrials = clinicalTrials)
+                                }
+                                clinicalTrialClipboard={
+                                    this.props.clinicalTrialClipboard
                                 }
                             />
                         </div>

@@ -200,7 +200,11 @@ import {
 import { getServerConfig } from 'config/config';
 import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 
-import { IMtb, IDeletions } from '../../../shared/model/TherapyRecommendation';
+import {
+    IMtb,
+    IDeletions,
+    IClinicalTrial,
+} from '../../../shared/model/TherapyRecommendation';
 import {
     StudyListEntry,
     StudyList,
@@ -2902,6 +2906,10 @@ export class PatientViewPageStore {
             maximumDistance
         );
     }
+
+    @observable
+    public clinicalTrialClipboard: IClinicalTrial[] = [];
+
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
             await: () => [this.mutationData, this.oncoKbAnnotatedGenes],

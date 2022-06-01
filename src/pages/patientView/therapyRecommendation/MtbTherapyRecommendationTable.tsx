@@ -69,6 +69,7 @@ export type ITherapyRecommendationProps = {
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
     isDisabled: boolean;
+    clinicalTrialClipboard: IClinicalTrial[];
 };
 
 export type ITherapyRecommendationState = {
@@ -831,6 +832,9 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                         }}
                         title="Edit therapy recommendation"
                         userEmailAddress={getServerConfig().user_email_address}
+                        clinicalTrialClipboard={
+                            this.props.clinicalTrialClipboard
+                        }
                     />
                 )}
                 {this.showOncoKBForm && (

@@ -10,6 +10,7 @@ import request from 'superagent';
 interface TherapyRecommendationFormClinicalTrialInputProps {
     data: ITherapyRecommendation;
     onChange: (clinicalTrials: IClinicalTrial[]) => void;
+    clinicalTrialClipboard: IClinicalTrial[];
 }
 
 type MyOption = { label: string; value: IClinicalTrial };
@@ -19,7 +20,13 @@ export default class TherapyRecommendationFormClinicalTrialInput extends React.C
     {}
 > {
     public render() {
-        const clinicalTrialDefault = this.props.data.clinicalTrials.map(
+        const clinicalTrialDefaultValue = this.props.data.clinicalTrials.map(
+            (clinicalTrial: IClinicalTrial) => ({
+                value: clinicalTrial,
+                label: clinicalTrial.id + ': ' + clinicalTrial.name,
+            })
+        );
+        const clinicalTrialDefaultOptions = this.props.clinicalTrialClipboard.map(
             (clinicalTrial: IClinicalTrial) => ({
                 value: clinicalTrial,
                 label: clinicalTrial.id + ': ' + clinicalTrial.name,
@@ -28,7 +35,7 @@ export default class TherapyRecommendationFormClinicalTrialInput extends React.C
         return (
             <AsyncCreatableSelect
                 isMulti
-                defaultValue={clinicalTrialDefault}
+                defaultValue={clinicalTrialDefaultValue}
                 cacheOptions
                 placeholder="Enter or search trial title..."
                 name="clinicalTrialsSelect"
@@ -53,6 +60,7 @@ export default class TherapyRecommendationFormClinicalTrialInput extends React.C
                     }
                 }}
                 loadOptions={promiseOptions}
+                defaultOptions={clinicalTrialDefaultOptions}
             />
         );
     }

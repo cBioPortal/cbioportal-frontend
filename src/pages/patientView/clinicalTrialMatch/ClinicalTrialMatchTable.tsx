@@ -9,6 +9,8 @@ import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTabl
 import ClinicalTrialMatchTableOptions from './ClinicalTrialMatchTableOptions';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import styles from 'shared/components/loadingIndicator/styles.module.scss';
+import { Button } from 'react-bootstrap';
+import { IClinicalTrial } from 'shared/model/TherapyRecommendation';
 
 enum ColumnKey {
     NUM_FOUND = 'Appearences',
@@ -27,6 +29,7 @@ enum ColumnKey {
 interface IClinicalTrialMatchProps {
     store: PatientViewPageStore;
     clinicalTrialMatches: IDetailedClinicalTrialMatch[];
+    mtbTabAvailable: boolean;
 }
 
 interface ICollapseListState {
@@ -188,7 +191,28 @@ export class ClinicalTrialMatchTable extends React.Component<
         {
             name: ColumnKey.STATUS,
             render: (trial: IDetailedClinicalTrialMatch) => (
-                <div>{trial.status}</div>
+                <div>
+                    {trial.status}
+                    <span>
+                        <Button
+                            type="button"
+                            className={'btn btn-default'}
+                            disabled={!this.props.mtbTabAvailable}
+                            onClick={() =>
+                                this.props.store.clinicalTrialClipboard.push({
+                                    id: trial.nct,
+                                    name: trial.title,
+                                } as IClinicalTrial)
+                            }
+                        >
+                            <i
+                                className={`fa fa-clipboard`}
+                                aria-hidden="true"
+                            ></i>{' '}
+                            MTB Clipboard
+                        </Button>
+                    </span>
+                </div>
             ),
             width: 300,
         },
