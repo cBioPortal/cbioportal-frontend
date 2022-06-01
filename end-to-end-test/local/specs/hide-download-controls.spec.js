@@ -204,8 +204,8 @@ describe('hide download controls feature', function() {
                         'mRNA',
                         'DNA Methylation',
                         'Treatment Response',
-                        'Mutational Signature',
                         'Generic Assay Patient Test',
+                        'Mutational Signature',
                     ];
                     const observedTabNames = $$(
                         '[data-test=ComparisonTabDiv] .tabAnchor'
@@ -300,7 +300,7 @@ describe('hide download controls feature', function() {
                             '.tabAnchor_generic_assay_mutational_signature'
                         ).click();
                         $(
-                            '[data-test=GroupComparisonGenericAssayEnrichments]'
+                            '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
                         ).waitForExist();
                         $$(
                             '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
