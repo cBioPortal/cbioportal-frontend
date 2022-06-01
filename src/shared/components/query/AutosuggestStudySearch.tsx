@@ -32,7 +32,9 @@ export const AutosuggestStudySearch: React.FunctionComponent<AutosuggestStudySea
     );
 
     function handleTyping(query: string) {
-        return props.onSearch(parseSearchQuery(query));
+        let parsed = parseSearchQuery(query);
+        console.log('handleTyping', query, parsed);
+        return props.onSearch(parsed);
     }
 
     function handleSelect(textRepresentation: string): void {

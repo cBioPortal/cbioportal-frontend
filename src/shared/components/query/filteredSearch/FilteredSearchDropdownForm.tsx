@@ -28,11 +28,6 @@ export const FilteredSearchDropdownForm: FunctionComponent<FilteredSearchDropdow
                     />
                 );
             })}
-            <li className="menu-item">
-                <a tabIndex={-1} href="#">
-                    Lorem
-                </a>
-            </li>
         </ul>
     );
 };

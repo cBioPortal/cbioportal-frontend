@@ -205,10 +205,6 @@ export default class CancerStudySelector extends React.Component<
                 data-test="studyList"
                 className={styles.CancerStudySelector}
             >
-                <AutosuggestStudySearch
-                    parsedQuery={this.store.parsedQuery}
-                    onSearch={query => (this.store.parsedQuery = query)}
-                />
                 <FlexRow overflow className={styles.CancerStudySelectorHeader}>
                     <SectionHeader
                         promises={[
@@ -276,39 +272,11 @@ export default class CancerStudySelector extends React.Component<
                                             x
                                         </span>
                                     )}
-                                    <Autosuggest
-                                        datalist={optionsWithSortKeys}
-                                        ref={(el: React.Component<any, any>) =>
-                                            (this.autosuggest = el)
+                                    <AutosuggestStudySearch
+                                        parsedQuery={this.store.parsedQuery}
+                                        onSearch={query =>
+                                            (this.store.parsedQuery = query)
                                         }
-                                        placeholder="Search..."
-                                        bsSize="small"
-                                        onChange={(currentVal: string) => {
-                                            if (searchTimeout !== null) {
-                                                window.clearTimeout(
-                                                    searchTimeout
-                                                );
-                                                searchTimeout = null;
-                                            }
-
-                                            searchTimeout = window.setTimeout(
-                                                () => {
-                                                    this.store.setSearchText(
-                                                        currentVal
-                                                    );
-                                                },
-                                                400
-                                            );
-                                        }}
-                                        onFocus={(value: string) => {
-                                            if (value.length === 0) {
-                                                setTimeout(() => {
-                                                    this.autosuggest.setState({
-                                                        open: true,
-                                                    });
-                                                }, 400);
-                                            }
-                                        }}
                                     />
                                 </div>
                             );

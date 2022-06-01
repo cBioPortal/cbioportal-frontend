@@ -1,10 +1,19 @@
 import * as React from 'react';
-import { FunctionComponent, useState } from 'react';
+import {
+    ChangeEvent,
+    FunctionComponent,
+    useCallback,
+    useEffect,
+    useState,
+} from 'react';
 import {
     CancerTreeSearchFilter,
     SearchClause,
 } from 'shared/lib/textQueryUtils';
 import { FilteredSearchDropdownForm } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
+import _ from 'lodash';
+import { usePrevious } from 'shared/components/query/filteredSearch/usePrevious';
+import { toJS } from 'mobx';
 
 export type FilteredSearchProps = {
     /**
@@ -31,7 +40,36 @@ export type FilteredSearchProps = {
 export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
     props
 ) {
+    console.log('props.query', toJS(props.query));
+
     const [isMenuOpen, setMenuOpen] = useState(false);
+
+    const [inputValue, setInputValue] = useState(toQueryString(props.query));
+
+    const [queryString, setQueryString] = useState(inputValue);
+    const prevQueryString = usePrevious(queryString);
+
+    function handleSearchBoxChange(e: ChangeEvent<HTMLInputElement>) {
+        let value = e.target.value;
+        setInputValue(value);
+        setQueryStringDebounced(value);
+    }
+
+    useEffect(() => {
+        if (queryString !== prevQueryString) {
+            props.onType(queryString);
+        }
+    });
+
+    // TODO: fix
+    // useEffect(() => {
+    //     setInputValue(toQueryString(props.query))
+    // })
+
+    const setQueryStringDebounced = useCallback(
+        _.debounce(setQueryString, 1000),
+        []
+    );
 
     return (
         <>
@@ -42,9 +80,8 @@ export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
                         className="form-control"
                         placeholder="Search..."
                         type="text"
-                        value={props.query
-                            .map(c => c.textRepresentation)
-                            .join(' ')}
+                        value={inputValue}
+                        onChange={handleSearchBoxChange}
                     />
                     <span className="input-group-btn">
                         <button
@@ -66,3 +103,7 @@ export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
         </>
     );
 };
+
+function toQueryString(query: SearchClause[]) {
+    return query.map(c => c.textRepresentation).join(' ');
+}
