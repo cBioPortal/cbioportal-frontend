@@ -67,7 +67,7 @@ describe('textQueryUtils', () => {
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
-                    data: 'part2',
+                    phrase: 'part2',
                     fields: defaultNodeFields,
                     textRepresentation: '- part2',
                 },
@@ -81,7 +81,7 @@ describe('textQueryUtils', () => {
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
-                    data: 'part2',
+                    phrase: 'part2',
                     fields: defaultNodeFields,
                     textRepresentation: '- part2',
                 },
@@ -106,7 +106,7 @@ describe('textQueryUtils', () => {
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
-                    data: 'part2a part2b',
+                    phrase: 'part2a part2b',
                     fields: defaultNodeFields,
                     textRepresentation: query,
                 },
@@ -183,7 +183,7 @@ describe('textQueryUtils', () => {
                 },
                 {
                     type: SearchClauseType.NOT,
-                    data: 'part4',
+                    phrase: 'part4',
                     fields: defaultNodeFields,
                     textRepresentation: '- part4',
                 },
@@ -237,7 +237,7 @@ describe('textQueryUtils', () => {
             const clauses: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
-                    data: 'no-match',
+                    phrase: 'no-match',
                     fields: defaultNodeFields,
                     textRepresentation: '- no-match',
                 },
@@ -274,7 +274,7 @@ describe('textQueryUtils', () => {
             const clauses: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
-                    data: 'match',
+                    phrase: 'match',
                     fields: defaultNodeFields,
                     textRepresentation: '- match',
                 },
@@ -330,7 +330,7 @@ describe('textQueryUtils', () => {
             const clauses: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
-                    data: 'hg2000',
+                    phrase: 'hg2000',
                     fields: referenceGenomeFields,
                     textRepresentation: '- reference-genome:hg2000',
                 },
@@ -361,7 +361,7 @@ describe('textQueryUtils', () => {
                 },
                 {
                     type: SearchClauseType.NOT,
-                    data: 'no-match-4',
+                    phrase: 'no-match-4',
                     fields: defaultNodeFields,
                     textRepresentation: '- no-match-4',
                 },

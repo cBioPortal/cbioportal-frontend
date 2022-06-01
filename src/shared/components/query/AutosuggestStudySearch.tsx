@@ -66,6 +66,15 @@ export const AutosuggestStudySearch: React.FunctionComponent<AutosuggestStudySea
     }
 };
 
+export function findClausesByPrefix(
+    prefix: string,
+    haystack: SearchClause[]
+): SearchClause[] {
+    return findClauseBy((c: ClauseData) => {
+        return c.phrase.includes(`${prefix}:`);
+    }, haystack);
+}
+
 export function findClause(
     needle: SearchClause,
     haystack: SearchClause[]
@@ -104,14 +113,6 @@ export function findInverseClauseByString(
     return findInverseClause(clause[0], haystack);
 }
 
-// TODO: export function findClauseByPrefix(
-//     prefix: string,
-//     haystack: SearchClause[]
-// ): SearchClause | undefined {
-//     // TODO: const clause = parseSearchQuery(textualRepresentation);
-//     return findClause(clause[0], haystack);
-// }
-
 type FindClauseBy = { data: string; fields: CancerTreeNodeFields[] };
 
 function findNotClause(needle: FindClauseBy, haystack: SearchClause[]) {
@@ -119,7 +120,7 @@ function findNotClause(needle: FindClauseBy, haystack: SearchClause[]) {
         .filter(h => h.type === SearchClauseType.NOT)
         .find(
             (h: NotClause) =>
-                h.data === needle.data && _.isEqual(h.fields, needle.fields)
+                h.phrase === needle.data && _.isEqual(h.fields, needle.fields)
         );
 }
 
@@ -132,14 +133,29 @@ function findAndClause(needle: FindClauseBy, haystack: SearchClause[]) {
     );
 }
 
-// TODO: function findClauseBy(predicate: (value: SearchClause) => boolean, haystack: SearchClause[]): SearchClause[] {
-//     const results = [];
-//     const andClauses = haystack
-//         .filter(c => c.type === SearchClauseType.AND)
-//         .find(c => c.data)
-//     return andClauses
-//         .find(predicate);
-// }
+/**
+ * Find clauses that match predicate
+ * @returns {SearchClause}
+ *  - {@link NotClause} that match predicate
+ *  - {@link AndClause} with phrases that match predicate
+ */
+function findClauseBy(
+    predicate: (value: ClauseData) => boolean,
+    haystack: SearchClause[]
+): SearchClause[] {
+    const results: SearchClause[] = [];
+    let andClauses = haystack
+        .filter(c => c.type === SearchClauseType.AND)
+        .filter((c: AndClause) =>
+            c.data.filter((d: ClauseData) => predicate(d))
+        );
+    results.concat(andClauses);
+    let notClauses = haystack
+        .filter(c => c.type === SearchClauseType.NOT)
+        .filter((c: NotClause) => predicate(c));
+    results.concat(notClauses);
+    return results;
+}
 
 function fromAndFields(needle: AndClause) {
     return {
@@ -150,7 +166,7 @@ function fromAndFields(needle: AndClause) {
 
 function fromNotFields(needle: NotClause) {
     return {
-        data: needle.data,
+        data: needle.phrase,
         fields: needle.fields,
     };
 }

@@ -89,10 +89,7 @@ export type SearchClause = NotClause | AndClause;
 
 export type NotClause = {
     readonly type: SearchClauseType.NOT;
-    readonly data: string;
-    readonly textRepresentation: string;
-    readonly fields: CancerTreeNodeFields[];
-};
+} & ClauseData;
 
 export type AndClause = {
     readonly type: SearchClauseType.AND;
@@ -251,7 +248,7 @@ function createNotClause(data: string): SearchClause {
     let textRepresentation = `- ${enquoteSpaces(data)}`;
     return {
         type,
-        data: phrase,
+        phrase,
         fields,
         textRepresentation,
     };
@@ -326,7 +323,7 @@ export function performSearchSingle(
     }
     for (const clause of parsedQuery) {
         if (clause.type === SearchClauseType.NOT) {
-            if (matchPhraseInFields(clause.data, study, clause.fields)) {
+            if (matchPhraseInFields(clause.phrase, study, clause.fields)) {
                 match = false;
                 forced = true;
                 break;

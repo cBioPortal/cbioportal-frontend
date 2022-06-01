@@ -6,6 +6,7 @@ import {
 import * as React from 'react';
 import {
     findClauseByString,
+    findClausesByPrefix,
     findInverseClauseByString,
 } from 'shared/components/query/AutosuggestStudySearch';
 
@@ -103,8 +104,9 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                         textualRepresentation,
                         props.clauses
                     );
-                    // const prefixExists = findClausesByPrefix(prefix, props.clauses);
-                    const checked = exists || !inverseExists;
+                    const prefixExists =
+                        prefix && findClausesByPrefix(prefix, props.clauses);
+                    const checked = exists;
                     const id = `input-${option}-${i}`;
                     return (
                         <span
