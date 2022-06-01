@@ -207,7 +207,6 @@ export function initializeAPIClients() {
             [
                 { url: '/mutations/fetch', params: {} },
                 { url: '/structural-variant/fetch', params: {} },
-                { url: '/clinical-attributes/counts/fetch', params: {} },
                 { url: '/patients/fetch', params: {} },
                 { url: '/molecular-data/fetch', params: {} },
                 {
@@ -220,6 +219,11 @@ export function initializeAPIClients() {
                     params: { clinicalDataType: 'PATIENT' },
                 },
             ],
+            getCbioPortalApiUrl()
+        );
+        compressRequestBodies(
+            CBioPortalAPIInternal,
+            [{ url: '/clinical-attributes/counts/fetch', params: {} }],
             getCbioPortalApiUrl()
         );
     }
