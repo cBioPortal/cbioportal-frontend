@@ -2,24 +2,24 @@
 import _ from 'lodash';
 import client from '../../api/cbioportalClientInstance';
 import {
-    ObservableMap,
-    toJS,
-    observable,
-    reaction,
     action,
     computed,
     makeObservable,
+    observable,
+    ObservableMap,
+    reaction,
+    toJS,
 } from 'mobx';
 import {
-    TypeOfCancer as CancerType,
-    MolecularProfile,
     CancerStudy,
-    SampleList,
     Gene,
+    Geneset,
+    MolecularProfile,
     Sample,
     SampleFilter,
+    SampleList,
+    TypeOfCancer as CancerType,
 } from 'cbioportal-ts-api-client';
-import { Geneset } from 'cbioportal-ts-api-client';
 import CancerStudyTreeData from './CancerStudyTreeData';
 import {
     getBrowserWindow,
@@ -27,7 +27,7 @@ import {
     stringListToIndexSet,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import { labelMobxPromises, cached, debounceAsync } from 'mobxpromise';
+import { cached, debounceAsync } from 'mobxpromise';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import { SingleGeneQuery, SyntaxError } from '../../lib/oql/oql-parser';
 import { parseOQLQuery } from '../../lib/oql/oqlfilter';
@@ -37,7 +37,7 @@ import URL from 'url';
 import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
-import { currentQueryParams, categorizedSamplesCount } from './QueryStoreUtils';
+import { categorizedSamplesCount, currentQueryParams } from './QueryStoreUtils';
 
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
@@ -51,8 +51,8 @@ import {
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import {
     getGenesetsFromHierarchy,
-    getVolcanoPlotMinYValue,
     getVolcanoPlotData,
+    getVolcanoPlotMinYValue,
 } from 'shared/components/query/GenesetsSelectorStore';
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from '../../lib/formSubmit';
@@ -251,14 +251,7 @@ export class QueryStore {
     @observable parsedQuery: SearchClause[] = [];
 
     @computed get searchText(): string {
-        let searchText = this.parsedQuery.map(c => c.toString()).join(' ');
-        console.log(
-            'searchText',
-            searchText,
-            this.parsedQuery.toString,
-            this.parsedQuery.map(q => q.toString)
-        );
-        return searchText;
+        return this.parsedQuery.map(c => c.textRepresentation).join(' ');
     }
 
     @observable private _allSelectedStudyIds: ObservableMap<

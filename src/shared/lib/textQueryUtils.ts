@@ -9,7 +9,7 @@ import {
     FilterField,
     FilterList,
     FilterText,
-} from 'shared/components/query/FilteredSearch';
+} from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 
 export type CancerTreeSearchFilter = {
     /**
@@ -39,6 +39,7 @@ export const defaultSearchFilter: CancerTreeSearchFilter = {
     nodeFields: defaultNodeFields,
     form: {
         input: FilterText,
+        label: 'search terms',
     },
 };
 
@@ -56,6 +57,7 @@ export const searchFilters: CancerTreeSearchFilter[] = [
             input: FilterCheckbox,
             // TODO: Make dynamic
             options: ['hg19', 'hg38'],
+            label: 'Reference genome',
         },
     },
     /**
@@ -65,6 +67,7 @@ export const searchFilters: CancerTreeSearchFilter[] = [
         phrasePrefix: undefined,
         nodeFields: defaultNodeFields,
         form: {
+            label: 'Examples',
             input: FilterList,
             options: ServerConfigHelpers.skin_example_study_queries(
                 getServerConfig()!.skin_example_study_queries || ''
@@ -85,20 +88,22 @@ export enum SearchClauseType {
 export type SearchClause = NotClause | AndClause;
 
 export type NotClause = {
-    type: SearchClauseType.NOT;
-    data: string;
-    textRepresentation: string;
-    fields: CancerTreeNodeFields[];
+    readonly type: SearchClauseType.NOT;
+    readonly data: string;
+    readonly textRepresentation: string;
+    readonly fields: CancerTreeNodeFields[];
 };
+
 export type AndClause = {
-    type: SearchClauseType.AND;
-    data: ClauseData[];
+    readonly type: SearchClauseType.AND;
+    readonly data: ClauseData[];
+    readonly textRepresentation: string;
 };
 
 export type ClauseData = {
-    phrase: string;
-    fields: CancerTreeNodeFields[];
-    textRepresentation: string;
+    readonly phrase: string;
+    readonly fields: CancerTreeNodeFields[];
+    readonly textRepresentation: string;
 };
 
 export type SearchResult = {
@@ -264,6 +269,7 @@ function createAndClause(phrases: string[]): SearchClause {
     return {
         type,
         data,
+        textRepresentation: data.map(d => d.textRepresentation).join(' '),
     };
 }
 

@@ -15,19 +15,21 @@ const referenceGenomeFields = searchFilters.find(
 describe('textQueryUtils', () => {
     describe('parseSearchQuery', () => {
         it('creates clause from search query string', () => {
+            const query = 'part1';
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.AND,
+                    textRepresentation: query,
                     data: [
                         {
                             phrase: 'part1',
                             fields: defaultNodeFields,
-                            textRepresentation: 'part1',
+                            textRepresentation: query,
                         },
                     ],
                 },
             ];
-            const result = parseSearchQuery('part1');
+            const result = parseSearchQuery(query);
             expect(result).toEqual(expected);
         });
 
@@ -35,6 +37,7 @@ describe('textQueryUtils', () => {
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.AND,
+                    textRepresentation: 'part1',
                     data: [
                         {
                             phrase: 'part1',
@@ -45,6 +48,7 @@ describe('textQueryUtils', () => {
                 },
                 {
                     type: SearchClauseType.AND,
+                    textRepresentation: 'part2',
                     data: [
                         {
                             phrase: 'part2',
@@ -59,6 +63,7 @@ describe('textQueryUtils', () => {
         });
 
         it('converts dash to negative clause', () => {
+            const query = '- part2';
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
@@ -67,11 +72,12 @@ describe('textQueryUtils', () => {
                     textRepresentation: '- part2',
                 },
             ];
-            const result = parseSearchQuery('- part2');
+            const result = parseSearchQuery(query);
             expect(result).toEqual(expected);
         });
 
         it('only uses first phrase after dash in negative clause', () => {
+            const query = '- part2 part3';
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
@@ -81,6 +87,7 @@ describe('textQueryUtils', () => {
                 },
                 {
                     type: SearchClauseType.AND,
+                    textRepresentation: 'part3',
                     data: [
                         {
                             phrase: 'part3',
@@ -90,27 +97,30 @@ describe('textQueryUtils', () => {
                     ],
                 },
             ];
-            const result = parseSearchQuery('- part2 part3');
+            const result = parseSearchQuery(query);
             expect(result).toEqual(expected);
         });
 
         it('creates single negative phrase when enclosed with quotes', () => {
+            const query = '- "part2a part2b"';
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.NOT,
                     data: 'part2a part2b',
                     fields: defaultNodeFields,
-                    textRepresentation: '- "part2a part2b"',
+                    textRepresentation: query,
                 },
             ];
-            const result = parseSearchQuery('- "part2a part2b"');
+            const result = parseSearchQuery(query);
             expect(result).toEqual(expected);
         });
 
         it('bundles all consecutive positive phrases in single conjunctive clause', () => {
+            let query = 'part1 part2 part3';
             const expected: SearchClause[] = [
                 {
                     type: SearchClauseType.AND,
+                    textRepresentation: query,
                     data: [
                         {
                             phrase: 'part1',
@@ -130,30 +140,33 @@ describe('textQueryUtils', () => {
                     ],
                 },
             ];
-            const result = parseSearchQuery('part1 part2 part3');
+            const result = parseSearchQuery(query);
             expect(result).toEqual(expected);
         });
 
         it('creates reference genome clause', () => {
+            let query = 'reference-genome:hg42';
             const expected: SearchClause[] = [
                 {
+                    textRepresentation: query,
                     type: SearchClauseType.AND,
                     data: [
                         {
                             phrase: 'hg42',
                             fields: referenceGenomeFields,
-                            textRepresentation: 'reference-genome:hg42',
+                            textRepresentation: query,
                         },
                     ],
                 },
             ];
-            const result = parseSearchQuery('reference-genome:hg42');
+            const result = parseSearchQuery(query);
             expect(result).toEqual(expected);
         });
 
         it('handles mix of conjunctive, negative and reference genome clauses', () => {
             const expected: SearchClause[] = [
                 {
+                    textRepresentation: 'part1 reference-genome:hg2000',
                     type: SearchClauseType.AND,
                     data: [
                         {
@@ -175,6 +188,7 @@ describe('textQueryUtils', () => {
                     textRepresentation: '- part4',
                 },
                 {
+                    textRepresentation: '"part5a part5b" part6',
                     type: SearchClauseType.AND,
                     data: [
                         {
@@ -202,6 +216,7 @@ describe('textQueryUtils', () => {
             const expected = { match: true, forced: false };
             const clauses: SearchClause[] = [
                 {
+                    textRepresentation: 'match',
                     type: SearchClauseType.AND,
                     data: [
                         {
@@ -236,6 +251,7 @@ describe('textQueryUtils', () => {
             const expected = { match: false, forced: false };
             const clauses: SearchClause[] = [
                 {
+                    textRepresentation: 'no-match',
                     type: SearchClauseType.AND,
                     data: [
                         {
@@ -272,6 +288,7 @@ describe('textQueryUtils', () => {
             const expected = { match: true, forced: false };
             const clauses: SearchClause[] = [
                 {
+                    textRepresentation: 'reference-genome:hg2000',
                     type: SearchClauseType.AND,
                     data: [
                         {
@@ -292,6 +309,7 @@ describe('textQueryUtils', () => {
             const expected = { match: false, forced: false };
             const clauses: SearchClause[] = [
                 {
+                    textRepresentation: 'reference-genome:hg2000',
                     type: SearchClauseType.AND,
                     data: [
                         {
@@ -326,6 +344,7 @@ describe('textQueryUtils', () => {
             const expected = { match: true, forced: false };
             const clauses: SearchClause[] = [
                 {
+                    textRepresentation: 'match1 reference-genome:hg2000',
                     type: SearchClauseType.AND,
                     data: [
                         {
@@ -347,6 +366,7 @@ describe('textQueryUtils', () => {
                     textRepresentation: '- no-match-4',
                 },
                 {
+                    textRepresentation: '"part5a part5b" part6',
                     type: SearchClauseType.AND,
                     data: [
                         {

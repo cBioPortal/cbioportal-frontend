@@ -1,21 +1,16 @@
 import {
     AndClause,
-    ClauseData,
     CancerTreeNodeFields,
+    ClauseData,
     NotClause,
     parseSearchQuery,
-    performSearchSingle,
     SearchClause,
     SearchClauseType,
     searchFilters,
 } from 'shared/lib/textQueryUtils';
 import * as React from 'react';
-import { ReactNode } from 'react';
-import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
-import { FormGroup } from 'react-bootstrap';
-import Autosuggest, { ItemAdapter } from 'react-bootstrap-autosuggest';
 import _ from 'lodash';
-import { FilteredSearch } from 'shared/components/query/FilteredSearch';
+import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredSearch';
 
 export type AutosuggestStudySearchProps = {
     parsedQuery: SearchClause[];
@@ -25,11 +20,6 @@ export type AutosuggestStudySearchProps = {
 export const AutosuggestStudySearch: React.FunctionComponent<AutosuggestStudySearchProps> = function(
     props
 ) {
-    type SearchItem = {
-        value: string | ReactNode;
-        textRepresentation: string;
-    };
-
     return (
         <>
             <FilteredSearch
@@ -70,12 +60,13 @@ export const AutosuggestStudySearch: React.FunctionComponent<AutosuggestStudySea
         props.onSearch(result);
     }
 
+    // TODO:
     function handleSearch(query: string): void {
         return props.onSearch(parseSearchQuery(query));
     }
 };
 
-function findClause(
+export function findClause(
     needle: SearchClause,
     haystack: SearchClause[]
 ): SearchClause | undefined {
@@ -86,7 +77,15 @@ function findClause(
     }
 }
 
-function findInverseClause(
+export function findClauseByString(
+    textualRepresentation: string,
+    haystack: SearchClause[]
+): SearchClause | undefined {
+    const clause = parseSearchQuery(textualRepresentation);
+    return findClause(clause[0], haystack);
+}
+
+export function findInverseClause(
     needle: SearchClause,
     haystack: SearchClause[]
 ): SearchClause | undefined {
@@ -96,6 +95,22 @@ function findInverseClause(
         return findAndClause(fromNotFields(needle), haystack);
     }
 }
+
+export function findInverseClauseByString(
+    textualRepresentation: string,
+    haystack: SearchClause[]
+): SearchClause | undefined {
+    const clause = parseSearchQuery(textualRepresentation);
+    return findInverseClause(clause[0], haystack);
+}
+
+// TODO: export function findClauseByPrefix(
+//     prefix: string,
+//     haystack: SearchClause[]
+// ): SearchClause | undefined {
+//     // TODO: const clause = parseSearchQuery(textualRepresentation);
+//     return findClause(clause[0], haystack);
+// }
 
 type FindClauseBy = { data: string; fields: CancerTreeNodeFields[] };
 
@@ -109,16 +124,22 @@ function findNotClause(needle: FindClauseBy, haystack: SearchClause[]) {
 }
 
 function findAndClause(needle: FindClauseBy, haystack: SearchClause[]) {
-    return haystack
-        .filter(h => h.type === SearchClauseType.AND)
-        .find((h: AndClause) =>
-            h.data.find(
-                d =>
-                    d.phrase === needle.data &&
-                    _.isEqual(d.fields, needle.fields)
-            )
-        );
+    const andClauses = haystack.filter(c => c.type === SearchClauseType.AND);
+    return andClauses.find((h: AndClause) =>
+        h.data.find(
+            d => d.phrase === needle.data && _.isEqual(d.fields, needle.fields)
+        )
+    );
 }
+
+// TODO: function findClauseBy(predicate: (value: SearchClause) => boolean, haystack: SearchClause[]): SearchClause[] {
+//     const results = [];
+//     const andClauses = haystack
+//         .filter(c => c.type === SearchClauseType.AND)
+//         .find(c => c.data)
+//     return andClauses
+//         .find(predicate);
+// }
 
 function fromAndFields(needle: AndClause) {
     return {
