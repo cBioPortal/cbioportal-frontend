@@ -1,15 +1,10 @@
+import * as React from 'react';
 import { FunctionComponent } from 'react';
 import { CancerTreeSearchFilter } from 'shared/lib/textQueryUtils';
-import * as React from 'react';
-import {
-    findClauseByString,
-    findClausesByPrefix,
-    findInverseClauseByString,
-} from 'shared/components/query/AutosuggestStudySearch';
-import { SearchClause } from 'shared/components/query/SearchClause';
+import { ISearchClause } from 'shared/components/query/SearchClause';
 
 export type FilteredSearchDropdownFormProps = {
-    query: SearchClause[];
+    query: ISearchClause[];
     filterConfig: CancerTreeSearchFilter[];
     onAdd: (textualRepresentation: string) => void;
     onRemove: (textualRepresentation: string) => void;
@@ -69,7 +64,7 @@ export type FilterField =
 
 type FieldProps = {
     filter: CancerTreeSearchFilter;
-    clauses: SearchClause[];
+    clauses: ISearchClause[];
     onAdd: (textualRepresentation: string) => void;
     onRemove: (textualRepresentation: string) => void;
 };
@@ -97,17 +92,11 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
             <div>
                 {form.options.map((option: string, i: number) => {
                     const textualRepresentation = `${prefix}:${option}`;
-                    const exists = !!findClauseByString(
-                        textualRepresentation,
-                        props.clauses
+                    const exists = !!props.clauses.find(clause =>
+                        clause.contains(
+                            c => c.textRepresentation === textualRepresentation
+                        )
                     );
-                    const inverseExists = !!findInverseClauseByString(
-                        textualRepresentation,
-                        props.clauses
-                    );
-                    const prefixExists =
-                        prefix && findClausesByPrefix(prefix, props.clauses);
-                    const checked = exists;
                     const id = `input-${option}-${i}`;
                     return (
                         <span
@@ -120,7 +109,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                 id={id}
                                 value={option}
                                 onClick={() => {
-                                    if (checked) {
+                                    if (exists) {
                                         props.onRemove(textualRepresentation);
                                     } else {
                                         props.onAdd(textualRepresentation);
@@ -129,7 +118,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                 style={{
                                     display: 'inline-block',
                                 }}
-                                checked={checked}
+                                checked={exists}
                             />
                             <label
                                 htmlFor={id}

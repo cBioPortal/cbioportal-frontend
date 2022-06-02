@@ -66,8 +66,8 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
-import { parseSearchQuery } from 'shared/lib/textQueryUtils';
-import { SearchClause } from 'shared/components/query/SearchClause';
+import { parseSearchQuery, toQueryString } from 'shared/lib/textQueryUtils';
+import { ISearchClause } from 'shared/components/query/SearchClause';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -249,10 +249,10 @@ export class QueryStore {
 
     @observable transposeDataMatrix = false;
 
-    @observable parsedQuery: SearchClause[] = [];
+    @observable parsedQuery: ISearchClause[] = [];
 
     @computed get searchText(): string {
-        return this.parsedQuery.map(c => c.textRepresentation).join(' ');
+        return toQueryString(this.parsedQuery);
     }
 
     @observable private _allSelectedStudyIds: ObservableMap<

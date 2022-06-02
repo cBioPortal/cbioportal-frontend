@@ -11,10 +11,12 @@ import {
     FilterText,
 } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import {
-    ClauseData,
-    SearchClause,
-    SearchClauseType,
+    AndSearchClause,
+    Phrase,
+    ISearchClause,
+    NotSearchClause,
 } from 'shared/components/query/SearchClause';
+import _ from 'lodash';
 
 export type CancerTreeSearchFilter = {
     /**
@@ -85,7 +87,7 @@ export type CancerTreeNodeFields =
     | keyof CancerTypeWithVisibility
     | keyof CancerStudy;
 
-export function parseSearchQuery(query: string): SearchClause[] {
+export function parseSearchQuery(query: string): ISearchClause[] {
     query = cleanUpQuery(query);
     const phrases = createPhrases(query);
     return createClauses(phrases);
@@ -140,10 +142,10 @@ function createPhrases(query: string): string[] {
 }
 
 /**
- * Create conjunctive, negative and reference genome clauses
+ * Create conjunctive and negative clauses
  */
-function createClauses(phrases: string[]): SearchClause[] {
-    const clauses: SearchClause[] = [];
+function createClauses(phrases: string[]): ISearchClause[] {
+    const clauses: ISearchClause[] = [];
     let currInd = 0;
     while (currInd < phrases.length) {
         if (phrases[currInd] === '-') {
@@ -161,7 +163,7 @@ function createClauses(phrases: string[]): SearchClause[] {
 function addNotClause(
     currInd: number,
     phrases: string[],
-    clauses: SearchClause[]
+    clauses: ISearchClause[]
 ): number {
     if (currInd < phrases.length - 1) {
         clauses.push(createNotClause(phrases[currInd + 1]));
@@ -175,7 +177,7 @@ function addNotClause(
 function addAndClause(
     phrases: string[],
     currInd: number,
-    clauses: SearchClause[]
+    clauses: ISearchClause[]
 ): number {
     let nextOr = phrases.indexOf('or', currInd);
     let nextDash = phrases.indexOf('-', currInd);
@@ -199,12 +201,7 @@ function addAndClause(
     }
 }
 
-type Parsed = {
-    phrase: string;
-    fields: CancerTreeNodeFields[];
-};
-
-function parsePhrase(data: string): Parsed {
+function parsePhrase(data: string): Phrase {
     const parts: string[] = data.split(':');
     let phrase: string;
     let fields: CancerTreeNodeFields[];
@@ -216,38 +213,25 @@ function parsePhrase(data: string): Parsed {
         phrase = parts[0];
         fields = defaultSearchFilter.nodeFields;
     }
-    return { phrase, fields };
+    return { phrase, fields, textRepresentation: enquoteSpaces(data) };
 }
 
-function createNotClause(data: string): SearchClause {
+function createNotClause(data: string): ISearchClause {
     const { phrase, fields } = parsePhrase(data);
-    const type = SearchClauseType.NOT;
     let textRepresentation = `- ${enquoteSpaces(data)}`;
-    return {
-        type,
-        phrase,
-        fields,
-        textRepresentation,
-    };
+    return new NotSearchClause({ phrase, textRepresentation, fields });
 }
 
-function createAndClause(phrases: string[]): SearchClause {
-    const data: ClauseData[] = [];
+function createAndClause(phrases: string[]): ISearchClause {
+    const data: Phrase[] = [];
     for (const phrase of phrases) {
         const parsedData = parsePhrase(phrase);
-        // TODO: parsed should also return textRepresentation
-        //  --> AndData should something like ClauseData
-        data.push({ ...parsedData, textRepresentation: enquoteSpaces(phrase) });
+        data.push(parsedData);
     }
-    const type = SearchClauseType.AND;
-    return {
-        type,
-        data,
-        textRepresentation: data.map(d => d.textRepresentation).join(' '),
-    };
+    return new AndSearchClause(data);
 }
 
-function enquoteSpaces(data: string) {
+export function enquoteSpaces(data: string) {
     return data.includes(' ') ? `"${data}"` : data;
 }
 
@@ -255,7 +239,7 @@ export function matchPhrase(phrase: string, fullText: string) {
     return fullText.toLowerCase().indexOf(phrase.toLowerCase()) > -1;
 }
 
-export function matchPhraseInFields(
+export function matchPhraseInStudyFields(
     phrase: string,
     study: CancerTreeNode,
     fields: CancerTreeNodeFields[]
@@ -278,10 +262,11 @@ type MatchResult = {
 };
 
 /**
- * @returns {boolean} true if the query, considering quotation marks, 'and' and 'or' logic, matches
+ * @returns {boolean} true if the query matches,
+ * considering quotation marks, 'and' and 'or' logic
  */
 export function performSearchSingle(
-    parsedQuery: SearchClause[],
+    parsedQuery: ISearchClause[],
     study: CancerTreeNode
 ): MatchResult {
     let match = false;
@@ -289,7 +274,7 @@ export function performSearchSingle(
     let forced = false;
 
     for (const clause of parsedQuery) {
-        if (clause.type !== SearchClauseType.NOT) {
+        if (clause.isAnd()) {
             hasPositiveClauseType = true;
             break;
         }
@@ -299,21 +284,110 @@ export function performSearchSingle(
         match = true;
     }
     for (const clause of parsedQuery) {
-        if (clause.type === SearchClauseType.NOT) {
-            if (matchPhraseInFields(clause.phrase, study, clause.fields)) {
+        if (clause.isNot()) {
+            let phrase = clause.getPhrases()[0];
+            if (matchPhraseInStudyFields(phrase.phrase, study, phrase.fields)) {
                 match = false;
                 forced = true;
                 break;
             }
-        } else if (clause.type === SearchClauseType.AND) {
+        } else if (clause.isAnd()) {
             let clauseMatch = true;
-            for (const phrase of clause.data) {
+            for (const phrase of clause.getPhrases()) {
                 clauseMatch =
                     clauseMatch &&
-                    matchPhraseInFields(phrase.phrase, study, phrase.fields);
+                    matchPhraseInStudyFields(
+                        phrase.phrase,
+                        study,
+                        phrase.fields
+                    );
             }
             match = match || clauseMatch;
         }
     }
     return { match, forced };
+}
+
+export function addClause(
+    toAdd: ISearchClause,
+    query: ISearchClause[]
+): ISearchClause[] {
+    let result = [...query];
+    const existingClause = result.find(r => r.equals(toAdd));
+    if (existingClause) {
+        return result;
+    }
+
+    result.push(toAdd);
+
+    const inverseClause = findInverseClause(toAdd, result);
+    if (inverseClause) {
+        result = removeClause(inverseClause, result);
+    }
+
+    return result;
+}
+
+export function removeClause(
+    toRemove: ISearchClause,
+    query: ISearchClause[]
+): ISearchClause[] {
+    let result = [...query];
+    if (toRemove.isAnd()) {
+        toRemove.getPhrases().forEach(removePhrase);
+    } else {
+        result = result.filter(r => !r.equals(toRemove));
+    }
+    return result;
+
+    function removePhrase(phrase: Phrase) {
+        const found = result.find(r => r.isAnd() && r.contains(phrase));
+        if (!found) {
+            return;
+        }
+        let multiplePhrases = found.getPhrases().length > 1;
+        if (multiplePhrases) {
+            const withoutPhrase = found
+                .getPhrases()
+                .filter(p => !areEqualPhrases(p, phrase));
+            result.push(new AndSearchClause(withoutPhrase));
+        }
+        result = result.filter(r => !r.equals(found));
+    }
+}
+
+/**
+ * Find inverse clause which contains phrase of needle
+ * AND is 'inverse' of NOT
+ */
+export function findInverseClause(
+    needle: ISearchClause,
+    haystack: ISearchClause[]
+): ISearchClause | undefined {
+    if (needle.isAnd()) {
+        return haystack.find(
+            not => not.isNot() && needle.contains(not.getPhrases()[0])
+        );
+    } else {
+        // Needle is not-clause:
+        return haystack.find(
+            and => and.isAnd() && and.contains(needle.getPhrases()[0])
+        );
+    }
+}
+
+/**
+ * Phrases are equal when phrase and fields are equal
+ * @param a
+ * @param b
+ */
+export function areEqualPhrases(a: Phrase, b: Phrase): boolean {
+    if (a.phrase !== b.phrase) {
+        return false;
+    }
+    return _.isEqual(a.fields, b.fields);
+}
+
+export function toQueryString(query: ISearchClause[]): string {
+    return query.map(c => c.toString()).join(' ');
 }

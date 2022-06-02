@@ -1,15 +1,18 @@
 import * as React from 'react';
 import { FunctionComponent, useState } from 'react';
-import { CancerTreeSearchFilter } from 'shared/lib/textQueryUtils';
+import {
+    CancerTreeSearchFilter,
+    toQueryString,
+} from 'shared/lib/textQueryUtils';
 import { FilteredSearchDropdownForm } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
-import { SearchClause } from 'shared/components/query/SearchClause';
+import { ISearchClause } from 'shared/components/query/SearchClause';
 
 export type FilteredSearchProps = {
     /**
      * Current search query
      */
-    query: SearchClause[];
+    query: ISearchClause[];
 
     /**
      * Configuration of dropdown form
@@ -99,7 +102,3 @@ const ClearSearchButton: FunctionComponent<{
         </span>
     );
 };
-
-function toQueryString(query: SearchClause[]) {
-    return query.map(c => c.textRepresentation).join(' ');
-}
