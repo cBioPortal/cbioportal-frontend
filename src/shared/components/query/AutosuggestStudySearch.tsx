@@ -1,16 +1,15 @@
+import { parseSearchQuery, searchFilters } from 'shared/lib/textQueryUtils';
+import * as React from 'react';
+import _ from 'lodash';
+import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredSearch';
 import {
     AndClause,
     ClauseData,
     FindClauseBy,
     NotClause,
-    parseSearchQuery,
     SearchClause,
     SearchClauseType,
-    searchFilters,
-} from 'shared/lib/textQueryUtils';
-import * as React from 'react';
-import _ from 'lodash';
-import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredSearch';
+} from 'shared/components/query/SearchClause';
 
 export type AutosuggestStudySearchProps = {
     parsedQuery: SearchClause[];

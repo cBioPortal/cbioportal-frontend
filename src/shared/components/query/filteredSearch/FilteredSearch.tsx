@@ -1,11 +1,9 @@
 import * as React from 'react';
 import { FunctionComponent, useState } from 'react';
-import {
-    CancerTreeSearchFilter,
-    SearchClause,
-} from 'shared/lib/textQueryUtils';
+import { CancerTreeSearchFilter } from 'shared/lib/textQueryUtils';
 import { FilteredSearchDropdownForm } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
+import { SearchClause } from 'shared/components/query/SearchClause';
 
 export type FilteredSearchProps = {
     /**

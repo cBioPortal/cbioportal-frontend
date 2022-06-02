@@ -1,14 +1,12 @@
 import { FunctionComponent } from 'react';
-import {
-    CancerTreeSearchFilter,
-    SearchClause,
-} from 'shared/lib/textQueryUtils';
+import { CancerTreeSearchFilter } from 'shared/lib/textQueryUtils';
 import * as React from 'react';
 import {
     findClauseByString,
     findClausesByPrefix,
     findInverseClauseByString,
 } from 'shared/components/query/AutosuggestStudySearch';
+import { SearchClause } from 'shared/components/query/SearchClause';
 
 export type FilteredSearchDropdownFormProps = {
     query: SearchClause[];

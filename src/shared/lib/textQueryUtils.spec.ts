@@ -2,11 +2,13 @@ import {
     parseSearchQuery,
     performSearchSingle,
     searchFilters,
-    SearchClause,
-    SearchClauseType,
     defaultNodeFields,
 } from 'shared/lib/textQueryUtils';
 import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
+import {
+    SearchClause,
+    SearchClauseType,
+} from 'shared/components/query/SearchClause';
 
 const referenceGenomeFields = searchFilters.find(
     f => f.phrasePrefix === 'reference-genome'

@@ -66,7 +66,8 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
-import { parseSearchQuery, SearchClause } from 'shared/lib/textQueryUtils';
+import { parseSearchQuery } from 'shared/lib/textQueryUtils';
+import { SearchClause } from 'shared/components/query/SearchClause';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {

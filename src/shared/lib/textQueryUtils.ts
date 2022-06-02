@@ -10,6 +10,11 @@ import {
     FilterList,
     FilterText,
 } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
+import {
+    ClauseData,
+    SearchClause,
+    SearchClauseType,
+} from 'shared/components/query/SearchClause';
 
 export type CancerTreeSearchFilter = {
     /**
@@ -79,39 +84,6 @@ export const searchFilters: CancerTreeSearchFilter[] = [
 export type CancerTreeNodeFields =
     | keyof CancerTypeWithVisibility
     | keyof CancerStudy;
-
-export enum SearchClauseType {
-    NOT = 'not',
-    AND = 'and',
-}
-
-export type SearchClause = NotClause | AndClause;
-
-export type NotClause = {
-    readonly type: SearchClauseType.NOT;
-} & ClauseData;
-
-export type AndClause = {
-    readonly type: SearchClauseType.AND;
-    data: ClauseData[];
-    textRepresentation: string;
-};
-
-export type ClauseData = {
-    readonly phrase: string;
-    readonly fields: CancerTreeNodeFields[];
-    textRepresentation: string;
-};
-
-export type FindClauseBy = {
-    phrase: string;
-    fields: CancerTreeNodeFields[];
-};
-
-export type SearchResult = {
-    match: boolean;
-    forced: boolean;
-};
 
 export function parseSearchQuery(query: string): SearchClause[] {
     query = cleanUpQuery(query);

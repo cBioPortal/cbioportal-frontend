@@ -10,14 +10,11 @@ import {
 } from 'cbioportal-ts-api-client';
 import { QueryStore } from './QueryStore';
 import { computed, action, makeObservable } from 'mobx';
-import {
-    parseSearchQuery,
-    performSearchSingle,
-    SearchResult,
-} from '../../lib/textQueryUtils';
+import { performSearchSingle } from '../../lib/textQueryUtils';
 import { cached } from 'mobxpromise';
 import { ServerConfigHelpers } from '../../../config/config';
 import memoize from 'memoize-weak-decorator';
+import { SearchResult } from 'shared/components/query/SearchClause';
 
 export const PAN_CAN_SIGNATURE = 'pan_can_atlas';
 
