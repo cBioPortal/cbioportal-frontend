@@ -2,6 +2,9 @@
 #
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
+
+version: 2.1
+
 defaults: &defaults
   working_directory: /tmp/repo
   docker:
@@ -65,7 +68,6 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         path: /tmp/repo/end-to-end-test/remote/junit/errors
         destination: /errors
 
-version: 2.1
 jobs:
   install:
     <<: *defaults
@@ -352,7 +354,6 @@ jobs:
           command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
 
 workflows:
-  version: 2.1
   install_and_test:
     jobs:
       - install
