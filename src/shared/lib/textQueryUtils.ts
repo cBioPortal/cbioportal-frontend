@@ -93,14 +93,19 @@ export type NotClause = {
 
 export type AndClause = {
     readonly type: SearchClauseType.AND;
-    readonly data: ClauseData[];
-    readonly textRepresentation: string;
+    data: ClauseData[];
+    textRepresentation: string;
 };
 
 export type ClauseData = {
     readonly phrase: string;
     readonly fields: CancerTreeNodeFields[];
-    readonly textRepresentation: string;
+    textRepresentation: string;
+};
+
+export type FindClauseBy = {
+    phrase: string;
+    fields: CancerTreeNodeFields[];
 };
 
 export type SearchResult = {

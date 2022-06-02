@@ -19,9 +19,14 @@ export type FilteredSearchProps = {
     filterConfig: CancerTreeSearchFilter[];
 
     /**
-     * Input from dropdown form
+     * Remove from query
      */
-    onSelect: (query: string) => void;
+    onAdd: (textualRepresentation: string) => void;
+
+    /**
+     * Add to query
+     */
+    onRemove: (textualRepresentation: string) => void;
 
     /**
      * Input from search box
@@ -51,7 +56,8 @@ export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
                 <FilteredSearchDropdownForm
                     query={props.query}
                     filterConfig={props.filterConfig}
-                    onSelect={props.onSelect}
+                    onAdd={props.onAdd}
+                    onRemove={props.onRemove}
                 />
             </div>
         </>

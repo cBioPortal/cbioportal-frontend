@@ -13,7 +13,8 @@ import {
 export type FilteredSearchDropdownFormProps = {
     query: SearchClause[];
     filterConfig: CancerTreeSearchFilter[];
-    onSelect: (textualRepresentation: string) => void;
+    onAdd: (textualRepresentation: string) => void;
+    onRemove: (textualRepresentation: string) => void;
 };
 
 export const FilteredSearchDropdownForm: FunctionComponent<FilteredSearchDropdownFormProps> = props => {
@@ -29,7 +30,8 @@ export const FilteredSearchDropdownForm: FunctionComponent<FilteredSearchDropdow
                     <FilterFormField
                         filter={filter}
                         clauses={props.query}
-                        onClick={props.onSelect}
+                        onAdd={props.onAdd}
+                        onRemove={props.onRemove}
                     />
                 );
             })}
@@ -70,7 +72,8 @@ export type FilterField =
 type FieldProps = {
     filter: CancerTreeSearchFilter;
     clauses: SearchClause[];
-    onClick: (textualRepresentation: string) => void;
+    onAdd: (textualRepresentation: string) => void;
+    onRemove: (textualRepresentation: string) => void;
 };
 
 export const FilterFormField: FunctionComponent<FieldProps> = props => {
@@ -119,10 +122,11 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                 id={id}
                                 value={option}
                                 onClick={() => {
-                                    const result = `${
-                                        checked ? '- ' : ''
-                                    } ${textualRepresentation}`;
-                                    props.onClick(result);
+                                    if (checked) {
+                                        props.onRemove(textualRepresentation);
+                                    } else {
+                                        props.onAdd(textualRepresentation);
+                                    }
                                 }}
                                 style={{
                                     display: 'inline-block',
@@ -157,7 +161,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
                     <li className="menu-item">
                         <a
                             tabIndex={-1}
-                            onClick={() => props.onClick(textualRepresentation)}
+                            onClick={() => props.onAdd(textualRepresentation)}
                         >
                             {option}
                         </a>
@@ -179,7 +183,7 @@ export const FilterText: FunctionComponent<FieldProps> = props => {
                     <li className="menu-item">
                         <a
                             tabIndex={-1}
-                            onClick={() => props.onClick(textualRepresentation)}
+                            onClick={() => props.onAdd(textualRepresentation)}
                         >
                             {option}
                         </a>
