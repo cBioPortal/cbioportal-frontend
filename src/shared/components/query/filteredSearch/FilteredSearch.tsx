@@ -1,19 +1,11 @@
 import * as React from 'react';
-import {
-    ChangeEvent,
-    FunctionComponent,
-    useCallback,
-    useEffect,
-    useState,
-} from 'react';
+import { FunctionComponent, useState } from 'react';
 import {
     CancerTreeSearchFilter,
     SearchClause,
 } from 'shared/lib/textQueryUtils';
 import { FilteredSearchDropdownForm } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
-import _ from 'lodash';
-import { usePrevious } from 'shared/components/query/filteredSearch/usePrevious';
-import { toJS } from 'mobx';
+import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
 
 export type FilteredSearchProps = {
     /**
@@ -32,7 +24,7 @@ export type FilteredSearchProps = {
     onSelect: (query: string) => void;
 
     /**
-     * Debounced content from search bar
+     * Input from search box
      */
     onType: (query: string) => void;
 };
@@ -40,60 +32,22 @@ export type FilteredSearchProps = {
 export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
     props
 ) {
-    console.log('props.query', toJS(props.query));
-
     const [isMenuOpen, setMenuOpen] = useState(false);
-
-    const [inputValue, setInputValue] = useState(toQueryString(props.query));
-
-    const [queryString, setQueryString] = useState(inputValue);
-    const prevQueryString = usePrevious(queryString);
-
-    function handleSearchBoxChange(e: ChangeEvent<HTMLInputElement>) {
-        let value = e.target.value;
-        setInputValue(value);
-        setQueryStringDebounced(value);
-    }
-
-    useEffect(() => {
-        if (queryString !== prevQueryString) {
-            props.onType(queryString);
-        }
-    });
-
-    // TODO: fix
-    // useEffect(() => {
-    //     setInputValue(toQueryString(props.query))
-    // })
-
-    const setQueryStringDebounced = useCallback(
-        _.debounce(setQueryString, 1000),
-        []
-    );
 
     return (
         <>
             <div className={`dropdown ${isMenuOpen ? 'open' : ''}`}>
                 <div className="input-group input-group-sm input-group-toggle">
-                    <input
-                        autoComplete="off"
-                        className="form-control"
-                        placeholder="Search..."
-                        type="text"
-                        value={inputValue}
-                        onChange={handleSearchBoxChange}
+                    <SearchBox
+                        queryString={toQueryString(props.query)}
+                        onType={props.onType}
                     />
-                    <span className="input-group-btn">
-                        <button
-                            type="button"
-                            className="dropdown-toggle btn btn-sm btn-default"
-                            onClick={() => setMenuOpen(!isMenuOpen)}
-                        >
-                            <span className="caret">&nbsp;</span>
-                        </button>
-                    </span>
+                    <MenuToggle onClick={() => setMenuOpen(!isMenuOpen)} />
                 </div>
-
+                <ClearSearchButton
+                    show={props.query.length > 0}
+                    onClick={() => props.onType('')}
+                />
                 <FilteredSearchDropdownForm
                     query={props.query}
                     filterConfig={props.filterConfig}
@@ -101,6 +55,44 @@ export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
                 />
             </div>
         </>
+    );
+};
+
+const MenuToggle: FunctionComponent<{ onClick: () => void }> = props => {
+    return (
+        <span className="input-group-btn">
+            <button
+                type="button"
+                className="dropdown-toggle btn btn-sm btn-default"
+                onClick={props.onClick}
+            >
+                <span className="caret">&nbsp;</span>
+            </button>
+        </span>
+    );
+};
+
+const ClearSearchButton: FunctionComponent<{
+    onClick: () => void;
+    show: boolean;
+}> = props => {
+    return (
+        <span
+            data-test="clearStudyFilter"
+            onClick={props.onClick}
+            style={{
+                visibility: props.show ? 'visible' : 'hidden',
+                position: 'absolute',
+                right: '37px',
+                top: '3px',
+                zIndex: 10,
+                fontSize: '18px',
+                cursor: 'pointer',
+                color: 'grey',
+            }}
+        >
+            x
+        </span>
     );
 };
 

@@ -18,7 +18,12 @@ export type FilteredSearchDropdownFormProps = {
 
 export const FilteredSearchDropdownForm: FunctionComponent<FilteredSearchDropdownFormProps> = props => {
     return (
-        <ul className="dropdown-menu">
+        <ul
+            className="dropdown-menu"
+            style={{
+                width: '300px',
+            }}
+        >
             {props.filterConfig.map(filter => {
                 return (
                     <FilterFormField

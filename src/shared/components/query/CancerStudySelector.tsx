@@ -251,27 +251,6 @@ export default class CancerStudySelector extends React.Component<
                                         alignItems: 'center',
                                     }}
                                 >
-                                    {this.store.searchText && (
-                                        <span
-                                            data-test="clearStudyFilter"
-                                            onClick={e => {
-                                                this.autosuggest.setState({
-                                                    inputValue: '',
-                                                });
-                                                this.handlers.onClearFilter();
-                                            }}
-                                            style={{
-                                                fontSize: 18,
-                                                cursor: 'pointer',
-                                                color: '#999999',
-                                                position: 'relative',
-                                                left: 164,
-                                                zIndex: 10,
-                                            }}
-                                        >
-                                            x
-                                        </span>
-                                    )}
                                     <AutosuggestStudySearch
                                         parsedQuery={this.store.parsedQuery}
                                         onSearch={query =>
