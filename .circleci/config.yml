@@ -65,7 +65,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         path: /tmp/repo/end-to-end-test/remote/junit/errors
         destination: /errors
 
-version: 2
+version: 2.1
 jobs:
   install:
     <<: *defaults
@@ -352,7 +352,7 @@ jobs:
           command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
 
 workflows:
-  version: 2
+  version: 2.1
   install_and_test:
     jobs:
       - install
@@ -365,27 +365,27 @@ workflows:
                 - master
                 - release-*
                 - rc
-      - unit_tests_main:
-          requires:
-            - install
-      - unit_tests_packages:
-            requires:
-              - install
-      - end_to_end_tests:
-          requires:
-            - install
+#      - unit_tests_main:
+#          requires:
+#            - install
+#      - unit_tests_packages:
+#            requires:
+#              - install
+#      - end_to_end_tests:
+#          requires:
+#            - install
       - end_to_end_tests_localdb:
           requires:
             - install
-      - api_sync:
-          requires:
-            - install
-      - check_forgotten_spec_only_statements:
-          requires:
-            - install
-      - check_incorrect_import_statements:
-          requires:
-            - install
+#      - api_sync:
+#          requires:
+#            - install
+#      - check_forgotten_spec_only_statements:
+#          requires:
+#            - install
+#      - check_incorrect_import_statements:
+#          requires:
+#            - install
   nightly:
     triggers:
       - schedule:
