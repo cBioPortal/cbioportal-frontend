@@ -20533,16 +20533,6 @@ react-column-resizer@^1.1.9:
   resolved "https://registry.yarnpkg.com/react-column-resizer/-/react-column-resizer-1.1.9.tgz#b3e591003d1373ae9a9f85ef9d855813743773dd"
   integrity sha512-l25LPyN3Gu33RC726cv3ZnS9EaI/B+ZIY1MrJiiHcBqsY4BKRYNBbrZolUfzBjjWDwHOBMc/fZLiSxmDGPqCrQ==
 
-react-dom@16.14.0, react-dom@^16.6:
-  version "16.14.0"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.14.0.tgz#7ad838ec29a777fb3c75c3a190f661cf92ab8b89"
-  integrity sha512-1gCeQXDLoIqMgqD3IO2Ah9bnf0w9kzhwN5q4FGnHZ67hBm9yePzB5JJAIQCc8x3pFnNlwFq4RidZggNAAkzWWw==
-  dependencies:
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.2"
-    scheduler "^0.19.1"
-
 react-dom@^15.3.1:
   version "15.6.2"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-15.6.2.tgz#41cfadf693b757faf2708443a1d1fd5a02bef730"
@@ -20552,6 +20542,16 @@ react-dom@^15.3.1:
     loose-envify "^1.1.0"
     object-assign "^4.1.0"
     prop-types "^15.5.10"
+
+react-dom@^16.6:
+  version "16.14.0"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.14.0.tgz#7ad838ec29a777fb3c75c3a190f661cf92ab8b89"
+  integrity sha512-1gCeQXDLoIqMgqD3IO2Ah9bnf0w9kzhwN5q4FGnHZ67hBm9yePzB5JJAIQCc8x3pFnNlwFq4RidZggNAAkzWWw==
+  dependencies:
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
+    prop-types "^15.6.2"
+    scheduler "^0.19.1"
 
 react-dom@^16.7.0:
   version "16.8.4"
