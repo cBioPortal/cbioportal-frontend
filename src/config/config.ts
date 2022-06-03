@@ -45,6 +45,8 @@ import pako from 'pako';
 
 const win = window as any;
 
+const REQ_BODY_SIZE_CHAR_LIMIT = 10000;
+
 // these should not be exported.  they should only be accessed
 // via getServerConfig and getLoadConfig
 const config: any = { serverConfig: {} };
@@ -202,49 +204,22 @@ export function initializeAPIClients() {
     }
 
     if (getServerConfig().enable_request_body_gzip_compression) {
-        compressRequestBodies(
-            CBioPortalAPI,
-            [
-                { url: '/mutations/fetch', params: {} },
-                { url: '/structural-variant/fetch', params: {} },
-                { url: '/clinical-attributes/counts/fetch', params: {} },
-                { url: '/patients/fetch', params: {} },
-                { url: '/molecular-data/fetch', params: {} },
-                {
-                    url: '/clinical-data/fetch',
-                    params: { clinicalDataType: 'SAMPLE' },
-                },
-                { url: '/gene-panel-data/fetch', params: {} },
-                {
-                    url: '/clinical-data/fetch',
-                    params: { clinicalDataType: 'PATIENT' },
-                },
-            ],
+        registerRequestBodyCompression(CBioPortalAPI, getCbioPortalApiUrl());
+        registerRequestBodyCompression(
+            CBioPortalAPIInternal,
             getCbioPortalApiUrl()
         );
     }
 }
 
 /**
- * Compresses the request bodies of POST calls of urls that start with
- * domain + urlToCompress, and adds the Content-Encoding header. To do this,
+ * Compresses the request bodies of POST calls of urls with large
+ * request body size, and adds the Content-Encoding header. To do this,
  * it wraps the api client's request function.
  * @param apiClient
- * @param urlsToCompress
  * @param domain
  */
-function compressRequestBodies(
-    apiClient: any,
-    urlsToCompress: UrlParamPair[],
-    domain: string
-): void {
-    urlsToCompress = urlsToCompress.map(pair => {
-        return {
-            url: domain + pair.url,
-            params: pair.params,
-        };
-    });
-
+function registerRequestBodyCompression(apiClient: any, domain: string): void {
     const oldRequestFunc = apiClient.prototype.request;
 
     const newRequestFunc = (
@@ -258,14 +233,15 @@ function compressRequestBodies(
         resolve: any,
         errorHandlers: any[]
     ) => {
-        if (
-            method === 'POST' &&
-            urlsToCompress.filter(pair =>
-                pairMatchesPath(pair, url, queryParameters)
-            ).length > 0
-        ) {
-            headers['Content-Encoding'] = 'gzip';
-            body = pako.gzip(JSON.stringify(body)).buffer;
+        if (method === 'POST') {
+            var bodyString = JSON.stringify(body);
+            if (bodyString.length > REQ_BODY_SIZE_CHAR_LIMIT) {
+                headers['Content-Encoding'] = 'gzip';
+                body = pako.gzip(bodyString).buffer;
+            } else {
+                // Store stringified body, so that stringify only runs once.
+                body = bodyString;
+            }
         }
 
         oldRequestFunc(
