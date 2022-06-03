@@ -14,9 +14,14 @@ var selectReactSelectOption = require('../../shared/specUtils')
 var goToTreatmentTab = require('./treatment.spec').goToTreatmentTab;
 var selectTreamentsBothAxes = require('./treatment.spec')
     .selectTreamentsBothAxes;
+var selectElementByText = require('../../shared/specUtils').selectElementByText;
 
+const TREATMENT_EC50_PROFILE_NAME =
+    'EC50 values of compounds on cellular phenotype readout';
 const GENERIC_ASSAY_ENTITY_SELECTOR =
     '[data-test="GenericAssayEntitySelection"]';
+const GENERIC_ASSAY_PROFILE_SELECTOR =
+    '[data-test="GenericAssayProfileSelection"]';
 
 describe('treatment feature', () => {
     describe('oncoprint tab', () => {
@@ -27,6 +32,10 @@ describe('treatment feature', () => {
 
         it('shows treatment profile heatmap track for treatment', () => {
             goToTreatmentTab();
+            // change profile to EC50
+            $(GENERIC_ASSAY_PROFILE_SELECTOR).click();
+            selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
+            selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
             $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
             $('[data-test="GenericAssayEntitySelection"] input').setValue(
                 '17-AAG'

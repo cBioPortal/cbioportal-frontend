@@ -22,6 +22,8 @@ const TREATMENT_IC50_PROFILE_NAME =
     'IC50 values of compounds on cellular phenotype readout';
 const TREATMENT_EC50_PROFILE_NAME =
     'EC50 values of compounds on cellular phenotype readout';
+const GENERIC_ASSAY_PROFILE_SELECTOR =
+    '[data-test="GenericAssayProfileSelection"]';
 const GENERIC_ASSAY_ENTITY_SELECTOR =
     '[data-test="GenericAssayEntitySelection"]';
 
@@ -36,26 +38,26 @@ describe('treatment feature', function() {
 
         it('shows treatment data type option in heatmap menu', () => {
             goToTreatmentTab();
-            // change profile to IC50
-            selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
-            selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
+            // open treatment profile selection menu
+            $(GENERIC_ASSAY_PROFILE_SELECTOR).click();
             selectElementByText(TREATMENT_IC50_PROFILE_NAME).waitForExist();
-            selectElementByText(TREATMENT_IC50_PROFILE_NAME).click();
             assert($(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`));
-            // change profile to EC50
-            selectElementByText(TREATMENT_IC50_PROFILE_NAME).waitForExist();
-            selectElementByText(TREATMENT_IC50_PROFILE_NAME).click();
             selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
-            selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
             assert($(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`));
         });
 
         it('shows treatment selection box in heatmap menu when treatment data type is selected', () => {
             goToTreatmentTab();
-            // open profile dropdown menu
+            // change profile to IC50
+            $(GENERIC_ASSAY_PROFILE_SELECTOR).click();
+            selectElementByText(TREATMENT_IC50_PROFILE_NAME).waitForExist();
+            selectElementByText(TREATMENT_IC50_PROFILE_NAME).click();
+            assert($(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`));
+            // change profile to EC50
+            $(GENERIC_ASSAY_PROFILE_SELECTOR).click();
             selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
             selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
-            assert($(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`));
+            assert($(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`));
         });
 
         it('shows all treatments in generic assay selector', () => {
@@ -155,6 +157,11 @@ describe('treatment feature', function() {
 
         it('sets `generic_assay_groups` URL parameter', () => {
             goToTreatmentTab();
+            // Select treatment profile
+            $(GENERIC_ASSAY_PROFILE_SELECTOR).click();
+            selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
+            selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
+            // Select treatments
             $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
             $('[data-test="GenericAssayEntitySelection"] input').setValue(
                 '17-AAG'
