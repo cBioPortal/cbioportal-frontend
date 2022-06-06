@@ -54,6 +54,7 @@ import { SummaryStatisticsTable } from './SummaryStatisticsTable';
 import CategoryPlot, {
     CategoryPlotType,
 } from 'pages/groupComparison/CategoryPlot';
+import { OncoprintJS } from 'oncoprintjs';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -129,6 +130,13 @@ export default class ClinicalData extends React.Component<
     @observable.ref highlightedRow: ClinicalDataEnrichmentWithQ | undefined;
 
     private scrollPane: HTMLDivElement;
+
+    private oncoprintJs: OncoprintJS | null = null;
+
+    @autobind
+    private oncoprintJsRef(oncoprint: OncoprintJS) {
+        this.oncoprintJs = oncoprint;
+    }
 
     readonly tabUI = MakeMobxView({
         await: () => {
@@ -519,6 +527,9 @@ export default class ClinicalData extends React.Component<
 
     @autobind
     private getSvg() {
+        if (this.categoryPlotType === CategoryPlotType.Heatmap) {
+            return this.oncoprintJs && this.oncoprintJs.toSVG(true);
+        }
         return document.getElementById(SVG_ID) as SVGElement | null;
     }
 
@@ -827,6 +838,7 @@ export default class ClinicalData extends React.Component<
                 } else {
                     plotElt = (
                         <CategoryPlot
+                            broadcastOncoprintJsRef={this.oncoprintJsRef}
                             type={this.categoryPlotType}
                             svgId={SVG_ID}
                             horzData={
