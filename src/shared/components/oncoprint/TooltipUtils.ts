@@ -6,8 +6,10 @@ import {
     GenePanelData,
     MolecularProfile,
     Mutation,
-    StructuralVariant,
 } from 'cbioportal-ts-api-client';
+
+import { StructuralVariant } from 'cbioportal-ts-api-client';
+
 import client from 'shared/api/cbioportalClientInstance';
 import {
     ClinicalTrackSpec,

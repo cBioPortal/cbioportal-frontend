@@ -9,9 +9,11 @@ import {
     PatientFilter,
     PatientIdentifier,
     ReferenceGenomeGene,
-    StructuralVariant,
     Sample,
 } from 'cbioportal-ts-api-client';
+
+import { StructuralVariant } from 'cbioportal-ts-api-client';
+
 import { action, ObservableMap } from 'mobx';
 import AccessorsForOqlFilter, {
     getSimplifiedMutationType,

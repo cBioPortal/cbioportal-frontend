@@ -33,9 +33,12 @@ import {
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
+} from 'cbioportal-ts-api-client';
+import {
     StructuralVariant,
     StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
+
 import client from 'shared/api/cbioportalClientInstance';
 import {
     CanonicalMutationType,
@@ -3286,7 +3289,7 @@ export class ResultsViewPageStore
                     sampleMolecularIdentifiers: filters,
                 } as StructuralVariantFilter;
 
-                return await client.fetchStructuralVariantsUsingPOST({
+                return await internalClient.fetchStructuralVariantsUsingPOST({
                     structuralVariantFilter: data,
                 });
             }
@@ -5899,7 +5902,7 @@ export class ResultsViewPageStore
             if (_.isEmpty(filters)) {
                 return [];
             } else {
-                return client.fetchStructuralVariantsUsingPOST({
+                return internalClient.fetchStructuralVariantsUsingPOST({
                     structuralVariantFilter: {
                         entrezGeneIds: [q.entrezGeneId],
                         sampleMolecularIdentifiers: filters,
