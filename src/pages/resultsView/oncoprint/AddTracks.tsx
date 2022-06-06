@@ -62,6 +62,8 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
     private updateTabId(newId: Tab) {
         this.tabId = newId;
         // update profile if clicked Generic Assay tab
+        // This will update generic assay profile correctly
+        // Because if isGenericAssayDataComplete and profilesByGenericAssayType are falsy, tabs will not be shown
         if (!Object.values(Tab).includes(newId)) {
             if (
                 this.isGenericAssayDataComplete &&
@@ -84,15 +86,17 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
     }
 
     @computed get showGenericAssayTabs() {
-        // disable for multiple studies query
         if (this.isGenericAssayDataComplete) {
-            return (
+            const isSingleStudy =
                 _.chain(this.props.store.genericAssayProfiles.result!)
                     .map(profile => profile.studyId)
                     .uniq()
                     .size()
-                    .value() == 1
-            );
+                    .value() == 1;
+            // disable for multiple studies query
+            if (!_.isEmpty(this.profilesByGenericAssayType) && isSingleStudy) {
+                return true;
+            }
         } else {
             return false;
         }
