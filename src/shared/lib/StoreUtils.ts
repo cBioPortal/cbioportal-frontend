@@ -33,7 +33,6 @@ import {
     ReferenceGenomeGene,
     Sample,
     SampleFilter,
-    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -109,6 +108,7 @@ import {
 } from 'shared/lib/MutationUtils';
 import { ObservableMap } from 'mobx';
 import { chunkCalls } from 'cbioportal-utils';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;

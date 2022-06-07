@@ -22,8 +22,10 @@ import {
     Mutation,
     NumericGeneMolecularData,
     Sample,
-    StructuralVariant,
 } from 'cbioportal-ts-api-client';
+
+import { StructuralVariant } from 'cbioportal-ts-api-client';
+
 import {
     capitalize,
     remoteData,

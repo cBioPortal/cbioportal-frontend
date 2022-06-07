@@ -5,7 +5,6 @@ import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStor
 import LazyMobXTable, {
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import { StructuralVariant } from 'cbioportal-ts-api-client';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu from '../mutation/GeneFilterMenu';
@@ -26,6 +25,7 @@ import {
     DEFAULT_ONCOKB_CONTENT_WIDTH,
     updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 export interface IPatientViewStructuralVariantTableProps {
     store: PatientViewPageStore;

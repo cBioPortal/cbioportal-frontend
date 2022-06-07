@@ -203,10 +203,7 @@ describe('Results Page', function() {
                 var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&gene_list=TP53+PTEN&gene_set_choice=user-defined-list&Action=Submit`;
                 browser.url(url);
                 $('[data-test=view3DStructure]').waitForExist({
-                    timeout: 10000,
-                });
-                $('[data-test=view3DStructure]').waitForEnabled({
-                    timeout: 10000,
+                    timeout: 20000,
                 });
                 $('[data-test=oncogenic-icon-image]').waitForDisplayed({
                     timeout: 10000,
