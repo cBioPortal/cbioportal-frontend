@@ -2633,7 +2633,7 @@ export class PatientViewPageStore {
                     search_symbols.length == 0 &&
                     nec_search_symbols.length == 0
                 ) {
-                    gene_symbols = [];
+                    gene_symbols = entity_symbols;
                 } else {
                     gene_symbols = search_symbols.concat(nec_search_symbols);
                     gene_symbols = [...new Set(gene_symbols)];
