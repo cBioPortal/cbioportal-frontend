@@ -36,6 +36,10 @@ interface ICollapseSearchState {
     isSearchCollapsed: boolean;
 }
 
+interface IForceModalCloseState {
+    forceModalClose: boolean;
+}
+
 interface ICollapseListState {
     isOpened: boolean;
 }
@@ -187,7 +191,7 @@ class CompleteCollapseList extends React.PureComponent<
 @observer
 export class ClinicalTrialMatchTable extends React.Component<
     IClinicalTrialMatchProps,
-    ICollapseSearchState,
+    ICollapseSearchState & IForceModalCloseState,
     {}
 > {
     private readonly ENTRIES_PER_PAGE = 10;
@@ -291,7 +295,8 @@ export class ClinicalTrialMatchTable extends React.Component<
     constructor(props: IClinicalTrialMatchProps) {
         super(props);
         this.state = {
-            isSearchCollapsed: false,
+            isSearchCollapsed: true,
+            forceModalClose: true,
         };
     }
 
@@ -302,10 +307,18 @@ export class ClinicalTrialMatchTable extends React.Component<
                 <div>
                     <ClinicalTrialMatchTableOptions
                         store={this.props.store}
-                        onHide={() => {
-                            this.setState({ isSearchCollapsed: false });
+                        onHide={forceClose => {
+                            this.setState({
+                                isSearchCollapsed: true,
+                                forceModalClose: forceClose,
+                            });
                         }}
-                        show={this.state.isSearchCollapsed}
+                        show={
+                            (!this.state.isSearchCollapsed ||
+                                this.props.store.isTrialResultsZero ||
+                                this.props.store.showLoadingScreen) &&
+                            !this.state.forceModalClose
+                        }
                     />
                 </div>
                 <th style={{ padding: '5px', borderBottom: '1px solid grey' }}>
@@ -316,6 +329,7 @@ export class ClinicalTrialMatchTable extends React.Component<
                                 this.setState({
                                     isSearchCollapsed: !this.state
                                         .isSearchCollapsed,
+                                    forceModalClose: false,
                                 });
                             }}
                         >
