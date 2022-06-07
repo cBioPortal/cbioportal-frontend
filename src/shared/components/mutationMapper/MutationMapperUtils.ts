@@ -41,19 +41,26 @@ export function buildNamespaceColumnConfig(
     if (!mutations) {
         return {};
     }
-    const namespaceConfig: NamespaceColumnConfig = {};
-    const nameSpaces = _.flatMap(mutations, m => _.keys(m.namespaceColumns));
-    nameSpaces.forEach(nameSpace => {
-        let columnCollapse: any = {};
-        _(mutations)
-            .map(m => _.get(m.namespaceColumns, nameSpace))
-            .forEach(column => _.mergeWith(columnCollapse, column, fMerge));
-        columnCollapse = _.mapValues(columnCollapse, (values: any[]) => {
-            return !values.some(_.isString) ? 'number' : 'string';
+    const columnTypes: any = {};
+    mutations.forEach(m => {
+        _.forIn(m.namespaceColumns, (columns, namespace) => {
+            _.forIn(columns, (value, columnName) => {
+                if (columnTypes[namespace] === undefined) {
+                    columnTypes[namespace] = {};
+                }
+                if (columnTypes[namespace][columnName] === undefined) {
+                    columnTypes[namespace][columnName] = 'number';
+                }
+                if (
+                    _.isString(value) &&
+                    columnTypes[namespace][columnName] === 'number'
+                ) {
+                    columnTypes[namespace][columnName] = 'string';
+                }
+            });
         });
-        namespaceConfig[nameSpace] = columnCollapse;
     });
-    return namespaceConfig;
+    return columnTypes;
 }
 
 export function createNamespaceColumnName(
