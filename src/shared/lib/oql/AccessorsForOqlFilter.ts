@@ -2,8 +2,9 @@ import {
     Mutation,
     MolecularProfile,
     NumericGeneMolecularData,
-    StructuralVariant,
 } from 'cbioportal-ts-api-client';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
+
 import _ from 'lodash';
 import {
     AlterationTypeConstants,

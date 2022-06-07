@@ -16,7 +16,6 @@ import {
     ResourceData,
     Sample,
     SampleMolecularIdentifier,
-    StructuralVariantFilter,
     GenericAssayData,
     GenericAssayMeta,
     GenericAssayDataMultipleStudyFilter,
@@ -200,6 +199,7 @@ import {
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
 import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -613,7 +613,7 @@ export class PatientViewPageStore {
                 .value();
 
             if (mutationalSignatureContributionStableIds.length > 0) {
-                return client.fetchGenericAssayMetaDataUsingPOST({
+                return client.fetchGenericAssayMetaUsingPOST({
                     genericAssayMetaFilter: {
                         genericAssayStableIds: mutationalSignatureContributionStableIds,
                     } as GenericAssayMetaFilter,
@@ -1615,7 +1615,7 @@ export class PatientViewPageStore {
                     }),
                 } as StructuralVariantFilter;
 
-                return client.fetchStructuralVariantsUsingPOST({
+                return internalClient.fetchStructuralVariantsUsingPOST({
                     structuralVariantFilter,
                 });
             }

@@ -1864,6 +1864,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "protein": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
