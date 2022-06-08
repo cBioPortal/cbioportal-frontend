@@ -1,5 +1,6 @@
 import * as React from 'react';
-import OncoprintJS, {
+import {
+    OncoprintJS,
     TrackId,
     CustomTrackOption,
     TrackGroupHeader,

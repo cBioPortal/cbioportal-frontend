@@ -19,11 +19,13 @@
 *.ejs
 *.toml
 *.xml
+*.py
 *module.scss.d.ts
 **/generated/**
 src/shared/lib/oql/oql-parser.js
 packages/**/dist/**
 yarn.lock
+LICENSE
 .prettierignore
 .DS_Store
 .gitignore

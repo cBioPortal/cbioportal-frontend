@@ -53,7 +53,7 @@ import _ from 'lodash';
 import { onMobxPromise, toPromise } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import OncoprintJS, { TrackGroupIndex, TrackId } from 'oncoprintjs';
+import { OncoprintJS, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
