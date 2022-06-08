@@ -434,6 +434,25 @@ describe('textQueryUtils', () => {
             const result = addClause(toAdd, query);
             expect(result).toEqual(expected);
         });
+
+        it('should remove existing phrases', () => {
+            let part1 = {
+                textRepresentation: 'part1',
+                phrase: 'part1',
+                fields: defaultNodeFields,
+            };
+            let part2 = {
+                textRepresentation: 'part2',
+                phrase: 'part2',
+                fields: defaultNodeFields,
+            };
+            const query: ISearchClause[] = [new AndSearchClause([part1])];
+            const toAdd = new AndSearchClause([part1, part2]);
+
+            const result = addClause(toAdd, query);
+            let expected = [toAdd];
+            expect(toQueryString(result)).toEqual(toQueryString(expected));
+        });
     });
 
     describe('removeClause', () => {

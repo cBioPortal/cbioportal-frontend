@@ -8,14 +8,14 @@ import _ from 'lodash';
  * Phrase string and associated fields
  */
 export type Phrase = {
+    /**
+     * Phrase as shown in search box, including its prefix
+     */
+    readonly textRepresentation: string;
+
     readonly phrase: string;
 
     readonly fields: CancerTreeNodeFields[];
-
-    /**
-     * Phrase as entered in search box, including its prefix
-     */
-    readonly textRepresentation: string;
 };
 
 export type SearchResult = {
@@ -45,6 +45,9 @@ export interface ISearchClause {
     getPhrases(): Phrase[];
 }
 
+/**
+ * Negative clause
+ */
 export class NotSearchClause implements ISearchClause {
     private readonly phrase: Phrase;
 
@@ -86,6 +89,10 @@ export class NotSearchClause implements ISearchClause {
     }
 }
 
+/**
+ * Conjunctive clause
+ * consists of multiple phrases which all must match
+ */
 export class AndSearchClause implements ISearchClause {
     private readonly phrases: Phrase[];
 

@@ -8,7 +8,6 @@ import {
     FilterCheckbox,
     FilterField,
     FilterList,
-    FilterText,
 } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import {
     AndSearchClause,
@@ -40,15 +39,6 @@ export const defaultNodeFields: CancerTreeNodeFields[] = [
     'description',
     'studyId',
 ];
-
-export const defaultSearchFilter: CancerTreeSearchFilter = {
-    phrasePrefix: undefined,
-    nodeFields: defaultNodeFields,
-    form: {
-        input: FilterText,
-        label: 'search terms',
-    },
-};
 
 /**
  * This field can be extended with additional search filters
@@ -211,7 +201,7 @@ function parsePhrase(data: string): Phrase {
         fields = filter.nodeFields;
     } else {
         phrase = parts[0];
-        fields = defaultSearchFilter.nodeFields;
+        fields = defaultNodeFields;
     }
     return { phrase, fields, textRepresentation: enquoteSpaces(data) };
 }
@@ -318,6 +308,11 @@ export function addClause(
         return result;
     }
 
+    let multiplePhrases = toAdd.getPhrases().length > 1;
+    if (multiplePhrases) {
+        result = removeClause(toAdd, query);
+    }
+
     result.push(toAdd);
 
     const inverseClause = findInverseClause(toAdd, result);
@@ -341,24 +336,26 @@ export function removeClause(
     return result;
 
     function removePhrase(phrase: Phrase) {
-        const found = result.find(r => r.isAnd() && r.contains(phrase));
-        if (!found) {
+        const containingClause = result.find(
+            r => r.isAnd() && r.contains(phrase)
+        );
+        if (!containingClause) {
             return;
         }
-        let multiplePhrases = found.getPhrases().length > 1;
+        _.remove(result, containingClause);
+        const multiplePhrases = containingClause.getPhrases().length > 1;
         if (multiplePhrases) {
-            const withoutPhrase = found
+            const otherPhrases = containingClause
                 .getPhrases()
                 .filter(p => !areEqualPhrases(p, phrase));
-            result.push(new AndSearchClause(withoutPhrase));
+            result.push(new AndSearchClause(otherPhrases));
         }
-        result = result.filter(r => !r.equals(found));
     }
 }
 
 /**
  * Find inverse clause which contains phrase of needle
- * AND is 'inverse' of NOT
+ * And-clause is 'inverse' of not-clause
  */
 export function findInverseClause(
     needle: ISearchClause,
@@ -378,8 +375,6 @@ export function findInverseClause(
 
 /**
  * Phrases are equal when phrase and fields are equal
- * @param a
- * @param b
  */
 export function areEqualPhrases(a: Phrase, b: Phrase): boolean {
     if (a.phrase !== b.phrase) {

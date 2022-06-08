@@ -34,8 +34,7 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
         return props.onSearch(parsed);
     }
 
-    function handleAdd(textRepresentation: string): void {
-        const toAdd = parseSearchQuery(textRepresentation)[0];
+    function handleAdd(toAdd: ISearchClause): void {
         if (!toAdd) {
             return;
         }
@@ -44,8 +43,7 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
         props.onSearch(result);
     }
 
-    function handleRemove(textRepresentation: string): void {
-        const toRemove = parseSearchQuery(textRepresentation)[0];
+    function handleRemove(toRemove: ISearchClause): void {
         if (!toRemove) {
             return;
         }
