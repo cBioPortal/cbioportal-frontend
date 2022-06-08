@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import * as _ from 'lodash';
-import { LoginModal, LoginButton, UserInfoButton } from './LoginElements';
 import {
     ITherapyRecommendation,
     IFollowUp,
@@ -35,9 +34,10 @@ import MtbTherapyRecommendationTable from './MtbTherapyRecommendationTable';
 import Select from 'react-select';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
 import FollowUpForm from './form/FollowUpForm';
-import { IMutationalSignature } from 'shared/model/MutationalSignature';
+import AppConfig from 'appConfig';
 import { Collapse } from 'react-collapse';
-import { getServerConfig } from 'config/config';
+import { IMutationalSignature } from 'shared/model/MutationalSignature';
+import { LoginModal, LoginButton, UserInfoButton } from './LoginElements';
 
 export type IFollowUpProps = {
     patientId: string;
@@ -55,24 +55,22 @@ export type IFollowUpProps = {
     oncoKbAvailable: boolean;
     followUps: IFollowUp[];
     mtbs: IMtb[];
+    mtbUrl: string;
     deletions: IDeletions;
     containerWidth: number;
-    mtbUrl: string;
     onDeleteData: (deletions: IDeletions) => void;
     onSaveData: (followUps: IFollowUp[]) => void;
+    checkPermission: () => Promise<boolean[]>;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
-    checkPermission: () => Promise<boolean[]>;
 };
 
 export type IFollowUpState = {
     followUps: IFollowUp[];
     deletions: IDeletions;
-    showFollowUpForm: boolean;
     loggedIn: boolean;
     permission: boolean;
-    showLoginModal: boolean;
 };
 
 enum ColumnKey {
@@ -96,10 +94,8 @@ export default class FollowUpTable extends React.Component<
         this.state = {
             followUps: props.followUps,
             deletions: props.deletions,
-            showFollowUpForm: false,
             loggedIn: false,
             permission: false,
-            showLoginModal: false,
         };
     }
 
@@ -116,6 +112,8 @@ export default class FollowUpTable extends React.Component<
         | ITherapyRecommendation
         | undefined;
     @observable backupTherapyRecommendation: ITherapyRecommendation | undefined;
+    @observable showFollowUpForm: boolean;
+    @observable showLoginModal: boolean = false;
 
     private _columns = [
         {
@@ -330,10 +328,10 @@ export default class FollowUpTable extends React.Component<
                 <MtbTherapyRecommendationTable
                     patientId={this.props.patientId}
                     mutations={this.props.mutations}
-                    mutationSignatureData={this.props.mutationSignatureData}
                     indexedVariantAnnotations={
                         this.props.indexedVariantAnnotations
                     }
+                    mutationSignatureData={this.props.mutationSignatureData}
                     indexedMyVariantInfoAnnotations={
                         this.props.indexedMyVariantInfoAnnotations
                     }
@@ -362,7 +360,7 @@ export default class FollowUpTable extends React.Component<
     ];
 
     private onHideFollowUpForm(therapyRecommendation: ITherapyRecommendation) {
-        this.setState({ showFollowUpForm: false });
+        this.showFollowUpForm = false;
         console.log(flattenStringify(this.props.mtbs));
         therapyRecommendation && this.addFollowUp(therapyRecommendation);
     }
@@ -431,19 +429,6 @@ export default class FollowUpTable extends React.Component<
         console.groupEnd();
     }
 
-    private openLoginModal() {
-        this.setState({ showLoginModal: true });
-    }
-
-    private closeLoginModal() {
-        this.setState({ showLoginModal: false });
-        this.props.checkPermission().then(res => {
-            console.log('checkPermission returned with ' + res);
-            this.setState({ loggedIn: res[0] });
-            this.setState({ permission: res[1] });
-        });
-    }
-
     private getTreatmentResponseCheckbox(
         followUp: IFollowUp,
         criteria: IResponseCriteria,
@@ -468,6 +453,19 @@ export default class FollowUpTable extends React.Component<
         );
     }
 
+    private openLoginModal() {
+        this.showLoginModal = true;
+    }
+
+    private closeLoginModal() {
+        this.showLoginModal = false;
+        this.props.checkPermission().then(res => {
+            console.log('checkPermission returned with ' + res);
+            this.setState({ loggedIn: res[0] });
+            this.setState({ permission: res[1] });
+        });
+    }
+
     render() {
         const loginButton = this.state.loggedIn ? (
             <UserInfoButton
@@ -490,17 +488,16 @@ export default class FollowUpTable extends React.Component<
                     <div className="btn-group">
                         {loginButton}
                         <LoginModal
-                            showLoginModal={this.state.showLoginModal}
+                            showLoginModal={this.showLoginModal}
                             handleClose={() => this.closeLoginModal()}
                             mtbUrl={this.props.mtbUrl}
                         />
                         <Button
                             type="button"
-                            className={'btn btn-default ' + styles.addMtbButton}
-                            onClick={() =>
-                                this.setState({ showFollowUpForm: true })
+                            className={
+                                'btn btn-default ' + styles.addFollowUpButton
                             }
-                            disabled={!this.state.permission}
+                            onClick={() => (this.showFollowUpForm = true)}
                         >
                             <i
                                 className={`fa fa-plus ${styles.marginLeft}`}
@@ -512,35 +509,34 @@ export default class FollowUpTable extends React.Component<
                             type="button"
                             className={'btn btn-default ' + styles.testButton}
                             onClick={() => this.saveFollowUps()}
-                            disabled={!this.state.permission}
                         >
                             Save Data
                         </Button>
-                        {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test</Button> */}
-                        {this.state.showFollowUpForm && (
-                            <FollowUpForm
-                                show={this.state.showFollowUpForm}
-                                patientID={this.props.patientId}
-                                mtbs={this.props.mtbs}
-                                onHide={(
-                                    therapyRecommendation: ITherapyRecommendation
-                                ) => {
-                                    this.onHideFollowUpForm(
-                                        therapyRecommendation
-                                    );
-                                }}
-                                title="Select therapy recommendation"
-                                userEmailAddress={
-                                    getServerConfig().user_email_address
-                                }
-                            />
-                        )}
                     </div>
+                    {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test</Button> */}
+                    {this.showFollowUpForm && (
+                        <FollowUpForm
+                            show={this.showFollowUpForm}
+                            patientID={this.props.patientId}
+                            mtbs={this.props.mtbs}
+                            onHide={(
+                                therapyRecommendation: ITherapyRecommendation
+                            ) => {
+                                this.onHideFollowUpForm(therapyRecommendation);
+                            }}
+                            title="Select therapy recommendation"
+                            userEmailAddress={
+                                AppConfig.serverConfig.user_email_address
+                            }
+                        />
+                    )}
                 </p>
                 <FollowUpTableComponent
                     data={this.state.followUps}
                     columns={this._columns}
                     showCopyDownload={false}
+                    showFilter={false}
+                    showColumnVisibility={false}
                     className="followUp-table"
                 />
                 <SimpleCopyDownloadControls
@@ -550,14 +546,5 @@ export default class FollowUpTable extends React.Component<
                 />
             </div>
         );
-    }
-
-    componentDidMount() {
-        // console.log('cDM got invoked');
-        this.props.checkPermission().then(res => {
-            console.log('checkPermission returned with ' + res);
-            this.setState({ loggedIn: res[0] });
-            this.setState({ permission: res[1] });
-        });
     }
 }
