@@ -63,7 +63,7 @@ describe('textQueryUtils', () => {
                 new NotSearchClause({
                     phrase: 'part2',
                     fields: defaultNodeFields,
-                    textRepresentation: '- part2',
+                    textRepresentation: 'part2',
                 }),
             ];
             const result = parseSearchQuery(query);
@@ -76,7 +76,7 @@ describe('textQueryUtils', () => {
                 new NotSearchClause({
                     phrase: 'part2',
                     fields: defaultNodeFields,
-                    textRepresentation: '- part2',
+                    textRepresentation: 'part2',
                 }),
                 new AndSearchClause([
                     {
@@ -96,7 +96,7 @@ describe('textQueryUtils', () => {
                 new NotSearchClause({
                     phrase: 'part2a part2b',
                     fields: defaultNodeFields,
-                    textRepresentation: '- "part2a part2b"',
+                    textRepresentation: '"part2a part2b"',
                 }),
             ];
             const result = parseSearchQuery(query);
@@ -160,7 +160,7 @@ describe('textQueryUtils', () => {
                 new NotSearchClause({
                     phrase: 'part4',
                     fields: defaultNodeFields,
-                    textRepresentation: '- part4',
+                    textRepresentation: 'part4',
                 }),
                 new AndSearchClause([
                     {
@@ -334,6 +334,39 @@ describe('textQueryUtils', () => {
             const result = performSearchSingle(clauses, studyNode);
             expect(result).toEqual(expected);
         });
+
+        it('matches when only one of two phrases in OR-query matches', () => {
+            const clauses = parseSearchQuery(
+                'reference-genome:hg19 or reference-genome:hg38'
+            );
+            const studyNodes = [
+                { referenceGenome: 'hg19' },
+                { referenceGenome: 'hg38' },
+            ] as CancerTreeNode[];
+
+            const result = studyNodes.map(n => performSearchSingle(clauses, n));
+            const expected = [
+                { match: true, forced: false },
+                { match: true, forced: false },
+            ];
+            expect(result).toEqual(expected);
+        });
+        it('does not match when only one of two phrases in query matches', () => {
+            const clauses = parseSearchQuery(
+                'reference-genome:hg19 reference-genome:hg38'
+            );
+            const studyNodes = [
+                { referenceGenome: 'hg19' },
+                { referenceGenome: 'hg38' },
+            ] as CancerTreeNode[];
+
+            const result = studyNodes.map(n => performSearchSingle(clauses, n));
+            const expected = [
+                { match: false, forced: false },
+                { match: false, forced: false },
+            ];
+            expect(result).toEqual(expected);
+        });
     });
 
     describe('addClause', () => {
@@ -402,6 +435,7 @@ describe('textQueryUtils', () => {
             expect(result).toEqual(expected);
         });
     });
+
     describe('removeClause', () => {
         it('should remove equal clause from query', () => {
             const query: ISearchClause[] = [

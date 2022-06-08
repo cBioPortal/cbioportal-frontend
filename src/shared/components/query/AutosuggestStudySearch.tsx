@@ -7,13 +7,14 @@ import {
 import * as React from 'react';
 import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredSearch';
 import { ISearchClause } from 'shared/components/query/SearchClause';
+import { FunctionComponent } from 'react';
 
 export type AutosuggestStudySearchProps = {
     parsedQuery: ISearchClause[];
     onSearch: (query: ISearchClause[]) => void;
 };
 
-export const AutosuggestStudySearch: React.FunctionComponent<AutosuggestStudySearchProps> = function(
+export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchProps> = function(
     props
 ) {
     return (

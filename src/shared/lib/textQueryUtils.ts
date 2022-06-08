@@ -218,7 +218,7 @@ function parsePhrase(data: string): Phrase {
 
 function createNotClause(data: string): ISearchClause {
     const { phrase, fields } = parsePhrase(data);
-    let textRepresentation = `- ${enquoteSpaces(data)}`;
+    let textRepresentation = enquoteSpaces(data);
     return new NotSearchClause({ phrase, textRepresentation, fields });
 }
 

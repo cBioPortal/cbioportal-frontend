@@ -43,13 +43,12 @@ describe('ISearchClause', () => {
 
         it('returns false when calling contains() with non contained phrase', () => {
             const a = new AndSearchClause([createTestPhrase()]);
-            expect(
-                a.contains({
-                    phrase: 'b',
-                    textRepresentation: 'a',
-                    fields: ['studyId'],
-                })
-            ).toEqual(true);
+            let b: Phrase = {
+                phrase: 'b',
+                textRepresentation: 'a',
+                fields: ['studyId'],
+            };
+            expect(a.contains(b)).toEqual(false);
         });
 
         it('returns false when calling contains() with faulty textRepresentation', () => {
@@ -114,7 +113,7 @@ describe('ISearchClause', () => {
             ).toEqual(false);
         });
 
-        it('returns false when calling contains() with faulty textRepresentation', () => {
+        it('ignores textRepresentation when calling contains()', () => {
             const a = new NotSearchClause(createTestPhrase());
             expect(
                 a.contains({
@@ -122,7 +121,7 @@ describe('ISearchClause', () => {
                     textRepresentation: 'faulty',
                     fields: ['studyId'],
                 })
-            ).toEqual(false);
+            ).toEqual(true);
         });
 
         it('returns negative textRepresentation when calling toString', () => {

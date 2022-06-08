@@ -65,10 +65,7 @@ export class NotSearchClause implements ISearchClause {
     }
 
     toString(): string {
-        if (!this.phrase) {
-            return '';
-        }
-        return `- ${this.phrase.textRepresentation}`;
+        return this.phrase ? `- ${this.phrase.textRepresentation}` : '';
     }
 
     equals(item: ISearchClause): boolean {
@@ -109,10 +106,9 @@ export class AndSearchClause implements ISearchClause {
     }
 
     toString(): string {
-        if (!this.phrases.length) {
-            return '';
-        }
-        return this.phrases.map(p => p.textRepresentation).join(' ');
+        return this.phrases.length
+            ? this.phrases.map(p => p.textRepresentation).join(' ')
+            : '';
     }
 
     contains(match: Phrase | null | ((predicate: Phrase) => boolean)): boolean {
