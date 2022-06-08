@@ -206,6 +206,17 @@ function renderRange(
     );
 }
 
+function replaceArray(replaceString: string) {
+    const search = ['Ã¤', 'Ã¼', 'Ã¶', 'Ã„', 'Ã–', 'Ãœ', 'ÃŸ'];
+    const replace = ['ä', 'ü', 'ö', 'Ä', 'Ö', 'Ü', 'ß'];
+    let regex;
+    for (let i = 0; i < search.length; i++) {
+        regex = new RegExp(search[i], 'g');
+        replaceString = replaceString.replace(regex, replace[i]);
+    }
+    return replaceString;
+}
+
 export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = observer(
     function({
         trackData,
@@ -416,10 +427,16 @@ export const EventTooltipContent: React.FunctionComponent<{
                                     <th>{att.key.replace(/_/g, ' ')}</th>
                                     <td>
                                         <ReactMarkdown
-                                            allowedElements={['p', 'a']}
+                                            className="line-break"
+                                            allowedElements={['p', 'a', 'br']}
                                             linkTarget={'_blank'}
                                         >
-                                            {att.value}
+                                            {replaceArray(
+                                                att.value.replaceAll(
+                                                    '<br>',
+                                                    '; '
+                                                )
+                                            )}
                                         </ReactMarkdown>
                                     </td>
                                 </tr>
