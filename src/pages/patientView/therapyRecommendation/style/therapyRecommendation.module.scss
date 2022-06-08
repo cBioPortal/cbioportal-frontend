@@ -206,24 +206,12 @@
     margin-top: 8px;
 }
 
-/*
-.mtb-table {
-  ​table tr {
-      border-bottom: 3px solid black !important;
-  }​
-
-  table tr:last-child {
-      border-bottom: none;
-  }
+.mtb-table tbody > tr {
+    border-bottom: 3px solid #000;
 }
-
-.statusBackground {
-  display: block;
-  padding: 10px;
-  width: 130px;
-  border-radius: 10px;
-  background: #73AD21;
-  text-align: center;
-  color: #ffffff;
+.mtb-table tbody > tr:last-child {
+    border-bottom: none;
 }
-*/
+.mtb-table table > tbody > tr {
+    border-bottom: none;
+}

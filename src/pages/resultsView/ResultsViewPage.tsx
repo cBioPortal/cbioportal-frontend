@@ -10,6 +10,7 @@ import {
     reaction,
     runInAction,
     makeObservable,
+    autorun,
 } from 'mobx';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
@@ -27,10 +28,9 @@ import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';
 import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
-import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
+import { remoteData } from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
-import { showCustomTab } from '../../shared/lib/customTabs';
 import {
     parseConfigDisabledTabs,
     ResultsViewTab,
@@ -63,6 +63,11 @@ import UserMessager, {
     IUserMessage,
 } from 'shared/components/userMessager/UserMessage';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import {
+    buildCustomTabs,
+    prepareCustomTabConfigurations,
+} from 'shared/lib/customTabs/customTabHelpers';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
 
 export function initStore(
     appStore: AppStore,
@@ -72,23 +77,19 @@ export function initStore(
 
     setWindowVariable('resultsViewPageStore', resultsViewPageStore);
 
-    reaction(
-        () => [resultsViewPageStore.studyIds, resultsViewPageStore.oqlText],
-        () => {
-            if (
-                resultsViewPageStore.studyIds.isComplete &&
-                resultsViewPageStore.oqlText
-            ) {
-                trackQuery(
-                    resultsViewPageStore.studyIds.result!,
-                    resultsViewPageStore.oqlText,
-                    resultsViewPageStore.hugoGeneSymbols,
-                    resultsViewPageStore.queriedVirtualStudies.result!.length >
-                        0
-                );
-            }
+    autorun(() => {
+        if (
+            resultsViewPageStore.studyIds.isComplete &&
+            resultsViewPageStore.oqlText
+        ) {
+            trackQuery(
+                resultsViewPageStore.studyIds.result!,
+                resultsViewPageStore.oqlText,
+                resultsViewPageStore.hugoGeneSymbols,
+                resultsViewPageStore.queriedVirtualStudies.result!.length > 0
+            );
         }
-    );
+    });
 
     return resultsViewPageStore;
 }
@@ -143,21 +144,6 @@ export default class ResultsViewPage extends React.Component<
                 this.urlWrapper
             );
         }
-    }
-
-    @autobind
-    private customTabCallback(
-        div: HTMLDivElement,
-        tab: any,
-        isUnmount = false
-    ) {
-        showCustomTab(
-            div,
-            tab,
-            getBrowserWindow().location.href,
-            this.resultsViewPageStore,
-            isUnmount
-        );
     }
 
     componentWillUnmount() {
@@ -446,32 +432,16 @@ export default class ResultsViewPage extends React.Component<
             .filter(this.evaluateTabInclusion)
             .map(tab => tab.getTab());
 
-        // now add custom tabs
-        if (getServerConfig().custom_tabs) {
-            const customResultsTabs = getServerConfig()
-                .custom_tabs.filter(
-                    (tab: any) => tab.location === 'RESULTS_PAGE'
-                )
-                .map((tab: any, i: number) => {
-                    return (
-                        <MSKTab
-                            key={100 + i}
-                            id={'customTab' + i}
-                            unmountOnHide={tab.unmountOnHide === true}
-                            onTabDidMount={div => {
-                                this.customTabCallback(div, tab);
-                            }}
-                            onTabUnmount={div => {
-                                this.customTabCallback(div, tab, true);
-                            }}
-                            linkText={tab.title}
-                        />
-                    );
-                });
-            filteredTabs = filteredTabs.concat(customResultsTabs);
-        }
+        filteredTabs.push(...buildCustomTabs(this.customTabs));
 
         return filteredTabs;
+    }
+
+    @computed get customTabs() {
+        return prepareCustomTabConfigurations(
+            getServerConfig().custom_tabs,
+            'RESULTS_PAGE'
+        );
     }
 
     @autobind
@@ -541,7 +511,7 @@ export default class ResultsViewPage extends React.Component<
     @autobind
     private getTabHref(tabId: string) {
         return URL.format({
-            pathname: tabId,
+            pathname: buildCBioPortalPageUrl(`./results/${tabId}`),
             query: this.props.routing.query,
             hash: this.props.routing.location.hash,
         });
@@ -696,7 +666,9 @@ export default class ResultsViewPage extends React.Component<
                                             )
                                         }
                                         className="mainTabs"
-                                        getTabHref={this.getTabHref}
+                                        hrefRoot={buildCBioPortalPageUrl(
+                                            'results'
+                                        )}
                                         contentWindowExtra={
                                             <HelpWidget
                                                 path={

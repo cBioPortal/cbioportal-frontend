@@ -54,6 +54,12 @@ export interface ITherapyRecommendation {
     author: string;
     treatments: ITreatment[];
     references: IReference[];
+    clinicalTrials: IClinicalTrial[];
+}
+
+export interface IClinicalTrial {
+    name: string;
+    id: string;
 }
 
 export interface IReference {
@@ -97,6 +103,7 @@ export interface IGeneticAlteration {
     clinvar?: number;
     cosmic?: string;
     gnomad?: number;
+    sampleIds?: string[];
 }
 
 export interface IDeletions {

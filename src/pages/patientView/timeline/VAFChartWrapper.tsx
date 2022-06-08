@@ -7,7 +7,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
 import { VAFChartControls } from './VAFChartControls';
-import VAFChart, { IColorPoint } from 'pages/patientView/timeline2/VAFChart';
+import VAFChart, { IColorPoint } from 'pages/patientView/timeline/VAFChart';
 import VAFChartWrapperStore from './VAFChartWrapperStore';
 import _ from 'lodash';
 import 'cbioportal-clinical-timeline/dist/styles.css';
@@ -24,7 +24,7 @@ import {
     buildBaseConfig,
     configureGenieTimeline,
     sortTracks,
-} from 'pages/patientView/timeline2/timeline_helpers';
+} from 'pages/patientView/timeline/timeline_helpers';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 import { computed, makeObservable } from 'mobx';
 import {
@@ -44,7 +44,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
 import { MultipleSampleMarker } from './SampleMarker';
-import { downloadZippedTracks } from 'pages/patientView/timeline2/timelineDataUtils';
+import { downloadZippedTracks } from 'pages/patientView/timeline/timelineDataUtils';
 import { CoverageInformation } from 'shared/lib/GenePanelUtils';
 
 export interface ISampleMetaDeta {

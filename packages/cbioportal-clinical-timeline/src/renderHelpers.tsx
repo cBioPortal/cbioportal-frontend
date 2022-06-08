@@ -98,27 +98,40 @@ export function renderShape(
             return <polygon points={points} fill={color} />;
         case Shape.CAMERA:
             return (
-                <g>
-                    // top part
-                    <rect
-                        x={-2.5}
-                        y={y - 4}
-                        width={5}
-                        height={1}
-                        fill={color}
-                    />
-                    // body
-                    <rect x={-5} y={y - 3} width={10} height={6} fill={color} />
-                    // lens
-                    <circle
-                        fill={color}
-                        stroke={'white'}
-                        cx={0}
-                        cy={y}
-                        r={2}
-                        strokeWidth={0.8}
-                    />
-                </g>
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    version="1.1"
+                    id="Layer_1"
+                    x="-8px"
+                    y="1px"
+                    width="16px"
+                    height="16px"
+                    viewBox="0 0 16 16"
+                    enable-background="new 0 0 16 16"
+                >
+                    <g>
+                        <circle
+                            fill="none"
+                            stroke="#646464"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-miterlimit="10"
+                            cx="7.997"
+                            cy="9.058"
+                            r="3.023"
+                        ></circle>
+                        <path
+                            fill="none"
+                            stroke="#646464"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-miterlimit="10"
+                            d="   M14.168,4h-2.983l-0.521-1.36C10.503,2.288,10.07,2,9.702,2H6.359C5.99,2,5.558,2.288,5.396,2.64L4.877,4H1.893   C1.401,4,1,4.427,1,4.948v8.072C1,13.543,1.401,14,1.893,14h12.275C14.659,14,15,13.543,15,13.021V4.948   C15,4.427,14.659,4,14.168,4z"
+                        ></path>
+                    </g>
+                </svg>
             );
     }
 }

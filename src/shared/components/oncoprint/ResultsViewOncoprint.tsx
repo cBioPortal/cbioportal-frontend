@@ -625,18 +625,6 @@ export default class ResultsViewOncoprint extends React.Component<
         this.mouseInsideBounds = false;
     }
 
-    @action
-    public setAnnotateCBioPortalInputValue(value: string) {
-        this.controlsHandlers.onChangeAnnotateCBioPortalInputValue &&
-            this.controlsHandlers.onChangeAnnotateCBioPortalInputValue(value);
-    }
-
-    @action
-    public setAnnotateCOSMICInputValue(value: string) {
-        this.controlsHandlers.onChangeAnnotateCOSMICInputValue &&
-            this.controlsHandlers.onChangeAnnotateCOSMICInputValue(value);
-    }
-
     private buildControlsHandlers() {
         return {
             onSelectColumnType: (type: OncoprintAnalysisCaseType) => {
@@ -713,28 +701,6 @@ export default class ResultsViewOncoprint extends React.Component<
             }),
             onSelectAnnotateHotspots: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.hotspots = s;
-            }),
-            onSelectAnnotateCBioPortal: action((s: boolean) => {
-                this.props.store.driverAnnotationSettings.cbioportalCount = s;
-            }),
-            onSelectAnnotateCOSMIC: action((s: boolean) => {
-                this.props.store.driverAnnotationSettings.cosmicCount = s;
-            }),
-            onChangeAnnotateCBioPortalInputValue: action((s: string) => {
-                this.props.store.driverAnnotationSettings.cbioportalCountThreshold = parseInt(
-                    s,
-                    10
-                );
-                this.controlsHandlers.onSelectAnnotateCBioPortal &&
-                    this.controlsHandlers.onSelectAnnotateCBioPortal(true);
-            }),
-            onChangeAnnotateCOSMICInputValue: action((s: string) => {
-                this.props.store.driverAnnotationSettings.cosmicCountThreshold = parseInt(
-                    s,
-                    10
-                );
-                this.controlsHandlers.onSelectAnnotateCOSMIC &&
-                    this.controlsHandlers.onSelectAnnotateCOSMIC(true);
             }),
             onSelectCustomDriverAnnotationBinary: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.customBinary = s;

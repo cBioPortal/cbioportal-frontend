@@ -644,18 +644,18 @@ d3.legend = function(
             });
         for (var i = 0; i < items.length; i++) {
             var k = items[i].key;
-            if (k.length > maxLabelLength) {
-                $('#' + k + 'legend_hover_rect').attr('title', k);
-                $('#' + k + 'legend_hover_rect').qtip({
-                    content: { attr: 'title' },
-                    style: { classes: 'qtip-light qtip-rounded' },
-                    position: {
-                        my: 'center left',
-                        at: 'center right',
-                        viewport: $(window),
-                    },
-                });
-            }
+            // if (k.length > maxLabelLength) {
+            //     $('#' + k + 'legend_hover_rect').attr('title', k);
+            //     $('#' + k + 'legend_hover_rect').qtip({
+            //         content: { attr: 'title' },
+            //         style: { classes: 'qtip-light qtip-rounded' },
+            //         position: {
+            //             my: 'center left',
+            //             at: 'center right',
+            //             viewport: $(window),
+            //         },
+            //     });
+            // }
         }
         li.on(
             'mouseout',

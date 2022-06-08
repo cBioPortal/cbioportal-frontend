@@ -85,7 +85,7 @@ export class ClinicalDataTab extends React.Component<
         invoke: async () => {
             let defaultColumns: Column<{ [id: string]: string }>[] = [
                 {
-                    ...this.getDefaultColumnConfig('patientId', 'Patient ID'),
+                    ...this.getDefaultColumnConfig('patientId', 'Patient'),
                     render: (data: { [id: string]: string }) => {
                         return (
                             <a
@@ -95,7 +95,15 @@ export class ClinicalDataTab extends React.Component<
                                 )}
                                 target="_blank"
                             >
-                                {data.patientId}
+                                {this.format(
+                                    data.PATIENT_DISPLAY_NAME &&
+                                        data.PATIENT_DISPLAY_NAME !== 'Unknown'
+                                        ? data.PATIENT_DISPLAY_NAME +
+                                              ' (' +
+                                              data.patientId +
+                                              ')'
+                                        : data.patientId
+                                )}
                             </a>
                         );
                     },

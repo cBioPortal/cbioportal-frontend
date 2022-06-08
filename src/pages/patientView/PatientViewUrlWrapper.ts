@@ -29,9 +29,9 @@ export default class PatientViewUrlWrapper extends URLWrapper<
 > {
     constructor(routing: ExtendedRouterStore) {
         super(routing, {
-            studyId: { isSessionProp: false },
-            caseId: { isSessionProp: false },
-            sampleId: { isSessionProp: false },
+            studyId: { isSessionProp: false, isHashedProp: true },
+            caseId: { isSessionProp: false, isHashedProp: true },
+            sampleId: { isSessionProp: false, isHashedProp: true },
             resourceUrl: { isSessionProp: false },
             genomicEvolutionSettings: {
                 isSessionProp: false,

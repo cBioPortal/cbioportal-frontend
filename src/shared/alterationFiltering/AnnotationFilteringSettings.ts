@@ -48,12 +48,6 @@ export interface IDriverAnnotationControlsState {
     annotateDriversHotspotsError?: boolean;
     annotateDriversHotspots?: boolean;
 
-    annotateDriversCBioPortal: boolean;
-    annotateCBioPortalInputValue: string;
-
-    annotateDriversCOSMIC?: boolean;
-    annotateCOSMICInputValue?: string;
-
     customDriverAnnotationBinaryMenuLabel?: string;
     customDriverAnnotationTiersMenuLabel?: string;
     customDriverAnnotationTiers?: string[];
@@ -66,10 +60,6 @@ export interface IDriverAnnotationControlsHandlers {
     onSelectDistinguishDrivers: (distinguish: boolean) => void;
     onSelectAnnotateOncoKb: (annotate: boolean) => void;
     onSelectAnnotateHotspots?: (annotate: boolean) => void;
-    onSelectAnnotateCBioPortal: (annotate: boolean) => void;
-    onSelectAnnotateCOSMIC?: (annotate: boolean) => void;
-    onChangeAnnotateCBioPortalInputValue?: (value: string) => void;
-    onChangeAnnotateCOSMICInputValue?: (value: string) => void;
     onSelectCustomDriverAnnotationBinary?: (s: boolean) => void;
     onSelectCustomDriverAnnotationTier?: (value: string, s: boolean) => void;
 }
@@ -212,22 +202,6 @@ export function buildDriverAnnotationControlsHandlers(
         onSelectAnnotateHotspots: action((s: boolean) => {
             driverAnnotationSettings.hotspots = s;
         }),
-        onSelectAnnotateCBioPortal: action((s: boolean) => {
-            driverAnnotationSettings.cbioportalCount = s;
-        }),
-        onSelectAnnotateCOSMIC: action((s: boolean) => {
-            driverAnnotationSettings.cosmicCount = s;
-        }),
-        onChangeAnnotateCBioPortalInputValue: action((s: string) => {
-            driverAnnotationSettings.cbioportalCountThreshold = parseInt(s, 10);
-            handlers.onSelectAnnotateCBioPortal &&
-                handlers.onSelectAnnotateCBioPortal(true);
-        }),
-        onChangeAnnotateCOSMICInputValue: action((s: string) => {
-            driverAnnotationSettings.cosmicCountThreshold = parseInt(s, 10);
-            handlers.onSelectAnnotateCOSMIC &&
-                handlers.onSelectAnnotateCOSMIC(true);
-        }),
         onSelectCustomDriverAnnotationBinary: action((s: boolean) => {
             driverAnnotationSettings.customBinary = s;
         }),
@@ -280,12 +254,6 @@ export function buildDriverAnnotationControlsState(
         },
         get annotateDriversHotspotsError() {
             return !!didHotspotFailInOncoprint;
-        },
-        get annotateDriversCBioPortal() {
-            return driverAnnotationSettings.cbioportalCount;
-        },
-        get annotateDriversCOSMIC() {
-            return driverAnnotationSettings.cosmicCount;
         },
         get includePutativeDrivers() {
             return driverAnnotationSettings.includeDriver;

@@ -218,27 +218,27 @@ describe('ExonUtils', () => {
                 transcriptInfo.proteinLength
             );
 
-            assert.equal(
+            assert.deepEqual(
                 formatExonLocation(exonInfo[0].start, 0),
-                'Nucleotide 1 of amino acid 1',
+                { nucleotideLocation: 1, aminoAcidLocation: 1 },
                 'First exon always starts at 1st nucleotide of amino acid 1'
             );
 
-            assert.equal(
+            assert.deepEqual(
                 formatExonLocation(exonInfo[1].start, 1),
-                'Nucleotide 2 of amino acid 5',
+                { nucleotideLocation: 2, aminoAcidLocation: 5 },
                 'Second exon start location should be 2nd nucleotide of amino acid 5th, because exonInfo[1].start is 4.333333333333333, which is actrually the first exon end position, start position for second exon should be the next nucleotide of first exon end position'
             );
 
-            assert.equal(
+            assert.deepEqual(
                 formatExonLocation(exonInfo[0].start + exonInfo[0].length),
-                'Nucleotide 1 of amino acid 5',
+                { nucleotideLocation: 1, aminoAcidLocation: 5 },
                 'First exon ends at 4.333333333333333, which should be 1st nucleotide of amino acid 5th. No index needed to calculate end position.'
             );
 
-            assert.equal(
+            assert.deepEqual(
                 formatExonLocation(exonInfo[2].start + exonInfo[2].length),
-                'Nucleotide 3 of amino acid 165',
+                { nucleotideLocation: 3, aminoAcidLocation: 165 },
                 'Third exon ends at 165, which should be 3rd nucleotide of amino acid 165th. No index needed to calculate end position.'
             );
         });
@@ -251,21 +251,21 @@ describe('ExonUtils', () => {
                 transcriptInfo.proteinLength
             );
 
-            assert.equal(
+            assert.deepEqual(
                 formatExonLength(exonInfo[0].length),
-                '4 amino acids and 1 nucleotide',
+                { aminoAcidLength: 4, nucleotideLength: 1 },
                 'First exon length is 4.333333333333333, which is 4 amino acids and 1 nucleotide'
             );
 
-            assert.equal(
+            assert.deepEqual(
                 formatExonLength(exonInfo[1].length),
-                '76 amino acids',
+                { aminoAcidLength: 76 },
                 'Second exon length is 76, which is 76 nucleotide'
             );
 
-            assert.equal(
+            assert.deepEqual(
                 formatExonLength(exonInfo[2].length),
-                '84 amino acids and 2 nucleotides',
+                { aminoAcidLength: 84, nucleotideLength: 2 },
                 'Third exon length is 84.66666666666667, which is 84 amino acids and 2 nucleotide'
             );
         });

@@ -192,10 +192,12 @@ export function getComparisonParamsForTable(
             return {
                 hugoGeneSymbols,
             };
-        case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE:
-        case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE:
         case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
+        case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE:
+        case ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE:
         case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+        case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE:
+        case ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE:
             return {
                 treatmentUniqueKeys: selectedRowsKeys.slice(), // slice() gets rid of mobx wrapping which messes up API calls
             };

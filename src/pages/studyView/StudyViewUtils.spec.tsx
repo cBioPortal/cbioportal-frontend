@@ -1334,6 +1334,20 @@ describe('StudyViewUtils', () => {
             { value: 'REDACTED' },
         ] as DataFilterValue[];
 
+        const filterDiscreteValuesWithEndOpen = [
+            { start: 10, end: 10 },
+            { start: 20, end: 20 },
+            { start: 30, end: 30 },
+            { start: 40, end: 40 },
+            { start: 50 },
+        ] as DataFilterValue[];
+
+        const filterDiscreteValuesWithEndOpenAndSpecialValues = [
+            ...filterDiscreteValuesWithEndOpen,
+            { value: 'NA' },
+            { value: 'REDACTED' },
+        ] as DataFilterValue[];
+
         const filterValuesWithSpecialValuesOnly = [
             { value: 'NA' },
             { value: 'REDACTED' },
@@ -1433,6 +1447,24 @@ describe('StudyViewUtils', () => {
                 true
             );
             assert.equal(value, '> 10, NA, REDACTED');
+        });
+
+        it('generates display value for filter values with discrete start closed, end open', () => {
+            const value = intervalFiltersDisplayValue(
+                filterDiscreteValuesWithEndOpen,
+                () => {},
+                true
+            );
+            assert.equal(value, '≥ 10');
+        });
+
+        it('generates display value for filter values with discrete start closed, end open, with special values', () => {
+            const value = intervalFiltersDisplayValue(
+                filterDiscreteValuesWithEndOpenAndSpecialValues,
+                () => {},
+                true
+            );
+            assert.equal(value, '≥ 10, NA, REDACTED');
         });
 
         it('generates display value for filter values with special values only', () => {

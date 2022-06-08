@@ -581,6 +581,15 @@ export class StudySummaryTab extends React.Component<
                 };
                 break;
             }
+            case ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE: {
+                props.filters = this.store.sampleTreatmentTargetFiltersAsStrings;
+                props.promise = this.store.sampleTreatmentTarget;
+                props.onValueSelection = this.store.onTreatmentSelection;
+                props.onResetSelection = () => {
+                    this.store.clearSampleTreatmentTargetFilters();
+                };
+                break;
+            }
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
                 props.filters = this.store.patientTreatmentFiltersAsStrings;
                 props.promise = this.store.patientTreatments;
@@ -596,6 +605,15 @@ export class StudySummaryTab extends React.Component<
                 props.onValueSelection = this.store.onTreatmentSelection;
                 props.onResetSelection = () => {
                     this.store.clearPatientTreatmentGroupFilters();
+                };
+                break;
+            }
+            case ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE: {
+                props.filters = this.store.patientTreatmentTargetFiltersAsStrings;
+                props.promise = this.store.patientTreatmentTarget;
+                props.onValueSelection = this.store.onTreatmentSelection;
+                props.onResetSelection = () => {
+                    this.store.clearPatientTreatmentTargetFilters();
                 };
                 break;
             }

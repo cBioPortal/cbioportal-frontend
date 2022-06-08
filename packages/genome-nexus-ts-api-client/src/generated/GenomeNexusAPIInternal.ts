@@ -129,6 +129,16 @@ export type CountByTumorType = {
         'variantCount': number
 
 };
+export type CuriousCases = {
+    'comment': string
+
+        'genomicLocation': string
+
+        'hugoGeneSymbol': string
+
+        'pubmedIds': Array < number >
+
+};
 export type Dbsnp = {
     '_class': string
 
@@ -1401,6 +1411,82 @@ export default class GenomeNexusAPIInternal {
                 return response.body;
             });
         };
+    fetchCuriousCasesGETURL(parameters: {
+        'genomicLocation': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/curious_cases/{genomicLocation}';
+
+        path = path.replace('{genomicLocation}', parameters['genomicLocation'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Curious Cases info by a genomic location
+     * @method
+     * @name GenomeNexusAPIInternal#fetchCuriousCasesGET
+     * @param {string} genomicLocation - Genomic location, for example: 7,116411883,116411905,TTCTTTCTCTCTGTTTTAAGATC,-
+     */
+    fetchCuriousCasesGETWithHttpInfo(parameters: {
+        'genomicLocation': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/curious_cases/{genomicLocation}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{genomicLocation}', parameters['genomicLocation'] + '');
+
+            if (parameters['genomicLocation'] === undefined) {
+                reject(new Error('Missing required  parameter: genomicLocation'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves Curious Cases info by a genomic location
+     * @method
+     * @name GenomeNexusAPIInternal#fetchCuriousCasesGET
+     * @param {string} genomicLocation - Genomic location, for example: 7,116411883,116411905,TTCTTTCTCTCTGTTTTAAGATC,-
+     */
+    fetchCuriousCasesGET(parameters: {
+        'genomicLocation': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < CuriousCases > {
+        return this.fetchCuriousCasesGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     postMutationAssessorAnnotationURL(parameters: {
         'variants': Array < string > ,
         $queryParameters ? : any

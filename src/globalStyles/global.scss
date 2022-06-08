@@ -664,6 +664,10 @@ h6.blackHeader {
     white-space: nowrap;
 }
 
+.nomouse {
+    pointer-events: none;
+}
+
 h2.divider {
     margin: 40px 0 !important;
     padding-bottom: 10px;

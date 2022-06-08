@@ -4,7 +4,7 @@ import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import _ from 'lodash';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
-import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
+import { GROUP_BY_NONE } from './/VAFChartControls';
 import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
 
 const MIN_LOG_ARG = 0.001;

@@ -325,18 +325,6 @@ export default class OncoprintControls extends React.Component<
                         !this.props.state.annotateDriversHotspots
                     );
                 break;
-            case EVENT_KEY.annotateCBioPortal:
-                this.props.handlers.onSelectAnnotateCBioPortal &&
-                    this.props.handlers.onSelectAnnotateCBioPortal(
-                        !this.props.state.annotateDriversCBioPortal
-                    );
-                break;
-            case EVENT_KEY.annotateCOSMIC:
-                this.props.handlers.onSelectAnnotateCOSMIC &&
-                    this.props.handlers.onSelectAnnotateCOSMIC(
-                        !this.props.state.annotateDriversCOSMIC
-                    );
-                break;
             case EVENT_KEY.hidePutativePassengers:
                 this.props.handlers.onSelectHideVUS &&
                     this.props.handlers.onSelectHideVUS(
@@ -440,24 +428,6 @@ export default class OncoprintControls extends React.Component<
             oql.query as SingleGeneQuery[],
             query => query.gene.toUpperCase() in foundGenes
         ); // all genes valid
-    }
-
-    @autobind
-    private onType(event: React.ChangeEvent<HTMLTextAreaElement>) {
-        switch ((event.target as HTMLTextAreaElement).name) {
-            case EVENT_KEY.annotateCBioPortalInput:
-                this.props.handlers.onChangeAnnotateCBioPortalInputValue &&
-                    this.props.handlers.onChangeAnnotateCBioPortalInputValue(
-                        event.target.value
-                    );
-                break;
-            case EVENT_KEY.annotateCOSMICInput:
-                this.props.handlers.onChangeAnnotateCOSMICInputValue &&
-                    this.props.handlers.onChangeAnnotateCOSMICInputValue(
-                        event.target.value
-                    );
-                break;
-        }
     }
 
     @computed get heatmapProfileOptions() {

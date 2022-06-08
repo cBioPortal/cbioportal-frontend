@@ -1,5 +1,13 @@
 import { scaleLinear, scaleLog } from 'd3-scale';
 import _ from 'lodash';
+import { getSampleViewUrl, getStudySummaryUrl } from 'shared/api/urls';
+import * as React from 'react';
+import {
+    ClinicalViolinPlotBoxData,
+    ClinicalViolinPlotIndividualPoint,
+} from 'cbioportal-ts-api-client';
+import { toFixedWithoutTrailingZeros } from 'shared/lib/FormatUtils';
+import joinJsx from 'shared/lib/joinJsx';
 
 export function getDataX(
     violinX: number,
@@ -69,6 +77,72 @@ export function getTickValues(
 
     ret = _.sortBy(_.uniq(ret));
     return ret;
+}
+
+export function renderTooltipForBoxPlot(
+    boxData: ClinicalViolinPlotBoxData,
+    logScale: boolean
+) {
+    const properties: Partial<
+        { [prop in keyof ClinicalViolinPlotBoxData]: string }
+    > = {
+        median: 'Median',
+        q1: 'Quartile 1',
+        q3: 'Quartile 3',
+    };
+    return (
+        <>
+            {joinJsx(
+                _.map(
+                    properties,
+                    (label: string, prop: keyof ClinicalViolinPlotBoxData) => {
+                        return (
+                            <>
+                                <b>{label}:</b>
+                                {` `}
+                                <span>
+                                    {toFixedWithoutTrailingZeros(
+                                        logScale
+                                            ? Math.exp(boxData[prop]) - 1
+                                            : boxData[prop],
+                                        2
+                                    )}
+                                </span>
+                            </>
+                        );
+                    }
+                ),
+                <br />
+            )}
+        </>
+    );
+}
+
+export function renderTooltipForPoint(
+    point: ClinicalViolinPlotIndividualPoint,
+    violinColumnName: string,
+    logScale: boolean
+) {
+    return (
+        <>
+            <b>Study ID:</b>
+            {` `}
+            <a href={getStudySummaryUrl(point.studyId)}>{point.studyId}</a>
+            <br />
+            <b>Sample ID:</b>
+            {` `}
+            <a href={getSampleViewUrl(point.studyId, point.sampleId)}>
+                {point.sampleId}
+            </a>
+            <br />
+            <b>{violinColumnName}:</b>
+            {` `}
+            {toFixedWithoutTrailingZeros(
+                logScale ? Math.exp(point.value) - 1 : point.value,
+                2
+            )}
+        </>
+    );
 }
 
 export const violinPlotXPadding = 5;

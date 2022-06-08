@@ -16,21 +16,19 @@ describe('Quick Search', () => {
         $('div=e.g. Lung, EGFR, TCGA-OR-A5J2').waitForExist();
         $('div=e.g. Lung, EGFR, TCGA-OR-A5J2').click();
         // "BRAF" is nice because it matches studies, genes, patients, and samples
-        $('input').setValue('BRAF');
+        $('input').setValue('Ad');
         $('div=Click on a study to open its summary').waitForExist();
         $('div=Click on a patient to see a summary').waitForExist();
         $('div=Click on a sample to open its summary').waitForExist();
     });
 
     it('should give results for studies', () => {
-        $('strong=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)').click();
-        $(
-            'h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-        ).waitForExist();
+        $('strong=Adrenocortical Carcinoma (TCGA, Firehose Legacy)').click();
+        $('h3=Adrenocortical Carcinoma (TCGA, Firehose Legacy)').waitForExist();
 
         assert.equal(
             $(
-                'h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
+                'h3=Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
             ).isDisplayed(),
             true,
             'modal is visible'
@@ -38,33 +36,37 @@ describe('Quick Search', () => {
     });
 
     it('should give results for genes', () => {
-        $('strong=25 more genes (click to load 20 more)').click();
-        $('strong=BRAF_PS314').waitForExist();
-        $('strong=BRAF_PS314').click();
-        $('a=BRAF_PS314').waitForExist({ timeout: 60000 });
+        $('strong=444 more genes (click to load 20 more)').click();
+        $('strong=ADAM12').waitForExist();
+        $('strong=ADAM15').click();
+        $('a=ADAM15').waitForExist({ timeout: 60000 });
 
-        assert.equal($('a=BRAF_PS314').isDisplayed(), true, 'modal is visible');
+        assert.equal(
+            $('a=ADAM15').isDisplayed(),
+            true,
+            'we navigated successfully to gene query'
+        );
     });
 
     it('should give results for patients', () => {
-        $('strong=Mel-BRAFi-03').click();
-        $('a=Mel-BRAFi-03').waitForExist();
+        $('strong=AdCC11T').click();
+        $('a=AdCC11T').waitForExist();
 
         assert.equal(
-            $('a=Mel-BRAFi-03').isDisplayed(),
+            $('a=AdCC11T').isDisplayed(),
             true,
-            'modal is visible'
+            'navigated to patient'
         );
     });
 
     it('should give results for samples', () => {
-        $('strong=Mel_BRAFi_02_PRE').click();
-        $('a=Mel_BRAFi_02_PRE').waitForExist();
+        $('strong=AdCC11T').click();
+        $('a=AdCC11T').waitForExist();
 
         assert.equal(
-            $('a=Mel_BRAFi_02_PRE').isDisplayed(),
+            $('a=AdCC11T').isDisplayed(),
             true,
-            'modal is visible'
+            'navigated to patient'
         );
     });
 });

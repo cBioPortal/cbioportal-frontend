@@ -18,9 +18,9 @@ import { GeneFilterOption } from './GeneFilterMenu';
 import { isFusion } from '../../../shared/lib/MutationUtils';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 import WindowStore from '../../../shared/components/window/WindowStore';
-import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
-import TimelineWrapper from 'pages/patientView/timeline2/TimelineWrapper';
-import VAFChartWrapperStore from '../timeline2/VAFChartWrapperStore';
+import VAFChartWrapper from 'pages/patientView/timeline/VAFChartWrapper';
+import TimelineWrapper from 'pages/patientView/timeline/TimelineWrapper';
+import VAFChartWrapperStore from '../timeline/VAFChartWrapperStore';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import _ from 'lodash';
 import {

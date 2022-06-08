@@ -18,7 +18,7 @@ import {
     yValueScaleFunction,
     splitMutationsBySampleGroup,
 } from './VAFChartUtils';
-import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
+import { GROUP_BY_NONE } from './/VAFChartControls';
 
 import _ from 'lodash';
 import { assertDeepEqualInAnyOrder } from 'shared/lib/SpecUtils';

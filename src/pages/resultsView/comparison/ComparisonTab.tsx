@@ -32,10 +32,10 @@ import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments
 import AlterationEnrichments from 'pages/groupComparison/AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
-import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
 import styles from 'pages/resultsView/comparison/styles.module.scss';
 import { getServerConfig } from 'config/config';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
+import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;

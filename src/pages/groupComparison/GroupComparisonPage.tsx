@@ -38,11 +38,15 @@ import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
 import GenericAssayEnrichments from './GenericAssayEnrichments';
 import _ from 'lodash';
-import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
 import { getServerConfig } from 'config/config';
+import {
+    buildCustomTabs,
+    prepareCustomTabConfigurations,
+} from 'shared/lib/customTabs/customTabHelpers';
+import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -94,15 +98,6 @@ export default class GroupComparisonPage extends React.Component<
         return GENOMIC_ALTERATIONS_TAB_NAME;
     }
 
-    @autobind
-    private getTabHref(tabId: string) {
-        return URL.format({
-            pathname: tabId,
-            query: this.props.routing.query,
-            hash: this.props.routing.location.hash,
-        });
-    }
-
     @computed get selectedGroupsKey() {
         // for components which should remount whenever selected groups change
         const selectedGroups = this.store._selectedGroups.result || [];
@@ -113,6 +108,13 @@ export default class GroupComparisonPage extends React.Component<
         this.queryReaction && this.queryReaction();
         this.store && this.store.destroy();
         this.urlWrapper.destroy();
+    }
+
+    @computed get customTabs() {
+        return prepareCustomTabConfigurations(
+            getServerConfig().custom_tabs,
+            'COMPARISON_PAGE'
+        );
     }
 
     readonly tabs = MakeMobxView({
@@ -135,7 +137,7 @@ export default class GroupComparisonPage extends React.Component<
                     activeTabId={this.urlWrapper.tabId}
                     onTabClick={this.urlWrapper.setTabId}
                     className="primaryTabs mainTabs"
-                    getTabHref={this.getTabHref}
+                    hrefRoot={buildCBioPortalPageUrl('comparison')}
                 >
                     <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
                         <Overlap
@@ -269,6 +271,8 @@ export default class GroupComparisonPage extends React.Component<
                                 </MSKTab>
                             );
                         })}
+
+                    {buildCustomTabs(this.customTabs)}
                 </MSKTabs>
             );
         },

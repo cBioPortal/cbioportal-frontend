@@ -9,6 +9,7 @@ import {
     IReference,
     IClinicalData,
     EvidenceLevel,
+    IClinicalTrial,
 } from '../../../shared/model/TherapyRecommendation';
 import { computed, makeObservable, observable } from 'mobx';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
@@ -68,6 +69,7 @@ export type ITherapyRecommendationProps = {
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
     isDisabled: boolean;
+    clinicalTrialClipboard: IClinicalTrial[];
 };
 
 export type ITherapyRecommendationState = {
@@ -76,7 +78,7 @@ export type ITherapyRecommendationState = {
 
 enum ColumnKey {
     PRIO = 'Prio',
-    THERAPY = 'Therapy',
+    THERAPY = 'Therapy / Trials',
     COMMENT = 'Comment',
     REASONING = 'Reasoning',
     REFERENCES = 'References',
@@ -254,29 +256,94 @@ export default class MtbTherapyRecommendationTable extends React.Component<
         {
             name: ColumnKey.THERAPY,
             render: (therapyRecommendation: ITherapyRecommendation) => (
-                <If
-                    condition={
-                        therapyRecommendation.treatments &&
-                        therapyRecommendation.treatments.length > 0
-                    }
-                >
-                    <div>
-                        <span>
-                            {therapyRecommendation.treatments.map(
-                                (treatment: ITreatment) => (
-                                    <div>
-                                        <img
-                                            src={require('../../../globalStyles/images/drug.png')}
-                                            style={{ width: 18, marginTop: -5 }}
-                                            alt="drug icon"
-                                        />
-                                        <b>{treatment.name}</b>
-                                    </div>
-                                )
-                            )}
-                        </span>
-                    </div>
-                </If>
+                <div>
+                    <If
+                        condition={
+                            therapyRecommendation.treatments &&
+                            therapyRecommendation.treatments.length > 0
+                        }
+                    >
+                        <div>
+                            <span>
+                                {therapyRecommendation.treatments.map(
+                                    (treatment: ITreatment) => (
+                                        <div>
+                                            <DefaultTooltip
+                                                placement="bottomLeft"
+                                                trigger={['hover', 'focus']}
+                                                overlay={this.tooltipTreatmentContent(
+                                                    treatment
+                                                )}
+                                                destroyTooltipOnHide={false}
+                                                onPopupAlign={
+                                                    placeArrowBottomLeft
+                                                }
+                                            >
+                                                <i
+                                                    className={
+                                                        'fa fa-medkit ' +
+                                                        styles.icon
+                                                    }
+                                                ></i>
+                                            </DefaultTooltip>
+                                            <span style={{ marginLeft: 5 }}>
+                                                <b>{treatment.name}</b>
+                                            </span>
+                                        </div>
+                                    )
+                                )}
+                            </span>
+                        </div>
+                    </If>
+                    <If
+                        condition={
+                            therapyRecommendation.clinicalTrials &&
+                            therapyRecommendation.clinicalTrials.length > 0
+                        }
+                    >
+                        <div>
+                            <span>
+                                {therapyRecommendation.clinicalTrials.map(
+                                    (clinicalTrial: IClinicalTrial) => (
+                                        <div>
+                                            <DefaultTooltip
+                                                placement="bottomLeft"
+                                                trigger={['hover', 'focus']}
+                                                overlay={this.tooltipClinicalTrialContent(
+                                                    clinicalTrial
+                                                )}
+                                                destroyTooltipOnHide={false}
+                                                onPopupAlign={
+                                                    placeArrowBottomLeft
+                                                }
+                                            >
+                                                <i
+                                                    className={
+                                                        'fa fa-stethoscope ' +
+                                                        styles.icon
+                                                    }
+                                                ></i>
+                                            </DefaultTooltip>
+                                            <span style={{ marginLeft: 5 }}>
+                                                <b>
+                                                    <a
+                                                        href={
+                                                            'https://www.clinicaltrials.gov/ct2/show/' +
+                                                            clinicalTrial.id
+                                                        }
+                                                        target={'_blank'}
+                                                    >
+                                                        {clinicalTrial.id}
+                                                    </a>
+                                                </b>
+                                            </span>
+                                        </div>
+                                    )
+                                )}
+                            </span>
+                        </div>
+                    </If>
+                </div>
             ),
             // width: this.columnWidths[ColumnKey.THERAPY]
         },
@@ -392,9 +459,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             //onPopupAlign={placeArrowBottomLeft}
                         >
                             <i
-                                className={
-                                    'fa fa-user-circle ' + styles.editIcon
-                                }
+                                className={'fa fa-user-md ' + styles.editIcon}
                             ></i>
                         </DefaultTooltip>
                     </span>
@@ -660,6 +725,32 @@ export default class MtbTherapyRecommendationTable extends React.Component<
         );
     }
 
+    private tooltipTreatmentContent(treatment: ITreatment) {
+        return (
+            <div className={styles.tooltip}>
+                <div>
+                    <div>
+                        <b>{treatment.name}</b> (NCIT: {treatment.ncit_code})
+                    </div>
+                    <div>Synonyms: {treatment.synonyms || '-'}</div>
+                </div>
+            </div>
+        );
+    }
+
+    private tooltipClinicalTrialContent(clinicalTrial: IClinicalTrial) {
+        return (
+            <div className={styles.tooltip}>
+                <div>
+                    <div>
+                        <b>{clinicalTrial.id}</b>
+                    </div>
+                    <div>{clinicalTrial.name}</div>
+                </div>
+            </div>
+        );
+    }
+
     private getTextForClinicalDataItem(item: IClinicalData): string {
         let text = '';
         if (item.attributeName) text += item.attributeName;
@@ -741,6 +832,9 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                         }}
                         title="Edit therapy recommendation"
                         userEmailAddress={getServerConfig().user_email_address}
+                        clinicalTrialClipboard={
+                            this.props.clinicalTrialClipboard
+                        }
                     />
                 )}
                 {this.showOncoKBForm && (
