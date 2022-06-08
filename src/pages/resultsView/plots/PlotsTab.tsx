@@ -271,11 +271,11 @@ const mutationCountByOptions = [
     { value: MutationCountBy.DriverVsVUS, label: 'Driver vs VUS' },
 ];
 const structuralVariantCountByOptions = [
-    { value: StructuralVariantCountBy.VariantType, label: 'Variant Type' },
     {
         value: StructuralVariantCountBy.MutatedVsWildType,
         label: 'Variant vs No Variant',
     },
+    { value: StructuralVariantCountBy.VariantType, label: 'Variant Type' },
 ];
 
 const discreteVsDiscretePlotTypeOptions = [
