@@ -116,9 +116,15 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                     samples![i].clinicalData[k].clinicalAttributeId ==
                         'CANCER_TYPE'
                 ) {
-                    this.tumorEntityDefault.push(
-                        samples![i].clinicalData[k].value
-                    );
+                    if (
+                        !this.tumorEntityDefault.includes(
+                            samples![i].clinicalData[k].value
+                        ) &&
+                        samples![i].clinicalData[k].value !== ''
+                    )
+                        this.tumorEntityDefault.push(
+                            samples![i].clinicalData[k].value
+                        );
                 }
             }
         }
