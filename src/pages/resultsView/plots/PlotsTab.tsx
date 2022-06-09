@@ -900,7 +900,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             get structuralVariantCountBy() {
                 if (this._structuralVariantCountBy === undefined) {
                     // default
-                    return StructuralVariantCountBy.VariantType;
+                    return StructuralVariantCountBy.MutatedVsWildType;
                 } else {
                     return this._structuralVariantCountBy;
                 }
