@@ -241,10 +241,10 @@ export function generateAnnotateStructuralVariantQuery(
     return ({
         id: id,
         geneA: {
-            hugoSymbol: genes[0],
+            entrezGeneId: genes[0],
         },
         geneB: {
-            hugoSymbol: genes[1] || genes[0],
+            entrezGeneId: genes[1] || genes[0],
         },
         structuralVariantType: structuralVariantType,
         functionalFusion: genes.length > 1, // if its only one gene, it's intagenic and thus not a functional fusion
