@@ -11,7 +11,7 @@ import { annotationSortMethod } from '../column/Annotation';
 import { gnomadSortMethod } from '../column/Gnomad';
 import { clinvarSortMethod } from '../column/ClinvarInterpretation';
 import MutationType from '../column/MutationType';
-import MutationStatus from '../column/MutationStatus';
+import { MutationStatus } from '../column/MutationStatus';
 import { dbsnpSortMethod } from '../column/Dbsnp';
 import { hgvscSortMethod } from '../column/Hgvsc';
 import { hgvsgSortMethod } from '../column/Hgvsg';
