@@ -50,7 +50,7 @@ describe('MutationMapperUtils', () => {
                 createMutation({ myNamespace: {} }),
             ] as Mutation[];
             const columnConfig = buildNamespaceColumnConfig(mutations);
-            assert.deepEqual(columnConfig, { myNamespace: {} });
+            assert.deepEqual(columnConfig, {});
         });
 
         it('derives namespace config from mutation data - no namespace data', () => {
