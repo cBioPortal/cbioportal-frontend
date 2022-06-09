@@ -167,7 +167,7 @@ export default class AnnotationColumnFormatter {
             uniqueSampleKeyToTumorType![
                 structuralVariantData[0].uniqueSampleKey
             ],
-            structuralVariantData[0].variantClass.toUpperCase() as any
+            'FUSION'
         );
 
         if (oncoKbData.indicatorMap[id]) {
