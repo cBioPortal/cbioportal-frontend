@@ -301,8 +301,8 @@ export function performSearchSingle(
 /**
  * Add clause to query
  * - add, or do nothing when clause already exists
- * - remove added phrases from existing query
- * - remove inverse clause from query
+ * - remove new phrases from existing query
+ * - remove inverse clause phrases from query
  *   (and-clause is 'inverse' or 'opposite' of not-clause)
  */
 export function addClause(
@@ -315,17 +315,18 @@ export function addClause(
         return result;
     }
 
-    let multiplePhrases = toAdd.getPhrases().length > 1;
-    if (multiplePhrases) {
-        result = removeClause(toAdd, query);
+    for (const p of toAdd.getPhrases()) {
+        result = removePhrase(p, query);
     }
-
-    result.push(toAdd);
 
     const inverseClause = findInverseClause(toAdd, result);
     if (inverseClause) {
-        result = removeClause(inverseClause, result);
+        for (const p of inverseClause.getPhrases()) {
+            result = removePhrase(p, result);
+        }
     }
+
+    result.push(toAdd);
 
     return result;
 }
@@ -341,28 +342,42 @@ export function removeClause(
 ): ISearchClause[] {
     let result = [...query];
     if (toRemove.isAnd()) {
-        toRemove.getPhrases().forEach(removePhrase);
+        const andClauses = query.filter(c => c.isAnd());
+        toRemove
+            .getPhrases()
+            .forEach(p => (result = removePhrase(p, andClauses)));
     } else {
         result = result.filter(r => !r.equals(toRemove));
     }
     return result;
+}
 
-    function removePhrase(phrase: Phrase) {
-        const containingClause = result.find(
-            r => r.isAnd() && r.contains(phrase)
-        );
-        if (!containingClause) {
-            return;
-        }
-        _.remove(result, containingClause);
-        const multiplePhrases = containingClause.getPhrases().length > 1;
-        if (multiplePhrases) {
-            const otherPhrases = containingClause
-                .getPhrases()
-                .filter(p => !areEqualPhrases(p, phrase));
-            result.push(new AndSearchClause(otherPhrases));
-        }
+/**
+ * Remove phrase from query
+ * - When removed phrase results in empty clause, the clause is also removed
+ * - When phrase is removed from clause with multiple phrases, a new clause is added without the phrase
+ *
+ * Note: function expects phrase to exist only once
+ */
+export function removePhrase(
+    phrase: Phrase,
+    query: ISearchClause[]
+): ISearchClause[] {
+    let result = [...query];
+
+    const containingClause = result.find(r => r.contains(phrase));
+    if (!containingClause) {
+        return result;
     }
+    _.remove(result, containingClause);
+    const multiplePhrases = containingClause.getPhrases().length > 1;
+    if (multiplePhrases) {
+        const otherPhrases = containingClause
+            .getPhrases()
+            .filter(p => !areEqualPhrases(p, phrase));
+        result.push(new AndSearchClause(otherPhrases));
+    }
+    return result;
 }
 
 /**

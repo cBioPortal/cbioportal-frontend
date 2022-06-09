@@ -1,12 +1,15 @@
 import {
     addClause,
     parseSearchQuery,
-    removeClause,
+    removePhrase,
     searchFilters,
 } from 'shared/lib/textQueryUtils';
 import * as React from 'react';
 import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredSearch';
-import { ISearchClause } from 'shared/components/query/SearchClause';
+import {
+    ISearchClause,
+    QueryUpdate,
+} from 'shared/components/query/SearchClause';
 import { FunctionComponent } from 'react';
 
 export type AutosuggestStudySearchProps = {
@@ -21,8 +24,7 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
         <FilteredSearch
             query={props.parsedQuery}
             filterConfig={searchFilters}
-            onAdd={handleAdd}
-            onRemove={handleRemove}
+            onChange={handleChange}
             onType={handleTyping}
         />
     );
@@ -32,24 +34,17 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
         return props.onSearch(parsed);
     }
 
-    function handleAdd(toAdd: ISearchClause[]): void {
-        if (!toAdd.length) {
-            return;
-        }
+    function handleChange(update: QueryUpdate) {
         let result = props.parsedQuery;
-        for (const clause of toAdd) {
-            result = addClause(clause, result);
+        if (update.toAdd) {
+            for (const clause of update.toAdd) {
+                result = addClause(clause, result);
+            }
         }
-        props.onSearch(result);
-    }
-
-    function handleRemove(toRemove: ISearchClause[]): void {
-        if (!toRemove.length) {
-            return;
-        }
-        let result = props.parsedQuery;
-        for (const clause of toRemove) {
-            result = removeClause(clause, result);
+        if (update.toRemove) {
+            for (const p of update.toRemove) {
+                result = removePhrase(p, result);
+            }
         }
         props.onSearch(result);
     }

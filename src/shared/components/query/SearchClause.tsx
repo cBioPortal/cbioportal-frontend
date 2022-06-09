@@ -4,25 +4,6 @@ import {
 } from 'shared/lib/textQueryUtils';
 import _ from 'lodash';
 
-/**
- * Phrase string and associated fields
- */
-export type Phrase = {
-    /**
-     * Phrase as shown in search box, including its prefix
-     */
-    readonly textRepresentation: string;
-
-    readonly phrase: string;
-
-    readonly fields: CancerTreeNodeFields[];
-};
-
-export type SearchResult = {
-    match: boolean;
-    forced: boolean;
-};
-
 export interface ISearchClause {
     isNot(): boolean;
     isAnd(): boolean;
@@ -50,6 +31,7 @@ export interface ISearchClause {
  */
 export class NotSearchClause implements ISearchClause {
     private readonly phrase: Phrase;
+    private readonly type = 'not';
 
     constructor(phrase: Phrase) {
         this.phrase = phrase;
@@ -95,6 +77,7 @@ export class NotSearchClause implements ISearchClause {
  */
 export class AndSearchClause implements ISearchClause {
     private readonly phrases: Phrase[];
+    private readonly type = 'and';
 
     constructor(phrases: Phrase[]) {
         this.phrases = phrases;
@@ -154,3 +137,32 @@ export class AndSearchClause implements ISearchClause {
         return containsAll;
     }
 }
+
+/**
+ * Phrase string and associated fields
+ */
+export type Phrase = {
+    /**
+     * Phrase as shown in search box, including its prefix
+     */
+    readonly textRepresentation: string;
+
+    readonly phrase: string;
+
+    readonly fields: CancerTreeNodeFields[];
+};
+
+export type SearchResult = {
+    match: boolean;
+    forced: boolean;
+};
+
+export type QueryUpdate = {
+    toAdd?: ISearchClause[];
+
+    /**
+     * Remove phrases, ignoring the type of their containing Clause
+     * to prevent conflicting clauses
+     */
+    toRemove?: Phrase[];
+};

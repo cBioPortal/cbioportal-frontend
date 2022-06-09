@@ -6,7 +6,10 @@ import {
 } from 'shared/lib/textQueryUtils';
 import { FilteredSearchDropdownForm } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
-import { ISearchClause } from 'shared/components/query/SearchClause';
+import {
+    ISearchClause,
+    QueryUpdate,
+} from 'shared/components/query/SearchClause';
 
 export type FilteredSearchProps = {
     /**
@@ -20,14 +23,9 @@ export type FilteredSearchProps = {
     filterConfig: CancerTreeSearchFilter[];
 
     /**
-     * Remove from query
+     * Input from dropdown form
      */
-    onAdd: (clauses: ISearchClause[]) => void;
-
-    /**
-     * Add to query
-     */
-    onRemove: (clauses: ISearchClause[]) => void;
+    onChange: (change: QueryUpdate) => void;
 
     /**
      * Input from search box
@@ -56,8 +54,7 @@ export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
             <FilteredSearchDropdownForm
                 query={props.query}
                 filterConfig={props.filterConfig}
-                onAdd={props.onAdd}
-                onRemove={props.onRemove}
+                onChange={props.onChange}
             />
         </div>
     );
