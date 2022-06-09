@@ -298,6 +298,13 @@ export function performSearchSingle(
     return { match, forced };
 }
 
+/**
+ * Add clause to query
+ * - add, or do nothing when clause already exists
+ * - remove added phrases from existing query
+ * - remove 'inverse' clause from query
+ *   (and-clause is inverse or opposite of not-clause)
+ */
 export function addClause(
     toAdd: ISearchClause,
     query: ISearchClause[]
@@ -323,6 +330,11 @@ export function addClause(
     return result;
 }
 
+/**
+ * Remove clause from query
+ * - When and-clause: remove all phrases from and-clauses in query
+ * - When not-clause: remove not-clause from query
+ */
 export function removeClause(
     toRemove: ISearchClause,
     query: ISearchClause[]
@@ -354,8 +366,8 @@ export function removeClause(
 }
 
 /**
- * Find inverse clause which contains phrase of needle
- * And-clause is 'inverse' of not-clause
+ * Find 'inverse' clause which contains phrase of needle
+ * And-clause is 'inverse' or 'opposite' of not-clause
  */
 export function findInverseClause(
     needle: ISearchClause,
