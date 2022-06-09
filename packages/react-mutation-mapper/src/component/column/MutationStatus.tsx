@@ -12,10 +12,7 @@ type MutationStatusProps = {
     styleMap?: { [mutationStatus: string]: React.CSSProperties };
 };
 
-export default class MutationStatus extends React.Component<
-    MutationStatusProps,
-    {}
-> {
+export class MutationStatus extends React.Component<MutationStatusProps, {}> {
     public static defaultProps: Partial<MutationStatusProps> = {
         enableTooltip: true,
     };
