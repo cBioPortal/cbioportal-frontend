@@ -7,7 +7,7 @@ import Oncoprint, {
     IHeatmapTrackSpec,
 } from 'shared/components/oncoprint/Oncoprint';
 import autobind from 'autobind-decorator';
-import OncoprintJS, { InitParams } from 'oncoprintjs';
+import { OncoprintJS, InitParams } from 'oncoprintjs';
 import _ from 'lodash';
 import { IStringAxisData } from 'pages/resultsView/plots/PlotsTabUtils';
 
