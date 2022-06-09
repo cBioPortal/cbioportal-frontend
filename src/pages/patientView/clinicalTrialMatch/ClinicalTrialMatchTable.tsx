@@ -2,7 +2,6 @@ import * as React from 'react';
 import { observable } from 'mobx';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { observer } from 'mobx-react';
-
 import { Link } from 'react-router-dom';
 import { Collapse } from 'react-bootstrap';
 import { StudyListEntry } from './utils/StudyList';
@@ -214,23 +213,32 @@ export class ClinicalTrialMatchTable extends React.Component<
                 <div>
                     {trial.status}
                     <div>
-                        <Button
-                            type="button"
-                            className={'btn btn-default'}
-                            disabled={!this.props.mtbTabAvailable}
-                            onClick={() =>
-                                this.props.store.clinicalTrialClipboard.push({
-                                    id: trial.nct,
-                                    name: trial.title,
-                                } as IClinicalTrial)
-                            }
+                        <DefaultTooltip
+                            overlay={'Copied study to clipboard'}
+                            trigger={['click']}
+                            destroyTooltipOnHide={true}
+                            placement={'bottom'}
                         >
-                            <i
-                                className={`fa fa-clipboard`}
-                                aria-hidden="true"
-                            ></i>{' '}
-                            MTB Clipboard
-                        </Button>
+                            <Button
+                                type="button"
+                                className={'btn btn-default'}
+                                disabled={!this.props.mtbTabAvailable}
+                                onClick={() =>
+                                    this.props.store.clinicalTrialClipboard.push(
+                                        {
+                                            id: trial.nct,
+                                            name: trial.title,
+                                        } as IClinicalTrial
+                                    )
+                                }
+                            >
+                                <i
+                                    className={`fa fa-clipboard`}
+                                    aria-hidden="true"
+                                ></i>{' '}
+                                MTB Clipboard
+                            </Button>
+                        </DefaultTooltip>
                     </div>
                 </div>
             ),
