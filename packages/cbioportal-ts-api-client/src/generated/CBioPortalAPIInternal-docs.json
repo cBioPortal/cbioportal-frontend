@@ -5155,9 +5155,6 @@
         "breakpointType": {
           "type": "string"
         },
-        "center": {
-          "type": "string"
-        },
         "comments": {
           "type": "string"
         },
@@ -5180,9 +5177,6 @@
           "type": "string"
         },
         "eventInfo": {
-          "type": "string"
-        },
-        "externalAnnotation": {
           "type": "string"
         },
         "length": {
@@ -5223,6 +5217,9 @@
         "site1Chromosome": {
           "type": "string"
         },
+        "site1Contig": {
+          "type": "string"
+        },
         "site1Description": {
           "type": "string"
         },
@@ -5233,10 +5230,6 @@
           "type": "integer",
           "format": "int32"
         },
-        "site1Exon": {
-          "type": "integer",
-          "format": "int32"
-        },
         "site1HugoSymbol": {
           "type": "string"
         },
@@ -5244,7 +5237,17 @@
           "type": "integer",
           "format": "int32"
         },
+        "site1Region": {
+          "type": "string"
+        },
+        "site1RegionNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
         "site2Chromosome": {
+          "type": "string"
+        },
+        "site2Contig": {
           "type": "string"
         },
         "site2Description": {
@@ -5260,10 +5263,6 @@
           "type": "integer",
           "format": "int32"
         },
-        "site2Exon": {
-          "type": "integer",
-          "format": "int32"
-        },
         "site2HugoSymbol": {
           "type": "string"
         },
@@ -5271,7 +5270,17 @@
           "type": "integer",
           "format": "int32"
         },
+        "site2Region": {
+          "type": "string"
+        },
+        "site2RegionNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
         "studyId": {
+          "type": "string"
+        },
+        "svStatus": {
           "type": "string"
         },
         "tumorPairedEndReadCount": {

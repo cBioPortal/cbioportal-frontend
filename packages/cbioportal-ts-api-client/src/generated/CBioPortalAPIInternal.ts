@@ -849,8 +849,6 @@ export type StructuralVariant = {
 
         'breakpointType': string
 
-        'center': string
-
         'comments': string
 
         'connectionType': string
@@ -866,8 +864,6 @@ export type StructuralVariant = {
         'driverTiersFilterAnn': string
 
         'eventInfo': string
-
-        'externalAnnotation': string
 
         'length': number
 
@@ -891,19 +887,25 @@ export type StructuralVariant = {
 
         'site1Chromosome': string
 
+        'site1Contig': string
+
         'site1Description': string
 
         'site1EnsemblTranscriptId': string
 
         'site1EntrezGeneId': number
 
-        'site1Exon': number
-
         'site1HugoSymbol': string
 
         'site1Position': number
 
+        'site1Region': string
+
+        'site1RegionNumber': number
+
         'site2Chromosome': string
+
+        'site2Contig': string
 
         'site2Description': string
 
@@ -913,13 +915,17 @@ export type StructuralVariant = {
 
         'site2EntrezGeneId': number
 
-        'site2Exon': number
-
         'site2HugoSymbol': string
 
         'site2Position': number
 
+        'site2Region': string
+
+        'site2RegionNumber': number
+
         'studyId': string
+
+        'svStatus': string
 
         'tumorPairedEndReadCount': number
 
