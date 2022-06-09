@@ -26,7 +26,7 @@ import {
     updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
-import MutationStatus from 'react-mutation-mapper/src/component/column/MutationStatus';
+import { MutationStatus } from 'react-mutation-mapper';
 
 export interface IPatientViewStructuralVariantTableProps {
     store: PatientViewPageStore;
