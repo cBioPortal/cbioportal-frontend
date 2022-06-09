@@ -95,7 +95,8 @@ class CollapseList extends React.PureComponent<
                         <div>{this.asHiddenListElement(str)}</div>
                     </Collapse>
                     <div className="config">
-                        <button
+                        <Button
+                            type="button"
                             className={'btn btn-default'}
                             children={
                                 !this.state.isOpened ? 'show more' : 'show less'
@@ -166,7 +167,8 @@ class CompleteCollapseList extends React.PureComponent<
                     <div>{str}</div>
                 </Collapse>
                 <div className="config">
-                    <button
+                    <Button
+                        type="button"
                         className={'btn btn-default'}
                         children={!this.state.isOpened ? 'show' : 'collapse'}
                         onClick={event => {
@@ -211,7 +213,7 @@ export class ClinicalTrialMatchTable extends React.Component<
             render: (trial: IDetailedClinicalTrialMatch) => (
                 <div>
                     {trial.status}
-                    <span>
+                    <div>
                         <Button
                             type="button"
                             className={'btn btn-default'}
@@ -229,7 +231,7 @@ export class ClinicalTrialMatchTable extends React.Component<
                             ></i>{' '}
                             MTB Clipboard
                         </Button>
-                    </span>
+                    </div>
                 </div>
             ),
             width: 250,
@@ -347,7 +349,8 @@ export class ClinicalTrialMatchTable extends React.Component<
                 </div>
                 <th style={{ padding: '5px', borderBottom: '1px solid grey' }}>
                     <div style={{ padding: '3px' }}>
-                        <button
+                        <Button
+                            type="button"
                             className={'btn btn-default'}
                             onClick={() => {
                                 this.setState({
@@ -358,7 +361,7 @@ export class ClinicalTrialMatchTable extends React.Component<
                             }}
                         >
                             Search clinical trials
-                        </button>
+                        </Button>
                     </div>
                 </th>
                 <th
