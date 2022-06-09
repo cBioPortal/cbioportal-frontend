@@ -18,15 +18,13 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
     props
 ) {
     return (
-        <>
-            <FilteredSearch
-                query={props.parsedQuery}
-                filterConfig={searchFilters}
-                onAdd={handleAdd}
-                onRemove={handleRemove}
-                onType={handleTyping}
-            />
-        </>
+        <FilteredSearch
+            query={props.parsedQuery}
+            filterConfig={searchFilters}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+            onType={handleTyping}
+        />
     );
 
     function handleTyping(query: string) {

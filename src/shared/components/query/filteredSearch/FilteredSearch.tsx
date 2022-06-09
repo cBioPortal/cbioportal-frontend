@@ -41,27 +41,25 @@ export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
     const [isMenuOpen, setMenuOpen] = useState(false);
 
     return (
-        <>
-            <div className={`dropdown ${isMenuOpen ? 'open' : ''}`}>
-                <div className="input-group input-group-sm input-group-toggle">
-                    <SearchBox
-                        queryString={toQueryString(props.query)}
-                        onType={props.onType}
-                    />
-                    <MenuToggle onClick={() => setMenuOpen(!isMenuOpen)} />
-                </div>
-                <ClearSearchButton
-                    show={props.query.length > 0}
-                    onClick={() => props.onType('')}
+        <div className={`autosuggest dropdown ${isMenuOpen ? 'open' : ''}`}>
+            <div className="input-group input-group-sm input-group-toggle">
+                <SearchBox
+                    queryString={toQueryString(props.query)}
+                    onType={props.onType}
                 />
-                <FilteredSearchDropdownForm
-                    query={props.query}
-                    filterConfig={props.filterConfig}
-                    onAdd={props.onAdd}
-                    onRemove={props.onRemove}
-                />
+                <MenuToggle onClick={() => setMenuOpen(!isMenuOpen)} />
             </div>
-        </>
+            <ClearSearchButton
+                show={props.query.length > 0}
+                onClick={() => props.onType('')}
+            />
+            <FilteredSearchDropdownForm
+                query={props.query}
+                filterConfig={props.filterConfig}
+                onAdd={props.onAdd}
+                onRemove={props.onRemove}
+            />
+        </div>
     );
 };
 
