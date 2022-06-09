@@ -246,7 +246,6 @@
     "react-addons-pure-render-mixin": "^15.4.2",
     "react-addons-test-utils": "^15.4.2",
     "react-bootstrap": "^0.31.5",
-    "react-bootstrap-autosuggest": "^0.5.0",
     "react-bootstrap-slider": "^2.0.1",
     "react-clipboard.js": "^1.0.1",
     "react-collapse": "^4.0.3",
