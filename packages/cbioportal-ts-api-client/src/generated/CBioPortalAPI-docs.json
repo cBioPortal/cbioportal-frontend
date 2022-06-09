@@ -5535,7 +5535,6 @@
           "enum": [
             "MUTATION_EXTENDED",
             "MUTATION_UNCALLED",
-            "FUSION",
             "STRUCTURAL_VARIANT",
             "COPY_NUMBER_ALTERATION",
             "MICRO_RNA_EXPRESSION",
@@ -5956,9 +5955,6 @@
         },
         "patientId": {
           "type": "string"
-        },
-        "profiledForFusions": {
-          "type": "boolean"
         },
         "sampleId": {
           "type": "string"
