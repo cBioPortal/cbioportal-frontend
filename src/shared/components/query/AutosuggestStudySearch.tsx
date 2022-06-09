@@ -32,21 +32,25 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
         return props.onSearch(parsed);
     }
 
-    function handleAdd(toAdd: ISearchClause): void {
-        if (!toAdd) {
+    function handleAdd(toAdd: ISearchClause[]): void {
+        if (!toAdd.length) {
             return;
         }
         let result = props.parsedQuery;
-        result = addClause(toAdd, result);
+        for (const clause of toAdd) {
+            result = addClause(clause, result);
+        }
         props.onSearch(result);
     }
 
-    function handleRemove(toRemove: ISearchClause): void {
-        if (!toRemove) {
+    function handleRemove(toRemove: ISearchClause[]): void {
+        if (!toRemove.length) {
             return;
         }
         let result = props.parsedQuery;
-        result = removeClause(toRemove, result);
+        for (const clause of toRemove) {
+            result = removeClause(clause, result);
+        }
         props.onSearch(result);
     }
 };

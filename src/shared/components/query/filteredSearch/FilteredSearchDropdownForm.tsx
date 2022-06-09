@@ -10,8 +10,8 @@ import {
 export type FilteredSearchDropdownFormProps = {
     query: ISearchClause[];
     filterConfig: CancerTreeSearchFilter[];
-    onAdd: (clause: ISearchClause) => void;
-    onRemove: (clause: ISearchClause) => void;
+    onAdd: (clauses: ISearchClause[]) => void;
+    onRemove: (clauses: ISearchClause[]) => void;
 };
 
 export const FilteredSearchDropdownForm: FunctionComponent<FilteredSearchDropdownFormProps> = props => {
@@ -61,8 +61,8 @@ type ListFilterField = {
 type FieldProps = {
     filter: CancerTreeSearchFilter;
     clauses: ISearchClause[];
-    onAdd: (clause: ISearchClause) => void;
-    onRemove: (clause: ISearchClause) => void;
+    onAdd: (clauses: ISearchClause[]) => void;
+    onRemove: (clauses: ISearchClause[]) => void;
 };
 
 export const FilterFormField: FunctionComponent<FieldProps> = props => {
@@ -113,14 +113,14 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                 value={option}
                                 onClick={() => {
                                     if (exists) {
-                                        props.onRemove(
-                                            new AndSearchClause([phrase])
-                                        );
+                                        props.onRemove([
+                                            new AndSearchClause([phrase]),
+                                        ]);
                                     } else {
                                         allSelected.push(phrase);
-                                        props.onAdd(
-                                            new AndSearchClause(allSelected)
-                                        );
+                                        props.onAdd([
+                                            new AndSearchClause(allSelected),
+                                        ]);
                                     }
                                 }}
                                 style={{
@@ -161,7 +161,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
                 ]);
                 return (
                     <li className="menu-item">
-                        <a tabIndex={-1} onClick={() => props.onAdd(clause)}>
+                        <a tabIndex={-1} onClick={() => props.onAdd([clause])}>
                             {option}
                         </a>
                     </li>

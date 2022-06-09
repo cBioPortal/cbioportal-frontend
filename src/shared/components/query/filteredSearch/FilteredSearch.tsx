@@ -22,12 +22,12 @@ export type FilteredSearchProps = {
     /**
      * Remove from query
      */
-    onAdd: (clause: ISearchClause) => void;
+    onAdd: (clauses: ISearchClause[]) => void;
 
     /**
      * Add to query
      */
-    onRemove: (clause: ISearchClause) => void;
+    onRemove: (clauses: ISearchClause[]) => void;
 
     /**
      * Input from search box

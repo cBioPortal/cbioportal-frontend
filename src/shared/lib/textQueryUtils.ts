@@ -302,8 +302,8 @@ export function performSearchSingle(
  * Add clause to query
  * - add, or do nothing when clause already exists
  * - remove added phrases from existing query
- * - remove 'inverse' clause from query
- *   (and-clause is inverse or opposite of not-clause)
+ * - remove inverse clause from query
+ *   (and-clause is 'inverse' or 'opposite' of not-clause)
  */
 export function addClause(
     toAdd: ISearchClause,
