@@ -333,7 +333,7 @@ export function addClause(
 
 /**
  * Remove clause from query
- * - When and-clause: remove all phrases from and-clauses in query
+ * - When and-clause: remove all phrases from and-clause in query
  * - When not-clause: remove not-clause from query
  */
 export function removeClause(
@@ -410,6 +410,18 @@ export function areEqualPhrases(a: Phrase, b: Phrase): boolean {
     return _.isEqual(a.fields, b.fields);
 }
 
+/**
+ * Convert query of search clauses into string
+ * - adding spaces between clauses
+ * - adding `or` between two and-clauses
+ */
 export function toQueryString(query: ISearchClause[]): string {
-    return query.map(c => c.toString()).join(' ');
+    return query.reduce<string>(
+        (accumulator: string, current: ISearchClause, i: number) => {
+            const appendOr =
+                current.isAnd() && query[i + 1] && query[i + 1].isAnd();
+            return `${accumulator} ${current}${appendOr ? ' or' : ''}`;
+        },
+        ''
+    );
 }
