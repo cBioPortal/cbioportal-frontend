@@ -354,12 +354,9 @@ export class DefaultMutationMapperDataFetcher
                 ),
                 (mutation: Mutation) => {
                     return generateAnnotateStructuralVariantQuery(
-                        getEntrezGeneId(mutation),
-                        getTumorType(mutation),
-                        mutation.proteinChange,
                         /* @ts-ignore */
                         mutation.structuralVariant,
-                        mutation.mutationType,
+                        getTumorType(mutation),
                         evidenceTypes
                     );
                 }

@@ -865,13 +865,11 @@ export async function fetchStructuralVariantOncoKbData(
         const queryVariants = _.uniqBy(
             _.map(alterationsToQuery, datum => {
                 return generateAnnotateStructuralVariantQuery(
-                    datum.site1EntrezGeneId,
+                    datum,
                     cancerTypeForOncoKb(
                         datum.uniqueSampleKey,
                         uniqueSampleKeyToTumorType
-                    ),
-                    buildProteinChange(datum),
-                    datum
+                    )
                 );
             }),
             datum => datum.id
