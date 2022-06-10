@@ -57,6 +57,7 @@ env/custom.sh
 image-compare/errors.js
 errorshots/
 TESTS.xml
+junit.xml
 key.pem
 cert.pem
 end
