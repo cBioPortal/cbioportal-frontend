@@ -31,7 +31,7 @@ export default class OncoKbFeedback extends React.Component<
                 onHide={this.props.handleFeedbackClose}
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>OncoKB Annotation Feedback</Modal.Title>
+                    <Modal.Title>OncoKB™ Annotation Feedback</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <iframe

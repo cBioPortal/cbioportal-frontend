@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import { ICache } from '../../model/SimpleCache';
 
-import oncoKbLogoImgSrc from '../../images/oncokb.svg';
+import oncoKbLogoImgSrc from 'oncokb-styles/dist/images/logo/oncokb.svg';
 import mainStyles from './main.module.scss';
 import { OncoKbCardTitle } from './OncoKbCardTitle';
 import { OncoKbCardBody } from './OncoKbCardBody';
@@ -50,7 +50,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
             <img
                 src={oncoKbLogoImgSrc}
                 className={mainStyles['oncokb-logo']}
-                alt="OncoKB"
+                alt="OncoKB™"
             />
         );
         return (

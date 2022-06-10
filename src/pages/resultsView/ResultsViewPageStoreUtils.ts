@@ -322,7 +322,6 @@ export function compileStructuralVariants<
 
 export const ONCOKB_ONCOGENIC_LOWERCASE = [
     'likely oncogenic',
-    'predicted oncogenic',
     'oncogenic',
     'resistance',
 ];
