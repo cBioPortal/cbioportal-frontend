@@ -313,15 +313,20 @@ jobs:
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
           command: 'for f in $TEST_HOME/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
-      -  store_artifacts:
+      - run: mkdir /tmp/repo/end-to-end-test/remote/junit2/
+      - run: cp /tmp/repo/end-to-end-test/remote/junit/results-0-0.chrome.xml /tmp/repo/end-to-end-test/remote/junit2/
+      - store_artifacts:
            path: /tmp/repo/end-to-end-test/local/screenshots
            destination: /screenshots
-      -  store_artifacts:
+      - store_artifacts:
            path: /tmp/repo/end-to-end-test/shared/image-compare
            destination: /image-compare
-      -  store_artifacts:
+      - store_artifacts:
            path: /tmp/repo/end-to-end-test/local/errorShots
            destination: /errorShots
+      - store_test_results:
+          path: /tmp/repo/end-to-end-test/remote/junit2
+      - run: ls -lah /tmp/repo/end-to-end-test/local/junit/
       - store_test_results:
           path: /tmp/repo/end-to-end-test/local/junit
       - store_artifacts:
@@ -357,36 +362,36 @@ workflows:
   install_and_test:
     jobs:
       - install
-      - prettier:
-          requires:
-            - install
-          filters:
-            branches:
-              ignore:
-                - master
-                - release-*
-                - rc
-      - unit_tests_main:
-          requires:
-            - install
-      - unit_tests_packages:
-            requires:
-              - install
-      - end_to_end_tests:
-          requires:
-            - install
+#      - prettier:
+#          requires:
+#            - install
+#          filters:
+#            branches:
+#              ignore:
+#                - master
+#                - release-*
+#                - rc
+#      - unit_tests_main:
+#          requires:
+#            - install
+#      - unit_tests_packages:
+#            requires:
+#              - install
+#      - end_to_end_tests:
+#          requires:
+#            - install
       - end_to_end_tests_localdb:
           requires:
             - install
-      - api_sync:
-          requires:
-            - install
-      - check_forgotten_spec_only_statements:
-          requires:
-            - install
-      - check_incorrect_import_statements:
-          requires:
-            - install
+#      - api_sync:
+#          requires:
+#            - install
+#      - check_forgotten_spec_only_statements:
+#          requires:
+#            - install
+#      - check_incorrect_import_statements:
+#          requires:
+#            - install
   nightly:
     triggers:
       - schedule:
