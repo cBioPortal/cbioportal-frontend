@@ -212,11 +212,8 @@ export function deriveStructuralVariantType(
 }
 
 export function generateAnnotateStructuralVariantQuery(
-    entrezGeneId: number,
-    tumorType: string | null,
-    proteinChange: string,
     structuralVariant: StructuralVariant,
-    mutationType?: string,
+    tumorType: string | null,
     evidenceTypes?: EvidenceType[]
 ): AnnotateStructuralVariantQuery {
     let structuralVariantType = deriveStructuralVariantType(structuralVariant);
