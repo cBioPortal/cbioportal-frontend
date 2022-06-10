@@ -402,7 +402,6 @@ export default class StudyViewPage extends React.Component<
                 {/*    </InfoBeacon>*/}
                 {/*</If>*/}
                 <DefaultTooltip
-                    visible={this.store.showComparisonGroupUI}
                     trigger={['click']}
                     placement="bottomLeft"
                     destroyTooltipOnHide={true}
@@ -411,14 +410,6 @@ export default class StudyViewPage extends React.Component<
                             '.rc-tooltip-arrow'
                         );
                         arrowEl.style.right = '10px';
-                    }}
-                    onVisibleChange={visible => {
-                        if (
-                            this.store.numberOfVisibleColorChooserModals == 0 &&
-                            !this.shareLinkModal
-                        ) {
-                            this.store.showComparisonGroupUI = !!visible;
-                        }
                     }}
                     getTooltipContainer={() =>
                         document.getElementById(
