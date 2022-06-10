@@ -13,7 +13,7 @@ interface IOncokbProps {
 export enum ONCOGENICITY {
     ONCOGENIC = 'Oncogenic',
     LIKELY_ONCOGENIC = 'Likely Oncogenic',
-    PREDICTED_ONCOGENIC = 'Predicted Oncogenic',
+    RESISTANCE = 'Resistance',
     NEUTRAL = 'Neutral',
     LIKELY_NEUTRAL = 'Likely Neutral',
     INCONCLUSIVE = 'Inconclusive',
@@ -24,7 +24,7 @@ export enum ONCOGENICITY {
 export const ONCOGENICITY_CLASS_NAMES: { [oncogenic: string]: string } = {
     [ONCOGENICITY.ONCOGENIC]: 'oncogenic',
     [ONCOGENICITY.LIKELY_ONCOGENIC]: 'oncogenic',
-    [ONCOGENICITY.PREDICTED_ONCOGENIC]: 'oncogenic',
+    [ONCOGENICITY.RESISTANCE]: 'oncogenic',
     [ONCOGENICITY.NEUTRAL]: 'neutral',
     [ONCOGENICITY.LIKELY_NEUTRAL]: 'neutral',
     [ONCOGENICITY.INCONCLUSIVE]: 'inconclusive',

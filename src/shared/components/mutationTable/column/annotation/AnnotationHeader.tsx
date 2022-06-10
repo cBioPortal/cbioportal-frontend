@@ -29,7 +29,7 @@ enum OncokbOncogenicIconEnum {
 
 const oncokbOncogenicDescription: _.Dictionary<string> = {
     [OncokbOncogenicIconEnum.ONCOGENIC]:
-        'Oncogenic/Likely Oncogenic/Predicted Oncogenic/Resistance',
+        'Oncogenic/Likely Oncogenic/Resistance',
     [OncokbOncogenicIconEnum.NUETRAL]: 'Likely Neutral',
     [OncokbOncogenicIconEnum.INCONCLUSIVE]: 'Inconclusive',
     [OncokbOncogenicIconEnum.VUS]: 'VUS',
