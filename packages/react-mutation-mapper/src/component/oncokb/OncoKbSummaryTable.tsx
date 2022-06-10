@@ -104,6 +104,7 @@ export default class OncoKbSummaryTable extends React.Component<
                             <div
                                 key={level.level}
                                 style={{
+                                    display: 'flex',
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                 }}
@@ -112,10 +113,15 @@ export default class OncoKbSummaryTable extends React.Component<
                                     className={levelIconClassNames(level.level)}
                                     style={{
                                         verticalAlign: 'text-bottom',
-                                        display: 'inline-block',
                                     }}
                                 />
-                                <span>: </span>
+                                <span
+                                    style={{
+                                        paddingRight: 3,
+                                    }}
+                                >
+                                    :
+                                </span>
                                 <EllipsisTextTooltip
                                     text={level.tumorTypes.join(', ')}
                                     style={{
