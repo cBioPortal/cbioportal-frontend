@@ -11,7 +11,7 @@ import { default as Track, TrackProps } from './Track';
 import { TrackItemSpec } from './TrackItem';
 import { Mutation } from 'cbioportal-utils';
 
-import oncoKbImg from '../../images/oncogenic-only.svg';
+import oncoKbImg from 'oncokb-styles/dist/images/oncogenic.svg';
 
 type OncoKbTrackProps = TrackProps & {
     store: MutationMapperStore<Mutation>;
@@ -68,7 +68,7 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
         return (
             <span>
                 <span style={{ marginRight: 2 }}>{getOncoKbImage()}</span>
-                OncoKB
+                OncoKB™
             </span>
         );
     }
