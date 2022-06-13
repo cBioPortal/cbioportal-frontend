@@ -25,6 +25,7 @@ export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
         <>
             <input
                 autoComplete="off"
+                spellCheck="false"
                 className="form-control"
                 placeholder="Search..."
                 type="text"
