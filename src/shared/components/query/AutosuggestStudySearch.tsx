@@ -1,18 +1,15 @@
-import {
-    addClause,
-    parseSearchQuery,
-    removePhrase,
-    searchFilters,
-} from 'shared/lib/textQueryUtils';
+import { addClause, removePhrase } from 'shared/lib/query/textQueryUtils';
 import * as React from 'react';
+import { FunctionComponent } from 'react';
 import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredSearch';
 import {
     ISearchClause,
     QueryUpdate,
 } from 'shared/components/query/SearchClause';
-import { FunctionComponent } from 'react';
+import { QueryParser } from 'shared/lib/query/QueryParser';
 
 export type AutosuggestStudySearchProps = {
+    parser: QueryParser;
     parsedQuery: ISearchClause[];
     onSearch: (query: ISearchClause[]) => void;
 };
@@ -23,14 +20,15 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
     return (
         <FilteredSearch
             query={props.parsedQuery}
-            filterConfig={searchFilters}
+            filterConfig={props.parser.searchFilters}
             onChange={handleChange}
             onType={handleTyping}
+            parser={props.parser}
         />
     );
 
     function handleTyping(query: string) {
-        let parsed = parseSearchQuery(query);
+        let parsed = props.parser.parseSearchQuery(query);
         return props.onSearch(parsed);
     }
 

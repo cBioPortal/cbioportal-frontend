@@ -66,8 +66,9 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
-import { parseSearchQuery, toQueryString } from 'shared/lib/textQueryUtils';
+import { toQueryString } from 'shared/lib/query/textQueryUtils';
 import { ISearchClause } from 'shared/components/query/SearchClause';
+import { QueryParser } from 'shared/lib/query/QueryParser';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -116,12 +117,18 @@ export function normalizeQuery(geneQuery: string) {
 type GenesetId = string;
 
 export class QueryStore {
+    private _parser: QueryParser = new QueryParser();
+
     constructor(urlWithInitialParams?: string) {
         getBrowserWindow().activeQueryStore = this;
 
         makeObservable(this);
 
         this.initialize(urlWithInitialParams);
+    }
+
+    get parser(): QueryParser {
+        return this._parser;
     }
 
     initialize(urlWithInitialParams?: string) {
@@ -2143,7 +2150,7 @@ export class QueryStore {
 
     @action setSearchText(searchText: string) {
         this.clearSelectedCancerType();
-        this.parsedQuery = parseSearchQuery(searchText);
+        this.parsedQuery = this.parser.parseSearchQuery(searchText);
     }
 
     @action clearSelectedCancerType() {

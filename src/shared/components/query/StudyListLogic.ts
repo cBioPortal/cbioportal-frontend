@@ -10,7 +10,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { QueryStore } from './QueryStore';
 import { computed, action, makeObservable } from 'mobx';
-import { performSearchSingle } from '../../lib/textQueryUtils';
+import { performSearchSingle } from '../../lib/query/textQueryUtils';
 import { cached } from 'mobxpromise';
 import { ServerConfigHelpers } from '../../../config/config';
 import memoize from 'memoize-weak-decorator';

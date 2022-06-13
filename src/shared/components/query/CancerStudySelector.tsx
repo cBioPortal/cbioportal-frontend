@@ -235,12 +235,6 @@ export default class CancerStudySelector extends React.Component<
                                 ].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;
 
-                            const optionsWithSortKeys = searchTextOptions.map(
-                                (name, i) => {
-                                    return { value: name, sortKey: i };
-                                }
-                            );
-
                             return (
                                 <div
                                     style={{
@@ -249,6 +243,7 @@ export default class CancerStudySelector extends React.Component<
                                     }}
                                 >
                                     <AutosuggestStudySearch
+                                        parser={this.store.parser}
                                         parsedQuery={this.store.parsedQuery}
                                         onSearch={query =>
                                             (this.store.parsedQuery = query)

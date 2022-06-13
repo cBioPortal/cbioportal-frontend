@@ -3,19 +3,14 @@ import {
     CancerTreeNode,
     CancerTypeWithVisibility,
 } from 'shared/components/query/CancerStudyTreeData';
-import { getServerConfig, ServerConfigHelpers } from 'config/config';
-import {
-    FilterCheckbox,
-    FilterField,
-    FilterList,
-} from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
+import { FilterField } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import {
     AndSearchClause,
-    Phrase,
     ISearchClause,
-    NotSearchClause,
+    Phrase,
 } from 'shared/components/query/SearchClause';
 import _ from 'lodash';
+import { MatchResult } from 'shared/lib/query/QueryParser';
 
 export type CancerTreeSearchFilter = {
     /**
@@ -40,190 +35,9 @@ export const defaultNodeFields: CancerTreeNodeFields[] = [
     'studyId',
 ];
 
-/**
- * This field can be extended with additional search filters
- */
-export const searchFilters: CancerTreeSearchFilter[] = [
-    /**
-     * Reference genome:
-     */
-    {
-        phrasePrefix: 'reference-genome',
-        nodeFields: ['referenceGenome'],
-        form: {
-            input: FilterCheckbox,
-            // TODO: Make dynamic
-            options: ['hg18', 'hg19', 'hg38', 'mm10', 'mm39'],
-            label: 'Reference genome',
-        },
-    },
-    /**
-     * Example queries:
-     */
-    {
-        phrasePrefix: undefined,
-        nodeFields: defaultNodeFields,
-        form: {
-            label: 'Examples',
-            input: FilterList,
-            options: ServerConfigHelpers.skin_example_study_queries(
-                getServerConfig()!.skin_example_study_queries || ''
-            ),
-        },
-    },
-];
-
 export type CancerTreeNodeFields =
     | keyof CancerTypeWithVisibility
     | keyof CancerStudy;
-
-export function parseSearchQuery(query: string): ISearchClause[] {
-    query = cleanUpQuery(query);
-    const phrases = createPhrases(query);
-    return createClauses(phrases);
-}
-
-/**
- * Eliminate trailing whitespace
- * and reduce every whitespace to a single space.
- */
-function cleanUpQuery(query: string) {
-    return query
-        .toLowerCase()
-        .trim()
-        .split(/\s+/g)
-        .join(' ');
-}
-
-/**
- * Factor out quotation marks and inter-token spaces
- */
-function createPhrases(query: string): string[] {
-    let phrases = [];
-    let currInd = 0;
-    let nextSpace, nextQuote;
-    while (currInd < query.length) {
-        if (query[currInd] === '"') {
-            nextQuote = query.indexOf('"', currInd + 1);
-            if (nextQuote === -1) {
-                phrases.push(query.substring(currInd + 1));
-                currInd = query.length;
-            } else {
-                phrases.push(query.substring(currInd + 1, nextQuote));
-                currInd = nextQuote + 1;
-            }
-        } else if (query[currInd] === ' ') {
-            currInd += 1;
-        } else if (query[currInd] === '-') {
-            phrases.push('-');
-            currInd += 1;
-        } else {
-            nextSpace = query.indexOf(' ', currInd);
-            if (nextSpace === -1) {
-                phrases.push(query.substring(currInd));
-                currInd = query.length;
-            } else {
-                phrases.push(query.substring(currInd, nextSpace));
-                currInd = nextSpace + 1;
-            }
-        }
-    }
-    return phrases;
-}
-
-/**
- * Create conjunctive and negative clauses
- */
-function createClauses(phrases: string[]): ISearchClause[] {
-    const clauses: ISearchClause[] = [];
-    let currInd = 0;
-    while (currInd < phrases.length) {
-        if (phrases[currInd] === '-') {
-            currInd = addNotClause(currInd, phrases, clauses);
-        } else {
-            currInd = addAndClause(phrases, currInd, clauses);
-        }
-    }
-    return clauses;
-}
-
-/**
- * @returns {number} next index
- **/
-function addNotClause(
-    currInd: number,
-    phrases: string[],
-    clauses: ISearchClause[]
-): number {
-    if (currInd < phrases.length - 1) {
-        clauses.push(createNotClause(phrases[currInd + 1]));
-    }
-    return currInd + 2;
-}
-
-/**
- * @returns {number} next index
- */
-function addAndClause(
-    phrases: string[],
-    currInd: number,
-    clauses: ISearchClause[]
-): number {
-    let nextOr = phrases.indexOf('or', currInd);
-    let nextDash = phrases.indexOf('-', currInd);
-    if (nextOr === -1 && nextDash === -1) {
-        clauses.push(createAndClause(phrases.slice(currInd)));
-        return phrases.length;
-    } else if (nextOr === -1 && nextDash > 0) {
-        clauses.push(createAndClause(phrases.slice(currInd, nextDash)));
-        return nextDash;
-    } else if (nextOr > 0 && nextDash === -1) {
-        clauses.push(createAndClause(phrases.slice(currInd, nextOr)));
-        return nextOr + 1;
-    } else {
-        if (nextOr < nextDash) {
-            clauses.push(createAndClause(phrases.slice(currInd, nextOr)));
-            return nextOr + 1;
-        } else {
-            clauses.push(createAndClause(phrases.slice(currInd, nextDash)));
-            return nextDash;
-        }
-    }
-}
-
-function parsePhrase(data: string): Phrase {
-    const parts: string[] = data.split(':');
-    let phrase: string;
-    let fields: CancerTreeNodeFields[];
-    let filter = searchFilters.find(sf => sf.phrasePrefix === parts[0]);
-    if (parts.length === 2 && filter?.nodeFields) {
-        phrase = parts[1];
-        fields = filter.nodeFields;
-    } else {
-        phrase = parts[0];
-        fields = defaultNodeFields;
-    }
-    return { phrase, fields, textRepresentation: enquoteSpaces(data) };
-}
-
-function createNotClause(data: string): ISearchClause {
-    const { phrase, fields } = parsePhrase(data);
-    let textRepresentation = enquoteSpaces(data);
-    return new NotSearchClause({ phrase, textRepresentation, fields });
-}
-
-function createAndClause(phrases: string[]): ISearchClause {
-    const data: Phrase[] = [];
-    for (const phrase of phrases) {
-        const parsedData = parsePhrase(phrase);
-        data.push(parsedData);
-    }
-    return new AndSearchClause(data);
-}
-
-export function enquoteSpaces(data: string) {
-    return data.includes(' ') ? `"${data}"` : data;
-}
 
 export function matchPhrase(phrase: string, fullText: string) {
     return fullText.toLowerCase().indexOf(phrase.toLowerCase()) > -1;
@@ -245,11 +59,6 @@ export function matchPhraseInStudyFields(
     }
     return anyFieldMatch;
 }
-
-type MatchResult = {
-    match: boolean;
-    forced: boolean;
-};
 
 /**
  * @returns {boolean} true if the query matches,
@@ -352,6 +161,19 @@ export function removeClause(
     return result;
 }
 
+export function createPhrase(
+    prefix: string,
+    option: string,
+    fields: CancerTreeNodeFields[]
+): Phrase {
+    const textRepresentation = `${prefix ? `${prefix}:` : ''}${option}`;
+    return {
+        phrase: option,
+        fields: fields,
+        textRepresentation,
+    };
+}
+
 /**
  * Remove phrase from query
  * - When removed phrase results in empty clause, the clause is also removed
@@ -419,7 +241,9 @@ export function toQueryString(query: ISearchClause[]): string {
         (accumulator: string, current: ISearchClause, i: number) => {
             const appendOr =
                 current.isAnd() && query[i + 1] && query[i + 1].isAnd();
-            return `${accumulator} ${current}${appendOr ? ' or' : ''}`;
+            return `${accumulator} ${current.toString()}${
+                appendOr ? ' or' : ''
+            }`;
         },
         ''
     );

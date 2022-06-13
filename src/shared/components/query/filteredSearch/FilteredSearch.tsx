@@ -3,13 +3,14 @@ import { FunctionComponent, useState } from 'react';
 import {
     CancerTreeSearchFilter,
     toQueryString,
-} from 'shared/lib/textQueryUtils';
+} from 'shared/lib/query/textQueryUtils';
 import { FilteredSearchDropdownForm } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
 import {
     ISearchClause,
     QueryUpdate,
 } from 'shared/components/query/SearchClause';
+import { QueryParser } from 'shared/lib/query/QueryParser';
 
 export type FilteredSearchProps = {
     /**
@@ -31,6 +32,8 @@ export type FilteredSearchProps = {
      * Input from search box
      */
     onType: (query: string) => void;
+
+    parser: QueryParser;
 };
 
 export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
@@ -55,6 +58,7 @@ export const FilteredSearch: FunctionComponent<FilteredSearchProps> = function(
                 query={props.query}
                 filterConfig={props.filterConfig}
                 onChange={props.onChange}
+                parser={props.parser}
             />
         </div>
     );

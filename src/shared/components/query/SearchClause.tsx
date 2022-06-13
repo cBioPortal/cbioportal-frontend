@@ -1,7 +1,7 @@
 import {
     areEqualPhrases,
     CancerTreeNodeFields,
-} from 'shared/lib/textQueryUtils';
+} from 'shared/lib/query/textQueryUtils';
 import _ from 'lodash';
 
 export interface ISearchClause {
