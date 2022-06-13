@@ -3,14 +3,10 @@ import {
     CancerTreeNode,
     CancerTypeWithVisibility,
 } from 'shared/components/query/CancerStudyTreeData';
-import { FilterField } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
-import {
-    AndSearchClause,
-    ISearchClause,
-    Phrase,
-} from 'shared/components/query/SearchClause';
+import { ISearchClause, Phrase } from 'shared/components/query/SearchClause';
 import _ from 'lodash';
 import { MatchResult } from 'shared/lib/query/QueryParser';
+import { FilterField } from 'shared/components/query/filteredSearch/field/FilterFormField';
 
 export type CancerTreeSearchFilter = {
     /**

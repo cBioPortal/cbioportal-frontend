@@ -9,9 +9,9 @@ import {
     NotSearchClause,
     Phrase,
 } from 'shared/components/query/SearchClause';
-import { FilterCheckbox } from 'shared/components/query/filteredSearch/CheckboxFilterField';
-import { FilterList } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
+import { FilterCheckbox } from 'shared/components/query/filteredSearch/field/CheckboxFilterField';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
+import { FilterList } from 'shared/components/query/filteredSearch/field/ListFormField';
 
 export class QueryParser {
     /**
@@ -41,7 +41,7 @@ export class QueryParser {
                 phrasePrefix: undefined,
                 nodeFields: defaultNodeFields,
                 form: {
-                    label: 'Examples',
+                    label: 'Example queries',
                     input: FilterList,
                     options: ServerConfigHelpers.skin_example_study_queries(
                         getServerConfig()!.skin_example_study_queries || ''

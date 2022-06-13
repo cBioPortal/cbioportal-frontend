@@ -1,5 +1,5 @@
 import { Phrase } from 'shared/components/query/SearchClause';
-import { createUpdate } from 'shared/components/query/filteredSearch/CheckboxFilterField';
+import { createUpdate } from 'shared/components/query/filteredSearch/field/CheckboxFilterField';
 
 describe('FilteredSearchDropdownForm', () => {
     describe('createUpdate', () => {

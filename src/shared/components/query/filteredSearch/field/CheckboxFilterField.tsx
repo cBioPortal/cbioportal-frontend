@@ -7,8 +7,8 @@ import {
     QueryUpdate,
 } from 'shared/components/query/SearchClause';
 import * as React from 'react';
-import { FieldProps } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import { createPhrase } from 'shared/lib/query/textQueryUtils';
+import { FieldProps } from 'shared/components/query/filteredSearch/field/FilterFormField';
 
 export type CheckboxFilterField = {
     input: typeof FilterCheckbox;
@@ -22,7 +22,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
     let checkedPhrases: Phrase[] = [];
     let uncheckedPhrases: Phrase[] = [];
 
-    const phrases = props.filter.form.options.map(option =>
+    const phrases = form.options.map(option =>
         createPhrase(prefix, option, props.filter.nodeFields)
     );
     const relevantClauses = props.query.filter(c =>
