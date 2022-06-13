@@ -109,10 +109,8 @@ export function performSearchSingle(
 
 /**
  * Add clause to query
- * - add, or do nothing when clause already exists
- * - remove new phrases from existing query
- * - remove inverse clause phrases from query
- *   (and-clause is 'inverse' or 'opposite' of not-clause)
+ * - add clause when it does not exist
+ * - remove all phrases from toAdd in existing query
  */
 export function addClause(
     toAdd: ISearchClause,
@@ -127,15 +125,6 @@ export function addClause(
     for (const p of toAdd.getPhrases()) {
         result = removePhrase(p, result);
     }
-
-    const inverseClause = findInverseClause(toAdd, result);
-    if (inverseClause) {
-        for (const p of inverseClause.getPhrases()) {
-            result = removePhrase(p, result);
-        }
-    }
-
-    result.push(toAdd);
 
     return result;
 }
@@ -199,26 +188,6 @@ export function removePhrase(
         result.push(new AndSearchClause(otherPhrases));
     }
     return result;
-}
-
-/**
- * Find 'inverse' clause which contains phrase of needle
- * And-clause is 'inverse' or 'opposite' of not-clause
- */
-export function findInverseClause(
-    needle: ISearchClause,
-    haystack: ISearchClause[]
-): ISearchClause | undefined {
-    if (needle.isAnd()) {
-        return haystack.find(
-            not => not.isNot() && needle.contains(not.getPhrases()[0])
-        );
-    } else {
-        // Needle is not-clause:
-        return haystack.find(
-            and => and.isAnd() && and.contains(needle.getPhrases()[0])
-        );
-    }
 }
 
 /**

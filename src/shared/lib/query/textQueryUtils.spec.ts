@@ -231,21 +231,39 @@ describe('textQueryUtils', () => {
             expect(result).toEqual(expected);
         });
 
-        it('should remove inverse clause', () => {
-            const query: ISearchClause[] = [
-                new AndSearchClause([
-                    {
-                        textRepresentation: 'part1',
-                        phrase: 'part1',
-                        fields: defaultNodeFields,
-                    },
-                ]),
-            ];
-            const toAdd = new NotSearchClause({
-                textRepresentation: '- part1',
+        it('should remove inverse phrase when adding not-clause', () => {
+            const part1 = {
+                textRepresentation: 'part1',
                 phrase: 'part1',
                 fields: defaultNodeFields,
-            });
+            };
+            const part2 = {
+                textRepresentation: 'part2',
+                phrase: 'part2',
+                fields: defaultNodeFields,
+            };
+            const query: ISearchClause[] = [
+                new AndSearchClause([part1, part2]),
+            ];
+            const toAdd = new NotSearchClause(part1);
+            const expected = [new AndSearchClause([part2]), toAdd];
+            const result = addClause(toAdd, query);
+            expect(result).toEqual(expected);
+        });
+
+        it('should remove inverse phrase when adding and-phrase', () => {
+            const part1 = {
+                textRepresentation: 'part1',
+                phrase: 'part1',
+                fields: defaultNodeFields,
+            };
+            const part2 = {
+                textRepresentation: 'part2',
+                phrase: 'part2',
+                fields: defaultNodeFields,
+            };
+            const query: ISearchClause[] = [new NotSearchClause(part1)];
+            const toAdd = new AndSearchClause([part1, part2]);
             const expected = [toAdd];
             const result = addClause(toAdd, query);
             expect(result).toEqual(expected);
