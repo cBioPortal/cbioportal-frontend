@@ -316,7 +316,7 @@ export function addClause(
     }
 
     for (const p of toAdd.getPhrases()) {
-        result = removePhrase(p, query);
+        result = removePhrase(p, result);
     }
 
     const inverseClause = findInverseClause(toAdd, result);
@@ -363,12 +363,11 @@ export function removePhrase(
     phrase: Phrase,
     query: ISearchClause[]
 ): ISearchClause[] {
-    let result = [...query];
-
-    const containingClause = result.find(r => r.contains(phrase));
+    const containingClause = query.find(r => r.contains(phrase));
     if (!containingClause) {
-        return result;
+        return query;
     }
+    let result = [...query];
     _.remove(result, containingClause);
     const multiplePhrases = containingClause.getPhrases().length > 1;
     if (multiplePhrases) {
