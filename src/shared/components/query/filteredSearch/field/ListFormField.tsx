@@ -15,27 +15,29 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
     return (
         <div className="filter-list">
             <span>{form.label}</span>
-            <ul>
-                {form.options.map(option => {
-                    const update = props.parser.parseSearchQuery(option);
-                    const queryPhrases = toUniquePhrases(props.query);
-                    return (
-                        <li className="menu-item">
-                            <a
-                                tabIndex={-1}
-                                onClick={() =>
-                                    props.onChange({
-                                        toAdd: update,
-                                        toRemove: queryPhrases,
-                                    })
-                                }
-                            >
-                                {option}
-                            </a>
-                        </li>
-                    );
-                })}
-            </ul>
+            {form.options.map(option => {
+                const update = props.parser.parseSearchQuery(option);
+                const queryPhrases = toUniquePhrases(props.query);
+                return (
+                    <li className="dropdown-item">
+                        <a
+                            style={{
+                                display: 'block',
+                                padding: '5px',
+                            }}
+                            tabIndex={-1}
+                            onClick={() =>
+                                props.onChange({
+                                    toAdd: update,
+                                    toRemove: queryPhrases,
+                                })
+                            }
+                        >
+                            {option}
+                        </a>
+                    </li>
+                );
+            })}
         </div>
     );
 };
