@@ -7,12 +7,10 @@ var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 var waitForPatientView = require('../../shared/specUtils').waitForPatientView;
 var waitForStudyView = require('../../shared/specUtils').waitForStudyView;
-var studyViewChartHoverHamburgerIcon = require('../../shared/specUtils')
-    .studyViewChartHoverHamburgerIcon;
+var jsApiHover = require('../../shared/specUtils').jsApiHover;
 var setServerConfiguration = require('../../shared/specUtils')
     .setServerConfiguration;
 var openGroupComparison = require('../../shared/specUtils').openGroupComparison;
-var waitForNetworkQuiet = require('../../shared/specUtils').waitForNetworkQuiet;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -54,6 +52,17 @@ const waitForTabs = count => {
         return $$('.tabAnchor').length >= count;
     }, 300000);
 };
+
+function studyViewChartHoverHamburgerIcon(chartDataTest, timeout) {
+    // move to the chart
+    const chart = '[data-test=' + chartDataTest + ']';
+    $(chart).waitForDisplayed({ timeout: timeout || 10000 });
+    jsApiHover(chart);
+
+    // move to hamburger icon
+    const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
+    jsApiHover(hamburgerIcon);
+}
 
 describe('hide download controls feature', function() {
     if (useExternalFrontend) {
@@ -113,6 +122,8 @@ describe('hide download controls feature', function() {
                 'Pathways',
             ];
             before(() => {
+                browser.setWindowSize(3200, 1000);
+
                 openAndSetProperty(
                     `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=mutations%2Cfusion%2Cgistic&case_set_id=study_es_0_cnaseq&gene_list=CREB3L1%2520RPS11%2520PNMA1%2520MMP2%2520ZHX3%2520ERCC5%2520TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit&comparison_subtab=mrna`,
                     { skin_hide_download_controls: true }
@@ -203,9 +214,9 @@ describe('hide download controls feature', function() {
                         'Genomic Alterations',
                         'mRNA',
                         'DNA Methylation',
-                        'Treatment Response',
-                        'Mutational Signature',
                         'Generic Assay Patient Test',
+                        'Mutational Signature',
+                        'Treatment Response',
                     ];
                     const observedTabNames = $$(
                         '[data-test=ComparisonTabDiv] .tabAnchor'
@@ -311,7 +322,7 @@ describe('hide download controls feature', function() {
                 });
                 // Activation of the 'Patient Test' tab results in a backend error. Omitting for now.
                 // Inactivation of download tabs is also covered by other Generic Assay tabs.
-                describe.omit('generic assay patient test tab', () => {
+                describe.skip('generic assay patient test tab', () => {
                     it('global check for icon and occurrence of "Download" as a word', () => {
                         $(
                             '.tabAnchor_generic_assay_generic_assay_patient_test'
@@ -543,9 +554,9 @@ describe('hide download controls feature', function() {
                 'Genomic Alterations',
                 'mRNA',
                 'DNA Methylation',
-                'Treatment Response',
-                'Mutational Signature',
                 'Generic Assay Patient Test',
+                'Mutational Signature',
+                'Treatment Response',
             ];
             before(() => {
                 openAndSetProperty(browser.getUrl(), {
@@ -661,7 +672,7 @@ describe('hide download controls feature', function() {
             });
             // Activation of the 'Patient Test' tab results in a backend error. Omitting for now.
             // Inactivation of download tabs is also covered by other Generic Assay tabs.
-            describe.omit('generic assay patient test tab', () => {
+            describe.skip('generic assay patient test tab', () => {
                 it('global check for icon and occurrence of "Download" as a word', () => {
                     $(
                         '.tabAnchor_generic_assay_generic_assay_patient_test'
