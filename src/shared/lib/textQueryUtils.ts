@@ -53,7 +53,7 @@ export const searchFilters: CancerTreeSearchFilter[] = [
         form: {
             input: FilterCheckbox,
             // TODO: Make dynamic
-            options: ['hg19', 'hg38'],
+            options: ['hg18', 'hg19', 'hg38', 'mm10', 'mm39'],
             label: 'Reference genome',
         },
     },

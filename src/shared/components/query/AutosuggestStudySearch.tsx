@@ -36,14 +36,14 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
 
     function handleChange(update: QueryUpdate) {
         let result = props.parsedQuery;
-        if (update.toAdd) {
-            for (const clause of update.toAdd) {
-                result = addClause(clause, result);
-            }
-        }
         if (update.toRemove) {
             for (const p of update.toRemove) {
                 result = removePhrase(p, result);
+            }
+        }
+        if (update.toAdd) {
+            for (const clause of update.toAdd) {
+                result = addClause(clause, result);
             }
         }
         props.onSearch(result);

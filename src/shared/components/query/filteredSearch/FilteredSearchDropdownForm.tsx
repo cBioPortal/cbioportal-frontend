@@ -88,10 +88,8 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
     const relevantClauses = props.clauses.filter(c =>
         phrases.find(p => c.contains(p))
     );
-
     for (const phrase of phrases) {
-        const clause = relevantClauses.find(c => c.contains(phrase));
-        const isChecked = (clause && clause.isAnd()) || !relevantClauses.length;
+        const isChecked = isOptionChecked(phrase, relevantClauses);
         if (isChecked) {
             checkedPhrases.push(phrase);
         } else {
@@ -105,10 +103,11 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
             <div>
                 {phrases.map((option: Phrase) => {
                     const id = `input-${option.phrase}`;
-                    const isChecked = checkedPhrases.includes(option);
+                    let isChecked = checkedPhrases.includes(option);
                     return (
-                        <span
+                        <div
                             style={{
+                                display: 'inline-block',
                                 padding: '0 1em 0 0',
                             }}
                         >
@@ -118,8 +117,8 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                 value={option.phrase}
                                 checked={isChecked}
                                 onClick={() => {
-                                    const newState = !isChecked;
-                                    updatePhrases(option, newState);
+                                    isChecked = !isChecked;
+                                    updatePhrases(option, isChecked);
                                     const update = createUpdate(
                                         uncheckedPhrases,
                                         checkedPhrases
@@ -139,7 +138,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                             >
                                 {option.phrase}
                             </label>
-                        </span>
+                        </div>
                     );
                 })}
             </div>
@@ -169,25 +168,48 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
 };
 
 /**
+ * Determine if checkbox option is checked
+ */
+function isOptionChecked(
+    phrase: Phrase,
+    relevantClauses: ISearchClause[]
+): boolean {
+    const clause = relevantClauses.find(c => c.contains(phrase));
+    if (clause && clause.isAnd()) {
+        return true;
+    }
+    if (clause && clause.isNot()) {
+        return false;
+    }
+    // option is checked when all others are not-clauses:
+    return (
+        relevantClauses.length === relevantClauses.filter(c => c.isNot()).length
+    );
+}
+
+/**
  * Create query update
  * while trying to keep query as short as possible
- * - if only and: remove all
- * - if only not: create not
- * - if more and: create not, remove and
- * - if more not: create and, remove not
  */
 export function createUpdate(not: Phrase[], and: Phrase[]): QueryUpdate {
     const toAdd: ISearchClause[] = [];
     const toRemove: Phrase[] = [];
 
+    // if only and: remove all
     if (!not.length) {
         and.forEach(p => toRemove.push(p));
-    } else if (!and.length) {
+    }
+    // if only not: create not
+    else if (!and.length) {
         not.forEach(p => toAdd.push(new NotSearchClause(p)));
-    } else if (and.length <= not.length) {
+    }
+    // if more and: create not, remove and
+    else if (and.length <= not.length) {
         and.forEach(p => toAdd.push(new AndSearchClause([p])));
         not.forEach(p => toRemove.push(p));
-    } else {
+    }
+    // if more not: create and, remove not
+    else {
         and.forEach(p => toRemove.push(p));
         not.forEach(p => toAdd.push(new NotSearchClause(p)));
     }
