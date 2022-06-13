@@ -208,27 +208,40 @@ describe('textQueryUtils', () => {
     });
 
     describe('addClause', () => {
-        it('should add clause to query', () => {
-            const query: ISearchClause[] = [
-                new AndSearchClause([
-                    {
-                        textRepresentation: 'part1',
-                        phrase: 'part1',
-                        fields: defaultNodeFields,
-                    },
-                ]),
-            ];
-            const toAdd = new AndSearchClause([
-                {
-                    textRepresentation: 'part2',
-                    phrase: 'part2',
-                    fields: defaultNodeFields,
-                },
-            ]);
-            const expected = [...query];
-            expected.push(toAdd);
+        it('should merge and-phrase when adding and-clause', () => {
+            const part1 = {
+                textRepresentation: 'part1',
+                phrase: 'part1',
+                fields: defaultNodeFields,
+            };
+            const query: ISearchClause[] = [new AndSearchClause([part1])];
+            const part2 = {
+                textRepresentation: 'part2',
+                phrase: 'part2',
+                fields: defaultNodeFields,
+            };
+            const toAdd = new AndSearchClause([part2]);
+            const expected = [new AndSearchClause([part1, part2])];
             const result = addClause(toAdd, query);
-            expect(result).toEqual(expected);
+            expect(toQueryString(result)).toEqual(toQueryString(expected));
+        });
+
+        it('should add not-clause to query', () => {
+            const part1 = {
+                textRepresentation: 'part1',
+                phrase: 'part1',
+                fields: defaultNodeFields,
+            };
+            const query: ISearchClause[] = [new AndSearchClause([part1])];
+            const part2 = {
+                textRepresentation: 'part2',
+                phrase: 'part2',
+                fields: defaultNodeFields,
+            };
+            const toAdd = new NotSearchClause(part2);
+            const expected = [...query, toAdd];
+            const result = addClause(toAdd, query);
+            expect(toQueryString(result)).toEqual(toQueryString(expected));
         });
 
         it('should remove inverse phrase when adding not-clause', () => {
@@ -266,7 +279,7 @@ describe('textQueryUtils', () => {
             const toAdd = new AndSearchClause([part1, part2]);
             const expected = [toAdd];
             const result = addClause(toAdd, query);
-            expect(result).toEqual(expected);
+            expect(toQueryString(result)).toEqual(toQueryString(expected));
         });
 
         it('should not add when clause already exists', () => {

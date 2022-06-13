@@ -7,6 +7,7 @@ import {
     QueryUpdate,
 } from 'shared/components/query/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
+import _ from 'lodash';
 
 export type AutosuggestStudySearchProps = {
     parser: QueryParser;
@@ -33,7 +34,7 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
     }
 
     function handleChange(update: QueryUpdate) {
-        let result = props.parsedQuery;
+        let result = _.cloneDeep(props.parsedQuery);
         if (update.toRemove) {
             for (const p of update.toRemove) {
                 result = removePhrase(p, result);

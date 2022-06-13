@@ -109,8 +109,12 @@ export function performSearchSingle(
 
 /**
  * Add clause to query
- * - add clause when it does not exist
  * - remove all phrases from toAdd in existing query
+ * if not-clause:
+ * - add new not-clause
+ * if and-clause:
+ * - merge with existing and-clauses
+ * - or push new clause
  */
 export function addClause(
     toAdd: ISearchClause,
@@ -126,6 +130,27 @@ export function addClause(
         result = removePhrase(p, result);
     }
 
+    if (toAdd.isAnd()) {
+        result = addAndClause(toAdd, result);
+    } else {
+        result = addNotClause(toAdd, result);
+    }
+
+    return result;
+}
+
+function addAndClause(toAdd: ISearchClause, query: ISearchClause[]) {
+    const andClauses = query.filter(c => c.isAnd());
+    if (andClauses.length) {
+        andClauses.forEach(c => c.getPhrases().push(...toAdd.getPhrases()));
+    } else {
+        query.push(toAdd);
+    }
+    return query;
+}
+
+function addNotClause(toAdd: ISearchClause, result: ISearchClause[]) {
+    result.push(toAdd);
     return result;
 }
 
@@ -163,30 +188,22 @@ export function createPhrase(
     };
 }
 
-/**
- * Remove phrase from query
- * - When removed phrase results in empty clause, the clause is also removed
- * - When phrase is removed from clause with multiple phrases, a new clause is added without the phrase
- *
- * Note: function expects phrase to exist only once
- */
 export function removePhrase(
     phrase: Phrase,
     query: ISearchClause[]
 ): ISearchClause[] {
-    const containingClause = query.find(r => r.contains(phrase));
-    if (!containingClause) {
+    const containingClauses = query.filter(r => r.contains(phrase));
+    if (!containingClauses.length) {
         return query;
     }
     let result = [...query];
-    _.remove(result, containingClause);
-    const multiplePhrases = containingClause.getPhrases().length > 1;
-    if (multiplePhrases) {
-        const otherPhrases = containingClause
-            .getPhrases()
-            .filter(p => !areEqualPhrases(p, phrase));
-        result.push(new AndSearchClause(otherPhrases));
-    }
+    containingClauses.forEach(c => {
+        if (c.getPhrases().length === 1) {
+            _.remove(result, c);
+        } else {
+            _.remove(c.getPhrases(), p => areEqualPhrases(p, phrase));
+        }
+    });
     return result;
 }
 

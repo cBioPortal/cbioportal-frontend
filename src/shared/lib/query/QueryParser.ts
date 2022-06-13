@@ -30,7 +30,7 @@ export class QueryParser {
                 form: {
                     input: FilterCheckbox,
                     // TODO: Make dynamic
-                    options: ['hg18', 'hg19', 'hg38', 'mm10', 'mm39'],
+                    options: ['hg19', 'hg38'],
                     label: 'Reference genome',
                 },
             },

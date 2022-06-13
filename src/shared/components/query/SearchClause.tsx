@@ -28,6 +28,7 @@ export interface ISearchClause {
 
 /**
  * Negative clause
+ * contains single phrase
  */
 export class NotSearchClause implements ISearchClause {
     private readonly phrase: Phrase;
