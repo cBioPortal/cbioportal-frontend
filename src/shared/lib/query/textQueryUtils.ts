@@ -90,36 +90,63 @@ export function performSearchSingle(
  * - merge with existing and-clauses
  * - or push new clause
  */
-export function addClause(
-    toAdd: ISearchClause,
+export function addClauses(
+    toAdd: ISearchClause[],
     query: ISearchClause[]
 ): ISearchClause[] {
     let result = [...query];
-    const existingClause = result.find(r => r.equals(toAdd));
-    if (existingClause) {
-        return result;
-    }
+    let newAndClauses: ISearchClause[] = [];
+    for (const clause of toAdd) {
+        const existingClause = result.find(r => r.equals(clause));
+        if (existingClause) {
+            continue;
+        }
 
-    for (const p of toAdd.getPhrases()) {
-        result = removePhrase(p, result);
-    }
+        for (const p of clause.getPhrases()) {
+            result = removePhrase(p, result);
+        }
 
-    if (toAdd.isAnd()) {
-        result = addAndClause(toAdd, result);
-    } else {
-        result = addNotClause(toAdd, result);
+        if (clause.isAnd()) {
+            [result, newAndClauses] = addAndClause(
+                result,
+                newAndClauses,
+                clause
+            );
+        } else {
+            result = addNotClause(clause, result);
+        }
     }
 
     return result;
 }
 
-function addAndClause(toAdd: ISearchClause, query: ISearchClause[]) {
-    const andClauses = query.filter(c => c.isAnd());
-    if (andClauses.length) {
-        andClauses.forEach(c => c.getPhrases().push(...toAdd.getPhrases()));
+/**
+ * Merge and-clause with old and-clauses, or add new and-clause
+ * @returns {result, newClauses}
+ */
+function addAndClause(
+    query: ISearchClause[],
+    newClauses: ISearchClause[],
+    toAdd: ISearchClause
+): [ISearchClause[], ISearchClause[]] {
+    const oldClauses = query.filter(c => c.isAnd() && !newClauses.includes(c));
+    if (oldClauses.length) {
+        query = mergeAndClause(toAdd, oldClauses);
     } else {
         query.push(toAdd);
+        newClauses.push(toAdd);
     }
+    return [query, newClauses];
+}
+
+/**
+ * Merge phrases with existing and-clauses,
+ */
+function mergeAndClause(
+    toAdd: ISearchClause,
+    query: ISearchClause[]
+): ISearchClause[] {
+    query.forEach(c => c.getPhrases().push(...toAdd.getPhrases()));
     return query;
 }
 

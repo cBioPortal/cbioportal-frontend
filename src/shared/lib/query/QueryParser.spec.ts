@@ -1,18 +1,10 @@
-import {
-    addClause,
-    defaultNodeFields,
-    performSearchSingle,
-    removeClause,
-    toQueryString,
-} from 'shared/lib/query/textQueryUtils';
-import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
+import { defaultNodeFields } from 'shared/lib/query/textQueryUtils';
 import {
     AndSearchClause,
     DefaultPhrase,
     ISearchClause,
     NotSearchClause,
 } from 'shared/components/query/SearchClause';
-import _ from 'lodash';
 import { QueryParser } from 'shared/lib/query/QueryParser';
 
 describe('QueryParser', () => {

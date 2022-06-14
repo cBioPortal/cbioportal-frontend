@@ -1,4 +1,4 @@
-import { addClause, removePhrase } from 'shared/lib/query/textQueryUtils';
+import { addClauses, removePhrase } from 'shared/lib/query/textQueryUtils';
 import * as React from 'react';
 import { FunctionComponent } from 'react';
 import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredSearch';
@@ -41,9 +41,7 @@ export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchPro
             }
         }
         if (update.toAdd) {
-            for (const clause of update.toAdd) {
-                result = addClause(clause, result);
-            }
+            result = addClauses(update.toAdd, result);
         }
         props.onSearch(result);
     }

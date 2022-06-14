@@ -156,17 +156,21 @@ export class DefaultPhrase implements Phrase {
         textRepresentation: string,
         fields: CancerTreeNodeFields[]
     ) {
-        this.fields = fields;
+        this._fields = fields;
         this._phrase = phrase;
         this._textRepresentation = textRepresentation;
     }
 
-    protected readonly fields: CancerTreeNodeFields[];
+    private readonly _fields: CancerTreeNodeFields[];
     protected readonly _textRepresentation: string;
     private readonly _phrase: string;
 
     public get phrase() {
         return this._phrase;
+    }
+
+    public get fields() {
+        return this._fields;
     }
 
     public toString() {
