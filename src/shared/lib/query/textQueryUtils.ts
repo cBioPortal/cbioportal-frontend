@@ -40,27 +40,6 @@ export type CancerTreeNodeFields =
     | keyof CancerTypeWithVisibility
     | keyof CancerStudy;
 
-export function matchPhrase(phrase: string, fullText: string) {
-    return fullText.toLowerCase().indexOf(phrase.toLowerCase()) > -1;
-}
-
-export function matchPhraseInStudyFields(
-    phrase: string,
-    study: CancerTreeNode,
-    fields: CancerTreeNodeFields[]
-): boolean {
-    let anyFieldMatch = false;
-    for (const fieldName of fields) {
-        let fieldMatch = false;
-        const fieldValue = (study as any)[fieldName];
-        if (fieldValue) {
-            fieldMatch = matchPhrase(phrase, fieldValue);
-        }
-        anyFieldMatch = anyFieldMatch || fieldMatch;
-    }
-    return anyFieldMatch;
-}
-
 /**
  * @returns {boolean} true if the query matches,
  * considering quotation marks, 'and' and 'or' logic
@@ -85,9 +64,8 @@ export function performSearchSingle(
     }
     for (const clause of parsedQuery) {
         if (clause.isNot()) {
-            let phrase = clause.getPhrases()[0];
-            // TODO: replace with phrase.match(study):
-            if (matchPhraseInStudyFields(phrase.phrase, study, phrase.fields)) {
+            const phrase = clause.getPhrases()[0];
+            if (phrase.match(study)) {
                 match = false;
                 forced = true;
                 break;
@@ -95,14 +73,7 @@ export function performSearchSingle(
         } else if (clause.isAnd()) {
             let clauseMatch = true;
             for (const phrase of clause.getPhrases()) {
-                clauseMatch =
-                    clauseMatch &&
-                    // TODO: replace with phrase.match(study):
-                    matchPhraseInStudyFields(
-                        phrase.phrase,
-                        study,
-                        phrase.fields
-                    );
+                clauseMatch = clauseMatch && phrase.match(study);
             }
             match = match || clauseMatch;
         }
@@ -202,20 +173,10 @@ export function removePhrase(
         if (c.getPhrases().length === 1) {
             _.remove(result, c);
         } else {
-            _.remove(c.getPhrases(), p => areEqualPhrases(p, phrase));
+            _.remove(c.getPhrases(), p => p.equals(phrase));
         }
     });
     return result;
-}
-
-/**
- * Phrases are equal when phrase and fields are equal
- */
-export function areEqualPhrases(a: Phrase, b: Phrase): boolean {
-    if (a.phrase !== b.phrase) {
-        return false;
-    }
-    return _.isEqual(a.fields, b.fields);
 }
 
 /**

@@ -1,8 +1,4 @@
-import {
-    areEqualPhrases,
-    CancerTreeNodeFields,
-    matchPhraseInStudyFields,
-} from 'shared/lib/query/textQueryUtils';
+import { CancerTreeNodeFields } from 'shared/lib/query/textQueryUtils';
 import _ from 'lodash';
 import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
 
@@ -13,7 +9,7 @@ export interface ISearchClause {
     isNot(): boolean;
     isAnd(): boolean;
     toString(): string;
-    equals(item: ISearchClause): boolean;
+    equals(other: ISearchClause): boolean;
 
     /**
      * check clause contains phrase using:
@@ -59,11 +55,11 @@ export class NotSearchClause implements ISearchClause {
         return this.phrase ? `${NOT_PREFIX} ${this.phrase.toString()}` : '';
     }
 
-    equals(item: ISearchClause): boolean {
-        if (item.isAnd()) {
+    equals(other: ISearchClause): boolean {
+        if (other.isAnd()) {
             return false;
         }
-        return item.contains(this.phrase);
+        return other.contains(this.phrase);
     }
 
     contains(match: Phrase | null | ((predicate: Phrase) => boolean)): boolean {
@@ -73,7 +69,7 @@ export class NotSearchClause implements ISearchClause {
         if (_.isFunction(match)) {
             return match(this.phrase);
         }
-        return areEqualPhrases(this.phrase, match);
+        return this.phrase.equals(match);
     }
 }
 
@@ -121,21 +117,21 @@ export class AndSearchClause implements ISearchClause {
         }
 
         for (const phrase of this.phrases) {
-            if (areEqualPhrases(phrase, match)) {
+            if (phrase.equals(match)) {
                 return true;
             }
         }
         return false;
     }
 
-    equals(item: ISearchClause): boolean {
-        if (item.isNot()) {
+    equals(other: ISearchClause): boolean {
+        if (other.isNot()) {
             return false;
         }
-        let itemPhrases = (item as AndSearchClause).phrases;
+        let itemPhrases = (other as AndSearchClause).phrases;
         let containsAll = true;
         for (const itemPhrase of this.phrases) {
-            containsAll = containsAll && item.contains(itemPhrase);
+            containsAll = containsAll && other.contains(itemPhrase);
         }
         for (const itemPhrase of itemPhrases) {
             containsAll = containsAll && this.contains(itemPhrase);
@@ -148,17 +144,10 @@ export class AndSearchClause implements ISearchClause {
  * Phrase string and associated fields
  */
 export interface Phrase {
-    /**
-     * Phrase as shown in search box, including its prefix
-     */
-    // readonly textRepresentation: string;
-
-    readonly phrase: string;
-
-    readonly fields: CancerTreeNodeFields[];
-
+    phrase: string;
     toString(): string;
     match(study: CancerTreeNode): boolean;
+    equals(other: Phrase): boolean;
 }
 
 export class DefaultPhrase implements Phrase {
@@ -168,20 +157,47 @@ export class DefaultPhrase implements Phrase {
         fields: CancerTreeNodeFields[]
     ) {
         this.fields = fields;
-        this.phrase = phrase;
-        this.textRepresentation = textRepresentation;
+        this._phrase = phrase;
+        this._textRepresentation = textRepresentation;
     }
 
-    readonly fields: CancerTreeNodeFields[];
-    readonly phrase: string;
-    readonly textRepresentation: string;
+    protected readonly fields: CancerTreeNodeFields[];
+    protected readonly _textRepresentation: string;
+    private readonly _phrase: string;
+
+    public get phrase() {
+        return this._phrase;
+    }
 
     public toString() {
-        return this.textRepresentation;
+        return this._textRepresentation;
     }
 
     public match(study: CancerTreeNode): boolean {
-        return matchPhraseInStudyFields(this.phrase, study, this.fields);
+        let anyFieldMatch = false;
+        for (const fieldName of this.fields) {
+            let fieldMatch = false;
+            const fieldValue = (study as any)[fieldName];
+            if (fieldValue) {
+                fieldMatch = matchPhrase(this.phrase, fieldValue);
+            }
+            anyFieldMatch = anyFieldMatch || fieldMatch;
+        }
+        return anyFieldMatch;
+    }
+
+    equals(other: Phrase): boolean {
+        if (!other) {
+            return false;
+        }
+        const o = other as DefaultPhrase;
+        if (!o.phrase || !o.fields) {
+            return false;
+        }
+        if (this.phrase !== o.phrase) {
+            return false;
+        }
+        return _.isEqual(this.fields, o.fields);
     }
 }
 
@@ -199,3 +215,7 @@ export type QueryUpdate = {
      */
     toRemove?: Phrase[];
 };
+
+function matchPhrase(phrase: string, fullText: string) {
+    return fullText.toLowerCase().indexOf(phrase.toLowerCase()) > -1;
+}

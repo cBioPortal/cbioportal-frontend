@@ -178,7 +178,7 @@ export class QueryParser {
         }
     }
 
-    private parsePhrase(data: string): Phrase {
+    private createPhrase(data: string): Phrase {
         const parts: string[] = data.split(FILTER_SEPARATOR);
         let phrase: string;
         let fields: CancerTreeNodeFields[];
@@ -196,20 +196,17 @@ export class QueryParser {
     }
 
     private createNotClause(data: string): ISearchClause {
-        const { phrase, fields } = this.parsePhrase(data);
-        let textRepresentation = this.enquoteSpaces(data);
-        return new NotSearchClause(
-            new DefaultPhrase(phrase, textRepresentation, fields)
-        );
+        const phrase = this.createPhrase(data);
+        return new NotSearchClause(phrase);
     }
 
-    private createAndClause(phrases: string[]): ISearchClause {
-        const data: Phrase[] = [];
-        for (const phrase of phrases) {
-            const parsedData = this.parsePhrase(phrase);
-            data.push(parsedData);
+    private createAndClause(textualRepresentations: string[]): ISearchClause {
+        const phrases: Phrase[] = [];
+        for (const tr of textualRepresentations) {
+            const phrase = this.createPhrase(tr);
+            phrases.push(phrase);
         }
-        return new AndSearchClause(data);
+        return new AndSearchClause(phrases);
     }
 
     public enquoteSpaces(data: string) {

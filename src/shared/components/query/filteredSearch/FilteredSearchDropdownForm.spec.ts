@@ -1,13 +1,14 @@
-import { Phrase } from 'shared/components/query/SearchClause';
+import { DefaultPhrase, Phrase } from 'shared/components/query/SearchClause';
 import { createUpdate } from 'shared/components/query/filteredSearch/field/CheckboxFilterField';
+import { defaultNodeFields } from 'shared/lib/query/textQueryUtils';
 
 describe('FilteredSearchDropdownForm', () => {
     describe('createUpdate', () => {
-        const a = { phrase: 'a' } as Phrase;
-        const b = { phrase: 'b' } as Phrase;
-        const c = { phrase: 'c' } as Phrase;
-        const d = { phrase: 'd' } as Phrase;
-        const e = { phrase: 'e' } as Phrase;
+        const a = new DefaultPhrase('a', 'a', defaultNodeFields);
+        const b = new DefaultPhrase('b', 'b', defaultNodeFields);
+        const c = new DefaultPhrase('c', 'c', defaultNodeFields);
+        const d = new DefaultPhrase('d', 'd', defaultNodeFields);
+        const e = new DefaultPhrase('e', 'e', defaultNodeFields);
 
         it('creates shortest update with more Not than And', () => {
             const not = [a, b, c];
@@ -16,7 +17,7 @@ describe('FilteredSearchDropdownForm', () => {
             expect(result.toAdd?.length).toEqual(2);
             expect(result.toAdd?.map(c => c.isAnd())).toEqual([true, true]);
             expect(result.toRemove?.length).toEqual(3);
-            expect(result.toRemove?.map(p => p.phrase)).toEqual([
+            expect(result.toRemove?.map(p => p.toString())).toEqual([
                 'a',
                 'b',
                 'c',
