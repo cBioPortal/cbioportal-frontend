@@ -7,6 +7,12 @@ import {
     OncoKbCardDataType,
 } from 'cbioportal-utils';
 import { IndicatorQueryResp, TumorType } from 'oncokb-ts-api-client';
+import {
+    deriveStructuralVariantType,
+    generateAnnotateStructuralVariantQuery,
+    generateQueryStructuralVariantId,
+} from 'cbioportal-utils/src';
+import { StructuralVariant } from 'cbioportal-ts-api-client/src';
 
 // oncogenic value => oncogenic class name
 const ONCOGENIC_CLASS_NAMES: { [oncogenic: string]: string } = {
@@ -382,12 +388,27 @@ export function getIndicatorData(
         return undefined;
     }
 
-    const id = generateQueryVariantId(
-        getEntrezGeneId(mutation),
-        getTumorType(mutation),
-        mutation.proteinChange,
-        mutation.mutationType
-    );
+    let id = '';
+
+    // @ts-ignore
+    const sv: StructuralVariant = mutation.structuralVariant;
+
+    if (sv) {
+        let structuralVariantType = deriveStructuralVariantType(sv);
+        id = generateQueryStructuralVariantId(
+            sv.site1EntrezGeneId,
+            sv.site2EntrezGeneId,
+            getTumorType(mutation),
+            structuralVariantType
+        );
+    } else {
+        id = generateQueryVariantId(
+            getEntrezGeneId(mutation),
+            getTumorType(mutation),
+            mutation.proteinChange,
+            mutation.mutationType
+        );
+    }
 
     return oncoKbData.indicatorMap[id];
 }
