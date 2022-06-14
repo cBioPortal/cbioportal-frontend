@@ -209,6 +209,7 @@ jobs:
 
   end_to_end_tests_localdb:
     working_directory: /tmp/repo
+    resource_class: large
     machine:
       enabled: true
       image: ubuntu-2004:202201-02
@@ -364,8 +365,8 @@ workflows:
             branches:
               ignore:
                 - master
-                - release-*
-                - rc
+#                - release-*
+#                - rc
       - unit_tests_main:
           requires:
             - install
@@ -395,7 +396,7 @@ workflows:
             branches:
               only:
                 - master
-                - rc
+#                - rc
     jobs:
       - install
       - api_sync:
