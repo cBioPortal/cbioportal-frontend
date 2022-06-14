@@ -2,10 +2,11 @@ import {
     AndSearchClause,
     Phrase,
     NotSearchClause,
+    DefaultPhrase,
 } from 'shared/components/query/SearchClause';
 
 function createTestPhrase(): Phrase {
-    return { fields: ['studyId'], phrase: 'a', textRepresentation: 'a' };
+    return new DefaultPhrase('a', 'a', ['studyId']);
 }
 
 describe('ISearchClause', () => {
@@ -25,7 +26,7 @@ describe('ISearchClause', () => {
         it('should equal when same phrases', () => {
             const a = new AndSearchClause([createTestPhrase()]);
             const b = new AndSearchClause([
-                { phrase: 'a', fields: ['studyId'], textRepresentation: 'a' },
+                new DefaultPhrase('a', 'a', ['studyId']),
             ]);
             expect(a.equals(b)).toEqual(true);
         });
@@ -33,32 +34,20 @@ describe('ISearchClause', () => {
         it('returns true when calling contains() with contained phrase', () => {
             const a = new AndSearchClause([createTestPhrase()]);
             expect(
-                a.contains({
-                    phrase: 'a',
-                    textRepresentation: 'a',
-                    fields: ['studyId'],
-                })
+                a.contains(new DefaultPhrase('a', 'a', ['studyId']))
             ).toEqual(true);
         });
 
         it('returns false when calling contains() with non contained phrase', () => {
             const a = new AndSearchClause([createTestPhrase()]);
-            let b: Phrase = {
-                phrase: 'b',
-                textRepresentation: 'a',
-                fields: ['studyId'],
-            };
+            let b: Phrase = new DefaultPhrase('b', 'a', ['studyId']);
             expect(a.contains(b)).toEqual(false);
         });
 
         it('returns false when calling contains() with faulty textRepresentation', () => {
             const a = new AndSearchClause([createTestPhrase()]);
             expect(
-                a.contains({
-                    phrase: 'a',
-                    textRepresentation: 'faulty',
-                    fields: ['studyId'],
-                })
+                a.contains(new DefaultPhrase('a', 'faulty', ['studyId']))
             ).toEqual(true);
         });
 
@@ -83,44 +72,30 @@ describe('ISearchClause', () => {
 
         it('should not equal when different phrases', () => {
             const a = new NotSearchClause(createTestPhrase());
-            const b = new NotSearchClause({
-                fields: ['studyId'],
-                phrase: 'different',
-                textRepresentation: 'a',
-            });
+            const b = new NotSearchClause(
+                new DefaultPhrase('different', 'a', ['studyId'])
+            );
             expect(a.equals(b)).toEqual(false);
         });
 
         it('returns true when calling contains() with contained phrase', () => {
             const a = new NotSearchClause(createTestPhrase());
             expect(
-                a.contains({
-                    phrase: 'a',
-                    textRepresentation: 'a',
-                    fields: ['studyId'],
-                })
+                a.contains(new DefaultPhrase('a', 'a', ['studyId']))
             ).toEqual(true);
         });
 
         it('returns false when calling contains() with non contained phrase', () => {
             const a = new NotSearchClause(createTestPhrase());
             expect(
-                a.contains({
-                    phrase: 'b',
-                    textRepresentation: 'a',
-                    fields: ['studyId'],
-                })
+                a.contains(new DefaultPhrase('b', 'a', ['studyId']))
             ).toEqual(false);
         });
 
         it('ignores textRepresentation when calling contains()', () => {
             const a = new NotSearchClause(createTestPhrase());
             expect(
-                a.contains({
-                    phrase: 'a',
-                    textRepresentation: 'faulty',
-                    fields: ['studyId'],
-                })
+                a.contains(new DefaultPhrase('a', 'faulty', ['studyId']))
             ).toEqual(true);
         });
 

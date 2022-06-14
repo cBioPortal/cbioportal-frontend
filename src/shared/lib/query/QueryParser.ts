@@ -5,7 +5,10 @@ import {
 } from 'shared/lib/query/textQueryUtils';
 import {
     AndSearchClause,
+    DefaultPhrase,
+    FILTER_SEPARATOR,
     ISearchClause,
+    NOT_PREFIX,
     NotSearchClause,
     Phrase,
 } from 'shared/components/query/SearchClause';
@@ -92,8 +95,8 @@ export class QueryParser {
                 }
             } else if (query[currInd] === ' ') {
                 currInd += 1;
-            } else if (query[currInd] === '-') {
-                phrases.push('-');
+            } else if (query[currInd] === NOT_PREFIX) {
+                phrases.push(NOT_PREFIX);
                 currInd += 1;
             } else {
                 nextSpace = query.indexOf(' ', currInd);
@@ -116,7 +119,7 @@ export class QueryParser {
         const clauses: ISearchClause[] = [];
         let currInd = 0;
         while (currInd < phrases.length) {
-            if (phrases[currInd] === '-') {
+            if (phrases[currInd] === NOT_PREFIX) {
                 currInd = this.addNotClause(currInd, phrases, clauses);
             } else {
                 currInd = this.addAndClause(phrases, currInd, clauses);
@@ -148,7 +151,7 @@ export class QueryParser {
         clauses: ISearchClause[]
     ): number {
         let nextOr = phrases.indexOf('or', currInd);
-        let nextDash = phrases.indexOf('-', currInd);
+        let nextDash = phrases.indexOf(NOT_PREFIX, currInd);
         if (nextOr === -1 && nextDash === -1) {
             clauses.push(this.createAndClause(phrases.slice(currInd)));
             return phrases.length;
@@ -176,7 +179,7 @@ export class QueryParser {
     }
 
     private parsePhrase(data: string): Phrase {
-        const parts: string[] = data.split(':');
+        const parts: string[] = data.split(FILTER_SEPARATOR);
         let phrase: string;
         let fields: CancerTreeNodeFields[];
         let filter = this._searchFilters.find(
@@ -189,13 +192,15 @@ export class QueryParser {
             phrase = parts[0];
             fields = defaultNodeFields;
         }
-        return { phrase, fields, textRepresentation: this.enquoteSpaces(data) };
+        return new DefaultPhrase(phrase, this.enquoteSpaces(data), fields);
     }
 
     private createNotClause(data: string): ISearchClause {
         const { phrase, fields } = this.parsePhrase(data);
         let textRepresentation = this.enquoteSpaces(data);
-        return new NotSearchClause({ phrase, textRepresentation, fields });
+        return new NotSearchClause(
+            new DefaultPhrase(phrase, textRepresentation, fields)
+        );
     }
 
     private createAndClause(phrases: string[]): ISearchClause {

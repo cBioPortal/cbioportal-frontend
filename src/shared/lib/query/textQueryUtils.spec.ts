@@ -8,6 +8,7 @@ import {
 import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
 import {
     AndSearchClause,
+    DefaultPhrase,
     ISearchClause,
     NotSearchClause,
 } from 'shared/components/query/SearchClause';
@@ -21,16 +22,26 @@ describe('textQueryUtils', () => {
     )!.nodeFields;
 
     describe('performSearchSingle', () => {
+        const matchPhrase = new DefaultPhrase(
+            'match',
+            'match',
+            defaultNodeFields
+        );
+        const noMatchPhrase = new DefaultPhrase(
+            'no-match',
+            'no-match',
+            defaultNodeFields
+        );
+        const hg2000 = new DefaultPhrase(
+            'hg2000',
+            'reference-genome:hg2000',
+            referenceGenomeFields
+        );
+
         it('matches study by single conjunctive clause', () => {
             const expected = { match: true, forced: false };
             const clauses: ISearchClause[] = [
-                new AndSearchClause([
-                    {
-                        phrase: 'match',
-                        fields: defaultNodeFields,
-                        textRepresentation: 'match',
-                    },
-                ]),
+                new AndSearchClause([matchPhrase]),
             ];
             const studyNode = { name: 'match' } as CancerTreeNode;
             const result = performSearchSingle(clauses, studyNode);
@@ -40,11 +51,7 @@ describe('textQueryUtils', () => {
         it('matches study by single negative clause', () => {
             const expected = { match: true, forced: false };
             const clauses: ISearchClause[] = [
-                new NotSearchClause({
-                    phrase: 'no-match',
-                    fields: defaultNodeFields,
-                    textRepresentation: '- no-match',
-                }),
+                new NotSearchClause(noMatchPhrase),
             ];
             const studyNode = { name: 'match' } as CancerTreeNode;
             const result = performSearchSingle(clauses, studyNode);
@@ -54,13 +61,7 @@ describe('textQueryUtils', () => {
         it('does not match study when conjunctive clause does not match', () => {
             const expected = { match: false, forced: false };
             const clauses: ISearchClause[] = [
-                new AndSearchClause([
-                    {
-                        phrase: 'no-match',
-                        fields: defaultNodeFields,
-                        textRepresentation: 'no-match',
-                    },
-                ]),
+                new AndSearchClause([noMatchPhrase]),
             ];
             const studyNode = {
                 description: 'foo match bar',
@@ -71,13 +72,7 @@ describe('textQueryUtils', () => {
 
         it('does not match study when negative clause matches (forced match)', () => {
             const expected = { match: false, forced: true };
-            const clauses: ISearchClause[] = [
-                new NotSearchClause({
-                    phrase: 'match',
-                    fields: defaultNodeFields,
-                    textRepresentation: '- match',
-                }),
-            ];
+            const clauses: ISearchClause[] = [new NotSearchClause(matchPhrase)];
             const studyNode = { studyId: 'match' } as CancerTreeNode;
             const result = performSearchSingle(clauses, studyNode);
             expect(result).toEqual(expected);
@@ -85,15 +80,7 @@ describe('textQueryUtils', () => {
 
         it('matches study by reference genome clause', () => {
             const expected = { match: true, forced: false };
-            const clauses: ISearchClause[] = [
-                new AndSearchClause([
-                    {
-                        textRepresentation: 'reference-genome:hg2000',
-                        phrase: 'hg2000',
-                        fields: referenceGenomeFields,
-                    },
-                ]),
-            ];
+            const clauses: ISearchClause[] = [new AndSearchClause([hg2000])];
 
             const studyNode = { referenceGenome: 'hg2000' } as CancerTreeNode;
             const result = performSearchSingle(clauses, studyNode);
@@ -102,15 +89,7 @@ describe('textQueryUtils', () => {
 
         it('does not match study when reference genome clause differs', () => {
             const expected = { match: false, forced: false };
-            const clauses: ISearchClause[] = [
-                new AndSearchClause([
-                    {
-                        textRepresentation: 'reference-genome:hg2000',
-                        phrase: 'hg2000',
-                        fields: referenceGenomeFields,
-                    },
-                ]),
-            ];
+            const clauses: ISearchClause[] = [new AndSearchClause([hg2000])];
             const studyNode = { referenceGenome: 'hg42' } as CancerTreeNode;
             const result = performSearchSingle(clauses, studyNode);
             expect(result).toEqual(expected);
@@ -118,13 +97,7 @@ describe('textQueryUtils', () => {
 
         it('does not match study when negative reference-genome clause matches (forced match)', () => {
             const expected = { match: false, forced: true };
-            const clauses: ISearchClause[] = [
-                new NotSearchClause({
-                    phrase: 'hg2000',
-                    fields: referenceGenomeFields,
-                    textRepresentation: '- reference-genome:hg2000',
-                }),
-            ];
+            const clauses: ISearchClause[] = [new NotSearchClause(hg2000)];
             const studyNode = { referenceGenome: 'hg2000' } as CancerTreeNode;
             const result = performSearchSingle(clauses, studyNode);
             expect(result).toEqual(expected);
@@ -134,33 +107,27 @@ describe('textQueryUtils', () => {
             const expected = { match: true, forced: false };
             const clauses: ISearchClause[] = [
                 new AndSearchClause([
-                    {
-                        phrase: 'match1',
-                        fields: defaultNodeFields,
-                        textRepresentation: 'match1',
-                    },
-                    {
-                        phrase: 'hg2000',
-                        fields: referenceGenomeFields,
-                        textRepresentation: 'reference-genome:hg2000',
-                    },
+                    new DefaultPhrase('match1', 'match1', defaultNodeFields),
+                    new DefaultPhrase(
+                        'hg2000',
+                        'reference-genome:hg2000',
+                        referenceGenomeFields
+                    ),
                 ]),
-                new NotSearchClause({
-                    phrase: 'no-match-4',
-                    fields: defaultNodeFields,
-                    textRepresentation: '- no-match-4',
-                }),
+                new NotSearchClause(
+                    new DefaultPhrase(
+                        'no-match-4',
+                        'no-match-4',
+                        defaultNodeFields
+                    )
+                ),
                 new AndSearchClause([
-                    {
-                        phrase: 'part5a part5b',
-                        fields: defaultNodeFields,
-                        textRepresentation: '"part5a part5b"',
-                    },
-                    {
-                        phrase: 'part6',
-                        fields: defaultNodeFields,
-                        textRepresentation: 'part6',
-                    },
+                    new DefaultPhrase(
+                        'part5a part5b',
+                        '"part5a part5b"',
+                        defaultNodeFields
+                    ),
+                    new DefaultPhrase('part6', 'part6', defaultNodeFields),
                 ]),
             ];
             const studyNode = {
@@ -208,18 +175,12 @@ describe('textQueryUtils', () => {
     });
 
     describe('addClause', () => {
+        const part1 = new DefaultPhrase('part1', 'part1', defaultNodeFields);
+        const part2 = new DefaultPhrase('part2', 'part2', defaultNodeFields);
+
         it('should merge and-phrase when adding and-clause', () => {
-            const part1 = {
-                textRepresentation: 'part1',
-                phrase: 'part1',
-                fields: defaultNodeFields,
-            };
             const query: ISearchClause[] = [new AndSearchClause([part1])];
-            const part2 = {
-                textRepresentation: 'part2',
-                phrase: 'part2',
-                fields: defaultNodeFields,
-            };
+
             const toAdd = new AndSearchClause([part2]);
             const expected = [new AndSearchClause([part1, part2])];
             const result = addClause(toAdd, query);
@@ -227,17 +188,7 @@ describe('textQueryUtils', () => {
         });
 
         it('should add not-clause to query', () => {
-            const part1 = {
-                textRepresentation: 'part1',
-                phrase: 'part1',
-                fields: defaultNodeFields,
-            };
             const query: ISearchClause[] = [new AndSearchClause([part1])];
-            const part2 = {
-                textRepresentation: 'part2',
-                phrase: 'part2',
-                fields: defaultNodeFields,
-            };
             const toAdd = new NotSearchClause(part2);
             const expected = [...query, toAdd];
             const result = addClause(toAdd, query);
@@ -245,16 +196,6 @@ describe('textQueryUtils', () => {
         });
 
         it('should remove inverse phrase when adding not-clause', () => {
-            const part1 = {
-                textRepresentation: 'part1',
-                phrase: 'part1',
-                fields: defaultNodeFields,
-            };
-            const part2 = {
-                textRepresentation: 'part2',
-                phrase: 'part2',
-                fields: defaultNodeFields,
-            };
             const query: ISearchClause[] = [
                 new AndSearchClause([part1, part2]),
             ];
@@ -265,16 +206,6 @@ describe('textQueryUtils', () => {
         });
 
         it('should remove inverse phrase when adding and-phrase', () => {
-            const part1 = {
-                textRepresentation: 'part1',
-                phrase: 'part1',
-                fields: defaultNodeFields,
-            };
-            const part2 = {
-                textRepresentation: 'part2',
-                phrase: 'part2',
-                fields: defaultNodeFields,
-            };
             const query: ISearchClause[] = [new NotSearchClause(part1)];
             const toAdd = new AndSearchClause([part1, part2]);
             const expected = [toAdd];
@@ -283,38 +214,14 @@ describe('textQueryUtils', () => {
         });
 
         it('should not add when clause already exists', () => {
-            const query: ISearchClause[] = [
-                new AndSearchClause([
-                    {
-                        textRepresentation: 'part1',
-                        phrase: 'part1',
-                        fields: defaultNodeFields,
-                    },
-                ]),
-            ];
-            const toAdd = new AndSearchClause([
-                {
-                    textRepresentation: 'part1',
-                    phrase: 'part1',
-                    fields: defaultNodeFields,
-                },
-            ]);
+            const query: ISearchClause[] = [new AndSearchClause([part1])];
+            const toAdd = new AndSearchClause([part1]);
             const expected = [...query];
             const result = addClause(toAdd, query);
             expect(result).toEqual(expected);
         });
 
         it('should remove existing phrases', () => {
-            let part1 = {
-                textRepresentation: 'part1',
-                phrase: 'part1',
-                fields: defaultNodeFields,
-            };
-            let part2 = {
-                textRepresentation: 'part2',
-                phrase: 'part2',
-                fields: defaultNodeFields,
-            };
             const query: ISearchClause[] = [new AndSearchClause([part1])];
             const toAdd = new AndSearchClause([part1, part2]);
 
@@ -325,16 +232,11 @@ describe('textQueryUtils', () => {
     });
 
     describe('removeClause', () => {
+        const part1 = new DefaultPhrase('part1', 'part1', defaultNodeFields);
+        const part2 = new DefaultPhrase('part2', 'part2', defaultNodeFields);
+
         it('should remove equal clause from query', () => {
-            const query: ISearchClause[] = [
-                new AndSearchClause([
-                    {
-                        textRepresentation: 'part1',
-                        phrase: 'part1',
-                        fields: defaultNodeFields,
-                    },
-                ]),
-            ];
+            const query: ISearchClause[] = [new AndSearchClause([part1])];
             const toRemove = _.clone(query[0]);
             const expected: ISearchClause[] = [];
             const result = removeClause(toRemove, query);
@@ -342,16 +244,6 @@ describe('textQueryUtils', () => {
         });
 
         it('should remove phrase from clause with multiple phrases', () => {
-            let part1 = {
-                textRepresentation: 'part1',
-                phrase: 'part1',
-                fields: defaultNodeFields,
-            };
-            let part2 = {
-                textRepresentation: 'part2',
-                phrase: 'part2',
-                fields: defaultNodeFields,
-            };
             const query = [new AndSearchClause([part1, part2])];
             const toRemove = new AndSearchClause([part1]);
             const expected = [new AndSearchClause([part2])];
@@ -360,13 +252,7 @@ describe('textQueryUtils', () => {
         });
 
         it('should remove not clause', () => {
-            const query = [
-                new NotSearchClause({
-                    textRepresentation: 'part1',
-                    phrase: 'part1',
-                    fields: defaultNodeFields,
-                }),
-            ];
+            const query = [new NotSearchClause(part1)];
             const toRemove = _.clone(query[0]);
             const expected: ISearchClause[] = [];
             const result = removeClause(toRemove, query);

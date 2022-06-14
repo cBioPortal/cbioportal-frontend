@@ -3,7 +3,12 @@ import {
     CancerTreeNode,
     CancerTypeWithVisibility,
 } from 'shared/components/query/CancerStudyTreeData';
-import { ISearchClause, Phrase } from 'shared/components/query/SearchClause';
+import {
+    DefaultPhrase,
+    FILTER_SEPARATOR,
+    ISearchClause,
+    Phrase,
+} from 'shared/components/query/SearchClause';
 import _ from 'lodash';
 import { MatchResult } from 'shared/lib/query/QueryParser';
 import { FilterField } from 'shared/components/query/filteredSearch/field/FilterFormField';
@@ -47,9 +52,9 @@ export function matchPhraseInStudyFields(
     let anyFieldMatch = false;
     for (const fieldName of fields) {
         let fieldMatch = false;
-        const studyElement = (study as any)[fieldName];
-        if (studyElement) {
-            fieldMatch = matchPhrase(phrase, studyElement);
+        const fieldValue = (study as any)[fieldName];
+        if (fieldValue) {
+            fieldMatch = matchPhrase(phrase, fieldValue);
         }
         anyFieldMatch = anyFieldMatch || fieldMatch;
     }
@@ -81,6 +86,7 @@ export function performSearchSingle(
     for (const clause of parsedQuery) {
         if (clause.isNot()) {
             let phrase = clause.getPhrases()[0];
+            // TODO: replace with phrase.match(study):
             if (matchPhraseInStudyFields(phrase.phrase, study, phrase.fields)) {
                 match = false;
                 forced = true;
@@ -91,6 +97,7 @@ export function performSearchSingle(
             for (const phrase of clause.getPhrases()) {
                 clauseMatch =
                     clauseMatch &&
+                    // TODO: replace with phrase.match(study):
                     matchPhraseInStudyFields(
                         phrase.phrase,
                         study,
@@ -176,12 +183,10 @@ export function createPhrase(
     option: string,
     fields: CancerTreeNodeFields[]
 ): Phrase {
-    const textRepresentation = `${prefix ? `${prefix}:` : ''}${option}`;
-    return {
-        phrase: option,
-        fields: fields,
-        textRepresentation,
-    };
+    const textRepresentation = `${
+        prefix ? `${prefix}${FILTER_SEPARATOR}` : ''
+    }${option}`;
+    return new DefaultPhrase(option, textRepresentation, fields);
 }
 
 export function removePhrase(

@@ -1,8 +1,13 @@
 import {
     areEqualPhrases,
     CancerTreeNodeFields,
+    matchPhraseInStudyFields,
 } from 'shared/lib/query/textQueryUtils';
 import _ from 'lodash';
+import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
+
+export const FILTER_SEPARATOR = `:`;
+export const NOT_PREFIX = `-`;
 
 export interface ISearchClause {
     isNot(): boolean;
@@ -51,7 +56,7 @@ export class NotSearchClause implements ISearchClause {
     }
 
     toString(): string {
-        return this.phrase ? `- ${this.phrase.textRepresentation}` : '';
+        return this.phrase ? `${NOT_PREFIX} ${this.phrase.toString()}` : '';
     }
 
     equals(item: ISearchClause): boolean {
@@ -98,7 +103,7 @@ export class AndSearchClause implements ISearchClause {
 
     toString(): string {
         return this.phrases.length
-            ? this.phrases.map(p => p.textRepresentation).join(' ')
+            ? this.phrases.map(p => p.toString()).join(' ')
             : '';
     }
 
@@ -142,16 +147,43 @@ export class AndSearchClause implements ISearchClause {
 /**
  * Phrase string and associated fields
  */
-export type Phrase = {
+export interface Phrase {
     /**
      * Phrase as shown in search box, including its prefix
      */
-    readonly textRepresentation: string;
+    // readonly textRepresentation: string;
 
     readonly phrase: string;
 
     readonly fields: CancerTreeNodeFields[];
-};
+
+    toString(): string;
+    match(study: CancerTreeNode): boolean;
+}
+
+export class DefaultPhrase implements Phrase {
+    constructor(
+        phrase: string,
+        textRepresentation: string,
+        fields: CancerTreeNodeFields[]
+    ) {
+        this.fields = fields;
+        this.phrase = phrase;
+        this.textRepresentation = textRepresentation;
+    }
+
+    readonly fields: CancerTreeNodeFields[];
+    readonly phrase: string;
+    readonly textRepresentation: string;
+
+    public toString() {
+        return this.textRepresentation;
+    }
+
+    public match(study: CancerTreeNode): boolean {
+        return matchPhraseInStudyFields(this.phrase, study, this.fields);
+    }
+}
 
 export type SearchResult = {
     match: boolean;
