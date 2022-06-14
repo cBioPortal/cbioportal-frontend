@@ -17,6 +17,7 @@ export type IOncoprintHeatmapProps = {
     axisLabelX: string;
     barWidth: number;
     groupToColor?: { [group: string]: string };
+    broadcastOncoprintJsRef: (oncoprint: OncoprintJS) => void;
 };
 
 const MIN_WIDTH = 400;
@@ -48,6 +49,7 @@ export default class MultipleCategoryHeatmap extends React.Component<
     @autobind
     private oncoprintJsRef(oncoprint: OncoprintJS) {
         this.oncoprintJs = oncoprint;
+        this.props.broadcastOncoprintJsRef(oncoprint);
     }
 
     render() {
