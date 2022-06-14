@@ -246,8 +246,39 @@ export default class ClinicalData extends React.Component<
         }
     );
 
-    @computed get showLogScaleControls() {
+    @computed get isNumericalPlot() {
         return isNumerical(this.highlightedRow!.clinicalAttribute.datatype);
+    }
+
+    @computed get showLogScaleControls() {
+        return this.isNumericalPlot;
+    }
+
+    @computed get showPAndQControls() {
+        return !this.isTable && !this.isHeatmap;
+    }
+
+    @computed get showHorizontalBarControls() {
+        return !this.showLogScaleControls && !this.isHeatmap;
+    }
+
+    @computed get showSwapAxisControls() {
+        return !this.isTable;
+    }
+
+    @computed get isTable() {
+        return (
+            this.isNumericalPlot &&
+            this.numericalVisualisationType ===
+                ClinicalNumericalVisualisationType.Table
+        );
+    }
+
+    @computed get isHeatmap() {
+        return (
+            !this.isNumericalPlot &&
+            this.categoryPlotType === CategoryPlotType.Heatmap
+        );
     }
 
     @observable private logScale = false;
@@ -284,7 +315,7 @@ export default class ClinicalData extends React.Component<
     }
 
     @action.bound
-    private onClickhorizontalBars() {
+    private onClickHorizontalBars() {
         this.horizontalBars = !this.horizontalBars;
     }
 
@@ -639,9 +670,7 @@ export default class ClinicalData extends React.Component<
         }
         return (
             <div style={{ marginBottom: '10px' }}>
-                {isNumerical(
-                    this.highlightedRow!.clinicalAttribute.datatype
-                ) && (
+                {this.isNumericalPlot && (
                     <>
                         <div
                             className="form-group"
@@ -688,8 +717,7 @@ export default class ClinicalData extends React.Component<
                     </div>
                 )}
                 <div>
-                    {this.numericalVisualisationType !==
-                        ClinicalNumericalVisualisationType.Table && (
+                    {this.showSwapAxisControls && (
                         <label className="checkbox-inline">
                             <input
                                 type="checkbox"
@@ -700,19 +728,18 @@ export default class ClinicalData extends React.Component<
                             Swap Axes
                         </label>
                     )}
-                    {!this.showLogScaleControls &&
-                        this.categoryPlotType !== CategoryPlotType.Heatmap && (
-                            <label className="checkbox-inline">
-                                <input
-                                    type="checkbox"
-                                    name="horizontalBars"
-                                    checked={this.horizontalBars}
-                                    onClick={this.onClickhorizontalBars}
-                                    data-test="HorizontalBars"
-                                />
-                                Horizontal Bars
-                            </label>
-                        )}
+                    {this.showHorizontalBarControls && (
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                name="horizontalBars"
+                                checked={this.horizontalBars}
+                                onClick={this.onClickHorizontalBars}
+                                data-test="HorizontalBars"
+                            />
+                            Horizontal Bars
+                        </label>
+                    )}
                     {this.showLogScaleControls && (
                         <label className="checkbox-inline">
                             <input
@@ -737,15 +764,17 @@ export default class ClinicalData extends React.Component<
                                 Show NA
                             </label>
                         )}
-                    <label className="checkbox-inline">
-                        <input
-                            type="checkbox"
-                            checked={this.showPAndQ}
-                            onClick={this.onClickTogglePAndQ}
-                            data-test="ShowPAndQ"
-                        />
-                        Show p and q
-                    </label>
+                    {this.showPAndQControls && (
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                checked={this.showPAndQ}
+                                onClick={this.onClickTogglePAndQ}
+                                data-test="ShowPAndQ"
+                            />
+                            Show p and q
+                        </label>
+                    )}
                 </div>
             </div>
         );
@@ -782,9 +811,7 @@ export default class ClinicalData extends React.Component<
                 }
 
                 let plotElt: any = null;
-                if (
-                    isNumerical(this.highlightedRow!.clinicalAttribute.datatype)
-                ) {
+                if (this.isNumericalPlot) {
                     if (this.boxPlotData.isComplete) {
                         plotElt = (
                             <ClinicalNumericalDataVisualisation
@@ -899,13 +926,7 @@ export default class ClinicalData extends React.Component<
 
     @autobind
     private toolbar() {
-        const numerical = isNumerical(
-            this.highlightedRow!.clinicalAttribute.datatype
-        );
-        const visualiseAsTable =
-            this.numericalVisualisationType ===
-            ClinicalNumericalVisualisationType.Table;
-        if (numerical && visualiseAsTable) {
+        if (this.isTable) {
             return <></>;
         }
         return (
