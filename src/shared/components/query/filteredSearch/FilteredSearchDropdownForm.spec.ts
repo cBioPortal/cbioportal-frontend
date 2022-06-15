@@ -1,9 +1,9 @@
-import { ListPhrase } from 'shared/components/query/SearchClause';
 import {
     createUpdate,
     FilterCheckbox,
 } from 'shared/components/query/filteredSearch/field/CheckboxFilterField';
 import { CancerTreeSearchFilter } from 'shared/lib/query/textQueryUtils';
+import { ListPhrase } from 'shared/components/query/filteredSearch/Phrase';
 
 describe('FilteredSearchDropdownForm', () => {
     describe('createUpdate', () => {

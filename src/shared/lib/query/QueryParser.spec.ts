@@ -4,11 +4,11 @@ import {
 } from 'shared/lib/query/textQueryUtils';
 import {
     AndSearchClause,
-    DefaultPhrase,
     ISearchClause,
     NotSearchClause,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
+import { DefaultPhrase } from 'shared/components/query/filteredSearch/Phrase';
 
 describe('QueryParser', () => {
     const parser = new QueryParser();

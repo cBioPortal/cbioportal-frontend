@@ -5,7 +5,7 @@ import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredS
 import {
     ISearchClause,
     QueryUpdate,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
 import _ from 'lodash';
 

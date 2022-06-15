@@ -9,7 +9,7 @@ import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
 import {
     ISearchClause,
     QueryUpdate,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
 
 export type FilteredSearchProps = {

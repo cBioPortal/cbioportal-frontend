@@ -5,17 +5,19 @@ import {
 } from 'shared/lib/query/textQueryUtils';
 import {
     AndSearchClause,
-    DefaultPhrase,
     FILTER_SEPARATOR,
-    ListPhrase,
     ISearchClause,
     NOT_PREFIX,
     NotSearchClause,
-    Phrase,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import { FilterCheckbox } from 'shared/components/query/filteredSearch/field/CheckboxFilterField';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import { FilterList } from 'shared/components/query/filteredSearch/field/ListFormField';
+import {
+    DefaultPhrase,
+    ListPhrase,
+    Phrase,
+} from 'shared/components/query/filteredSearch/Phrase';
 
 export class QueryParser {
     /**

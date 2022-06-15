@@ -8,12 +8,12 @@ import {
 import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
 import {
     AndSearchClause,
-    DefaultPhrase,
     ISearchClause,
     NotSearchClause,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import _ from 'lodash';
 import { QueryParser } from 'shared/lib/query/QueryParser';
+import { DefaultPhrase } from 'shared/components/query/filteredSearch/Phrase';
 
 describe('textQueryUtils', () => {
     const parser = new QueryParser();

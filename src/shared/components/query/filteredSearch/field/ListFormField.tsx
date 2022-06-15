@@ -1,7 +1,8 @@
 import { FieldProps } from 'shared/components/query/filteredSearch/field/FilterFormField';
 import * as React from 'react';
 import { FunctionComponent } from 'react';
-import { ISearchClause, Phrase } from 'shared/components/query/SearchClause';
+import { ISearchClause } from 'shared/components/query/filteredSearch/SearchClause';
+import { Phrase } from 'shared/components/query/filteredSearch/Phrase';
 
 export type ListFilterField = {
     label: string;

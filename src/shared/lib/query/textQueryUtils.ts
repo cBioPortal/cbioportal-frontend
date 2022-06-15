@@ -4,15 +4,16 @@ import {
     CancerTypeWithVisibility,
 } from 'shared/components/query/CancerStudyTreeData';
 import {
-    DefaultPhrase,
     FILTER_SEPARATOR,
-    ListPhrase,
     ISearchClause,
-    Phrase,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import _ from 'lodash';
 import { MatchResult } from 'shared/lib/query/QueryParser';
 import { FilterField } from 'shared/components/query/filteredSearch/field/FilterFormField';
+import {
+    ListPhrase,
+    Phrase,
+} from 'shared/components/query/filteredSearch/Phrase';
 
 export type CancerTreeSearchFilter = {
     /**

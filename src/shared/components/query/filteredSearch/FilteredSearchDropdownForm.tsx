@@ -4,7 +4,7 @@ import { CancerTreeSearchFilter } from 'shared/lib/query/textQueryUtils';
 import {
     ISearchClause,
     QueryUpdate,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
 import { FilterFormField } from 'shared/components/query/filteredSearch/field/FilterFormField';
 

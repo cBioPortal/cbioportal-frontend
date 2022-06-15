@@ -4,15 +4,15 @@ import {
     AndSearchClause,
     FILTER_VALUE_SEPARATOR,
     ISearchClause,
-    ListPhrase,
     NotSearchClause,
     QueryUpdate,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import {
     CancerTreeSearchFilter,
     createListPhrase,
 } from 'shared/lib/query/textQueryUtils';
 import { FieldProps } from 'shared/components/query/filteredSearch/field/FilterFormField';
+import { ListPhrase } from 'shared/components/query/filteredSearch/Phrase';
 
 export type CheckboxFilterField = {
     input: typeof FilterCheckbox;

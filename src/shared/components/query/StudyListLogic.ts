@@ -14,7 +14,7 @@ import { performSearchSingle } from '../../lib/query/textQueryUtils';
 import { cached } from 'mobxpromise';
 import { ServerConfigHelpers } from '../../../config/config';
 import memoize from 'memoize-weak-decorator';
-import { SearchResult } from 'shared/components/query/SearchClause';
+import { SearchResult } from 'shared/components/query/filteredSearch/SearchClause';
 
 export const PAN_CAN_SIGNATURE = 'pan_can_atlas';
 

@@ -2,7 +2,7 @@ import { CancerTreeSearchFilter } from 'shared/lib/query/textQueryUtils';
 import {
     ISearchClause,
     QueryUpdate,
-} from 'shared/components/query/SearchClause';
+} from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
 import * as React from 'react';
 import { FunctionComponent } from 'react';
