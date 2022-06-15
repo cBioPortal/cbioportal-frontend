@@ -242,13 +242,15 @@ export default class CancerStudySelector extends React.Component<
                                         alignItems: 'center',
                                     }}
                                 >
-                                    <AutosuggestStudySearch
-                                        parser={this.store.parser}
-                                        parsedQuery={this.store.parsedQuery}
-                                        onSearch={query =>
-                                            (this.store.parsedQuery = query)
-                                        }
-                                    />
+                                    {this.store.parser && (
+                                        <AutosuggestStudySearch
+                                            parser={this.store.parser}
+                                            parsedQuery={this.store.parsedQuery}
+                                            onSearch={query =>
+                                                (this.store.parsedQuery = query)
+                                            }
+                                        />
+                                    )}
                                 </div>
                             );
                         }}

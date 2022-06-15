@@ -86,7 +86,11 @@ export default class StudyListLogic {
 
     @cached @computed get map_node_filterBySelectedCancerTypes() {
         let map_node_filter = new Map<CancerTreeNode, boolean>();
-        if (this.store.selectedCancerTypes.length) {
+        if (
+            (this.store.selectedCancerTypes.length &&
+                this.store.availableReferenceGenomes) ||
+            !this.store.availableReferenceGenomes
+        ) {
             for (let cancerType of this.store.selectedCancerTypes) {
                 let meta = this.getMetadata(cancerType);
 

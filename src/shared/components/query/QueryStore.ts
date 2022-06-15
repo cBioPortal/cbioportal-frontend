@@ -117,7 +117,7 @@ export function normalizeQuery(geneQuery: string) {
 type GenesetId = string;
 
 export class QueryStore {
-    private _parser: QueryParser = new QueryParser();
+    private _parser: QueryParser;
 
     constructor(urlWithInitialParams?: string) {
         getBrowserWindow().activeQueryStore = this;
@@ -154,6 +154,12 @@ export class QueryStore {
             () => {
                 this.studiesHaveChangedSinceInitialization = true;
             }
+        );
+
+        reaction(
+            () => this.availableReferenceGenomes,
+            () =>
+                (this._parser = new QueryParser(this.availableReferenceGenomes))
         );
     }
 
@@ -1434,6 +1440,13 @@ export class QueryStore {
                     ) as CancerType
             )
             .filter(_.identity);
+    }
+
+    @computed get availableReferenceGenomes() {
+        const nodes = Array.from(this.treeData.map_node_meta.keys());
+        const nodeRefGens = nodes.map(n => (n as CancerStudy).referenceGenome);
+        const uniqueRefGens = [...new Set(nodeRefGens.filter(n => n))];
+        return uniqueRefGens;
     }
 
     @computed get selectableSelectedStudies() {

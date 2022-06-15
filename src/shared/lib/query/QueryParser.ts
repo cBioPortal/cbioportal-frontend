@@ -25,7 +25,7 @@ export class QueryParser {
      */
     private readonly _searchFilters: CancerTreeSearchFilter[];
 
-    constructor() {
+    constructor(availableReferenceGenomes: string[]) {
         this._searchFilters = [
             /**
              * Reference genome:
@@ -35,8 +35,7 @@ export class QueryParser {
                 nodeFields: ['referenceGenome'],
                 form: {
                     input: FilterCheckbox,
-                    // TODO: Make dynamic
-                    options: ['hg16', 'hg17', 'hg18', 'hg19', 'hg38'],
+                    options: availableReferenceGenomes,
                     label: 'Reference genome',
                 },
             },
