@@ -316,8 +316,8 @@ jobs:
       - run:
           name: "Copy to another folder"
           command: |
-            mkdir /tmp/repo/end-to-end-test/remote/junit2/ && \
-            cp /tmp/repo/end-to-end-test/remote/junit/results-0-0.chrome.xml /tmp/repo/end-to-end-test/remote/junit2/
+            mkdir /tmp/repo/end-to-end-test/local/junit2/ && \
+            cp /tmp/repo/end-to-end-test/local/junit/results-0-0.chrome.xml /tmp/repo/end-to-end-test/local/junit2/
       - store_artifacts:
            path: /tmp/repo/end-to-end-test/local/screenshots
            destination: /screenshots
