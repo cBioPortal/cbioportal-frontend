@@ -328,7 +328,7 @@ jobs:
            path: /tmp/repo/end-to-end-test/local/errorShots
            destination: /errorShots
       - store_test_results:
-          path: /tmp/repo/end-to-end-test/remote/junit2
+          path: /tmp/repo/end-to-end-test/local/junit2
       - run: ls -lah /tmp/repo/end-to-end-test/local/junit/
       - store_test_results:
           path: /tmp/repo/end-to-end-test/local/junit
