@@ -3,7 +3,9 @@ import {
     Phrase,
     NotSearchClause,
     DefaultPhrase,
+    ListPhrase,
 } from 'shared/components/query/SearchClause';
+import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
 
 function createTestPhrase(): Phrase {
     return new DefaultPhrase('a', 'a', ['studyId']);
@@ -108,6 +110,34 @@ describe('ISearchClause', () => {
             const a = new NotSearchClause(createTestPhrase());
             (a as any).phrase = null;
             expect(a.toString()).toEqual('');
+        });
+    });
+});
+
+describe('Phrase', () => {
+    describe('ListPhrase', () => {
+        it('should match when single element in phraseList', () => {
+            const phrase = new ListPhrase('a', 'test:a', ['studyId']);
+            const study = { studyId: 'a' } as CancerTreeNode;
+            expect(phrase.match(study)).toBe(true);
+        });
+
+        it('should not match when single element in phraseList does not match', () => {
+            const phrase = new ListPhrase('a', 'test:a', ['studyId']);
+            const study = { studyId: 'b' } as CancerTreeNode;
+            expect(phrase.match(study)).toBe(false);
+        });
+
+        it('should do a full (instead of partial) match', () => {
+            const phrase = new ListPhrase('a', 'test:a', ['studyId']);
+            const study = { studyId: 'ab' } as CancerTreeNode;
+            expect(phrase.match(study)).toBe(false);
+        });
+
+        it('should match when multiple elements in phraseList', () => {
+            const phrase = new ListPhrase('a,b', 'test:a,b', ['studyId']);
+            const study = { studyId: 'a' } as CancerTreeNode;
+            expect(phrase.match(study)).toBe(true);
         });
     });
 });

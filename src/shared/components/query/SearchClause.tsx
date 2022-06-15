@@ -216,8 +216,10 @@ export class DefaultPhrase implements Phrase {
 
 /**
  * Match studies by one or more values
- * Shape: <prefix>:<phrase> in which phrase
- * is a comma separated list of values
+ *
+ * Shape: <prefix>:<phrase> in which phrase is a comma separated list
+ *
+ * Studies match when one of values is found in fields
  */
 export class ListPhrase implements Phrase {
     protected readonly _textRepresentation: string;
@@ -259,14 +261,15 @@ export class ListPhrase implements Phrase {
     public match(study: CancerTreeNode): boolean {
         let anyFieldMatch = false;
         for (const fieldName of this.fields) {
-            let fieldMatch = false;
+            let anyPhraseMatch = false;
             const fieldValue = (study as any)[fieldName];
             if (fieldValue) {
                 for (const phrase of this._phraseList) {
-                    fieldMatch = matchPhrase(this.phrase, fieldValue);
+                    anyPhraseMatch =
+                        anyPhraseMatch || matchPhraseFull(phrase, fieldValue);
                 }
             }
-            anyFieldMatch = anyFieldMatch || fieldMatch;
+            anyFieldMatch = anyFieldMatch || anyPhraseMatch;
         }
         return anyFieldMatch;
     }
@@ -301,6 +304,16 @@ export type QueryUpdate = {
     toRemove: Phrase[];
 };
 
+/**
+ * Partial match using lowercase
+ */
 function matchPhrase(phrase: string, fullText: string) {
     return fullText.toLowerCase().indexOf(phrase.toLowerCase()) > -1;
+}
+
+/**
+ * Full match using lowercase
+ */
+function matchPhraseFull(phrase: string, fullText: string) {
+    return fullText.toLowerCase() === phrase.toLowerCase();
 }
