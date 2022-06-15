@@ -1,4 +1,7 @@
-import { defaultNodeFields } from 'shared/lib/query/textQueryUtils';
+import {
+    defaultNodeFields,
+    toQueryString,
+} from 'shared/lib/query/textQueryUtils';
 import {
     AndSearchClause,
     DefaultPhrase,
@@ -84,10 +87,12 @@ describe('QueryParser', () => {
             let query = 'reference-genome:hg42';
             const expected: ISearchClause[] = [new AndSearchClause([hg42])];
             const result = parser.parseSearchQuery(query);
-            expect(result).toEqual(expected);
+            expect(toQueryString(result)).toEqual(toQueryString(expected));
         });
 
         it('handles mix of conjunctive, negative and reference genome clauses', () => {
+            const expectedQuery =
+                'part1 reference-genome:hg42 - part4 "part5a part5b" part6';
             const expected: ISearchClause[] = [
                 new AndSearchClause([part1, hg42]),
                 new NotSearchClause(
@@ -102,10 +107,9 @@ describe('QueryParser', () => {
                     new DefaultPhrase('part6', 'part6', defaultNodeFields),
                 ]),
             ];
-            const result = parser.parseSearchQuery(
-                'part1 reference-genome:hg42 - part4 "part5a part5b" part6'
-            );
-            expect(result).toEqual(expected);
+            const result = parser.parseSearchQuery(expectedQuery);
+            expect(toQueryString(result)).toEqual(toQueryString(expected));
+            expect(toQueryString(result)).toEqual(expectedQuery);
         });
     });
 });

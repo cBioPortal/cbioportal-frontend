@@ -6,6 +6,7 @@ import {
 import {
     DefaultPhrase,
     FILTER_SEPARATOR,
+    ListPhrase,
     ISearchClause,
     Phrase,
 } from 'shared/components/query/SearchClause';
@@ -131,7 +132,7 @@ function addAndClause(
 ): [ISearchClause[], ISearchClause[]] {
     const oldClauses = query.filter(c => c.isAnd() && !newClauses.includes(c));
     if (oldClauses.length) {
-        query = mergeAndClause(toAdd, oldClauses);
+        mergeAndClause(toAdd, oldClauses);
     } else {
         query.push(toAdd);
         newClauses.push(toAdd);
@@ -140,14 +141,10 @@ function addAndClause(
 }
 
 /**
- * Merge phrases with existing and-clauses,
+ * Merge phrases with existing and-clauses
  */
-function mergeAndClause(
-    toAdd: ISearchClause,
-    query: ISearchClause[]
-): ISearchClause[] {
+function mergeAndClause(toAdd: ISearchClause, query: ISearchClause[]): void {
     query.forEach(c => c.getPhrases().push(...toAdd.getPhrases()));
-    return query;
 }
 
 function addNotClause(toAdd: ISearchClause, result: ISearchClause[]) {
@@ -176,15 +173,15 @@ export function removeClause(
     return result;
 }
 
-export function createPhrase(
+export function createListPhrase(
     prefix: string,
     option: string,
     fields: CancerTreeNodeFields[]
-): Phrase {
+): ListPhrase {
     const textRepresentation = `${
         prefix ? `${prefix}${FILTER_SEPARATOR}` : ''
     }${option}`;
-    return new DefaultPhrase(option, textRepresentation, fields);
+    return new ListPhrase(option, textRepresentation, fields);
 }
 
 export function removePhrase(
@@ -214,11 +211,11 @@ export function removePhrase(
 export function toQueryString(query: ISearchClause[]): string {
     return query.reduce<string>(
         (accumulator: string, current: ISearchClause, i: number) => {
-            const appendOr =
-                current.isAnd() && query[i + 1] && query[i + 1].isAnd();
-            return `${accumulator} ${current.toString()}${
-                appendOr ? ' or' : ''
-            }`;
+            if (!i) {
+                return current.toString();
+            }
+            const or = current.isAnd() && query[i - 1] && query[i - 1].isAnd();
+            return `${accumulator} ${or ? 'or ' : ''}${current.toString()}`;
         },
         ''
     );

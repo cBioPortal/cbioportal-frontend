@@ -1,13 +1,17 @@
+import * as React from 'react';
 import { FunctionComponent } from 'react';
 import {
     AndSearchClause,
+    FILTER_VALUE_SEPARATOR,
     ISearchClause,
+    ListPhrase,
     NotSearchClause,
-    Phrase,
     QueryUpdate,
 } from 'shared/components/query/SearchClause';
-import * as React from 'react';
-import { createPhrase } from 'shared/lib/query/textQueryUtils';
+import {
+    CancerTreeSearchFilter,
+    createListPhrase,
+} from 'shared/lib/query/textQueryUtils';
 import { FieldProps } from 'shared/components/query/filteredSearch/field/FilterFormField';
 
 export type CheckboxFilterField = {
@@ -19,21 +23,25 @@ export type CheckboxFilterField = {
 export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
     const form = props.filter.form as CheckboxFilterField;
     const prefix = props.filter.phrasePrefix || '';
-    let checkedPhrases: Phrase[] = [];
-    let uncheckedPhrases: Phrase[] = [];
+    const options = props.filter.form.options;
+    let checkedOptions: string[] = [];
 
-    const phrases = form.options.map(option =>
-        createPhrase(prefix, option, props.filter.nodeFields)
-    );
-    const relevantClauses = props.query.filter(c =>
-        phrases.find(p => c.contains(p))
-    );
-    for (const phrase of phrases) {
-        const isChecked = isOptionChecked(phrase, relevantClauses);
+    const relevantClauses: ISearchClause[] = [];
+    const toRemove: ListPhrase[] = [];
+    props.query.forEach(clause => {
+        const phraseToRemove = clause
+            .getPhrases()
+            .find(p => (p as ListPhrase).prefix === prefix);
+        if (phraseToRemove) {
+            relevantClauses.push(clause);
+            toRemove.push(phraseToRemove as ListPhrase);
+        }
+    });
+
+    for (const option of options) {
+        const isChecked = isOptionChecked(option, relevantClauses);
         if (isChecked) {
-            checkedPhrases.push(phrase);
-        } else {
-            uncheckedPhrases.push(phrase);
+            checkedOptions.push(option);
         }
     }
 
@@ -41,9 +49,9 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
         <div className="filter-checkbox">
             <span>{form.label}</span>
             <div>
-                {phrases.map((option: Phrase) => {
-                    const id = `input-${option.phrase}`;
-                    let isChecked = checkedPhrases.includes(option);
+                {options.map((option: string) => {
+                    const id = `input-${option}`;
+                    let isChecked = checkedOptions.includes(option);
                     return (
                         <div
                             style={{
@@ -54,14 +62,15 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                             <input
                                 type="checkbox"
                                 id={id}
-                                value={option.phrase}
+                                value={option}
                                 checked={isChecked}
                                 onClick={() => {
                                     isChecked = !isChecked;
                                     updatePhrases(option, isChecked);
                                     const update = createUpdate(
-                                        uncheckedPhrases,
-                                        checkedPhrases
+                                        toRemove,
+                                        checkedOptions,
+                                        props.filter
                                     );
                                     props.onChange(update);
                                 }}
@@ -76,7 +85,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                     padding: '0 0 0 0.2em',
                                 }}
                             >
-                                {option.phrase}
+                                {option}
                             </label>
                         </div>
                     );
@@ -85,59 +94,75 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
         </div>
     );
 
-    function updatePhrases(phrase: Phrase, checked?: boolean) {
+    function updatePhrases(option: string, checked?: boolean) {
         if (checked) {
-            checkedPhrases.push(phrase);
-            uncheckedPhrases = uncheckedPhrases.filter(as => as !== phrase);
+            checkedOptions.push(option);
         } else {
-            uncheckedPhrases.push(phrase);
-            checkedPhrases = checkedPhrases.filter(as => as !== phrase);
+            checkedOptions = checkedOptions.filter(as => as !== option);
         }
     }
 };
 
 function isOptionChecked(
-    phrase: Phrase,
+    option: string,
     relevantClauses: ISearchClause[]
 ): boolean {
-    const clause = relevantClauses.find(c => c.contains(phrase));
-    if (clause && clause.isAnd()) {
+    if (!relevantClauses.length) {
         return true;
     }
-    if (clause && clause.isNot()) {
+    const containingClause = relevantClauses.find(c =>
+        c
+            .getPhrases()
+            .find(
+                p =>
+                    (p as ListPhrase).phraseList &&
+                    (p as ListPhrase).phraseList.includes(option)
+            )
+    );
+    const onlyNotClauses =
+        relevantClauses.length ===
+        relevantClauses.filter(c => c.isNot()).length;
+    if (!containingClause) {
+        return onlyNotClauses;
+    }
+    if (containingClause.isNot()) {
         return false;
     }
-    // option is checked when all others are not-clauses:
-    return (
-        relevantClauses.length === relevantClauses.filter(c => c.isNot()).length
-    );
+    return containingClause.isAnd();
 }
 
 /**
  * Create query update while trying
  * to keep the query as short as possible
  */
-export function createUpdate(not: Phrase[], and: Phrase[]): QueryUpdate {
-    const toAdd: ISearchClause[] = [];
-    const toRemove: Phrase[] = [];
+export function createUpdate(
+    phrasesToRemove: ListPhrase[],
+    optionsToAdd: string[],
+    filter: CancerTreeSearchFilter
+): QueryUpdate {
+    let toAdd: ISearchClause[];
+    const toRemove = phrasesToRemove;
 
-    // if only and: remove all
-    if (!not.length) {
-        and.forEach(p => toRemove.push(p));
-    }
-    // if only not: create not
-    else if (!and.length) {
-        not.forEach(p => toAdd.push(new NotSearchClause(p)));
-    }
-    // if more and: create not, remove and
-    else if (and.length <= not.length) {
-        and.forEach(p => toAdd.push(new AndSearchClause([p])));
-        not.forEach(p => toRemove.push(p));
-    }
-    // if more not: create and, remove not
-    else {
-        and.forEach(p => toRemove.push(p));
-        not.forEach(p => toAdd.push(new NotSearchClause(p)));
+    const options = filter.form.options;
+    const prefix = filter.phrasePrefix || '';
+    const fields = filter.nodeFields;
+
+    const onlyAnd = optionsToAdd.length === options.length;
+    const onlyNot = !optionsToAdd.length;
+    const moreAnd = optionsToAdd.length > options.length / 2;
+
+    if (onlyAnd) {
+        toAdd = [];
+    } else if (onlyNot || moreAnd) {
+        const phrase = options
+            .filter(o => !optionsToAdd.includes(o))
+            .join(FILTER_VALUE_SEPARATOR);
+        toAdd = [new NotSearchClause(createListPhrase(prefix, phrase, fields))];
+    } else {
+        const phrase = optionsToAdd.join(FILTER_VALUE_SEPARATOR);
+        toAdd = [
+            new AndSearchClause([createListPhrase(prefix, phrase, fields)]),
+        ];
     }
     return { toAdd, toRemove };
 }

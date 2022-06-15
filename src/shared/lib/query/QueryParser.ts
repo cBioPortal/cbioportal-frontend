@@ -7,6 +7,7 @@ import {
     AndSearchClause,
     DefaultPhrase,
     FILTER_SEPARATOR,
+    ListPhrase,
     ISearchClause,
     NOT_PREFIX,
     NotSearchClause,
@@ -33,7 +34,7 @@ export class QueryParser {
                 form: {
                     input: FilterCheckbox,
                     // TODO: Make dynamic
-                    options: ['hg19', 'hg38'],
+                    options: ['hg16', 'hg17', 'hg18', 'hg19', 'hg38'],
                     label: 'Reference genome',
                 },
             },
@@ -188,11 +189,12 @@ export class QueryParser {
         if (parts.length === 2 && filter?.nodeFields) {
             phrase = parts[1];
             fields = filter.nodeFields;
+            return new ListPhrase(phrase, this.enquoteSpaces(data), fields);
         } else {
             phrase = parts[0];
             fields = defaultNodeFields;
+            return new DefaultPhrase(phrase, this.enquoteSpaces(data), fields);
         }
-        return new DefaultPhrase(phrase, this.enquoteSpaces(data), fields);
     }
 
     private createNotClause(data: string): ISearchClause {

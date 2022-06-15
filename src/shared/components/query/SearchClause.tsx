@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
 
 export const FILTER_SEPARATOR = `:`;
+export const FILTER_VALUE_SEPARATOR = ',';
 export const NOT_PREFIX = `-`;
 
 export interface ISearchClause {
@@ -146,7 +147,15 @@ export class AndSearchClause implements ISearchClause {
 export interface Phrase {
     phrase: string;
     toString(): string;
+
+    /**
+     * Does filter match study?
+     */
     match(study: CancerTreeNode): boolean;
+
+    /**
+     * Are two phrases equal?
+     */
     equals(other: Phrase): boolean;
 }
 
@@ -205,19 +214,91 @@ export class DefaultPhrase implements Phrase {
     }
 }
 
+/**
+ * Match studies by one or more values
+ * Shape: <prefix>:<phrase> in which phrase
+ * is a comma separated list of values
+ */
+export class ListPhrase implements Phrase {
+    protected readonly _textRepresentation: string;
+    private readonly _fields: CancerTreeNodeFields[];
+    private readonly _phraseList: string[];
+    private readonly _prefix: string;
+
+    constructor(
+        phrase: string,
+        textRepresentation: string,
+        fields: CancerTreeNodeFields[]
+    ) {
+        this._fields = fields;
+        this._phraseList = phrase.split(FILTER_VALUE_SEPARATOR);
+        this._textRepresentation = textRepresentation;
+        this._prefix = textRepresentation.split(FILTER_SEPARATOR)[0];
+    }
+
+    public get phrase() {
+        return this._phraseList.join(FILTER_VALUE_SEPARATOR);
+    }
+
+    public get fields() {
+        return this._fields;
+    }
+
+    public get prefix() {
+        return this._prefix;
+    }
+
+    public get phraseList() {
+        return this._phraseList;
+    }
+
+    public toString() {
+        return this._textRepresentation;
+    }
+
+    public match(study: CancerTreeNode): boolean {
+        let anyFieldMatch = false;
+        for (const fieldName of this.fields) {
+            let fieldMatch = false;
+            const fieldValue = (study as any)[fieldName];
+            if (fieldValue) {
+                for (const phrase of this._phraseList) {
+                    fieldMatch = matchPhrase(this.phrase, fieldValue);
+                }
+            }
+            anyFieldMatch = anyFieldMatch || fieldMatch;
+        }
+        return anyFieldMatch;
+    }
+
+    equals(other: Phrase): boolean {
+        if (!other) {
+            return false;
+        }
+        const o = other as ListPhrase;
+        if (!o._phraseList || !o.fields) {
+            return false;
+        }
+        if (!_.isEqual(this._phraseList, o._phraseList)) {
+            return false;
+        }
+        return _.isEqual(this.fields, o.fields);
+    }
+}
+
 export type SearchResult = {
     match: boolean;
     forced: boolean;
 };
 
 export type QueryUpdate = {
-    toAdd?: ISearchClause[];
+    toAdd: ISearchClause[];
 
     /**
      * Remove phrases, ignoring the type of their containing Clause
      * to prevent conflicting clauses
      */
-    toRemove?: Phrase[];
+    toRemove: Phrase[];
 };
 
 function matchPhrase(phrase: string, fullText: string) {
