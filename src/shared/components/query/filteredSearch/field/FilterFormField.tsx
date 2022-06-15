@@ -30,9 +30,7 @@ export const FilterFormField: FunctionComponent<FieldProps> = props => {
                 margin: '0.5em',
             }}
         >
-            <h5>{props.filter.form.label}:</h5>
             {React.createElement(inputField, props)}
-            <hr style={{ marginTop: '1em' }} />
         </div>
     );
 };

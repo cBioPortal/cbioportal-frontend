@@ -21,9 +21,13 @@ export type CheckboxFilterField = {
 };
 
 export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
-    const form = props.filter.form as CheckboxFilterField;
-    const prefix = props.filter.phrasePrefix || '';
     const options = props.filter.form.options;
+
+    if (options.length < 2) {
+        return null;
+    }
+
+    const prefix = props.filter.phrasePrefix || '';
     let checkedOptions: string[] = [];
 
     const relevantClauses: ISearchClause[] = [];
@@ -47,6 +51,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
 
     return (
         <div className="filter-checkbox">
+            <h5>{props.filter.form.label}:</h5>
             <div>
                 {options.map((option: string) => {
                     const id = `input-${option}`;
@@ -90,6 +95,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                     );
                 })}
             </div>
+            <hr style={{ marginTop: '1em' }} />
         </div>
     );
 

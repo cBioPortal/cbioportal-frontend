@@ -15,6 +15,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
 
     return (
         <div className="filter-list">
+            <h5>{props.filter.form.label}:</h5>
             {form.options.map(option => {
                 const update = props.parser.parseSearchQuery(option);
                 const queryPhrases = toUniquePhrases(props.query);
@@ -38,6 +39,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
                     </li>
                 );
             })}
+            <hr style={{ marginTop: '1em' }} />
         </div>
     );
 };
