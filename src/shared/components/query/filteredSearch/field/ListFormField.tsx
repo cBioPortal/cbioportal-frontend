@@ -15,7 +15,6 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
 
     return (
         <div className="filter-list">
-            <span>{form.label}</span>
             {form.options.map(option => {
                 const update = props.parser.parseSearchQuery(option);
                 const queryPhrases = toUniquePhrases(props.query);
