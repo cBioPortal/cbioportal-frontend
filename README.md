@@ -37,6 +37,12 @@ To build DLLs in common-dist folder (must be done prior to start of dev server)
 yarn run buildDLL:dev
 ```
 
+To build all packages the main project depends on (must be done prior to start of dev server):
+
+```
+yarn run buildModules
+```
+
 To start the dev server with hot reload enabled
 ```
 # set the environment variables you want based on what branch you're branching
