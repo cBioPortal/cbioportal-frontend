@@ -12,20 +12,12 @@ import {
 export interface Phrase {
     phrase: string;
     toString(): string;
-
-    /**
-     * Does filter match study?
-     */
     match(study: CancerTreeNode): boolean;
-
-    /**
-     * Are two phrases equal?
-     */
     equals(other: Phrase): boolean;
 }
 
 /**
- * Match studies when their fields partially match phrase
+ * Single string that is partially matched against fields in study
  *
  * Shape: [<prefix>:]<phrase>
  *
@@ -87,11 +79,11 @@ export class DefaultPhrase implements Phrase {
 }
 
 /**
- * Match studies by one or more values
+ * Comma separated list of strings that is matched against entire fields in study
  *
  * Shape: <prefix>:<phrase> in which phrase is a comma separated list
  *
- * Study fields and phrase values are matched using logical or
+ * Study fields are matched against all elements in list using logical or
  */
 export class ListPhrase implements Phrase {
     protected readonly _textRepresentation: string;

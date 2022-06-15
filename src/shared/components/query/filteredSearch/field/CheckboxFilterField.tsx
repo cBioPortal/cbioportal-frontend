@@ -3,7 +3,7 @@ import { FunctionComponent } from 'react';
 import {
     AndSearchClause,
     FILTER_VALUE_SEPARATOR,
-    ISearchClause,
+    SearchClause,
     NotSearchClause,
     QueryUpdate,
 } from 'shared/components/query/filteredSearch/SearchClause';
@@ -30,7 +30,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
     const prefix = props.filter.phrasePrefix || '';
     let checkedOptions: string[] = [];
 
-    const relevantClauses: ISearchClause[] = [];
+    const relevantClauses: SearchClause[] = [];
     const toRemove: ListPhrase[] = [];
     props.query.forEach(clause => {
         const phraseToRemove = clause
@@ -110,7 +110,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
 
 function isOptionChecked(
     option: string,
-    relevantClauses: ISearchClause[]
+    relevantClauses: SearchClause[]
 ): boolean {
     if (!relevantClauses.length) {
         return true;
@@ -145,7 +145,7 @@ export function createUpdate(
     optionsToAdd: string[],
     filter: CancerTreeSearchFilter
 ): QueryUpdate {
-    let toAdd: ISearchClause[];
+    let toAdd: SearchClause[];
     const toRemove = phrasesToRemove;
 
     const options = filter.form.options;

@@ -1,7 +1,7 @@
 import { FieldProps } from 'shared/components/query/filteredSearch/field/FilterFormField';
 import * as React from 'react';
 import { FunctionComponent } from 'react';
-import { ISearchClause } from 'shared/components/query/filteredSearch/SearchClause';
+import { SearchClause } from 'shared/components/query/filteredSearch/SearchClause';
 import { Phrase } from 'shared/components/query/filteredSearch/Phrase';
 
 export type ListFilterField = {
@@ -44,7 +44,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
     );
 };
 
-function toUniquePhrases(query: ISearchClause[]): Phrase[] {
+function toUniquePhrases(query: SearchClause[]): Phrase[] {
     return query.reduce<Phrase[]>((accumulator, clause) => {
         accumulator.push(...clause.getPhrases());
         return [...new Set(accumulator)];

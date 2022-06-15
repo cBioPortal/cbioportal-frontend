@@ -3,7 +3,7 @@ import * as React from 'react';
 import { FunctionComponent } from 'react';
 import { FilteredSearch } from 'shared/components/query/filteredSearch/FilteredSearch';
 import {
-    ISearchClause,
+    SearchClause,
     QueryUpdate,
 } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
@@ -11,8 +11,8 @@ import _ from 'lodash';
 
 export type AutosuggestStudySearchProps = {
     parser: QueryParser;
-    parsedQuery: ISearchClause[];
-    onSearch: (query: ISearchClause[]) => void;
+    parsedQuery: SearchClause[];
+    onSearch: (query: SearchClause[]) => void;
 };
 
 export const AutosuggestStudySearch: FunctionComponent<AutosuggestStudySearchProps> = function(

@@ -1,6 +1,6 @@
 import { CancerTreeSearchFilter } from 'shared/lib/query/textQueryUtils';
 import {
-    ISearchClause,
+    SearchClause,
     QueryUpdate,
 } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
@@ -16,7 +16,7 @@ export type FilterField = CheckboxFilterField | ListFilterField;
 
 export type FieldProps = {
     filter: CancerTreeSearchFilter;
-    query: ISearchClause[];
+    query: SearchClause[];
     onChange: (change: QueryUpdate) => void;
     parser: QueryParser;
 };

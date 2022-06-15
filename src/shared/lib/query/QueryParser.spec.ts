@@ -4,7 +4,7 @@ import {
 } from 'shared/lib/query/textQueryUtils';
 import {
     AndSearchClause,
-    ISearchClause,
+    SearchClause,
     NotSearchClause,
 } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
@@ -28,13 +28,13 @@ describe('QueryParser', () => {
 
         it('creates clause from search query string', () => {
             const query = 'part1';
-            const expected: ISearchClause[] = [new AndSearchClause([part1])];
+            const expected: SearchClause[] = [new AndSearchClause([part1])];
             const result = parser.parseSearchQuery(query);
             expect(result).toEqual(expected);
         });
 
         it('creates separate clauses from search query string with OR', () => {
-            const expected: ISearchClause[] = [
+            const expected: SearchClause[] = [
                 new AndSearchClause([part1]),
                 new AndSearchClause([part2]),
             ];
@@ -44,14 +44,14 @@ describe('QueryParser', () => {
 
         it('converts dash to negative clause', () => {
             const query = '- part2';
-            const expected: ISearchClause[] = [new NotSearchClause(part2)];
+            const expected: SearchClause[] = [new NotSearchClause(part2)];
             const result = parser.parseSearchQuery(query);
             expect(result).toEqual(expected);
         });
 
         it('only uses first phrase after dash in negative clause', () => {
             const query = '- part2 part3';
-            const expected: ISearchClause[] = [
+            const expected: SearchClause[] = [
                 new NotSearchClause(part2),
                 new AndSearchClause([part3]),
             ];
@@ -61,7 +61,7 @@ describe('QueryParser', () => {
 
         it('creates single negative phrase when enclosed with quotes', () => {
             const query = '- "part2a part2b"';
-            const expected: ISearchClause[] = [
+            const expected: SearchClause[] = [
                 new NotSearchClause(
                     new DefaultPhrase(
                         'part2a part2b',
@@ -76,7 +76,7 @@ describe('QueryParser', () => {
 
         it('bundles all consecutive positive phrases in single conjunctive clause', () => {
             let query = 'part1 part2 part3';
-            const expected: ISearchClause[] = [
+            const expected: SearchClause[] = [
                 new AndSearchClause([part1, part2, part3]),
             ];
             const result = parser.parseSearchQuery(query);
@@ -85,7 +85,7 @@ describe('QueryParser', () => {
 
         it('creates reference genome clause', () => {
             let query = 'reference-genome:hg42';
-            const expected: ISearchClause[] = [new AndSearchClause([hg42])];
+            const expected: SearchClause[] = [new AndSearchClause([hg42])];
             const result = parser.parseSearchQuery(query);
             expect(toQueryString(result)).toEqual(toQueryString(expected));
         });
@@ -93,7 +93,7 @@ describe('QueryParser', () => {
         it('handles mix of conjunctive, negative and reference genome clauses', () => {
             const expectedQuery =
                 'part1 reference-genome:hg42 - part4 "part5a part5b" part6';
-            const expected: ISearchClause[] = [
+            const expected: SearchClause[] = [
                 new AndSearchClause([part1, hg42]),
                 new NotSearchClause(
                     new DefaultPhrase('part4', 'part4', defaultNodeFields)

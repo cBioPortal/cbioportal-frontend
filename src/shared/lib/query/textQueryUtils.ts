@@ -5,7 +5,7 @@ import {
 } from 'shared/components/query/CancerStudyTreeData';
 import {
     FILTER_SEPARATOR,
-    ISearchClause,
+    SearchClause,
 } from 'shared/components/query/filteredSearch/SearchClause';
 import _ from 'lodash';
 import { MatchResult } from 'shared/lib/query/QueryParser';
@@ -47,7 +47,7 @@ export type CancerTreeNodeFields =
  * considering quotation marks, 'and' and 'or' logic
  */
 export function performSearchSingle(
-    parsedQuery: ISearchClause[],
+    parsedQuery: SearchClause[],
     study: CancerTreeNode
 ): MatchResult {
     let match = false;
@@ -93,11 +93,11 @@ export function performSearchSingle(
  * - or push new clause
  */
 export function addClauses(
-    toAdd: ISearchClause[],
-    query: ISearchClause[]
-): ISearchClause[] {
+    toAdd: SearchClause[],
+    query: SearchClause[]
+): SearchClause[] {
     let result = [...query];
-    let newAndClauses: ISearchClause[] = [];
+    let newAndClauses: SearchClause[] = [];
     for (const clause of toAdd) {
         const existingClause = result.find(r => r.equals(clause));
         if (existingClause) {
@@ -127,10 +127,10 @@ export function addClauses(
  * @returns {result, newClauses}
  */
 function addAndClause(
-    query: ISearchClause[],
-    newClauses: ISearchClause[],
-    toAdd: ISearchClause
-): [ISearchClause[], ISearchClause[]] {
+    query: SearchClause[],
+    newClauses: SearchClause[],
+    toAdd: SearchClause
+): [SearchClause[], SearchClause[]] {
     const oldClauses = query.filter(c => c.isAnd() && !newClauses.includes(c));
     if (oldClauses.length) {
         mergeAndClause(toAdd, oldClauses);
@@ -144,11 +144,11 @@ function addAndClause(
 /**
  * Merge phrases with existing and-clauses
  */
-function mergeAndClause(toAdd: ISearchClause, query: ISearchClause[]): void {
+function mergeAndClause(toAdd: SearchClause, query: SearchClause[]): void {
     query.forEach(c => c.getPhrases().push(...toAdd.getPhrases()));
 }
 
-function addNotClause(toAdd: ISearchClause, result: ISearchClause[]) {
+function addNotClause(toAdd: SearchClause, result: SearchClause[]) {
     result.push(toAdd);
     return result;
 }
@@ -159,9 +159,9 @@ function addNotClause(toAdd: ISearchClause, result: ISearchClause[]) {
  * - When not-clause: remove not-clause from query
  */
 export function removeClause(
-    toRemove: ISearchClause,
-    query: ISearchClause[]
-): ISearchClause[] {
+    toRemove: SearchClause,
+    query: SearchClause[]
+): SearchClause[] {
     let result = [...query];
     if (toRemove.isAnd()) {
         const andClauses = query.filter(c => c.isAnd());
@@ -187,8 +187,8 @@ export function createListPhrase(
 
 export function removePhrase(
     phrase: Phrase,
-    query: ISearchClause[]
-): ISearchClause[] {
+    query: SearchClause[]
+): SearchClause[] {
     const containingClauses = query.filter(r => r.contains(phrase));
     if (!containingClauses.length) {
         return query;
@@ -209,9 +209,9 @@ export function removePhrase(
  * - adding spaces between clauses
  * - adding `or` between two and-clauses
  */
-export function toQueryString(query: ISearchClause[]): string {
+export function toQueryString(query: SearchClause[]): string {
     return query.reduce<string>(
-        (accumulator: string, current: ISearchClause, i: number) => {
+        (accumulator: string, current: SearchClause, i: number) => {
             if (!i) {
                 return current.toString();
             }

@@ -6,7 +6,7 @@ import {
 import {
     AndSearchClause,
     FILTER_SEPARATOR,
-    ISearchClause,
+    SearchClause,
     NOT_PREFIX,
     NotSearchClause,
 } from 'shared/components/query/filteredSearch/SearchClause';
@@ -60,7 +60,7 @@ export class QueryParser {
         return this._searchFilters;
     }
 
-    public parseSearchQuery(query: string): ISearchClause[] {
+    public parseSearchQuery(query: string): SearchClause[] {
         query = QueryParser.cleanUpQuery(query);
         const phrases = QueryParser.createPhrases(query);
         return this.createClauses(phrases);
@@ -117,8 +117,8 @@ export class QueryParser {
     /**
      * Create conjunctive and negative clauses
      */
-    private createClauses(phrases: string[]): ISearchClause[] {
-        const clauses: ISearchClause[] = [];
+    private createClauses(phrases: string[]): SearchClause[] {
+        const clauses: SearchClause[] = [];
         let currInd = 0;
         while (currInd < phrases.length) {
             if (phrases[currInd] === NOT_PREFIX) {
@@ -136,7 +136,7 @@ export class QueryParser {
     private addNotClause(
         currInd: number,
         phrases: string[],
-        clauses: ISearchClause[]
+        clauses: SearchClause[]
     ): number {
         if (currInd < phrases.length - 1) {
             clauses.push(this.createNotClause(phrases[currInd + 1]));
@@ -150,7 +150,7 @@ export class QueryParser {
     private addAndClause(
         phrases: string[],
         currInd: number,
-        clauses: ISearchClause[]
+        clauses: SearchClause[]
     ): number {
         let nextOr = phrases.indexOf('or', currInd);
         let nextDash = phrases.indexOf(NOT_PREFIX, currInd);
@@ -198,12 +198,12 @@ export class QueryParser {
         }
     }
 
-    private createNotClause(data: string): ISearchClause {
+    private createNotClause(data: string): SearchClause {
         const phrase = this.createPhrase(data);
         return new NotSearchClause(phrase);
     }
 
-    private createAndClause(textualRepresentations: string[]): ISearchClause {
+    private createAndClause(textualRepresentations: string[]): SearchClause {
         const phrases: Phrase[] = [];
         for (const tr of textualRepresentations) {
             const phrase = this.createPhrase(tr);

@@ -67,7 +67,7 @@ import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
 import { toQueryString } from 'shared/lib/query/textQueryUtils';
-import { ISearchClause } from 'shared/components/query/filteredSearch/SearchClause';
+import { SearchClause } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
 
 // interface for communicating
@@ -262,7 +262,7 @@ export class QueryStore {
 
     @observable transposeDataMatrix = false;
 
-    @observable parsedQuery: ISearchClause[] = [];
+    @observable parsedQuery: SearchClause[] = [];
 
     @computed get searchText(): string {
         return toQueryString(this.parsedQuery);

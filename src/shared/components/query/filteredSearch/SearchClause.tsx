@@ -7,11 +7,11 @@ export const FILTER_SEPARATOR = `:`;
 export const FILTER_VALUE_SEPARATOR = ',';
 export const NOT_PREFIX = `-`;
 
-export interface ISearchClause {
+export interface SearchClause {
     isNot(): boolean;
     isAnd(): boolean;
     toString(): string;
-    equals(other: ISearchClause): boolean;
+    equals(other: SearchClause): boolean;
 
     /**
      * check clause contains phrase using:
@@ -33,7 +33,7 @@ export interface ISearchClause {
  * Negative clause
  * contains single phrase
  */
-export class NotSearchClause implements ISearchClause {
+export class NotSearchClause implements SearchClause {
     private readonly phrase: Phrase;
     private readonly type = 'not';
 
@@ -57,7 +57,7 @@ export class NotSearchClause implements ISearchClause {
         return this.phrase ? `${NOT_PREFIX} ${this.phrase.toString()}` : '';
     }
 
-    equals(other: ISearchClause): boolean {
+    equals(other: SearchClause): boolean {
         if (other.isAnd()) {
             return false;
         }
@@ -79,7 +79,7 @@ export class NotSearchClause implements ISearchClause {
  * Conjunctive clause
  * consists of multiple phrases which all must match
  */
-export class AndSearchClause implements ISearchClause {
+export class AndSearchClause implements SearchClause {
     private readonly phrases: Phrase[];
     private readonly type = 'and';
 
@@ -126,7 +126,7 @@ export class AndSearchClause implements ISearchClause {
         return false;
     }
 
-    equals(other: ISearchClause): boolean {
+    equals(other: SearchClause): boolean {
         if (other.isNot()) {
             return false;
         }
@@ -148,10 +148,10 @@ export type SearchResult = {
 };
 
 export type QueryUpdate = {
-    toAdd: ISearchClause[];
+    toAdd: SearchClause[];
 
     /**
-     * Remove phrases, ignoring the type of their containing Clause
+     * Remove phrases instead of clauses,
      * to prevent conflicting clauses
      */
     toRemove: Phrase[];

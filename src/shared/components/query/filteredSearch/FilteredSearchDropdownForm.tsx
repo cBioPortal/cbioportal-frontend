@@ -2,14 +2,14 @@ import * as React from 'react';
 import { FunctionComponent } from 'react';
 import { CancerTreeSearchFilter } from 'shared/lib/query/textQueryUtils';
 import {
-    ISearchClause,
+    SearchClause,
     QueryUpdate,
 } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
 import { FilterFormField } from 'shared/components/query/filteredSearch/field/FilterFormField';
 
 export type FilteredSearchDropdownFormProps = {
-    query: ISearchClause[];
+    query: SearchClause[];
     filterConfig: CancerTreeSearchFilter[];
     onChange: (change: QueryUpdate) => void;
     parser: QueryParser;

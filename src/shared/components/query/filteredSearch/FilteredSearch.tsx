@@ -7,7 +7,7 @@ import {
 import { FilteredSearchDropdownForm } from 'shared/components/query/filteredSearch/FilteredSearchDropdownForm';
 import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
 import {
-    ISearchClause,
+    SearchClause,
     QueryUpdate,
 } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
@@ -16,7 +16,7 @@ export type FilteredSearchProps = {
     /**
      * Current search query
      */
-    query: ISearchClause[];
+    query: SearchClause[];
 
     /**
      * Configuration of dropdown form
