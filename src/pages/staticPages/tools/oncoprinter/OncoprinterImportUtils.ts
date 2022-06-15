@@ -72,7 +72,15 @@ function getOncoprinterParsedGeneticInputLine(
     if (alteration) {
         const oncoprinterInput: Partial<OncoprinterGeneticInputLineType2> = {};
         oncoprinterInput.sampleId = caseId;
-        oncoprinterInput.hugoGeneSymbol = d.hugoGeneSymbol;
+
+        if (d.alterationType === AlterationTypeConstants.STRUCTURAL_VARIANT) {
+            // fix typing so it can accomodate SV
+            oncoprinterInput.hugoGeneSymbol /* @ts-ignore */ =
+                d.site1HugoSymbol || d.site2HugoSymbol;
+        } else {
+            oncoprinterInput.hugoGeneSymbol = d.hugoGeneSymbol;
+        }
+
         oncoprinterInput.trackName = trackLabel;
         oncoprinterInput.alteration = alteration;
         oncoprinterInput.proteinChange = d.proteinChange;
