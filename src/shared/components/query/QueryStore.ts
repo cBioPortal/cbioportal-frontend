@@ -157,9 +157,8 @@ export class QueryStore {
         );
 
         reaction(
-            () => this.availableReferenceGenomes,
-            () =>
-                (this._parser = new QueryParser(this.availableReferenceGenomes))
+            () => this.referenceGenomes,
+            () => (this._parser = new QueryParser(this.referenceGenomes))
         );
     }
 
@@ -1442,11 +1441,12 @@ export class QueryStore {
             .filter(_.identity);
     }
 
-    @computed get availableReferenceGenomes() {
-        const nodes = Array.from(this.treeData.map_node_meta.keys());
-        const nodeRefGens = nodes.map(n => (n as CancerStudy).referenceGenome);
-        const uniqueRefGens = [...new Set(nodeRefGens.filter(n => n))];
-        return uniqueRefGens;
+    @computed get referenceGenomes(): Set<string> {
+        const studies = Array.from(this.treeData.map_node_meta.keys());
+        const referenceGenomes = studies
+            .map(n => (n as CancerStudy).referenceGenome)
+            .filter(n => !!n);
+        return new Set(referenceGenomes);
     }
 
     @computed get selectableSelectedStudies() {

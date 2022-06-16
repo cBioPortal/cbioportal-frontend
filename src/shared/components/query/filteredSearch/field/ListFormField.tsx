@@ -12,13 +12,13 @@ export type ListFilterField = {
 
 export const FilterList: FunctionComponent<FieldProps> = props => {
     const form = props.filter.form as ListFilterField;
+    const allPhrases = toUniquePhrases(props.query);
 
     return (
         <div className="filter-list">
             <h5>{props.filter.form.label}:</h5>
             {form.options.map(option => {
                 const update = props.parser.parseSearchQuery(option);
-                const queryPhrases = toUniquePhrases(props.query);
                 return (
                     <li className="dropdown-item">
                         <a
@@ -30,7 +30,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
                             onClick={() =>
                                 props.onChange({
                                     toAdd: update,
-                                    toRemove: queryPhrases,
+                                    toRemove: allPhrases,
                                 })
                             }
                         >

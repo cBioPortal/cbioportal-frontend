@@ -25,7 +25,7 @@ export class QueryParser {
      */
     private readonly _searchFilters: CancerTreeSearchFilter[];
 
-    constructor(availableReferenceGenomes: string[]) {
+    constructor(referenceGenomes: Set<string>) {
         this._searchFilters = [
             /**
              * Reference genome:
@@ -35,7 +35,7 @@ export class QueryParser {
                 nodeFields: ['referenceGenome'],
                 form: {
                     input: FilterCheckbox,
-                    options: availableReferenceGenomes,
+                    options: [...referenceGenomes],
                     label: 'Reference genome',
                 },
             },
