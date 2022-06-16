@@ -61,6 +61,7 @@ export type TrackSortDirectionChangeCallback = (
     track_id: TrackId,
     dir: number
 ) => void;
+export type TrackGapChangeCallBack = (track_id: TrackId, on: boolean) => void;
 export type CustomTrackOption = {
     label?: string;
     separator?: boolean;
@@ -99,6 +100,7 @@ export type UserTrackSpec<D> = {
     sortCmpFn: TrackSortSpecification<D>;
     sort_direction_changeable?: boolean;
     onSortDirectionChange?: TrackSortDirectionChangeCallback;
+    onGapChange?: TrackGapChangeCallBack;
     init_sort_direction?: TrackSortDirection;
     data?: D[];
     rule_set_params?: RuleSetParams;
@@ -288,6 +290,7 @@ export default class OncoprintModel {
     private track_sort_direction_change_callback: TrackProp<
         TrackSortDirectionChangeCallback
     >;
+    private track_gap_change_callback: TrackProp<TrackGapChangeCallBack>;
     private track_data: TrackProp<Datum[]>;
     private track_rule_set_id: TrackProp<RuleSetId>;
     private track_active_rules: TrackProp<ActiveRules>;
@@ -391,6 +394,7 @@ export default class OncoprintModel {
         this.track_sort_direction_changeable = {};
         this.track_sort_direction = {}; // 1: ascending, -1: descending, 0: not
         this.track_sort_direction_change_callback = {};
+        this.track_gap_change_callback = {};
         this.track_data = {};
         this.track_rule_set_id = {}; // track id -> rule set id
         this.track_active_rules = {}; // from track id to active rule map (map with rule ids as keys)
@@ -662,7 +666,7 @@ export default class OncoprintModel {
 
     public setTrackShowGaps(trackId: TrackId, show: boolean) {
         this.track_show_gaps[trackId] = show;
-
+        this.track_gap_change_callback[trackId](trackId, show);
         this.ids_after_a_gap.update(this);
     }
 
@@ -1334,14 +1338,22 @@ export default class OncoprintModel {
                 params.expandButtonTextGetter;
         }
 
+        this.track_sort_direction[track_id] = ifndef(
+            params.init_sort_direction,
+            1
+        );
+
         this.track_can_show_gaps[track_id] = ifndef(
             params.track_can_show_gaps,
             false
         );
-        this.track_show_gaps[track_id] = ifndef(
-            params.show_gaps_on_init,
-            false
-        );
+
+        const trackShowGaps = ifndef(params.show_gaps_on_init, false);
+        this.track_show_gaps[track_id] = trackShowGaps;
+        const trackNotSorted = this.track_sort_direction[track_id] === 0;
+        if (trackShowGaps && trackNotSorted) {
+            this.track_sort_direction[track_id] = 1;
+        }
 
         this.track_sort_cmp_fn[track_id] = params.sortCmpFn;
 
@@ -1352,6 +1364,10 @@ export default class OncoprintModel {
         this.track_sort_direction_change_callback[
             track_id
         ] = ifndef(params.onSortDirectionChange, function() {});
+        this.track_gap_change_callback[track_id] = ifndef(
+            params.onGapChange,
+            function() {}
+        );
         this.track_data[track_id] = ifndef(params.data, []);
         this.track_data_id_key[track_id] = ifndef(params.data_id_key, 'id');
 
@@ -1371,11 +1387,6 @@ export default class OncoprintModel {
         if (params.important_ids) {
             this.setTrackImportantIds(track_id, params.important_ids);
         }
-
-        this.track_sort_direction[track_id] = ifndef(
-            params.init_sort_direction,
-            1
-        );
 
         params.target_group = ifndef(params.target_group, 0);
         this.ensureTrackGroupExists(params.target_group);
