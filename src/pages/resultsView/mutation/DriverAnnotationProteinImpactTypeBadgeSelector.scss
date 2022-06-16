@@ -1,0 +1,16 @@
+@import '../../../globalStyles/variables.scss';
+
+.btn-link {
+    background: none !important;
+    border: none;
+    padding: 0 !important;
+    /*optional*/
+    font-family: arial, sans-serif;
+    /*input has OS specific font-family*/
+    color: $brand-primary;
+    cursor: pointer;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}

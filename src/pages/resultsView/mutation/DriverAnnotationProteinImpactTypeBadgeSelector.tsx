@@ -25,6 +25,7 @@ import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import './mutations.scss';
+import './DriverAnnotationProteinImpactTypeBadgeSelector.scss';
 import styles from './badgeSelector.module.scss';
 
 const PUTATIVE_DRIVER_TYPE = [
@@ -290,6 +291,11 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     }
 
     @action.bound
+    protected clearSelection() {
+        this.props.onSelect && this.props.onSelect([], false);
+    }
+
+    @action.bound
     protected onSettingMenuClick(e: React.MouseEvent<any>) {
         e.stopPropagation(); // Prevent click being applied to parent element
         this.settingMenuVisible = !this.settingMenuVisible;
@@ -318,6 +324,9 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                     {...this.props}
                     onSelect={this.props.onSelect}
                 />
+                <button className="btn-link" onClick={this.clearSelection}>
+                    Clear Selection
+                </button>
             </div>
         );
     }
