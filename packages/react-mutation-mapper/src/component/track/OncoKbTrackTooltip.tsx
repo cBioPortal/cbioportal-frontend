@@ -6,6 +6,7 @@ import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
 import OncoKbSummaryTable from '../oncokb/OncoKbSummaryTable';
 import { makeObservable } from 'mobx';
+import { getTumorTypeName } from '../../util/OncoKbUtils';
 
 type OncoKbTrackTooltipProps = {
     usingPublicOncoKbInstance: boolean;
@@ -94,7 +95,9 @@ export function generateLevelData(indicatorData: IndicatorQueryResp[]) {
             const level = parts.length === 2 ? parts[1] : treatment.level;
 
             levels[level] = levels[level] || [];
-            levels[level].push(indicator.query.tumorType);
+            levels[level].push(
+                getTumorTypeName(treatment.levelAssociatedCancerType)
+            );
         });
     });
 
