@@ -318,7 +318,10 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                         {...this.props}
                         onSelect={this.onDriverVsVusSelect}
                     />
-                    <span className={styles['visible-on-legend-hover']}>
+                    <span
+                        className={styles['visible-on-legend-hover']}
+                        style={{ marginLeft: 'auto' }}
+                    >
                         <DefaultTooltip
                             placement="top"
                             overlay={<span>Clear selection</span>}
