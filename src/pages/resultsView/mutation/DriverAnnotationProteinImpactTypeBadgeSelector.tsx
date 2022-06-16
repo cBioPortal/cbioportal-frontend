@@ -25,7 +25,6 @@ import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import './mutations.scss';
-import './DriverAnnotationProteinImpactTypeBadgeSelector.scss';
 import styles from './badgeSelector.module.scss';
 
 const PUTATIVE_DRIVER_TYPE = [
@@ -306,16 +305,47 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     public render() {
         return (
             <div className={styles['legend-panel']}>
-                <BadgeSelector
-                    options={this.driverVsVusOptions}
-                    getOptionLabel={this.getDriverVsVusOptionLabel}
-                    getBadgeLabel={getProteinImpactTypeBadgeLabel}
-                    selectedValues={this.selectedDriverVsVusValues.map(v => {
-                        return { value: v };
-                    })}
-                    {...this.props}
-                    onSelect={this.onDriverVsVusSelect}
-                />
+                <div style={{ display: 'flex' }}>
+                    <BadgeSelector
+                        options={this.driverVsVusOptions}
+                        getOptionLabel={this.getDriverVsVusOptionLabel}
+                        getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                        selectedValues={this.selectedDriverVsVusValues.map(
+                            v => {
+                                return { value: v };
+                            }
+                        )}
+                        {...this.props}
+                        onSelect={this.onDriverVsVusSelect}
+                    />
+                    <span className={styles['driver-annotation-setting']}>
+                        <DefaultTooltip
+                            placement="top"
+                            overlay={<span>Clear selection</span>}
+                        >
+                            <button
+                                style={{
+                                    marginLeft: 5,
+                                    marginRight: 5,
+                                    padding: '0px 4px 0px 4px',
+                                    height: 18,
+                                }}
+                                className="btn btn-primary"
+                                onClick={this.clearSelection}
+                            >
+                                <i
+                                    className="fa fa-times"
+                                    style={{
+                                        fontSize: 12,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                />
+                            </button>
+                        </DefaultTooltip>
+                    </span>
+                </div>
                 <hr style={{ marginBottom: 5 }}></hr>
                 <BadgeSelector
                     options={this.options}
@@ -324,9 +354,6 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                     {...this.props}
                     onSelect={this.props.onSelect}
                 />
-                <button className="btn-link" onClick={this.clearSelection}>
-                    Clear Selection
-                </button>
             </div>
         );
     }
