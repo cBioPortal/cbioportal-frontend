@@ -2,7 +2,10 @@ import React from 'react';
 import { OncoKbCardDataType } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
-import { normalizeLevel, normalizeOncogenicity } from '../../util/OncoKbUtils';
+import {
+    normalizeLevel,
+    normalizeOncogenicity,
+} from '../../../util/OncoKbUtils';
 
 const BIOLOGICAL_COLOR_MAP: { [level: string]: string } = {
     oncogenic: '#0968C3',
