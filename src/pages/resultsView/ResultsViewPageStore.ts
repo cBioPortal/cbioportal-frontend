@@ -1839,24 +1839,22 @@ export class ResultsViewPageStore
                         accessors
                     );
 
-                    try {
-                        if (
-                            extendedD.molecularProfileAlterationType ===
-                            'STRUCTURAL_VARIANT'
-                        ) {
-                            extendedD.hugoGeneSymbol =
-                                entrezGeneIdToGene[extendedD.site1EntrezGeneId]
-                                    ?.hugoGeneSymbol ||
-                                entrezGeneIdToGene[extendedD.site2EntrezGeneId]
-                                    ?.hugoGeneSymbol;
-                        } else {
-                            extendedD.hugoGeneSymbol =
-                                entrezGeneIdToGene[
-                                    d.entrezGeneId
-                                ].hugoGeneSymbol;
-                        }
-                    } catch (ex) {
-                        debugger;
+                    // we are folding structural variants into the alterations collect
+                    // and thus need to provide them with hugoGeneGeneSymbol
+                    // this is a problem with intermingling SVs (which have two genes)
+                    // with all other alterations, which have only one
+                    if (
+                        extendedD.molecularProfileAlterationType ===
+                        'STRUCTURAL_VARIANT'
+                    ) {
+                        extendedD.hugoGeneSymbol =
+                            entrezGeneIdToGene[extendedD.site1EntrezGeneId]
+                                ?.hugoGeneSymbol ||
+                            entrezGeneIdToGene[extendedD.site2EntrezGeneId]
+                                ?.hugoGeneSymbol;
+                    } else {
+                        extendedD.hugoGeneSymbol =
+                            entrezGeneIdToGene[d.entrezGeneId].hugoGeneSymbol;
                     }
 
                     extendedD.molecularProfileAlterationType = accessors.molecularAlterationType(
