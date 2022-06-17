@@ -286,7 +286,6 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import { ICBioData } from 'pathway-mapper';
 import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
-import { getHugoGeneSymbols } from 'pages/studyView/StudyViewComparisonUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
