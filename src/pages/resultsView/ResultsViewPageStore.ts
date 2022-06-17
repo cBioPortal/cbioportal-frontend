@@ -286,7 +286,6 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import { ICBioData } from 'pathway-mapper';
 import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
-import { getHugoGeneSymbols } from 'pages/studyView/StudyViewComparisonUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -1840,24 +1839,22 @@ export class ResultsViewPageStore
                         accessors
                     );
 
-                    try {
-                        if (
-                            extendedD.molecularProfileAlterationType ===
-                            'STRUCTURAL_VARIANT'
-                        ) {
-                            extendedD.hugoGeneSymbol =
-                                entrezGeneIdToGene[extendedD.site1EntrezGeneId]
-                                    ?.hugoGeneSymbol ||
-                                entrezGeneIdToGene[extendedD.site2EntrezGeneId]
-                                    ?.hugoGeneSymbol;
-                        } else {
-                            extendedD.hugoGeneSymbol =
-                                entrezGeneIdToGene[
-                                    d.entrezGeneId
-                                ].hugoGeneSymbol;
-                        }
-                    } catch (ex) {
-                        debugger;
+                    // we are folding structural variants into the alterations collect
+                    // and thus need to provide them with hugoGeneGeneSymbol
+                    // this is a problem with intermingling SVs (which have two genes)
+                    // with all other alterations, which have only one
+                    if (
+                        extendedD.molecularProfileAlterationType ===
+                        'STRUCTURAL_VARIANT'
+                    ) {
+                        extendedD.hugoGeneSymbol =
+                            entrezGeneIdToGene[extendedD.site1EntrezGeneId]
+                                ?.hugoGeneSymbol ||
+                            entrezGeneIdToGene[extendedD.site2EntrezGeneId]
+                                ?.hugoGeneSymbol;
+                    } else {
+                        extendedD.hugoGeneSymbol =
+                            entrezGeneIdToGene[d.entrezGeneId].hugoGeneSymbol;
                     }
 
                     extendedD.molecularProfileAlterationType = accessors.molecularAlterationType(
@@ -2372,12 +2369,7 @@ export class ResultsViewPageStore
         await: () => [this.genes, this.oqlFilteredAlterations],
         invoke: () => {
             // first group them by gene symbol
-            let groupedGenesMap = _.groupBy(
-                this.oqlFilteredAlterations.result!,
-                alteration => alteration.hugoGeneSymbol
-            );
-
-            groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
+            const groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
                 (
                     agg: { [getHugoGeneSymbol: string]: ExtendedAlteration[] },
                     alt
