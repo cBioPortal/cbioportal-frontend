@@ -306,8 +306,6 @@ export default class MutationTable<
         >;
         this.generateColumns();
 
-        getBrowserWindow().mutationTable = this;
-
         // here we wait for the oncokb icons to fully finish rendering
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(

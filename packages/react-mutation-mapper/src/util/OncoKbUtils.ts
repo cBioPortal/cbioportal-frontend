@@ -11,8 +11,8 @@ import {
     deriveStructuralVariantType,
     generateAnnotateStructuralVariantQuery,
     generateQueryStructuralVariantId,
-} from 'cbioportal-utils/src';
-import { StructuralVariant } from 'cbioportal-ts-api-client/src';
+} from 'cbioportal-utils';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 // oncogenic value => oncogenic class name
 const ONCOGENIC_CLASS_NAMES: { [oncogenic: string]: string } = {
