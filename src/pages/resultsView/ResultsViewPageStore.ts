@@ -2369,12 +2369,7 @@ export class ResultsViewPageStore
         await: () => [this.genes, this.oqlFilteredAlterations],
         invoke: () => {
             // first group them by gene symbol
-            let groupedGenesMap = _.groupBy(
-                this.oqlFilteredAlterations.result!,
-                alteration => alteration.hugoGeneSymbol
-            );
-
-            groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
+            const groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
                 (
                     agg: { [getHugoGeneSymbol: string]: ExtendedAlteration[] },
                     alt
