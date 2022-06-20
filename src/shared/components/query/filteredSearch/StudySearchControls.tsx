@@ -15,7 +15,10 @@ export type FilteredSearchDropdownFormProps = {
     parser: QueryParser;
 };
 
-export const FilteredSearchDropdownForm: FunctionComponent<FilteredSearchDropdownFormProps> = props => {
+/**
+ * Rendering of search filters as defined in query parser
+ */
+export const StudySearchControls: FunctionComponent<FilteredSearchDropdownFormProps> = props => {
     return (
         <ul
             className="dropdown-menu"

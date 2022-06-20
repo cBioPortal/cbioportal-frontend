@@ -153,27 +153,6 @@ function addNotClause(toAdd: SearchClause, result: SearchClause[]) {
     return result;
 }
 
-/**
- * Remove clause from query
- * - When and-clause: remove all phrases from and-clause in query
- * - When not-clause: remove not-clause from query
- */
-export function removeClause(
-    toRemove: SearchClause,
-    query: SearchClause[]
-): SearchClause[] {
-    let result = [...query];
-    if (toRemove.isAnd()) {
-        const andClauses = query.filter(c => c.isAnd());
-        toRemove
-            .getPhrases()
-            .forEach(p => (result = removePhrase(p, andClauses)));
-    } else {
-        result = result.filter(r => !r.equals(toRemove));
-    }
-    return result;
-}
-
 export function createListPhrase(
     prefix: string,
     option: string,
@@ -193,15 +172,15 @@ export function removePhrase(
     if (!containingClauses.length) {
         return query;
     }
-    let result = [...query];
+    let updatedQuery = [...query];
     containingClauses.forEach(c => {
         if (c.getPhrases().length === 1) {
-            _.remove(result, c);
+            _.remove(updatedQuery, c);
         } else {
             _.remove(c.getPhrases(), p => p.equals(phrase));
         }
     });
-    return result;
+    return updatedQuery;
 }
 
 /**

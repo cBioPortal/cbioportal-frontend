@@ -71,7 +71,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                 onClick={() => {
                                     isChecked = !isChecked;
                                     updatePhrases(option, isChecked);
-                                    const update = createUpdate(
+                                    const update = createQueryUpdate(
                                         toRemove,
                                         checkedOptions,
                                         props.filter
@@ -140,7 +140,7 @@ function isOptionChecked(
  * Create query update while trying
  * to keep the query as short as possible
  */
-export function createUpdate(
+export function createQueryUpdate(
     phrasesToRemove: ListPhrase[],
     optionsToAdd: string[],
     filter: CancerTreeSearchFilter

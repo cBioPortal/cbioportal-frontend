@@ -26,7 +26,7 @@ import { PAN_CAN_SIGNATURE } from './StudyListLogic';
 import QuickSelectButtons from './QuickSelectButtons';
 import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import WindowStore from 'shared/components/window/WindowStore';
-import { AutosuggestStudySearch } from 'shared/components/query/AutosuggestStudySearch';
+import { StudySearch } from 'shared/components/query/StudySearch';
 
 const MIN_LIST_HEIGHT = 200;
 
@@ -243,11 +243,11 @@ export default class CancerStudySelector extends React.Component<
                                     }}
                                 >
                                     {this.store.parser && (
-                                        <AutosuggestStudySearch
+                                        <StudySearch
                                             parser={this.store.parser}
-                                            parsedQuery={this.store.parsedQuery}
+                                            query={this.store.query}
                                             onSearch={query =>
-                                                (this.store.parsedQuery = query)
+                                                (this.store.query = query)
                                             }
                                         />
                                     )}
