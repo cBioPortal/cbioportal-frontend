@@ -3,6 +3,7 @@ import * as React from 'react';
 import { FunctionComponent } from 'react';
 import { SearchClause } from 'shared/components/query/filteredSearch/SearchClause';
 import { Phrase } from 'shared/components/query/filteredSearch/Phrase';
+import './ListFormField.scss';
 
 export type ListFilterField = {
     label: string;
@@ -16,16 +17,12 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
 
     return (
         <div className="filter-list">
-            <h5>{props.filter.form.label}:</h5>
+            <h5>{props.filter.form.label}</h5>
             {form.options.map(option => {
                 const update = props.parser.parseSearchQuery(option);
                 return (
                     <li className="dropdown-item">
                         <a
-                            style={{
-                                display: 'block',
-                                padding: '5px',
-                            }}
                             tabIndex={-1}
                             onClick={() =>
                                 props.onChange({
@@ -39,7 +36,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
                     </li>
                 );
             })}
-            <hr style={{ marginTop: '1em' }} />
+            <hr />
         </div>
     );
 };

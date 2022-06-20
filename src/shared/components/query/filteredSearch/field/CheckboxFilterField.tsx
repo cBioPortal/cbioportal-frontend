@@ -51,7 +51,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
 
     return (
         <div className="filter-checkbox">
-            <h5>{props.filter.form.label}:</h5>
+            <h5>{props.filter.form.label}</h5>
             <div>
                 {options.map((option: string) => {
                     const id = `input-${option}`;
