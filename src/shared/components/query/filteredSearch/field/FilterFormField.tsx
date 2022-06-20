@@ -25,7 +25,7 @@ export const FilterFormField: FunctionComponent<FieldProps> = props => {
     const inputField = props.filter.form.input;
     return (
         <div
-            className={`filter-form-field ${props.filter.phrasePrefix}`}
+            className={`filter-form-field ${props.filter.phrasePrefix || ''}`}
             style={{
                 margin: '0.5em',
             }}
