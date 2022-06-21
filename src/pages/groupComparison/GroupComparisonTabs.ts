@@ -3,6 +3,7 @@ export enum GroupComparisonTab {
     MRNA = 'mrna',
     PROTEIN = 'protein',
     SURVIVAL = 'survival',
+    MUTATION = 'mutation',
     CLINICAL = 'clinical',
     DNAMETHYLATION = 'dna_methylation',
     ALTERATIONS = 'alterations',

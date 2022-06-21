@@ -176,8 +176,8 @@ export default class GroupComparisonPage extends React.Component<
                     </MSKTab>
 
                     <MSKTab
-                        id={GroupComparisonTab.CLINICAL}
-                        linkText="Mutation"
+                        id={GroupComparisonTab.MUTATION}
+                        linkText="Mutations"
                     ></MSKTab>
 
                     {this.store.showAlterationsTab && (
