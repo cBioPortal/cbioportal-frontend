@@ -164,6 +164,7 @@ export default class GroupComparisonPage extends React.Component<
                             <Survival store={this.store} />
                         </MSKTab>
                     )}
+
                     <MSKTab
                         id={GroupComparisonTab.CLINICAL}
                         linkText="Clinical"
@@ -173,6 +174,12 @@ export default class GroupComparisonPage extends React.Component<
                     >
                         <ClinicalData store={this.store} />
                     </MSKTab>
+
+                    <MSKTab
+                        id={GroupComparisonTab.CLINICAL}
+                        linkText="Mutation"
+                    ></MSKTab>
+
                     {this.store.showAlterationsTab && (
                         <MSKTab
                             id={GroupComparisonTab.ALTERATIONS}
