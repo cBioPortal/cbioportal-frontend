@@ -7,7 +7,7 @@ export interface IPageUserSession<T extends PageSettingsData> {
      * - user is logged in;
      * - sessions are enabled
      */
-    readonly canSaveSession: boolean;
+    readonly isUserSessionEnabled: boolean;
 
     /**
      * Changes exist between local and remote userSettings

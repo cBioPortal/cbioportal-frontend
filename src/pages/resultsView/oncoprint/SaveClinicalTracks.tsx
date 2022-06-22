@@ -5,6 +5,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 type SaveClinicalStracksProps = {
     store: ResultsViewPageStore;
+    isEnabled: boolean;
 };
 
 @observer
@@ -30,7 +31,7 @@ export default class SaveClinicalTracks extends React.Component<
                         onClick={() => {
                             this.props.store.pageUserSession.saveUserSession();
                         }}
-                        disabled={!this.props.store.pageUserSession.isDirty}
+                        disabled={!this.props.isEnabled}
                     >
                         <i className="fa fa-thumb-tack" aria-hidden="true" />{' '}
                         Save tracks

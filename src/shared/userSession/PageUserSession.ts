@@ -18,10 +18,24 @@ import { PageSettingsIdentifier } from './PageSettingsIdentifier';
 
 export class PageUserSession<T extends PageSettingsData>
     implements IPageUserSession<T> {
-    public sessionUserSettings: T | undefined;
     private _id: PageSettingsIdentifier;
-    private _userSettings: T | undefined;
     private previousId: PageSettingsIdentifier | undefined;
+
+    /**
+     * User session as used in app, including user changes
+     */
+    private _userSettings: T | undefined;
+
+    /**
+     * User settings as stored in user session
+     */
+    private _savedUserSettings: T | undefined;
+
+    /**
+     * Saved user settings are loaded
+     */
+    private _isLoaded = false;
+
     private reactionDisposers: IReactionDisposer[] = [];
 
     constructor(
@@ -32,12 +46,16 @@ export class PageUserSession<T extends PageSettingsData>
 
         this.reactionDisposers.push(
             reaction(
-                () => [this.id, this.canSaveSession],
+                () => [this.id, this.isUserSessionEnabled],
                 async () => {
                     await this.fetchSessionUserSettings();
                 }
             )
         );
+    }
+
+    get isLoaded(): boolean {
+        return this._isLoaded;
     }
 
     public get id(): PageSettingsIdentifier {
@@ -59,22 +77,25 @@ export class PageUserSession<T extends PageSettingsData>
     }
 
     @computed
-    public get canSaveSession() {
+    public get isUserSessionEnabled() {
         return this.isLoggedIn && this.sessionServiceIsEnabled;
     }
 
+    /**
+     * User settings are changed but not stored in user session
+     */
     @computed
     public get isDirty(): boolean {
         const dirtyUserSettings = !isEqualJs(
             this._userSettings,
-            this.sessionUserSettings
+            this._savedUserSettings
         );
         const dirtyId = !isEqualJs(this._id, this.previousId);
         return dirtyUserSettings || dirtyId;
     }
 
     public async saveUserSession() {
-        if (!this.isDirty || !this.canSaveSession) {
+        if (!this.isDirty || !this.isUserSessionEnabled) {
             return;
         }
         const update = {
@@ -82,7 +103,7 @@ export class PageUserSession<T extends PageSettingsData>
             ...this.userSettings,
         } as PageSettingsUpdateRequest;
         await sessionServiceClient.updateUserSettings(update);
-        this.sessionUserSettings = this.userSettings;
+        this._savedUserSettings = this.userSettings;
         this.previousId = this.id;
     }
 
@@ -92,13 +113,15 @@ export class PageUserSession<T extends PageSettingsData>
     }
 
     private async fetchSessionUserSettings() {
-        const shouldFetch = this.canSaveSession && this.isDirty;
+        const shouldFetch = this.isUserSessionEnabled && this.isDirty;
 
         if (shouldFetch) {
-            this.sessionUserSettings = await sessionServiceClient.fetchPageSettings<
+            this._savedUserSettings = await sessionServiceClient.fetchPageSettings<
                 T
             >(this.id, true);
             this.previousId = this.id;
+            this._userSettings = this._savedUserSettings;
+            this._isLoaded = true;
         }
     }
 

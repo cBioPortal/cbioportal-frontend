@@ -102,6 +102,7 @@ export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
                                     <input
                                         type="text"
                                         className="form-control"
+                                        data-test="bookmark-url"
                                         value={
                                             this.urlData
                                                 ? this.urlData.fullUrl

@@ -1,6 +1,6 @@
 import URLWrapper, { PropertiesMap } from '../../shared/lib/URLWrapper';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
-import { computed, makeObservable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     LegacyResultsViewComparisonSubTab,
@@ -21,6 +21,10 @@ import _ from 'lodash';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
+import { ResultPageSettings } from 'shared/api/session-service/sessionServiceModels';
+import { parse } from 'query-string';
+
+export const USER_SETTINGS_QUERY_PARAM = 'userSettingsJson';
 
 export type PlotsSelectionParam = {
     selectedGeneOption?: string;
@@ -312,8 +316,13 @@ export default class ResultsViewURLWrapper
                 : undefined,
             backwardsCompatibilityMapping
         );
+        this.extractBookmarkUserSettings(routing);
         makeObservable(this);
     }
+
+    // The URL parameter for user settings that is passed in via the 'bookmark'
+    // functionality
+    @observable userSettingsParam: ResultPageSettings = {};
 
     pathContext = '/results';
 
@@ -328,66 +337,50 @@ export default class ResultsViewURLWrapper
     }
 
     /**
-     * Query param clinicallist can be:
-     * - url encoded json object
-     * - comma seperated list (legacy)
-     * - undefined: clinical tracks not configured
-     * - 'null': all clinical tracks were deleted by user
-     *
-     * Ideally, we would like to simply give an empty string.
-     * The problem is that, in order to know whether to show
-     * some clinical tracks by default (such as "profiled-in",
-     * "samples per patient", etc), we need to know whether
-     * the clinical tracks have been updated by the user. If we
-     * pass an empty string, the router just deletes that parameter
-     * from the URL completely, making it indistinguishable from
-     * the initialization state. So we have to use 'null' here to
-     * distinguish the state of user having deleted all clinical tracks,
-     * because the alternative is to make a breaking change to the router library.
-     *
-     * @param clinicalTracks
+     * Retrieve user settings as stored in hash query param
+     * and remove query param from hash afterwards
      */
-    public convertClinicalTracksToUrlParam(
-        clinicalTracks: ClinicalTrackConfig[]
-    ) {
-        if (clinicalTracks.length) {
-            return { clinicallist: JSON.stringify(clinicalTracks) };
-        } else {
-            return { clinicallist: ALL_TRACKS_DELETED };
+    private extractBookmarkUserSettings(routing: ExtendedRouterStore) {
+        let hash = routing.location.hash;
+        if (!hash) {
+            return;
+        }
+
+        routing.location.hash = '';
+
+        const params = parse(hash);
+
+        let userSettingsJson = params[USER_SETTINGS_QUERY_PARAM];
+        if (userSettingsJson) {
+            this.userSettingsParam = JSON.parse(userSettingsJson as string);
         }
     }
 
     /**
-     * Clinical tracks as configured in url
-     *
-     * See also: {@link convertClinicalTracksToUrlParam}
+     * Clinical tracks as configured in:
+     * - user settings query param (created by bookmark)
+     * - clinicallist query param (legacy)
      */
     @computed
-    public get oncoprintSelectedClinicalTracks(): ClinicalTrackConfig[] {
-        if (
-            !this.query.clinicallist ||
-            this.query.clinicallist === ALL_TRACKS_DELETED
-        ) {
-            return [];
+    public get oncoprintSelectedClinicalTracks(): ClinicalTrackConfig[] | null {
+        if (this.userSettingsParam?.clinicallist) {
+            return this.userSettingsParam.clinicallist;
         }
-        try {
-            return JSON.parse(this.query.clinicallist) as ClinicalTrackConfig[];
-        } catch {
+        if (
+            this.query.clinicallist &&
+            this.query.clinicallist !== ALL_TRACKS_DELETED
+        ) {
             return this.query.clinicallist
                 .split(',')
                 .map(id => new ClinicalTrackConfig(id));
         }
-    }
-
-    /**
-     * Check if clinical tracks are initialized
-     * See also: {@link convertClinicalTracksToUrlParam}
-     */
-    @computed public get hasClinicalTracksConfig(): boolean {
-        return !!this.query.clinicallist;
+        return null;
     }
 
     @computed public get oncoprintSelectedClinicalTrackIds(): string[] {
+        if (!this.oncoprintSelectedClinicalTracks) {
+            return [];
+        }
         return this.oncoprintSelectedClinicalTracks.map(track =>
             _.isString(track) ? track : track.stableId
         );

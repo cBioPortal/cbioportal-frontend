@@ -297,6 +297,7 @@ import { ICBioData } from 'pathway-mapper';
 import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
 import { PageUserSession } from 'shared/userSession/PageUserSession';
 import { PageType } from 'shared/userSession/PageType';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -570,11 +571,6 @@ export class ResultsViewPageStore
         public urlWrapper: ResultsViewURLWrapper
     ) {
         makeObservable(this);
-        //labelMobxPromises(this);
-
-        // addErrorHandler((error: any) => {
-        //     this.ajaxErrors.push(error);
-        // });
         this.getURL();
 
         const store = this;
@@ -612,18 +608,6 @@ export class ResultsViewPageStore
                     this.pageUserSession.id = {
                         page: PageType.RESULTS_VIEW,
                         origin: this.cancerStudyIds,
-                    };
-                }
-            )
-        );
-
-        this.reactionDisposers.push(
-            reaction(
-                () => [this.urlWrapper.oncoprintSelectedClinicalTracks],
-                () => {
-                    this.pageUserSession.userSettings = {
-                        clinicallist: this.urlWrapper
-                            .oncoprintSelectedClinicalTracks,
                     };
                 }
             )
@@ -957,17 +941,22 @@ export class ResultsViewPageStore
      */
     @computed.struct get comparisonGroupsReferencedInURL() {
         // Get selected clinical attribute tracks:
-        const inComparisonGroupTracks = this.urlWrapper.oncoprintSelectedClinicalTrackIds.filter(
-            (clinicalAttributeId: string) =>
+        const tracks = this.pageUserSession.userSettings?.clinicallist;
+        const inComparisonGroupTracks =
+            tracks &&
+            tracks.filter((track: ClinicalTrackConfig) =>
                 clinicalAttributeIsINCOMPARISONGROUP({
-                    clinicalAttributeId,
+                    clinicalAttributeId: track.stableId,
                 })
-        );
+            );
 
-        // Convert track ids to group ids:
-        return inComparisonGroupTracks.map((clinicalAttributeId: string) =>
-            convertComparisonGroupClinicalAttribute(clinicalAttributeId, false)
-        );
+        if (inComparisonGroupTracks) {
+            return inComparisonGroupTracks.map((track: ClinicalTrackConfig) =>
+                convertComparisonGroupClinicalAttribute(track.stableId, false)
+            );
+        } else {
+            return [];
+        }
     }
 
     readonly savedComparisonGroupsForStudies = remoteData<Group[]>({

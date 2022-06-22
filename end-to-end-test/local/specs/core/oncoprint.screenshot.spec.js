@@ -11,7 +11,9 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 
 var _ = require('lodash');
+const { parse } = require('query-string');
 
+const USER_SETTINGS_QUERY_PARAM = 'userSettingsJson';
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 const studyes0_oncoprintTabUrl =
@@ -95,7 +97,7 @@ describe('oncoprint', function() {
         });
     });
 
-    describe.only('clinical tracks', () => {
+    describe('clinical tracks', () => {
         beforeEach(() => {
             goToUrlAndSetLocalStorageWithProperty(
                 studyes0_oncoprintTabUrl,
@@ -114,51 +116,43 @@ describe('oncoprint', function() {
             assertScreenShotMatch(res);
         });
 
-        it('stores configuration in url param "clinicallist" during initialization', () => {
-            const clinicalList = getClinicallistConfigFromUrl(browser);
-            expect(clinicalList).toEqual(SERVER_CLINICAL_TRACK_CONFIG);
-        });
-
         it('updates url when changing gaps', () => {
             changeNthTrack(1, "Don't show gaps");
+            const clinicalTracksUrlParam = getTracksFromBookmark(browser);
 
-            const clinicalTracksUrlParam = getClinicallistConfigFromUrl(
-                browser
-            );
-            expect(SERVER_CLINICAL_TRACK_CONFIG[0].gapOn === true);
-            const updatedTrackConfig = JSON.parse(
+            const expectedConfig = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
-            updatedTrackConfig[0].gapOn = false;
-            expect(clinicalTracksUrlParam).toEqual(updatedTrackConfig);
+            expectedConfig[0].gapOn = false;
+
+            expect(clinicalTracksUrlParam).toEqual(expectedConfig);
         });
 
         it('updates url when sorting', () => {
             changeNthTrack(1, 'Sort Z-a');
 
-            const clinicalTracksUrlParam = getClinicallistConfigFromUrl(
-                browser
-            );
+            const clinicallist = getTracksFromBookmark(browser);
+
             expect(SERVER_CLINICAL_TRACK_CONFIG[0].sortOrder === 'ASC');
             const updatedTrackConfig = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
             updatedTrackConfig[0].sortOrder = 'DESC';
-            expect(clinicalTracksUrlParam).toEqual(updatedTrackConfig);
+            expect(clinicallist).toEqual(updatedTrackConfig);
         });
 
         it('initializes correctly when clinicallist config present in url', () => {
-            const urlConfig = encodeURIComponent(
-                JSON.stringify(MANUAL_TRACK_CONFIG)
+            const urlWithUserConfig = createUrlWithSettingsQueryParam(
+                MANUAL_TRACK_CONFIG
             );
-            const urlWithUserConfig = `${studyes0_oncoprintTabUrl}&clinicallist=${urlConfig}`;
             goToUrlAndSetLocalStorage(urlWithUserConfig, false);
             waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-            const clinicalList = getClinicallistConfigFromUrl(browser);
-            expect(clinicalList).toEqual(MANUAL_TRACK_CONFIG);
             const res = checkOncoprintElement();
             assertScreenShotMatch(res);
+
+            const clinicallist = getTracksFromBookmark(browser);
+            expect(clinicallist).toEqual(MANUAL_TRACK_CONFIG);
         });
 
         it('still supports legacy clinicallist format', () => {
@@ -166,15 +160,14 @@ describe('oncoprint', function() {
 
             changeNthTrack(1, 'Sort a-Z');
 
-            // Legacy format should be converted to config json:
-            const url = browser.getUrl();
-
-            const clinicalList = getClinicallistConfigFromUrl(browser);
-            const stableIds = clinicalList.map(tracks => tracks.stableId);
-            expect(stableIds.join(',')).toEqual(legacyFormatUrlParam);
-            expect(clinicalList[0].sortOrder).toEqual('ASC');
             const res = checkOncoprintElement();
             assertScreenShotMatch(res);
+
+            const clinicallist = getTracksFromBookmark(browser);
+
+            const stableIds = clinicallist.map(tracks => tracks.stableId);
+            expect(stableIds.join(',')).toEqual(legacyFormatUrlParam);
+            expect(clinicallist[0].sortOrder).toEqual('ASC');
         });
 
         /**
@@ -185,12 +178,12 @@ describe('oncoprint', function() {
             const customConfig = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
-            customConfig.pop();
-            browser.url(
-                studyes0_oncoprintTabUrl +
-                '&clinicallist=' +
-                encodeURIComponent(JSON.stringify(customConfig))
+            customConfig.pop(); // <-- remove track
+            const urlWithUserConfig = createUrlWithSettingsQueryParam(
+                customConfig
             );
+            browser.url(urlWithUserConfig);
+
             waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             // Check save button enabled
@@ -215,33 +208,23 @@ describe('oncoprint', function() {
          * to differentiate between default and custom config
          */
         it('uses configuration stored in session when available', () => {
-            const customConfig = JSON.parse(
+            // Expected should match custom config of previous test
+            const expected = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
-            customConfig.pop();
-            const urlConfig = getClinicallistConfigFromUrl(browser);
-            expect(urlConfig).toEqual(customConfig);
-        });
-
-        /**
-         * Load page with a default config that differs
-         * from SERVER_CLINICAL_TRACK_CONFIG and session config
-         */
-        it('prefers url when session and url configuration differ', () => {
-            const customUrlConfig = _.cloneDeep(SERVER_CLINICAL_TRACK_CONFIG);
-            customUrlConfig[0].gapOn = !customUrlConfig[0].gapOn;
-            browser.url(
-                studyes0_oncoprintTabUrl +
-                '&clinicallist=' +
-                encodeURIComponent(JSON.stringify(customUrlConfig))
-            );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-
-            const res = checkOncoprintElement();
-            assertScreenShotMatch(res);
+            expected.pop(); // <-- remove track
+            const clinicallist = getTracksFromBookmark(browser);
+            expect(clinicallist).toEqual(expected);
         });
     });
 });
+
+function createUrlWithSettingsQueryParam(config) {
+    const jsonConfig = encodeURIComponent(
+        JSON.stringify({ clinicallist: config })
+    );
+    return `${studyes0_oncoprintTabUrl}#${USER_SETTINGS_QUERY_PARAM}=${jsonConfig}`;
+}
 
 function openTracksMenu() {
     const $tracksDropdown = $('#addTracksDropdown');
@@ -259,6 +242,27 @@ function changeNthTrack(track, menuOptionButtonText) {
     waitForOncoprint(2000);
 }
 
+function getBookmarkUrl(browser) {
+    const showBookmarkButtonSelector = '[data-test=bookmark-link]';
+    browser.waitUntil(() => $(showBookmarkButtonSelector).isExisting());
+    $(showBookmarkButtonSelector).click();
+    const bookmarkUrlInputFieldSelector = '[data-test=bookmark-url]';
+    browser.waitUntil(() => $(bookmarkUrlInputFieldSelector).isExisting());
+    const $bookMarkUrl = $('[data-test=bookmark-url]');
+    return $bookMarkUrl.getValue();
+}
+
+function getTracksFromBookmark(browser) {
+    const bookmarkUrl = getBookmarkUrl(browser);
+    const userSettings = getUserSettingsFrom(bookmarkUrl);
+    return userSettings.clinicallist;
+}
+
+function getUserSettingsFrom(bookmarkUrl) {
+    let params = parse(new URL(bookmarkUrl).hash);
+    return JSON.parse(params[USER_SETTINGS_QUERY_PARAM]);
+}
+
 /**
  * @returns {string} legacy format
  */
@@ -270,11 +274,4 @@ function createOncoprintFromLegacyFormat() {
     goToUrlAndSetLocalStorage(legacyUrl, false);
     waitForOncoprint(ONCOPRINT_TIMEOUT);
     return legacyFormatQueryParam;
-}
-
-function getClinicallistConfigFromUrl(browser) {
-    const url = browser.getUrl();
-    return JSON.parse(
-        decodeURIComponent(new URLSearchParams(url).get('clinicallist'))
-    );
 }

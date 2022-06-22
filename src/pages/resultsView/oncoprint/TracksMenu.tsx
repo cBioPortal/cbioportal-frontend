@@ -52,7 +52,7 @@ export const CONTAINER_PADDING_WIDTH = 20;
 export const TAB_PADDING_WIDTH = 14;
 export const COUNT_PADDING_WIDTH = 17;
 @observer
-export default class AddTracks extends React.Component<IAddTrackProps, {}> {
+export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     @observable tabId: Tab | string = Tab.CLINICAL;
 
     constructor(props: IAddTrackProps) {
@@ -247,7 +247,14 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
         ) {
             return (
                 <>
-                    <SaveClinicalTracks store={this.props.store} />
+                    {this.props.oncoprinterMode}
+                    <SaveClinicalTracks
+                        store={this.props.store}
+                        isEnabled={
+                            this.props.state
+                                .isSaveTracksToUserSessionButtonEnabled
+                        }
+                    />
                     <AddClinicalTracks
                         store={this.props.store}
                         getSelectedClinicalAttributes={
