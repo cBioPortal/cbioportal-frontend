@@ -4,6 +4,7 @@ import GroupComparisonStore from './GroupComparisonStore';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Survival from './Survival';
+import Mutation from './Mutation';
 import Overlap from './Overlap';
 import MRNAEnrichments from './MRNAEnrichments';
 import ProteinEnrichments from './ProteinEnrichments';

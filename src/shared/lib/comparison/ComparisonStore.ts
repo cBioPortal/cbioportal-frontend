@@ -148,6 +148,11 @@ export default abstract class ComparisonStore
                         this.showSurvivalTab
                 );
                 this.tabHasBeenShown.set(
+                    GroupComparisonTab.MUTATION,
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.MUTATION) ||
+                        this.showMutationTab
+                );
+                this.tabHasBeenShown.set(
                     GroupComparisonTab.MRNA,
                     !!this.tabHasBeenShown.get(GroupComparisonTab.MRNA) ||
                         this.showMRNATab
@@ -1460,6 +1465,22 @@ export default abstract class ComparisonStore
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
                 this.tabHasBeenShown.get(GroupComparisonTab.SURVIVAL))
+        );
+    }
+
+    @computed get mutationTabShowable() {
+        return (
+            this.survivalClinicalDataExists.isComplete &&
+            this.survivalClinicalDataExists.result
+        );
+    }
+
+    @computed get showMutationTab() {
+        return !!(
+            this.survivalTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(GroupComparisonTab.MUTATION))
         );
     }
 
