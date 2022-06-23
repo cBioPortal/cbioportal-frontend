@@ -255,7 +255,7 @@ export class QueryStore {
 
     @observable transposeDataMatrix = false;
 
-    @observable searchClauses: SearchClause[] = [];
+    @observable.ref searchClauses: SearchClause[] = [];
 
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);
@@ -2293,7 +2293,6 @@ export enum Focus {
     ShouldFocus,
     Focused,
 }
-// mobx observable
 
 export const QueryStoreComponent = ComponentGetsStoreContext(QueryStore);
 
