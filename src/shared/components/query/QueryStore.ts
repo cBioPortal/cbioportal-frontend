@@ -117,7 +117,7 @@ export function normalizeQuery(geneQuery: string) {
 type GenesetId = string;
 
 export class QueryStore {
-    private _parser: QueryParser;
+    private _queryParser: QueryParser;
 
     constructor(urlWithInitialParams?: string) {
         getBrowserWindow().activeQueryStore = this;
@@ -127,8 +127,8 @@ export class QueryStore {
         this.initialize(urlWithInitialParams);
     }
 
-    get parser(): QueryParser {
-        return this._parser;
+    get queryParser(): QueryParser {
+        return this._queryParser;
     }
 
     initialize(urlWithInitialParams?: string) {
@@ -158,7 +158,7 @@ export class QueryStore {
 
         reaction(
             () => this.referenceGenomes,
-            () => (this._parser = new QueryParser(this.referenceGenomes))
+            () => (this._queryParser = new QueryParser(this.referenceGenomes))
         );
     }
 
@@ -2163,7 +2163,7 @@ export class QueryStore {
 
     @action setSearchText(searchText: string) {
         this.clearSelectedCancerType();
-        this.query = this.parser.parseSearchQuery(searchText);
+        this.query = this.queryParser.parseSearchQuery(searchText);
     }
 
     @action clearSelectedCancerType() {

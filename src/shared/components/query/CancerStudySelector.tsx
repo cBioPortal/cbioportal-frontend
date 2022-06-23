@@ -242,9 +242,9 @@ export default class CancerStudySelector extends React.Component<
                                         alignItems: 'center',
                                     }}
                                 >
-                                    {this.store.parser && (
+                                    {this.store.queryParser && (
                                         <StudySearch
-                                            parser={this.store.parser}
+                                            parser={this.store.queryParser}
                                             query={this.store.query}
                                             onSearch={query =>
                                                 (this.store.query = query)
