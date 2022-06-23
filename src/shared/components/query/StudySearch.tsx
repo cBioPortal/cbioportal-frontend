@@ -31,7 +31,10 @@ export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = obser
         }));
 
         return (
-            <div className={`dropdown ${store.isMenuOpen ? 'open' : ''}`}>
+            <div
+                data-test="study-search"
+                className={`dropdown ${store.isMenuOpen ? 'open' : ''}`}
+            >
                 <div className="input-group input-group-sm input-group-toggle">
                     <SearchBox
                         queryString={toQueryString(props.query)}
