@@ -61,6 +61,10 @@ export default class StudyList extends QueryStoreComponent<
         if (this.props.showSelectedStudiesOnly) this._view = this.view;
     }
 
+    @computed get shouldShowRefGenome() {
+        return this.store.multipleReferenceGenomesPresentInAllStudies;
+    }
+
     render() {
         let studyList = this.renderCancerType(this.rootCancerType);
 
@@ -238,6 +242,8 @@ export default class StudyList extends QueryStoreComponent<
                                 {!this.store.isDeletedVirtualStudy(
                                     study.studyId
                                 ) && this.renderSamples(study)}
+                                {this.shouldShowRefGenome &&
+                                    this.renderReferenceGenomeLabel(study)}
                                 {this.renderStudyLinks(study)}
                             </div>
                         );
@@ -246,17 +252,6 @@ export default class StudyList extends QueryStoreComponent<
             </li>
         );
     };
-
-    // renderStudyName = (study:CancerStudy, afterName?:any) =>
-    // {
-    // 	return (
-    // 		<CancerTreeCheckbox view={this.view} node={study}>
-    // 			<span className={styles.StudyName}>
-    // 				{study.name} {afterName || null}
-    // 			</span>
-    // 		</CancerTreeCheckbox>
-    // 	);
-    // }
 
     renderSamples = (study: CancerStudy) => {
         return (
@@ -445,6 +440,12 @@ export default class StudyList extends QueryStoreComponent<
             );
         }
     };
+
+    private renderReferenceGenomeLabel(study: CancerStudy) {
+        return study.referenceGenome ? (
+            <span> | {study.referenceGenome} </span>
+        ) : null;
+    }
 }
 
 export interface ICancerTreeCheckboxProps {

@@ -250,6 +250,15 @@ export class QueryStore {
         return referenceGenomes.length === 1;
     }
 
+    @computed
+    get multipleReferenceGenomesPresentInAllStudies() {
+        const allStudies = this.treeData.map_studyId_cancerStudy;
+        const referenceGenomes = _.uniq(
+            Array.from(allStudies.values()).map(s => s.referenceGenome)
+        );
+        return referenceGenomes.length > 1;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     // QUERY PARAMETERS
     ////////////////////////////////////////////////////////////////////////////////
