@@ -3269,6 +3269,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const axisIsStringData =
             axisDataPromise.isComplete && isStringData(axisDataPromise.result!);
 
+        // some structural variant data lacks variantClass data.  if none of the SV data has variantClass, then we
+        // we don't want to allow the data to be viewed by variantClass (Variant Type in UI) so remove
+        // that from the options
+        const filterStructuralVariantOptions = _.every(
+            this.props.store.structuralVariants.result,
+            sv => {
+                return !sv.variantClass || sv.variantClass === 'NA';
+            }
+        )
+            ? structuralVariantCountByOptions.filter(
+                  option =>
+                      option.value !== StructuralVariantCountBy.VariantType
+              )
+            : structuralVariantCountByOptions;
+
         switch (axisSelection.dataType) {
             case CLIN_ATTR_DATA_TYPE:
                 dataSourceLabel = 'Clinical Attribute';
@@ -3284,7 +3299,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
                 dataSourceLabel = 'Group Structural variants by';
                 dataSourceValue = axisSelection.structuralVariantCountBy;
-                dataSourceOptions = structuralVariantCountByOptions;
+                dataSourceOptions = filterStructuralVariantOptions;
                 onDataSourceChange = vertical
                     ? this.onVerticalAxisStructuralVariantCountBySelect
                     : this.onHorizontalAxisStructuralVariantCountBySelect;
