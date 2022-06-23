@@ -28,18 +28,6 @@ export class QueryParser {
     constructor(referenceGenomes: Set<string>) {
         this._searchFilters = [
             /**
-             * Reference genome:
-             */
-            {
-                phrasePrefix: 'reference-genome',
-                nodeFields: ['referenceGenome'],
-                form: {
-                    input: FilterCheckbox,
-                    options: [...referenceGenomes],
-                    label: 'Reference genome',
-                },
-            },
-            /**
              * Example queries:
              */
             {
@@ -51,6 +39,18 @@ export class QueryParser {
                     options: ServerConfigHelpers.skin_example_study_queries(
                         getServerConfig()!.skin_example_study_queries || ''
                     ),
+                },
+            },
+            /**
+             * Reference genome:
+             */
+            {
+                phrasePrefix: 'reference-genome',
+                nodeFields: ['referenceGenome'],
+                form: {
+                    input: FilterCheckbox,
+                    options: [...referenceGenomes],
+                    label: 'Reference genome',
                 },
             },
         ];
