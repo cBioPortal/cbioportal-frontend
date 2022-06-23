@@ -255,10 +255,10 @@ export class QueryStore {
 
     @observable transposeDataMatrix = false;
 
-    @observable query: SearchClause[] = [];
+    @observable searchClauses: SearchClause[] = [];
 
     @computed get searchText(): string {
-        return toQueryString(this.query);
+        return toQueryString(this.searchClauses);
     }
 
     @observable private _allSelectedStudyIds: ObservableMap<
@@ -2157,7 +2157,7 @@ export class QueryStore {
 
     @action setSearchText(searchText: string) {
         this.clearSelectedCancerType();
-        this.query = this.queryParser.parseSearchQuery(searchText);
+        this.searchClauses = this.queryParser.parseSearchQuery(searchText);
     }
 
     @action clearSelectedCancerType() {

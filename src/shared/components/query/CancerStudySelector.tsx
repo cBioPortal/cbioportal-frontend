@@ -245,9 +245,9 @@ export default class CancerStudySelector extends React.Component<
                                     {this.store.queryParser && (
                                         <StudySearch
                                             parser={this.store.queryParser}
-                                            query={this.store.query}
+                                            query={this.store.searchClauses}
                                             onSearch={query =>
-                                                (this.store.query = query)
+                                                (this.store.searchClauses = query)
                                             }
                                         />
                                     )}

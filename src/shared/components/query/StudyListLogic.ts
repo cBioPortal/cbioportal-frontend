@@ -49,7 +49,7 @@ export default class StudyListLogic {
         for (const study of this.store.treeData.map_node_meta.keys()) {
             map_node_searchResult.set(
                 study,
-                performSearchSingle(this.store.query, study)
+                performSearchSingle(this.store.searchClauses, study)
             );
         }
 
