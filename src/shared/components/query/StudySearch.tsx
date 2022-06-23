@@ -13,6 +13,7 @@ import { QueryParser } from 'shared/lib/query/QueryParser';
 import _ from 'lodash';
 import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
 import { StudySearchControls } from 'shared/components/query/filteredSearch/StudySearchControls';
+import { observer, useLocalObservable } from 'mobx-react-lite';
 
 export type AutosuggestStudySearchProps = {
     parser: QueryParser;
@@ -20,51 +21,60 @@ export type AutosuggestStudySearchProps = {
     onSearch: (query: SearchClause[]) => void;
 };
 
-export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = function(
-    props
-) {
-    const [isMenuOpen, setMenuOpen] = useState(false);
+export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = observer(
+    function(props) {
+        const store = useLocalObservable(() => ({
+            isMenuOpen: false,
+            toggle() {
+                this.isMenuOpen = !this.isMenuOpen;
+            },
+        }));
 
-    return (
-        <div className={`autosuggest dropdown ${isMenuOpen ? 'open' : ''}`}>
-            <div className="input-group input-group-sm input-group-toggle">
-                <SearchBox
-                    queryString={toQueryString(props.query)}
-                    onType={handleQueryTyping}
+        return (
+            <div
+                className={`autosuggest dropdown ${
+                    store.isMenuOpen ? 'open' : ''
+                }`}
+            >
+                <div className="input-group input-group-sm input-group-toggle">
+                    <SearchBox
+                        queryString={toQueryString(props.query)}
+                        onType={handleQueryTyping}
+                    />
+                    <SearchMenuToggle onClick={store.toggle} />
+                </div>
+                <ClearSearchButton
+                    show={props.query.length > 0}
+                    onClick={() => handleQueryTyping('')}
                 />
-                <SearchMenuToggle onClick={() => setMenuOpen(!isMenuOpen)} />
+                <StudySearchControls
+                    query={props.query}
+                    filterConfig={props.parser.searchFilters}
+                    onChange={handleQueryUpdate}
+                    parser={props.parser}
+                />
             </div>
-            <ClearSearchButton
-                show={props.query.length > 0}
-                onClick={() => handleQueryTyping('')}
-            />
-            <StudySearchControls
-                query={props.query}
-                filterConfig={props.parser.searchFilters}
-                onChange={handleQueryUpdate}
-                parser={props.parser}
-            />
-        </div>
-    );
+        );
 
-    function handleQueryTyping(update: string) {
-        const updatedQuery = props.parser.parseSearchQuery(update);
-        return props.onSearch(updatedQuery);
-    }
+        function handleQueryTyping(update: string) {
+            const updatedQuery = props.parser.parseSearchQuery(update);
+            return props.onSearch(updatedQuery);
+        }
 
-    function handleQueryUpdate(update: QueryUpdate) {
-        let updatedQuery = _.cloneDeep(props.query);
-        if (update.toRemove) {
-            for (const p of update.toRemove) {
-                updatedQuery = removePhrase(p, updatedQuery);
+        function handleQueryUpdate(update: QueryUpdate) {
+            let updatedQuery = _.cloneDeep(props.query);
+            if (update.toRemove) {
+                for (const p of update.toRemove) {
+                    updatedQuery = removePhrase(p, updatedQuery);
+                }
             }
+            if (update.toAdd) {
+                updatedQuery = addClauses(update.toAdd, updatedQuery);
+            }
+            props.onSearch(updatedQuery);
         }
-        if (update.toAdd) {
-            updatedQuery = addClauses(update.toAdd, updatedQuery);
-        }
-        props.onSearch(updatedQuery);
     }
-};
+);
 
 const SearchMenuToggle: FunctionComponent<{ onClick: () => void }> = props => {
     return (
