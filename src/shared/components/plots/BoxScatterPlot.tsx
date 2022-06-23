@@ -46,6 +46,7 @@ import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
+import { capitalizeFirstLettersOfAllWords } from '../../../../packages/cbioportal-frontend-commons/src';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;
@@ -135,6 +136,9 @@ export default class BoxScatterPlot<
 
     constructor(props: any) {
         super(props);
+
+        console.log('aaron', props.data);
+
         makeObservable(this);
     }
 
@@ -538,8 +542,7 @@ export default class BoxScatterPlot<
 
     @bind
     private formatCategoryTick(t: number, index: number) {
-        //return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
-        return this.labels[index];
+        return capitalizeFirstLettersOfAllWords(this.labels[index]);
     }
 
     @bind
