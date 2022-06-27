@@ -14,7 +14,6 @@ const ONCOGENIC_CLASS_NAMES: { [oncogenic: string]: string } = {
     Unknown: 'unknown',
     Inconclusive: 'inconclusive',
     Resistance: 'oncogenic',
-    'Predicted Oncogenic': 'oncogenic',
     'Likely Oncogenic': 'oncogenic',
     Oncogenic: 'oncogenic',
 };
@@ -26,7 +25,6 @@ const ONCOGENIC_SCORE: { [oncogenic: string]: number } = {
     Inconclusive: 0,
     'Likely Neutral': 0,
     Resistance: 5,
-    'Predicted Oncogenic': 5,
     'Likely Oncogenic': 5,
     Oncogenic: 5,
 };
@@ -107,7 +105,6 @@ export function oncogenicYPosition(
 ) {
     const oncogenicityMap: { [id: string]: number } = {
         Oncogenic: 0,
-        'Predicted Oncogenic': 0,
         'Likely Oncogenic': 0,
         Resistance: 0,
         Neutral: 1,

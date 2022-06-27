@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend",
   "private": true,
-  "version": "3.3.182",
+  "version": "3.3.187",
   "workspaces": {
     "packages": [
       ".",
@@ -152,8 +152,8 @@
     "bootstrap-sass": "3.4.1",
     "bowser": "^1.7.1",
     "bundle-loader": "^0.5.4",
-    "cbioportal-clinical-timeline": "^0.3.40",
-    "cbioportal-frontend-commons": "^0.5.29",
+    "cbioportal-clinical-timeline": "^0.3.42",
+    "cbioportal-frontend-commons": "^0.5.30",
     "cbioportal-ts-api-client": "^0.9.42",
     "cbioportal-utils": "^0.3.21",
     "chart.js": "^2.6.0",
@@ -219,7 +219,7 @@
     "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "numeral": "^2.0.6",
     "object-sizeof": "^1.2.0",
-    "oncokb-styles": "~1.3.0",
+    "oncokb-styles": "~1.4.2",
     "oncokb-ts-api-client": "^1.3.1",
     "oncoprintjs": "^6.0.0",
     "pako": "2.0.2",
@@ -264,7 +264,7 @@
     "react-markdown": "^7.0.1",
     "react-mfb": "^0.6.0",
     "react-motion": "^0.4.7",
-    "react-mutation-mapper": "^0.8.44",
+    "react-mutation-mapper": "^0.8.48",
     "react-overlays": "0.7.4",
     "react-portal": "^4.2.0",
     "react-rangeslider": "^2.1.0",

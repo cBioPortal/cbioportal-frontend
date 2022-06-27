@@ -33,7 +33,7 @@ const ONCOKB_DATA_ACCESS_PAGE_LINK =
 const publicInstanceDisclaimerOverLay = (
     <div>
         <p>
-            This cBioPortal instance is not linked to an OncoKB license, and
+            This cBioPortal instance is not linked to an OncoKB™ license, and
             therefore some OncoKB content is not available including
             therapeutic, diagnostic and prognostic implications. To obtain a
             license, please follow{' '}

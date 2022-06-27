@@ -9,6 +9,7 @@ import { flattenTracks, sortNestedTracks } from './lib/helpers';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import { TICK_AXIS_HEIGHT } from './TickAxis';
 import { useObserver } from 'mobx-react-lite';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export interface ITimelineTracks {
     store: TimelineStore;
@@ -70,8 +71,10 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                 </g>
                 {store.tooltipModels.map(([uid, model, index]) => {
                     const position = model.position || store.mousePosition;
-                    let placementLeft = position.x > width / 2;
-                    placementLeft = false;
+                    // if the x offset is great than half the screen, then position
+                    // tooltip to the left
+                    let placementLeft =
+                        position.x / getBrowserWindow().outerWidth > 0.5;
                     return (
                         <Portal container={document.body}>
                             <Popover

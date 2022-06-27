@@ -42,9 +42,9 @@ export function getAnnotatingProgressMessage(
 ) {
     let message;
     if (usingOncokb && usingHotspot) {
-        message = 'Annotating with OncoKB and Cancer Hotspots';
+        message = 'Annotating with OncoKB™ and Cancer Hotspots';
     } else if (usingOncokb) {
-        message = 'Annotating with OncoKB';
+        message = 'Annotating with OncoKB™';
     } else if (usingHotspot) {
         message = 'Annotating with Cancer Hotspots';
     } else {

@@ -129,13 +129,13 @@ export default class DriverAnnotationControls extends React.Component<
                                         <DefaultTooltip
                                             overlay={
                                                 <span>
-                                                    Oncogenicity from OncoKB
+                                                    Oncogenicity from OncoKB™
                                                 </span>
                                             }
                                             placement="top"
                                         >
                                             <img
-                                                src={require('../../../rootImages/oncokb.png')}
+                                                src={require('oncokb-styles/dist/images/logo/oncokb.svg')}
                                                 style={{
                                                     maxHeight: '12px',
                                                     cursor: 'pointer',

@@ -29,9 +29,7 @@ import {
     makeBoxScatterPlotData,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
-import BoxScatterPlot, {
-    IBoxScatterPlotData,
-} from 'shared/components/plots/BoxScatterPlot';
+import { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
 import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
 import {
     CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
@@ -48,9 +46,15 @@ import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
 import { getComparisonCategoricalNaValue } from './ClinicalDataUtils';
+import {
+    ClinicalNumericalDataVisualisation,
+    ClinicalNumericalVisualisationType,
+} from 'pages/groupComparison/ClinicalNumericalDataVisualisation';
+import { SummaryStatisticsTable } from './SummaryStatisticsTable';
 import CategoryPlot, {
     CategoryPlotType,
 } from 'pages/groupComparison/CategoryPlot';
+import { OncoprintJS } from 'oncoprintjs';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -58,7 +62,10 @@ export interface IClinicalDataProps {
 
 const SVG_ID = 'clinical-plot-svg';
 
-class PlotsTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
+export const numericalVisualisationTypeOptions = [
+    { value: ClinicalNumericalVisualisationType.Plot, label: 'Plot' },
+    { value: ClinicalNumericalVisualisationType.Table, label: 'Table' },
+];
 
 export class ClinicalDataEnrichmentStore extends SimpleGetterLazyMobXTableApplicationDataStore<
     ClinicalDataEnrichmentWithQ
@@ -123,6 +130,13 @@ export default class ClinicalData extends React.Component<
     @observable.ref highlightedRow: ClinicalDataEnrichmentWithQ | undefined;
 
     private scrollPane: HTMLDivElement;
+
+    private oncoprintJs: OncoprintJS | null = null;
+
+    @autobind
+    private oncoprintJsRef(oncoprint: OncoprintJS) {
+        this.oncoprintJs = oncoprint;
+    }
 
     readonly tabUI = MakeMobxView({
         await: () => {
@@ -240,8 +254,39 @@ export default class ClinicalData extends React.Component<
         }
     );
 
-    @computed get showLogScaleControls() {
+    @computed get isNumericalPlot() {
         return isNumerical(this.highlightedRow!.clinicalAttribute.datatype);
+    }
+
+    @computed get showLogScaleControls() {
+        return this.isNumericalPlot;
+    }
+
+    @computed get showPAndQControls() {
+        return !this.isTable && !this.isHeatmap;
+    }
+
+    @computed get showHorizontalBarControls() {
+        return !this.showLogScaleControls && !this.isHeatmap;
+    }
+
+    @computed get showSwapAxisControls() {
+        return !this.isTable;
+    }
+
+    @computed get isTable() {
+        return (
+            this.isNumericalPlot &&
+            this.numericalVisualisationType ===
+                ClinicalNumericalVisualisationType.Table
+        );
+    }
+
+    @computed get isHeatmap() {
+        return (
+            !this.isNumericalPlot &&
+            this.categoryPlotType === CategoryPlotType.Heatmap
+        );
     }
 
     @observable private logScale = false;
@@ -278,7 +323,7 @@ export default class ClinicalData extends React.Component<
     }
 
     @action.bound
-    private onClickhorizontalBars() {
+    private onClickHorizontalBars() {
         this.horizontalBars = !this.horizontalBars;
     }
 
@@ -513,6 +558,9 @@ export default class ClinicalData extends React.Component<
 
     @autobind
     private getSvg() {
+        if (this.categoryPlotType === CategoryPlotType.Heatmap) {
+            return this.oncoprintJs && this.oncoprintJs.toSVG(true);
+        }
         return document.getElementById(SVG_ID) as SVGElement | null;
     }
 
@@ -583,44 +631,9 @@ export default class ClinicalData extends React.Component<
     }
 
     @computed get boxPlotTooltip() {
-        return (d: any) => {
-            return (
-                <table className="table table-striped">
-                    <thead>
-                        <tr>
-                            <th colSpan={2}>
-                                {
-                                    this.boxPlotData.result!.data[d.eventKey]
-                                        .label
-                                }
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Maximum</td>
-                            <td>{d.max}</td>
-                        </tr>
-                        <tr>
-                            <td>75% (q3)</td>
-                            <td>{d.q3}</td>
-                        </tr>
-                        <tr>
-                            <td>Median</td>
-                            <td>{d.median}</td>
-                        </tr>
-                        <tr>
-                            <td>25% (q1)</td>
-                            <td>{d.q1}</td>
-                        </tr>
-                        <tr>
-                            <td>Minimum</td>
-                            <td>{d.min}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            );
-        };
+        return (data: any[], labels: string[]) => (
+            <SummaryStatisticsTable data={data} labels={labels} />
+        );
     }
 
     @computed get categoryToColor() {
@@ -649,9 +662,17 @@ export default class ClinicalData extends React.Component<
     @observable categoryPlotType: CategoryPlotType =
         CategoryPlotType.PercentageStackedBar;
 
+    @observable numericalVisualisationType: ClinicalNumericalVisualisationType =
+        ClinicalNumericalVisualisationType.Plot;
+
     @action.bound
     private onPlotTypeSelect(option: any) {
         this.categoryPlotType = option.value;
+    }
+
+    @action.bound
+    private onNumericalVisualisationTypeSelect(option: any) {
+        this.numericalVisualisationType = option.value;
     }
 
     @computed private get getUtilitiesMenu() {
@@ -660,6 +681,31 @@ export default class ClinicalData extends React.Component<
         }
         return (
             <div style={{ marginBottom: '10px' }}>
+                {this.isNumericalPlot && (
+                    <>
+                        <div
+                            className="form-group"
+                            style={{ display: 'flex', alignItems: 'center' }}
+                        >
+                            <label>Visualisation type</label>
+                            <div
+                                style={{ width: 240, marginLeft: 5 }}
+                                data-test="numericalVisualisationTypeSelector"
+                            >
+                                <ReactSelect
+                                    name="numerical-visualisation-type"
+                                    value={this.numericalVisualisationType}
+                                    onChange={
+                                        this.onNumericalVisualisationTypeSelect
+                                    }
+                                    options={numericalVisualisationTypeOptions}
+                                    clearable={false}
+                                    searchable={true}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
                 {!this.showLogScaleControls && (
                     <div
                         className="form-group"
@@ -682,28 +728,29 @@ export default class ClinicalData extends React.Component<
                     </div>
                 )}
                 <div>
-                    <label className="checkbox-inline">
-                        <input
-                            type="checkbox"
-                            checked={this.swapAxes}
-                            onClick={this.onClickSwapAxes}
-                            data-test="SwapAxes"
-                        />
-                        Swap Axes
-                    </label>
-                    {!this.showLogScaleControls &&
-                        this.categoryPlotType !== CategoryPlotType.Heatmap && (
-                            <label className="checkbox-inline">
-                                <input
-                                    type="checkbox"
-                                    name="horizontalBars"
-                                    checked={this.horizontalBars}
-                                    onClick={this.onClickhorizontalBars}
-                                    data-test="HorizontalBars"
-                                />
-                                Horizontal Bars
-                            </label>
-                        )}
+                    {this.showSwapAxisControls && (
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                checked={this.swapAxes}
+                                onClick={this.onClickSwapAxes}
+                                data-test="SwapAxes"
+                            />
+                            Swap Axes
+                        </label>
+                    )}
+                    {this.showHorizontalBarControls && (
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                name="horizontalBars"
+                                checked={this.horizontalBars}
+                                onClick={this.onClickHorizontalBars}
+                                data-test="HorizontalBars"
+                            />
+                            Horizontal Bars
+                        </label>
+                    )}
                     {this.showLogScaleControls && (
                         <label className="checkbox-inline">
                             <input
@@ -728,15 +775,17 @@ export default class ClinicalData extends React.Component<
                                 Show NA
                             </label>
                         )}
-                    <label className="checkbox-inline">
-                        <input
-                            type="checkbox"
-                            checked={this.showPAndQ}
-                            onClick={this.onClickTogglePAndQ}
-                            data-test="ShowPAndQ"
-                        />
-                        Show p and q
-                    </label>
+                    {this.showPAndQControls && (
+                        <label className="checkbox-inline">
+                            <input
+                                type="checkbox"
+                                checked={this.showPAndQ}
+                                onClick={this.onClickTogglePAndQ}
+                                data-test="ShowPAndQ"
+                            />
+                            Show p and q
+                        </label>
+                    )}
                 </div>
             </div>
         );
@@ -773,12 +822,11 @@ export default class ClinicalData extends React.Component<
                 }
 
                 let plotElt: any = null;
-                if (
-                    isNumerical(this.highlightedRow!.clinicalAttribute.datatype)
-                ) {
+                if (this.isNumericalPlot) {
                     if (this.boxPlotData.isComplete) {
                         plotElt = (
-                            <PlotsTabBoxPlot
+                            <ClinicalNumericalDataVisualisation
+                                type={this.numericalVisualisationType}
                                 svgId={SVG_ID}
                                 domainPadding={75}
                                 boxWidth={
@@ -817,6 +865,7 @@ export default class ClinicalData extends React.Component<
                 } else {
                     plotElt = (
                         <CategoryPlot
+                            broadcastOncoprintJsRef={this.oncoprintJsRef}
                             type={this.categoryPlotType}
                             svgId={SVG_ID}
                             horzData={
@@ -889,6 +938,9 @@ export default class ClinicalData extends React.Component<
 
     @autobind
     private toolbar() {
+        if (this.isTable) {
+            return <></>;
+        }
         return (
             <div style={{ textAlign: 'center', position: 'relative' }}>
                 <DownloadControls
