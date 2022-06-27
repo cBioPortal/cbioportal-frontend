@@ -4838,7 +4838,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             className={'alert alert-info'}
                         >
                             There are too many unique categories in the data
-                            selected for horizontal or vertical axis. The
+                            selected for the horizontal or vertical axis. The
                             current threshold is set at
                             {DISCRETE_CATEGORY_LIMIT} categories to prevent the
                             browser from freezing. Please update you selection
