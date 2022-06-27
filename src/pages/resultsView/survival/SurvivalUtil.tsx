@@ -85,6 +85,12 @@ export const survivalClinicalDataNullValueSet = new Set([
     'na',
 ]);
 
+export function sortPatientSurvivals(patientSurvivals: PatientSurvival[]) {
+    // First sort by month in asc order (smaller number to the front)
+    // Then sort by status in desc order (which means if status are '1's, then go to the front, '0's are right after '1's in the same time stamp)
+    return _.orderBy(patientSurvivals, [s => s.months, s => !s.status]);
+}
+
 // Concept of Number at risk:
 // In order to calculate survival probability using the Kaplan-Meier product limit method
 // We need to know how many individuals were still accounted for in the study that had not yet experienced the event of interest.

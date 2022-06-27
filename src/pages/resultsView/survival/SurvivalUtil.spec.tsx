@@ -18,6 +18,7 @@ import {
     isNullSurvivalClinicalDataValue,
     createSurvivalAttributeIdsDict,
     getNumPatientsAtRisk,
+    sortPatientSurvivals,
 } from './SurvivalUtil';
 
 const exampleAlteredPatientSurvivals = [
@@ -13563,6 +13564,113 @@ describe('SurvivalUtil', () => {
             };
             assert.deepEqual(
                 createSurvivalAttributeIdsDict(prefixList, false, true),
+                result
+            );
+        });
+    });
+
+    describe('sortPatientSurvivals()', () => {
+        it('return small months first', () => {
+            const result = [
+                {
+                    status: true,
+                    months: 1,
+                },
+                {
+                    status: true,
+                    months: 2,
+                },
+                {
+                    status: true,
+                    months: 3,
+                },
+            ];
+            const unsortedPatientSurvivals = [
+                {
+                    status: true,
+                    months: 3,
+                },
+                {
+                    status: true,
+                    months: 1,
+                },
+                {
+                    status: true,
+                    months: 2,
+                },
+            ] as PatientSurvival[];
+            assert.deepEqual(
+                sortPatientSurvivals(unsortedPatientSurvivals),
+                result
+            );
+        });
+
+        it('return true status first', () => {
+            const result = [
+                {
+                    status: true,
+                    months: 1,
+                },
+                {
+                    status: false,
+                    months: 1,
+                },
+                {
+                    status: false,
+                    months: 1,
+                },
+            ];
+            const unsortedPatientSurvivals = [
+                {
+                    status: false,
+                    months: 1,
+                },
+                {
+                    status: true,
+                    months: 1,
+                },
+                {
+                    status: false,
+                    months: 1,
+                },
+            ] as PatientSurvival[];
+            assert.deepEqual(
+                sortPatientSurvivals(unsortedPatientSurvivals),
+                result
+            );
+        });
+
+        it('return small months first, then true status first when months are equal', () => {
+            const result = [
+                {
+                    status: true,
+                    months: 1,
+                },
+                {
+                    status: false,
+                    months: 1,
+                },
+                {
+                    status: false,
+                    months: 2,
+                },
+            ];
+            const unsortedPatientSurvivals = [
+                {
+                    status: false,
+                    months: 1,
+                },
+                {
+                    status: false,
+                    months: 2,
+                },
+                {
+                    status: true,
+                    months: 1,
+                },
+            ] as PatientSurvival[];
+            assert.deepEqual(
+                sortPatientSurvivals(unsortedPatientSurvivals),
                 result
             );
         });

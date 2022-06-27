@@ -31,6 +31,7 @@ import {
     SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
     generateSurvivalPlotYAxisLabelFromDisplayName,
+    sortPatientSurvivals,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -211,11 +212,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     survivalsByPrefixByAnalysisGroup,
                     survivalsByAnalysisGroup =>
                         _.mapValues(survivalsByAnalysisGroup, survivals =>
-                            _.orderBy(
-                                survivals,
-                                ['months', 'status'],
-                                ['asc', 'desc']
-                            )
+                            sortPatientSurvivals(survivals)
                         )
                 )
             );

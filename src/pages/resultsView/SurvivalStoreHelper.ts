@@ -28,9 +28,7 @@ export function getPatientSurvivals(
                         c => c.clinicalAttributeId === monthsAttributeId
                     );
                     const entryMonths =
-                        (entryMonthsByUniquePatientKey &&
-                            entryMonthsByUniquePatientKey[uniquePatientKey]) ||
-                        0;
+                        entryMonthsByUniquePatientKey?.[uniquePatientKey] || 0;
                     if (
                         statusClinicalData &&
                         monthsClinicalData &&
