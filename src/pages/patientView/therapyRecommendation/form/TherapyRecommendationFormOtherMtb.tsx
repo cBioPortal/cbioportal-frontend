@@ -138,9 +138,7 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                                                                 }}
                                                             >
                                                                 <span>
-                                                                    Authored on{' '}
-                                                                    {result.id}{' '}
-                                                                    by{' '}
+                                                                    Authored by{' '}
                                                                     {
                                                                         result.author
                                                                     }
