@@ -775,6 +775,10 @@ export function tabs(
                     otherMtbs={
                         pageComponent.patientViewPageStore.otherMtbs.result
                     }
+                    clinicalTrialClipboard={
+                        pageComponent.patientViewPageStore
+                            .clinicalTrialClipboard
+                    }
                 />
             </MSKTab>
         );
@@ -827,6 +831,7 @@ export function tabs(
                     pageComponent.patientViewPageStore.clinicalTrialMatches
                         .result
                 }
+                mtbTabAvailable={pageComponent.shouldShowMtbTab}
             />
         </MSKTab>
     );

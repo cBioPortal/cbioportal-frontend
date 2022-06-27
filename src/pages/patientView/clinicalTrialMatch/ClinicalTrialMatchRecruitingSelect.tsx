@@ -12,6 +12,7 @@ interface Option {
 }
 
 interface RecruitingSelectProps {
+    data: string[];
     options: Option[];
     onChange: (mutations: string[]) => void;
     isMulti?: boolean;
@@ -108,6 +109,11 @@ const ClinicalTrialMatchRecruitingSelect = (props: RecruitingSelectProps) => {
     const [inputValue, setInputValue] = useState<string>();
     const [options, setOptions] = useState<Option[]>([]);
 
+    const recruitingDefault = props.data.map((status: string) => ({
+        value: status,
+        label: status,
+    }));
+
     const onChange = (selectedOption: any) => {
         var selectedOptionsMapped = selectedOption
             .reduce((list: any, option: Option) => {
@@ -154,17 +160,12 @@ const ClinicalTrialMatchRecruitingSelect = (props: RecruitingSelectProps) => {
     return (
         <>
             <Select
+                data={props.data}
                 name={props.name}
                 className={props.className}
                 classNamePrefix={props.classNamePrefix}
                 defaultInputValue=""
-                defaultValue={[
-                    { label: 'Recruiting', value: 'Recruiting' },
-                    {
-                        label: 'Not yet recruiting',
-                        value: 'Not yet recruiting',
-                    },
-                ]}
+                defaultValue={recruitingDefault}
                 allowCreateWhileLoading={true}
                 inputValue={inputValue}
                 onInputChange={onInputChange}

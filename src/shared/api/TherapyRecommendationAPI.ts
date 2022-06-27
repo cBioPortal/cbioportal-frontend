@@ -228,12 +228,17 @@ export async function checkPermissionUsingGET(url: string, studyId: string) {
                 let boolArray: boolean[] = [true, false];
                 return boolArray;
             } else {
+                let usingLocalhost = url.includes('localhost');
                 console.group(
                     '### MTB ### ERROR checkPermissionUsingGET ' + url
                 );
                 console.log(err);
+                if (usingLocalhost)
+                    console.log(
+                        'The application is running in localhost, therefore editing is enabled.'
+                    );
                 console.groupEnd();
-                let boolArray: boolean[] = [false, false];
+                let boolArray: boolean[] = [false, usingLocalhost];
                 return boolArray;
             }
         });

@@ -44,6 +44,7 @@ export function getNewTherapyRecommendation(
         author: getAuthor(),
         references: [],
         treatments: [],
+        clinicalTrials: [],
     };
     return therapyRecommendation;
 }

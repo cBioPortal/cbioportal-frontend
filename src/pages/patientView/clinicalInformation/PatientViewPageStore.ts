@@ -204,6 +204,7 @@ import {
     IMtb,
     IDeletions,
     ITherapyRecommendation,
+    IClinicalTrial,
 } from '../../../shared/model/TherapyRecommendation';
 import {
     StudyListEntry,
@@ -236,6 +237,7 @@ import {
 } from 'shared/api/TherapyRecommendationAPI';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import { ageAsNumber } from '../clinicalTrialMatch/utils/AgeSexConverter';
+import { City } from '../clinicalTrialMatch/ClinicalTrialMatchSelectUtil';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -343,8 +345,9 @@ class ClinicalTrialsSearchParams {
     clinicalTrialsRecruitingStatus: RecruitingStatus[] = [];
     symbolsToSearch: string[] = [];
     necSymbolsToSearch: string[] = [];
+    entitiesToSearch: string[] = [];
     gender: string;
-    patientLocation: string;
+    patientLocation: City;
     age: number;
     filterDistance: boolean;
     maximumDistance: number;
@@ -354,8 +357,9 @@ class ClinicalTrialsSearchParams {
         clinicalTrialsRecruitingStatus: RecruitingStatus[],
         symbolsToSearch: string[] = [],
         necSymbolsToSearch: string[] = [],
+        entitiesToSearch: string[] = [],
         gender: string,
-        patientLocation: string,
+        patientLocation: City,
         age: number,
         filterDistance: boolean,
         maximumDistance: number
@@ -364,6 +368,7 @@ class ClinicalTrialsSearchParams {
         this.clinicalTrialsCountires = clinicalTrialsCountires;
         this.symbolsToSearch = symbolsToSearch;
         this.necSymbolsToSearch = necSymbolsToSearch;
+        this.entitiesToSearch = entitiesToSearch;
         this.gender = gender;
         this.patientLocation = patientLocation;
         this.age = age;
@@ -384,15 +389,17 @@ export class PatientViewPageStore {
     @observable
     public isClinicalTrialsLoading: boolean = false;
     public showLoadingScreen: boolean = false;
+    public isTrialResultsZero: boolean = true;
 
     @observable
-    private clinicalTrialSerchParams: ClinicalTrialsSearchParams = new ClinicalTrialsSearchParams(
+    public clinicalTrialSerchParams: ClinicalTrialsSearchParams = new ClinicalTrialsSearchParams(
+        [],
         [],
         [],
         [],
         [],
         '',
-        '',
+        { city: '', lat: 0, lng: 0, country: '', admin_name: '' },
         0,
         false,
         0
@@ -2631,6 +2638,7 @@ export class PatientViewPageStore {
                 var clinicalTrialQuery = this.clinicalTrialSerchParams;
                 var search_symbols = clinicalTrialQuery.symbolsToSearch;
                 var nec_search_symbols = clinicalTrialQuery.necSymbolsToSearch;
+                var entity_symbols = clinicalTrialQuery.entitiesToSearch;
                 var gene_symbols: string[] = [];
                 var study_dictionary:
                     | IOncoKBStudyDictionary
@@ -2643,7 +2651,7 @@ export class PatientViewPageStore {
                     search_symbols.length == 0 &&
                     nec_search_symbols.length == 0
                 ) {
-                    gene_symbols = [];
+                    gene_symbols = entity_symbols;
                 } else {
                     gene_symbols = search_symbols.concat(nec_search_symbols);
                     gene_symbols = [...new Set(gene_symbols)];
@@ -2690,9 +2698,9 @@ export class PatientViewPageStore {
                 }
 
                 nctIDs_with_tumor_entity = await getStudiesNCTIds(
-                    tumor_entities,
                     nec_search_symbols,
                     search_symbols,
+                    entity_symbols,
                     this.clinicalTrialSerchParams.clinicalTrialsCountires,
                     this.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus
                 );
@@ -2822,6 +2830,11 @@ export class PatientViewPageStore {
                     result.push(newTrial);
                 }
                 this.showLoadingScreen = false;
+                if (result.length > 0) {
+                    this.isTrialResultsZero = false;
+                } else {
+                    this.isTrialResultsZero = true;
+                }
                 return result;
             },
         },
@@ -2890,8 +2903,9 @@ export class PatientViewPageStore {
         status: RecruitingStatus[],
         symbols: string[],
         necSymbols: string[],
+        tumorEntities: string[],
         gender: string,
-        patientLocation: string,
+        patientLocation: City,
         age: number,
         filterDistance: boolean,
         maximumDistance: number
@@ -2912,6 +2926,7 @@ export class PatientViewPageStore {
             status,
             symbols,
             necSymbols,
+            tumorEntities,
             gender,
             patientLocation,
             age,
@@ -2919,6 +2934,10 @@ export class PatientViewPageStore {
             maximumDistance
         );
     }
+
+    @observable
+    public clinicalTrialClipboard: IClinicalTrial[] = [];
+
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
             await: () => [this.mutationData, this.oncoKbAnnotatedGenes],

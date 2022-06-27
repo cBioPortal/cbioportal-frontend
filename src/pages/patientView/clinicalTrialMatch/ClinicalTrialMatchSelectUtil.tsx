@@ -1,14 +1,37 @@
 import React, { useState } from 'react';
 import CreatableSelect from 'react-select';
+import { Mutation, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
+import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
+import _ from 'lodash';
+import { flattenArray } from '../therapyRecommendation/TherapyRecommendationTableUtils';
+
+export interface Dict<T> {
+    [key: string]: T;
+}
+
+export interface City {
+    city: string;
+    city_ascii?: string;
+    lat: number;
+    lng: number;
+    country: string;
+    iso2?: string;
+    iso3?: string;
+    admin_name: string;
+    capital?: string;
+    population?: number;
+    id?: number;
+}
 
 interface Option {
     label: string;
     value: string;
 }
 
-interface CustomSelectProps {
+interface MutationSelectProps {
     data: string[];
-    options: Option[];
+    mutations: Mutation[];
+    cna: DiscreteCopyNumberData[];
     onChange: (selectedOption: Array<any>) => void;
     isMulti?: boolean;
     name?: string;
@@ -17,7 +40,42 @@ interface CustomSelectProps {
     placeholder?: string;
 }
 
-export const ClinicalTrialMatchMutationSelect = (props: CustomSelectProps) => {
+export const ClinicalTrialMatchMutationSelect = (
+    props: MutationSelectProps
+) => {
+    let alterationOptions: Array<object> = [];
+    props.mutations.forEach((alteration: Mutation) => {
+        alterationOptions.push({
+            value: alteration.gene.hugoGeneSymbol,
+            label: alteration.gene.hugoGeneSymbol,
+        });
+        alterationOptions.push({
+            value:
+                alteration.gene.hugoGeneSymbol + ' ' + alteration.proteinChange,
+            label:
+                alteration.gene.hugoGeneSymbol + ' ' + alteration.proteinChange,
+        });
+    });
+
+    props.cna.forEach((alteration: DiscreteCopyNumberData) => {
+        alterationOptions.push({
+            value: alteration.gene.hugoGeneSymbol,
+            label: alteration.gene.hugoGeneSymbol,
+        });
+        alterationOptions.push({
+            value:
+                alteration.gene.hugoGeneSymbol +
+                ' ' +
+                (alteration.alteration === -2 ? 'Deletion' : 'Amplification'),
+            label:
+                alteration.gene.hugoGeneSymbol +
+                ' ' +
+                (alteration.alteration === -2 ? 'Deletion' : 'Amplification'),
+        });
+    });
+
+    alterationOptions.sort();
+
     const mutationDefault = props.data.map((mutation: string) => ({
         value: mutation,
         label: mutation,
@@ -48,7 +106,7 @@ export const ClinicalTrialMatchMutationSelect = (props: CustomSelectProps) => {
     };
 
     const onBlur = (event: any) => {
-        if (inputValue !== '') {
+        if (inputValue !== '' && inputValue !== undefined) {
             const newValue = { label: inputValue, value: inputValue } as Option;
             const opts = [...(value || []), newValue];
             props.onChange(
@@ -94,6 +152,7 @@ export const ClinicalTrialMatchMutationSelect = (props: CustomSelectProps) => {
     return (
         <>
             <CreatableSelect
+                height={'100%'}
                 name={props.name}
                 className={props.className}
                 classNamePrefix={props.classNamePrefix}
@@ -102,11 +161,12 @@ export const ClinicalTrialMatchMutationSelect = (props: CustomSelectProps) => {
                 allowCreateWhileLoading={true}
                 inputValue={inputValue}
                 onInputChange={onInputChange}
+                autoSize={false}
                 onChange={onChange}
                 onBlur={onBlur}
                 onKeyDown={onKeyDown}
                 value={value}
-                options={props.options}
+                options={alterationOptions}
                 tabSelectsOption={true}
                 placeholder={props.placeholder}
                 backspaceRemovesValue={false}
