@@ -263,6 +263,7 @@ export const ALL_SELECTED_OPTION_NUMERICAL_VALUE = -3;
 export const SAME_SELECTED_OPTION_STRING_VALUE = 'same';
 export const SAME_SELECTED_OPTION_NUMERICAL_VALUE = -2;
 const LEGEND_TO_BOTTOM_WIDTH_THRESHOLD = 550; // when plot is wider than this value, the legend moves from right to bottom of screen
+const DISCRETE_CATEGORY_LIMIT = 150; // when a discrete variable has more categories, the discrete plot will not be rendered.
 
 const mutationCountByOptions = [
     { value: MutationCountBy.MutationType, label: 'Mutation Type' },
@@ -4747,6 +4748,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         ); // log scale selected
     }
 
+    @computed get tooManyDiscreteVariables() {
+        return (
+            this.plotType.result &&
+            this.horzAxisCategories.result &&
+            this.vertAxisCategories.result &&
+            this.plotType.result === PlotType.DiscreteVsDiscrete &&
+            this.discreteVsDiscretePlotType !==
+                DiscreteVsDiscretePlotType.Table &&
+            (this.horzAxisCategories.result!.length > DISCRETE_CATEGORY_LIMIT ||
+                this.vertAxisCategories.result!.length >
+                    DISCRETE_CATEGORY_LIMIT)
+        );
+    }
+
     @computed get coloringByGene() {
         return !!(
             this.coloringMenuSelection.selectedOption &&
@@ -4813,6 +4828,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             className={'alert alert-info'}
                         >
                             No data to plot.
+                        </div>
+                    );
+                }
+                if (this.tooManyDiscreteVariables) {
+                    return (
+                        <div
+                            data-test="PlotsTabNoDataDiv"
+                            className={'alert alert-info'}
+                        >
+                            There are too many unique categories in the data
+                            selected for the horizontal or vertical axis. The
+                            current threshold is set at
+                            {DISCRETE_CATEGORY_LIMIT} categories to prevent the
+                            browser from freezing. Please update you selection
+                            to a variable with less categories.
                         </div>
                     );
                 }
