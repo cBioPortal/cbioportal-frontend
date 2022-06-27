@@ -107,6 +107,11 @@ export function getTumorTypeQuery(
         }
     }
 
+    if (keywords.length === 0) {
+        result += tumor_type_string;
+        result += ' ALL';
+    }
+
     if (locations && locations.length > 0) {
         result += ' AND SEARCH[Location](AREA[LocationCountry](';
         result += locations[0];

@@ -6,6 +6,7 @@ import {
     IMtb,
     MtbState,
     IDeletions,
+    IClinicalTrial,
 } from '../../../shared/model/TherapyRecommendation';
 import { computed, makeObservable, observable } from 'mobx';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
@@ -34,7 +35,7 @@ import Select from 'react-select';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { isMacOs, isSafari } from 'react-device-detect';
 import DatePicker from 'react-date-picker';
-import { LoginModal, LoginButton, UserInfoButton } from './LoginElements';
+import { LoginModal, UserInfoButton } from './LoginElements';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
 export type IMtbProps = {
     patientId: string;
@@ -61,6 +62,7 @@ export type IMtbProps = {
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
+    clinicalTrialClipboard: IClinicalTrial[];
 };
 
 export type IMtbState = {
@@ -129,7 +131,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             )}
                             destroyTooltipOnHide={false}
                         >
-                            <i className={'fa fa-user-circle'}></i>
+                            <i className={'fa fa-user-md fa-2x'}></i>
                         </DefaultTooltip>
                     </span>
                     <label
@@ -376,6 +378,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     cnaOncoKbData={this.props.cnaOncoKbData}
                     pubMedCache={this.props.pubMedCache}
                     isDisabled={this.isDisabled(mtb) || !this.state.permission}
+                    clinicalTrialClipboard={this.props.clinicalTrialClipboard}
                 />
             ),
             width: this.columnWidths[ColumnKey.THERAPYRECOMMENDATIONS],
@@ -437,7 +440,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
         if (index === -1) {
             newMtbs
                 .find(x => x.id === mtbId)!
-                .therapyRecommendations.push(therapyRecommendationToAdd);
+                .therapyRecommendations.unshift(therapyRecommendationToAdd);
         } else {
             newMtbs
                 .find(x => x.id === mtbId)!
@@ -488,7 +491,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             samples: [],
             author: getAuthor(),
         } as IMtb;
-        newMtbs.push(newMtb);
+        newMtbs.unshift(newMtb);
         this.setState({ mtbs: newMtbs });
     }
 
@@ -563,31 +566,16 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
     }
 
     render() {
-        const loginButton = this.state.loggedIn ? (
-            <UserInfoButton
-                className={'btn btn-default ' + styles.loginButton}
-                mtbUrl={this.props.mtbUrl}
-                openLoginModal={() => this.openLoginModal()}
-                checkPermission={() => this.closeLoginModal()}
-            />
-        ) : (
-            <LoginButton
-                className={'btn btn-default ' + styles.loginButton}
-                openLoginModal={() => this.openLoginModal()}
-            />
-        );
-
         return (
             <div>
+                <LoginModal
+                    showLoginModal={this.showLoginModal}
+                    handleClose={() => this.closeLoginModal()}
+                    mtbUrl={this.props.mtbUrl}
+                />
                 <h2 style={{ marginBottom: '0' }}>MTB Sessions</h2>
                 <p className={styles.edit}>
                     <div className="btn-group">
-                        {loginButton}
-                        <LoginModal
-                            showLoginModal={this.showLoginModal}
-                            handleClose={() => this.closeLoginModal()}
-                            mtbUrl={this.props.mtbUrl}
-                        />
                         <Button
                             type="button"
                             className={'btn btn-default ' + styles.addMtbButton}
@@ -613,6 +601,36 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                         >
                             Save Data
                         </Button>
+                        {this.state.loggedIn ? (
+                            <UserInfoButton
+                                mtbUrl={this.props.mtbUrl}
+                                openLoginModal={() => this.openLoginModal()}
+                            />
+                        ) : (
+                            <span
+                                className={'fa fa-stack fa-2x'}
+                                style={{
+                                    fontSize: '15px',
+                                    marginTop: '12px',
+                                    marginLeft: '13px',
+                                }}
+                                title="Write access is only available if you are logged in and authorized."
+                            >
+                                <i className={'fa fa-user fa-stack-2x'}></i>
+                                <i
+                                    className={
+                                        'fa fa-exclamation-triangle fa-stack-1x fa-inverse'
+                                    }
+                                    style={{
+                                        color: 'yellow',
+                                        textAlign: 'right',
+                                        bottom: '0px !important',
+                                        position: 'absolute',
+                                        lineHeight: '3em',
+                                    }}
+                                ></i>
+                            </span>
+                        )}
                         {this.state.successfulSave ? (
                             <div className={styles.successBox}>
                                 Saving data was successful!
@@ -623,14 +641,13 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             isLoading={this.isProcessingSaveData}
                             size="big"
                         />
-                        {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test</Button> */}
                     </div>
                 </p>
                 <MtbTableComponent
                     data={this.state.mtbs}
                     columns={this._columns}
                     showCopyDownload={false}
-                    className="mtb-table"
+                    className={styles['mtb-table']}
                 />
                 <SimpleCopyDownloadControls
                     downloadData={() => flattenStringify(this.state.mtbs)}
@@ -642,11 +659,10 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
     }
 
     componentDidMount() {
-        // console.log('cDM got invoked');
         this.props.checkPermission().then(res => {
             console.log('checkPermission returned with ' + res);
-            this.setState({ loggedIn: true });
-            this.setState({ permission: true });
+            this.setState({ loggedIn: res[0] });
+            this.setState({ permission: res[1] });
         });
     }
 }
