@@ -5,6 +5,11 @@ import { ITherapyRecommendation } from 'shared/model/TherapyRecommendation';
 import Select from 'react-select';
 import { DiscreteCopyNumberData, Mutation } from 'cbioportal-ts-api-client';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
+import {
+    DefaultTooltip,
+    placeArrowBottomLeft,
+} from 'cbioportal-frontend-commons';
+import styles from '../style/therapyRecommendation.module.scss';
 
 interface ITherapyRecommendationFormOtherMtbProps {
     show: boolean;
@@ -49,7 +54,7 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                         <Modal.Title>{this.props.title}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        Did not find any mathing recommendation templates.
+                        Did not find any matching recommendation templates.
                     </Modal.Body>
                 </Modal>
             );
@@ -88,32 +93,79 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                                 <Select
                                     options={this.props.fhirsparkResult.map(
                                         result => ({
-                                            label:
-                                                result.treatments
-                                                    .map(t => {
-                                                        return t.name;
-                                                    })
-                                                    .join(' + ') +
-                                                ' (' +
-                                                result.reasoning.geneticAlterations
-                                                    ?.map(g => {
-                                                        return (
-                                                            g.hugoSymbol +
-                                                            ' ' +
-                                                            g.alteration
-                                                        );
-                                                    })
-                                                    .join(', ') +
-                                                ') - ' +
-                                                result.evidenceLevel +
-                                                (result.evidenceLevelExtension
-                                                    ? ' ' +
-                                                      result.evidenceLevelExtension +
-                                                      (result.evidenceLevelM3Text
-                                                          ? ' ' +
-                                                            result.evidenceLevelM3Text
-                                                          : '')
-                                                    : ''),
+                                            label: (
+                                                <>
+                                                    {result.treatments
+                                                        .map(t => {
+                                                            return t.name;
+                                                        })
+                                                        .join(' + ') +
+                                                        ' (' +
+                                                        result.reasoning.geneticAlterations
+                                                            ?.map(g => {
+                                                                return (
+                                                                    g.hugoSymbol +
+                                                                    ' ' +
+                                                                    g.alteration
+                                                                );
+                                                            })
+                                                            .join(', ') +
+                                                        ') - ' +
+                                                        result.evidenceLevel +
+                                                        (result.evidenceLevelExtension
+                                                            ? ' ' +
+                                                              result.evidenceLevelExtension +
+                                                              (result.evidenceLevelM3Text
+                                                                  ? ' ' +
+                                                                    result.evidenceLevelM3Text
+                                                                  : '')
+                                                            : '')}
+                                                    &nbsp;
+                                                    <DefaultTooltip
+                                                        placement="bottomLeft"
+                                                        trigger={[
+                                                            'hover',
+                                                            'focus',
+                                                        ]}
+                                                        overlay={
+                                                            <div
+                                                                className={
+                                                                    styles.tooltip
+                                                                }
+                                                                style={{
+                                                                    width:
+                                                                        '120px',
+                                                                }}
+                                                            >
+                                                                <span>
+                                                                    Authored on{' '}
+                                                                    {result.id}{' '}
+                                                                    by{' '}
+                                                                    {
+                                                                        result.author
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                        destroyTooltipOnHide={
+                                                            false
+                                                        }
+                                                        onPopupAlign={
+                                                            placeArrowBottomLeft
+                                                        }
+                                                    >
+                                                        <i
+                                                            className={
+                                                                'fa fa-info-circle ' +
+                                                                styles.icon
+                                                            }
+                                                            style={{
+                                                                marginRight: 2,
+                                                            }}
+                                                        ></i>
+                                                    </DefaultTooltip>
+                                                </>
+                                            ),
                                             value: result,
                                         })
                                     )}
