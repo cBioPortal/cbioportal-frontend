@@ -177,7 +177,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             return (
                 <span>
                     {option.label || option.value}
-                    <span className={styles['driver-annotation-setting']}>
+                    <span className={styles['visible-on-legend-hover']}>
                         <DefaultTooltip
                             placement="top"
                             overlay={
@@ -306,16 +306,50 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     public render() {
         return (
             <div className={styles['legend-panel']}>
-                <BadgeSelector
-                    options={this.driverVsVusOptions}
-                    getOptionLabel={this.getDriverVsVusOptionLabel}
-                    getBadgeLabel={getProteinImpactTypeBadgeLabel}
-                    selectedValues={this.selectedDriverVsVusValues.map(v => {
-                        return { value: v };
-                    })}
-                    {...this.props}
-                    onSelect={this.onDriverVsVusSelect}
-                />
+                <div style={{ display: 'flex' }}>
+                    <BadgeSelector
+                        options={this.driverVsVusOptions}
+                        getOptionLabel={this.getDriverVsVusOptionLabel}
+                        getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                        selectedValues={this.selectedDriverVsVusValues.map(
+                            v => {
+                                return { value: v };
+                            }
+                        )}
+                        {...this.props}
+                        onSelect={this.onDriverVsVusSelect}
+                    />
+                    <span
+                        className={styles['visible-on-legend-hover']}
+                        style={{ marginLeft: 'auto' }}
+                    >
+                        <DefaultTooltip
+                            placement="top"
+                            overlay={<span>Clear selection</span>}
+                        >
+                            <button
+                                style={{
+                                    marginLeft: 5,
+                                    marginRight: 5,
+                                    padding: '0px 4px 0px 4px',
+                                    height: 18,
+                                }}
+                                className="btn btn-primary"
+                                onClick={this.clearSelection}
+                            >
+                                <i
+                                    className="fa fa-times"
+                                    style={{
+                                        fontSize: 12,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                />
+                            </button>
+                        </DefaultTooltip>
+                    </span>
+                </div>
                 <hr style={{ marginBottom: 5 }}></hr>
                 <BadgeSelector
                     options={this.options}

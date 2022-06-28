@@ -1,6 +1,6 @@
 declare const styles: {
-  readonly "driver-annotation-setting": string;
   readonly "legend-panel": string;
+  readonly "visible-on-legend-hover": string;
 };
 export = styles;
 
