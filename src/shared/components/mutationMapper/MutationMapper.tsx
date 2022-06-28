@@ -61,6 +61,7 @@ export interface IMutationMapperProps {
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
     showPlotDownloadControls?: boolean;
+    showView3dButton?: boolean;
     mutationTable?: JSX.Element;
     pubMedCache?: PubMedCache;
     showTranscriptDropDown?: boolean;
@@ -655,7 +656,8 @@ export default class MutationMapper<
                                 {this.geneSummary}
                                 {this.mutationRateSummary}
                                 {this.mutationFilterPanel}
-                                {this.view3dButton}
+                                {this.props.showView3dButton &&
+                                    this.view3dButton}
                             </div>
                         </div>
                         <hr style={{ marginTop: 20 }} />
