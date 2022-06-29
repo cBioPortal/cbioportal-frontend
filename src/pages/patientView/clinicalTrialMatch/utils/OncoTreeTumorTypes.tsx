@@ -17,7 +17,11 @@ type tumorType = {
 };
 
 let getRequest = new XMLHttpRequest();
-getRequest.open('Get', 'http://oncotree.mskcc.org/api/tumorTypes', false);
+let url = '/tumorTypes.json';
+if (window.location.hostname === 'localhost') {
+    url = 'http://oncotree.mskcc.org/api/tumorTypes';
+}
+getRequest.open('Get', url, false);
 getRequest.send(null);
 const oncoTreeTumorTypes: Array<tumorType> = JSON.parse(
     getRequest.responseText
