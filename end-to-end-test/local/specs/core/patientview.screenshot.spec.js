@@ -166,11 +166,9 @@ const doVafPlotScreenshotTest = () => {
     $('//*[text()="Annotation"]').click();
     // close on columns dropdown
     $('button*=Columns').click();
-    var res = browser.checkElement('[data-test=vaf-plot]'); // grabs the full plot
-    $('svg[data-test=vaf-plot]').moveTo(); // moves pointer to plot thumbnail
-    var res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
+    $('.vafPlotThumbnail').moveTo(); // moves pointer to plot thumbnail
     $('div[role=tooltip] [data-test=vaf-plot]').waitForExist();
-    res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
+    const res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
     assertScreenShotMatch(res);
 };
 

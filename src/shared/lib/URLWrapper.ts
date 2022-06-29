@@ -61,7 +61,7 @@ export default class URLWrapper<
     @observable localSessionData: PortalSession | undefined = undefined;
 
     constructor(
-        protected routing: ExtendedRouterStore,
+        public routing: ExtendedRouterStore,
         // pass it in in a map so that typescript can ensure that every property is accounted for
         protected propertiesMap: PropertiesMap<QueryParamsType>,
         public sessionEnabled = false,

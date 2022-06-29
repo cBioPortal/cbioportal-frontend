@@ -9,8 +9,9 @@ import classnames from 'classnames';
 import styles from './DownloadControls.module.scss';
 import { saveSvg, saveSvgAsPng } from 'save-svg-as-png';
 import svgToPdfDownload from '../../lib/svgToPdfDownload';
-import { isPromiseLike } from 'cbioportal-utils';
 import { CSSProperties } from 'react';
+import { isPromiseLike } from 'cbioportal-utils';
+import { AppContext } from '../appContext/AppContext';
 
 type ButtonSpec = {
     key: string;
@@ -290,6 +291,10 @@ export default class DownloadControls extends React.Component<
     }
 
     render() {
+        if (this.context.showDownloadControls === false) {
+            return null;
+        }
+
         let element: any = null;
         if (this.props.type === 'buttonGroup') {
             element = (
@@ -399,3 +404,5 @@ export default class DownloadControls extends React.Component<
         }
     }
 }
+
+DownloadControls.contextType = AppContext;

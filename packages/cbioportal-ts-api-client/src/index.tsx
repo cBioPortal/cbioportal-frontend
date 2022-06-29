@@ -63,5 +63,7 @@ export {
     MutationCountByPosition,
     ResourceDefinition,
     CustomDriverAnnotationReport,
+    StructuralVariant,
+    StructuralVariantFilter,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';

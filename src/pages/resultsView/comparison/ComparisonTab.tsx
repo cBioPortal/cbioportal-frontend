@@ -35,7 +35,7 @@ import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichmen
 import styles from 'pages/resultsView/comparison/styles.module.scss';
 import { getServerConfig } from 'config/config';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
-import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -264,19 +264,17 @@ export default class ComparisonTab extends React.Component<
                         </MSKTab>
                     )}
                     {this.store.showGenericAssayTab &&
-                        _.keys(
+                        getSortedGenericAssayTabSpecs(
                             this.store
                                 .genericAssayEnrichmentProfilesGroupedByGenericAssayType
                                 .result
-                        ).map(genericAssayType => {
+                        ).map(genericAssayTabSpecs => {
                             return (
                                 <MSKTab
                                     id={`${
                                         ResultsViewComparisonSubTab.GENERIC_ASSAY_PREFIX
-                                    }_${genericAssayType.toLowerCase()}`}
-                                    linkText={deriveDisplayTextFromGenericAssayType(
-                                        genericAssayType
-                                    )}
+                                    }_${genericAssayTabSpecs.genericAssayType.toLowerCase()}`}
+                                    linkText={genericAssayTabSpecs.linkText}
                                     anchorClassName={
                                         this.store.genericAssayTabUnavailable
                                             ? 'greyedOut'
@@ -285,7 +283,9 @@ export default class ComparisonTab extends React.Component<
                                 >
                                     <GenericAssayEnrichments
                                         store={this.store}
-                                        genericAssayType={genericAssayType}
+                                        genericAssayType={
+                                            genericAssayTabSpecs.genericAssayType
+                                        }
                                         resultsViewMode={true}
                                     />
                                 </MSKTab>

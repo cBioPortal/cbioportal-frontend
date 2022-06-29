@@ -35,6 +35,7 @@ import {
     IDriverAnnotationControlsState,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
+import { AppContext } from 'cbioportal-frontend-commons';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -1039,7 +1040,7 @@ export default class OncoprintControls extends React.Component<
     });
 
     private DownloadMenu = observer(() => {
-        return (
+        return this.context.showDownloadControls === true ? (
             <CustomDropdown
                 bsStyle="default"
                 title="Download"
@@ -1096,7 +1097,7 @@ export default class OncoprintControls extends React.Component<
                     </button>
                 )}
             </CustomDropdown>
-        );
+        ) : null;
     });
 
     private HorzZoomControls = observer(() => {
@@ -1212,3 +1213,5 @@ export default class OncoprintControls extends React.Component<
         );
     }
 }
+
+OncoprintControls.contextType = AppContext;

@@ -27,6 +27,51 @@ function unmonkify(base64String: string) {
     );
 }
 
+function addCustomHeaders(
+    headers: any,
+    customHeaders?: { [key: string]: string }
+) {
+    if (!_.isEmpty(customHeaders)) {
+        _.forEach(customHeaders, (value, key) => {
+            headers[key] = value;
+        });
+    }
+}
+
+export function addCustomHeadersForApiRequests(
+    apiClient: any,
+    domain: string,
+    customHeaders?: { [key: string]: string }
+) {
+    const oldRequestFunc = apiClient.prototype.request;
+
+    apiClient.prototype.request = (
+        method: string,
+        url: string,
+        body: any,
+        headers: any,
+        queryParameters: any,
+        form: any,
+        reject: any,
+        resolve: any,
+        errorHandlers: any[]
+    ) => {
+        addCustomHeaders(headers, customHeaders);
+
+        oldRequestFunc(
+            method,
+            url,
+            body,
+            headers,
+            queryParameters,
+            form,
+            reject,
+            resolve,
+            errorHandlers
+        );
+    };
+}
+
 export function maskApiRequests(
     apiClient: any,
     domain: string,
@@ -73,11 +118,7 @@ export function maskApiRequests(
             resolve(res, ...args);
         };
 
-        if (!_.isEmpty(customHeaders)) {
-            _.forEach(customHeaders, (value, key) => {
-                headers[key] = value;
-            });
-        }
+        addCustomHeaders(headers, customHeaders);
 
         oldRequestFunc(
             method,

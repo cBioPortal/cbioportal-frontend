@@ -16,7 +16,6 @@ import {
     ResourceData,
     Sample,
     SampleMolecularIdentifier,
-    StructuralVariantFilter,
     GenericAssayData,
     GenericAssayMeta,
     GenericAssayDataMultipleStudyFilter,
@@ -191,7 +190,8 @@ import {
     IMutationalSignature,
     IMutationalSignatureMeta,
 } from 'shared/model/MutationalSignature';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+
 import {
     MutationalSignaturesVersion,
     MutationalSignatureStableIdKeyWord,
@@ -199,6 +199,7 @@ import {
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
 import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
 
 import {
     IMtb,
@@ -705,7 +706,7 @@ export class PatientViewPageStore {
                 .value();
 
             if (mutationalSignatureContributionStableIds.length > 0) {
-                return client.fetchGenericAssayMetaDataUsingPOST({
+                return client.fetchGenericAssayMetaUsingPOST({
                     genericAssayMetaFilter: {
                         genericAssayStableIds: mutationalSignatureContributionStableIds,
                     } as GenericAssayMetaFilter,
@@ -1707,7 +1708,7 @@ export class PatientViewPageStore {
                     }),
                 } as StructuralVariantFilter;
 
-                return client.fetchStructuralVariantsUsingPOST({
+                return internalClient.fetchStructuralVariantsUsingPOST({
                     structuralVariantFilter,
                 });
             }

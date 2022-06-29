@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { ClinicalDataEnrichmentWithQ } from 'pages/groupComparison/GroupComparisonUtils';
 import LazyMobXTable, {
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import { ClinicalDataEnrichmentTableColumnType } from 'pages/groupComparison/ClinicalDataEnrichmentsTable';
 import autobind from 'autobind-decorator';
 import {
     getSortedFilteredData,
@@ -16,7 +14,6 @@ import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
 import _ from 'lodash';
 import {
     EditableSpan,
-    pluralize,
     toggleColumnVisibility,
 } from 'cbioportal-frontend-commons';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';

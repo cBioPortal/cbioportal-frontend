@@ -245,7 +245,6 @@ export async function fetchOncoKbDataForMutations(
                 alteration: mutation.proteinChange,
                 proteinPosStart: mutation.proteinPosStart,
                 proteinPosEnd: mutation.proteinPosEnd,
-                mutationType: mutation.mutationType,
                 tumorType: null,
             };
         }),
@@ -689,8 +688,7 @@ export function annotateGeneticTrackData(
             const id = generateQueryVariantId(
                 d.entrezGeneId,
                 null,
-                d.proteinChange,
-                d.mutationType
+                d.proteinChange
             );
             const oncoKbIndicator = indicatorMap[id];
             if (oncoKbIndicator) {

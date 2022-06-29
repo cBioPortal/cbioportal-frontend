@@ -1,6 +1,6 @@
 import { IStringAxisData } from '../../../pages/resultsView/plots/PlotsTabUtils';
 import _ from 'lodash';
-import { IMultipleCategoryBarPlotData } from './MultipleCategoryBarPlot';
+import { IMultipleCategoryBarPlotData } from '../../../pages/groupComparison/MultipleCategoryBarPlot';
 
 export function makePlotData(
     horzData: IStringAxisData['data'],

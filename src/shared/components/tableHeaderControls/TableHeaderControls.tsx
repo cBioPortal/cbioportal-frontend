@@ -1,13 +1,6 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import {
-    Button,
-    ButtonGroup,
-    ButtonToolbar,
-    Form,
-    FormGroup,
-    MenuItem,
-} from 'react-bootstrap';
+import { Button, ButtonGroup, ButtonToolbar } from 'react-bootstrap';
 var ClipboardButton = require('react-clipboard.js');
 var Clipboard = require('clipboard');
 import fileDownload from 'react-file-download';
@@ -21,6 +14,8 @@ import {
     IColumnVisibilityControlsProps,
     ColumnVisibilityControls,
 } from '../columnVisibilityControls/ColumnVisibilityControls';
+import { computed } from 'mobx';
+import { AppContext } from 'cbioportal-frontend-commons';
 
 export interface ITableHeaderControlsProps {
     tableData?: Array<any>;
@@ -85,7 +80,7 @@ export default class TableHeaderControls extends React.Component<
     componentDidMount() {
         // this is necessary because the clipboard wrapper library
         // doesn't work with tooltips :(
-        if (this.props.showCopyAndDownload && this._copyButton) {
+        if (this.showCopyAndDownload && this._copyButton) {
             this.bindCopyButton();
         }
     }
@@ -110,6 +105,14 @@ export default class TableHeaderControls extends React.Component<
         columnVisibilityProps: {},
         searchDelayMs: 400,
     };
+
+    @computed
+    get showCopyAndDownload() {
+        return (
+            this.props.showCopyAndDownload &&
+            this.context.showDownloadControls === true
+        );
+    }
 
     public handleInput(evt: any) {
         if (this.searchTimeout !== null) {
@@ -145,7 +148,7 @@ export default class TableHeaderControls extends React.Component<
                         />
                     </If>
 
-                    <If condition={this.props.showCopyAndDownload}>
+                    <If condition={this.showCopyAndDownload}>
                         <ButtonGroup
                             className={this.props.copyDownloadClassName}
                             style={{ marginLeft: 10 }}
@@ -241,3 +244,5 @@ export default class TableHeaderControls extends React.Component<
         }
     };
 }
+
+TableHeaderControls.contextType = AppContext;

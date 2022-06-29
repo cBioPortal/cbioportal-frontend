@@ -15,7 +15,8 @@ export type GAEvent = {
         | 'download'
         | 'groupComparison'
         | 'homePage'
-        | 'patientView';
+        | 'patientView'
+        | 'linkout';
     action: string;
     label?: string | string[];
     fieldsObject?: { [key: string]: string | number };

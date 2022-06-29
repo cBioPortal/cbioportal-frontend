@@ -634,6 +634,15 @@ function jq(selector) {
     }, selector);
 }
 
+function setServerConfiguration(serverConfig) {
+    browser.execute(function(_serverConfig) {
+        this.localStorage.setItem(
+            'frontendConfig',
+            JSON.stringify({ serverConfig: _serverConfig })
+        );
+    }, serverConfig);
+}
+
 var openAlterationTypeSelectionMenu = () => {
     $('[data-test=AlterationEnrichmentTypeSelectorButton]').waitForExist();
     $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
@@ -647,56 +656,68 @@ function strIsNumeric(str) {
     ); // ...and ensure strings of whitespace fail
 }
 
+function selectClinicalTabPlotType(type) {
+    setDropdownOpen(
+        true,
+        '[data-test="plotTypeSelector"] .Select-arrow-zone',
+        '[data-test="plotTypeSelector"] .Select-menu',
+        "Couldn't open clinical tab chart type dropdown"
+    );
+    $(
+        `[data-test="plotTypeSelector"] .Select-option[aria-label="${type}"]`
+    ).click();
+}
+
 module.exports = {
-    checkElementWithElementHidden: checkElementWithElementHidden,
-    waitForPlotsTab: waitForPlotsTab,
-    waitForAndCheckPlotsTab: waitForAndCheckPlotsTab,
-    waitForStudyQueryPage: waitForStudyQueryPage,
-    waitForGeneQueryPage: waitForGeneQueryPage,
-    waitForOncoprint: waitForOncoprint,
-    waitForCoExpressionTab: waitForCoExpressionTab,
-    waitForPatientView: waitForPatientView,
-    waitForComparisonTab: waitForComparisonTab,
-    goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
-    goToUrlAndSetLocalStorageWithProperty: goToUrlAndSetLocalStorageWithProperty,
-    useExternalFrontend: useExternalFrontend,
-    useNetlifyDeployPreview: useNetlifyDeployPreview,
-    sessionServiceIsEnabled: sessionServiceIsEnabled,
-    waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
-    waitForNetworkQuiet: waitForNetworkQuiet,
-    getTextInOncoprintLegend: getTextInOncoprintLegend,
-    toStudyViewSummaryTab: toStudyViewSummaryTab,
-    toStudyViewClinicalDataTab: toStudyViewClinicalDataTab,
-    removeAllStudyViewFilters: removeAllStudyViewFilters,
-    waitForStudyViewSelectedInfo: waitForStudyViewSelectedInfo,
-    waitForStudyView: waitForStudyView,
-    waitForGroupComparisonTabOpen: waitForGroupComparisonTabOpen,
-    getTextFromElement: getTextFromElement,
-    getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
-    setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
-    getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements,
-    setInputText: setInputText,
-    pasteToElement: pasteToElement,
-    checkOncoprintElement: checkOncoprintElement,
-    executeInBrowser: executeInBrowser,
-    checkElementWithTemporaryClass: checkElementWithTemporaryClass,
-    checkElementWithMouseDisabled: checkElementWithMouseDisabled,
-    clickQueryByGeneButton: clickQueryByGeneButton,
-    clickModifyStudySelectionButton: clickModifyStudySelectionButton,
-    selectReactSelectOption: selectReactSelectOption,
-    reactSelectOption: reactSelectOption,
-    getReactSelectOptions: getReactSelectOptions,
+    checkElementWithElementHidden,
+    waitForPlotsTab,
+    waitForAndCheckPlotsTab,
+    waitForStudyQueryPage,
+    waitForGeneQueryPage,
+    waitForOncoprint,
+    waitForCoExpressionTab,
+    waitForPatientView,
+    waitForComparisonTab,
+    goToUrlAndSetLocalStorage,
+    goToUrlAndSetLocalStorageWithProperty,
+    useExternalFrontend,
+    useNetlifyDeployPreview,
+    sessionServiceIsEnabled,
+    waitForNumberOfStudyCheckboxes,
+    waitForNetworkQuiet,
+    getTextInOncoprintLegend,
+    toStudyViewSummaryTab,
+    toStudyViewClinicalDataTab,
+    removeAllStudyViewFilters,
+    waitForStudyViewSelectedInfo,
+    waitForStudyView,
+    waitForGroupComparisonTabOpen,
+    getTextFromElement,
+    getNumberOfStudyViewCharts,
+    setOncoprintMutationsMenuOpen,
+    getNthOncoprintTrackOptionsElements,
+    setInputText,
+    pasteToElement,
+    checkOncoprintElement,
+    executeInBrowser,
+    checkElementWithTemporaryClass,
+    checkElementWithMouseDisabled,
+    clickQueryByGeneButton,
+    clickModifyStudySelectionButton,
+    selectReactSelectOption,
+    reactSelectOption,
+    getReactSelectOptions,
     COEXPRESSION_TIMEOUT: 120000,
-    getSelectCheckedOptions: getSelectCheckedOptions,
-    selectCheckedOption: selectCheckedOption,
-    getOncoprintGroupHeaderOptionsElements: getOncoprintGroupHeaderOptionsElements,
-    showGsva: showGsva,
-    setSettingsMenuOpen: setSettingsMenuOpen,
-    setDropdownOpen: setDropdownOpen,
-    postDataToUrl: postDataToUrl,
-    getPortalUrlFromEnv: getPortalUrlFromEnv,
-    openGroupComparison: openGroupComparison,
-    selectElementByText: selectElementByText,
+    getSelectCheckedOptions,
+    selectCheckedOption,
+    getOncoprintGroupHeaderOptionsElements,
+    showGsva,
+    setSettingsMenuOpen,
+    setDropdownOpen,
+    postDataToUrl,
+    getPortalUrlFromEnv,
+    openGroupComparison,
+    selectElementByText,
     jsApiHover,
     jsApiClick,
     setCheckboxChecked,
@@ -704,4 +725,5 @@ module.exports = {
     strIsNumeric,
     jq,
     setServerConfiguration,
+    selectClinicalTabPlotType,
 };

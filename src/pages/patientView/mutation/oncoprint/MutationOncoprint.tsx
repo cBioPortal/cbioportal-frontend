@@ -17,7 +17,8 @@ import {
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../../../shared/components/ErrorMessage';
 import { computed, observable, makeObservable } from 'mobx';
-import OncoprintJS, {
+import {
+    OncoprintJS,
     ColumnId,
     ColumnLabel,
     InitParams,
@@ -691,7 +692,7 @@ export default class MutationOncoprint extends React.Component<
                         <Oncoprint
                             key="MutationOncoprint"
                             ref={this.oncoprintComponentRef}
-                            oncoprintRef={this.oncoprintRef}
+                            broadcastOncoprintJsRef={this.oncoprintRef}
                             highlightedIds={this.highlightedIds}
                             highlightedTracks={this.highlightedTracks}
                             initParams={INIT_PARAMS}

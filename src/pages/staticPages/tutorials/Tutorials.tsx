@@ -194,6 +194,19 @@ export default class Tutorials extends React.Component<{}, {}> {
                                         ></i>
                                     </a>
                                 </li>
+                                <li>
+                                    <a
+                                        href={
+                                            'https://www.youtube.com/watch?v=JId304dp3tc'
+                                        }
+                                        target={'_blank'}
+                                    >
+                                        How to download data{' '}
+                                        <i
+                                            className={'fa fa-external-link'}
+                                        ></i>
+                                    </a>
+                                </li>
                             </ol>
                         </li>
                         <li>

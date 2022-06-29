@@ -7,6 +7,7 @@ defaults: &defaults
   docker:
     # specify the version you desire here
     - image: circleci/node:15.2.1-browsers
+  resource_class: large
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
@@ -87,8 +88,8 @@ jobs:
           command: "cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
       - restore_cache:
           keys:
-            - v7-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-            - v7-dependencies-{{ checksum "yarn.lock" }}
+            - v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+            - v8-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
       - run: yarn buildModules
@@ -98,7 +99,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-          key: v7-dependencies-{{ checksum "yarn.lock" }}
+          key: v8-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: "Run build if no dist folder"
           command: 'ls dist || yarn run build'
@@ -112,7 +113,7 @@ jobs:
             - node_modules
             - dist
             - common-dist
-          key: v7-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+          key: v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -126,7 +127,7 @@ jobs:
       # check that all api responses are still the same
       - run: "bash src/test/check_api_sync.sh"
 
-  unit_tests:
+  unit_tests_main:
     <<: *defaults
     steps:
       #      - run:
@@ -137,17 +138,36 @@ jobs:
           at: /tmp/
       # run tests!
       - run:
-          command: "yarn run test"
+          command: "yarn run testMain"
           environment:
-            JUNIT_REPORT_PATH: ./junit/
-            JUNIT_REPORT_NAME: test-results.xml
+            JEST_JUNIT_OUTPUT_DIR: ./junit/unit/main/
+            JEST_JUNIT_OUTPUT_NAME: test-results-unit-main.xml
+            NODE_OPTIONS: --max-old-space-size=4096
             DISABLE_SOURCEMAP: true
             WEBPACK_PARALLEL: false
           when: always
       - store_test_results:
-          path: /tmp/repo/junit
-      - store_artifacts:
-          path: /tmp/repo/junit
+          path: ./junit/unit/main/
+
+  unit_tests_packages:
+    <<: *defaults
+    steps:
+      #      - run:
+      #          name: "Install yarn at specific version"
+      #          command:
+      #            sudo npm install --global yarn@1.22.4
+      - attach_workspace:
+          at: /tmp/
+      # run tests!
+      - run:
+          command: "yarn run testPackagesCI"
+          environment:
+            DISABLE_SOURCEMAP: true
+            NODE_OPTIONS: --max-old-space-size=4096
+            WEBPACK_PARALLEL: false
+          when: always
+      - store_test_results:
+          path: /tmp/junit/module/
 
   check_forgotten_spec_only_statements:
     <<: *defaults
@@ -177,7 +197,7 @@ jobs:
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
-  
+
   end_to_end_tests_against_master:
     <<: *defaults
     environment:
@@ -191,14 +211,14 @@ jobs:
     working_directory: /tmp/repo
     machine:
       enabled: true
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202201-02
     steps:
       - attach_workspace:
           at: /tmp/
-      - run:
-          # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
-          name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
-          command: pyenv local 3.6.5 && virtualenv venv
+#      - run:
+#          # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
+#          name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
+#          command: pyenv local 3.6.5 && virtualenv venv
       - run:
           name: Setup python libraries
           command: |
@@ -252,10 +272,10 @@ jobs:
             docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
       - restore_cache:
           keys:
-            - v7-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+            - v8-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - restore_cache:
           keys:
-            - v7-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+            - v8-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Init database
           command: |
@@ -269,7 +289,7 @@ jobs:
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/cbio_db_data
-          key: v7-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          key: v8-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - run:
           name: Start cbioportal and other services
           command: |
@@ -277,14 +297,14 @@ jobs:
       - run:
           name: Change owner of keycloak MySQL database files (needed by cache)
           command: |
-              if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
-                  sudo chmod -R 777 $KC_DB_DATA_DIR && \
-                  sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
-              fi
+            if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
+                sudo chmod -R 777 $KC_DB_DATA_DIR && \
+                sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
+            fi
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
-          key: v7-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+          key: v8-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Run end-2-end tests with studies in local database
           command: |
@@ -346,9 +366,12 @@ workflows:
                 - master
                 - release-*
                 - rc
-      - unit_tests:
+      - unit_tests_main:
           requires:
             - install
+      - unit_tests_packages:
+            requires:
+              - install
       - end_to_end_tests:
           requires:
             - install
@@ -378,7 +401,10 @@ workflows:
       - api_sync:
           requires:
             - install
-      - unit_tests:
+      - unit_tests_main:
+          requires:
+            - install
+      - unit_tests_packages:
           requires:
             - install
       - end_to_end_tests:

@@ -8,7 +8,7 @@ import OncoprintControls, {
 } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
 import { getServerConfig } from 'config/config';
-import OncoprintJS from 'oncoprintjs';
+import { OncoprintJS } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import { FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
@@ -411,7 +411,7 @@ export default class Oncoprinter extends React.Component<
                             {this.alterationInfo}
                             <Oncoprint
                                 key={this.props.store.submitCount}
-                                oncoprintRef={this.oncoprintRef}
+                                broadcastOncoprintJsRef={this.oncoprintRef}
                                 clinicalTracks={this.props.store.clinicalTracks}
                                 geneticTracks={
                                     this.props.store.geneticTracks.result

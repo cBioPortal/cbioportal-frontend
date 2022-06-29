@@ -5,13 +5,13 @@ import {
     getGenericAssayMetaPropertyOrDefault,
     COMMON_GENERIC_ASSAY_PROPERTY,
     deriveDisplayTextFromGenericAssayType,
-    GenericAssayTypeConstants,
     formatGenericAssayCompactLabelByNameAndId,
     filterGenericAssayEntitiesByGenes,
     makeGenericAssayPlotsTabOption,
 } from './GenericAssayCommonUtils';
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 describe('GenericAssayCommonUtils', () => {
     describe('makeGenericAssayOption()', () => {
@@ -338,21 +338,21 @@ describe('GenericAssayCommonUtils', () => {
                     DESCRIPTION: 'tp53',
                 },
             };
-            assert.equal(
+            assert.deepEqual(
                 filterGenericAssayEntitiesByGenes(
                     [genericAssayEntity1],
                     TARGET_GENE_LIST
                 ),
                 [genericAssayEntity1]
             );
-            assert.equal(
+            assert.deepEqual(
                 filterGenericAssayEntitiesByGenes(
                     [genericAssayEntity2],
                     TARGET_GENE_LIST
                 ),
                 [genericAssayEntity2]
             );
-            assert.equal(
+            assert.deepEqual(
                 filterGenericAssayEntitiesByGenes(
                     [genericAssayEntity3],
                     TARGET_GENE_LIST
@@ -373,8 +373,8 @@ describe('GenericAssayCommonUtils', () => {
                 filterGenericAssayEntitiesByGenes(
                     [genericAssayEntity],
                     TARGET_GENE_LIST
-                ),
-                []
+                ).length,
+                0
             );
         });
     });

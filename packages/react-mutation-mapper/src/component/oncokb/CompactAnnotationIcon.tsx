@@ -7,7 +7,6 @@ import { normalizeLevel, normalizeOncogenicity } from '../../util/OncoKbUtils';
 const BIOLOGICAL_COLOR_MAP: { [level: string]: string } = {
     oncogenic: '#0968C3',
     'likely-oncogenic': '#0968C3',
-    'predicted-oncogenic': '#0968C3',
     resistance: '#0968C3',
     neutral: '#696969',
     'likely-neutral': '#696969',

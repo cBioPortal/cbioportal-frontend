@@ -37,6 +37,12 @@ To build DLLs in common-dist folder (must be done prior to start of dev server)
 yarn run buildDLL:dev
 ```
 
+To build all packages the main project depends on (must be done prior to start of dev server):
+
+```
+yarn run buildModules
+```
+
 To start the dev server with hot reload enabled
 ```
 # set the environment variables you want based on what branch you're branching
@@ -53,7 +59,16 @@ Example pages:
 
 To run unit/integration tests
 ```
-yarn run test
+// run tests for main project
+yarn run testMain
+
+// run tests for all packages
+yarn run testPackages
+
+// run the above with grep on particular spec file
+GREP=example.spec.js yarn run testMain
+GREP=example.spec.js yarn run testModules
+
 ```
 
 > **Windows Tip:** There is a known solved hiccup running the tests on Ubuntu via Windows Subsystem for Linux (WSL): [#7096](https://github.com/cBioPortal/cbioportal/issues/7096)
@@ -61,11 +76,16 @@ yarn run test
 To run unit/integration tests in watch mode
 ```
 yarn run test:watch
+
+// see above for GREP
+
 ```
 
 To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before `.spec.`))
 ```
-yarn run test:watch -- --grep=#specName#
+yarn run test:watch 
+
+// see above for GREP
 ```
 
 ## Formatting Code with PrettierJS

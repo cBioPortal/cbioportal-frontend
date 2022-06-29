@@ -6,7 +6,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { getLoadConfig, getServerConfig } from './config/config';
 import _ from 'lodash';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import client from 'shared/api/cbioportalClientInstance';
 import { sendSentryMessage } from './shared/lib/tracking';
 
 export type SiteError = {
@@ -96,9 +96,7 @@ export class AppStore {
 
     readonly portalVersion = remoteData<string | undefined>({
         invoke: async () => {
-            const portalVersionResult = await internalClient.getInfoUsingGET(
-                {}
-            );
+            const portalVersionResult = await client.getInfoUsingGET({});
             if (portalVersionResult && portalVersionResult.portalVersion) {
                 let version = undefined;
 

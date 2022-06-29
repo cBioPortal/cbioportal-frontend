@@ -33,6 +33,7 @@ import {
     XvsYScatterChart,
     XvsYChartSettings,
     XvsYViolinChart,
+    BinMethodOption,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -70,6 +71,7 @@ import {
 import {
     ClinicalDataBin,
     GenericAssayDataBin,
+    BinsGeneratorConfig,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ChartOption } from './addChartButton/AddChartButton';
 import { observer } from 'mobx-react';
@@ -1159,6 +1161,7 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
             // no need to add 1 (no interval needed for the previous value)
             if (
                 index - 1 > -1 &&
+                numericalBins[index - 1].start !== undefined &&
                 numericalBins[index - 1].start !== numericalBins[index - 1].end
             ) {
                 x++;
@@ -3569,6 +3572,42 @@ export function getUserGroupColor(
         : undefined;
 }
 
+export function getRangeFromDataBins(bins: DataFilterValue[]) {
+    const numericals = bins.filter(
+        value => value.start !== undefined || value.end !== undefined
+    );
+
+    if (numericals.length === 0) {
+        return undefined;
+    }
+
+    // merge numericals into one interval
+    const min = numericals[0].start;
+    const max = numericals[numericals.length - 1].end;
+
+    return {
+        min,
+        max,
+    };
+
+    /*const allNumericals = bins.filter(
+        bin => bin.start !== undefined || bin.end !== undefined
+    );
+
+    const binBounds = _.chain(allNumericals)
+        .flatMap(bin => [bin.start, bin.end]) // put starts and ends into a list
+        .filter(x => x !== undefined && x !== null)
+        .value() as number[]; // get rid of any non-numbers;
+
+    let min = Number.POSITIVE_INFINITY;
+    let max = Number.NEGATIVE_INFINITY;
+    for (const b of binBounds) {
+        min = Math.min(b, min);
+        max = Math.max(b, max);
+    }
+    return {min, max};*/
+}
+
 export async function updateCustomIntervalFilter(
     newRange: { start?: number; end?: number },
     chartMeta: Pick<ChartMeta, 'uniqueKey'>,
@@ -3576,7 +3615,12 @@ export async function updateCustomIntervalFilter(
         chartMeta: Pick<ChartMeta, 'uniqueKey'>
     ) => MobxPromise<DataBin[]>,
     getCurrentFilters: (chartUniqueKey: string) => DataFilterValue[],
-    updateCustomBins: (chartUniqueKey: string, bins: number[]) => void,
+    updateCustomBins: (
+        chartUniqueKey: string,
+        bins: number[],
+        binMethod: 'MEDIAN' | 'QUARTILE' | 'CUSTOM' | 'GENERATE',
+        generateBinsConfig?: BinsGeneratorConfig
+    ) => void,
     updateIntervalFilters: (uniqueKey: string, bins: DataBin[]) => void
 ) {
     /* This function does what is necessary in order to set a custom range to filter a numerical attribute.
@@ -3606,7 +3650,12 @@ export async function updateCustomIntervalFilter(
         .value() as number[];
 
     // Invoke the given callback to update the custom bins
-    updateCustomBins(chartMeta.uniqueKey, newBinBounds);
+    updateCustomBins(
+        chartMeta.uniqueKey,
+        newBinBounds,
+        BinMethodOption.CUSTOM,
+        undefined
+    );
 
     // Now, we will use the custom bins to define the new filter.
     // First, wait for the new bins to come back from the server.

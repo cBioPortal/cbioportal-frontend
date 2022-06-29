@@ -1,5 +1,7 @@
 import _ from 'lodash';
 import { GenePanelIdSpecialValue } from 'shared/lib/StoreUtils';
+import { Mutation } from 'cbioportal-ts-api-client';
+import { MutationFrequenciesBySample } from 'pages/patientView/vafPlot/VAFPlot';
 
 export interface IIconData {
     genePanelId: string | undefined;
@@ -11,6 +13,7 @@ export interface IKeyedIconData {
     [id: string]: IIconData;
 }
 
+export const IGV_TRACK_SAMPLE_EXPAND_HEIGHT = 18;
 export const COLOR_GENEPANEL_ICON = 'blue';
 export const COLOR_WHOLEGENOME_ICON = '#007fff';
 export const PREFIX_GENEPANEL_LABEL = 'P';
@@ -20,6 +23,18 @@ export const wholeGenomeIconData: IIconData = {
     color: COLOR_WHOLEGENOME_ICON,
     genePanelId: undefined,
 };
+
+export function getGenePanelIds(
+    sampleIdToMutationGenePanelId?: { [sampleId: string]: string },
+    sampleIdToCopyNumberGenePanelId?: { [sampleId: string]: string }
+) {
+    return _.uniq(
+        _.concat(
+            _.values(sampleIdToMutationGenePanelId),
+            _.values(sampleIdToCopyNumberGenePanelId)
+        )
+    );
+}
 
 export function genePanelIdToIconData(
     genePanelIds: (string | undefined)[]
@@ -91,4 +106,45 @@ export function sampleIdToIconData(
         );
 
     return lookupTable;
+}
+
+export function computeMutationFrequencyBySample(
+    mergedMutations: Mutation[][],
+    sampleOrder: { [s: string]: number }
+): MutationFrequenciesBySample {
+    const ret: MutationFrequenciesBySample = {};
+    let sampleId;
+    let freq;
+    for (const mutations of mergedMutations) {
+        for (const mutation of mutations) {
+            if (mutation.tumorAltCount >= 0 && mutation.tumorRefCount >= 0) {
+                sampleId = mutation.sampleId;
+                freq =
+                    mutation.tumorAltCount /
+                    (mutation.tumorRefCount + mutation.tumorAltCount);
+                ret[sampleId] = ret[sampleId] || [];
+                ret[sampleId].push(freq);
+            }
+        }
+    }
+    for (const sampleId of Object.keys(sampleOrder)) {
+        ret[sampleId] = ret[sampleId] || [];
+        const shouldAdd = mergedMutations.length - ret[sampleId].length;
+        for (let i = 0; i < shouldAdd; i++) {
+            ret[sampleId].push(NaN);
+        }
+    }
+    return ret;
+}
+
+export function doesFrequencyExist(frequencies: MutationFrequenciesBySample) {
+    for (const frequencyId of Object.keys(frequencies)) {
+        if (frequencies.hasOwnProperty(frequencyId)) {
+            for (const frequency of frequencies[frequencyId]) {
+                return !isNaN(frequency);
+            }
+        }
+    }
+
+    return false;
 }

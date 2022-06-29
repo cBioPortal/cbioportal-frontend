@@ -6,7 +6,7 @@ import {
     TimelineTrackSpecification,
     TimelineTrackType,
 } from './types';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import _ from 'lodash';
 import {
     formatDate,
@@ -23,7 +23,7 @@ import {
     getTicksForLineChartAxis,
     getTrackValueRange,
 } from './lib/lineChartAxisUtils';
-import { getColor } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, getColor } from 'cbioportal-frontend-commons';
 import { getTrackLabel } from './TrackHeader';
 import {
     COLOR_ATTRIBUTE_KEY,
@@ -31,6 +31,7 @@ import {
     SHAPE_ATTRIBUTE_KEY,
 } from './renderHelpers';
 import ReactMarkdown from 'react-markdown';
+import { useLocalObservable, useLocalStore } from 'mobx-react-lite';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -55,12 +56,12 @@ export function groupEventsByPosition(events: TimelineEvent[]) {
     });
 }
 
-export function renderSuperscript(number: number) {
+export function renderSuperscript(number: number, y: number = 0) {
     return (
-        <g transform={'translate(3 -8)'}>
+        <g transform={'translate(3 -18)'}>
             <text
                 x={1}
-                y={0}
+                y={y}
                 dy={'1em'}
                 className="noselect"
                 style={{
@@ -176,8 +177,8 @@ export function renderPoint(
         if (events.length > 1) {
             contents = (
                 <>
-                    {renderSuperscript(events.length)}
-                    {renderStack(events.map(eventColorGetter))}
+                    {renderSuperscript(events.length, y)}
+                    {renderStack(events.map(eventColorGetter), y)}
                 </>
             );
         } else {
@@ -405,6 +406,45 @@ const TimelineItemWithTooltip: React.FunctionComponent<{
     );
 });
 
+export const OurPopup: React.FunctionComponent<any> = observer(function(
+    ...props
+) {
+    const store = useLocalObservable(() => ({
+        showModal: false,
+    }));
+
+    const showModal = useCallback(() => {
+        const $modal = $(`
+            <div class="myoverlay">
+                <div class="myclose"><button class="btn btn-xs">Open in New Window</button> <button class="btn btn-xs"><i class="fa fa-close"></i> Close</button> </div>
+                <iframe class="modal-iframe"></iframe>
+            </div>,
+        `)
+            .appendTo('body')
+            .on('keydown', function(event) {
+                if (event.key == 'Escape') {
+                    $modal.remove();
+                }
+            })
+            .on('click', function(e) {
+                if (/Open in New Window/.test(e.target.innerText)) {
+                    getBrowserWindow().open(props[0].href);
+                }
+                $modal.remove();
+            });
+
+        setTimeout(() => {
+            $modal.find('iframe').attr('src', props[0].href);
+        }, 500);
+    }, []);
+
+    return (
+        <>
+            <a onClick={showModal}>{props[0].children}</a>
+        </>
+    );
+});
+
 export const EventTooltipContent: React.FunctionComponent<{
     event: TimelineEvent;
 }> = function({ event }) {
@@ -430,6 +470,11 @@ export const EventTooltipContent: React.FunctionComponent<{
                                             className="line-break"
                                             allowedElements={['p', 'a', 'br']}
                                             linkTarget={'_blank'}
+                                            components={{
+                                                a: ({ node, ...props }) => (
+                                                    <OurPopup {...props} />
+                                                ),
+                                            }}
                                         >
                                             {replaceArray(
                                                 att.value.replaceAll(

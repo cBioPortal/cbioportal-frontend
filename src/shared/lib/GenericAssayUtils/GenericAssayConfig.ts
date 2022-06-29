@@ -1,12 +1,18 @@
 import { getServerConfig } from 'config/config';
 import _ from 'lodash';
-import { GenericAssayTypeConstants } from './GenericAssayCommonUtils';
 
 export type GenericAssayConfig = {
     genericAssayConfigByType: {
         [genericAssayType: string]: GenericAssayTypeConfig;
     };
     // Add more Generic Assay global config from here
+};
+
+export const GenericAssayTypeConstants: { [s: string]: string } = {
+    TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
+    MUTATIONAL_SIGNATURE: 'MUTATIONAL_SIGNATURE',
+    ARMLEVEL_CNA: 'ARMLEVEL_CNA',
+    METHYLATION: 'METHYLATION',
 };
 
 export type GenericAssayTypeConfig = {

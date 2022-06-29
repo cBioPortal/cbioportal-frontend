@@ -10,6 +10,7 @@ import { generateSegmentFileContent } from 'shared/lib/IGVUtils';
 import { onMobxPromise } from 'cbioportal-frontend-commons';
 import fileDownload from 'react-file-download';
 import autobind from 'autobind-decorator';
+import { AppContext } from 'cbioportal-frontend-commons';
 
 export type CNSegmentsDownloaderProps = {
     promise: MobxPromise<CopyNumberSeg[]>;
@@ -37,7 +38,7 @@ export default class CNSegmentsDownloader extends React.Component<
     @observable downloading = false;
 
     public render() {
-        return (
+        return this.context.showDownloadControls === true ? (
             <DefaultTooltip
                 overlay={
                     <span>
@@ -51,6 +52,7 @@ export default class CNSegmentsDownloader extends React.Component<
                     className={this.props.buttonClassName}
                     onClick={this.handleDownload}
                     disabled={this.downloading}
+                    data-test={'downloadButton'}
                 >
                     <i
                         className={classnames({
@@ -61,7 +63,7 @@ export default class CNSegmentsDownloader extends React.Component<
                     />
                 </Button>
             </DefaultTooltip>
-        );
+        ) : null;
     }
 
     @autobind
@@ -74,3 +76,5 @@ export default class CNSegmentsDownloader extends React.Component<
         });
     }
 }
+
+CNSegmentsDownloader.contextType = AppContext;
