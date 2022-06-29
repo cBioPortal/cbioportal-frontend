@@ -93,7 +93,7 @@ describe('extendSamplesWithCancerType', () => {
 
     var arg0: Sample[];
     beforeEach(() => {
-        arg0 = [
+        arg0 = ([
             {
                 uniqueSampleKey: 'QlRfNTQ5OmNlbGxsaW5lX25jaTYw',
                 uniquePatientKey: 'QlRfNTQ5OmNlbGxsaW5lX25jaTYw',
@@ -102,7 +102,7 @@ describe('extendSamplesWithCancerType', () => {
                 patientId: 'BT_549',
                 studyId: 'cellline_nci60',
             },
-        ] as Sample[];
+        ] as unknown) as Sample[];
     });
 
     it('when both CANCER_TYPE and CANCER_TYPE_DETAILED are present, should populated appropriately', () => {
