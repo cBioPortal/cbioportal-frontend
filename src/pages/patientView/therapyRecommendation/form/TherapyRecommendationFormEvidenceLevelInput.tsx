@@ -49,14 +49,14 @@ export default class TherapyRecommendationFormEvidenceLevelInput extends React.C
                 this.props.data.evidenceLevel.toString() === 'NA' ||
                 this.props.data.evidenceLevel.toString() === '0',
             isValue:
-                this.props.data.evidenceLevelExtension.toString() ==
+                this.props.data.evidenceLevelExtension ==
                 EvidenceLevelExtension.IS,
             ivValue:
-                this.props.data.evidenceLevelExtension.toString() ===
+                this.props.data.evidenceLevelExtension ===
                 EvidenceLevelExtension.IV,
             m3Text: this.props.data.evidenceLevelM3Text,
             rValue:
-                this.props.data.evidenceLevelExtension.toString() ===
+                this.props.data.evidenceLevelExtension ===
                 EvidenceLevelExtension.R,
             zValue:
                 this.props.data.evidenceLevelExtension ===
