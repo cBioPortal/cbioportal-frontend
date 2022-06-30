@@ -24,13 +24,14 @@ export async function fetchFollowupUsingGET(url: string) {
     console.log('### FOLLOWUP ### Calling GET: ' + url);
     return request
         .get(url)
+        .timeout(120000)
         .then(res => {
             if (res.ok) {
                 console.group('### FOLLOWUP ### Success GETting ' + url);
                 console.log(JSON.parse(res.text));
                 console.groupEnd();
                 const response = JSON.parse(res.text);
-                return response.followups.map(
+                return response.followUps.map(
                     (followup: any) =>
                         ({
                             id: followup.id,
@@ -69,6 +70,7 @@ export async function fetchMtbsUsingGET(url: string, studyId: string) {
     console.log('### MTB ### Calling GET: ' + url);
     return request
         .get(url)
+        .timeout(120000)
         .then(res => {
             if (res.ok) {
                 console.group('### MTB ### Success GETting ' + url);
@@ -113,13 +115,22 @@ export async function updateFollowupUsingPUT(
     followups: IFollowUp[]
 ) {
     console.log('### FOLLOWUP ### Calling PUT: ' + url);
+    console.log(
+        JSON.stringify({
+            id: id,
+            mtbs: [],
+            followUps: flattenArray(followups),
+        })
+    );
     return request
         .put(url)
+        .timeout(120000)
         .set('Content-Type', 'application/json')
         .send(
             JSON.stringify({
                 id: id,
-                followups: flattenArray(followups),
+                mtbs: [],
+                followUps: flattenArray(followups),
             })
         )
         .then(res => {
@@ -127,18 +138,21 @@ export async function updateFollowupUsingPUT(
                 console.group('### FOLLOWUP ### Success PUTting ' + url);
                 console.log(JSON.parse(res.text));
                 console.groupEnd();
+                return true;
             } else {
                 console.group(
                     '### FOLLOWUP ### ERROR res not ok PUTting ' + url
                 );
                 console.log(JSON.parse(res.text));
                 console.groupEnd();
+                return false;
             }
         })
         .catch(err => {
             console.group('### FOLLOWUP ### ERROR catched PUTting ' + url);
             console.log(err);
             console.groupEnd();
+            return false;
         });
 }
 
@@ -158,11 +172,13 @@ export async function updateMtbUsingPUT(
     console.log('### MTB ### Calling PUT: ' + url);
     return request
         .put(url)
+        .timeout(120000)
         .set('Content-Type', 'application/json')
         .send(
             JSON.stringify({
                 id: id,
                 mtbs: flattenArray(mtbs),
+                followUps: [],
             })
         )
         .then(res => {
@@ -196,6 +212,7 @@ export async function deleteFollowupUsingDELETE(
     console.log('### FOLLOWUP ### Calling DELETE: ' + url);
     return request
         .delete(url)
+        .timeout(120000)
         .set('Content-Type', 'application/json')
         .send(JSON.stringify(deletions))
         .then(res => {
@@ -230,6 +247,7 @@ export async function deleteMtbUsingDELETE(
     console.log('### MTB ### Calling DELETE: ' + url);
     return request
         .delete(url)
+        .timeout(60000)
         .set('Content-Type', 'application/json')
         .send(JSON.stringify(deletions))
         .then(res => {

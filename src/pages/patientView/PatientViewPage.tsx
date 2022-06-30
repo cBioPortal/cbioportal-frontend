@@ -1861,7 +1861,10 @@ export default class PatientViewPage extends React.Component<
                                                     this.patientViewPageStore
                                                         .pubMedCache
                                                 }
-                                                followUps={[]}
+                                                followUps={
+                                                    this.patientViewPageStore
+                                                        .followUps.result
+                                                }
                                             />
                                         </MSKTab>
                                     )}

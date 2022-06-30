@@ -2529,13 +2529,11 @@ export class PatientViewPageStore {
         []
     );
 
-    readonly followups = remoteData<IFollowUp[]>(
+    readonly followUps = remoteData<IFollowUp[]>(
         {
             invoke: () => {
                 return fetchFollowupUsingGET(
-                    this.getMtbJsonStoreUrl(
-                        'followup/' + this.getSafePatientId()
-                    )
+                    this.getMtbJsonStoreUrl(this.getSafePatientId(), true)
                 );
             },
         },
@@ -2564,12 +2562,12 @@ export class PatientViewPageStore {
         );
     };
 
-    updateFollowUps = (followUps: IFollowUp[]) => {
+    updateFollowUps = (followUps: IFollowUp[]): Promise<boolean> => {
         console.log('update');
 
-        updateFollowupUsingPUT(
+        return updateFollowupUsingPUT(
             this.getSafePatientId(),
-            this.getMtbJsonStoreUrl('followup/' + this.getSafePatientId()),
+            this.getMtbJsonStoreUrl(this.getSafePatientId(), true),
             followUps
         );
     };
@@ -2594,7 +2592,7 @@ export class PatientViewPageStore {
         console.log('delete');
         deleteFollowupUsingDELETE(
             this.getSafePatientId(),
-            this.getMtbJsonStoreUrl('followup/' + this.getSafePatientId()),
+            this.getMtbJsonStoreUrl(this.getSafePatientId(), true),
             deletions
         );
     };
@@ -2605,7 +2603,7 @@ export class PatientViewPageStore {
         return checkPermissionUsingGET(checkUrl, this.getSafeStudyId());
     };
 
-    getMtbJsonStoreUrl = (id: string) => {
+    getMtbJsonStoreUrl = (id: string, followUp: boolean = false) => {
         let host: string | null = window.location.hostname;
         let port = ':' + window.location.port;
         if (
@@ -2620,7 +2618,9 @@ export class PatientViewPageStore {
             getServerConfig().fhirspark!.port !== 'undefined'
         )
             port = ':' + getServerConfig().fhirspark!.port;
-        return '//' + host + port + '/mtb/' + id;
+        return (
+            'http://' + host + port + (followUp ? '/followup/' : '/mtb/') + id
+        );
     };
 
     private getSafePatientId = () => {

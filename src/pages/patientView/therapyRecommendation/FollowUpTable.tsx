@@ -25,6 +25,7 @@ import {
     ClinicalData,
     DiscreteCopyNumberData,
 } from 'cbioportal-ts-api-client';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { SimpleCopyDownloadControls } from 'shared/components/copyDownloadControls/SimpleCopyDownloadControls';
 import { RemoteData, IOncoKbData } from 'cbioportal-utils';
 import PubMedCache from 'shared/cache/PubMedCache';
@@ -34,7 +35,7 @@ import MtbTherapyRecommendationTable from './MtbTherapyRecommendationTable';
 import Select from 'react-select';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
 import FollowUpForm from './form/FollowUpForm';
-import AppConfig from 'appConfig';
+//import AppConfig from 'appConfig';
 import { Collapse } from 'react-collapse';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
 import { LoginModal, LoginButton, UserInfoButton } from './LoginElements';
@@ -59,7 +60,7 @@ export type IFollowUpProps = {
     deletions: IDeletions;
     containerWidth: number;
     onDeleteData: (deletions: IDeletions) => void;
-    onSaveData: (followUps: IFollowUp[]) => void;
+    onSaveData: (followUps: IFollowUp[]) => Promise<boolean>;
     checkPermission: () => Promise<boolean[]>;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
@@ -71,6 +72,7 @@ export type IFollowUpState = {
     deletions: IDeletions;
     loggedIn: boolean;
     permission: boolean;
+    successfulSave: boolean;
 };
 
 enum ColumnKey {
@@ -96,6 +98,7 @@ export default class FollowUpTable extends React.Component<
             deletions: props.deletions,
             loggedIn: false,
             permission: false,
+            successfulSave: false,
         };
     }
 
@@ -114,6 +117,7 @@ export default class FollowUpTable extends React.Component<
     @observable backupTherapyRecommendation: ITherapyRecommendation | undefined;
     @observable showFollowUpForm: boolean;
     @observable showLoginModal: boolean = false;
+    @observable isProcessingSaveData: boolean = false;
 
     private _columns = [
         {
@@ -344,7 +348,7 @@ export default class FollowUpTable extends React.Component<
                     oncoKbData={this.props.oncoKbData}
                     cnaOncoKbData={this.props.cnaOncoKbData}
                     pubMedCache={this.props.pubMedCache}
-                    isDisabled={false}
+                    isDisabled={true}
                     showButtons={false}
                     columnVisibility={{
                         Reasoning: true,
@@ -352,6 +356,7 @@ export default class FollowUpTable extends React.Component<
                         Comment: true,
                         'Evidence Level': true,
                         References: true,
+                        Edit: false,
                     }}
                 />
             ),
@@ -419,14 +424,26 @@ export default class FollowUpTable extends React.Component<
             this.props.onDeleteData(this.state.deletions);
         }
         console.group('Save followUps');
-        this.props.onSaveData(this.state.followUps);
+        this.isProcessingSaveData = true;
+        this.props.onSaveData(this.state.followUps).then(res => {
+            this.isProcessingSaveData = false;
+            console.log('onSaveData returned with ' + res);
+            if (res == true) {
+                console.log('Showing successfulSave div');
+                this.setState({ successfulSave: true });
+                setTimeout(() => this.saveCallback(), 3000);
+            } else {
+                window.alert(
+                    'Saving data failed - error output is in console.'
+                );
+            }
+        });
         console.groupEnd();
     }
 
-    private test() {
-        console.group('Test');
-        console.log(this.props);
-        console.groupEnd();
+    private saveCallback() {
+        console.log('Hiding successfulSave div');
+        this.setState({ successfulSave: false });
     }
 
     private getTreatmentResponseCheckbox(
@@ -508,10 +525,25 @@ export default class FollowUpTable extends React.Component<
                         <Button
                             type="button"
                             className={'btn btn-default ' + styles.testButton}
-                            onClick={() => this.saveFollowUps()}
+                            onClick={() => {
+                                this.saveFollowUps();
+                                console.log(
+                                    'Saving FollowUps: ' + this.props.followUps
+                                );
+                            }}
                         >
                             Save Data
                         </Button>
+                        {this.state.successfulSave ? (
+                            <div className={styles.successBox}>
+                                Saving data was successful!
+                            </div>
+                        ) : null}
+                        <LoadingIndicator
+                            center={true}
+                            isLoading={this.isProcessingSaveData}
+                            size="big"
+                        />
                     </div>
                     {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test</Button> */}
                     {this.showFollowUpForm && (
@@ -526,7 +558,7 @@ export default class FollowUpTable extends React.Component<
                             }}
                             title="Select therapy recommendation"
                             userEmailAddress={
-                                AppConfig.serverConfig.user_email_address
+                                '' //AppConfig.serverConfig.user_email_address
                             }
                         />
                     )}
