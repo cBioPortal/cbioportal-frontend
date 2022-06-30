@@ -1,4 +1,9 @@
-import { IMtb, IDeletions } from 'shared/model/TherapyRecommendation';
+import { Mutation } from 'cbioportal-ts-api-client';
+import {
+    IMtb,
+    IDeletions,
+    ITherapyRecommendation,
+} from 'shared/model/TherapyRecommendation';
 import * as request from 'superagent';
 
 export function flattenArray(x: Array<any>): Array<any> {
@@ -56,6 +61,42 @@ export async function fetchMtbsUsingGET(url: string, studyId: string) {
             console.groupEnd();
 
             return [] as IMtb[];
+        });
+}
+
+export async function fetchOtherMtbsUsingPOST(
+    url: string,
+    alterations: Mutation[]
+) {
+    console.log('### Recycling MTBs ### Calling GET: ' + url);
+    return request
+        .post(url)
+        .send(alterations)
+        .then(res => {
+            if (res.ok) {
+                console.group('### Recycling MTBs ### Success GETting ' + url);
+                console.log(JSON.parse(res.text));
+                console.groupEnd();
+                const response = JSON.parse(res.text);
+                return response as ITherapyRecommendation[];
+            } else {
+                console.group(
+                    '### Recycling MTBs ### ERROR res not ok GETting ' + url
+                );
+                console.log(JSON.parse(res.text));
+                console.groupEnd();
+
+                return [] as ITherapyRecommendation[];
+            }
+        })
+        .catch(err => {
+            console.group(
+                '### Recycling MTBs ### ERROR catched GETting ' + url
+            );
+            console.log(err);
+            console.groupEnd();
+
+            return [] as ITherapyRecommendation[];
         });
 }
 

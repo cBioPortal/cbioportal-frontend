@@ -2,6 +2,7 @@ declare const styles: {
   readonly "addButton": string;
   readonly "addMtbButton": string;
   readonly "addOncoKbButton": string;
+  readonly "addOtherMtbButton": string;
   readonly "alterationUl": string;
   readonly "armDiv": string;
   readonly "checkbox-align": string;
