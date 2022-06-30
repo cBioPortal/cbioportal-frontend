@@ -9,7 +9,7 @@ import {
     IMtb,
     IResponseCriteria,
 } from '../../../shared/model/TherapyRecommendation';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import styles from './style/therapyRecommendation.module.scss';
 import SampleManager from '../SampleManager';
@@ -100,6 +100,7 @@ export default class FollowUpTable extends React.Component<
             permission: false,
             successfulSave: false,
         };
+        makeObservable(this);
     }
 
     @computed
