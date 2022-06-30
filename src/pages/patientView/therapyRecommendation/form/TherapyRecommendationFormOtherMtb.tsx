@@ -36,6 +36,16 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
     ITherapyRecommendationFormOtherMtbProps,
     {}
 > {
+    private formatDate(d: Date) {
+        return (
+            ('0' + d.getDate()).slice(-2) +
+            '.' +
+            ('0' + (d.getMonth() + 1)).slice(-2) +
+            '.' +
+            d.getFullYear()
+        );
+    }
+
     public render() {
         let selectedTherapyRecommendation: ITherapyRecommendation;
         if (
@@ -112,10 +122,14 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                                                             .join(', ') +
                                                         ') - ' +
                                                         result.evidenceLevel +
-                                                        (result.evidenceLevelExtension
+                                                        (result.evidenceLevelExtension &&
+                                                        result.evidenceLevelExtension.toString() !==
+                                                            'null'
                                                             ? ' ' +
                                                               result.evidenceLevelExtension +
-                                                              (result.evidenceLevelM3Text
+                                                              (result.evidenceLevelM3Text &&
+                                                              result.evidenceLevelM3Text !==
+                                                                  'null'
                                                                   ? ' ' +
                                                                     result.evidenceLevelM3Text
                                                                   : '')
@@ -141,7 +155,14 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                                                                     Authored by{' '}
                                                                     {
                                                                         result.author
-                                                                    }
+                                                                    }{' '}
+                                                                    on{' '}
+                                                                    {this.formatDate(
+                                                                        new Date(
+                                                                            +result.id
+                                                                        )
+                                                                    )}
+                                                                    .
                                                                 </span>
                                                             </div>
                                                         }
