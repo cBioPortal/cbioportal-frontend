@@ -504,13 +504,6 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
     }
 
     private saveMtbs() {
-        if (
-            this.state.deletions.mtb.length > 0 ||
-            this.state.deletions.therapyRecommendation.length > 0
-        ) {
-            console.log('Save deletions');
-            this.props.onDeleteData(this.state.deletions);
-        }
         console.group('Save mtbs');
         this.isProcessingSaveData = true;
         this.props.onSaveData(this.state.mtbs).then(res => {
@@ -520,6 +513,13 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                 console.log('Showing successfulSave div');
                 this.setState({ successfulSave: true });
                 setTimeout(() => this.saveCallback(), 3000);
+                if (
+                    this.state.deletions.mtb.length > 0 ||
+                    this.state.deletions.therapyRecommendation.length > 0
+                ) {
+                    console.log('Save deletions');
+                    this.props.onDeleteData(this.state.deletions);
+                }
             } else {
                 window.alert(
                     'Saving data failed - error output is in console.'
