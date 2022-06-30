@@ -1760,6 +1760,8 @@ export default class PatientViewPage extends React.Component<
                                 ) &&
                                     this.patientViewPageStore.mutationData
                                         .isComplete &&
+                                    this.patientViewPageStore.followUps
+                                        .isComplete &&
                                     this.patientViewPageStore.discreteCNAData
                                         .isComplete &&
                                     (this.patientViewPageStore.oncoKbData
