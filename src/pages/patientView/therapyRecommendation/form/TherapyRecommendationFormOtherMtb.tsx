@@ -85,6 +85,24 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                 minWidth: 1,
                 padding: '0.16666666666667em 0.5em',
             };
+
+            const filterOptions = (
+                candidate: { label: any; value: any },
+                input: string
+            ) => {
+                let searchString = input.toLowerCase();
+
+                // default search
+                if (
+                    candidate.label.props.children[0]
+                        .toLowerCase()
+                        .includes(searchString)
+                )
+                    return true;
+
+                return false;
+            };
+
             return (
                 <Modal
                     show={this.props.show}
@@ -101,6 +119,7 @@ export default class TherapyRecommendationFormOtherMtb extends React.Component<
                             <div className="form-group">
                                 <h5>Select entry from template:</h5>
                                 <Select
+                                    filterOption={filterOptions}
                                     options={this.props.fhirsparkResult.map(
                                         result => ({
                                             label: (
