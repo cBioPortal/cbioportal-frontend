@@ -5,6 +5,7 @@ import { useDebounce } from 'shared/components/query/filteredSearch/useDebounce'
 type SearchBoxProps = {
     queryString: string;
     onType: (changed: string) => void;
+    onFocus: () => void;
 };
 
 export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
@@ -31,6 +32,7 @@ export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
                 type="text"
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
+                onFocus={props.onFocus}
                 style={{
                     width: '300px',
                 }}

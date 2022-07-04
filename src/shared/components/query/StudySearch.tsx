@@ -4,7 +4,7 @@ import {
     toQueryString,
 } from 'shared/lib/query/textQueryUtils';
 import * as React from 'react';
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent } from 'react';
 import {
     SearchClause,
     QueryUpdate,
@@ -28,7 +28,14 @@ export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = obser
             toggle() {
                 this.isMenuOpen = !this.isMenuOpen;
             },
+            setMenuOpen(visible: boolean) {
+                this.isMenuOpen = visible;
+            },
         }));
+
+        const onFocusSearchBox = () => {
+            store.setMenuOpen(true);
+        };
 
         return (
             <div
@@ -39,6 +46,7 @@ export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = obser
                     <SearchBox
                         queryString={toQueryString(props.query)}
                         onType={handleQueryTyping}
+                        onFocus={onFocusSearchBox}
                     />
                     <SearchMenuToggle onClick={store.toggle} />
                 </div>
