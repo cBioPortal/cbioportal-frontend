@@ -36,7 +36,6 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
                     </li>
                 );
             })}
-            <hr />
         </div>
     );
 };

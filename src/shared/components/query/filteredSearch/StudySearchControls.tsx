@@ -26,14 +26,22 @@ export const StudySearchControls: FunctionComponent<FilteredSearchDropdownFormPr
                 width: '300px',
             }}
         >
-            {props.filterConfig.map(filter => {
-                return (
-                    <FilterFormField
-                        filter={filter}
-                        query={props.query}
-                        onChange={props.onChange}
-                        parser={props.parser}
-                    />
+            {props.filterConfig.map((filter, index, filters) => {
+                const appendDivider = index < filters.length - 1;
+                // When all studies map to the same value
+                // for the variable, do not render the form field.
+                return filter.form.options.length < 2 ? null : (
+                    <div>
+                        <FilterFormField
+                            filter={filter}
+                            query={props.query}
+                            onChange={props.onChange}
+                            parser={props.parser}
+                        />
+                        {appendDivider === true && (
+                            <hr style={{ margin: '1em' }} />
+                        )}
+                    </div>
                 );
             })}
         </ul>

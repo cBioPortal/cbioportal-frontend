@@ -95,7 +95,6 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                     );
                 })}
             </div>
-            <hr style={{ marginTop: '1em' }} />
         </div>
     );
 
