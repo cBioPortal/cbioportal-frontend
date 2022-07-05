@@ -41,4 +41,52 @@ describe('study select page', function() {
             );
         });
     });
+
+    describe('study search box', () => {
+        before(() => {
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+        });
+
+        const searchTextInput = '[data-test=study-search-input]';
+        const searchControlsMenu =
+            '[data-test=study-search-controls-container]';
+        const referenceGenomeFormSection = '//h5[text()="Reference genome"]';
+        const hg38StudyEntry = '//span[text()="Study HG38"]';
+        const placeSomeWhereOutsideSearchElement = 'a.tabAnchor_advanced';
+        const hg38Checkbox = '#input-hg38';
+
+        it('shows menu when focussing the text input', () => {
+            assert(!$(searchControlsMenu).isExisting());
+            $(searchTextInput).click();
+            assert($(searchControlsMenu).isExisting());
+        });
+        it('keeps showing menu after un-focussing the text input', () => {
+            assert($(searchControlsMenu).isExisting());
+            $(placeSomeWhereOutsideSearchElement).click();
+            assert($(searchControlsMenu).isExisting());
+        });
+
+        describe('reference genome', () => {
+            it('shows reference genome form elements when studies on different reference genomes are present', () => {
+                assert($(searchControlsMenu).isExisting());
+                assert($(referenceGenomeFormSection).isExisting());
+            });
+            it('fills text input with search shorthand and filters studies when filtering studies via reference genome form element', () => {
+                assert($(referenceGenomeFormSection).isExisting());
+                assert($(hg38StudyEntry).isExisting());
+                $(hg38Checkbox).click();
+                const textInSeachTextInput = $(searchTextInput).getValue();
+                assert.equal(textInSeachTextInput, 'reference-genome:hg19');
+                assert(!$(hg38StudyEntry).isExisting());
+            });
+            it('updates reference genome form elements and study filter when entering search shorthand in text input', () => {
+                assert($(referenceGenomeFormSection).isExisting());
+                assert(!$(hg38StudyEntry).isExisting());
+                assert(!$(hg38Checkbox).isSelected());
+                $(searchTextInput).setValue('');
+                assert($(hg38StudyEntry).isExisting());
+                assert($(hg38Checkbox).isSelected());
+            });
+        });
+    });
 });

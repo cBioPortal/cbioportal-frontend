@@ -21,6 +21,7 @@ export type FilteredSearchDropdownFormProps = {
 export const StudySearchControls: FunctionComponent<FilteredSearchDropdownFormProps> = props => {
     return (
         <ul
+            data-test="study-search-controls-container"
             className="dropdown-menu"
             style={{
                 width: '300px',

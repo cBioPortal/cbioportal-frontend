@@ -25,6 +25,7 @@ export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
     return (
         <>
             <input
+                data-test="study-search-input"
                 autoComplete="off"
                 spellCheck="false"
                 className="form-control"
