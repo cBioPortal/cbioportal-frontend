@@ -85,6 +85,17 @@ export class AppStore {
         });
     }
 
+    @action public addError(err: String | SiteError) {
+        if (_.isString(err)) {
+            this.siteErrors.push({
+                errorObj: { message: err },
+                dismissed: false,
+            });
+        } else {
+            this.siteErrors.push({ errorObj: err, dismissed: false });
+        }
+    }
+
     @action
     public setAppReady() {
         this._appReady = true;
