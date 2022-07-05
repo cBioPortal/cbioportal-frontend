@@ -68,13 +68,13 @@ export function capitalize(str: string) {
     }
 }
 
-export function capitalizeFirstLettersOfAllWords(str: string) {
+export function lowerCaseAndCapitalizeString(str: string) {
     // this is heurisitic.  if it's a short string, it could
     // be an acronym and shouldn't be lowercased
     if (str.length < 5) {
         return str;
     } else {
-        return str.toLowerCase().replace(/^.|\s./g, s => {
+        return str.toLowerCase().replace(/^./g, s => {
             return s.toUpperCase();
         });
     }

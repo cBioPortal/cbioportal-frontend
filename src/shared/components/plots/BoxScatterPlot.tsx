@@ -46,7 +46,7 @@ import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
-import { capitalizeFirstLettersOfAllWords } from '../../../../packages/cbioportal-frontend-commons/src';
+import { lowerCaseAndCapitalizeString } from '../../../../packages/cbioportal-frontend-commons/src';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;
@@ -542,7 +542,7 @@ export default class BoxScatterPlot<
 
     @bind
     private formatCategoryTick(t: number, index: number) {
-        return capitalizeFirstLettersOfAllWords(this.labels[index]);
+        return lowerCaseAndCapitalizeString(this.labels[index]);
     }
 
     @bind
