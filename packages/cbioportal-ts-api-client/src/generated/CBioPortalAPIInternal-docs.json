@@ -16,6 +16,10 @@
   },
   "tags": [
     {
+      "name": "Alteration Counts",
+      "description": " "
+    },
+    {
       "name": "Alteration Enrichments",
       "description": " "
     },
@@ -125,6 +129,70 @@
     }
   ],
   "paths": {
+    "/alteration-counts/fetch": {
+      "post": {
+        "tags": [
+          "Alteration Counts"
+        ],
+        "summary": "Fetch alteration counts in molecular profiles",
+        "operationId": "fetchAlterationCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "alterationCountFilter",
+            "description": "Alteration Filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AlterationCountFilter"
+            }
+          },
+          {
+            "name": "alterationCountType",
+            "in": "query",
+            "description": "Type of the count e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "allowEmptyValue": false,
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "name": "entrezGeneIds",
+            "in": "query",
+            "description": "List of entrez gene ids",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "collectionFormat": "multi",
+            "allowEmptyValue": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationCountByGene"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/alteration-enrichments/fetch": {
       "post": {
         "tags": [
@@ -3246,6 +3314,21 @@
         }
       },
       "title": "AlterationCountByGene"
+    },
+    "AlterationCountFilter": {
+      "type": "object",
+      "properties": {
+        "alterationFilter": {
+          "$ref": "#/definitions/AlterationFilter"
+        },
+        "molecularProfileCaseIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MolecularProfileCaseIdentifier"
+          }
+        }
+      },
+      "title": "AlterationCountFilter"
     },
     "AlterationEnrichment": {
       "type": "object",

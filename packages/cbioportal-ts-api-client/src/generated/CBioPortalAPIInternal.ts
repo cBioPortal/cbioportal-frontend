@@ -17,6 +17,12 @@ export type AlterationCountByGene = {
         'totalCount': number
 
 };
+export type AlterationCountFilter = {
+    'alterationFilter': AlterationFilter
+
+        'molecularProfileCaseIdentifiers': Array < MolecularProfileCaseIdentifier >
+
+};
 export type AlterationEnrichment = {
     'counts': Array < CountSummary >
 
@@ -1061,6 +1067,109 @@ export default class CBioPortalAPIInternal {
         });
     }
 
+    fetchAlterationCountsUsingPOSTURL(parameters: {
+        'alterationCountFilter': AlterationCountFilter,
+        'alterationCountType' ? : "SAMPLE" | "PATIENT",
+        'entrezGeneIds' ? : Array < number > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/alteration-counts/fetch';
+
+        if (parameters['alterationCountType'] !== undefined) {
+            queryParameters['alterationCountType'] = parameters['alterationCountType'];
+        }
+
+        if (parameters['entrezGeneIds'] !== undefined) {
+            queryParameters['entrezGeneIds'] = parameters['entrezGeneIds'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch alteration counts in molecular profiles
+     * @method
+     * @name CBioPortalAPIInternal#fetchAlterationCountsUsingPOST
+     * @param {} alterationCountFilter - Alteration Filter
+     * @param {string} alterationCountType - Type of the count e.g. SAMPLE or PATIENT
+     * @param {array} entrezGeneIds - List of entrez gene ids
+     */
+    fetchAlterationCountsUsingPOSTWithHttpInfo(parameters: {
+        'alterationCountFilter': AlterationCountFilter,
+        'alterationCountType' ? : "SAMPLE" | "PATIENT",
+        'entrezGeneIds' ? : Array < number > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/alteration-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['alterationCountFilter'] !== undefined) {
+                body = parameters['alterationCountFilter'];
+            }
+
+            if (parameters['alterationCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: alterationCountFilter'));
+                return;
+            }
+
+            if (parameters['alterationCountType'] !== undefined) {
+                queryParameters['alterationCountType'] = parameters['alterationCountType'];
+            }
+
+            if (parameters['entrezGeneIds'] !== undefined) {
+                queryParameters['entrezGeneIds'] = parameters['entrezGeneIds'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch alteration counts in molecular profiles
+     * @method
+     * @name CBioPortalAPIInternal#fetchAlterationCountsUsingPOST
+     * @param {} alterationCountFilter - Alteration Filter
+     * @param {string} alterationCountType - Type of the count e.g. SAMPLE or PATIENT
+     * @param {array} entrezGeneIds - List of entrez gene ids
+     */
+    fetchAlterationCountsUsingPOST(parameters: {
+            'alterationCountFilter': AlterationCountFilter,
+            'alterationCountType' ? : "SAMPLE" | "PATIENT",
+            'entrezGeneIds' ? : Array < number > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < AlterationCountByGene >
+        > {
+            return this.fetchAlterationCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchAlterationEnrichmentsUsingPOSTURL(parameters: {
         'enrichmentType' ? : "PATIENT" | "SAMPLE",
         'groupsAndAlterationTypes': MolecularProfileCasesGroupAndAlterationTypeFilter,
