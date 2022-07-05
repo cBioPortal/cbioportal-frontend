@@ -4,6 +4,7 @@ import defaultClient from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
     action,
+    comparer,
     computed,
     IReactionDisposer,
     makeObservable,
@@ -461,6 +462,21 @@ export class StudyViewPageStore
 
         this.reactionDisposers.push(
             reaction(
+                () => [this.filtersProx, this.instantUpdate],
+                () => {
+                    if (this.instantUpdate) {
+                        console.log('setting filters', this.filtersProx);
+                        this.filters = this.filtersProx;
+                    }
+                },
+                {
+                    equals: comparer.structural,
+                }
+            )
+        );
+
+        this.reactionDisposers.push(
+            reaction(
                 () => [
                     this.visibleAttributes,
                     this.columns,
@@ -589,6 +605,8 @@ export class StudyViewPageStore
 
     //this is set on initial load
     private _loadUserSettingsInitially = this.isLoggedIn;
+
+    @observable instantUpdate = true;
 
     // make sure the reactions are disposed when the component which initialized store will unmount
     destroy(): void {
@@ -3461,8 +3479,10 @@ export class StudyViewPageStore
         return Array.from(this._genericAssayDataFilterSet.values());
     }
 
+    @observable filters: StudyViewFilter;
+
     @computed
-    get filters(): StudyViewFilter {
+    get filtersProx(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
         const clinicalDataFilters = this.clinicalDataFilters;
