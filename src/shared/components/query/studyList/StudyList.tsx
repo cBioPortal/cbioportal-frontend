@@ -120,7 +120,6 @@ export default class StudyList extends QueryStoreComponent<
                 <li className={liClassName}>
                     <CancerTreeCheckbox view={this.view} node={cancerType}>
                         {indentArrow}
-
                         <span>{cancerType.name}</span>
                         {!this.store.forDownloadTab && (
                             <span className={styles.SelectAll}>
@@ -198,6 +197,7 @@ export default class StudyList extends QueryStoreComponent<
             <li
                 key={arrayIndex}
                 className={liClassName}
+                data-tut={`tour_selector_${arrayIndex}`}
                 data-test={
                     this.store.isVirtualStudy(study.studyId)
                         ? 'VirtualStudySelect'

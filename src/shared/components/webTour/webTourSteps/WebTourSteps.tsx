@@ -57,6 +57,45 @@ export const HomePageTour  = [
           </div>
       ),
   },
+
+  {
+      selector: '[data-tut="tour_selector_0"]',
+      content: () => (
+          <div className="step">
+              Move ahead with selected this one.
+              <br />
+          </div>
+      ),
+stepInteraction: true,
+action: (node:any) => {
+  const nextBtn:any = document.getElementById("_tour_next_btn");
+  // by using this, focus trap is temporary disabled
+  node.focus();
+  node.onclick = () => {
+    nextBtn.click();
+    // ...
+  };
+}
+  },
+  {
+      selector: '[data-tut="tour_selector_1"]',
+      content: () => (
+          <div className="step">
+              And now this one.
+              <br />
+          </div>
+      ),
+stepInteraction: true,
+action: (node:any) => {
+  const nextBtn:any = document.getElementById("_tour_next_btn");
+  // by using this, focus trap is temporary disabled
+  node.focus();
+  node.onclick = () => {
+    nextBtn.click();
+    // ...
+  };
+}
+  },
   {
       selector:  '[data-tut="cancerStudyListContainer_reactmarkdown"]',
       content: () => (
@@ -77,3 +116,14 @@ export const HomePageTour  = [
     ),
 },
 ];
+
+// stepInteraction: true,
+// action: (node) => {
+//   const nextBtn = document.getElementById("_tour_next_btn");
+//   // by using this, focus trap is temporary disabled
+//   node.focus();
+//   node.onclick = () => {
+//     nextBtn.click();
+//     // ...
+//   };
+// }

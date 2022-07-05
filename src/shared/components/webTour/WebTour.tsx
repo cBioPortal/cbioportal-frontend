@@ -43,6 +43,12 @@ export const TourProvider: React.FC<Props> = observer(
                         className="helper"
                         rounded={5}
                         accentColor={accentColor}
+                        nextButton={
+                            <button
+                                style={{ display: 'none' }}
+                                id="_tour_next_btn"
+                            ></button>
+                        }
                         // onAfterOpen={this.disableBody}
                         // onBeforeClose={this.enableBody}
                     />
