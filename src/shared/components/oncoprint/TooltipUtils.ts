@@ -42,6 +42,7 @@ const tooltipTextElementNaN = 'N/A';
 import './styles.scss';
 import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
 import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { deriveStructuralVariantType } from 'cbioportal-utils';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
     return `<a class="nobreak" href="${getSampleViewUrl(
@@ -628,7 +629,7 @@ export function makeGeneticTrackTooltip(
                 d.site1HugoSymbol,
                 d.site2HugoSymbol,
                 d.eventInfo,
-                d.variantClass,
+                deriveStructuralVariantType(d),
                 d.oncokb_oncogenic
             );
         }
@@ -650,7 +651,9 @@ export function makeGeneticTrackTooltip(
                         `<b class="nobreak">${site1HugoSymbol || ''}${
                             site2HugoSymbol ? '-' + site2HugoSymbol : ''
                         }${
-                            variantClass ? ', ' + variantClass + ',' : ''
+                            variantClass && variantClass !== 'NA'
+                                ? ', ' + variantClass + ','
+                                : ''
                         } Event Info: ${eventInfo}</b>`
                     );
                     if (oncokb_oncogenic) {
