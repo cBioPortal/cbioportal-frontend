@@ -46,7 +46,7 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
-import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
 export interface IGroupComparisonPageProps {
@@ -251,17 +251,19 @@ export default class GroupComparisonPage extends React.Component<
                         </MSKTab>
                     )}
                     {this.store.showGenericAssayTab &&
-                        getSortedGenericAssayTabSpecs(
+                        _.keys(
                             this.store
                                 .genericAssayEnrichmentProfilesGroupedByGenericAssayType
                                 .result
-                        ).map(genericAssayTabSpecs => {
+                        ).map(genericAssayType => {
                             return (
                                 <MSKTab
                                     id={`${
                                         GroupComparisonTab.GENERIC_ASSAY_PREFIX
-                                    }_${genericAssayTabSpecs.genericAssayType.toLowerCase()}`}
-                                    linkText={genericAssayTabSpecs.linkText}
+                                    }_${genericAssayType.toLowerCase()}`}
+                                    linkText={deriveDisplayTextFromGenericAssayType(
+                                        genericAssayType
+                                    )}
                                     anchorClassName={
                                         this.store.genericAssayTabUnavailable
                                             ? 'greyedOut'
@@ -270,9 +272,7 @@ export default class GroupComparisonPage extends React.Component<
                                 >
                                     <GenericAssayEnrichments
                                         store={this.store}
-                                        genericAssayType={
-                                            genericAssayTabSpecs.genericAssayType
-                                        }
+                                        genericAssayType={genericAssayType}
                                     />
                                 </MSKTab>
                             );

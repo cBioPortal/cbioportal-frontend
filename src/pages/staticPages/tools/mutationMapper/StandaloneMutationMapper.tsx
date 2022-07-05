@@ -10,7 +10,10 @@ import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMa
 import { computed } from 'mobx';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import _ from 'lodash';
-import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
+import {
+    createNamespaceColumnName,
+    extractColumnNames,
+} from 'shared/components/mutationMapper/MutationMapperUtils';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 
 export interface IStandaloneMutationMapperProps extends IMutationMapperProps {

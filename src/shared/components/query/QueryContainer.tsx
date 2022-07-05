@@ -24,6 +24,7 @@ import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import $ from 'jquery';
 import { serializeEvent } from 'shared/lib/tracking';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
+import TourContext from '../webTour/WebTour';
 
 interface QueryContainerProps {
     store: QueryStore;
@@ -39,6 +40,7 @@ export default class QueryContainer extends React.Component<
     QueryContainerProps,
     {}
 > {
+    static contextType?: React.Context<any> | undefined = TourContext;
     get store() {
         return this.props.store;
     }
@@ -180,6 +182,7 @@ export default class QueryContainer extends React.Component<
     }
 
     render(): JSX.Element {
+        // console.log('look here', this.context);
         return (
             <FlexCol
                 padded
@@ -356,6 +359,7 @@ export default class QueryContainer extends React.Component<
                                         overlay={this.queryByGeneTooltipMessage}
                                     >
                                         <a
+                                            data-tut="reactour__queryByGene"
                                             data-test="queryByGeneButton"
                                             onClick={() =>
                                                 this.store.hasSelectedStudies &&
@@ -394,6 +398,7 @@ export default class QueryContainer extends React.Component<
                                         }
                                     >
                                         <a
+                                            data-tut="exploreSelectedStudies"
                                             onClick={() =>
                                                 !this
                                                     .exploreCohortsButtonDisabled &&

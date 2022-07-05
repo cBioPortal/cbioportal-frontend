@@ -1,0 +1,19 @@
+.webButton_container {
+    position: fixed;
+    height: 50px;
+    width: 50px;
+    bottom: 1vh;
+    right: 1vh;
+    border-radius: 100%;
+    background-color: #ffa500;
+    color: white;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.webButton_button {
+    border: none;
+    background-color: transparent;
+}

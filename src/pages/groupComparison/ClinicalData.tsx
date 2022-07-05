@@ -54,7 +54,6 @@ import { SummaryStatisticsTable } from './SummaryStatisticsTable';
 import CategoryPlot, {
     CategoryPlotType,
 } from 'pages/groupComparison/CategoryPlot';
-import { OncoprintJS } from 'oncoprintjs';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -130,13 +129,6 @@ export default class ClinicalData extends React.Component<
     @observable.ref highlightedRow: ClinicalDataEnrichmentWithQ | undefined;
 
     private scrollPane: HTMLDivElement;
-
-    private oncoprintJs: OncoprintJS | null = null;
-
-    @autobind
-    private oncoprintJsRef(oncoprint: OncoprintJS) {
-        this.oncoprintJs = oncoprint;
-    }
 
     readonly tabUI = MakeMobxView({
         await: () => {
@@ -254,39 +246,8 @@ export default class ClinicalData extends React.Component<
         }
     );
 
-    @computed get isNumericalPlot() {
-        return isNumerical(this.highlightedRow!.clinicalAttribute.datatype);
-    }
-
     @computed get showLogScaleControls() {
-        return this.isNumericalPlot;
-    }
-
-    @computed get showPAndQControls() {
-        return !this.isTable && !this.isHeatmap;
-    }
-
-    @computed get showHorizontalBarControls() {
-        return !this.showLogScaleControls && !this.isHeatmap;
-    }
-
-    @computed get showSwapAxisControls() {
-        return !this.isTable;
-    }
-
-    @computed get isTable() {
-        return (
-            this.isNumericalPlot &&
-            this.numericalVisualisationType ===
-                ClinicalNumericalVisualisationType.Table
-        );
-    }
-
-    @computed get isHeatmap() {
-        return (
-            !this.isNumericalPlot &&
-            this.categoryPlotType === CategoryPlotType.Heatmap
-        );
+        return isNumerical(this.highlightedRow!.clinicalAttribute.datatype);
     }
 
     @observable private logScale = false;
@@ -323,7 +284,7 @@ export default class ClinicalData extends React.Component<
     }
 
     @action.bound
-    private onClickHorizontalBars() {
+    private onClickhorizontalBars() {
         this.horizontalBars = !this.horizontalBars;
     }
 
@@ -558,9 +519,6 @@ export default class ClinicalData extends React.Component<
 
     @autobind
     private getSvg() {
-        if (this.categoryPlotType === CategoryPlotType.Heatmap) {
-            return this.oncoprintJs && this.oncoprintJs.toSVG(true);
-        }
         return document.getElementById(SVG_ID) as SVGElement | null;
     }
 
@@ -681,7 +639,9 @@ export default class ClinicalData extends React.Component<
         }
         return (
             <div style={{ marginBottom: '10px' }}>
-                {this.isNumericalPlot && (
+                {isNumerical(
+                    this.highlightedRow!.clinicalAttribute.datatype
+                ) && (
                     <>
                         <div
                             className="form-group"
@@ -728,7 +688,8 @@ export default class ClinicalData extends React.Component<
                     </div>
                 )}
                 <div>
-                    {this.showSwapAxisControls && (
+                    {this.numericalVisualisationType !==
+                        ClinicalNumericalVisualisationType.Table && (
                         <label className="checkbox-inline">
                             <input
                                 type="checkbox"
@@ -739,18 +700,19 @@ export default class ClinicalData extends React.Component<
                             Swap Axes
                         </label>
                     )}
-                    {this.showHorizontalBarControls && (
-                        <label className="checkbox-inline">
-                            <input
-                                type="checkbox"
-                                name="horizontalBars"
-                                checked={this.horizontalBars}
-                                onClick={this.onClickHorizontalBars}
-                                data-test="HorizontalBars"
-                            />
-                            Horizontal Bars
-                        </label>
-                    )}
+                    {!this.showLogScaleControls &&
+                        this.categoryPlotType !== CategoryPlotType.Heatmap && (
+                            <label className="checkbox-inline">
+                                <input
+                                    type="checkbox"
+                                    name="horizontalBars"
+                                    checked={this.horizontalBars}
+                                    onClick={this.onClickhorizontalBars}
+                                    data-test="HorizontalBars"
+                                />
+                                Horizontal Bars
+                            </label>
+                        )}
                     {this.showLogScaleControls && (
                         <label className="checkbox-inline">
                             <input
@@ -775,17 +737,15 @@ export default class ClinicalData extends React.Component<
                                 Show NA
                             </label>
                         )}
-                    {this.showPAndQControls && (
-                        <label className="checkbox-inline">
-                            <input
-                                type="checkbox"
-                                checked={this.showPAndQ}
-                                onClick={this.onClickTogglePAndQ}
-                                data-test="ShowPAndQ"
-                            />
-                            Show p and q
-                        </label>
-                    )}
+                    <label className="checkbox-inline">
+                        <input
+                            type="checkbox"
+                            checked={this.showPAndQ}
+                            onClick={this.onClickTogglePAndQ}
+                            data-test="ShowPAndQ"
+                        />
+                        Show p and q
+                    </label>
                 </div>
             </div>
         );
@@ -822,7 +782,9 @@ export default class ClinicalData extends React.Component<
                 }
 
                 let plotElt: any = null;
-                if (this.isNumericalPlot) {
+                if (
+                    isNumerical(this.highlightedRow!.clinicalAttribute.datatype)
+                ) {
                     if (this.boxPlotData.isComplete) {
                         plotElt = (
                             <ClinicalNumericalDataVisualisation
@@ -865,7 +827,6 @@ export default class ClinicalData extends React.Component<
                 } else {
                     plotElt = (
                         <CategoryPlot
-                            broadcastOncoprintJsRef={this.oncoprintJsRef}
                             type={this.categoryPlotType}
                             svgId={SVG_ID}
                             horzData={
@@ -938,7 +899,13 @@ export default class ClinicalData extends React.Component<
 
     @autobind
     private toolbar() {
-        if (this.isTable) {
+        const numerical = isNumerical(
+            this.highlightedRow!.clinicalAttribute.datatype
+        );
+        const visualiseAsTable =
+            this.numericalVisualisationType ===
+            ClinicalNumericalVisualisationType.Table;
+        if (numerical && visualiseAsTable) {
             return <></>;
         }
         return (

@@ -43,7 +43,11 @@ import {
     submitToStudyViewPage,
 } from '../querySummary/QuerySummaryUtils';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
-import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
+import {
+    buildNamespaceColumnConfig,
+    createNamespaceColumnName,
+    extractColumnNames,
+} from 'shared/components/mutationMapper/MutationMapperUtils';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;

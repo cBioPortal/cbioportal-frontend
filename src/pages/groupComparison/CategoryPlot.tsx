@@ -5,13 +5,10 @@ import MultipleCategoryBarPlot, {
     IMultipleCategoryBarPlotProps,
 } from 'pages/groupComparison/MultipleCategoryBarPlot';
 import MultipleCategoryHeatmap from 'shared/components/plots/MultipleCategoryHeatmap';
-import autobind from 'autobind-decorator';
-import { OncoprintJS } from 'oncoprintjs';
 
 export type IMultipleCategoryPlotProps = IMultipleCategoryBarPlotProps & {
     type: CategoryPlotType;
     groupToColor?: { [group: string]: string };
-    broadcastOncoprintJsRef: (oncoprint: OncoprintJS) => void;
 };
 
 export enum CategoryPlotType {
@@ -31,14 +28,6 @@ export default class CategoryPlot extends React.Component<
         makeObservable(this);
     }
 
-    private oncoprintJs: OncoprintJS | null = null;
-
-    @autobind
-    private oncoprintJsRef(oncoprint: OncoprintJS) {
-        this.oncoprintJs = oncoprint;
-        this.props.broadcastOncoprintJsRef(oncoprint);
-    }
-
     render() {
         const isHeatmap = this.props.type === CategoryPlotType.Heatmap;
         return <>{isHeatmap ? this.heatmap : this.barchart}</>;
@@ -52,7 +41,6 @@ export default class CategoryPlot extends React.Component<
                 axisLabelX={this.props.axisLabelY!}
                 barWidth={this.props.barWidth}
                 groupToColor={this.props.groupToColor}
-                broadcastOncoprintJsRef={this.oncoprintJsRef}
             />
         );
     }
