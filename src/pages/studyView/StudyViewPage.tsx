@@ -532,6 +532,24 @@ export default class StudyViewPage extends React.Component<
                                 store={this.store}
                                 onBookmarkClick={this.onBookmarkClick}
                             />
+                            <button
+                                onClick={() =>
+                                    (this.store.hesitateUpdate = !this.store
+                                        .hesitateUpdate)
+                                }
+                            >
+                                Hesitate{' '}
+                                {this.store.hesitateUpdate ? 'On' : 'Off'}
+                            </button>
+                            {this.store.hesitateUpdate && (
+                                <button
+                                    onClick={() =>
+                                        (this.store.filters = this.store.filtersProx)
+                                    }
+                                >
+                                    Apply
+                                </button>
+                            )}
 
                             <div className={styles.mainTabs}>
                                 <MSKTabs
