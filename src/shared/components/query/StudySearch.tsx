@@ -48,7 +48,10 @@ export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = obser
                         onType={handleQueryTyping}
                         onFocus={onFocusSearchBox}
                     />
-                    <SearchMenuToggle onClick={store.toggle} />
+                    <SearchMenuToggle
+                        onClick={store.toggle}
+                        open={store.isMenuOpen}
+                    />
                 </div>
                 <ClearSearchButton
                     show={props.query.length > 0}
@@ -83,7 +86,11 @@ export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = obser
     }
 );
 
-const SearchMenuToggle: FunctionComponent<{ onClick: () => void }> = props => {
+const SearchMenuToggle: FunctionComponent<{
+    onClick: () => void;
+    open: boolean;
+}> = props => {
+    const arrowDirection = props.open ? 'rotate(180deg)' : 'rotate(0deg)';
     return (
         <span className="input-group-btn">
             <button
@@ -91,7 +98,9 @@ const SearchMenuToggle: FunctionComponent<{ onClick: () => void }> = props => {
                 className="dropdown-toggle btn btn-sm btn-default"
                 onClick={props.onClick}
             >
-                <span className="caret">&nbsp;</span>
+                <span className="caret" style={{ transform: arrowDirection }}>
+                    &nbsp;
+                </span>
             </button>
         </span>
     );
