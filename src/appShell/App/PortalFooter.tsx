@@ -89,9 +89,12 @@ export default class PortalFooter extends React.Component<
                                         }
                                     >
                                         <li>
-                                            <Link to="/tutorials">
+                                            <a
+                                                target="_blank"
+                                                href="https://docs.cbioportal.org/user-guide/overview/"
+                                            >
                                                 Tutorials
-                                            </Link>
+                                            </a>
                                         </li>
                                     </If>
                                     <If
@@ -100,7 +103,12 @@ export default class PortalFooter extends React.Component<
                                         }
                                     >
                                         <li>
-                                            <Link to="/faq">FAQ</Link>
+                                            <a
+                                                target={'_blank'}
+                                                href="https://docs.cbioportal.org/user-guide/faq/"
+                                            >
+                                                FAQ
+                                            </a>
                                         </li>
                                     </If>
                                     <li>
@@ -129,7 +137,12 @@ export default class PortalFooter extends React.Component<
                                         }
                                     >
                                         <li>
-                                            <Link to="/news">News</Link>
+                                            <a
+                                                target="_blank"
+                                                href="https://docs.cbioportal.org/news/"
+                                            >
+                                                News
+                                            </a>
                                         </li>
                                     </If>
                                     <If
@@ -139,7 +152,12 @@ export default class PortalFooter extends React.Component<
                                         }
                                     >
                                         <li>
-                                            <Link to="/about">About</Link>
+                                            <a
+                                                target={'_blank'}
+                                                href="https://docs.cbioportal.org/about-us/"
+                                            >
+                                                About
+                                            </a>
                                         </li>
                                     </If>
                                     <If
