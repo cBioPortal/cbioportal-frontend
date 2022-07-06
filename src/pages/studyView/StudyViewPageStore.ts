@@ -470,9 +470,9 @@ export class StudyViewPageStore
 
         this.reactionDisposers.push(
             reaction(
-                () => [this.filtersProx, this.instantUpdate],
+                () => [this.filtersProx, this.hesitateUpdate],
                 () => {
-                    if (this.instantUpdate) {
+                    if (!this.hesitateUpdate) {
                         console.log('setting filters', this.filtersProx);
                         this.filters = this.filtersProx;
                     }
@@ -614,7 +614,7 @@ export class StudyViewPageStore
     //this is set on initial load
     private _loadUserSettingsInitially = this.isLoggedIn;
 
-    @observable instantUpdate = true;
+    @observable hesitateUpdate = false;
 
     // make sure the reactions are disposed when the component which initialized store will unmount
     destroy(): void {
