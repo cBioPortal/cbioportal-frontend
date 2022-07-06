@@ -96,7 +96,10 @@ const GeneSummaryInfo: React.FunctionComponent<GeneSummaryProps> = ({
     );
 
     const uniprot = uniprotId ? (
-        <a href={`http://www.uniprot.org/uniprot/${uniprotId}`} target="_blank">
+        <a
+            href={`https://www.uniprot.org/uniprot/${uniprotId}`}
+            target="_blank"
+        >
             {uniprotId}
         </a>
     ) : (
