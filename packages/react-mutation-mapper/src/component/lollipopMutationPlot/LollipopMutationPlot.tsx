@@ -567,7 +567,7 @@ export default class LollipopMutationPlot<
         return (
             <div style={{ maxWidth: 200 }}>
                 <a
-                    href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                    href={`https://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
                     target="_blank"
                 >
                     {this.props.store.uniprotId.result}
