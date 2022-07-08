@@ -32,6 +32,7 @@ import {
     ScatterPlotTooltipHelper,
     truncateWithEllipsis,
     wrapText,
+    lowerCaseAndCapitalizeString,
 } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
@@ -46,7 +47,6 @@ import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
-import { lowerCaseAndCapitalizeString } from '../../../../packages/cbioportal-frontend-commons/src';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;
