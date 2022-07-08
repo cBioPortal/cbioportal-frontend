@@ -80,12 +80,13 @@ export function buildDriverAnnotationSettings(
         cosmicCountThreshold: 0,
         driverTiers: observable.map<string, boolean>({}, { deep: true }),
 
-        _hotspots: true,
-        _oncoKb: true,
+        _hotspots: getServerConfig().oncoprint_hotspots_default,
+        _oncoKb: getServerConfig().oncoprint_oncokb_default,
         _includeDriver: true,
-        _includeVUS: true,
+        _includeVUS: !getServerConfig().oncoprint_hide_vus_default,
         _includeUnknownOncogenicity: true,
-        _customBinary: undefined,
+        _customBinary: getServerConfig()
+            .oncoprint_custom_driver_annotation_binary_default,
         _includeUnknownTier: true,
 
         set hotspots(val: boolean) {
@@ -141,9 +142,7 @@ export function buildDriverAnnotationSettings(
             this._customBinary = val;
         },
         get customBinary() {
-            return this._customBinary === undefined
-                ? config.oncoprint_custom_driver_annotation_binary_default
-                : this._customBinary;
+            return this._customBinary;
         },
         get customTiersDefault() {
             return config.oncoprint_custom_driver_annotation_tiers_default;
