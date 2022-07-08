@@ -9,19 +9,13 @@ import PathwayMapperTable, {
 import PathwayMapperMessageBox from 'shared/lib/pathwayMapper/PathwayMapperMessageBox';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import {
-    observable,
-    computed,
-    action,
-    makeObservable,
-} from 'mobx';
+import { observable, computed, action, makeObservable } from 'mobx';
 import { Row } from 'react-bootstrap';
 
 import { AppStore } from 'AppStore';
 import OqlStatusBanner from 'shared/components/banners/OqlStatusBanner';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
-import {ResultsViewPathwayMapperStore} from "./ResultsViewPathwayMapperStore";
-
+import { ResultsViewPathwayMapperStore } from './ResultsViewPathwayMapperStore';
 
 import 'pathway-mapper/dist/base.css';
 import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
@@ -66,15 +60,26 @@ export default class ResultsViewPathwayMapper extends React.Component<
         | undefined = undefined;
 
     @computed get message(): string {
-        if (this.store.alterationCountsByNonQueryGenes.isComplete && this.warningMessage === LOADING_MESSAGE) {
+        // if (this.store.alterationCountsByNonQueryGenes.isComplete && this.warningMessage === LOADING_MESSAGE) {
+        //     return '';
+        // }
+        //
+        // if (
+        //     this.store.alterationCountsByNonQueryGenes.isPending &&
+        //     this.store.validNonQueryGenes.isComplete &&
+        //     this.store.validNonQueryGenes.result.length > 0
+        // ) {
+        //     return LOADING_MESSAGE;
+        // }
+
+        if (
+            this.store.alterationCountsByAllGenes.isComplete &&
+            this.warningMessage === LOADING_MESSAGE
+        ) {
             return '';
         }
 
-        if (
-            this.store.alterationCountsByNonQueryGenes.isPending &&
-            this.store.validNonQueryGenes.isComplete &&
-            this.store.validNonQueryGenes.result.length > 0
-        ) {
+        if (this.store.alterationCountsByAllGenes.isPending) {
             return LOADING_MESSAGE;
         }
 
@@ -86,10 +91,11 @@ export default class ResultsViewPathwayMapper extends React.Component<
     }
 
     public render() {
-        // Alteration data of non-query genes are loaded.
-        if (this.store.alterationCountsByQueryGenes.isComplete && this.store.alterationCountsByNonQueryGenes.isComplete) {
+        // Alteration data of all genes are loaded.
+        if (this.store.alterationCountsByAllGenes.isComplete) {
             this.addGenomicData(this.store.alterationFrequencyData);
         }
+
         if (!this.PathwayMapperComponent) {
             return null;
         }

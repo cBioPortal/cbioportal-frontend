@@ -1,36 +1,42 @@
-import {computed, makeObservable, observable} from "mobx";
-import {remoteData} from "cbioportal-frontend-commons";
-import {Gene} from "cbioportal-ts-api-client";
+import _ from 'lodash';
+import { computed, makeObservable, observable } from 'mobx';
+import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    Gene,
+    MolecularProfile,
+    Patient,
+    Sample,
+} from 'cbioportal-ts-api-client';
 import {
     AlterationCountByGene,
-    MolecularProfileCaseIdentifier
-} from "cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal";
+    MolecularProfileCaseIdentifier,
+} from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
-import {fetchGenes} from "shared/lib/StoreUtils";
-import internalClient from "shared/api/cbioportalInternalClientInstance";
-import {ResultsViewPageStore} from "pages/resultsView/ResultsViewPageStore";
-import {ICBioData} from "pathway-mapper";
-import {percentAltered} from "shared/components/oncoprint/OncoprintUtils";
+import { fetchGenes } from 'shared/lib/StoreUtils';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
+import { ICBioData } from 'pathway-mapper';
+import { percentAltered } from 'shared/components/oncoprint/OncoprintUtils';
 
 function fetchAlterationCounts(
-    genes: Gene[],
-    selectedMolecularProfileCaseIdentifiers: MolecularProfileCaseIdentifier[]
+    selectedMolecularProfileCaseIdentifiers: MolecularProfileCaseIdentifier[],
+    alterationCountType: 'SAMPLE' | 'PATIENT' = 'PATIENT',
+    genes?: Gene[]
 ) {
-    if (genes.length === 0) {
-        return Promise.resolve([]);
-    }
-
     return internalClient.fetchAlterationCountsUsingPOST({
-        entrezGeneIds: genes.map(gene => gene.entrezGeneId),
+        entrezGeneIds: _.isEmpty(genes)
+            ? (undefined as any)
+            : genes!.map(gene => gene.entrezGeneId),
+        alterationCountType,
         alterationCountFilter: {
             molecularProfileCaseIdentifiers: selectedMolecularProfileCaseIdentifiers,
             alterationFilter: {
                 copyNumberAlterationEventTypes: {
                     AMP: true,
-                    HOMDEL: true
+                    HOMDEL: true,
                 },
                 mutationEventTypes: {
-                    any: true
+                    any: true,
                 },
                 structuralVariants: null,
                 // TODO adjust filter wrt selected driver settings?
@@ -42,8 +48,8 @@ function fetchAlterationCounts(
                 // includeUnknownTier: false,
                 // includeVUS: false,
                 // tiersBooleanMap: {},
-            } as any
-        }
+            } as any,
+        },
     });
 }
 
@@ -52,16 +58,46 @@ function getAlterationInfo(count: AlterationCountByGene) {
         gene: count.hugoGeneSymbol,
         altered: count.numberOfAlteredCases,
         sequenced: count.numberOfProfiledCases,
-        percentAltered: percentAltered(count.numberOfAlteredCases, count.numberOfProfiledCases),
+        percentAltered: percentAltered(
+            count.numberOfAlteredCases,
+            count.numberOfProfiledCases
+        ),
     };
+}
+
+function getMolecularProfileCaseIdentifiers(
+    filteredCases?: { sampleId?: string; patientId?: string }[],
+    selectedMolecularProfiles?: MolecularProfile[],
+    getCaseId: (sampleOrPatient: {
+        sampleId?: string;
+        patientId?: string;
+    }) => string = () => ''
+) {
+    const molecularProfileCaseIdentifiers: MolecularProfileCaseIdentifier[] = [];
+
+    filteredCases?.forEach(sampleOrPatient => {
+        selectedMolecularProfiles?.forEach(profile => {
+            molecularProfileCaseIdentifiers.push({
+                caseId: getCaseId(sampleOrPatient),
+                molecularProfileId: profile.molecularProfileId,
+            });
+        });
+    });
+
+    return Promise.resolve(molecularProfileCaseIdentifiers);
 }
 
 export class ResultsViewPathwayMapperStore {
     private accumulatedAlterationFrequencyDataForNonQueryGenes: ICBioData[];
-    private readonly accumulatedValidGenes: { [hugoGeneSymbol: string]: boolean };
+    private readonly accumulatedValidGenes: {
+        [hugoGeneSymbol: string]: boolean;
+    };
 
     @observable
     public newGenesFromPathway: string[];
+
+    @observable
+    public alterationCountType: 'SAMPLE' | 'PATIENT' = 'PATIENT';
 
     constructor(private resultsViewPageStore: ResultsViewPageStore) {
         makeObservable(this);
@@ -69,45 +105,97 @@ export class ResultsViewPathwayMapperStore {
         this.accumulatedValidGenes = {};
     }
 
-    readonly alterationCountsByQueryGenes = remoteData<AlterationCountByGene[]>({
-        await: () => [
-            this.resultsViewPageStore.genes,
-            this.selectedMolecularProfileCaseIdentifiers
-        ],
+    private getSelectedMolecularProfileCaseIdentifiers() {
+        return this.alterationCountType === 'PATIENT'
+            ? this.selectedMolecularProfileCaseIdentifiersForPatients
+            : this.selectedMolecularProfileCaseIdentifiersForSamples;
+    }
+
+    readonly alterationCountsByAllGenes = remoteData<AlterationCountByGene[]>({
+        await: () => [this.getSelectedMolecularProfileCaseIdentifiers()],
         invoke: () => {
-            return fetchAlterationCounts(this.resultsViewPageStore.genes.result || [], this.selectedMolecularProfileCaseIdentifiers.result || []);
-        }
+            const caseIdentifiers = this.getSelectedMolecularProfileCaseIdentifiers()
+                .result;
+
+            return _.isEmpty(caseIdentifiers)
+                ? Promise.resolve([])
+                : fetchAlterationCounts(
+                      caseIdentifiers!,
+                      this.alterationCountType
+                  );
+        },
     });
 
-    readonly alterationCountsByNonQueryGenes = remoteData<AlterationCountByGene[]>({
+    readonly alterationCountsByQueryGenes = remoteData<AlterationCountByGene[]>(
+        {
+            await: () => [
+                this.resultsViewPageStore.genes,
+                this.getSelectedMolecularProfileCaseIdentifiers(),
+            ],
+            invoke: () => {
+                const caseIdentifiers = this.getSelectedMolecularProfileCaseIdentifiers()
+                    .result;
+                const genes = this.resultsViewPageStore.genes.result;
+                return _.isEmpty(genes) || _.isEmpty(caseIdentifiers)
+                    ? Promise.resolve([])
+                    : fetchAlterationCounts(
+                          caseIdentifiers!,
+                          this.alterationCountType,
+                          genes
+                      );
+            },
+        }
+    );
+
+    readonly alterationCountsByNonQueryGenes = remoteData<
+        AlterationCountByGene[]
+    >({
         await: () => [
             this.validNonQueryGenes,
-            this.selectedMolecularProfileCaseIdentifiers
+            this.getSelectedMolecularProfileCaseIdentifiers(),
         ],
         invoke: () => {
-            return fetchAlterationCounts(this.validNonQueryGenes.result || [], this.selectedMolecularProfileCaseIdentifiers.result || []);
-        }
+            const caseIdentifiers = this.getSelectedMolecularProfileCaseIdentifiers()
+                .result;
+            const genes = this.validNonQueryGenes.result;
+            return _.isEmpty(genes) || _.isEmpty(caseIdentifiers)
+                ? Promise.resolve([])
+                : fetchAlterationCounts(
+                      caseIdentifiers!,
+                      this.alterationCountType,
+                      genes
+                  );
+        },
     });
 
-    readonly selectedMolecularProfileCaseIdentifiers = remoteData<MolecularProfileCaseIdentifier[]>({
+    readonly selectedMolecularProfileCaseIdentifiersForSamples = remoteData<
+        MolecularProfileCaseIdentifier[]
+    >({
         await: () => [
             this.resultsViewPageStore.filteredSamples,
-            this.resultsViewPageStore.selectedMolecularProfiles
+            this.resultsViewPageStore.selectedMolecularProfiles,
         ],
-        invoke: () => {
-            const molecularProfileCaseIdentifiers: MolecularProfileCaseIdentifier[]= [];
+        invoke: () =>
+            getMolecularProfileCaseIdentifiers(
+                this.resultsViewPageStore.filteredSamples.result,
+                this.resultsViewPageStore.selectedMolecularProfiles.result,
+                (sample: Sample) => sample.sampleId
+            ),
+    });
 
-            this.resultsViewPageStore.filteredSamples.result?.forEach(sample => {
-                this.resultsViewPageStore.selectedMolecularProfiles.result?.forEach(profile => {
-                    molecularProfileCaseIdentifiers.push({
-                        caseId: sample.sampleId,
-                        molecularProfileId: profile.molecularProfileId,
-                    });
-                });
-            });
-
-            return Promise.resolve(molecularProfileCaseIdentifiers);
-        }
+    readonly selectedMolecularProfileCaseIdentifiersForPatients = remoteData<
+        MolecularProfileCaseIdentifier[]
+    >({
+        await: () => [
+            this.resultsViewPageStore.filteredPatients,
+            this.resultsViewPageStore.selectedMolecularProfiles,
+        ],
+        invoke: () =>
+            getMolecularProfileCaseIdentifiers(
+                this.resultsViewPageStore.filteredPatients.result,
+                this.resultsViewPageStore.selectedMolecularProfiles.result,
+                (patient: Patient) => patient.patientId
+            ),
     });
 
     readonly validNonQueryGenes = remoteData<Gene[]>({
@@ -132,8 +220,11 @@ export class ResultsViewPathwayMapperStore {
     }
 
     @computed get alterationFrequencyData(): ICBioData[] {
-        return this.alterationFrequencyDataForQueryGenes.concat(
-            this.alterationFrequencyDataForNonQueryGenes
+        // return this.alterationFrequencyDataForQueryGenes.concat(
+        //     this.alterationFrequencyDataForNonQueryGenes
+        // );
+        return (
+            this.alterationCountsByAllGenes.result?.map(getAlterationInfo) || []
         );
     }
 
@@ -166,7 +257,10 @@ export class ResultsViewPathwayMapperStore {
             //     }
             // );
 
-            alterationFrequencyData = this.alterationCountsByQueryGenes.result?.map(getAlterationInfo) || [];
+            alterationFrequencyData =
+                this.alterationCountsByQueryGenes.result?.map(
+                    getAlterationInfo
+                ) || [];
         }
 
         return alterationFrequencyData;
@@ -198,7 +292,10 @@ export class ResultsViewPathwayMapperStore {
             //     }
             // );
 
-            alterationFrequencyDataForNewGenes = this.alterationCountsByNonQueryGenes.result?.map(getAlterationInfo) || [];
+            alterationFrequencyDataForNewGenes =
+                this.alterationCountsByNonQueryGenes.result?.map(
+                    getAlterationInfo
+                ) || [];
         }
 
         // on pathway change PathwayMapper returns only the genes that are new (i.e genes for which we haven't
