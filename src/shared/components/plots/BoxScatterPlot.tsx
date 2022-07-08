@@ -32,7 +32,6 @@ import {
     ScatterPlotTooltipHelper,
     truncateWithEllipsis,
     wrapText,
-    lowerCaseAndCapitalizeString,
 } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
@@ -136,9 +135,6 @@ export default class BoxScatterPlot<
 
     constructor(props: any) {
         super(props);
-
-        console.log('aaron', props.data);
-
         makeObservable(this);
     }
 
@@ -542,7 +538,8 @@ export default class BoxScatterPlot<
 
     @bind
     private formatCategoryTick(t: number, index: number) {
-        return lowerCaseAndCapitalizeString(this.labels[index]);
+        //return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
+        return this.labels[index];
     }
 
     @bind
