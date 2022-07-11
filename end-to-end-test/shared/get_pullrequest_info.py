@@ -37,6 +37,7 @@ if(myResponse.ok):
       pr_state = "draft"
 
     print(
+      "echo url="+ url +"\n"
       "export PULL_REQUEST_STATE="+ pr_state +"\n"
       "export FRONTEND_GROUPID="+ frontend_group_id +"\n"
       "export FRONTEND_BASE_BRANCH="+ frontend_base_branch_name +"\n"
