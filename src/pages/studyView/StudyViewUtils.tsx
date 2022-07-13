@@ -3671,7 +3671,10 @@ export async function updateCustomIntervalFilter(
         chartMeta.uniqueKey,
         newBinBounds,
         BinMethodOption.CUSTOM,
-        undefined
+        {
+            anchorValue: 0,
+            binSize: 0,
+        }
     );
 
     // Now, we will use the custom bins to define the new filter.
