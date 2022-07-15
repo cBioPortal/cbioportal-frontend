@@ -403,7 +403,7 @@ export default class StudyList extends QueryStoreComponent<
                                 </div>
                             }
                         >
-                            <span>
+                            <span data-tut="genome_pie">
                                 <StudyLink
                                     studyId={study.studyId}
                                     className={classNames(

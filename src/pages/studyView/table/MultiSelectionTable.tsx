@@ -38,6 +38,8 @@ import {
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
+import { useTour } from '@reactour/tour';
+import { isJsxOpeningElement } from 'typescript';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -47,6 +49,7 @@ export type MultiSelectionTableRow = OncokbCancerGene & {
     qValue: number;
     totalCount: number;
     alteration?: number;
+    isOpen?: boolean;
     cytoband?: string;
     uniqueKey: string;
 };
@@ -256,6 +259,7 @@ export class MultiSelectionTable extends React.Component<
                 },
                 width: columnWidth,
             },
+            // # one
             [MultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
@@ -272,28 +276,54 @@ export class MultiSelectionTable extends React.Component<
                         </TableHeaderCellFilterIcon>
                     );
                 },
-                render: (data: MultiSelectionTableRow) => (
-                    <LabeledCheckbox
-                        checked={this.isChecked(data.uniqueKey)}
-                        disabled={this.isDisabled(data.uniqueKey)}
-                        onChange={event => this.toggleSelectRow(data.uniqueKey)}
-                        labelProps={{
-                            style: {
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                marginLeft: cellMargin,
-                                marginRight: cellMargin,
-                            },
-                        }}
-                        inputProps={{
-                            className: styles.autoMarginCheckbox,
-                        }}
-                    >
-                        <span data-test={'numberOfAlteredCasesText'}>
-                            {data.numberOfAlteredCases.toLocaleString()}
-                        </span>
-                    </LabeledCheckbox>
-                ),
+                render: (data: MultiSelectionTableRow) => {
+                    return (
+                        <LabeledCheckbox
+                            uniKey={data.uniqueKey}
+                            checked={this.isChecked(data.uniqueKey)}
+                            disabled={this.isDisabled(data.uniqueKey)}
+                            data-tut={`genome_${data.uniqueKey}`}
+                            onChange={event => {
+                                this.toggleSelectRow(data.uniqueKey);
+
+                                // if (
+                                //     data.uniqueKey == 'TP53' &&
+                                //     this.isChecked('TP53')
+                                // ) {
+                                //     if (isOpen) {
+                                //         setCurrentNumber(currentNumber + 1);
+                                //     }
+                                // } else if (
+                                //     data.uniqueKey == 'KRAS' &&
+                                //     this.isChecked('KRAS')
+                                // ) {
+                                //     if (isOpen) {
+                                //         setCurrentNumber(currentNumber + 1);
+                                //     }
+                                // }
+                            }}
+                            labelProps={{
+                                style: {
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    marginLeft: cellMargin,
+                                    marginRight: cellMargin,
+                                },
+                            }}
+                            inputProps={{
+                                className: styles.autoMarginCheckbox,
+                            }}
+                        >
+                            <span data-test={'numberOfAlteredCasesText'}>
+                                {/* {console.log(
+                                data.numberOfAlteredCases.toLocaleString(),
+                                data.uniqueKey
+                            )} */}
+                                {data.numberOfAlteredCases.toLocaleString()}
+                            </span>
+                        </LabeledCheckbox>
+                    );
+                },
                 sortBy: (data: MultiSelectionTableRow) =>
                     data.numberOfAlteredCases,
                 defaultSortDirection: 'desc' as 'desc',
@@ -772,6 +802,9 @@ export class MultiSelectionTable extends React.Component<
 
     public render() {
         const tableId = `${this.props.tableType}-table`;
+        const { currentStep, setCurrentStep, isOpen } = useTour();
+        console.log(isOpen);
+
         return (
             <div data-test={tableId} key={tableId}>
                 {this.props.promise.isComplete && (

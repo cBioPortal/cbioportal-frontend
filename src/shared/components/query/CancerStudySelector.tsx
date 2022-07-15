@@ -27,6 +27,9 @@ import { PAN_CAN_SIGNATURE } from './StudyListLogic';
 import QuickSelectButtons from './QuickSelectButtons';
 import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import WindowStore from 'shared/components/window/WindowStore';
+import { TourProvider, useTour } from '@reactour/tour';
+import { genomicDataTour } from '../webTour/webTourSteps/WebTourSteps';
+import WebTourButton from '../webTour/webTourButton/WebTourButton';
 
 const MIN_LIST_HEIGHT = 200;
 
@@ -197,7 +200,7 @@ export default class CancerStudySelector extends React.Component<
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
             getServerConfig().skin_quick_select_buttons
         );
-
+        const { setSteps, setIsOpen } = useTour();
         return (
             <FlexCol
                 overflow
@@ -323,6 +326,8 @@ export default class CancerStudySelector extends React.Component<
                                 </div>
                             </Then>
                         </If>
+                        {/* <TourProvider steps={genomicDataTour}> */}
+                        {/* <WebTourButton /> */}
                         <div
                             data-tut="cancerStudyListContainer"
                             className={styles.cancerStudyListContainer}
@@ -337,6 +342,15 @@ export default class CancerStudySelector extends React.Component<
                                 >
                                     Help <i className={'fa fa-book'}></i>
                                 </a>
+                                <button
+                                    onClick={() => {
+                                        setSteps(genomicDataTour);
+                                        setIsOpen(true);
+                                    }}
+                                >
+                                    Genome Tour{' '}
+                                    <i className={'fa fa-binoculars'}></i>
+                                </button>
                             </div>
                             <div
                                 className="checkbox"
@@ -421,6 +435,7 @@ export default class CancerStudySelector extends React.Component<
 
                             <StudyList />
                         </div>
+                        {/* </TourProvider> */}
                     </FlexRow>
                 </If>
 

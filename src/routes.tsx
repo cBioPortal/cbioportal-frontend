@@ -143,6 +143,7 @@ import {
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { ResultsViewURLQuery } from 'pages/resultsView/ResultsViewURLWrapper';
 import { EnumDeclaration, EnumType } from 'typescript';
+import { TourProvider } from '@reactour/tour';
 
 function SuspenseWrapper(Component: any) {
     return (props: any) => (
@@ -318,184 +319,207 @@ function preloadImportantComponents() {
 export const makeRoutes = () => {
     return (
         <React.Suspense fallback={null}>
-            <Switch>
-                <Route
-                    exact
-                    path={'/'}
-                    component={ScrollToTop(
-                        Homepage,
-                        preloadImportantComponents
-                    )}
-                />
-                <Route path="/restore" component={ScrollToTop(restoreRoute)} />
-                <Route
-                    path="/loading/comparison"
-                    component={ScrollToTop(GroupComparisonLoading)}
-                />
+            <TourProvider steps={[]}>
+                <Switch>
+                    <Route
+                        exact
+                        path={'/'}
+                        component={ScrollToTop(
+                            Homepage,
+                            preloadImportantComponents
+                        )}
+                    />
+                    <Route
+                        path="/restore"
+                        component={ScrollToTop(restoreRoute)}
+                    />
+                    <Route
+                        path="/loading/comparison"
+                        component={ScrollToTop(GroupComparisonLoading)}
+                    />
 
-                {/* Redirect legacy survival route directly to survival tab in comparison */}
-                <Route
-                    path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
-                    component={getBlankPage(() => {
-                        redirectTo(
-                            { comparison_subtab: 'survival' },
-                            '/results/comparison'
-                        );
-                    })}
-                />
+                    {/* Redirect legacy survival route directly to survival tab in comparison */}
+                    <Route
+                        path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
+                        component={getBlankPage(() => {
+                            redirectTo(
+                                { comparison_subtab: 'survival' },
+                                '/results/comparison'
+                            );
+                        })}
+                    />
 
-                {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
-                <Route
-                    path={`/results/${ResultsViewTab.EXPRESSION_REDIRECT}`}
-                    component={getBlankPage(() => {
-                        redirectTo(
-                            {
-                                plots_horz_selection: JSON.stringify({
-                                    dataType: CLIN_ATTR_DATA_TYPE,
-                                    selectedDataSourceOption:
-                                        SpecialAttribute.StudyOfOrigin,
-                                }),
+                    {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
+                    <Route
+                        path={`/results/${ResultsViewTab.EXPRESSION_REDIRECT}`}
+                        component={getBlankPage(() => {
+                            redirectTo(
+                                {
+                                    plots_horz_selection: JSON.stringify({
+                                        dataType: CLIN_ATTR_DATA_TYPE,
+                                        selectedDataSourceOption:
+                                            SpecialAttribute.StudyOfOrigin,
+                                    }),
 
-                                plots_vert_selection: JSON.stringify({
-                                    dataType:
-                                        AlterationTypeConstants.MRNA_EXPRESSION,
-                                    logScale: 'true',
-                                }),
-                            },
-                            `/results/${ResultsViewTab.PLOTS}`
-                        );
-                    })}
-                />
+                                    plots_vert_selection: JSON.stringify({
+                                        dataType:
+                                            AlterationTypeConstants.MRNA_EXPRESSION,
+                                        logScale: 'true',
+                                    }),
+                                },
+                                `/results/${ResultsViewTab.PLOTS}`
+                            );
+                        })}
+                    />
 
-                {/* Redirect legacy enrichments route directly to mutations tab in comparison */}
-                <Route
-                    path="/results/enrichments"
-                    component={getBlankPage(() => {
-                        redirectTo(
-                            { comparison_subtab: 'mutations' },
-                            '/results/comparison'
-                        );
-                    })}
-                />
-                <Route
-                    path="/results/:tab?"
-                    component={LocationValidationWrapper(
-                        ResultsViewPage,
-                        tabParamValidator(ResultsViewTab),
-                        ResultsViewQueryParamsAdjuster
-                    )}
-                />
-                <Route
-                    path={'/' + PagePath.Patient + '/:tab?'}
-                    component={ScrollToTop(
-                        LocationValidationWrapper(
-                            PatientViewPage,
-                            tabParamValidator(PatientViewPageTabs)
-                        )
-                    )}
-                />
-                <Route
-                    path={'/' + PagePath.Study + '/:tab?'}
-                    component={ScrollToTop(
-                        LocationValidationWrapper(
-                            StudyViewPage,
-                            tabParamValidator(StudyViewPageTabKeyEnum)
-                        )
-                    )}
-                />
+                    {/* Redirect legacy enrichments route directly to mutations tab in comparison */}
+                    <Route
+                        path="/results/enrichments"
+                        component={getBlankPage(() => {
+                            redirectTo(
+                                { comparison_subtab: 'mutations' },
+                                '/results/comparison'
+                            );
+                        })}
+                    />
+                    <Route
+                        path="/results/:tab?"
+                        component={LocationValidationWrapper(
+                            ResultsViewPage,
+                            tabParamValidator(ResultsViewTab),
+                            ResultsViewQueryParamsAdjuster
+                        )}
+                    />
+                    <Route
+                        path={'/' + PagePath.Patient + '/:tab?'}
+                        component={ScrollToTop(
+                            LocationValidationWrapper(
+                                PatientViewPage,
+                                tabParamValidator(PatientViewPageTabs)
+                            )
+                        )}
+                    />
+                    <Route
+                        path={'/' + PagePath.Study + '/:tab?'}
+                        component={ScrollToTop(
+                            LocationValidationWrapper(
+                                StudyViewPage,
+                                tabParamValidator(StudyViewPageTabKeyEnum)
+                            )
+                        )}
+                    />
 
-                <Route
-                    path={`/comparison/${LegacyGroupComparisonTab.MUTATIONS}`}
-                    component={getBlankPage(() => {
-                        redirectTo(
-                            {
-                                selectedEnrichmentEventTypes: JSON.stringify([
-                                    ...mutationGroup,
-                                ]),
-                            },
-                            `/comparison/${GroupComparisonTab.ALTERATIONS}`
-                        );
-                    })}
-                />
-                <Route
-                    path={`/comparison/${LegacyGroupComparisonTab.CNA}`}
-                    component={getBlankPage(() => {
-                        redirectTo(
-                            {
-                                selectedEnrichmentEventTypes: JSON.stringify([
-                                    ...cnaGroup,
-                                ]),
-                            },
-                            `/comparison/${GroupComparisonTab.ALTERATIONS}`
-                        );
-                    })}
-                />
-                <Route
-                    path="/comparison/:tab?"
-                    component={ScrollToTop(
-                        LocationValidationWrapper(
-                            GroupComparisonPage,
-                            comparisonTabParamValidator()
-                        )
-                    )}
-                />
+                    <Route
+                        path={`/comparison/${LegacyGroupComparisonTab.MUTATIONS}`}
+                        component={getBlankPage(() => {
+                            redirectTo(
+                                {
+                                    selectedEnrichmentEventTypes: JSON.stringify(
+                                        [...mutationGroup]
+                                    ),
+                                },
+                                `/comparison/${GroupComparisonTab.ALTERATIONS}`
+                            );
+                        })}
+                    />
+                    <Route
+                        path={`/comparison/${LegacyGroupComparisonTab.CNA}`}
+                        component={getBlankPage(() => {
+                            redirectTo(
+                                {
+                                    selectedEnrichmentEventTypes: JSON.stringify(
+                                        [...cnaGroup]
+                                    ),
+                                },
+                                `/comparison/${GroupComparisonTab.ALTERATIONS}`
+                            );
+                        })}
+                    />
+                    <Route
+                        path="/comparison/:tab?"
+                        component={ScrollToTop(
+                            LocationValidationWrapper(
+                                GroupComparisonPage,
+                                comparisonTabParamValidator()
+                            )
+                        )}
+                    />
 
-                <Route path="/mutation_mapper" component={MutationMapperTool} />
-                <Route path="/oncoprinter" component={OncoprinterTool} />
-                <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
-                <Route path="/rmatlab" component={ScrollToTop(RMATLAB)} />
-                <Route path="/datasets" component={ScrollToTop(DatasetPage)} />
-                <Route path="/tutorials" component={GoToHashLink(Tutorials)} />
-                <Route path="/installations" component={InstallationMap} />
-                <Route path="/visualize" component={ScrollToTop(Visualize)} />
-                <Route path="/about" component={ScrollToTop(AboutUs)} />
-                <Route path="/software" component={ScrollToTop(Software)} />
-                <Route path="/news" component={GoToHashLink(News)} />
-                <Route path="/faq" component={GoToHashLink(FAQ)} />
-                <Route path="/oql" component={GoToHashLink(OQL)} />
-                <Route
-                    path="/testimonials"
-                    component={ScrollToTop(TestimonialsPage)}
-                />
-                <Route path="/case.do" component={getBlankPage(handleCaseDO)} />
-                <Route
-                    path="/index.do"
-                    component={getBlankPage(handleIndexDO)}
-                />
-                <Route
-                    path="/study.do"
-                    component={getBlankPage(handleStudyDO)}
-                />
+                    <Route
+                        path="/mutation_mapper"
+                        component={MutationMapperTool}
+                    />
+                    <Route path="/oncoprinter" component={OncoprinterTool} />
+                    <Route
+                        path="/webAPI"
+                        component={GoToHashLink(WebAPIPage)}
+                    />
+                    <Route path="/rmatlab" component={ScrollToTop(RMATLAB)} />
+                    <Route
+                        path="/datasets"
+                        component={ScrollToTop(DatasetPage)}
+                    />
+                    <Route
+                        path="/tutorials"
+                        component={GoToHashLink(Tutorials)}
+                    />
+                    <Route path="/installations" component={InstallationMap} />
+                    <Route
+                        path="/visualize"
+                        component={ScrollToTop(Visualize)}
+                    />
+                    <Route path="/about" component={ScrollToTop(AboutUs)} />
+                    <Route path="/software" component={ScrollToTop(Software)} />
+                    <Route path="/news" component={GoToHashLink(News)} />
+                    <Route path="/faq" component={GoToHashLink(FAQ)} />
+                    <Route path="/oql" component={GoToHashLink(OQL)} />
+                    <Route
+                        path="/testimonials"
+                        component={ScrollToTop(TestimonialsPage)}
+                    />
+                    <Route
+                        path="/case.do"
+                        component={getBlankPage(handleCaseDO)}
+                    />
+                    <Route
+                        path="/index.do"
+                        component={getBlankPage(handleIndexDO)}
+                    />
+                    <Route
+                        path="/study.do"
+                        component={getBlankPage(handleStudyDO)}
+                    />
 
-                <Route path="/ln" component={getBlankPage(handleLinkOut)} />
-                <Route
-                    path="/link.do"
-                    component={getBlankPage(handleLinkOut)}
-                />
-                <Route
-                    path="/encodedRedirect"
-                    component={getBlankPage(handleEncodedRedirect)}
-                />
+                    <Route path="/ln" component={getBlankPage(handleLinkOut)} />
+                    <Route
+                        path="/link.do"
+                        component={getBlankPage(handleLinkOut)}
+                    />
+                    <Route
+                        path="/encodedRedirect"
+                        component={getBlankPage(handleEncodedRedirect)}
+                    />
 
-                <Redirect
-                    path={'/mutation_mapper.jsp'}
-                    to={'/mutation_mapper'}
-                />
-                <Redirect path={'/data_sets.jsp'} to={'/datasets'} />
-                <Redirect path={'/oncoprinter.jsp'} to={'/oncoprinter'} />
-                <Redirect path={'/onco_query_lang_desc.jsp'} to={'/oql'} />
-                <Redirect path={'/tools.jsp'} to={'/visualize'} />
-                <Redirect path={'/tutorials.jsp'} to={'/tutorials'} />
-                <Redirect path={'/tutorial.jsp'} to={'/tutorials'} />
-                <Redirect path={'/cgds_r.jsp'} to={'/rmatlab'} />
+                    <Redirect
+                        path={'/mutation_mapper.jsp'}
+                        to={'/mutation_mapper'}
+                    />
+                    <Redirect path={'/data_sets.jsp'} to={'/datasets'} />
+                    <Redirect path={'/oncoprinter.jsp'} to={'/oncoprinter'} />
+                    <Redirect path={'/onco_query_lang_desc.jsp'} to={'/oql'} />
+                    <Redirect path={'/tools.jsp'} to={'/visualize'} />
+                    <Redirect path={'/tutorials.jsp'} to={'/tutorials'} />
+                    <Redirect path={'/tutorial.jsp'} to={'/tutorials'} />
+                    <Redirect path={'/cgds_r.jsp'} to={'/rmatlab'} />
 
-                <Route
-                    path="*"
-                    component={ScrollToTop(() => (
-                        <PageNotFound />
-                    ))}
-                />
-            </Switch>
+                    <Route
+                        path="*"
+                        component={ScrollToTop(() => (
+                            <PageNotFound />
+                        ))}
+                    />
+                </Switch>
+            </TourProvider>
         </React.Suspense>
     );
 };

@@ -11,9 +11,9 @@ import RightBar from '../../shared/components/rightbar/RightBar';
 import './homePage.scss';
 import autobind from 'autobind-decorator';
 import { createQueryStore } from 'shared/lib/createQueryStore';
-import { TourProvider } from 'shared/components/webTour/WebTour';
 import { HomePageTour } from 'shared/components/webTour/webTourSteps/WebTourSteps';
 import WebTourButton from 'shared/components/webTour/webTourButton/WebTourButton';
+import { TourProvider, useTour } from '@reactour/tour';
 
 const win = window as any;
 
@@ -51,28 +51,24 @@ export default class HomePage extends React.Component<
 
     public render() {
         return (
-            <TourProvider config={HomePageTour}>
-                <PageLayout
-                    className="homePageLayout"
-                    noMargin={true}
-                    rightBar={<RightBar queryStore={this.queryStore} />}
-                >
-                    <div
-                        className={'headBlock'}
-                        dangerouslySetInnerHTML={{
-                            __html: getServerConfig().skin_blurb!,
-                        }}
-                    ></div>
-                    <WebTourButton />
-                    <QueryAndDownloadTabs
-                        getQueryStore={this.getQueryStore}
-                        showQuickSearchTab={
-                            getServerConfig().quick_search_enabled
-                        }
-                        showDownloadTab={true}
-                    />
-                </PageLayout>
-            </TourProvider>
+            <PageLayout
+                className="homePageLayout"
+                noMargin={true}
+                rightBar={<RightBar queryStore={this.queryStore} />}
+            >
+                <div
+                    className={'headBlock'}
+                    dangerouslySetInnerHTML={{
+                        __html: getServerConfig().skin_blurb!,
+                    }}
+                ></div>
+                <WebTourButton />
+                <QueryAndDownloadTabs
+                    getQueryStore={this.getQueryStore}
+                    showQuickSearchTab={getServerConfig().quick_search_enabled}
+                    showDownloadTab={true}
+                />
+            </PageLayout>
         );
     }
 }

@@ -1,7 +1,7 @@
-import React from 'react'
-import ReactMarkdown from 'react-markdown';
+import React, { useContext } from 'react'
 
 
+// const data = useContext(TourContext)
 export const HomePageTour  = [
   {
     selector: '[data-tut="reactour__start"]',
@@ -16,22 +16,6 @@ export const HomePageTour  = [
       ),
   },
   {
-    selector: '[data-tut="reactour__queryByGene"]',
-    content: () => (
-                 <div className="step">
-                     Now, you have two options:
-                     <p />
-                     You can either:
-                     <p />
-                     <b>Query by Gene</b>: in this mode, you will be prompted to
-                     enter one of more genes.
-                     <p />
-                     You can then analyze these genes within the selected study.
-                 </div>
-      
-      ),
-  },
-    {
       selector: '[data-tut = "exploreSelectedStudies"]',
       content: () => (
           <div className="step">
@@ -57,22 +41,27 @@ export const HomePageTour  = [
           </div>
       ),
   },
-
   {
       selector: '[data-tut="tour_selector_0"]',
-      content: () => (
+      content: () => {
+        
+        return (
+
           <div className="step">
               Move ahead with selected this one.
               <br />
           </div>
-      ),
+        )
+      }
+      ,
 stepInteraction: true,
 action: (node:any) => {
   const nextBtn:any = document.getElementById("_tour_next_btn");
   // by using this, focus trap is temporary disabled
+  
   node.focus();
   node.onclick = () => {
-    nextBtn.click();
+    // nextBtn.click();
     // ...
   };
 }
@@ -86,12 +75,41 @@ action: (node:any) => {
           </div>
       ),
 stepInteraction: true,
+
 action: (node:any) => {
   const nextBtn:any = document.getElementById("_tour_next_btn");
   // by using this, focus trap is temporary disabled
   node.focus();
   node.onclick = () => {
     nextBtn.click();
+    
+    // ...
+  };
+}
+  },
+  {
+    selector: '[data-tut="reactour__queryByGene"]',
+    content: () => (
+                 <div className="step">
+                     Now, you have two options:
+                     <p />
+                     You can either:
+                     <p />
+                     <b>Query by Gene</b>: in this mode, you will be prompted to
+                     enter one of more genes.
+                     <p />
+                     You can then analyze these genes within the selected study.
+                 </div>
+      
+      ),
+stepInteraction: true,
+action: (node:any) => {
+  const nextBtn:any = document.getElementById("_tour_next_btn");
+  // by using this, focus trap is temporary disabled
+  node.focus();
+  node.onclick = () => {
+    nextBtn.click();
+
     // ...
   };
 }
@@ -112,18 +130,30 @@ action: (node:any) => {
     selector : '#mid_page',
     // selector:  '[data-tut="cancerStudyListContainer_reactmarkdown"]',
     content: () => (
-       <ReactMarkdown children='# Welcome to cbioportal Markdown example' />
+       <div> Welcome to cbioportal Markdown example' </div>
     ),
 },
 ];
 
-// stepInteraction: true,
-// action: (node) => {
-//   const nextBtn = document.getElementById("_tour_next_btn");
-//   // by using this, focus trap is temporary disabled
-//   node.focus();
-//   node.onclick = () => {
-//     nextBtn.click();
-//     // ...
-//   };
-// }
+export const genomicDataTour = [
+  {
+    selector : '[data-tut="genome_pie"]',
+    content: () => (
+      <div>Guide through genome studies. Click on the button highlighted !!!</div>
+    )
+  }
+  ,{
+
+    selector : '[data-tut="genome_TP53"]',
+    content: () => (
+      <div>Step 2!!!</div>
+    )
+  }
+  ,{
+
+    selector : '[data-tut="genome_KRAS"]',
+    content: () => (
+      <div>Step 3!!!</div>
+    )
+  }
+]

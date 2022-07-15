@@ -2,6 +2,7 @@ import * as React from 'react';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 import ChangeEventHandler = React.ChangeEventHandler;
+import { useTour } from '@reactour/tour';
 
 export interface ILabeledCheckboxProps {
     checked?: boolean;
@@ -10,6 +11,7 @@ export interface ILabeledCheckboxProps {
     onChange?: ChangeEventHandler<HTMLInputElement>;
     labelProps?: React.HTMLProps<HTMLLabelElement>;
     inputProps?: React.HTMLProps<HTMLInputElement> & { 'data-test'?: string };
+    uniKey?: string;
 }
 
 export default class LabeledCheckbox extends React.Component<

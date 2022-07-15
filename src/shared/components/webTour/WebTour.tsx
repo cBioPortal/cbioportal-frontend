@@ -7,7 +7,11 @@ import './tour.scss';
 const TourContext = React.createContext<any>(null);
 
 interface Props {
-    config: { selector: string; content: () => JSX.Element }[];
+    config: {
+        selector: string;
+
+        content: ({ goTo }: any) => JSX.Element;
+    }[];
 }
 
 export const TourProvider: React.FC<Props> = observer(
@@ -20,6 +24,7 @@ export const TourProvider: React.FC<Props> = observer(
             openTour() {
                 this.isTourActive = true;
             },
+            currStep: 0,
         }));
         const isTourActive = TourStore.isTourActive;
         const { openTour, closeTour } = TourStore;
@@ -42,6 +47,10 @@ export const TourProvider: React.FC<Props> = observer(
                         maskClassName="mask"
                         className="helper"
                         rounded={5}
+                        getCurrentStep={(curr: number) => {
+                            TourStore.currStep = curr;
+                            console.log(TourStore.currStep);
+                        }}
                         accentColor={accentColor}
                         nextButton={
                             <button

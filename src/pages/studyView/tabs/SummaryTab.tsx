@@ -36,6 +36,7 @@ import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBi
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';
+import { useTour } from '@reactour/tour';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -632,6 +633,8 @@ export class StudySummaryTab extends React.Component<
         //      Then across the study page, there should be only one place to include ChartContainer component.
         // 2.   The maintainer of RGL repo currently not actively accepts pull requests. So we don't know when the
         //      issue will be solved.
+        // console.log(chartMeta.uniqueKey, 'key');
+
         return (
             <div key={chartMeta.uniqueKey}>
                 <DelayedRender>
@@ -717,6 +720,15 @@ export class StudySummaryTab extends React.Component<
     }
 
     render() {
+        console.log('page loaded');
+        const { isOpen, setCurrentStep, currentStep } = useTour();
+
+        React.useEffect(() => {
+            if (isOpen) {
+                setCurrentStep(currentStep + 1);
+            }
+        }, []);
+
         return (
             <div>
                 <LoadingIndicator
