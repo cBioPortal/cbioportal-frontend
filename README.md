@@ -182,6 +182,8 @@ Files for the local database e2e-tests are located in the `./end-to-end-test/loc
 2. You need to have the [jq](https://stedolan.github.io/jq/) package installed on your system. E.g. using brew:
    ```brew install jq```
 
+3. You need to have a global version of Maven installed.
+
 In a terminal, start the frontend dev server
 
 ```
