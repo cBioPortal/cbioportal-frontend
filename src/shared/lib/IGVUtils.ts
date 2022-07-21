@@ -162,7 +162,7 @@ export function generateSegmentFeatures(
         patient: segment.patientId,
         study: segment.studyId,
         numberOfProbes: segment.numberOfProbes,
-        sampleKey: segment.uniqueSampleKey,
+        sampleKey: segment.sampleId,
         popupData: () => segmentPopupData(segment),
     }));
 }
@@ -172,7 +172,7 @@ export function generateMutationFeatures(
 ): MutationTrackFeatures[] {
     return mutations.map(mutation => ({
         value: mutation.mutationType,
-        sampleKey: mutation.uniqueSampleKey,
+        sampleKey: mutation.sampleId,
         sample: mutation.sampleId,
         start: mutation.startPosition - 1,
         end: mutation.endPosition,
