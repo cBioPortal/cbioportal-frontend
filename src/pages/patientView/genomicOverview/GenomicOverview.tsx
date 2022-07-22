@@ -104,8 +104,8 @@ function getGenePanelInfoForIgvTrack(
     );
 }
 
-function getUniqSampleKeys(sortedSamples: { uniqueSampleKey: string }[]) {
-    return _.uniq(sortedSamples.map(s => s.uniqueSampleKey));
+function getSampleIds(sortedSamples: { sampleId: string }[]) {
+    return _.uniq(sortedSamples.map(s => s.sampleId));
 }
 
 // TODO see if it is possible to pass custom components for "customButtons"
@@ -190,7 +190,7 @@ export default class GenomicOverview extends React.Component<
                 sampleExpandHeight: IGV_TRACK_SAMPLE_EXPAND_HEIGHT,
                 height: mutHeight,
                 features: mutFeatures,
-                samples: getUniqSampleKeys(sortedMutations),
+                samples: getSampleIds(sortedMutations),
             });
         }
 
@@ -213,7 +213,7 @@ export default class GenomicOverview extends React.Component<
                 sampleExpandHeight: IGV_TRACK_SAMPLE_EXPAND_HEIGHT,
                 height: segHeight,
                 features: segFeatures,
-                samples: getUniqSampleKeys(sortedSegments),
+                samples: getSampleIds(sortedSegments),
             });
         }
 
