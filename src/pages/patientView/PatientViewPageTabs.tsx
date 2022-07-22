@@ -188,6 +188,7 @@ export function tabs(
                         style={{ top: -10 }}
                     >
                         <GenomicOverview
+                            store={pageComponent.patientViewPageStore}
                             mergedMutations={
                                 pageComponent.patientViewPageStore
                                     .mergedMutationDataFilteredByGene
@@ -217,8 +218,6 @@ export function tabs(
                                 pageComponent.toggleGenePanelModal
                             }
                             disableTooltip={pageComponent.genePanelModal.isOpen}
-                            locus={pageComponent.activeLocus}
-                            handleLocusChange={pageComponent.handleLocusChange}
                             // assuming that all studies have the same reference genome
                             genome={
                                 pageComponent.patientViewPageStore.studies
