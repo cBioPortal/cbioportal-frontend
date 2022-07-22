@@ -146,7 +146,7 @@ export const genomicDataTour = [
 
     selector : '[data-tut="genome_TP53"]',
     content: () => (
-      <div>Step 2!!!</div>
+      <div>Tour Through Routing</div>
     )
   }
   ,{
