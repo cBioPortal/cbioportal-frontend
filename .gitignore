@@ -20,8 +20,6 @@ test/
 .classpath
 .project
 .settings
-package-lock.json
-yarn-error.log
 .vscode
 .yarn
 .yarnrc
