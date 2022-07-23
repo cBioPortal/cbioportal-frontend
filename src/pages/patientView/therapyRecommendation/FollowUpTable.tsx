@@ -38,7 +38,7 @@ import FollowUpForm from './form/FollowUpForm';
 //import AppConfig from 'appConfig';
 import { Collapse } from 'react-collapse';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
-import { LoginModal, LoginButton, UserInfoButton } from './LoginElements';
+import { LoginModal, UserInfoButton } from './LoginElements';
 
 export type IFollowUpProps = {
     patientId: string;
@@ -457,6 +457,22 @@ export default class FollowUpTable extends React.Component<
                 checked={criteria[attribute]}
                 onChange={() => {
                     const newCriteria = { ...criteria };
+                    var month: string =
+                        attribute.length === 4
+                            ? attribute.substring(attribute.length - 2)
+                            : attribute.charAt(attribute.length - 1);
+                    newCriteria[
+                        ('cr' + month) as keyof IResponseCriteria
+                    ] = false;
+                    newCriteria[
+                        ('pd' + month) as keyof IResponseCriteria
+                    ] = false;
+                    newCriteria[
+                        ('pr' + month) as keyof IResponseCriteria
+                    ] = false;
+                    newCriteria[
+                        ('sd' + month) as keyof IResponseCriteria
+                    ] = false;
                     newCriteria[attribute] = !criteria[attribute];
                     const newFollowUps = this.state.followUps.slice();
                     newFollowUps.find(
@@ -485,47 +501,32 @@ export default class FollowUpTable extends React.Component<
     }
 
     render() {
-        const loginButton = this.state.loggedIn ? (
-            <UserInfoButton
-                className={'btn btn-default ' + styles.loginButton}
-                mtbUrl={this.props.mtbUrl}
-                openLoginModal={() => this.openLoginModal()}
-                checkPermission={() => this.closeLoginModal()}
-            />
-        ) : (
-            <LoginButton
-                className={'btn btn-default ' + styles.loginButton}
-                openLoginModal={() => this.openLoginModal()}
-            />
-        );
-
         return (
             <div>
+                <LoginModal
+                    showLoginModal={this.showLoginModal}
+                    handleClose={() => this.closeLoginModal()}
+                    mtbUrl={this.props.mtbUrl}
+                />
                 <h2 style={{ marginBottom: '0' }}>Follow-up data</h2>
                 <p className={styles.edit}>
                     <div className="btn-group">
-                        {loginButton}
-                        <LoginModal
-                            showLoginModal={this.showLoginModal}
-                            handleClose={() => this.closeLoginModal()}
-                            mtbUrl={this.props.mtbUrl}
-                        />
                         <Button
                             type="button"
-                            className={
-                                'btn btn-default ' + styles.addFollowUpButton
-                            }
+                            className={'btn btn-default ' + styles.addMtbButton}
+                            disabled={!this.state.permission}
                             onClick={() => (this.showFollowUpForm = true)}
                         >
                             <i
                                 className={`fa fa-plus ${styles.marginLeft}`}
                                 aria-hidden="true"
                             ></i>{' '}
-                            Add Follow-up
+                            Add FollowUp
                         </Button>
                         <Button
                             type="button"
                             className={'btn btn-default ' + styles.testButton}
+                            disabled={!this.state.permission}
                             onClick={() => {
                                 this.saveFollowUps();
                                 console.log(
@@ -535,6 +536,36 @@ export default class FollowUpTable extends React.Component<
                         >
                             Save Data
                         </Button>
+                        {this.state.loggedIn ? (
+                            <UserInfoButton
+                                mtbUrl={this.props.mtbUrl}
+                                openLoginModal={() => this.openLoginModal()}
+                            />
+                        ) : (
+                            <span
+                                className={'fa fa-stack fa-2x'}
+                                style={{
+                                    fontSize: '15px',
+                                    marginTop: '12px',
+                                    marginLeft: '13px',
+                                }}
+                                title="Write access is only available if you are logged in and authorized."
+                            >
+                                <i className={'fa fa-user fa-stack-2x'}></i>
+                                <i
+                                    className={
+                                        'fa fa-exclamation-triangle fa-stack-1x fa-inverse'
+                                    }
+                                    style={{
+                                        color: 'yellow',
+                                        textAlign: 'right',
+                                        bottom: '0px !important',
+                                        position: 'absolute',
+                                        lineHeight: '3em',
+                                    }}
+                                ></i>
+                            </span>
+                        )}
                         {this.state.successfulSave ? (
                             <div className={styles.successBox}>
                                 Saving data was successful!
@@ -579,5 +610,14 @@ export default class FollowUpTable extends React.Component<
                 />
             </div>
         );
+    }
+
+    componentDidMount() {
+        // console.log('cDM got invoked');
+        this.props.checkPermission().then(res => {
+            console.log('checkPermission returned with ' + res);
+            this.setState({ loggedIn: res[0] });
+            this.setState({ permission: res[1] });
+        });
     }
 }

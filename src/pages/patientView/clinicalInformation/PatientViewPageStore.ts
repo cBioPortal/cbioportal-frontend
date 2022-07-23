@@ -2618,9 +2618,7 @@ export class PatientViewPageStore {
             getServerConfig().fhirspark!.port !== 'undefined'
         )
             port = ':' + getServerConfig().fhirspark!.port;
-        return (
-            'http://' + host + port + (followUp ? '/followup/' : '/mtb/') + id
-        );
+        return '//' + host + port + (followUp ? '/followup/' : '/mtb/') + id;
     };
 
     private getSafePatientId = () => {

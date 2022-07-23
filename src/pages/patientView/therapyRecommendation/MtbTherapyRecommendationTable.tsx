@@ -440,7 +440,15 @@ export default class MtbTherapyRecommendationTable extends React.Component<
             ),
             // width: this.columnWidths[ColumnKey.EDIT]
         },
-    ];
+    ].filter(col => {
+        if (this.props.columnVisibility === undefined) {
+            return true;
+        }
+        if (this.props.columnVisibility[col.name] === undefined) {
+            return false;
+        }
+        return this.props.columnVisibility[col.name];
+    });
 
     public getSampleIdIcons(fittingSampleIds: string[]) {
         let sortedSampleIds = fittingSampleIds;

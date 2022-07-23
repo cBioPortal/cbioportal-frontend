@@ -217,6 +217,16 @@
     margin-top: 8px;
 }
 
+.mtb-table tbody > tr {
+    border-bottom: 3px solid #000;
+}
+.mtb-table tbody > tr:last-child {
+    border-bottom: none;
+}
+.mtb-table table > tbody > tr {
+    border-bottom: none;
+}
+
 /*
 .mtb-table {
   ​table tr {
