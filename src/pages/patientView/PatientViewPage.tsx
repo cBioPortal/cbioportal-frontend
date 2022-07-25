@@ -1780,7 +1780,7 @@ export default class PatientViewPage extends React.Component<
                                             key={43}
                                             id={PatientViewPageTabs.FollowUp}
                                             linkText="Follow-up"
-                                            unmountOnHide={true}
+                                            unmountOnHide={false}
                                         >
                                             <FollowUpTable
                                                 patientId={

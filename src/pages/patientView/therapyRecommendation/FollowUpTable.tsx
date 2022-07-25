@@ -513,7 +513,9 @@ export default class FollowUpTable extends React.Component<
                     <div className="btn-group">
                         <Button
                             type="button"
-                            className={'btn btn-default ' + styles.addMtbButton}
+                            className={
+                                'btn btn-default ' + styles.addMTBFUButton
+                            }
                             disabled={!this.state.permission}
                             onClick={() => (this.showFollowUpForm = true)}
                         >

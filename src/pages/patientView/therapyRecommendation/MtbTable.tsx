@@ -572,7 +572,9 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     <div className="btn-group">
                         <Button
                             type="button"
-                            className={'btn btn-default ' + styles.addMtbButton}
+                            className={
+                                'btn btn-default ' + styles.addMTBFUButton
+                            }
                             disabled={!this.state.permission}
                             onClick={() => this.addMtb()}
                         >
