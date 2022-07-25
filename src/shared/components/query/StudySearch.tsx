@@ -15,13 +15,13 @@ import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
 import { StudySearchControls } from 'shared/components/query/filteredSearch/StudySearchControls';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 
-export type AutosuggestStudySearchProps = {
+export type StudySearchProps = {
     parser: QueryParser;
     query: SearchClause[];
     onSearch: (query: SearchClause[]) => void;
 };
 
-export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = observer(
+export const StudySearch: FunctionComponent<StudySearchProps> = observer(
     function(props) {
         const store = useLocalObservable(() => ({
             isMenuOpen: false,
@@ -45,7 +45,9 @@ export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = obser
                 <div className="input-group input-group-sm input-group-toggle">
                     <SearchBox
                         queryString={toQueryString(props.query)}
-                        onType={handleQueryTyping}
+                        onType={(update: string) =>
+                            handleQueryTyping(props, update)
+                        }
                         onFocus={onFocusSearchBox}
                     />
                     <SearchMenuToggle
@@ -55,36 +57,38 @@ export const StudySearch: FunctionComponent<AutosuggestStudySearchProps> = obser
                 </div>
                 <ClearSearchButton
                     show={props.query.length > 0}
-                    onClick={() => handleQueryTyping('')}
+                    onClick={() => handleQueryTyping(props, '')}
                 />
                 <StudySearchControls
                     query={props.query}
                     filterConfig={props.parser.searchFilters}
-                    onChange={handleQueryUpdate}
+                    onChange={(update: QueryUpdate) =>
+                        handleQueryUpdate(props, update)
+                    }
                     parser={props.parser}
                 />
             </div>
         );
-
-        function handleQueryTyping(update: string) {
-            const updatedQuery = props.parser.parseSearchQuery(update);
-            return props.onSearch(updatedQuery);
-        }
-
-        function handleQueryUpdate(update: QueryUpdate) {
-            let updatedQuery = _.cloneDeep(props.query);
-            if (update.toRemove) {
-                for (const p of update.toRemove) {
-                    updatedQuery = removePhrase(p, updatedQuery);
-                }
-            }
-            if (update.toAdd) {
-                updatedQuery = addClauses(update.toAdd, updatedQuery);
-            }
-            props.onSearch(updatedQuery);
-        }
     }
 );
+
+function handleQueryTyping(props: StudySearchProps, update: string) {
+    const updatedQuery = props.parser.parseSearchQuery(update);
+    return props.onSearch(updatedQuery);
+}
+
+function handleQueryUpdate(props: StudySearchProps, update: QueryUpdate) {
+    let updatedQuery = _.cloneDeep(props.query);
+    if (update.toRemove) {
+        for (const p of update.toRemove) {
+            updatedQuery = removePhrase(p, updatedQuery);
+        }
+    }
+    if (update.toAdd) {
+        updatedQuery = addClauses(update.toAdd, updatedQuery);
+    }
+    props.onSearch(updatedQuery);
+}
 
 const SearchMenuToggle: FunctionComponent<{
     onClick: () => void;
