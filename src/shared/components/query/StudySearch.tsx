@@ -96,7 +96,7 @@ const SearchMenuToggle: FunctionComponent<{
 }> = props => {
     const arrowDirection = props.open ? 'rotate(180deg)' : 'rotate(0deg)';
     return (
-        <span className="input-group-btn">
+        <div className="input-group-btn">
             <button
                 type="button"
                 className="dropdown-toggle btn btn-sm btn-default"
@@ -106,7 +106,7 @@ const SearchMenuToggle: FunctionComponent<{
                     &nbsp;
                 </span>
             </button>
-        </span>
+        </div>
     );
 };
 
@@ -115,7 +115,7 @@ const ClearSearchButton: FunctionComponent<{
     show: boolean;
 }> = props => {
     return (
-        <span
+        <div
             data-test="clearStudyFilter"
             onClick={props.onClick}
             style={{
@@ -130,6 +130,6 @@ const ClearSearchButton: FunctionComponent<{
             }}
         >
             x
-        </span>
+        </div>
     );
 };
