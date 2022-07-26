@@ -31,7 +31,7 @@ import ReactSelect from 'react-select';
 import { trackEvent } from 'shared/lib/tracking';
 import URL from 'url';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
-
+import classnames from 'classnames';
 import styles from './styles.module.scss';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
@@ -48,6 +48,7 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import GroupComparisonPathwayMapper from './pathwayMapper/GroupComparisonPathwayMapper';
 import GroupComparisonMutationsTab from './GroupComparisonMutationsTab';
 
 export interface IGroupComparisonPageProps {
@@ -133,6 +134,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
             this.store.alterationsEnrichmentData,
             this.store.alterationsEnrichmentAnalysisGroups,
+            this.store.genesSortedByMutationFrequency,
         ],
         render: () => {
             return (
@@ -248,6 +250,25 @@ export default class GroupComparisonPage extends React.Component<
                                     </div>
                                 );
                             })} */}
+                        </MSKTab>
+                    )}
+                    {this.props.appStore.featureFlagStore.has(
+                        'group_comparison_pathways'
+                    ) && (
+                        <MSKTab
+                            id={GroupComparisonTab.PATHWAYS}
+                            linkText={'Pathways'}
+                            anchorClassName={classnames({
+                                greyedOut: this.store.alterationsTabUnavailable,
+                            })}
+                        >
+                            <GroupComparisonPathwayMapper
+                                genomicData={
+                                    this.store.alterationEnrichmentRowData
+                                }
+                                activeGroups={this.store.activeGroups.result}
+                                store={this.store}
+                            />
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (

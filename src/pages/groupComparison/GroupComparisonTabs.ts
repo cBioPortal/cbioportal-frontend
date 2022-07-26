@@ -8,6 +8,7 @@ export enum GroupComparisonTab {
     ALTERATIONS = 'alterations',
     GENERIC_ASSAY_PREFIX = 'generic_assay',
     MUTATIONS = 'mutations',
+    PATHWAYS = 'pathways',
 }
 
 export const GENOMIC_ALTERATIONS_TAB_NAME = 'Genomic Alterations';
