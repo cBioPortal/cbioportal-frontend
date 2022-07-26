@@ -12,7 +12,7 @@ export function toggleIncluded<T>(
     callbackFn?: (element: T) => boolean
 ): T[] {
     let index;
-    if(callbackFn) {
+    if (callbackFn) {
         index = included.findIndex(callbackFn);
     } else {
         index = included.indexOf(element);

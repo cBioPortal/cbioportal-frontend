@@ -1,5 +1,5 @@
-import {TrackSortVector} from 'oncoprintjs';
-import {ClinicalTrackSpec, GeneticTrackDatum} from './Oncoprint';
+import { TrackSortVector } from 'oncoprintjs';
+import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
 import naturalSort from 'javascript-natural-sort';
 
 /**

@@ -73,7 +73,7 @@ import {
     isGenericAssayCategoricalProfile,
     isGenericAssayHeatmapProfile,
 } from 'shared/components/oncoprint/ResultsViewOncoprintUtils';
-import {ExtendedClinicalAttribute} from "pages/resultsView/ResultsViewPageStoreUtils";
+import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -887,11 +887,15 @@ export function makeClinicalTracksMobxPromise(
             if (!_.keys(oncoprint.selectedClinicalTrackConfig).length) {
                 return [];
             }
-            const attributes: ExtendedClinicalAttribute[] = Array
-                .from(_.keys(oncoprint.selectedClinicalTrackConfig))
-                .map(attrId => oncoprint.props.store
-                        .clinicalAttributeIdToClinicalAttribute
-                        .result![attrId]
+            const attributes: ExtendedClinicalAttribute[] = Array.from(
+                _.keys(oncoprint.selectedClinicalTrackConfig)
+            )
+                .map(
+                    attrId =>
+                        oncoprint.props.store
+                            .clinicalAttributeIdToClinicalAttribute.result![
+                            attrId
+                        ]
                 )
                 // filter out nonexistent attributes:
                 .filter(x => !!x);
@@ -979,7 +983,10 @@ export function makeClinicalTracksMobxPromise(
                     (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
                 }
 
-                const trackConfig = oncoprint.selectedClinicalTrackConfig[attribute.clinicalAttributeId];
+                const trackConfig =
+                    oncoprint.selectedClinicalTrackConfig[
+                        attribute.clinicalAttributeId
+                    ];
                 ret.sortOrder = trackConfig.sortOrder || undefined;
                 ret.gapOn = trackConfig.gapOn || undefined;
 

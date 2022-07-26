@@ -200,7 +200,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     comparison_categorical_na_values: 'NA',
     skin_hide_download_controls: false,
 
-    oncoprint_clinical_tracks_show_by_default: '',
+    oncoprint_clinical_tracks_config_json: '',
 };
 
 export default ServerConfigDefaults;

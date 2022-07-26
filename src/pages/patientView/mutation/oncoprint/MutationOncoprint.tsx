@@ -161,9 +161,7 @@ export default class MutationOncoprint extends React.Component<
                 ) {
                     // set mouseover mutation based on track
                     if (this.oncoprint) {
-                        const key = this.oncoprint.getTrackSpecKey(
-                            track_id
-                        );
+                        const key = this.oncoprint.getTrackSpecKey(track_id);
                         const mutation = key && this.mutationKeyToMutation[key];
                         if (mutation) {
                             this.props.dataStore.setMouseOverMutation(mutation);
@@ -190,9 +188,7 @@ export default class MutationOncoprint extends React.Component<
                 ) {
                     if (this.oncoprint) {
                         // toggle highlighted mutation based on track
-                        const key = this.oncoprint.getTrackSpecKey(
-                            track_id
-                        );
+                        const key = this.oncoprint.getTrackSpecKey(track_id);
                         const mutation = key && this.mutationKeyToMutation[key];
                         if (mutation) {
                             this.props.dataStore.toggleSelectedMutation(
@@ -292,7 +288,8 @@ export default class MutationOncoprint extends React.Component<
 
     @autobind
     private updateOncoprintHorzZoom() {
-        this.oncoprintJs && this.oncoprintJs.setHorzZoom(this.horzZoomSliderState);
+        this.oncoprintJs &&
+            this.oncoprintJs.setHorzZoom(this.horzZoomSliderState);
     }
 
     @autobind

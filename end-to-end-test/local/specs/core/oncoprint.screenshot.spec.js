@@ -45,7 +45,7 @@ const genericArrayUrl =
     '&show_samples=true' +
     '&generic_assay_groups=lgg_ucsf_2014_test_generic_assay_mutational_signature_binary_v2%2Cmutational_signature_binary_2%2Cmutational_signature_binary_1%3Blgg_ucsf_2014_test_generic_assay_mutational_signature_category_v2%2Cmutational_signature_category_6%2Cmutational_signature_category_8%2Cmutational_signature_category_9';
 
-const SERVER_DEFAULT_TRACK_CONFIG = [
+const SERVER_CLINICAL_TRACK_CONFIG = [
     {
         stableId: 'SUBTYPE',
         sortOrder: 'ASC',
@@ -92,14 +92,14 @@ describe('oncoprint', function() {
         });
     });
 
-    describe.only('clinical tracks', () => {
+    describe('clinical tracks', () => {
         beforeEach(() => {
             goToUrlAndSetLocalStorageWithProperty(
                 studyes0_oncoprintTabUrl,
                 true,
                 {
-                    oncoprint_clinical_tracks_show_by_default: JSON.stringify(
-                        SERVER_DEFAULT_TRACK_CONFIG
+                    oncoprint_clinical_tracks_config_json: JSON.stringify(
+                        SERVER_CLINICAL_TRACK_CONFIG
                     ),
                 }
             );
@@ -115,7 +115,7 @@ describe('oncoprint', function() {
             const url = browser.getUrl();
             const clinicalList = new URLSearchParams(url).get('clinicallist');
             expect(clinicalList).toEqual(
-                JSON.stringify(SERVER_DEFAULT_TRACK_CONFIG)
+                JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
         });
 
@@ -126,9 +126,9 @@ describe('oncoprint', function() {
             const clinicalTracksUrlParam = new URLSearchParams(url).get(
                 'clinicallist'
             );
-            expect(SERVER_DEFAULT_TRACK_CONFIG[0].gapOn === true);
+            expect(SERVER_CLINICAL_TRACK_CONFIG[0].gapOn === true);
             const updatedTrackConfig = JSON.parse(
-                JSON.stringify(SERVER_DEFAULT_TRACK_CONFIG)
+                JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
             updatedTrackConfig[0].gapOn = false;
             expect(clinicalTracksUrlParam).toEqual(
@@ -143,9 +143,9 @@ describe('oncoprint', function() {
             const clinicalTracksUrlParam = new URLSearchParams(url).get(
                 'clinicallist'
             );
-            expect(SERVER_DEFAULT_TRACK_CONFIG[0].sortOrder === 'ASC');
+            expect(SERVER_CLINICAL_TRACK_CONFIG[0].sortOrder === 'ASC');
             const updatedTrackConfig = JSON.parse(
-                JSON.stringify(SERVER_DEFAULT_TRACK_CONFIG)
+                JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
             updatedTrackConfig[0].sortOrder = 'DESC';
             expect(clinicalTracksUrlParam).toEqual(
@@ -153,7 +153,7 @@ describe('oncoprint', function() {
             );
         });
 
-        it('initializes correctly when "clinicallist" config present in url', () => {
+        it('initializes correctly when clinicallist config present in url', () => {
             const urlConfig = encodeURIComponent(
                 JSON.stringify(MANUAL_TRACK_CONFIG)
             );
@@ -168,10 +168,10 @@ describe('oncoprint', function() {
             assertScreenShotMatch(res);
         });
 
-        it('still supports legacy "clinicallist" format', () => {
+        it('still supports legacy clinicallist format', () => {
             const legacyFormatUrlParam = createOncoprintFromLegacyFormat();
 
-            changeNthTrack(1, "Sort a-Z");
+            changeNthTrack(1, 'Sort a-Z');
 
             // Legacy format should be converted to config json:
             const url = browser.getUrl();
@@ -207,7 +207,5 @@ describe('oncoprint', function() {
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             return legacyFormatQueryParam;
         }
-
     });
-
 });

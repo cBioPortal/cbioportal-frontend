@@ -7,5 +7,5 @@ module.exports = {
         } else {
             assert(result[0].isWithinMisMatchTolerance, message);
         }
-    }
+    },
 };
