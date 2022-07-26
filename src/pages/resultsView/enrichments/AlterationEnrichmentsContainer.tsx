@@ -52,6 +52,7 @@ export interface IAlterationEnrichmentContainerProps {
     patientLevelEnrichments: boolean;
     onSetPatientLevelEnrichments: (patientLevel: boolean) => void;
     comparisonStore?: ComparisonStore;
+    alterationsRowData: AlterationEnrichmentRow[];
 }
 
 @observer
@@ -115,11 +116,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
     }
 
     @computed get data(): AlterationEnrichmentRow[] {
-        return getAlterationRowData(
-            this.props.data,
-            this.props.store ? this.props.store.hugoGeneSymbols : [],
-            this.props.groups
-        );
+        return this.props.alterationsRowData;
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
@@ -480,6 +477,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
     }
 
     public render() {
+        console.log(this.data?.length);
         if (this.props.data.length === 0) {
             return (
                 <div
@@ -577,7 +575,6 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             onSelectionCleared={this.onSelectionCleared}
                         />
                     )}
-
                     <div style={{ maxWidth: this.genePlotMaxWidth }}>
                         <GeneBarPlot
                             data={this.data}

@@ -48,10 +48,17 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import { getPathwayData } from './MultipleCategoryBarPlot';
+import GroupComparisonPathwayMapper from './pathwayMapper/GroupComparisonPathwayMapper';
 
 export interface IGroupComparisonPageProps {
     routing: any;
     appStore: AppStore;
+}
+
+export interface IMultipleCategoryBarPlotData {
+    minorCategory: string;
+    counts: { majorCategory: string; count: number; percentage: number }[];
 }
 
 @inject('routing', 'appStore')
@@ -105,6 +112,34 @@ export default class GroupComparisonPage extends React.Component<
         return JSON.stringify(selectedGroups.map(g => g.uid));
     }
 
+    /* @computed get data(): IMultipleCategoryBarPlotData[] {
+        data={
+            this.store.alterationsEnrichmentData.result!
+        }
+        groups={
+            this.store.alterationsEnrichmentAnalysisGroups
+                .result
+        }
+        alteredVsUnalteredMode={false}
+        headerName={headerName}
+        patientLevelEnrichments={
+            this.store.usePatientLevelEnrichments
+        }
+        onSetPatientLevelEnrichments={
+            this.store.setUsePatientLevelEnrichments
+        }
+        store={this.resultsViewStore}
+        comparisonStore={this.store}
+        dashToRight={this.useInlineTypeSelectorMenu}
+        let alterationEnrichmentRowData: AlterationEnrichmentRow[] = [];
+        alterationEnrichmentRowData = getAlterationRowData(
+            this.store.alterationsEnrichmentData.result!
+            this.resultsViewStore ? this.store.hugoGeneSymbols : [],
+            this.store.alterationsEnrichmentAnalysisGroups
+                .result
+        );
+        return ;
+    }*/
     componentWillUnmount() {
         this.queryReaction && this.queryReaction();
         this.store && this.store.destroy();
@@ -130,8 +165,22 @@ export default class GroupComparisonPage extends React.Component<
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
+            this.store.alterationsEnrichmentData,
+            this.store.alterationsEnrichmentAnalysisGroups,
         ],
         render: () => {
+            if (this.store.alterationEnrichmentRowData[2] !== undefined) {
+                let enrichedGroup: string = '';
+                if (this.store.alterationEnrichmentRowData[2].enrichedGroup)
+                    enrichedGroup = this.store.alterationEnrichmentRowData[2]
+                        .enrichedGroup;
+                if (
+                    this.store.activeGroups !== undefined &&
+                    this.store.activeGroups?.result !== undefined
+                ) {
+                    enrichedGroup = this.store.activeGroups?.result[0].name;
+                }
+            }
             return (
                 <MSKTabs
                     unmountOnHide={false}
@@ -213,6 +262,24 @@ export default class GroupComparisonPage extends React.Component<
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}
+                    {
+                        <MSKTab
+                            id={GroupComparisonTab.PATHWAYS}
+                            linkText={'Pathways'}
+                            anchorClassName={
+                                this.store.alterationsTabUnavailable
+                                    ? 'greyedOut'
+                                    : ''
+                            }
+                        >
+                            <GroupComparisonPathwayMapper
+                                alterationRowData={
+                                    this.store.maxFrequencedGenes
+                                }
+                                activeGroups={this.store.activeGroups.result}
+                            />
+                        </MSKTab>
+                    }
                     {this.store.showMRNATab && (
                         <MSKTab
                             id={GroupComparisonTab.MRNA}

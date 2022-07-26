@@ -42,6 +42,7 @@ import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import {
+    getAlterationRowData,
     pickCopyNumberEnrichmentProfiles,
     pickGenericAssayEnrichmentProfiles,
     pickMethylationEnrichmentProfiles,
@@ -104,6 +105,7 @@ import {
     ComparisonSession,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
+import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -1062,7 +1064,77 @@ export default abstract class ComparisonStore
             return Promise.resolve([]);
         },
     });
+    @computed get alterationEnrichmentRowData(): AlterationEnrichmentRow[] {
+        if (
+            this.alterationsEnrichmentData.isComplete &&
+            this.alterationsEnrichmentAnalysisGroups.isComplete
+        )
+            return getAlterationRowData(
+                this.alterationsEnrichmentData.result!,
+                this.resultsViewStore
+                    ? this.resultsViewStore.hugoGeneSymbols
+                    : [],
+                this.alterationsEnrichmentAnalysisGroups.result!
+            );
+        return [];
+    }
+    @computed get maxFrequencedGenes(): AlterationEnrichmentRow[] {
+        if (
+            this.alterationsEnrichmentData.isComplete &&
+            this.alterationsEnrichmentAnalysisGroups.isComplete
+        ) {
+            console.log('adsad');
+            //  return [];
+            let MaxFrequencedGenes: AlterationEnrichmentRow[] = [];
+            let usedGenes: number[] = [];
+            let alterationRowData: AlterationEnrichmentRow[] = getAlterationRowData(
+                this.alterationsEnrichmentData.result!,
+                this.resultsViewStore
+                    ? this.resultsViewStore.hugoGeneSymbols
+                    : [],
+                this.alterationsEnrichmentAnalysisGroups.result!
+            );
+            let activeGroups: ComparisonGroup[] | undefined = this.activeGroups
+                .result;
+            // return [];
+            for (let j: number = 0; j < 10; j++) {
+                let idOfGene: number = 0;
+                let frequencyOfGene: number = 0;
+                for (let i: number = 0; i < alterationRowData.length; i++) {
+                    let k: number = 0;
+                    for (k = 0; k < j; k++) if (i === usedGenes[k]) break;
+                    if (k < j) continue;
+                    let maxFrequencyinGroups: number = 0;
+                    let groupCount: number | undefined = activeGroups?.length;
+                    //   console.log(groupCount);
+                    if (
+                        groupCount !== undefined &&
+                        alterationRowData[i] !== undefined &&
+                        alterationRowData[i].enrichedGroup !== undefined
+                    ) {
+                        let enrichedGroup: string = '';
+                        if (this.alterationEnrichmentRowData[i].enrichedGroup)
+                            enrichedGroup = this.alterationEnrichmentRowData[i]
+                                .enrichedGroup as string;
+                        maxFrequencyinGroups = this.alterationEnrichmentRowData[
+                            i
+                        ].groupsSet[enrichedGroup].alteredPercentage;
+                    }
+                    if (maxFrequencyinGroups > frequencyOfGene) {
+                        frequencyOfGene = maxFrequencyinGroups;
+                        idOfGene = i;
+                    }
+                }
 
+                MaxFrequencedGenes.push(alterationRowData[idOfGene]);
+                usedGenes.push(idOfGene);
+                //console.log(alterationRowData[idOfGene])
+            }
+            //console.log(MaxFrequencedGenes);
+            return MaxFrequencedGenes;
+        }
+        return [];
+    }
     readonly mrnaEnrichmentAnalysisGroups = remoteData({
         await: () => [
             this.selectedmRNAEnrichmentProfileMap,

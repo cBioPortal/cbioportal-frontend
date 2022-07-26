@@ -74,6 +74,9 @@ const DEFAULT_BOTTOM_PADDING = 10;
 const LEGEND_ITEMS_PER_ROW = 4;
 const BOTTOM_LEGEND_PADDING = 15;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
+export function getPathwayData() {
+    return this.data;
+}
 
 @observer
 export default class MultipleCategoryBarPlot extends React.Component<
@@ -97,6 +100,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @observable.ref private container: HTMLDivElement;
 
+    /// sddadasdasd sdasdas
     @bind
     private containerRef(container: HTMLDivElement) {
         this.container = container;
@@ -836,6 +840,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @autobind
     private getChart() {
+        console.log(this.data?.length);
+        console.log(this.props.plotData?.[0]);
         if (this.data.length > 0) {
             return (
                 <div

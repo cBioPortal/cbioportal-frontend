@@ -47,6 +47,13 @@ export default class AlterationEnrichments extends React.Component<
         ],
         render: () => {
             let headerName = GENOMIC_ALTERATIONS_TAB_NAME;
+            console.log(
+                this.props.store.alterationsEnrichmentData.result!?.[0]
+            );
+            console.log(
+                this.props.store.alterationsEnrichmentAnalysisGroups.result
+                    ?.length
+            );
             return (
                 <div data-test="GroupComparisonAlterationEnrichments">
                     <AlterationEnrichmentContainer
@@ -68,6 +75,9 @@ export default class AlterationEnrichments extends React.Component<
                         store={this.props.resultsViewStore}
                         comparisonStore={this.props.store}
                         dashToRight={this.useInlineTypeSelectorMenu}
+                        alterationsRowData={
+                            this.props.store.alterationEnrichmentRowData
+                        }
                     />
                 </div>
             );
