@@ -58,6 +58,9 @@
       "name": "Gene Panels"
     },
     {
+      "name": "Gene Panel Data"
+    },
+    {
       "name": "Generic Assays"
     },
     {
@@ -65,10 +68,6 @@
     },
     {
       "name": "Info"
-    },
-    {
-      "name": "Gene Panel Data",
-      "description": " "
     },
     {
       "name": "Server running status",
@@ -704,6 +703,119 @@
         "deprecated": false
       }
     },
+    "/generic-assay-data/fetch": {
+      "post": {
+        "tags": [
+          "Generic Assay Data"
+        ],
+        "summary": "Fetch generic-assay-data",
+        "operationId": "fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genericAssayDataMultipleStudyFilter",
+            "description": "List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayDataMultipleStudyFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayData"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/generic-assay-data/{molecularProfileId}/fetch": {
+      "post": {
+        "tags": [
+          "Generic Assay Data"
+        ],
+        "summary": "fetch generic_assay_data in a molecular profile",
+        "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genericAssayDataFilter",
+            "description": "List of Sample IDs/Sample List ID and Generic Assay IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayFilter"
+            }
+          },
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayData"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/generic-assay-data/{molecularProfileId}/generic-assay/{genericAssayStableId}": {
       "get": {
         "tags": [
@@ -752,6 +864,59 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/GenericAssayData"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/generic-assay-meta/fetch": {
+      "post": {
+        "tags": [
+          "Generic Assays"
+        ],
+        "summary": "Fetch meta data for generic-assay by ID",
+        "operationId": "fetchGenericAssayMetaUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genericAssayMetaFilter",
+            "description": "List of Molecular Profile ID or List of Stable ID",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayMetaFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayMeta"
               }
             }
           }
@@ -861,7 +1026,7 @@
           "Generic Assay Data"
         ],
         "summary": "Fetch generic_assay_data",
-        "operationId": "fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST",
+        "operationId": "fetchGenericAssayDataInMultipleMolecularProfilesRedirectUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -914,7 +1079,7 @@
           "Generic Assay Data"
         ],
         "summary": "fetch generic_assay_data in a molecular profile",
-        "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST",
+        "operationId": "fetchGenericAssayDataInMolecularProfileRedirectUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -974,7 +1139,7 @@
           "Generic Assays"
         ],
         "summary": "Fetch meta data for generic-assay by ID",
-        "operationId": "fetchGenericAssayMetaUsingPOST",
+        "operationId": "fetchGenericAssayMetaRedirectUsingPOST",
         "consumes": [
           "application/json"
         ],
