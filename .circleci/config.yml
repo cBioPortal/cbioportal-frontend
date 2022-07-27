@@ -212,6 +212,7 @@ jobs:
     machine:
       enabled: true
       image: ubuntu-2004:202201-02
+    resource_class: large
     steps:
       - attach_workspace:
           at: /tmp/
