@@ -136,9 +136,6 @@ export default class BoxScatterPlot<
 
     constructor(props: any) {
         super(props);
-
-        console.log('aaron', props.data);
-
         makeObservable(this);
     }
 
@@ -542,7 +539,8 @@ export default class BoxScatterPlot<
 
     @bind
     private formatCategoryTick(t: number, index: number) {
-        return lowerCaseAndCapitalizeString(this.labels[index]);
+        //return lowerCaseAndCapitalizeString(this.labels[index]);
+        return this.labels[index];
     }
 
     @bind
