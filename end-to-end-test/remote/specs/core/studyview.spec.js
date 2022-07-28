@@ -721,12 +721,10 @@ describe('submit genes to results view query', () => {
             waitForNetworkQuiet();
         });
         it('generic assay chart should be added in the summary tab', () => {
-            $(ADD_CHART_BUTTON).waitForDisplayed({
-                timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+            $(ADD_CHART_BUTTON).waitForEnabled({
+                timeout: 60000,
             });
             $(ADD_CHART_BUTTON).click();
-
-            waitForNetworkQuiet();
 
             // Change to GENERIC ASSAY tab
             $(ADD_CHART_GENERIC_ASSAY_TAB).waitForDisplayed({
