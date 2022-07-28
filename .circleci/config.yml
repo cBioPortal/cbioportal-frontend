@@ -367,15 +367,15 @@ workflows:
 #                - master
 #                - release-*
 #                - rc
-      - unit_tests_main:
-          requires:
-            - install
-      - unit_tests_packages:
-            requires:
-              - install
-      - end_to_end_tests:
-          requires:
-            - install
+#      - unit_tests_main:
+#          requires:
+#            - install
+#      - unit_tests_packages:
+#            requires:
+#              - install
+#      - end_to_end_tests:
+#          requires:
+#            - install
       - end_to_end_tests_localdb:
           requires:
             - install
