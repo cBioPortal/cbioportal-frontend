@@ -147,7 +147,7 @@ describe('IGVUtils', () => {
                 featuresWithoutFunctions(generateSegmentFeatures(segments)),
                 [
                     {
-                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        sampleKey: 'TCGA-13-1510-01',
                         patient: 'TCGA-13-1510',
                         start: 3218610,
                         end: 4734076,
@@ -158,7 +158,7 @@ describe('IGVUtils', () => {
                         numberOfProbes: 941,
                     },
                     {
-                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        sampleKey: 'TCGA-13-1510-01',
                         patient: 'TCGA-13-1510',
                         start: 4734514,
                         end: 4735056,
@@ -169,7 +169,7 @@ describe('IGVUtils', () => {
                         numberOfProbes: 2,
                     },
                     {
-                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        sampleKey: 'TCGA-13-1510-01',
                         patient: 'TCGA-13-1510',
                         start: 4735908,
                         end: 12155936,
@@ -180,7 +180,7 @@ describe('IGVUtils', () => {
                         numberOfProbes: 3984,
                     },
                     {
-                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        sampleKey: 'TCGA-13-1510-01',
                         patient: 'TCGA-13-1510',
                         start: 12156236,
                         end: 12262792,
@@ -191,7 +191,7 @@ describe('IGVUtils', () => {
                         numberOfProbes: 77,
                     },
                     {
-                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        sampleKey: 'TCGA-13-1510-01',
                         patient: 'TCGA-13-1510',
                         start: 12264355,
                         end: 26281561,
@@ -202,7 +202,7 @@ describe('IGVUtils', () => {
                         numberOfProbes: 7347,
                     },
                     {
-                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        sampleKey: 'TCGA-13-1510-01',
                         patient: 'TCGA-13-1510',
                         start: 26282396,
                         end: 26355640,
@@ -213,7 +213,7 @@ describe('IGVUtils', () => {
                         numberOfProbes: 41,
                     },
                     {
-                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        sampleKey: 'TCGA-13-1510-01',
                         patient: 'TCGA-13-1510',
                         start: 26361404,
                         end: 30593096,
@@ -224,7 +224,7 @@ describe('IGVUtils', () => {
                         numberOfProbes: 1833,
                     },
                     {
-                        sampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',
+                        sampleKey: 'TCGA-13-1510-01',
                         patient: 'TCGA-13-1510',
                         start: 30593355,
                         end: 35255680,

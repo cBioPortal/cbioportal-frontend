@@ -37,6 +37,19 @@ function getItemStatus(
     }
 }
 
+function getDetailedErrorMessages(items: IProgressIndicatorItem[]): string[] {
+    return _(
+        items.map(item =>
+            item.promises?.map(
+                promise => (promise.error as any)?.detailedErrorMessage
+            )
+        )
+    )
+        .flatten()
+        .compact()
+        .value();
+}
+
 @observer
 export default class ProgressIndicator extends React.Component<
     IProgressIndicatorProps,
@@ -129,13 +142,19 @@ export default class ProgressIndicator extends React.Component<
 
     render() {
         if (this.props.show) {
+            const detailedErrorMessages = getDetailedErrorMessages(this.items);
             return (
                 <div className={styles.container}>
                     <div className={styles['items-container']}>
                         {this.items.map(this.makeItem)}
                     </div>
                     {_.some(this.items, i => getItemStatus(i) === 'error') && (
-                        <ErrorMessage />
+                        <ErrorMessage
+                            message={detailedErrorMessages.join('\n')}
+                            disableDefaultContactMessage={
+                                detailedErrorMessages.length > 0
+                            }
+                        />
                     )}
                 </div>
             );

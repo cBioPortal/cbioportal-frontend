@@ -1540,7 +1540,7 @@ describe('getSampleAlteredMap', () => {
         },
     ] as IQueriedMergedTrackCaseData[];
 
-    var samples = [
+    var samples = ([
         {
             uniqueSampleKey: 'QjA4NTpjaG9sX251c18yMDEy',
             uniquePatientKey: 'QjA4NTpjaG9sX251c18yMDEy',
@@ -1621,7 +1621,7 @@ describe('getSampleAlteredMap', () => {
             patientId: 'W040',
             studyId: 'chol_nus_2012',
         },
-    ] as Sample[];
+    ] as unknown) as Sample[];
 
     const oqlQuery = '["RAS" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS';
 

@@ -17,7 +17,7 @@ import { Sample } from 'cbioportal-ts-api-client';
 
 describe('CustomCaseSelectionUtils', () => {
     describe('getData', () => {
-        const s1 = {
+        const s1 = ({
             studyId: 's1',
             sampleId: 'c1',
             patientId: 'p1',
@@ -26,9 +26,9 @@ describe('CustomCaseSelectionUtils', () => {
             sequenced: true,
             uniquePatientKey: 's1_p1',
             uniqueSampleKey: 's1_c1',
-        } as Sample;
+        } as unknown) as Sample;
 
-        const s2 = {
+        const s2 = ({
             studyId: 's1',
             sampleId: 'c2',
             patientId: 'p2',
@@ -37,7 +37,7 @@ describe('CustomCaseSelectionUtils', () => {
             sequenced: true,
             uniquePatientKey: 's1_p2',
             uniqueSampleKey: 's1_c2',
-        } as Sample;
+        } as unknown) as Sample;
 
         it("group name should be Selected when it's not specified by user", () => {
             const sampleIdentifiersWithData = getData(
@@ -146,7 +146,7 @@ describe('CustomCaseSelectionUtils', () => {
     });
 
     describe('validateLines', () => {
-        const st1 = _.map(new Array(10), (item, index) => {
+        const st1 = (_.map(new Array(10), (item, index) => {
             return {
                 studyId: 'chol_nus_2012',
                 sampleId: 's' + index,
@@ -157,9 +157,9 @@ describe('CustomCaseSelectionUtils', () => {
                 uniquePatientKey: 'chol_nus_2012_p' + index,
                 uniqueSampleKey: 'chol_nus_2012_s' + index,
             };
-        }) as Sample[];
+        }) as unknown) as Sample[];
 
-        const st2 = _.map(new Array(5), (item, index) => {
+        const st2 = (_.map(new Array(5), (item, index) => {
             return {
                 studyId: 'lgg_tcga',
                 sampleId: 's' + index,
@@ -170,7 +170,7 @@ describe('CustomCaseSelectionUtils', () => {
                 uniquePatientKey: 'lgg_tcga_p' + index,
                 uniqueSampleKey: 'lgg_tcga_s' + index,
             };
-        }) as Sample[];
+        }) as unknown) as Sample[];
 
         it('In multiple studies, study id needs to be specified', () => {
             const lines: InputLine[] = [

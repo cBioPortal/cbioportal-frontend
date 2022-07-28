@@ -124,7 +124,7 @@ export type ClinicalDataBinCountFilter = {
 export type ClinicalDataBinFilter = {
     'attributeId': string
 
-        'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
+        'binMethod': "CUSTOM" | "GENERATE" | "MEDIAN" | "QUARTILE"
 
         'binsGeneratorConfig': BinsGeneratorConfig
 
@@ -238,7 +238,7 @@ export type ClinicalViolinPlotRowData = {
 export type CoExpression = {
     'geneticEntityId': string
 
-        'geneticEntityType': "GENE" | "GENESET" | "PHOSPHOPROTEIN" | "GENERIC_ASSAY"
+        'geneticEntityType': "GENE" | "GENERIC_ASSAY" | "GENESET" | "PHOSPHOPROTEIN"
 
         'pValue': number
 
@@ -367,7 +367,7 @@ export type GeneFilter = {
 
 };
 export type GeneFilterQuery = {
-    'alterations': Array < "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL" >
+    'alterations': Array < "AMP" | "DIPLOID" | "GAIN" | "HETLOSS" | "HOMDEL" >
 
         'entrezGeneId': number
 
@@ -411,7 +411,7 @@ export type GenericAssayDataBinCountFilter = {
 
 };
 export type GenericAssayDataBinFilter = {
-    'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
+    'binMethod': "CUSTOM" | "GENERATE" | "MEDIAN" | "QUARTILE"
 
         'binsGeneratorConfig': BinsGeneratorConfig
 
@@ -555,7 +555,7 @@ export type GenomicDataBinCountFilter = {
 
 };
 export type GenomicDataBinFilter = {
-    'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
+    'binMethod': "CUSTOM" | "GENERATE" | "MEDIAN" | "QUARTILE"
 
         'binsGeneratorConfig': BinsGeneratorConfig
 
@@ -803,7 +803,7 @@ export type ResourceDefinition = {
 
         'resourceId': string
 
-        'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
+        'resourceType': "PATIENT" | "SAMPLE" | "STUDY"
 
         'studyId': string
 
@@ -817,7 +817,7 @@ export type Sample = {
 
         'sampleId': string
 
-        'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
+        'sampleType': "BLOOD_NORMAL" | "METASTATIC" | "PRIMARY_BLOOD_TUMOR" | "PRIMARY_SOLID_TUMOR" | "RECURRENT_BLOOD_TUMOR" | "RECURRENT_SOLID_TUMOR" | "SOLID_NORMAL"
 
         'sequenced': boolean
 
@@ -841,7 +841,7 @@ export type SampleMolecularIdentifier = {
 
 };
 export type SampleTreatmentFilter = {
-    'time': "Pre" | "Post"
+    'time': "Post" | "Pre"
 
         'treatment': string
 
@@ -1058,7 +1058,7 @@ export default class CBioPortalAPIInternal {
     }
 
     fetchAlterationEnrichmentsUsingPOSTURL(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
         'groupsAndAlterationTypes': MolecularProfileCasesGroupAndAlterationTypeFilter,
         $queryParameters ? : any
     }): string {
@@ -1086,7 +1086,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groupsAndAlterationTypes - List of groups containing sample identifiers and list of Alteration Types
      */
     fetchAlterationEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
         'groupsAndAlterationTypes': MolecularProfileCasesGroupAndAlterationTypeFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -1136,7 +1136,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groupsAndAlterationTypes - List of groups containing sample identifiers and list of Alteration Types
      */
     fetchAlterationEnrichmentsUsingPOST(parameters: {
-            'enrichmentType' ? : "SAMPLE" | "PATIENT",
+            'enrichmentType' ? : "PATIENT" | "SAMPLE",
             'groupsAndAlterationTypes': MolecularProfileCasesGroupAndAlterationTypeFilter,
             $queryParameters ? : any,
                 $domain ? : string
@@ -1147,13 +1147,12 @@ export default class CBioPortalAPIInternal {
             });
         };
     clearAllCachesUsingDELETEURL(parameters: {
-        'xApiKey' ? : string,
         'springManagedCache' ? : boolean,
+        'xApiKey': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cache';
-
         if (parameters['springManagedCache'] !== undefined) {
             queryParameters['springManagedCache'] = parameters['springManagedCache'];
         }
@@ -1172,12 +1171,12 @@ export default class CBioPortalAPIInternal {
      * Clear and reinitialize caches
      * @method
      * @name CBioPortalAPIInternal#clearAllCachesUsingDELETE
-     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
      * @param {boolean} springManagedCache - Clear Spring-managed caches
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
      */
     clearAllCachesUsingDELETEWithHttpInfo(parameters: {
-        'xApiKey' ? : string,
         'springManagedCache' ? : boolean,
+        'xApiKey': string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -1192,12 +1191,17 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'text/plain';
 
+            if (parameters['springManagedCache'] !== undefined) {
+                queryParameters['springManagedCache'] = parameters['springManagedCache'];
+            }
+
             if (parameters['xApiKey'] !== undefined) {
                 headers['X-API-KEY'] = parameters['xApiKey'];
             }
 
-            if (parameters['springManagedCache'] !== undefined) {
-                queryParameters['springManagedCache'] = parameters['springManagedCache'];
+            if (parameters['xApiKey'] === undefined) {
+                reject(new Error('Missing required  parameter: xApiKey'));
+                return;
             }
 
             if (parameters.$queryParameters) {
@@ -1216,12 +1220,12 @@ export default class CBioPortalAPIInternal {
      * Clear and reinitialize caches
      * @method
      * @name CBioPortalAPIInternal#clearAllCachesUsingDELETE
-     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
      * @param {boolean} springManagedCache - Clear Spring-managed caches
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
      */
     clearAllCachesUsingDELETE(parameters: {
-        'xApiKey' ? : string,
         'springManagedCache' ? : boolean,
+        'xApiKey': string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < string > {
@@ -1230,14 +1234,13 @@ export default class CBioPortalAPIInternal {
         });
     };
     clearCachesForStudyUsingDELETEURL(parameters: {
-        'xApiKey' ? : string,
         'springManagedCache' ? : boolean,
         'studyId': string,
+        'xApiKey': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cache/{studyId}';
-
         if (parameters['springManagedCache'] !== undefined) {
             queryParameters['springManagedCache'] = parameters['springManagedCache'];
         }
@@ -1258,14 +1261,14 @@ export default class CBioPortalAPIInternal {
      * Clear and reinitialize caches after import/removal/update of a study
      * @method
      * @name CBioPortalAPIInternal#clearCachesForStudyUsingDELETE
-     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
      * @param {boolean} springManagedCache - Clear Spring-managed caches
      * @param {string} studyId - studyId
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
      */
     clearCachesForStudyUsingDELETEWithHttpInfo(parameters: {
-        'xApiKey' ? : string,
         'springManagedCache' ? : boolean,
         'studyId': string,
+        'xApiKey': string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -1280,10 +1283,6 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'text/plain';
 
-            if (parameters['xApiKey'] !== undefined) {
-                headers['X-API-KEY'] = parameters['xApiKey'];
-            }
-
             if (parameters['springManagedCache'] !== undefined) {
                 queryParameters['springManagedCache'] = parameters['springManagedCache'];
             }
@@ -1292,6 +1291,15 @@ export default class CBioPortalAPIInternal {
 
             if (parameters['studyId'] === undefined) {
                 reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters['xApiKey'] !== undefined) {
+                headers['X-API-KEY'] = parameters['xApiKey'];
+            }
+
+            if (parameters['xApiKey'] === undefined) {
+                reject(new Error('Missing required  parameter: xApiKey'));
                 return;
             }
 
@@ -1311,14 +1319,14 @@ export default class CBioPortalAPIInternal {
      * Clear and reinitialize caches after import/removal/update of a study
      * @method
      * @name CBioPortalAPIInternal#clearCachesForStudyUsingDELETE
-     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
      * @param {boolean} springManagedCache - Clear Spring-managed caches
      * @param {string} studyId - studyId
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
      */
     clearCachesForStudyUsingDELETE(parameters: {
-        'xApiKey' ? : string,
         'springManagedCache' ? : boolean,
         'studyId': string,
+        'xApiKey': string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < string > {
@@ -1405,7 +1413,7 @@ export default class CBioPortalAPIInternal {
         };
     fetchClinicalDataBinCountsUsingPOSTURL(parameters: {
         'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
-        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1434,7 +1442,7 @@ export default class CBioPortalAPIInternal {
      */
     fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters: {
         'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
-        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1484,7 +1492,7 @@ export default class CBioPortalAPIInternal {
      */
     fetchClinicalDataBinCountsUsingPOST(parameters: {
             'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
-            'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+            'dataBinMethod' ? : "DYNAMIC" | "STATIC",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < ClinicalDataBin >
@@ -2999,7 +3007,7 @@ export default class CBioPortalAPIInternal {
         });
     };
     fetchGenomicEnrichmentsUsingPOSTURL(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any
     }): string {
@@ -3027,7 +3035,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groups - List of groups containing sample and molecular profile identifiers
      */
     fetchGenomicEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -3077,7 +3085,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groups - List of groups containing sample and molecular profile identifiers
      */
     fetchGenomicEnrichmentsUsingPOST(parameters: {
-            'enrichmentType' ? : "SAMPLE" | "PATIENT",
+            'enrichmentType' ? : "PATIENT" | "SAMPLE",
             'groups': Array < MolecularProfileCasesGroupFilter > ,
                 $queryParameters ? : any,
                 $domain ? : string
@@ -3177,7 +3185,7 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchGenericAssayDataBinCountsUsingPOSTURL(parameters: {
-        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
         'genericAssayDataBinCountFilter': GenericAssayDataBinCountFilter,
         $queryParameters ? : any
     }): string {
@@ -3205,7 +3213,7 @@ export default class CBioPortalAPIInternal {
      * @param {} genericAssayDataBinCountFilter - Generic assay data bin count filter
      */
     fetchGenericAssayDataBinCountsUsingPOSTWithHttpInfo(parameters: {
-        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
         'genericAssayDataBinCountFilter': GenericAssayDataBinCountFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -3255,7 +3263,7 @@ export default class CBioPortalAPIInternal {
      * @param {} genericAssayDataBinCountFilter - Generic assay data bin count filter
      */
     fetchGenericAssayDataBinCountsUsingPOST(parameters: {
-            'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+            'dataBinMethod' ? : "DYNAMIC" | "STATIC",
             'genericAssayDataBinCountFilter': GenericAssayDataBinCountFilter,
             $queryParameters ? : any,
                 $domain ? : string
@@ -3343,7 +3351,7 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchGenericAssayEnrichmentsUsingPOSTURL(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any
     }): string {
@@ -3371,7 +3379,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groups - List of groups containing sample and molecular profile identifiers
      */
     fetchGenericAssayEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -3421,7 +3429,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groups - List of groups containing sample and molecular profile identifiers
      */
     fetchGenericAssayEnrichmentsUsingPOST(parameters: {
-            'enrichmentType' ? : "SAMPLE" | "PATIENT",
+            'enrichmentType' ? : "PATIENT" | "SAMPLE",
             'groups': Array < MolecularProfileCasesGroupFilter > ,
                 $queryParameters ? : any,
                 $domain ? : string
@@ -3575,7 +3583,7 @@ export default class CBioPortalAPIInternal {
     getAllGenesetsUsingGETURL(parameters: {
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3613,7 +3621,7 @@ export default class CBioPortalAPIInternal {
     getAllGenesetsUsingGETWithHttpInfo(parameters: {
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3663,7 +3671,7 @@ export default class CBioPortalAPIInternal {
     getAllGenesetsUsingGET(parameters: {
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Geneset >
@@ -4105,7 +4113,7 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchGenomicDataBinCountsUsingPOSTURL(parameters: {
-        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
         'genomicDataBinCountFilter': GenomicDataBinCountFilter,
         $queryParameters ? : any
     }): string {
@@ -4133,7 +4141,7 @@ export default class CBioPortalAPIInternal {
      * @param {} genomicDataBinCountFilter - Genomic data bin count filter
      */
     fetchGenomicDataBinCountsUsingPOSTWithHttpInfo(parameters: {
-        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
         'genomicDataBinCountFilter': GenomicDataBinCountFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -4183,7 +4191,7 @@ export default class CBioPortalAPIInternal {
      * @param {} genomicDataBinCountFilter - Genomic data bin count filter
      */
     fetchGenomicDataBinCountsUsingPOST(parameters: {
-            'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+            'dataBinMethod' ? : "DYNAMIC" | "STATIC",
             'genomicDataBinCountFilter': GenomicDataBinCountFilter,
             $queryParameters ? : any,
                 $domain ? : string
@@ -5188,7 +5196,7 @@ export default class CBioPortalAPIInternal {
         });
     };
     fetchResourceDefinitionsUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyIds': Array < string > ,
             $queryParameters ? : any
     }): string {
@@ -5216,7 +5224,7 @@ export default class CBioPortalAPIInternal {
      * @param {} studyIds - List of Study IDs
      */
     fetchResourceDefinitionsUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -5266,7 +5274,7 @@ export default class CBioPortalAPIInternal {
      * @param {} studyIds - List of Study IDs
      */
     fetchResourceDefinitionsUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'studyIds': Array < string > ,
                 $queryParameters ? : any,
                 $domain ? : string
@@ -5562,8 +5570,8 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "endNumberOfDaysSinceDiagnosis" | "eventType" | "startNumberOfDaysSinceDiagnosis",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -5616,8 +5624,8 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "endNumberOfDaysSinceDiagnosis" | "eventType" | "startNumberOfDaysSinceDiagnosis",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -5687,8 +5695,8 @@ export default class CBioPortalAPIInternal {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "endNumberOfDaysSinceDiagnosis" | "eventType" | "startNumberOfDaysSinceDiagnosis",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -5703,8 +5711,8 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "endNumberOfDaysSinceDiagnosis" | "eventType" | "startNumberOfDaysSinceDiagnosis",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -5760,8 +5768,8 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "endNumberOfDaysSinceDiagnosis" | "eventType" | "startNumberOfDaysSinceDiagnosis",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -5840,8 +5848,8 @@ export default class CBioPortalAPIInternal {
             'pageNumber' ? : number,
             'pageSize' ? : number,
             'patientId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "endNumberOfDaysSinceDiagnosis" | "eventType" | "startNumberOfDaysSinceDiagnosis",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -5856,7 +5864,7 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'resourceId' ? : string,
         'sortBy' ? : "ResourceId" | "url",
         'studyId': string,
@@ -5919,7 +5927,7 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'resourceId' ? : string,
         'sortBy' ? : "ResourceId" | "url",
         'studyId': string,
@@ -6005,7 +6013,7 @@ export default class CBioPortalAPIInternal {
             'pageNumber' ? : number,
             'pageSize' ? : number,
             'patientId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'resourceId' ? : string,
             'sortBy' ? : "ResourceId" | "url",
             'studyId': string,
@@ -6021,7 +6029,7 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'resourceId' ? : string,
         'sortBy' ? : "ResourceId" | "url",
         'studyId': string,
@@ -6081,7 +6089,7 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'resourceId' ? : string,
         'sortBy' ? : "ResourceId" | "url",
         'studyId': string,
@@ -6158,7 +6166,7 @@ export default class CBioPortalAPIInternal {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'resourceId' ? : string,
             'sortBy' ? : "ResourceId" | "url",
             'studyId': string,
@@ -6174,8 +6182,8 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "description" | "displayName" | "openByDefault" | "priority" | "resourceId" | "resourceType" | "studyId",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -6228,8 +6236,8 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "description" | "displayName" | "openByDefault" | "priority" | "resourceId" | "resourceType" | "studyId",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -6299,8 +6307,8 @@ export default class CBioPortalAPIInternal {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "description" | "displayName" | "openByDefault" | "priority" | "resourceId" | "resourceType" | "studyId",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -6403,7 +6411,7 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'resourceId' ? : string,
         'sampleId': string,
         'sortBy' ? : "ResourceId" | "url",
@@ -6466,7 +6474,7 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'resourceId' ? : string,
         'sampleId': string,
         'sortBy' ? : "ResourceId" | "url",
@@ -6552,7 +6560,7 @@ export default class CBioPortalAPIInternal {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'resourceId' ? : string,
             'sampleId': string,
             'sortBy' ? : "ResourceId" | "url",
@@ -6569,8 +6577,8 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "chromosome" | "cytoband" | "widePeakStart" | "widePeakEnd" | "qValue" | "amp",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "amp" | "chromosome" | "cytoband" | "qValue" | "widePeakEnd" | "widePeakStart",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -6623,8 +6631,8 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "chromosome" | "cytoband" | "widePeakStart" | "widePeakEnd" | "qValue" | "amp",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "amp" | "chromosome" | "cytoband" | "qValue" | "widePeakEnd" | "widePeakStart",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -6694,8 +6702,8 @@ export default class CBioPortalAPIInternal {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "chromosome" | "cytoband" | "widePeakStart" | "widePeakEnd" | "qValue" | "amp",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "amp" | "chromosome" | "cytoband" | "qValue" | "widePeakEnd" | "widePeakStart",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -6709,8 +6717,8 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "rank" | "numberOfMutations" | "pValue" | "qValue",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "numberOfMutations" | "pValue" | "qValue" | "rank",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -6763,8 +6771,8 @@ export default class CBioPortalAPIInternal {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "rank" | "numberOfMutations" | "pValue" | "qValue",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "numberOfMutations" | "pValue" | "qValue" | "rank",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -6834,8 +6842,8 @@ export default class CBioPortalAPIInternal {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "rank" | "numberOfMutations" | "pValue" | "qValue",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "numberOfMutations" | "pValue" | "qValue" | "rank",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
