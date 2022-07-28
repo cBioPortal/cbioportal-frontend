@@ -731,7 +731,7 @@
           "Generic Assay Data"
         ],
         "summary": "fetch generic_assay_data in a molecular profile",
-        "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST",
+        "operationId": "fetchGenericAssayDataInMolecularProfileRedirectUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -844,7 +844,7 @@
           "Generic Assays"
         ],
         "summary": "Fetch meta data for generic-assay by ID",
-        "operationId": "fetchGenericAssayMetaUsingPOST",
+        "operationId": "fetchGenericAssayMetaRedirectUsingPOST",
         "consumes": [
           "application/json"
         ],

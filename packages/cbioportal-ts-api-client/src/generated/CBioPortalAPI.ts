@@ -1821,11 +1821,11 @@ export default class CBioPortalAPI {
     /**
      * Fetch generic-assay-data
      * @method
-     * @name CBioPortalAPI#fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST
+     * @name CBioPortalAPI#fetchGenericAssayDataInMultipleMolecularProfilesRedirectUsingPOST
      * @param {} genericAssayDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs
      * @param {string} projection - Level of detail of the response
      */
-    fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
+    fetchGenericAssayDataInMultipleMolecularProfilesRedirectUsingPOSTWithHttpInfo(parameters: {
         'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any,
@@ -1871,22 +1871,22 @@ export default class CBioPortalAPI {
     /**
      * Fetch generic-assay-data
      * @method
-     * @name CBioPortalAPI#fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST
+     * @name CBioPortalAPI#fetchGenericAssayDataInMultipleMolecularProfilesRedirectUsingPOST
      * @param {} genericAssayDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs
      * @param {string} projection - Level of detail of the response
      */
-    fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(parameters: {
+    fetchGenericAssayDataInMultipleMolecularProfilesRedirectUsingPOST(parameters: {
             'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayData >
         > {
-            return this.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchGenericAssayDataInMultipleMolecularProfilesRedirectUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    fetchGenericAssayDataInMolecularProfileUsingPOSTURL(parameters: {
+    fetchGenericAssayDataInMolecularProfileRedirectUsingPOSTURL(parameters: {
         'genericAssayDataFilter': GenericAssayFilter,
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -1913,12 +1913,12 @@ export default class CBioPortalAPI {
     /**
      * fetch generic_assay_data in a molecular profile
      * @method
-     * @name CBioPortalAPI#fetchGenericAssayDataInMolecularProfileUsingPOST
+     * @name CBioPortalAPI#fetchGenericAssayDataInMolecularProfileRedirectUsingPOST
      * @param {} genericAssayDataFilter - List of Sample IDs/Sample List ID and Generic Assay IDs
      * @param {string} molecularProfileId - Molecular Profile ID
      * @param {string} projection - Level of detail of the response
      */
-    fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
+    fetchGenericAssayDataInMolecularProfileRedirectUsingPOSTWithHttpInfo(parameters: {
         'genericAssayDataFilter': GenericAssayFilter,
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -1972,12 +1972,12 @@ export default class CBioPortalAPI {
     /**
      * fetch generic_assay_data in a molecular profile
      * @method
-     * @name CBioPortalAPI#fetchGenericAssayDataInMolecularProfileUsingPOST
+     * @name CBioPortalAPI#fetchGenericAssayDataInMolecularProfileRedirectUsingPOST
      * @param {} genericAssayDataFilter - List of Sample IDs/Sample List ID and Generic Assay IDs
      * @param {string} molecularProfileId - Molecular Profile ID
      * @param {string} projection - Level of detail of the response
      */
-    fetchGenericAssayDataInMolecularProfileUsingPOST(parameters: {
+    fetchGenericAssayDataInMolecularProfileRedirectUsingPOST(parameters: {
             'genericAssayDataFilter': GenericAssayFilter,
             'molecularProfileId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -1985,7 +1985,7 @@ export default class CBioPortalAPI {
             $domain ? : string
         }): Promise < Array < GenericAssayData >
         > {
-            return this.fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchGenericAssayDataInMolecularProfileRedirectUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -2116,11 +2116,11 @@ export default class CBioPortalAPI {
     /**
      * Fetch meta data for generic-assay by ID
      * @method
-     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
+     * @name CBioPortalAPI#fetchGenericAssayMetaRedirectUsingPOST
      * @param {} genericAssayMetaFilter - List of Molecular Profile ID or List of Stable ID
      * @param {string} projection - Level of detail of the response
      */
-    fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters: {
+    fetchGenericAssayMetaRedirectUsingPOSTWithHttpInfo(parameters: {
         'genericAssayMetaFilter': GenericAssayMetaFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any,
@@ -2166,18 +2166,18 @@ export default class CBioPortalAPI {
     /**
      * Fetch meta data for generic-assay by ID
      * @method
-     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
+     * @name CBioPortalAPI#fetchGenericAssayMetaRedirectUsingPOST
      * @param {} genericAssayMetaFilter - List of Molecular Profile ID or List of Stable ID
      * @param {string} projection - Level of detail of the response
      */
-    fetchGenericAssayMetaUsingPOST(parameters: {
+    fetchGenericAssayMetaRedirectUsingPOST(parameters: {
             'genericAssayMetaFilter': GenericAssayMetaFilter,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayMeta >
         > {
-            return this.fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchGenericAssayMetaRedirectUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
