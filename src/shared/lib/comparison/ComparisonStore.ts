@@ -69,6 +69,7 @@ import ComplexKeyGroupsMap from '../complexKeyDataStructures/ComplexKeyGroupsMap
 import { AppStore } from '../../../AppStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
+    //fetchVariantAnnotationsIndexedByGenomicLocation,
     fetchAllReferenceGenomeGenes,
     fetchSurvivalDataExists,
     getSurvivalClinicalAttributesPrefix,
@@ -104,7 +105,97 @@ import {
     ComparisonSession,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
+/*
+import {
+    Gene,
+    Mutation,
+} from 'cbioportal-ts-api-client';
+import {
+    ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
+    createAnnotatedProteinImpactTypeFilter,
+    createNumericalFilter,
+    createCategoricalFilter,
+} from 'shared/lib/MutationUtils';
+import {
+    CanonicalMutationType,
+} from 'cbioportal-frontend-commons';
 
+import { cached } from 'mobxpromise';
+import PubMedCache from 'shared/cache/PubMedCache';
+import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
+import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
+import CancerTypeCache from 'shared/cache/CancerTypeCache';
+import MutationCountCache from 'shared/cache/MutationCountCache';
+import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
+import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
+import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
+import {
+    existsSomeMutationWithAscnPropertyInCollection,
+    fetchGenes,
+    getGenomeNexusUrl,
+    IDataQueryFilter,
+    getGenomeBuildFromStudies,
+} from 'shared/lib/StoreUtils';
+
+import ResultsViewMutationMapperStore from '../../../pages/resultsView/mutation/ResultsViewMutationMapperStore';
+
+import AccessorsForOqlFilter, {
+    SimplifiedMutationType,
+} from '../../../shared/lib/oql/AccessorsForOqlFilter';
+import {
+    doesQueryContainMutationOQL,
+    filterCBioPortalWebServiceData,
+    uniqueGenesInOQLQuery,
+} from '../../../shared/lib/oql/oqlfilter';
+
+
+import {
+    compileMutations,
+    compileStructuralVariants,
+    FilteredAndAnnotatedMutationsReport,
+
+} from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+
+import { ErrorMessages } from '../../../shared/enums/ErrorEnums';
+
+import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
+import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
+import {
+    GENOME_NEXUS_ARG_FIELD_ENUM,
+} from 'shared/constants';
+
+export interface AnnotatedMutation extends Mutation {
+    hugoGeneSymbol: string;
+    putativeDriver: boolean;
+    oncoKbOncogenic: string;
+    isHotspot: boolean;
+    simplifiedMutationType: SimplifiedMutationType;
+}
+import {
+    MutationTableColumnType,
+    getTextForDataField,
+} from 'shared/components/mutationTable/MutationTable';
+import { getClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+import { getCancerCellFractionValue } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
+import { getExpectedAltCopiesValue } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
+import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
+import NormalAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/NormalAlleleFreqColumnFormatter';
+import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
+import { getASCNMethodValue } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
+import SampleColumnFormatter from 'shared/components/mutationTable/column/SampleColumnFormatter';
+import GeneColumnFormatter from 'shared/components/mutationTable/column/GeneColumnFormatter';
+import ProteinChangeColumnFormatter from 'shared/components/mutationTable/column/ProteinChangeColumnFormatter';
+import MutationTypeColumnFormatter from 'shared/components/mutationTable/column/MutationTypeColumnFormatter';
+import VariantTypeColumnFormatter from 'shared/components/mutationTable/column/VariantTypeColumnFormatter';
+import HgvsgColumnFormatter from 'shared/components/mutationTable/column/HgvsgColumnFormatter';
+import ClinvarColumnFormatter from 'shared/components/mutationTable/column/ClinvarColumnFormatter';
+import SignalColumnFormatter from 'shared/components/mutationTable/column/SignalColumnFormatter';
+import {
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+    VariantAnnotation,
+} from 'genome-nexus-ts-api-client';
+*/
 export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
@@ -189,6 +280,260 @@ export default abstract class ComparisonStore
             this.tabHasBeenShownReactionDisposer();
     }
 
+    @computed get genomeNexusClient() {
+        return new GenomeNexusAPI(this.referenceGenomeBuild);
+    }
+
+    @computed get hugoGeneSymbols() {
+        if (
+            this.urlWrapper.query.gene_list &&
+            this.urlWrapper.query.gene_list.length > 0
+        ) {
+            return uniqueGenesInOQLQuery(this.urlWrapper.query.gene_list);
+        } else {
+            return [];
+        }
+    }
+    readonly genes = remoteData<Gene[]>({
+        invoke: async () => {
+            const genes = await fetchGenes(this.hugoGeneSymbols);
+
+            // Check that the same genes are in the OQL query as in the API response (order doesnt matter).
+            // This ensures that all the genes in OQL are valid. If not, we throw an error.
+            if (
+                _.isEqual(
+                    _.sortBy(this.hugoGeneSymbols),
+                    _.sortBy(genes.map(gene => gene.hugoGeneSymbol))
+                )
+            ) {
+                return genes;
+            } else {
+                throw new Error(ErrorMessages.InvalidGenes);
+            }
+        },
+        onResult: (genes: Gene[]) => {
+            this.geneCache.addData(genes);
+        },
+        onError: err => {
+            // throwing this allows sentry to report it
+            throw err;
+        },
+    });
+
+    @computed get queryExceedsLimit() {
+        return (
+            this.hugoGeneSymbols.length * this.sample.result.length >
+            getServerConfig().query_product_limit
+        );
+    }
+
+    @computed get queryContainsMutationOql() {
+        return doesQueryContainMutationOQL(this.urlWrapper.query.gene_list);
+    }
+
+    @computed get referenceGenomeBuild() {
+        if (!this.studies.isComplete) {
+            throw new Error('Failed to get studies');
+        }
+        return getGenomeNexusUrl(this.studies.result);
+    }
+
+    @computed get ensemblLink() {
+        return this.referenceGenomeBuild ===
+            getServerConfig().genomenexus_url_grch38
+            ? getServerConfig().ensembl_transcript_grch38_url
+            : getServerConfig().ensembl_transcript_url;
+    }
+
+    @cached @computed get discreteCNACache() {
+        return new DiscreteCNACache(
+            this.studyToMolecularProfileDiscreteCna.result
+        );
+    }
+
+    @cached @computed get pubMedCache() {
+        return new PubMedCache();
+    }
+
+    @cached @computed get cancerTypeCache() {
+        return new CancerTypeCache();
+    }
+
+    @cached @computed get mutationCountCache() {
+        return new MutationCountCache();
+    }
+
+    @cached @computed get clinicalAttributeCache() {
+        return new ClinicalAttributeCache();
+    }
+
+    @cached @computed get genomeNexusCache() {
+        return new GenomeNexusCache(
+            createVariantAnnotationsByMutationFetcher(
+                [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
+                this.genomeNexusClient
+            )
+        );
+    }
+
+    @cached @computed get genomeNexusMutationAssessorCache() {
+        return new GenomeNexusMutationAssessorCache(
+            createVariantAnnotationsByMutationFetcher(
+                [
+                    GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                    GENOME_NEXUS_ARG_FIELD_ENUM.MUTATION_ASSESSOR,
+                ],
+                this.genomeNexusClient
+            )
+        );
+    }
+
+    @cached @computed get pdbHeaderCache() {
+        return new PdbHeaderCache();
+    }
+
+    @computed get existsSomeMutationWithAscnProperty(): {
+        [property: string]: boolean;
+    } {
+        if (this.mutations.result === undefined) {
+            return existsSomeMutationWithAscnPropertyInCollection(
+                [] as Mutation[]
+            );
+        } else {
+            return existsSomeMutationWithAscnPropertyInCollection(
+                this.mutations.result
+            );
+        }
+    }
+
+    @computed
+    get cancerStudyIds() {
+        return this.urlWrapper.query.cancer_study_list.split(',');
+    }
+
+    @computed get customDataFilterAppliers() {
+        return {
+            [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
+                this.isPutativeDriver
+            ),
+            [MutationTableColumnType.CLONAL]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getClonalValue(d);
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.CANCER_CELL_FRACTION]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getCancerCellFractionValue(d);
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.EXPECTED_ALT_COPIES]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getExpectedAltCopiesValue(d);
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.TUMOR_ALLELE_FREQ]: createNumericalFilter(
+                (d: Mutation) =>
+                    TumorAlleleFreqColumnFormatter.getSortValue([d])
+            ),
+            [MutationTableColumnType.NORMAL_ALLELE_FREQ]: createNumericalFilter(
+                (d: Mutation) =>
+                    NormalAlleleFreqColumnFormatter.getSortValue([d])
+            ),
+            [MutationTableColumnType.REF_READS_N]: createNumericalFilter(
+                (d: Mutation) => d.normalRefCount
+            ),
+            [MutationTableColumnType.VAR_READS_N]: createNumericalFilter(
+                (d: Mutation) => d.normalAltCount
+            ),
+            [MutationTableColumnType.REF_READS]: createNumericalFilter(
+                (d: Mutation) => d.tumorRefCount
+            ),
+            [MutationTableColumnType.VAR_READS]: createNumericalFilter(
+                (d: Mutation) => d.tumorAltCount
+            ),
+            [MutationTableColumnType.START_POS]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getTextForDataField([d], 'startPosition');
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.END_POS]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getTextForDataField([d], 'endPosition');
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.SAMPLE_ID]: createCategoricalFilter(
+                (d: Mutation) => SampleColumnFormatter.getTextValue([d])
+            ),
+            [MutationTableColumnType.GENE]: createCategoricalFilter(
+                (d: Mutation) => GeneColumnFormatter.getTextValue([d])
+            ),
+            [MutationTableColumnType.PROTEIN_CHANGE]: createCategoricalFilter(
+                (d: Mutation) => ProteinChangeColumnFormatter.getTextValue([d])
+            ),
+            [MutationTableColumnType.CHROMOSOME]: createCategoricalFilter(
+                (d: Mutation) => ChromosomeColumnFormatter.getData([d]) || ''
+            ),
+            [MutationTableColumnType.REF_ALLELE]: createCategoricalFilter(
+                (d: Mutation) => getTextForDataField([d], 'referenceAllele')
+            ),
+            [MutationTableColumnType.VAR_ALLELE]: createCategoricalFilter(
+                (d: Mutation) => getTextForDataField([d], 'variantAllele')
+            ),
+            [MutationTableColumnType.MUTATION_TYPE]: createCategoricalFilter(
+                (d: Mutation) =>
+                    MutationTypeColumnFormatter.getDisplayValue([d])
+            ),
+            [MutationTableColumnType.VARIANT_TYPE]: createCategoricalFilter(
+                (d: Mutation) => VariantTypeColumnFormatter.getTextValue([d])
+            ),
+            [MutationTableColumnType.CENTER]: createCategoricalFilter(
+                (d: Mutation) => getTextForDataField([d], 'center')
+            ),
+            [MutationTableColumnType.HGVSG]: createCategoricalFilter(
+                (d: Mutation) => HgvsgColumnFormatter.download([d])
+            ),
+            [MutationTableColumnType.ASCN_METHOD]: createCategoricalFilter(
+                (d: Mutation) => getASCNMethodValue(d)
+            ),
+            [MutationTableColumnType.CLINVAR]: createCategoricalFilter(
+                (d: Mutation) =>
+                    ClinvarColumnFormatter.download(
+                        [d],
+                        this.indexedVariantAnnotations
+                    )
+            ),
+            [MutationTableColumnType.SIGNAL]: createCategoricalFilter(
+                (d: Mutation) =>
+                    SignalColumnFormatter.download(
+                        [d],
+                        this.indexedVariantAnnotations
+                    )
+            ),
+        };
+    }
+
+    @computed get genomeBuild() {
+        if (!this.studies.isComplete) {
+            throw new Error('Failed to get studies');
+        }
+        return getGenomeBuildFromStudies(this.studies.result);
+    }
+
+    @computed
+    public get hideUnprofiledSamples() {
+        const value = this.urlWrapper.query.hide_unprofiled_samples;
+        if (value === 'any' || value === 'totally') {
+            return value;
+        } else {
+            return false;
+        }
+    }
+
     @computed get selectedCopyNumberEnrichmentEventTypes() {
         if (this.urlWrapper.selectedEnrichmentEventTypes) {
             return stringListToMap(
@@ -235,6 +580,11 @@ export default abstract class ComparisonStore
             this.alterationEnrichmentProfiles.result.structuralVariantProfiles
                 .length > 0
         );
+    }
+
+    @autobind
+    generateGenomeNexusHgvsgUrl(hgvsg: string) {
+        return getGenomeNexusHgvsgUrl(hgvsg, this.referenceGenomeBuild);
     }
 
     @autobind
@@ -297,6 +647,434 @@ export default abstract class ComparisonStore
         this.saveAndGoToSession(newSession);
     }
 
+    public mutationsTabFilteringSettings = this.makeMutationsTabFilteringSettings();
+
+    private mutationMapperStoreByGeneWithDriverKey: {
+        [hugoGeneSymbolWithDriver: string]: ResultsViewMutationMapperStore;
+    } = {};
+
+    // Need to add "DRIVER" into key because mutation mapper store is cached
+    // if we don't do this, starting with no driver then switch to driver will get wrong filter results
+    private getGeneWithDriverKey(gene: Gene) {
+        return `${gene.hugoGeneSymbol}_${
+            this.isPutativeDriver ? 'DRIVER' : 'NO_DRIVER'
+        }`;
+    }
+
+    @computed get isPutativeDriver() {
+        return this.driverAnnotationSettings.driversAnnotated
+            ? (m: AnnotatedMutation) => m.putativeDriver
+            : undefined;
+    }
+
+    public getMutationMapperStore(
+        gene: Gene
+    ): ResultsViewMutationMapperStore | undefined {
+        if (
+            this.genes.isComplete &&
+            this.oncoKbCancerGenes.isComplete &&
+            this.uniqueSampleKeyToTumorType.isComplete &&
+            this.mutations.isComplete &&
+            this.mutationsByGene.isComplete
+        ) {
+            return (
+                this.mutationMapperStoreByGeneWithDriverKey[
+                    this.getGeneWithDriverKey(gene)
+                ] || this.createMutationMapperStoreForSelectedGene(gene)
+            );
+        }
+        return undefined;
+    }
+
+    // Mutation annotation
+    // genome nexus
+    readonly indexedVariantAnnotations = remoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >(
+        {
+            await: () => [this.mutations],
+            invoke: async () =>
+                getServerConfig().show_transcript_dropdown &&
+                this.mutations.result
+                    ? await fetchVariantAnnotationsIndexedByGenomicLocation(
+                          this.mutations.result,
+                          [
+                              GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                              GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
+                              GENOME_NEXUS_ARG_FIELD_ENUM.CLINVAR,
+                              getServerConfig().show_signal
+                                  ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
+                                  : '',
+                          ].filter(f => f),
+                          getServerConfig().isoformOverrideSource,
+                          this.genomeNexusClient
+                      )
+                    : undefined,
+            onError: (err: Error) => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        },
+        undefined
+    );
+
+    readonly unprofiledSampleKeyToSample = remoteData({
+        await: () => [this.unprofiledSamples],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.unprofiledSamples.result!, s => s.uniqueSampleKey)
+            ),
+    });
+
+    readonly totallyUnprofiledSamples = remoteData({
+        await: () => [
+            this.unprofiledSamples,
+            this.coverageInformation,
+            this.genes,
+            this.selectedMolecularProfiles,
+        ],
+        invoke: () => {
+            const genes = this.genes.result!;
+            const coverageInfo = this.coverageInformation.result!;
+            const studyToSelectedMolecularProfileIds = _.mapValues(
+                _.groupBy(
+                    this.selectedMolecularProfiles.result!,
+                    p => p.studyId
+                ),
+                profiles => profiles.map(p => p.molecularProfileId)
+            );
+
+            return Promise.resolve(
+                this.unprofiledSamples.result!.filter(sample => {
+                    // Only look at profiles for this sample's study - doesn't
+                    //  make sense to look at profiles for other studies, which
+                    //  the sample certainly is not part of.
+                    const profileIds =
+                        studyToSelectedMolecularProfileIds[sample.studyId];
+
+                    // Among unprofiled samples, pick out samples that are unprofiled for EVERY gene ...(gene x profile)
+                    return _.every(genes, gene => {
+                        // for EVERY profile
+                        return !_.some(
+                            isSampleProfiledInMultiple(
+                                sample.uniqueSampleKey,
+                                profileIds,
+                                coverageInfo,
+                                gene.hugoGeneSymbol
+                            )
+                        );
+                    });
+                })
+            );
+        },
+    });
+
+    readonly filteredSamples = remoteData({
+        await: () => [
+            this.samples,
+            this.unprofiledSampleKeyToSample,
+            this.totallyUnprofiledSamples,
+        ],
+        invoke: () => {
+            if (this.hideUnprofiledSamples) {
+                let unprofiledSampleKeys: { [key: string]: Sample };
+                if (this.hideUnprofiledSamples === 'any') {
+                    unprofiledSampleKeys = this.unprofiledSampleKeyToSample
+                        .result!;
+                } else if (this.hideUnprofiledSamples === 'totally') {
+                    unprofiledSampleKeys = _.keyBy(
+                        this.totallyUnprofiledSamples.result!,
+                        s => s.uniqueSampleKey
+                    );
+                }
+                return Promise.resolve(
+                    this.samples.result!.filter(
+                        s => !(s.uniqueSampleKey in unprofiledSampleKeys)
+                    )
+                );
+            } else {
+                return Promise.resolve(this.samples.result!);
+            }
+        },
+    });
+
+    public createMutationMapperStoreForSelectedGene(gene: Gene) {
+        const store = new ResultsViewMutationMapperStore(
+            getServerConfig(),
+            {
+                filterMutationsBySelectedTranscript: true,
+                filterAppliersOverride: this.customDataFilterAppliers,
+                genomeBuild: this.genomeBuild,
+            },
+            gene,
+            this.filteredSamples,
+            this.oncoKbCancerGenes,
+            () => this.mutationsByGene.result![gene.hugoGeneSymbol] || [],
+            () => this.mutationCountCache,
+            () => this.clinicalAttributeCache,
+            () => this.genomeNexusCache,
+            () => this.genomeNexusMutationAssessorCache,
+            () => this.discreteCNACache,
+            this.studyToMolecularProfileDiscreteCna.result!,
+            this.studyIdToStudy,
+            this.queriedStudies,
+            this.molecularProfileIdToMolecularProfile,
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.germlineConsentedSamples,
+            this.indexedHotspotData,
+            this.indexedVariantAnnotations,
+            this.uniqueSampleKeyToTumorType.result!,
+            this.generateGenomeNexusHgvsgUrl,
+            this.clinicalDataGroupedBySampleMap,
+            this.mutationsTabClinicalAttributes,
+            this.clinicalAttributeIdToAvailableFrequency,
+            this.genomeNexusClient,
+            this.genomeNexusInternalClient,
+            () => this.urlWrapper.query.mutations_transcript_id
+        );
+        this.mutationMapperStoreByGeneWithDriverKey[
+            this.getGeneWithDriverKey(gene)
+        ] = store;
+        return store;
+    }
+
+    readonly uniqueSampleKeyToTumorType = remoteData<{
+        [uniqueSampleKey: string]: string;
+    }>({
+        await: () => [
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.samplesWithoutCancerTypeClinicalData,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                generateUniqueSampleKeyToTumorTypeMap(
+                    this.clinicalDataForSamples,
+                    this.studiesForSamplesWithoutCancerTypeClinicalData,
+                    this.samplesWithoutCancerTypeClinicalData
+                )
+            );
+        },
+    });
+
+    readonly oncoKbCancerGenes = remoteData(
+        {
+            invoke: () => {
+                if (getServerConfig().show_oncokb) {
+                    return fetchOncoKbCancerGenes();
+                } else {
+                    return Promise.resolve([]);
+                }
+            },
+        },
+        []
+    );
+
+    readonly sample = remoteData(
+        {
+            await: () => [this.studyToDataQueryFilter],
+            invoke: async () => {
+                const customSampleListIds = new SampleSet();
+                const customSampleListStudyIds: string[] = [];
+                const sampleListIds: string[] = [];
+                _.each(
+                    this.studyToDataQueryFilter.result,
+                    (dataQueryFilter: IDataQueryFilter, studyId: string) => {
+                        if (dataQueryFilter.sampleIds) {
+                            customSampleListIds.add(
+                                studyId,
+                                dataQueryFilter.sampleIds
+                            );
+                            customSampleListStudyIds.push(studyId);
+                        } else if (dataQueryFilter.sampleListId) {
+                            sampleListIds.push(dataQueryFilter.sampleListId);
+                        }
+                    }
+                );
+
+                const promises: Promise<Sample[]>[] = [];
+
+                if (customSampleListStudyIds.length > 0) {
+                    promises.push(
+                        client
+                            .fetchSamplesUsingPOST({
+                                sampleFilter: {
+                                    sampleListIds: customSampleListStudyIds.map(
+                                        studyId => `${studyId}_all`
+                                    ),
+                                } as SampleFilter,
+                                projection:
+                                    REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                            })
+                            .then(samples => {
+                                return samples.filter(s =>
+                                    customSampleListIds.has(s)
+                                );
+                            })
+                    );
+                }
+                if (sampleListIds.length) {
+                    promises.push(
+                        client.fetchSamplesUsingPOST({
+                            sampleFilter: {
+                                sampleListIds,
+                            } as SampleFilter,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                        })
+                    );
+                }
+                return _.flatten(await Promise.all(promises));
+            },
+        },
+        []
+    );
+
+    readonly molecularProfileIdToMolecularProfile = remoteData<{
+        [molecularProfileId: string]: MolecularProfile;
+    }>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudies.result.reduce(
+                        (
+                            map: {
+                                [molecularProfileId: string]: MolecularProfile;
+                            },
+                            next: MolecularProfile
+                        ) => {
+                            map[next.molecularProfileId] = next;
+                            return map;
+                        },
+                        {}
+                    )
+                );
+            },
+        },
+        {}
+    );
+
+    readonly everyStudyIdToStudy = remoteData({
+        await: () => [this.allStudies],
+        invoke: () =>
+            Promise.resolve(_.keyBy(this.allStudies.result!, s => s.studyId)),
+    });
+
+    readonly queriedStudies = remoteData({
+        await: () => [this.everyStudyIdToStudy, this.queriedVirtualStudies],
+        invoke: async () => {
+            if (!_.isEmpty(this.cancerStudyIds)) {
+                return fetchQueriedStudies(
+                    this.everyStudyIdToStudy.result!,
+                    this.cancerStudyIds,
+                    this.queriedVirtualStudies.result
+                        ? this.queriedVirtualStudies.result
+                        : []
+                );
+            } else {
+                return [];
+            }
+        },
+        default: [],
+    });
+
+    readonly queriedVirtualStudies = remoteData(
+        {
+            await: () => [this.allStudies],
+            invoke: async () => {
+                const allCancerStudies = this.allStudies.result;
+                const cancerStudyIds = this.cancerStudyIds;
+
+                const missingFromCancerStudies = _.differenceWith(
+                    cancerStudyIds,
+                    allCancerStudies,
+                    (id: string, study: CancerStudy) => id === study.studyId
+                );
+                let ret: VirtualStudy[] = [];
+
+                for (const missingId of missingFromCancerStudies) {
+                    try {
+                        const vs = await sessionServiceClient.getVirtualStudy(
+                            missingId
+                        );
+                        ret = ret.concat(vs);
+                    } catch (error) {
+                        // ignore missing studies
+                        continue;
+                    }
+                }
+                return Promise.resolve(ret);
+            },
+            onError: () => {
+                // fail silently when an error occurs with the virtual studies
+            },
+            // just return empty array if session service is disabled
+        },
+        []
+    );
+
+    readonly studyToMolecularProfileDiscreteCna = remoteData<{
+        [studyId: string]: MolecularProfile;
+    }>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: async () => {
+                const ret: { [studyId: string]: MolecularProfile } = {};
+                for (const molecularProfile of this.molecularProfilesInStudies
+                    .result) {
+                    if (
+                        molecularProfile.datatype ===
+                            DataTypeConstants.DISCRETE &&
+                        molecularProfile.molecularAlterationType ===
+                            AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                    ) {
+                        ret[molecularProfile.studyId] = molecularProfile;
+                    }
+                }
+                return ret;
+            },
+        },
+        {}
+    );
+
+    readonly studyIdToStudy = remoteData(
+        {
+            await: () => [this.studies],
+            invoke: () =>
+                Promise.resolve(_.keyBy(this.studies.result, x => x.studyId)),
+        },
+        {}
+    );
+
+    private makeMutationsTabFilteringSettings() {
+        const self = this;
+        let _excludeVus = observable.box<boolean | undefined>(undefined);
+        let _excludeGermline = observable.box<boolean | undefined>(undefined);
+        return observable({
+            useOql: true,
+            get excludeVus() {
+                if (_excludeVus.get() === undefined) {
+                    return !self.driverAnnotationSettings.includeVUS;
+                } else {
+                    return _excludeVus.get()!;
+                }
+            },
+            get excludeGermline() {
+                if (_excludeGermline.get() === undefined) {
+                    return !self.includeGermlineMutations;
+                } else {
+                    return _excludeGermline.get()!;
+                }
+            },
+            set excludeVus(s: boolean) {
+                _excludeVus.set(s);
+            },
+            set excludeGermline(s: boolean) {
+                _excludeGermline.set(s);
+            },
+        });
+    }
+
     readonly origin = remoteData({
         // the studies that the comparison groups come from
         await: () => [this._session],
@@ -321,6 +1099,158 @@ export default abstract class ComparisonStore
             return ret;
         },
     });
+
+    readonly mutationsByGene = remoteData<{
+        [hugoGeneSymbol: string]: Mutation[];
+    }>({
+        await: () => {
+            const promises: MobxPromise<any>[] = [
+                this.selectedMolecularProfiles,
+                this.defaultOQLQuery,
+                this.mutationsReportByGene,
+                this.structuralVariantsReportByGene,
+            ];
+            if (this.hideUnprofiledSamples) {
+                promises.push(this.filteredSampleKeyToSample);
+            }
+            return promises;
+        },
+        invoke: () => {
+            const mutationsByGene = _.mapValues(
+                this.mutationsReportByGene.result!,
+                (mutationGroups: FilteredAndAnnotatedMutationsReport) => {
+                    if (
+                        this.mutationsTabFilteringSettings.useOql &&
+                        this.queryContainsMutationOql
+                    ) {
+                        // use oql filtering in mutations tab only if query contains mutation oql
+                        mutationGroups = _.mapValues(
+                            mutationGroups,
+                            mutations =>
+                                filterCBioPortalWebServiceData(
+                                    this.oqlText,
+                                    mutations,
+                                    new AccessorsForOqlFilter(
+                                        this.selectedMolecularProfiles.result!
+                                    ),
+                                    this.defaultOQLQuery.result!
+                                )
+                        );
+                    }
+                    const filteredMutations = compileMutations(
+                        mutationGroups,
+                        this.mutationsTabFilteringSettings.excludeVus,
+                        this.mutationsTabFilteringSettings.excludeGermline
+                    );
+                    if (this.hideUnprofiledSamples) {
+                        // filter unprofiled samples
+                        const sampleMap = this.filteredSampleKeyToSample
+                            .result!;
+                        return filteredMutations.filter(
+                            m => m.uniqueSampleKey in sampleMap
+                        );
+                    } else {
+                        return filteredMutations;
+                    }
+                }
+            );
+
+            //TODO: remove once SV/Fusion tab is merged
+            _.forEach(
+                this.structuralVariantsReportByGene.result,
+                (structuralVariantsGroups, hugoGeneSymbol) => {
+                    if (mutationsByGene[hugoGeneSymbol] === undefined) {
+                        mutationsByGene[hugoGeneSymbol] = [];
+                    }
+
+                    if (
+                        this.mutationsTabFilteringSettings.useOql &&
+                        this.queryContainsMutationOql
+                    ) {
+                        // use oql filtering in mutations tab only if query contains mutation oql
+                        structuralVariantsGroups = _.mapValues(
+                            structuralVariantsGroups,
+                            structuralVariants =>
+                                filterCBioPortalWebServiceData(
+                                    this.oqlText,
+                                    structuralVariants,
+                                    new AccessorsForOqlFilter(
+                                        this.selectedMolecularProfiles.result!
+                                    ),
+                                    this.defaultOQLQuery.result!
+                                )
+                        );
+                    }
+                    let filteredStructuralVariants = compileStructuralVariants(
+                        structuralVariantsGroups,
+                        this.mutationsTabFilteringSettings.excludeVus,
+                        this.mutationsTabFilteringSettings.excludeGermline
+                    );
+                    if (this.hideUnprofiledSamples) {
+                        // filter unprofiled samples
+                        const sampleMap = this.filteredSampleKeyToSample
+                            .result!;
+                        filteredStructuralVariants = filteredStructuralVariants.filter(
+                            m => m.uniqueSampleKey in sampleMap
+                        );
+                    }
+
+                    filteredStructuralVariants.forEach(structuralVariant => {
+                        const mutation = {
+                            center: structuralVariant.center,
+                            chr: structuralVariant.site1Chromosome,
+                            entrezGeneId: structuralVariant.site1EntrezGeneId,
+                            keyword: structuralVariant.comments,
+                            molecularProfileId:
+                                structuralVariant.molecularProfileId,
+                            mutationType: CanonicalMutationType.FUSION,
+                            ncbiBuild: structuralVariant.ncbiBuild,
+                            patientId: structuralVariant.patientId,
+                            proteinChange: structuralVariant.eventInfo,
+                            sampleId: structuralVariant.sampleId,
+                            startPosition: structuralVariant.site1Position,
+                            studyId: structuralVariant.studyId,
+                            uniquePatientKey:
+                                structuralVariant.uniquePatientKey,
+                            uniqueSampleKey: structuralVariant.uniqueSampleKey,
+                            variantType: structuralVariant.variantClass,
+                            gene: {
+                                entrezGeneId:
+                                    structuralVariant.site1EntrezGeneId,
+                                hugoGeneSymbol:
+                                    structuralVariant.site1HugoSymbol,
+                            },
+                            hugoGeneSymbol: structuralVariant.site1HugoSymbol,
+                            putativeDriver: structuralVariant.putativeDriver,
+                            oncoKbOncogenic: structuralVariant.oncoKbOncogenic,
+                            isHotspot: structuralVariant.isHotspot,
+                            simplifiedMutationType:
+                                CanonicalMutationType.FUSION,
+                        } as AnnotatedMutation;
+
+                        mutationsByGene[hugoGeneSymbol].push(mutation);
+                    });
+                }
+            );
+            //TODO: remove once SV/Fusion tab is merged
+
+            return Promise.resolve(mutationsByGene);
+        },
+    });
+
+    readonly mutations = remoteData<Mutation[]>({
+        await: () => [this.mutations_preload, this.sampleKeyToSample],
+        invoke: () => {
+            const sampleKeys = this.sampleKeyToSample.result!;
+            return Promise.resolve(
+                this.mutations_preload.result!.filter(
+                    m => m.uniqueSampleKey in sampleKeys
+                )
+            );
+        },
+    });
+
+    readonly geneCache = new GeneCache();
 
     readonly overlapComputations = remoteData<
         IOverlapComputations<ComparisonGroup>

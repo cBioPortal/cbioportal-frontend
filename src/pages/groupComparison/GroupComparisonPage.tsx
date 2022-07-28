@@ -50,6 +50,8 @@ import {
 import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
+import Mutations from '../../../src/pages/resultsView/mutation/Mutations';
+
 export interface IGroupComparisonPageProps {
     routing: any;
     appStore: AppStore;
@@ -179,8 +181,13 @@ export default class GroupComparisonPage extends React.Component<
                     <MSKTab
                         id={GroupComparisonTab.MUTATION}
                         linkText="Mutations"
-                    ></MSKTab>
-
+                    >
+                        <Mutation
+                            store={this.store}
+                            //appStore={this.appStore}
+                            //urlWrapper={this.urlWrapper}
+                        />
+                    </MSKTab>
                     {this.store.showAlterationsTab && (
                         <MSKTab
                             id={GroupComparisonTab.ALTERATIONS}
