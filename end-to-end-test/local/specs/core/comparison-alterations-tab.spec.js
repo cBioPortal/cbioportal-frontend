@@ -15,7 +15,7 @@ var openAlterationTypeSelectionMenu = require('../../../shared/specUtils')
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const resultsViewComparisonTab = `${CBIOPORTAL_URL}/results/comparison?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=BRCA1%2520BRCA2&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize&comparison_subtab=alterations`;
 
-describe('comparison alterations tab', function() {
+describe.only('comparison alterations tab', function() {
     beforeEach(() => {
         loadAlterationsTab();
         openAlterationTypeSelectionMenu();
@@ -52,9 +52,12 @@ describe('comparison alterations tab', function() {
 
     it('filters CNA types', function() {
         clickAlterationTypeCheckBox('Mutations');
+        clickAlterationTypeCheckBox('Structural Variants / Fusions');
+
         submitEnrichmentRequest();
         $('[data-test=LazyMobXTable]').waitForDisplayed();
         assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
+
         clickAlterationTypeCheckBox('Deletion');
         submitEnrichmentRequest();
         $('[data-test=LazyMobXTable]').waitForDisplayed();
