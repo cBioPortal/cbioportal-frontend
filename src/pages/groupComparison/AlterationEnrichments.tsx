@@ -7,7 +7,6 @@ import ErrorMessage from '../../shared/components/ErrorMessage';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { ResultsViewPageStore } from '../resultsView/ResultsViewPageStore';
-import { makeObservable } from 'mobx';
 import { GENOMIC_ALTERATIONS_TAB_NAME } from 'pages/groupComparison/GroupComparisonTabs';
 import { getServerConfig } from 'config/config';
 
@@ -23,7 +22,6 @@ export default class AlterationEnrichments extends React.Component<
 > {
     constructor(props: IAlterationEnrichmentsProps) {
         super(props);
-        makeObservable(this);
     }
 
     readonly tabUI = MakeEnrichmentsTabUI(

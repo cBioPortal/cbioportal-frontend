@@ -3507,6 +3507,23 @@ export function statusFilterActive(
     );
 }
 
+export function findInvalidMolecularProfileIds(
+    filters: StudyViewFilter,
+    molecularProfiles: MolecularProfile[]
+): string[] {
+    const molecularProfilesInFilters = _(
+        filters.geneFilters?.map(f => f.molecularProfileIds)
+    )
+        .flatten()
+        .uniq()
+        .value();
+
+    return _.difference(
+        molecularProfilesInFilters,
+        molecularProfiles.map(p => p.molecularProfileId)
+    );
+}
+
 export function getFilteredMolecularProfilesByAlterationType(
     studyIdToMolecularProfiles: { [studyId: string]: MolecularProfile[] },
     alterationType: string,
@@ -3654,7 +3671,10 @@ export async function updateCustomIntervalFilter(
         chartMeta.uniqueKey,
         newBinBounds,
         BinMethodOption.CUSTOM,
-        undefined
+        {
+            anchorValue: 0,
+            binSize: 0,
+        }
     );
 
     // Now, we will use the custom bins to define the new filter.

@@ -37,6 +37,12 @@ To build DLLs in common-dist folder (must be done prior to start of dev server)
 yarn run buildDLL:dev
 ```
 
+To build all packages the main project depends on (must be done prior to start of dev server):
+
+```
+yarn run buildModules
+```
+
 To start the dev server with hot reload enabled
 ```
 # set the environment variables you want based on what branch you're branching
@@ -175,6 +181,8 @@ Files for the local database e2e-tests are located in the `./end-to-end-test/loc
 
 2. You need to have the [jq](https://stedolan.github.io/jq/) package installed on your system. E.g. using brew:
    ```brew install jq```
+
+3. You need to have a global version of Maven installed.
 
 In a terminal, start the frontend dev server
 

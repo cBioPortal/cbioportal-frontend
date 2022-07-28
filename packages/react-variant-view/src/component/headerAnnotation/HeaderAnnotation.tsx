@@ -19,7 +19,7 @@ import { ANNOTATION_QUERY_FIELDS } from '../../util/Constants';
 import headerAnnotationStyle from './HeaderAnnotation.module.scss';
 import { generateOncokbLink, ONCOKB_URL } from '../pathogenicity/Oncokb';
 import TranscriptSummaryTable from './TranscriptSummaryTable';
-import oncokbLogo from '../../image/oncokb.png';
+import oncokbLogo from 'oncokb-styles/dist/images/oncogenic.svg';
 
 interface IHeaderAnnotationProps {
     annotation: VariantAnnotationSummary | undefined;
@@ -410,7 +410,7 @@ export default class HeaderAnnotation extends React.Component<
                                         alignItems: 'center',
                                     }}
                                 >
-                                    OncoKB
+                                    OncoKB™
                                     <img
                                         height={12}
                                         src={oncokbLogo}

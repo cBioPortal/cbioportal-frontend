@@ -177,17 +177,30 @@ describe('group comparison page screenshot tests', function() {
         });
     });
 
-    describe('Clinical tab', function() {
+    describe('Clinical tab', () => {
         before(function() {
             openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',
-                5000
+                10000
             );
             $('.tabAnchor_clinical').click();
             $('[data-test="ComparisonPageClinicalTabDiv"]').waitForExist({
                 timeout: 20000,
             });
+        });
+
+        it('shows box plot for numerical data', () => {
+            $('[data-test="Mutation Count"]').click();
+            const res = checkClinicalTabPlot();
+            assertScreenShotMatch(res);
+        });
+
+        it('shows table when selecting table visualisation', () => {
+            $('[data-test="Mutation Count"]').click();
+            selectClinicalTabNumericalDisplayType('Table');
+            const res = checkClinicalTabPlot();
+            assertScreenShotMatch(res);
         });
 
         it('displays 100% stacked bar chart by default', () => {
@@ -210,6 +223,24 @@ function openGeneSelectorMenu() {
         '[data-test="selectGenes"]',
         'input[data-test=numberOfGenes]'
     );
+}
+
+function checkClinicalTabPlot() {
+    return browser.checkElement('div[data-test="ClinicalTabPlotDiv"]', '', {
+        hide: ['.qtip'],
+    });
+}
+
+function selectClinicalTabNumericalDisplayType(type) {
+    setDropdownOpen(
+        true,
+        '[data-test="numericalVisualisationTypeSelector"] .Select-arrow-zone',
+        '[data-test="numericalVisualisationTypeSelector"] .Select-menu',
+        "Couldn't open clinical tab chart type dropdown"
+    );
+    $(
+        `[data-test="numericalVisualisationTypeSelector"] .Select-option[aria-label="${type}"]`
+    ).click();
 }
 
 function checkClinicalTabPlot() {

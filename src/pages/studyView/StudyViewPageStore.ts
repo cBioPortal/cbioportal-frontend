@@ -85,6 +85,7 @@ import {
     excludeFiltersForAttribute,
     FGA_PLOT_DOMAIN,
     FGA_VS_MUTATION_COUNT_KEY,
+    findInvalidMolecularProfileIds,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateScatterPlotDownloadData,
@@ -7090,12 +7091,26 @@ export class StudyViewPageStore
     @observable blockLoading = false;
 
     readonly selectedSamples = remoteData<Sample[]>({
-        await: () => [this.samples],
+        await: () => [this.samples, this.molecularProfiles],
         invoke: () => {
             //fetch samples when there are only filters applied
             if (this.chartsAreFiltered) {
                 if (!this.hasSampleIdentifiersInFilter) {
                     return Promise.resolve([] as Sample[]);
+                }
+                // here we are validating only the molecular profile ids,
+                // but ideally we should validate the entire filters object
+                const invalidMolecularProfiles = findInvalidMolecularProfileIds(
+                    this.filters,
+                    this.molecularProfiles.result
+                );
+
+                if (invalidMolecularProfiles.length > 0) {
+                    return Promise.reject({
+                        detailedErrorMessage: `Invalid molecular profile id(s): ${invalidMolecularProfiles.join(
+                            ', '
+                        )}`,
+                    });
                 }
 
                 return internalClient.fetchFilteredSamplesUsingPOST({

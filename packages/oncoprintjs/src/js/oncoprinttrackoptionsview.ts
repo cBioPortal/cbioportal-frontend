@@ -571,6 +571,7 @@ export default class OncoprintTrackOptionsView {
         this.resize(model, getCellViewHeight);
     }
     public addTracks(model: OncoprintModel, getCellViewHeight: () => number) {
+        this.setTrackShowGaps(model, getCellViewHeight);
         this.renderAllOptions(model);
         this.resize(model, getCellViewHeight);
     }

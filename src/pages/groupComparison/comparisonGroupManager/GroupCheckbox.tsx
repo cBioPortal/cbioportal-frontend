@@ -78,16 +78,6 @@ export default class GroupCheckbox extends React.Component<
         this.props.shareGroup(this.props.group);
     }
 
-    @autobind
-    private onOverlayEnter() {
-        this.props.store.numberOfVisibleColorChooserModals += 1;
-    }
-
-    @autobind
-    private onOverlayExit() {
-        this.props.store.numberOfVisibleColorChooserModals -= 1;
-    }
-
     @computed get label() {
         return (
             <span
@@ -136,14 +126,15 @@ export default class GroupCheckbox extends React.Component<
     };
 
     buildColorChooserWidget = () => (
-        <Popover
-            id="popover-basic"
-            onClick={e => {
-                e.stopPropagation();
-                e.preventDefault();
-            }}
-        >
-            <div>
+        <Popover>
+            <div
+                onMouseDown={e => {
+                    e.nativeEvent.stopImmediatePropagation();
+                }}
+                onClick={e => {
+                    e.nativeEvent.stopImmediatePropagation();
+                }}
+            >
                 <CirclePicker
                     colors={this.colorList}
                     circleSize={20}
@@ -229,18 +220,11 @@ export default class GroupCheckbox extends React.Component<
                                 trigger="click"
                                 placement="bottom"
                                 overlay={this.buildColorChooserWidget()}
-                                onEnter={this.onOverlayEnter}
-                                onExit={this.onOverlayExit}
                                 rootClose={true}
                             >
                                 <DefaultTooltip
                                     overlay={
                                         'Optional: Select color for group to be used in group comparison. If no color is selected, a random color will be applied.'
-                                    }
-                                    disabled={
-                                        this.props.store
-                                            .numberOfVisibleColorChooserModals >
-                                        0
                                     }
                                 >
                                     <span

@@ -85,7 +85,7 @@ function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
                 return true;
             } else {
                 $(button).click();
-                $('[data-test=GlobalSettingsDropdown]').waitForDisplayed({
+                $(dropdown).waitForDisplayed({
                     timeout: 6000,
                     reverse: !open,
                 });
