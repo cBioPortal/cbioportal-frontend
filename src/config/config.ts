@@ -337,7 +337,21 @@ export function initializeServerConfiguration(rawConfiguration: any) {
         localStorageOverride.serverConfig
     );
 
+    // apply custom corrections for deprecated
+    // configurations
+    applyCorrections(mergedConfig);
+
     setServerConfig(mergedConfig);
+}
+
+function applyCorrections(config: IServerConfig) {
+    // we no longer support markdown files (7/30/2022)
+    // we only support hyper links to externally hosted pages
+    // if we detect a custom configured MD file, correct it to use default new link
+    // otherwise, string will be used as link href
+    if (/\.md$/i.test(config.skin_documentation_news || '')) {
+        config.skin_documentation_news = ServerConfigDefaults.skin_documentation_news!;
+    }
 }
 
 export function setLoadConfig(obj: Partial<ILoadConfig>) {
