@@ -1910,6 +1910,11 @@ export class StudyViewPageStore
     }
 
     @action
+    handleTabChange(id: string) {
+        this.urlWrapper.setTab(id);
+    }
+
+    @action
     updateStoreByFilters(filters: Partial<StudyViewFilter>): void {
         // fixes filters in place to ensure backward compatiblity
         // as filter specification changes
@@ -8276,6 +8281,28 @@ export class StudyViewPageStore
             );
         },
         default: [],
+    });
+
+    readonly clinicalAttributeProduct = remoteData({
+        await: () => [this.clinicalAttributes, this.selectedSamples],
+        invoke: async () => {
+            return (
+                this.clinicalAttributes.result.length *
+                this.selectedSamples.result.length
+            );
+        },
+        default: 0,
+    });
+
+    readonly maxSamplesForClinicalTab = remoteData({
+        await: () => [this.clinicalAttributes],
+        invoke: async () => {
+            return Math.floor(
+                getServerConfig().clinical_attribute_product_limit /
+                    this.clinicalAttributes.result.length
+            );
+        },
+        default: 0,
     });
 
     readonly molecularProfileForGeneCharts = remoteData({
