@@ -17,7 +17,7 @@
   "tags": [
     {
       "name": "Alteration Counts",
-      "description": " "
+      "description": "Alteration Count Controller"
     },
     {
       "name": "Alteration Enrichments",
@@ -159,10 +159,9 @@
             "required": false,
             "type": "string",
             "default": "SAMPLE",
-            "allowEmptyValue": false,
             "enum": [
-              "SAMPLE",
-              "PATIENT"
+              "PATIENT",
+              "SAMPLE"
             ]
           },
           {
@@ -175,22 +174,17 @@
               "type": "integer",
               "format": "int32"
             },
-            "collectionFormat": "multi",
-            "allowEmptyValue": false
+            "collectionFormat": "multi"
           }
         ],
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationCountByGene"
-              }
+              "$ref": "#/definitions/AlterationCountDetailed"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/alteration-enrichments/fetch": {
@@ -3315,6 +3309,32 @@
       },
       "title": "AlterationCountByGene"
     },
+    "AlterationCountDetailed": {
+      "type": "object",
+      "properties": {
+        "allGenesProfiled": {
+          "type": "boolean"
+        },
+        "alterationCountsByGene": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AlterationCountByGene"
+          }
+        },
+        "profiledCasesCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "profiledGenes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/GenePanelToGene"
+          }
+        }
+      },
+      "title": "AlterationCountDetailed"
+    },
     "AlterationCountFilter": {
       "type": "object",
       "properties": {
@@ -4185,6 +4205,23 @@
         }
       },
       "title": "GeneFilterQuery"
+    },
+    "GenePanelToGene": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "hugoGeneSymbol"
+      ],
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        }
+      },
+      "title": "GenePanelToGene"
     },
     "GenericAssayDataBin": {
       "type": "object",

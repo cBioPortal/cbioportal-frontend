@@ -9,7 +9,14 @@ import PathwayMapperTable, {
 import PathwayMapperMessageBox from 'shared/lib/pathwayMapper/PathwayMapperMessageBox';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import { observable, computed, action, makeObservable } from 'mobx';
+import {
+    observable,
+    computed,
+    action,
+    makeObservable,
+    autorun,
+    IReactionDisposer,
+} from 'mobx';
 import { Row } from 'react-bootstrap';
 
 import { AppStore } from 'AppStore';
@@ -33,6 +40,7 @@ const LOADING_MESSAGE = 'Loading alteration data...';
 export default class ResultsViewPathwayMapper extends React.Component<
     IResultsViewPathwayMapperProps
 > {
+    private reactionDisposer: IReactionDisposer;
     private store: ResultsViewPathwayMapperStore;
 
     @observable
@@ -53,6 +61,20 @@ export default class ResultsViewPathwayMapper extends React.Component<
                     .default as PathwayMapper;
             }
         );
+
+        // we still need this action where we invoke addGenomicData function
+        // due to underlying implementation of pathway mapper
+        // we need to refactor pathway mapper to get rid of this.addGenomicData callback
+        this.reactionDisposer = autorun(() => {
+            // alterationFrequencyData is loaded/reloaded.
+            if (this.store.alterationFrequencyData.isComplete) {
+                this.addGenomicData(this.store.alterationFrequencyData.result);
+            }
+        });
+    }
+
+    public destroy() {
+        this.reactionDisposer();
     }
 
     @observable.ref PathwayMapperComponent:
@@ -60,18 +82,6 @@ export default class ResultsViewPathwayMapper extends React.Component<
         | undefined = undefined;
 
     @computed get message(): string {
-        // if (this.store.alterationCountsByNonQueryGenes.isComplete && this.warningMessage === LOADING_MESSAGE) {
-        //     return '';
-        // }
-        //
-        // if (
-        //     this.store.alterationCountsByNonQueryGenes.isPending &&
-        //     this.store.validNonQueryGenes.isComplete &&
-        //     this.store.validNonQueryGenes.result.length > 0
-        // ) {
-        //     return LOADING_MESSAGE;
-        // }
-
         if (
             this.store.alterationCountsByAllGenes.isComplete &&
             this.warningMessage === LOADING_MESSAGE
@@ -91,11 +101,6 @@ export default class ResultsViewPathwayMapper extends React.Component<
     }
 
     public render() {
-        // Alteration data of all genes are loaded.
-        if (this.store.alterationCountsByAllGenes.isComplete) {
-            this.addGenomicData(this.store.alterationFrequencyData);
-        }
-
         if (!this.PathwayMapperComponent) {
             return null;
         }
@@ -121,7 +126,8 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 isCollaborative={false}
                                 genes={this.props.store.genes.result as any}
                                 cBioAlterationData={
-                                    this.store.alterationFrequencyData
+                                    this.store.alterationFrequencyData.result ||
+                                    []
                                 }
                                 onAddGenes={this.handleAddGenes}
                                 changePathwayHandler={this.handlePathwayChange}
@@ -130,7 +136,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 }
                                 messageBanner={this.renderBanner}
                                 tableComponent={this.renderTable}
-                                validGenes={this.store.validGenes}
+                                validGenes={this.store.validGeneSymbols}
                                 showMessage={this.updateMessage}
                             />
                         </>

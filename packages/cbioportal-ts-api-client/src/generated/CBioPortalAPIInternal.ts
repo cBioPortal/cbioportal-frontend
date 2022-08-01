@@ -17,6 +17,16 @@ export type AlterationCountByGene = {
         'totalCount': number
 
 };
+export type AlterationCountDetailed = {
+    'allGenesProfiled': boolean
+
+        'alterationCountsByGene': Array < AlterationCountByGene >
+
+        'profiledCasesCount': number
+
+        'profiledGenes': Array < GenePanelToGene >
+
+};
 export type AlterationCountFilter = {
     'alterationFilter': AlterationFilter
 
@@ -394,6 +404,12 @@ export type GeneFilterQuery = {
         'includeVUS': boolean
 
         'tiersBooleanMap': {}
+
+};
+export type GenePanelToGene = {
+    'entrezGeneId': number
+
+        'hugoGeneSymbol': string
 
 };
 export type GenericAssayDataBin = {
@@ -1069,7 +1085,7 @@ export default class CBioPortalAPIInternal {
 
     fetchAlterationCountsUsingPOSTURL(parameters: {
         'alterationCountFilter': AlterationCountFilter,
-        'alterationCountType' ? : "SAMPLE" | "PATIENT",
+        'alterationCountType' ? : "PATIENT" | "SAMPLE",
         'entrezGeneIds' ? : Array < number > ,
         $queryParameters ? : any
     }): string {
@@ -1104,7 +1120,7 @@ export default class CBioPortalAPIInternal {
      */
     fetchAlterationCountsUsingPOSTWithHttpInfo(parameters: {
         'alterationCountFilter': AlterationCountFilter,
-        'alterationCountType' ? : "SAMPLE" | "PATIENT",
+        'alterationCountType' ? : "PATIENT" | "SAMPLE",
         'entrezGeneIds' ? : Array < number > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1159,17 +1175,16 @@ export default class CBioPortalAPIInternal {
      * @param {array} entrezGeneIds - List of entrez gene ids
      */
     fetchAlterationCountsUsingPOST(parameters: {
-            'alterationCountFilter': AlterationCountFilter,
-            'alterationCountType' ? : "SAMPLE" | "PATIENT",
-            'entrezGeneIds' ? : Array < number > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < AlterationCountByGene >
-        > {
-            return this.fetchAlterationCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'alterationCountFilter': AlterationCountFilter,
+        'alterationCountType' ? : "PATIENT" | "SAMPLE",
+        'entrezGeneIds' ? : Array < number > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < AlterationCountDetailed > {
+        return this.fetchAlterationCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchAlterationEnrichmentsUsingPOSTURL(parameters: {
         'enrichmentType' ? : "PATIENT" | "SAMPLE",
         'groupsAndAlterationTypes': MolecularProfileCasesGroupAndAlterationTypeFilter,

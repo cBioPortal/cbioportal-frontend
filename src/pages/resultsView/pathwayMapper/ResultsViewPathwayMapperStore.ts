@@ -9,6 +9,8 @@ import {
 } from 'cbioportal-ts-api-client';
 import {
     AlterationCountByGene,
+    AlterationCountDetailed,
+    GenePanelToGene,
     MolecularProfileCaseIdentifier,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
@@ -22,7 +24,7 @@ function fetchAlterationCounts(
     selectedMolecularProfileCaseIdentifiers: MolecularProfileCaseIdentifier[],
     alterationCountType: 'SAMPLE' | 'PATIENT' = 'PATIENT',
     genes?: Gene[]
-) {
+): Promise<AlterationCountDetailed> {
     return internalClient.fetchAlterationCountsUsingPOST({
         entrezGeneIds: _.isEmpty(genes)
             ? (undefined as any)
@@ -53,6 +55,15 @@ function fetchAlterationCounts(
     });
 }
 
+function emptyAlterationCount(): AlterationCountDetailed {
+    return {
+        alterationCountsByGene: [],
+        allGenesProfiled: false,
+        profiledGenes: [],
+        profiledCasesCount: 0,
+    };
+}
+
 function getAlterationInfo(count: AlterationCountByGene) {
     return {
         gene: count.hugoGeneSymbol,
@@ -65,32 +76,111 @@ function getAlterationInfo(count: AlterationCountByGene) {
     };
 }
 
+function getNotProfiledAlterationCount(gene: Gene): AlterationCountByGene {
+    return getNotAlteredAlterationCount(gene, 0);
+}
+
+function getNotAlteredAlterationCount(
+    gene: Gene,
+    numberOfProfiledCases: number
+): AlterationCountByGene {
+    return {
+        hugoGeneSymbol: gene.hugoGeneSymbol,
+        entrezGeneId: gene.entrezGeneId,
+        numberOfAlteredCases: 0,
+        numberOfProfiledCases,
+        totalCount: 0,
+        matchingGenePanelIds: [],
+        qValue: 0,
+    };
+}
+
+function getAlterationCountsForProfiledGenes(
+    alterationCountDetailed: AlterationCountDetailed
+) {
+    let alterationCountsByGene: AlterationCountByGene[] =
+        alterationCountDetailed.alterationCountsByGene;
+
+    if (!alterationCountDetailed.allGenesProfiled) {
+        const map = _.keyBy(
+            alterationCountDetailed.profiledGenes,
+            gene => gene.hugoGeneSymbol
+        );
+
+        // there may actually be alteration counts for N/P genes,
+        // but we just ignore them
+        alterationCountsByGene = alterationCountDetailed.alterationCountsByGene?.filter(
+            count => map[count.hugoGeneSymbol] !== undefined
+        );
+    }
+
+    return alterationCountsByGene;
+}
+
 function getMolecularProfileCaseIdentifiers(
-    filteredCases?: { sampleId?: string; patientId?: string }[],
+    filteredCases?: {
+        sampleId?: string;
+        patientId?: string;
+        studyId?: string;
+    }[],
     selectedMolecularProfiles?: MolecularProfile[],
     getCaseId: (sampleOrPatient: {
         sampleId?: string;
         patientId?: string;
     }) => string = () => ''
 ) {
-    const molecularProfileCaseIdentifiers: MolecularProfileCaseIdentifier[] = [];
+    // use a map to avoid duplicate case id and molecular profile id pairs
+    const molecularProfileCaseIdentifierMap: {
+        [key: string]: MolecularProfileCaseIdentifier;
+    } = {};
 
     filteredCases?.forEach(sampleOrPatient => {
         selectedMolecularProfiles?.forEach(profile => {
-            molecularProfileCaseIdentifiers.push({
-                caseId: getCaseId(sampleOrPatient),
-                molecularProfileId: profile.molecularProfileId,
-            });
+            if (profile.studyId === sampleOrPatient.studyId) {
+                const caseId = getCaseId(sampleOrPatient);
+                const molecularProfileId = profile.molecularProfileId;
+                const key = `${caseId}_${molecularProfileId}`;
+
+                molecularProfileCaseIdentifierMap[key] = {
+                    caseId,
+                    molecularProfileId,
+                };
+            }
         });
     });
 
-    return Promise.resolve(molecularProfileCaseIdentifiers);
+    return Promise.resolve(_.values(molecularProfileCaseIdentifierMap));
+}
+
+function getNotProfiledValidGenes(
+    validGenes: Gene[],
+    profiledGenes: GenePanelToGene[],
+    allGenesProfiled?: boolean
+): Gene[] {
+    if (allGenesProfiled) {
+        return [];
+    } else {
+        const profiled = _.keyBy(profiledGenes, gene => gene.entrezGeneId);
+        return validGenes.filter(gene => !profiled[gene.entrezGeneId]);
+    }
+}
+
+function getNotAlteredValidGenes(
+    validGenes: Gene[],
+    notProfiledGenes: Gene[],
+    alterationCountsByGene: { [entrezGeneId: number]: AlterationCountByGene }
+): Gene[] {
+    const notProfiled = _.keyBy(notProfiledGenes, gene => gene.entrezGeneId);
+    return validGenes.filter(
+        gene =>
+            !notProfiled[gene.entrezGeneId] &&
+            !alterationCountsByGene[gene.entrezGeneId]
+    );
 }
 
 export class ResultsViewPathwayMapperStore {
-    private accumulatedAlterationFrequencyDataForNonQueryGenes: ICBioData[];
     private readonly accumulatedValidGenes: {
-        [hugoGeneSymbol: string]: boolean;
+        [hugoGeneSymbol: string]: Gene;
     };
 
     @observable
@@ -101,7 +191,6 @@ export class ResultsViewPathwayMapperStore {
 
     constructor(private resultsViewPageStore: ResultsViewPageStore) {
         makeObservable(this);
-        this.accumulatedAlterationFrequencyDataForNonQueryGenes = [];
         this.accumulatedValidGenes = {};
     }
 
@@ -111,59 +200,17 @@ export class ResultsViewPathwayMapperStore {
             : this.selectedMolecularProfileCaseIdentifiersForSamples;
     }
 
-    readonly alterationCountsByAllGenes = remoteData<AlterationCountByGene[]>({
+    readonly alterationCountsByAllGenes = remoteData<AlterationCountDetailed>({
         await: () => [this.getSelectedMolecularProfileCaseIdentifiers()],
         invoke: () => {
             const caseIdentifiers = this.getSelectedMolecularProfileCaseIdentifiers()
                 .result;
 
             return _.isEmpty(caseIdentifiers)
-                ? Promise.resolve([])
+                ? Promise.resolve(emptyAlterationCount())
                 : fetchAlterationCounts(
                       caseIdentifiers!,
                       this.alterationCountType
-                  );
-        },
-    });
-
-    readonly alterationCountsByQueryGenes = remoteData<AlterationCountByGene[]>(
-        {
-            await: () => [
-                this.resultsViewPageStore.genes,
-                this.getSelectedMolecularProfileCaseIdentifiers(),
-            ],
-            invoke: () => {
-                const caseIdentifiers = this.getSelectedMolecularProfileCaseIdentifiers()
-                    .result;
-                const genes = this.resultsViewPageStore.genes.result;
-                return _.isEmpty(genes) || _.isEmpty(caseIdentifiers)
-                    ? Promise.resolve([])
-                    : fetchAlterationCounts(
-                          caseIdentifiers!,
-                          this.alterationCountType,
-                          genes
-                      );
-            },
-        }
-    );
-
-    readonly alterationCountsByNonQueryGenes = remoteData<
-        AlterationCountByGene[]
-    >({
-        await: () => [
-            this.validNonQueryGenes,
-            this.getSelectedMolecularProfileCaseIdentifiers(),
-        ],
-        invoke: () => {
-            const caseIdentifiers = this.getSelectedMolecularProfileCaseIdentifiers()
-                .result;
-            const genes = this.validNonQueryGenes.result;
-            return _.isEmpty(genes) || _.isEmpty(caseIdentifiers)
-                ? Promise.resolve([])
-                : fetchAlterationCounts(
-                      caseIdentifiers!,
-                      this.alterationCountType,
-                      genes
                   );
         },
     });
@@ -208,103 +255,95 @@ export class ResultsViewPathwayMapperStore {
      * Valid non-query genes accumulated from currently selected pathway
      * and previously selected pathways in a single query session.
      */
-    @computed get validGenes() {
-        if (this.validNonQueryGenes.isComplete) {
+    readonly validGenes = remoteData<{ [hugoGeneSymbol: string]: Gene }>({
+        await: () => [this.validNonQueryGenes],
+        invoke: () => {
             // Valid genes are accumulated.
-            this.validNonQueryGenes.result.forEach(gene => {
-                this.accumulatedValidGenes[gene.hugoGeneSymbol] = true;
+            this.validNonQueryGenes.result?.forEach(gene => {
+                this.accumulatedValidGenes[gene.hugoGeneSymbol] = gene;
             });
-        }
 
-        return this.accumulatedValidGenes;
+            return Promise.resolve(this.accumulatedValidGenes);
+        },
+    });
+
+    readonly notProfiledValidGenes = remoteData<Gene[]>({
+        await: () => [this.validGenes, this.alterationCountsByAllGenes],
+        invoke: () =>
+            Promise.resolve(
+                getNotProfiledValidGenes(
+                    _.values(this.validGenes.result),
+                    this.alterationCountsByAllGenes.result?.profiledGenes || [],
+                    this.alterationCountsByAllGenes.result?.allGenesProfiled
+                )
+            ),
+    });
+
+    readonly notAlteredValidGenes = remoteData<Gene[]>({
+        await: () => [
+            this.validGenes,
+            this.notProfiledValidGenes,
+            this.alterationCountsByAllGenes,
+        ],
+        invoke: () =>
+            Promise.resolve(
+                getNotAlteredValidGenes(
+                    _.values(this.validGenes.result),
+                    this.notProfiledValidGenes.result || [],
+                    this.alterationCountsByEntrezGeneId
+                )
+            ),
+    });
+
+    readonly alterationFrequencyData = remoteData<ICBioData[]>({
+        await: () => [
+            this.alterationCountsByAllGenes,
+            this.notProfiledValidGenes,
+            this.notAlteredValidGenes,
+        ],
+        invoke: () => {
+            const alterationCountsByGenes: AlterationCountByGene[] = [];
+
+            if (this.alterationCountsByAllGenes.result) {
+                const dataProfiled = getAlterationCountsForProfiledGenes(
+                    this.alterationCountsByAllGenes.result
+                );
+                const dataNotProfiled =
+                    (this.notProfiledValidGenes.result || []).map(
+                        getNotProfiledAlterationCount
+                    ) || [];
+                const dataNotAltered =
+                    (this.notAlteredValidGenes.result || []).map(gene =>
+                        getNotAlteredAlterationCount(
+                            gene,
+                            this.alterationCountsByAllGenes.result!
+                                .profiledCasesCount
+                        )
+                    ) || [];
+
+                alterationCountsByGenes.push(
+                    ...dataProfiled,
+                    ...dataNotProfiled,
+                    ...dataNotAltered
+                );
+            }
+
+            return Promise.resolve(
+                alterationCountsByGenes.map(getAlterationInfo)
+            );
+        },
+    });
+
+    @computed get validGeneSymbols() {
+        return _.keys(this.validGenes.result || {});
     }
 
-    @computed get alterationFrequencyData(): ICBioData[] {
-        // return this.alterationFrequencyDataForQueryGenes.concat(
-        //     this.alterationFrequencyDataForNonQueryGenes
-        // );
-        return (
-            this.alterationCountsByAllGenes.result?.map(getAlterationInfo) || []
+    @computed get alterationCountsByEntrezGeneId(): {
+        [entrezGeneId: number]: AlterationCountByGene;
+    } {
+        return _.keyBy(
+            this.alterationCountsByAllGenes.result?.alterationCountsByGene,
+            c => c.entrezGeneId
         );
-    }
-
-    @computed get alterationFrequencyDataForQueryGenes() {
-        let alterationFrequencyData: ICBioData[] = [];
-
-        if (this.alterationCountsByQueryGenes.isComplete) {
-            // gene: (oql as any).gene,
-            //     altered: alterationInfo.altered,
-            //     sequenced: alterationInfo.sequenced,
-            //     percentAltered: alterationInfo.percent,
-
-            // this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
-            //     alterationData => {
-            //         const data = getAlterationData(
-            //             this.props.store.samples.result,
-            //             this.props.store.patients.result,
-            //             this.props.store.coverageInformation.result!,
-            //             this.props.store.filteredSequencedSampleKeysByGene.result!,
-            //             this.props.store.filteredSequencedPatientKeysByGene.result!,
-            //             this.props.store.selectedMolecularProfiles.result!,
-            //             alterationData,
-            //             true,
-            //             this.props.store.genes.result!
-            //         );
-            //
-            //         if (data) {
-            //             alterationFrequencyData.push(data);
-            //         }
-            //     }
-            // );
-
-            alterationFrequencyData =
-                this.alterationCountsByQueryGenes.result?.map(
-                    getAlterationInfo
-                ) || [];
-        }
-
-        return alterationFrequencyData;
-    }
-
-    @computed get alterationFrequencyDataForNonQueryGenes() {
-        let alterationFrequencyDataForNewGenes: ICBioData[] = [];
-
-        if (this.alterationCountsByNonQueryGenes.isComplete) {
-            // this.storeForAllData!.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
-            //     alterationData => {
-            //         const data = getAlterationData(
-            //             this.storeForAllData!.samples.result,
-            //             this.storeForAllData!.patients.result,
-            //             this.storeForAllData!.coverageInformation.result!,
-            //             this.storeForAllData!.filteredSequencedSampleKeysByGene
-            //                 .result!,
-            //             this.storeForAllData!.filteredSequencedPatientKeysByGene
-            //                 .result!,
-            //             this.storeForAllData!.selectedMolecularProfiles.result!,
-            //             alterationData,
-            //             false,
-            //             this.props.store.genes.result!
-            //         );
-            //
-            //         if (data) {
-            //             alterationFrequencyDataForNewGenes.push(data);
-            //         }
-            //     }
-            // );
-
-            alterationFrequencyDataForNewGenes =
-                this.alterationCountsByNonQueryGenes.result?.map(
-                    getAlterationInfo
-                ) || [];
-        }
-
-        // on pathway change PathwayMapper returns only the genes that are new (i.e genes for which we haven't
-        // calculated the alteration data yet), so we need to accumulate the alteration frequency data after each
-        // query
-        this.accumulatedAlterationFrequencyDataForNonQueryGenes = this.accumulatedAlterationFrequencyDataForNonQueryGenes.concat(
-            alterationFrequencyDataForNewGenes
-        );
-
-        return this.accumulatedAlterationFrequencyDataForNonQueryGenes;
     }
 }
