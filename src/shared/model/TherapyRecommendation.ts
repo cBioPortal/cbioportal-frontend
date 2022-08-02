@@ -49,7 +49,7 @@ export interface ITherapyRecommendation {
     comment: string[];
     reasoning: IReasoning;
     evidenceLevel: EvidenceLevel;
-    evidenceLevelExtension: EvidenceLevelExtension;
+    evidenceLevelExtension?: EvidenceLevelExtension;
     evidenceLevelM3Text: string;
     author: string;
     treatments: ITreatment[];
