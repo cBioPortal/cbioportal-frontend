@@ -1,5 +1,5 @@
-import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import client from 'shared/api/cbioportalClientInstance';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import {
     GenericAssayMetaFilter,
     GenericAssayMeta,
@@ -7,8 +7,17 @@ import {
     GenericAssayFilter,
 } from 'cbioportal-ts-api-client';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-import _, { Dictionary } from 'lodash';
+import _ from 'lodash';
 import { IDataQueryFilter } from '../StoreUtils';
+import {
+    doesOptionMatchSearchText,
+    ISelectOption,
+} from './GenericAssaySelectionUtils';
+import {
+    GENERIC_ASSAY_CONFIG,
+    GenericAssayTypeConstants,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import * as Pluralize from 'pluralize';
 
 export const NOT_APPLICABLE_VALUE = 'NA';
 export const COMMON_GENERIC_ASSAY_PROPERTY = {
@@ -17,13 +26,9 @@ export const COMMON_GENERIC_ASSAY_PROPERTY = {
     URL: 'URL',
 };
 
-export const GenericAssayTypeConstants: { [s: string]: string } = {
-    TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
-    MUTATIONAL_SIGNATURE: 'MUTATIONAL_SIGNATURE',
-    ARMLEVEL_CNA: 'ARMLEVEL_CNA',
-};
-
-export const RESERVED_CATEGORY_ORDER_DICT: Dictionary<string[]> = {
+export const RESERVED_CATEGORY_ORDER_DICT: {
+    [genericAssayType: string]: string[];
+} = {
     // Add more generic assay types here to change category order in plots tab
     [GenericAssayTypeConstants.ARMLEVEL_CNA]: [
         'Loss',
@@ -42,10 +47,10 @@ export enum GenericAssayDataType {
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
     molecularProfiles: MolecularProfile[]
 ) {
+    // TODO: use AlterationTypeContants here instead of string for GENERIC_ASSAY
+    // we removed it because importing from page store was causing circular dependency
     const genericAssayProfiles = molecularProfiles.filter(
-        profile =>
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.GENERIC_ASSAY
+        profile => profile.molecularAlterationType === 'GENERIC_ASSAY'
     );
 
     const genericAssayProfilesGroupedByGenericAssayType = _.groupBy(
@@ -83,10 +88,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
     molecularProfiles: MolecularProfile[]
 ) {
     const genericAssayProfiles = molecularProfiles.filter(profile => {
-        return (
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.GENERIC_ASSAY
-        );
+        return profile.molecularAlterationType === 'GENERIC_ASSAY';
     });
 
     const genericAssayMetaGroupByMolecularProfileId: {
@@ -111,7 +113,7 @@ export function fetchGenericAssayMetaByProfileIds(
     genericAssayProfileIds: string[]
 ) {
     if (genericAssayProfileIds.length > 0) {
-        return client.fetchGenericAssayMetaDataUsingPOST({
+        return client.fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
                 molecularProfileIds: genericAssayProfileIds,
                 // the Swagger-generated type expected by the client method below
@@ -125,7 +127,7 @@ export function fetchGenericAssayMetaByProfileIds(
 
 export function fetchGenericAssayMetaByEntityIds(entityIds: string[]) {
     if (entityIds.length > 0) {
-        return client.fetchGenericAssayMetaDataUsingPOST({
+        return client.fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
                 genericAssayStableIds: entityIds,
                 // the Swagger-generated type expected by the client method below
@@ -185,10 +187,37 @@ export function fetchGenericAssayDataByStableIdsAndMolecularIds(
     });
 }
 
-export function makeGenericAssayOption(
+export function makeGenericAssayOption(meta: GenericAssayMeta) {
+    const label = formatGenericAssayCommonLabel(meta);
+    return {
+        value: meta.stableId,
+        label: label,
+    };
+}
+
+export function makeGenericAssayPlotsTabOption(
     meta: GenericAssayMeta,
-    isPlotsTabOption?: boolean
+    shouldUseCompactLabelForPlotAxis?: boolean
 ) {
+    const label = formatGenericAssayCommonLabel(meta);
+    const entityName = getGenericAssayMetaPropertyOrDefault(
+        meta,
+        COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+        meta.stableId
+    );
+    return {
+        value: meta.stableId,
+        label: label,
+        plotAxisLabel: shouldUseCompactLabelForPlotAxis
+            ? formatGenericAssayCompactLabelByNameAndId(
+                  meta.stableId,
+                  entityName
+              )
+            : entityName,
+    };
+}
+
+export function formatGenericAssayCommonLabel(meta: GenericAssayMeta) {
     // Note: name and desc are optional fields for generic assay entities
     // When not provided in the data file, these fields are assigned the
     // value of the entity_stable_id. The code below hides fields when
@@ -216,22 +245,33 @@ export function makeGenericAssayOption(
     } else {
         label = `${name} (${meta.stableId}): ${description}`;
     }
+    return label;
+}
 
-    if (isPlotsTabOption) {
-        return {
-            value: meta.stableId,
-            label: label,
-            plotAxisLabel: getGenericAssayMetaPropertyOrDefault(
-                meta,
-                COMMON_GENERIC_ASSAY_PROPERTY.NAME,
-                meta.stableId
-            ),
-        };
+export function formatGenericAssayCompactLabelByNameAndId(
+    stableId: string,
+    name: string
+) {
+    const uniqueName = name !== stableId;
+    let label = stableId;
+    if (uniqueName) {
+        label = `${name} (${stableId})`;
     }
-    return {
-        value: meta.stableId,
-        label: label,
-    };
+    return label;
+}
+
+export function getGenericAssayPropertyOrDefault(
+    genericAssayProperties: {},
+    property: string,
+    defaultValue: string = NOT_APPLICABLE_VALUE
+): string {
+    if (property in genericAssayProperties) {
+        return (genericAssayProperties as {
+            [property: string]: string;
+        })[property];
+    } else {
+        return defaultValue;
+    }
 }
 
 export function getGenericAssayMetaPropertyOrDefault(
@@ -239,13 +279,11 @@ export function getGenericAssayMetaPropertyOrDefault(
     property: string,
     defaultValue: string = NOT_APPLICABLE_VALUE
 ): string {
-    if (property in meta.genericEntityMetaProperties) {
-        return (meta.genericEntityMetaProperties as {
-            [property: string]: string;
-        })[property];
-    } else {
-        return defaultValue;
-    }
+    return getGenericAssayPropertyOrDefault(
+        meta.genericEntityMetaProperties,
+        property,
+        defaultValue
+    );
 }
 
 export function getCategoryOrderByGenericAssayType(genericAssayType: string) {
@@ -254,4 +292,87 @@ export function getCategoryOrderByGenericAssayType(genericAssayType: string) {
     return genericAssayType in RESERVED_CATEGORY_ORDER_DICT
         ? RESERVED_CATEGORY_ORDER_DICT[genericAssayType]
         : undefined;
+}
+
+export function filterGenericAssayEntitiesByGenes(
+    genericAssayEntities: GenericAssayMeta[],
+    hugoGeneSymbols: string[]
+) {
+    // filter logic is: stableId, name or description
+    // is any of them includes sepcific gene, then it's related, we should keep them and filter out others
+    return _.filter(genericAssayEntities, meta => {
+        const entityName = getGenericAssayMetaPropertyOrDefault(
+            meta,
+            COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+            ''
+        );
+        const entityDescription = getGenericAssayMetaPropertyOrDefault(
+            meta,
+            COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
+            ''
+        );
+        return _.some(
+            hugoGeneSymbols,
+            hugoGeneSymbol =>
+                RegExp(hugoGeneSymbol, 'i').test(meta.stableId) ||
+                RegExp(hugoGeneSymbol, 'i').test(entityName) ||
+                RegExp(hugoGeneSymbol, 'i').test(entityDescription)
+        );
+    });
+}
+
+export function filterGenericAssayOptionsByGenes(
+    options: ISelectOption[],
+    hugoGeneSymbols: string[]
+) {
+    return _.filter(options, option =>
+        _.some(hugoGeneSymbols, hugoGeneSymbol =>
+            doesOptionMatchSearchText(hugoGeneSymbol, option)
+        )
+    );
+}
+
+export function deriveDisplayTextFromGenericAssayType(
+    genericAssayType: string,
+    plural?: boolean
+) {
+    let derivedDisplayText = '';
+    if (
+        genericAssayType in GENERIC_ASSAY_CONFIG.genericAssayConfigByType &&
+        GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+            .displayTitleText
+    ) {
+        derivedDisplayText = GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+            genericAssayType
+        ].displayTitleText!;
+    } else {
+        const textArray = genericAssayType.split('_');
+        const capitalizeTextArray = textArray.map(text =>
+            _.capitalize(text.toLowerCase())
+        );
+        derivedDisplayText = capitalizeTextArray.join(' ');
+    }
+
+    if (plural) {
+        return Pluralize.plural(derivedDisplayText);
+    }
+    return derivedDisplayText;
+}
+
+export function getSortedGenericAssayTabSpecs(
+    genericAssayEnrichmentProfilesGroupedByGenericAssayType: {
+        [key: string]: MolecularProfile[];
+    } = {}
+): { genericAssayType: string; linkText: string }[] {
+    const genericAssayTabSpecs: {
+        genericAssayType: string;
+        linkText: string;
+    }[] = _.keys(genericAssayEnrichmentProfilesGroupedByGenericAssayType).map(
+        genericAssayType => ({
+            genericAssayType,
+            linkText: deriveDisplayTextFromGenericAssayType(genericAssayType),
+        })
+    );
+
+    return _.sortBy(genericAssayTabSpecs, specs => specs.linkText);
 }

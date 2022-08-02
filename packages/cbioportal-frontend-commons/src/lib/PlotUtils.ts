@@ -117,7 +117,7 @@ export function makeTooltipMouseEvents(self: {
                                     clearTimeout(disappearTimeout);
                                 }
 
-                                disappearTimeout = setTimeout(
+                                disappearTimeout = global.setTimeout(
                                     action(() => {
                                         self.pointHovered = false;
                                     }),

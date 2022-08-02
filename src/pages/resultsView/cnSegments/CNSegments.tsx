@@ -12,7 +12,7 @@ import CNSegmentsDownloader from 'shared/components/cnSegments/CNSegmentsDownloa
 import WindowStore from 'shared/components/window/WindowStore';
 import {
     WHOLE_GENOME,
-    calcSegmentTrackHeight,
+    calcIgvTrackHeight,
     defaultSegmentTrackProps,
     generateSegmentFeatures,
 } from 'shared/lib/IGVUtils';
@@ -44,10 +44,7 @@ export default class CNSegments extends React.Component<
     }
 
     @computed get segmentTrackHeight() {
-        return calcSegmentTrackHeight(
-            this.features,
-            this.segmentTrackMaxHeight
-        );
+        return calcIgvTrackHeight(this.features, this.segmentTrackMaxHeight);
     }
 
     @computed get activeLocus(): string {

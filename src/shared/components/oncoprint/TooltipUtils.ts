@@ -6,8 +6,10 @@ import {
     GenePanelData,
     MolecularProfile,
     Mutation,
-    StructuralVariant,
 } from 'cbioportal-ts-api-client';
+
+import { StructuralVariant } from 'cbioportal-ts-api-client';
+
 import client from 'shared/api/cbioportalClientInstance';
 import {
     ClinicalTrackSpec,
@@ -38,8 +40,8 @@ export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 
 const tooltipTextElementNaN = 'N/A';
 import './styles.scss';
-import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
+import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
     return `<a class="nobreak" href="${getSampleViewUrl(

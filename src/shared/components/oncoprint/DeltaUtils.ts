@@ -9,7 +9,8 @@ import {
     IHeatmapTrackSpec,
     IOncoprintProps,
 } from './Oncoprint';
-import OncoprintJS, {
+import {
+    OncoprintJS,
     ICategoricalRuleSetParams,
     SortConfig,
     TrackId,

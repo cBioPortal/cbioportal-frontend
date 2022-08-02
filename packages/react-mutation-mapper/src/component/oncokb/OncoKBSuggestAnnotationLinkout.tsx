@@ -13,7 +13,7 @@ export default class OncoKBSuggestAnnotationLinkout extends React.Component<{
                 <span> but hasn't been curated yet. Please feel free to </span>
                 <a
                     target="_blank"
-                    href={`mailto:contact@oncokb.org?subject=Annotation suggestion for ${this.props.gene}&&body=Thank you for using OncoKB.%0APlease provide the following information for ${this.props.gene} curation:%0A%0AEvidence:%0APMIDs:%0AAbstracts:`}
+                    href={`mailto:contact@oncokb.org?subject=Annotation suggestion for ${this.props.gene}&&body=Thank you for using OncoKB™.%0APlease provide the following information for ${this.props.gene} curation:%0A%0AEvidence:%0APMIDs:%0AAbstracts:`}
                     title="suggest to annotate this gene"
                 >
                     suggest the team annotate the gene

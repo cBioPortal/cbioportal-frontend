@@ -73,6 +73,7 @@ export interface IServerConfig {
     show_mutation_mapper_tool_grch38: boolean;
     show_transcript_dropdown: boolean;
     show_signal: boolean;
+    show_ndex: boolean;
     survival_initial_x_axis_limit: number;
     survival_show_p_q_values_in_survival_type_table: boolean;
     survival_min_group_threshold: number;
@@ -118,6 +119,7 @@ export interface IServerConfig {
     skin_title: string;
     skin_authorization_message: string | null;
     skin_patientview_filter_genes_profiled_all_samples: boolean;
+    skin_hide_download_controls: boolean;
     show_mdacc_heatmap: boolean;
     quick_search_enabled: boolean;
     default_cross_cancer_study_list: string; // this has a default
@@ -159,6 +161,7 @@ export interface IServerConfig {
     skin_home_page_show_unauthorized_studies: boolean;
     skin_home_page_unauthorized_studies_global_message: string;
     skin_mutation_table_namespace_column_show_by_default: boolean;
+    comparison_categorical_na_values: string;
     fhirspark?: IFhirsparkConfig;
     cancerdrugsUrl?: string;
     cancerdrugsJsonUrl?: string;

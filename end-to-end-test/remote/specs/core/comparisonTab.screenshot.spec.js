@@ -1,33 +1,18 @@
 var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
-var setInputText = require('../../../shared/specUtils').setInputText;
 var checkElementWithTemporaryClass = require('../../../shared/specUtils')
     .checkElementWithTemporaryClass;
 var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
-var setDropdownOpen = require('../../../shared/specUtils').setDropdownOpen;
-var { jsApiClick } = require('../../../shared/specUtils');
+var {
+    jsApiClick,
+    selectClinicalTabPlotType,
+} = require('../../../shared/specUtils');
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-
-function selectClinicalTabPlotType(type) {
-    setDropdownOpen(
-        true,
-        '[data-test="plotTypeSelector"] .Select-arrow-zone',
-        '[data-test="plotTypeSelector"] .Select-menu',
-        "Couldn't open clinical tab chart type dropdown"
-    );
-    $(
-        `[data-test="plotTypeSelector"] .Select-option[aria-label="${type}"]`
-    ).click();
-}
 
 describe('results view comparison tab screenshot tests', function() {
     describe('general screenshot tests', function() {

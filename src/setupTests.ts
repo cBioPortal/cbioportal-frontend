@@ -11,8 +11,8 @@ jest.mock('cbioportal-ts-api-client');
 // if we ever need to test that class, we need to refactor it to get rid of the circular references
 jest.mock('shared/components/copyDownloadControls/CopyDownloadQueryLinks.tsx');
 
-// explicitly set mock for legacy packages
+// explicitly set mock for problematic packages
 jest.setMock('webpack-raphael', {});
 jest.setMock('jquery-migrate', {});
-
+jest.setMock('igv', {});
 jest.setMock('react-markdown', {});

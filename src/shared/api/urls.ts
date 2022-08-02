@@ -183,7 +183,7 @@ export function getMutationAlignerUrlTemplate() {
 }
 
 export function getOncoQueryDocUrl() {
-    return buildCBioPortalPageUrl('/oql');
+    return 'https://docs.cbioportal.org/user-guide/by-page/#oql';
 }
 
 export function trimProtocol(url: string) {
@@ -208,7 +208,10 @@ export function getProxyUrlIfNecessary(url: any) {
 }
 
 export function getOncoKbApiUrl() {
-    return buildCBioPortalAPIUrl(`proxy/oncokb`);
+    return (
+        localStorage.oncokbOverride ||
+        buildCBioPortalAPIUrl(`proxy/A8F74CD7851BDEE8DCD2E86AB4E2A711`)
+    );
 }
 
 export function getInstituteLogoUrl() {

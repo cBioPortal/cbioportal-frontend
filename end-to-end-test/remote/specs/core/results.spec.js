@@ -66,7 +66,7 @@ describe('Results Page', function() {
 
         describe('single study with multiple cancer types', () => {
             before(() => {
-                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_id=brca_metabric&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=brca_metabric_cnaseq&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_metabric_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_metabric_cna`;
+                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_list=brca_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cgistic&case_set_id=brca_tcga_cnaseq&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`;
                 goToUrlAndSetLocalStorage(url);
                 $('[data-test=cancerTypeSummaryChart]').waitForDisplayed({
                     timeout: 10000,
@@ -203,10 +203,7 @@ describe('Results Page', function() {
                 var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&gene_list=TP53+PTEN&gene_set_choice=user-defined-list&Action=Submit`;
                 browser.url(url);
                 $('[data-test=view3DStructure]').waitForExist({
-                    timeout: 10000,
-                });
-                $('[data-test=view3DStructure]').waitForEnabled({
-                    timeout: 10000,
+                    timeout: 20000,
                 });
                 $('[data-test=oncogenic-icon-image]').waitForDisplayed({
                     timeout: 10000,

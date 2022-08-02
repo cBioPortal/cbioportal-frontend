@@ -67,6 +67,8 @@ import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import URL from 'url';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -400,7 +402,6 @@ export default class StudyViewPage extends React.Component<
                 {/*    </InfoBeacon>*/}
                 {/*</If>*/}
                 <DefaultTooltip
-                    visible={this.store.showComparisonGroupUI}
                     trigger={['click']}
                     placement="bottomLeft"
                     destroyTooltipOnHide={true}
@@ -409,14 +410,6 @@ export default class StudyViewPage extends React.Component<
                             '.rc-tooltip-arrow'
                         );
                         arrowEl.style.right = '10px';
-                    }}
-                    onVisibleChange={visible => {
-                        if (
-                            this.store.numberOfVisibleColorChooserModals == 0 &&
-                            !this.shareLinkModal
-                        ) {
-                            this.store.showComparisonGroupUI = !!visible;
-                        }
                     }}
                     getTooltipContainer={() =>
                         document.getElementById(
@@ -560,6 +553,7 @@ export default class StudyViewPage extends React.Component<
                                             }
                                         />
                                     }
+                                    hrefRoot={buildCBioPortalPageUrl('study')}
                                 >
                                     <MSKTab
                                         key={0}

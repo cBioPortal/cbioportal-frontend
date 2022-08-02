@@ -1,4 +1,4 @@
-import { ServerConfigHelpers } from './config';
+import { ServerConfigHelpers, UrlParamPair, pairMatchesPath } from './config';
 import { assert } from 'chai';
 
 describe('ServerConfigHelpers', () => {

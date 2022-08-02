@@ -33,9 +33,12 @@ import {
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
+} from 'cbioportal-ts-api-client';
+import {
     StructuralVariant,
     StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
+
 import client from 'shared/api/cbioportalClientInstance';
 import {
     CanonicalMutationType,
@@ -88,6 +91,7 @@ import {
     getGenomeNexusUrl,
     getOncoKbOncogenic,
     getSurvivalClinicalAttributesPrefix,
+    getGenomeBuildFromStudies,
     groupBy,
     groupBySampleId,
     IDataQueryFilter,
@@ -278,6 +282,8 @@ import {
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import { ICBioData } from 'pathway-mapper';
+import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -1584,6 +1590,67 @@ export class ResultsViewPageStore
         },
     });
 
+    // remoteNdexUrl queries Ndex's iquery. The result is either the full URL to
+    // query, or an empty string.
+    readonly remoteNdexUrl = remoteData<string>({
+        await: () => [
+            this.studyIds,
+            this.genes,
+            this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+        ],
+        invoke: async () => {
+            var result = '';
+            const alterationData = this.alterationFrequencyDataForQueryGenes;
+
+            if (
+                this.studyIds.result!.length > 0 &&
+                this.genes.result!.length > 0 &&
+                this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!
+                    .length > 0
+            ) {
+                const postData = {
+                    // this might be necessary at some point
+                    // studyid: this.studyIds.result![0],
+                    geneList: this.genes.result!.map(g => g.hugoGeneSymbol),
+                    sourceList: ['enrichment'],
+                    alterationData,
+                    /* TODO: disable alteration services for now, until we have
+                     * https://github.com/cBioPortal/cbioportal/issues/9305
+                    geneAnnotationServices: {
+                        mutation: "https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/mutationfrequency",
+                        alteration: "http://localhost"
+                    }
+                    */
+                };
+
+                var urlResponse;
+
+                try {
+                    urlResponse = (await request
+                        .post(
+                            'https://iquery-cbio.ucsd.edu/integratedsearch/v1/'
+                        )
+                        .send(postData)
+                        .set('Accept', 'application/json')
+                        .timeout(30000)) as any;
+                } catch (err) {
+                    // Just eat the exception. Result will be empty string.
+                }
+
+                if (
+                    urlResponse &&
+                    urlResponse.body &&
+                    urlResponse.body.webURL &&
+                    urlResponse.body.webURL.startsWith('https://')
+                ) {
+                    result = urlResponse.body.webURL;
+                }
+            }
+
+            return Promise.resolve(result);
+        },
+    });
+
     // remoteNgchmUrl queries mdanderson.org to test if there are NGCHMs for one selected
     // study.  The result is either the full URL to a portal page, or an empty string.
     readonly remoteNgchmUrl = remoteData<string>({
@@ -1740,6 +1807,8 @@ export class ResultsViewPageStore
         },
     });
 
+    // TODO: there is some duplication here with the same function in
+    // PathwayMapper. Moved it out for re-use in NDEx.
     readonly nonOqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
@@ -1984,6 +2053,32 @@ export class ResultsViewPageStore
             }
         },
     });
+
+    @computed get alterationFrequencyDataForQueryGenes() {
+        const alterationFrequencyData: ICBioData[] = [];
+
+        this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
+            alterationData => {
+                const data = getAlterationData(
+                    this.samples.result,
+                    this.patients.result,
+                    this.coverageInformation.result!,
+                    this.filteredSequencedSampleKeysByGene.result!,
+                    this.filteredSequencedPatientKeysByGene.result!,
+                    this.selectedMolecularProfiles.result!,
+                    alterationData,
+                    true,
+                    this.genes.result!
+                );
+
+                if (data) {
+                    alterationFrequencyData.push(data);
+                }
+            }
+        );
+
+        return alterationFrequencyData;
+    }
 
     readonly isSampleAlteredMap = remoteData({
         await: () => [
@@ -3194,7 +3289,7 @@ export class ResultsViewPageStore
                     sampleMolecularIdentifiers: filters,
                 } as StructuralVariantFilter;
 
-                return await client.fetchStructuralVariantsUsingPOST({
+                return await internalClient.fetchStructuralVariantsUsingPOST({
                     structuralVariantFilter: data,
                 });
             }
@@ -3546,6 +3641,7 @@ export class ResultsViewPageStore
             {
                 filterMutationsBySelectedTranscript: true,
                 filterAppliersOverride: this.customDataFilterAppliers,
+                genomeBuild: this.genomeBuild,
             },
             gene,
             this.filteredSamples,
@@ -4091,6 +4187,13 @@ export class ResultsViewPageStore
         },
         []
     );
+
+    @computed get genomeBuild() {
+        if (!this.studies.isComplete) {
+            throw new Error('Failed to get studies');
+        }
+        return getGenomeBuildFromStudies(this.studies.result);
+    }
 
     @computed get referenceGenomeBuild() {
         if (!this.studies.isComplete) {
@@ -5356,7 +5459,8 @@ export class ResultsViewPageStore
                             cancerTypeForOncoKb(
                                 structuralVariant.uniqueSampleKey,
                                 {}
-                            )
+                            ),
+                            structuralVariant.variantClass.toUpperCase() as any
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
                             id
@@ -5795,12 +5899,16 @@ export class ResultsViewPageStore
                 [] as StructuralVariantFilter['sampleMolecularIdentifiers']
             );
 
-            return client.fetchStructuralVariantsUsingPOST({
-                structuralVariantFilter: {
-                    entrezGeneIds: [q.entrezGeneId],
-                    sampleMolecularIdentifiers: filters,
-                } as StructuralVariantFilter,
-            });
+            if (_.isEmpty(filters)) {
+                return [];
+            } else {
+                return internalClient.fetchStructuralVariantsUsingPOST({
+                    structuralVariantFilter: {
+                        entrezGeneIds: [q.entrezGeneId],
+                        sampleMolecularIdentifiers: filters,
+                    } as StructuralVariantFilter,
+                });
+            }
         },
     }));
 

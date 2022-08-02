@@ -35,6 +35,10 @@
       "description": "Annotation Summary Controller"
     },
     {
+      "name": "curious-cases-controller",
+      "description": "Curious Cases Controller"
+    },
+    {
       "name": "signal-query-controller",
       "description": "Signal Query Controller"
     },
@@ -422,6 +426,38 @@
               "items": {
                 "$ref": "#/definitions/Hotspot"
               }
+            }
+          }
+        }
+      }
+    },
+    "/curious_cases/{genomicLocation}": {
+      "get": {
+        "tags": [
+          "curious-cases-controller"
+        ],
+        "summary": "Retrieves Curious Cases info by a genomic location",
+        "operationId": "fetchCuriousCasesGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genomicLocation",
+            "in": "path",
+            "description": "Genomic location, for example: 7,116411883,116411905,TTCTTTCTCTCTGTTTTAAGATC,-",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/CuriousCases"
             }
           }
         }
@@ -1182,6 +1218,27 @@
         }
       }
     },
+    "CuriousCases": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "genomicLocation": {
+          "type": "string"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "pubmedIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+    },
     "Dbsnp": {
       "type": "object",
       "properties": {
@@ -1425,6 +1482,12 @@
           }
         },
         "genomic": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "protein": {
           "type": "array",
           "items": {
             "type": "string"

@@ -9,8 +9,12 @@ import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleLabelNotProfiled from 'shared/components/sampleLabel/SampleLabelNotProfiled';
 
 export default class TumorColumnFormatter {
+    // NOTE: entrezGeneId can be array of genes
+    // in order to support structural variant
+    // alteration type which are associated with
+    // two genes
     public static renderFunction<
-        T extends { sampleId: string; entrezGeneId: number }
+        T extends { sampleId: string; entrezGeneId: number | number[] }
     >(
         mutations: T[],
         sampleManager: SampleManager | null,
@@ -74,6 +78,7 @@ export default class TumorColumnFormatter {
             return (
                 <li className={isProfiled && !isMutated ? 'invisible' : ''}>
                     {isProfiled ? (
+                        // Sample is profiled AND is mutated
                         sampleManager.getComponentForSample(
                             sample.id,
                             mutatedSamples[sample.id] ? 1 : 0.1,
@@ -83,6 +88,7 @@ export default class TumorColumnFormatter {
                             disableTooltip
                         )
                     ) : (
+                        // Sample is not profiled
                         <SampleInline
                             sample={sample}
                             extraTooltipText={extraTooltipText}
@@ -160,7 +166,7 @@ export default class TumorColumnFormatter {
     }
 
     public static getProfiledSamplesForGene(
-        entrezGeneId: number,
+        entrezGeneId: number | number[],
         sampleIds: string[],
         sampleToGenePanelId: { [sampleId: string]: string | undefined },
         genePanelIdToEntrezGeneIds: { [genePanelId: string]: number[] }
@@ -170,13 +176,20 @@ export default class TumorColumnFormatter {
             (sampleIsProfiled, nextSampleId, currentIndex: number) => {
                 const genePanelId = sampleToGenePanelId[nextSampleId];
 
+                // NOTE: entrezGeneId can be an array in order to
+                // support structural variant alteration types
                 const wholeGenome = noGenePanelUsed(genePanelId);
                 const isInGenePanel =
                     !wholeGenome &&
                     !!genePanelId &&
                     genePanelId in genePanelIdToEntrezGeneIds &&
-                    genePanelIdToEntrezGeneIds[genePanelId].includes(
-                        entrezGeneId
+                    _.some(
+                        _.isArray(entrezGeneId) ? entrezGeneId : [entrezGeneId],
+                        geneId => {
+                            return genePanelIdToEntrezGeneIds[
+                                genePanelId
+                            ].includes(geneId);
+                        }
                     );
 
                 sampleIsProfiled[nextSampleId] = wholeGenome || isInGenePanel;

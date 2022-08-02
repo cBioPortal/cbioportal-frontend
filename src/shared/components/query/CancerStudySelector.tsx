@@ -324,6 +324,16 @@ export default class CancerStudySelector extends React.Component<
                             className={styles.cancerStudyListContainer}
                             data-test="cancerTypeListContainer"
                         >
+                            <div className={styles.queryHelp}>
+                                <a
+                                    href={
+                                        'https://docs.cbioportal.org/user-guide/by-page/#homepage'
+                                    }
+                                    target={'_blank'}
+                                >
+                                    Help <i className={'fa fa-book'}></i>
+                                </a>
+                            </div>
                             <div
                                 className="checkbox"
                                 style={{ marginLeft: 19 }}

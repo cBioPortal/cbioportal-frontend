@@ -29,7 +29,7 @@ enum OncokbOncogenicIconEnum {
 
 const oncokbOncogenicDescription: _.Dictionary<string> = {
     [OncokbOncogenicIconEnum.ONCOGENIC]:
-        'Oncogenic/Likely Oncogenic/Predicted Oncogenic/Resistance',
+        'Oncogenic/Likely Oncogenic/Resistance',
     [OncokbOncogenicIconEnum.NUETRAL]: 'Likely Neutral',
     [OncokbOncogenicIconEnum.INCONCLUSIVE]: 'Inconclusive',
     [OncokbOncogenicIconEnum.VUS]: 'VUS',
@@ -61,7 +61,7 @@ export const sourceTooltipInfo = {
     [AnnotationSources.ONCOKB]: [
         {
             sourceUrl: 'https://www.oncokb.org/',
-            sourceName: 'OncoKB',
+            sourceName: 'OncoKB™',
             sourceDescription:
                 'a precision oncology knowledge base that contains information about the effects and treatment implications of variants in cancer',
             reference: 'Chakravarty et al. 2017',

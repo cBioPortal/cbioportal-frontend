@@ -39,11 +39,13 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import {
     getGenericAssayMetaPropertyOrDefault,
     COMMON_GENERIC_ASSAY_PROPERTY,
+    formatGenericAssayCompactLabelByNameAndId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import client from 'shared/api/cbioportalClientInstance';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
 import fileDownload from 'react-file-download';
+import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -502,13 +504,16 @@ export function generateGenericAssayProfileDownloadData(
     sampleGenericAssayDataByStableId: { [key: string]: GenericAssayData[] },
     samples: Sample[] = [],
     stableIds: string[] = [],
-    stableIdToMetaMap: { [genericAssayStableId: string]: GenericAssayMeta }
+    stableIdToMetaMap: { [genericAssayStableId: string]: GenericAssayMeta },
+    profiles: MolecularProfile[]
 ): string[][] {
     if (_.isEmpty(sampleGenericAssayDataByStableId)) {
         return [];
     } else {
         // we need the sample index for better performance
         const sampleIndex = _.keyBy(samples, sample => sample.uniqueSampleKey);
+        // Use the first profile to determine generic assay type
+        const genericAssayType = profiles[0].genericAssayType;
 
         // generate row data (keyed by uniqueSampleKey)
         const rows = generateGenericAssayRowsByUniqueSampleKey(
@@ -524,13 +529,21 @@ export function generateGenericAssayProfileDownloadData(
         // fall back to stableId if "NAME" not available
         downloadData.push(
             ['STUDY_ID', 'SAMPLE_ID'].concat(
-                _.map(stableIds, id =>
-                    getGenericAssayMetaPropertyOrDefault(
+                _.map(stableIds, id => {
+                    const entityName = getGenericAssayMetaPropertyOrDefault(
                         stableIdToMetaMap[id],
                         COMMON_GENERIC_ASSAY_PROPERTY.NAME,
                         id
-                    )
-                )
+                    );
+                    return GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                        genericAssayType
+                    ]?.downloadTabConfig?.formatDownloadHeaderUsingCompactLabel
+                        ? formatGenericAssayCompactLabelByNameAndId(
+                              id,
+                              entityName
+                          )
+                        : entityName;
+                })
             )
         );
 

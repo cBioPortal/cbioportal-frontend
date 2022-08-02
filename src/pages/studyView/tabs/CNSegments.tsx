@@ -6,7 +6,7 @@ import autobind from 'autobind-decorator';
 import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import IntegrativeGenomicsViewer from 'shared/components/igv/IntegrativeGenomicsViewer';
 import {
-    calcSegmentTrackHeight,
+    calcIgvTrackHeight,
     defaultSegmentTrackProps,
     generateSegmentFeatures,
 } from 'shared/lib/IGVUtils';
@@ -46,10 +46,7 @@ export default class CNSegments extends React.Component<
     }
 
     @computed get segmentTrackHeight() {
-        return calcSegmentTrackHeight(
-            this.features,
-            this.segmentTrackMaxHeight
-        );
+        return calcIgvTrackHeight(this.features, this.segmentTrackMaxHeight);
     }
 
     @computed get features() {

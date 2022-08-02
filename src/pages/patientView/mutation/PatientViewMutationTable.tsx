@@ -36,7 +36,12 @@ export interface IPatientViewMutationTableProps extends IMutationTableProps {
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
+    alleleFreqHeaderRender?: (name: string) => JSX.Element;
 }
+
+export const defaultAlleleFrequencyHeaderTooltip = (
+    <span>Variant allele frequency in the tumor sample</span>
+);
 
 export default class PatientViewMutationTable extends MutationTable<
     IPatientViewMutationTableProps
@@ -105,6 +110,7 @@ export default class PatientViewMutationTable extends MutationTable<
 
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
             name: 'Allele Freq',
+            headerRender: this.props.alleleFreqHeaderRender,
             render: (d: Mutation[]) =>
                 AlleleFreqColumnFormatter.renderFunction(
                     d,
@@ -117,7 +123,9 @@ export default class PatientViewMutationTable extends MutationTable<
                 ),
             download: (d: Mutation[]) =>
                 AlleleFreqColumnFormatter.getFrequency(d),
-            tooltip: <span>Variant allele frequency in the tumor sample</span>,
+            tooltip: this.props.alleleFreqHeaderRender
+                ? undefined
+                : defaultAlleleFrequencyHeaderTooltip,
             visible: AlleleFreqColumnFormatter.isVisible(
                 this.props.sampleManager,
                 this.props.dataStore

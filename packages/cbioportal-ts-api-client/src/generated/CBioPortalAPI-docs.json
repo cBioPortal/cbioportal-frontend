@@ -61,7 +61,18 @@
       "name": "Generic Assays"
     },
     {
-      "name": "Structural Variants"
+      "name": "Generic Assay Data"
+    },
+    {
+      "name": "Info"
+    },
+    {
+      "name": "Gene Panel Data",
+      "description": " "
+    },
+    {
+      "name": "Server running status",
+      "description": "This end point does not require authentication"
     },
     {
       "name": "Treatments",
@@ -480,7 +491,7 @@
     "/gene-panel-data/fetch": {
       "post": {
         "tags": [
-          "Gene Panels"
+          "Gene Panel Data"
         ],
         "summary": "Fetch gene panel data",
         "operationId": "fetchGenePanelDataInMultipleMolecularProfilesUsingPOST",
@@ -693,10 +704,161 @@
         "deprecated": false
       }
     },
+    "/generic-assay-data/{molecularProfileId}/generic-assay/{genericAssayStableId}": {
+      "get": {
+        "tags": [
+          "Generic Assay Data"
+        ],
+        "summary": "Get generic_assay_data in a molecular profile",
+        "operationId": "getGenericAssayDataInMolecularProfileUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genericAssayStableId",
+            "in": "path",
+            "description": "Generic Assay stable ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayData"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/generic-assay-meta/generic-assay/{genericAssayStableId}": {
+      "get": {
+        "tags": [
+          "Generic Assays"
+        ],
+        "summary": "Fetch meta data for generic-assay by ID",
+        "operationId": "getGenericAssayMeta_gaUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genericAssayStableId",
+            "in": "path",
+            "description": "Generic Assay stable ID",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayMeta"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/generic-assay-meta/{molecularProfileId}": {
+      "get": {
+        "tags": [
+          "Generic Assays"
+        ],
+        "summary": "Fetch meta data for generic-assay by ID",
+        "operationId": "getGenericAssayMetaUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayMeta"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/generic_assay_data/fetch": {
       "post": {
         "tags": [
-          "Generic Assays"
+          "Generic Assay Data"
         ],
         "summary": "Fetch generic_assay_data",
         "operationId": "fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST",
@@ -749,7 +911,7 @@
     "/generic_assay_data/{molecularProfileId}/fetch": {
       "post": {
         "tags": [
-          "Generic Assays"
+          "Generic Assay Data"
         ],
         "summary": "fetch generic_assay_data in a molecular profile",
         "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST",
@@ -812,7 +974,7 @@
           "Generic Assays"
         ],
         "summary": "Fetch meta data for generic-assay by ID",
-        "operationId": "fetchGenericAssayMetaDataUsingPOST",
+        "operationId": "fetchGenericAssayMetaUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -1096,6 +1258,48 @@
               "items": {
                 "type": "string"
               }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Server running status"
+        ],
+        "summary": "Get the running status of the server",
+        "operationId": "getServerStatusUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ServerStatusMessage"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/info": {
+      "get": {
+        "tags": [
+          "Info"
+        ],
+        "summary": "Get information about the running instance",
+        "operationId": "getInfoUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Info"
             }
           }
         },
@@ -1489,7 +1693,7 @@
     "/molecular-profiles/{molecularProfileId}/gene-panel-data/fetch": {
       "post": {
         "tags": [
-          "Gene Panels"
+          "Gene Panel Data"
         ],
         "summary": "Get gene panel data",
         "operationId": "getGenePanelDataUsingPOST",
@@ -2556,81 +2760,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Sample"
-              }
-            }
-          }
-        },
-        "deprecated": false
-      }
-    },
-    "/structural-variant/fetch": {
-      "post": {
-        "tags": [
-          "Structural Variants"
-        ],
-        "summary": "Fetch structural variants for entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers",
-        "operationId": "fetchStructuralVariantsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "entrezGeneIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "collectionFormat": "multi",
-            "maximum": 10000000,
-            "minimum": 0
-          },
-          {
-            "name": "molecularProfileIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi",
-            "maximum": 10000000,
-            "minimum": 0
-          },
-          {
-            "name": "sampleMolecularIdentifiers[0].molecularProfileId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "sampleMolecularIdentifiers[0].sampleId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "structuralVariantFilter",
-            "description": "List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/StructuralVariantFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/StructuralVariant"
               }
             }
           }
@@ -4230,7 +4359,8 @@
             "allowEmptyValue": false,
             "enum": [
               "Agent",
-              "AgentClass"
+              "AgentClass",
+              "AgentTarget"
             ]
           }
         ],
@@ -4281,7 +4411,8 @@
             "allowEmptyValue": false,
             "enum": [
               "Agent",
-              "AgentClass"
+              "AgentClass",
+              "AgentTarget"
             ]
           }
         ],
@@ -4329,7 +4460,8 @@
             "allowEmptyValue": false,
             "enum": [
               "Agent",
-              "AgentClass"
+              "AgentClass",
+              "AgentTarget"
             ]
           }
         ],
@@ -4380,7 +4512,8 @@
             "allowEmptyValue": false,
             "enum": [
               "Agent",
-              "AgentClass"
+              "AgentClass",
+              "AgentTarget"
             ]
           }
         ],
@@ -5273,6 +5406,62 @@
       },
       "title": "GenomicDataFilter"
     },
+    "Info": {
+      "type": "object",
+      "required": [
+        "dbVersion",
+        "gitBranch",
+        "gitCommitId",
+        "gitCommitIdAbbrev",
+        "gitCommitIdDescribe",
+        "gitCommitIdDescribeShort",
+        "gitCommitMessageFull",
+        "gitCommitMessageShort",
+        "gitCommitMessageUserEmail",
+        "gitCommitMessageUserName",
+        "gitDirty",
+        "portalVersion"
+      ],
+      "properties": {
+        "dbVersion": {
+          "type": "string"
+        },
+        "gitBranch": {
+          "type": "string"
+        },
+        "gitCommitId": {
+          "type": "string"
+        },
+        "gitCommitIdAbbrev": {
+          "type": "string"
+        },
+        "gitCommitIdDescribe": {
+          "type": "string"
+        },
+        "gitCommitIdDescribeShort": {
+          "type": "string"
+        },
+        "gitCommitMessageFull": {
+          "type": "string"
+        },
+        "gitCommitMessageShort": {
+          "type": "string"
+        },
+        "gitCommitMessageUserEmail": {
+          "type": "string"
+        },
+        "gitCommitMessageUserName": {
+          "type": "string"
+        },
+        "gitDirty": {
+          "type": "boolean"
+        },
+        "portalVersion": {
+          "type": "string"
+        }
+      },
+      "title": "Info"
+    },
     "MolecularDataFilter": {
       "type": "object",
       "properties": {
@@ -5925,188 +6114,14 @@
       },
       "title": "SampleTreatmentRow"
     },
-    "StructuralVariant": {
+    "ServerStatusMessage": {
       "type": "object",
       "properties": {
-        "annotation": {
-          "type": "string"
-        },
-        "breakpointType": {
-          "type": "string"
-        },
-        "center": {
-          "type": "string"
-        },
-        "comments": {
-          "type": "string"
-        },
-        "connectionType": {
-          "type": "string"
-        },
-        "dnaSupport": {
-          "type": "string"
-        },
-        "driverFilter": {
-          "type": "string"
-        },
-        "driverFilterAnn": {
-          "type": "string"
-        },
-        "driverTiersFilter": {
-          "type": "string"
-        },
-        "driverTiersFilterAnn": {
-          "type": "string"
-        },
-        "eventInfo": {
-          "type": "string"
-        },
-        "externalAnnotation": {
-          "type": "string"
-        },
-        "length": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "molecularProfileId": {
-          "type": "string"
-        },
-        "ncbiBuild": {
-          "type": "string"
-        },
-        "normalPairedEndReadCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "normalReadCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "normalSplitReadCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "normalVariantCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "rnaSupport": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "site1Chromosome": {
-          "type": "string"
-        },
-        "site1Description": {
-          "type": "string"
-        },
-        "site1EnsemblTranscriptId": {
-          "type": "string"
-        },
-        "site1EntrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "site1Exon": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "site1HugoSymbol": {
-          "type": "string"
-        },
-        "site1Position": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "site2Chromosome": {
-          "type": "string"
-        },
-        "site2Description": {
-          "type": "string"
-        },
-        "site2EffectOnFrame": {
-          "type": "string"
-        },
-        "site2EnsemblTranscriptId": {
-          "type": "string"
-        },
-        "site2EntrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "site2Exon": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "site2HugoSymbol": {
-          "type": "string"
-        },
-        "site2Position": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "tumorPairedEndReadCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "tumorReadCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "tumorSplitReadCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "tumorVariantCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        },
-        "variantClass": {
+        "status": {
           "type": "string"
         }
       },
-      "title": "StructuralVariant"
-    },
-    "StructuralVariantFilter": {
-      "type": "object",
-      "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0,
-            "maximum": 10000000
-          }
-        },
-        "molecularProfileIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "sampleMolecularIdentifiers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/SampleMolecularIdentifier"
-          }
-        }
-      },
-      "title": "StructuralVariantFilter"
+      "title": "ServerStatusMessage"
     },
     "StudyViewFilter": {
       "type": "object",
@@ -6168,6 +6183,9 @@
         "patientTreatmentGroupFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
+        "patientTreatmentTargetFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -6178,6 +6196,9 @@
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "sampleTreatmentGroupFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "sampleTreatmentTargetFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {

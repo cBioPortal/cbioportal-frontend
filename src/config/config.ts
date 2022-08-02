@@ -34,12 +34,18 @@ import {
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
-import { CivicAPI } from 'cbioportal-utils';
+import {
+    addCustomHeadersForApiRequests,
+    CivicAPI,
+    maskApiRequests,
+} from 'cbioportal-utils';
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';
 import pako from 'pako';
 
 const win = window as any;
+
+const REQ_BODY_SIZE_CHAR_LIMIT = 10000;
 
 // these should not be exported.  they should only be accessed
 // via getServerConfig and getLoadConfig
@@ -147,6 +153,24 @@ function cachePostMethods(
     );
 }
 
+export type UrlParamPair = {
+    url: string;
+    params: { [key: string]: string };
+};
+
+export function pairMatchesPath(
+    pair: UrlParamPair,
+    url: string,
+    params: any
+): boolean {
+    return (
+        url.startsWith(pair.url) &&
+        Object.keys(pair.params).filter(
+            k => params[k] && params[k] === pair.params[k]
+        ).length == Object.keys(pair.params).length
+    );
+}
+
 export function initializeAPIClients() {
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
@@ -168,37 +192,34 @@ export function initializeAPIClients() {
     cachePostMethods(GenomeNexusAPIInternal, [], /POST$/);
     cachePostMethods(OncoKbAPI);
 
+    if (_.isEmpty(localStorage.oncokbOverride)) {
+        maskApiRequests(OncoKbAPI, getOncoKbApiUrl(), {
+            'X-Proxy-User-Agreement':
+                'I/We do NOT use this obfuscated proxy to programmatically obtain private OncoKB data. I/We know that I/we should get a valid data access token by registering at https://www.oncokb.org/account/register.',
+        });
+    } else {
+        addCustomHeadersForApiRequests(OncoKbAPI, getOncoKbApiUrl(), {
+            'X-Proxy-User-Agreement': localStorage.oncokbToken,
+        });
+    }
+
     if (getServerConfig().enable_request_body_gzip_compression) {
-        compressRequestBodies(
-            CBioPortalAPI,
-            [
-                '/mutations/fetch',
-                '/patients/fetch',
-                '/molecular-data/fetch',
-                '/clinical-data/fetch?clinicalDataType=SAMPLE',
-                '/gene-panel-data/fetch',
-                '/clinical-data/fetch?clinicalDataType=PATIENT',
-            ],
+        registerRequestBodyCompression(CBioPortalAPI, getCbioPortalApiUrl());
+        registerRequestBodyCompression(
+            CBioPortalAPIInternal,
             getCbioPortalApiUrl()
         );
     }
 }
 
 /**
- * Compresses the request bodies of POST calls of urls that start with
- * domain + urlToCompress, and adds the Content-Encoding header. To do this,
+ * Compresses the request bodies of POST calls of urls with large
+ * request body size, and adds the Content-Encoding header. To do this,
  * it wraps the api client's request function.
  * @param apiClient
- * @param urlsToCompress
  * @param domain
  */
-function compressRequestBodies(
-    apiClient: any,
-    urlsToCompress: string[],
-    domain: string
-): void {
-    urlsToCompress = urlsToCompress.map(url => domain + url);
-
+function registerRequestBodyCompression(apiClient: any, domain: string): void {
     const oldRequestFunc = apiClient.prototype.request;
 
     const newRequestFunc = (
@@ -212,12 +233,15 @@ function compressRequestBodies(
         resolve: any,
         errorHandlers: any[]
     ) => {
-        if (
-            method === 'POST' &&
-            urlsToCompress.filter(match => url.startsWith(match)).length > 0
-        ) {
-            headers['Content-Encoding'] = 'gzip';
-            body = pako.gzip(JSON.stringify(body)).buffer;
+        if (method === 'POST') {
+            var bodyString = JSON.stringify(body);
+            if (bodyString.length > REQ_BODY_SIZE_CHAR_LIMIT) {
+                headers['Content-Encoding'] = 'gzip';
+                body = pako.gzip(bodyString).buffer;
+            } else {
+                // Store stringified body, so that stringify only runs once.
+                body = bodyString;
+            }
         }
 
         oldRequestFunc(

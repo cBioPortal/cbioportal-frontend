@@ -7,9 +7,9 @@ import {
     action,
     computed,
     observable,
-    reaction,
     runInAction,
     makeObservable,
+    autorun,
 } from 'mobx';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
@@ -30,7 +30,6 @@ import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
 import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
-import { showCustomTab } from '../../shared/lib/customTabs';
 import {
     parseConfigDisabledTabs,
     ResultsViewTab,
@@ -63,6 +62,14 @@ import UserMessager, {
     IUserMessage,
 } from 'shared/components/userMessager/UserMessage';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import {
+    buildCustomTabs,
+    prepareCustomTabConfigurations,
+} from 'shared/lib/customTabs/customTabHelpers';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
+import { AppContext } from 'cbioportal-frontend-commons';
+import PathWayMapperContainer from 'pages/resultsView/pathwayMapper/PathWayMapperContainer';
 
 export function initStore(
     appStore: AppStore,
@@ -72,23 +79,19 @@ export function initStore(
 
     setWindowVariable('resultsViewPageStore', resultsViewPageStore);
 
-    reaction(
-        () => [resultsViewPageStore.studyIds, resultsViewPageStore.oqlText],
-        () => {
-            if (
-                resultsViewPageStore.studyIds.isComplete &&
-                resultsViewPageStore.oqlText
-            ) {
-                trackQuery(
-                    resultsViewPageStore.studyIds.result!,
-                    resultsViewPageStore.oqlText,
-                    resultsViewPageStore.hugoGeneSymbols,
-                    resultsViewPageStore.queriedVirtualStudies.result!.length >
-                        0
-                );
-            }
+    autorun(() => {
+        if (
+            resultsViewPageStore.studyIds.isComplete &&
+            resultsViewPageStore.oqlText
+        ) {
+            trackQuery(
+                resultsViewPageStore.studyIds.result!,
+                resultsViewPageStore.oqlText,
+                resultsViewPageStore.hugoGeneSymbols,
+                resultsViewPageStore.queriedVirtualStudies.result!.length > 0
+            );
         }
-    );
+    });
 
     return resultsViewPageStore;
 }
@@ -98,12 +101,9 @@ function addOnBecomeVisibleListener(callback: () => void) {
 }
 
 export interface IResultsViewPageProps {
-    routing: ExtendedRouterStore;
-    appStore: AppStore;
     params: any; // from react router
 }
 
-@inject('appStore', 'routing')
 @observer
 export default class ResultsViewPage extends React.Component<
     IResultsViewPageProps,
@@ -122,7 +122,7 @@ export default class ResultsViewPage extends React.Component<
 
         makeObservable(this);
 
-        this.urlWrapper = new ResultsViewURLWrapper(props.routing);
+        this.urlWrapper = new ResultsViewURLWrapper(this.routing);
 
         handleLegacySubmission(this.urlWrapper);
 
@@ -133,31 +133,28 @@ export default class ResultsViewPage extends React.Component<
         if (this.urlWrapper.hasSessionId) {
             onMobxPromise(this.urlWrapper.remoteSessionData, () => {
                 this.resultsViewPageStore = initStore(
-                    props.appStore,
+                    this.appStore,
                     this.urlWrapper
                 );
             });
         } else {
             this.resultsViewPageStore = initStore(
-                props.appStore,
+                this.appStore,
                 this.urlWrapper
             );
         }
     }
 
-    @autobind
-    private customTabCallback(
-        div: HTMLDivElement,
-        tab: any,
-        isUnmount = false
-    ) {
-        showCustomTab(
-            div,
-            tab,
-            getBrowserWindow().location.href,
-            this.resultsViewPageStore,
-            isUnmount
-        );
+    // this is temporary to allow us to
+    // get rid of @inject, which is conflicting
+    // with react context
+    // ultimately should be replaced with react context
+    private get appStore(): AppStore {
+        return getBrowserWindow().globalStores.appStore as AppStore;
+    }
+
+    private get routing(): ExtendedRouterStore {
+        return getBrowserWindow().globalStores.routing as ExtendedRouterStore;
     }
 
     componentWillUnmount() {
@@ -265,7 +262,7 @@ export default class ResultsViewPage extends React.Component<
                         >
                             <Mutations
                                 store={store}
-                                appStore={this.props.appStore}
+                                appStore={this.appStore}
                                 urlWrapper={this.urlWrapper}
                             />
                         </MSKTab>
@@ -323,7 +320,7 @@ export default class ResultsViewPage extends React.Component<
                         >
                             <ComparisonTab
                                 urlWrapper={this.urlWrapper}
-                                appStore={this.props.appStore}
+                                appStore={this.appStore}
                                 store={this.resultsViewPageStore}
                             />
                         </MSKTab>
@@ -383,13 +380,14 @@ export default class ResultsViewPage extends React.Component<
                 },
             },
             {
-                id: ResultsViewTab.PATHWAY_MAPPER,
+                id: ResultsViewTab.PATHWAYS,
                 hide: () =>
                     browser.name === 'Internet Explorer' ||
-                    !getServerConfig().show_pathway_mapper ||
+                    (!getServerConfig().show_pathway_mapper &&
+                        !getServerConfig().show_ndex) ||
                     !this.resultsViewPageStore.studies.isComplete,
                 getTab: () => {
-                    const showPM =
+                    const showPathwaysTab =
                         store.filteredSequencedSampleKeysByGene.isComplete &&
                         store.oqlFilteredCaseAggregatedDataByOQLLine
                             .isComplete &&
@@ -406,14 +404,13 @@ export default class ResultsViewPage extends React.Component<
                     return (
                         <MSKTab
                             key={13}
-                            id={ResultsViewTab.PATHWAY_MAPPER}
+                            id={ResultsViewTab.PATHWAYS}
                             linkText={'Pathways'}
                         >
-                            {showPM ? (
-                                <ResultsViewPathwayMapper
-                                    store={store}
-                                    appStore={this.props.appStore}
-                                    urlWrapper={this.urlWrapper}
+                            {showPathwaysTab ? (
+                                <PathWayMapperContainer
+                                    resultsViewPageStore={store}
+                                    appStore={this.appStore}
                                 />
                             ) : (
                                 <LoadingIndicator
@@ -426,7 +423,10 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-            {
+        ];
+
+        if (this.context.showDownloadControls === true) {
+            tabMap.push({
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {
                     return (
@@ -439,39 +439,23 @@ export default class ResultsViewPage extends React.Component<
                         </MSKTab>
                     );
                 },
-            },
-        ];
+            });
+        }
 
         let filteredTabs = tabMap
             .filter(this.evaluateTabInclusion)
             .map(tab => tab.getTab());
 
-        // now add custom tabs
-        if (getServerConfig().custom_tabs) {
-            const customResultsTabs = getServerConfig()
-                .custom_tabs.filter(
-                    (tab: any) => tab.location === 'RESULTS_PAGE'
-                )
-                .map((tab: any, i: number) => {
-                    return (
-                        <MSKTab
-                            key={100 + i}
-                            id={'customTab' + i}
-                            unmountOnHide={tab.unmountOnHide === true}
-                            onTabDidMount={div => {
-                                this.customTabCallback(div, tab);
-                            }}
-                            onTabUnmount={div => {
-                                this.customTabCallback(div, tab, true);
-                            }}
-                            linkText={tab.title}
-                        />
-                    );
-                });
-            filteredTabs = filteredTabs.concat(customResultsTabs);
-        }
+        filteredTabs.push(...buildCustomTabs(this.customTabs));
 
         return filteredTabs;
+    }
+
+    @computed get customTabs() {
+        return prepareCustomTabConfigurations(
+            getServerConfig().custom_tabs,
+            'RESULTS_PAGE'
+        );
     }
 
     @autobind
@@ -541,9 +525,9 @@ export default class ResultsViewPage extends React.Component<
     @autobind
     private getTabHref(tabId: string) {
         return URL.format({
-            pathname: tabId,
-            query: this.props.routing.query,
-            hash: this.props.routing.location.hash,
+            pathname: buildCBioPortalPageUrl(`./results/${tabId}`),
+            query: this.routing.query,
+            hash: this.routing.location.hash,
         });
     }
 
@@ -639,7 +623,7 @@ export default class ResultsViewPage extends React.Component<
                             <div>
                                 <div className={'headBlock'}>
                                     <QuerySummary
-                                        routingStore={this.props.routing}
+                                        routingStore={this.routing}
                                         store={this.resultsViewPageStore}
                                         onToggleQueryFormVisibility={visible => {
                                             runInAction(() => {
@@ -696,11 +680,13 @@ export default class ResultsViewPage extends React.Component<
                                             )
                                         }
                                         className="mainTabs"
-                                        getTabHref={this.getTabHref}
+                                        hrefRoot={buildCBioPortalPageUrl(
+                                            'results'
+                                        )}
                                         contentWindowExtra={
                                             <HelpWidget
                                                 path={
-                                                    this.props.routing.location
+                                                    this.routing.location
                                                         .pathname
                                                 }
                                             />
@@ -763,3 +749,5 @@ export default class ResultsViewPage extends React.Component<
         }
     }
 }
+
+ResultsViewPage.contextType = AppContext;

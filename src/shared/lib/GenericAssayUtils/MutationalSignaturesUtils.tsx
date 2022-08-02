@@ -1,9 +1,9 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { IMutationalSignature } from '../../model/MutationalSignature';
-import { GenericAssayTypeConstants } from './GenericAssayCommonUtils';
-import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
+import { deriveDisplayTextFromGenericAssayType } from './GenericAssayCommonUtils';
 import { GenericAssayData } from 'cbioportal-ts-api-client';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 export enum MutationalSignaturesVersion {
     V2 = 'v2',

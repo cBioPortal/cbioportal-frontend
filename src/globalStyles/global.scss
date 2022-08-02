@@ -140,7 +140,7 @@ th.reactable-header-sort-asc:after {
 
 .rc-tooltip {
     border-radius: $border-radius-base;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: $boxShadow;
     padding: 0;
     opacity: 1;
 
@@ -664,12 +664,68 @@ h6.blackHeader {
     white-space: nowrap;
 }
 
+.nomouse {
+    pointer-events: none;
+}
+
 h2.divider {
     margin: 40px 0 !important;
     padding-bottom: 10px;
     border-bottom: 1px solid $borderColor;
 }
 
-.react-date-picker__inputGroup__input--hasLeadingZero {
-    padding-left: 0 !important;
+.myoverlay {
+    position: fixed;
+    top: 0;
+    z-index: 10000;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.5);
+
+    .myclose {
+        position: absolute;
+        top: 5px;
+        right: 12px;
+        z-index: 200;
+
+        button {
+            cursor: pointer;
+        }
+    }
+
+    .modal-iframe {
+        z-index: 100;
+        margin: 0px;
+        position: absolute;
+        top: 0px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        height: 100%;
+        width: 100%;
+        padding: 30px 10px 10px 10px;
+    }
+}
+
+.displayFlex {
+    display: flex;
+}
+
+// igv overrides
+.igv-ui-popover {
+    border: 1px solid $borderColor;
+    padding: 5px;
+    box-shadow: $boxShadow;
+
+    > div:first-child {
+        background: none;
+        border: none;
+        height: 1px;
+        svg {
+            position: relative;
+            top: 2px;
+            right: -4px;
+        }
+    }
 }

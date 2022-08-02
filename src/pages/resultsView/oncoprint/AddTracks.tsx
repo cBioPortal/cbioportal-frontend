@@ -6,8 +6,11 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import _ from 'lodash';
 import OncoprintDropdownCount from './OncoprintDropdownCount';
 import CustomDropdown from 'shared/components/oncoprint/controls/CustomDropdown';
-import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
-import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
+import {
+    deriveDisplayTextFromGenericAssayType,
+    filterGenericAssayEntitiesByGenes,
+    makeGenericAssayOption,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import GenericAssaySelection, {
     GenericAssayTrackInfo,
 } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
@@ -25,6 +28,7 @@ import {
 } from 'shared/cache/ClinicalDataCache';
 import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
 import { ClinicalAttribute, MolecularProfile } from 'cbioportal-ts-api-client';
+import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 export interface IAddTrackProps {
     store: ResultsViewPageStore;
     heatmapMenu: JSX.Element | null;
@@ -58,6 +62,8 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
     private updateTabId(newId: Tab) {
         this.tabId = newId;
         // update profile if clicked Generic Assay tab
+        // This will update generic assay profile correctly
+        // Because if isGenericAssayDataComplete and profilesByGenericAssayType are falsy, tabs will not be shown
         if (!Object.values(Tab).includes(newId)) {
             if (
                 this.isGenericAssayDataComplete &&
@@ -80,15 +86,17 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
     }
 
     @computed get showGenericAssayTabs() {
-        // disable for multiple studies query
         if (this.isGenericAssayDataComplete) {
-            return (
+            const isSingleStudy =
                 _.chain(this.props.store.genericAssayProfiles.result!)
                     .map(profile => profile.studyId)
                     .uniq()
                     .size()
-                    .value() == 1
-            );
+                    .value() == 1;
+            // disable for multiple studies query
+            if (!_.isEmpty(this.profilesByGenericAssayType) && isSingleStudy) {
+                return true;
+            }
         } else {
             return false;
         }
@@ -269,10 +277,25 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
                         label: profile.name,
                     };
                 });
-                const entityOptions = _.map(
-                    genericAssayEntitiesGroupedByGenericAssayType[type],
-                    entity => makeGenericAssayOption(entity, false)
-                );
+
+                // bring gene related options to the front
+                let entities = [];
+                const filteredEntities = GENERIC_ASSAY_CONFIG
+                    .genericAssayConfigByType[type]?.globalConfig
+                    ?.geneRelatedGenericAssayType
+                    ? filterGenericAssayEntitiesByGenes(
+                          genericAssayEntitiesGroupedByGenericAssayType[type],
+                          this.props.store.hugoGeneSymbols
+                      )
+                    : [];
+                entities = [
+                    ...filteredEntities,
+                    ..._.difference(
+                        genericAssayEntitiesGroupedByGenericAssayType[type],
+                        filteredEntities
+                    ),
+                ];
+                const entityOptions = _.map(entities, makeGenericAssayOption);
                 const linkText = (
                     <div>
                         {deriveDisplayTextFromGenericAssayType(type)}

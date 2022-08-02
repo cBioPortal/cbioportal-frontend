@@ -16,7 +16,6 @@ import {
     IWaterfallPlotData,
     getWaterfallPlotDownloadData,
     getLimitValues,
-    deriveDisplayTextFromGenericAssayType,
     MUT_PROFILE_COUNT_DRIVER,
     MUT_PROFILE_COUNT_VUS,
     mutDriverVsVUSCategoryOrder,
@@ -41,7 +40,7 @@ import {
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
 import _ from 'lodash';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 describe('PlotsTabUtils', () => {
     describe('makeClinicalAttributeOptions', () => {
@@ -898,42 +897,6 @@ describe('PlotsTabUtils', () => {
             ];
             const types = getLimitValues(data);
             assert.deepEqual(types, []);
-        });
-    });
-
-    describe('deriveDisplayTextFromGenericAssayType', () => {
-        beforeAll(() => {
-            getServerConfig().generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
-        });
-        it('derive from the existing display text', () => {
-            const displayText = 'Treatment Response';
-            const derivedText = deriveDisplayTextFromGenericAssayType(
-                GenericAssayTypeConstants.TREATMENT_RESPONSE
-            );
-            assert.equal(displayText, derivedText);
-        });
-        it('derive from the type', () => {
-            const displayText = 'New Type';
-            const derivedText = deriveDisplayTextFromGenericAssayType(
-                'NEW_TYPE'
-            );
-            assert.equal(displayText, derivedText);
-        });
-        it('derive from the existing display text - plural', () => {
-            const displayText = 'Treatment Responses';
-            const derivedText = deriveDisplayTextFromGenericAssayType(
-                GenericAssayTypeConstants.TREATMENT_RESPONSE,
-                true
-            );
-            assert.equal(displayText, derivedText);
-        });
-        it('derive from the type - plural', () => {
-            const displayText = 'New Types';
-            const derivedText = deriveDisplayTextFromGenericAssayType(
-                'NEW_TYPE',
-                true
-            );
-            assert.equal(displayText, derivedText);
         });
     });
 });

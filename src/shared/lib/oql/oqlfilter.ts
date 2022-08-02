@@ -18,11 +18,10 @@ import {
     ExtendedAlteration,
     AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
-import {
-    NumericGeneMolecularData,
-    Mutation,
-    StructuralVariant,
-} from 'cbioportal-ts-api-client';
+import { NumericGeneMolecularData, Mutation } from 'cbioportal-ts-api-client';
+
+import { StructuralVariant } from 'cbioportal-ts-api-client';
+
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import AccessorsForOqlFilter, {
     Datum,

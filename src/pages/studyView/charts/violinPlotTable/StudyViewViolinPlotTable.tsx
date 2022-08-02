@@ -4,7 +4,10 @@ import { observer } from 'mobx-react';
 import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
 import { action, computed, makeObservable, observable } from 'mobx';
 import StudyViewViolinPlot from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlot';
-import { ClinicalViolinPlotRowData } from 'cbioportal-ts-api-client';
+import {
+    ClinicalViolinPlotBoxData,
+    ClinicalViolinPlotRowData,
+} from 'cbioportal-ts-api-client';
 import {
     ChartDimension,
     STUDY_VIEW_CONFIG,
@@ -16,6 +19,8 @@ import {
     getDataX,
     getTickValues,
     getViolinX,
+    renderTooltipForBoxPlot,
+    renderTooltipForPoint,
     violinPlotXPadding,
 } from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotUtils';
 import { ClinicalViolinPlotIndividualPoint } from 'cbioportal-ts-api-client';
@@ -33,8 +38,9 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 
 const NUM_SAMPLES_COL_NAME = '#';
 const HEADER_HEIGHT = 50;
+const ROWS_Y_START = 72;
 const FIRST_COLUMN_WIDTH = 120;
-const VIOLIN_PLOT_START_X = 143;
+const VIOLIN_PLOT_START_X = 140;
 
 export interface IStudyViewViolinPlotTableProps {
     width: number;
@@ -45,6 +51,10 @@ export interface IStudyViewViolinPlotTableProps {
     violinBounds: {
         min: number;
         max: number;
+    };
+    violinFilterRange?: {
+        min?: number;
+        max?: number;
     };
     rows: ClinicalViolinPlotRowData[];
     showViolin: boolean;
@@ -65,9 +75,25 @@ export default class StudyViewViolinPlotTable extends React.Component<
 > {
     private ref: any;
 
+    @observable categoryColumnDragging = {
+        _extraCategoryColumnWidth: 0,
+        dragging: false,
+        mouseXStart: -1,
+        _extraWidthStart: 0,
+    };
+
     constructor(props: any) {
         super(props);
         makeObservable(this);
+    }
+
+    @computed get extraCategoryColumnWidth() {
+        // only allow growing the column so that it shrinks the violin column by half
+        return clamp(
+            this.categoryColumnDragging._extraCategoryColumnWidth,
+            0,
+            this.violinColumnWidthWithoutColumnResize / 2
+        );
     }
 
     @autobind
@@ -88,7 +114,8 @@ export default class StudyViewViolinPlotTable extends React.Component<
     };
 
     @observable tooltipModel: {
-        point: ClinicalViolinPlotIndividualPoint;
+        point?: ClinicalViolinPlotIndividualPoint;
+        boxData?: ClinicalViolinPlotBoxData;
         category: string;
         mouseX: number;
         mouseY: number;
@@ -116,8 +143,8 @@ export default class StudyViewViolinPlotTable extends React.Component<
     private violinX(v: number) {
         return getViolinX(v, this.props.violinBounds, this.violinPlotWidth);
     }
-    @computed get violinColumnWidth() {
-        const baseViolinWidth = 180;
+    @computed get violinColumnWidthWithoutColumnResize() {
+        const baseViolinWidth = 160; //180;
         let additionalViolinWidth = 0;
         if (this.props.dimension.w > 3) {
             // starting after grid width 3, we will absorb
@@ -127,8 +154,35 @@ export default class StudyViewViolinPlotTable extends React.Component<
         }
         return baseViolinWidth + additionalViolinWidth;
     }
+    @computed get violinColumnWidth() {
+        return (
+            this.violinColumnWidthWithoutColumnResize -
+            this.extraCategoryColumnWidth
+        );
+    }
     @computed get violinPlotWidth() {
         return this.violinColumnWidth - 2 * violinPlotXPadding;
+    }
+
+    @action.bound
+    private onMouseOverBoxPlot(
+        boxData: ClinicalViolinPlotBoxData,
+        mouseX: number,
+        mouseY: number,
+        category: string
+    ) {
+        // mouse on point means mouse not in tooltip
+        this.onMouseLeaveTooltip();
+        // cancel hiding the tooltip
+        this.cancelResetTooltip();
+        // Only update tooltip if this is not the same data as we're already showing
+        if (
+            !this.tooltipModel ||
+            this.tooltipModel.category !== category ||
+            !_.isEqual(this.tooltipModel.boxData, boxData)
+        ) {
+            this.tooltipModel = { boxData, category, mouseX, mouseY };
+        }
     }
 
     @action.bound
@@ -142,7 +196,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
         this.onMouseLeaveTooltip();
         // cancel hiding the tooltip
         this.cancelResetTooltip();
-        // Only update tooltip if this is not the same point as we're already showing
+        // Only update tooltip if this is not the same data as we're already showing
         if (
             !this.tooltipModel ||
             this.tooltipModel.category !== category ||
@@ -196,6 +250,73 @@ export default class StudyViewViolinPlotTable extends React.Component<
         this.props.setFilters('numerical', range);
     }
 
+    @action.bound
+    private startCategoryColumnDrag(e: any) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.categoryColumnDragging.dragging = true;
+        this.categoryColumnDragging.mouseXStart = e.clientX;
+        this.categoryColumnDragging._extraWidthStart = this.extraCategoryColumnWidth;
+    }
+
+    @action.bound
+    private doCategoryColumnDrag(e: any) {
+        if (!this.categoryColumnDragging.dragging) {
+            return;
+        }
+        this.categoryColumnDragging._extraCategoryColumnWidth =
+            this.categoryColumnDragging._extraWidthStart +
+            e.clientX -
+            this.categoryColumnDragging.mouseXStart;
+    }
+
+    @action.bound
+    private stopCategoryColumnDrag(e: any) {
+        if (this.categoryColumnDragging.dragging) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        this.categoryColumnDragging.dragging = false;
+    }
+
+    @action.bound
+    private executeRangeSelection() {
+        if (this.rangeSelection.rectWidth > 5) {
+            // execute zoom
+            let start = clamp(
+                getDataX(
+                    this.rangeSelection.rectX - this.violinPlotStartX,
+                    this.props.violinBounds,
+                    this.violinPlotWidth
+                ),
+                this.props.violinBounds.min,
+                this.props.violinBounds.max
+            );
+            let end = clamp(
+                getDataX(
+                    this.rangeSelection.rectX +
+                        this.rangeSelection.rectWidth -
+                        this.violinPlotStartX,
+                    this.props.violinBounds,
+                    this.violinPlotWidth
+                ),
+                this.props.violinBounds.min,
+                this.props.violinBounds.max
+            );
+            if (this.props.logScale) {
+                start = Math.exp(start) - 1;
+                end = Math.exp(end) - 1;
+            }
+            this.onSelectRange({ start, end });
+        }
+    }
+
+    @action.bound
+    private stopRangeSelectionDrag(e: any) {
+        this.rangeSelection.mouseX = undefined;
+        this.rangeSelection.dragging = false;
+    }
+
     @computed get selectedCategories() {
         return _.keyBy(this.props.selectedCategories);
     }
@@ -207,7 +328,31 @@ export default class StudyViewViolinPlotTable extends React.Component<
                 render: (row: ClinicalViolinPlotRowData) => (
                     <span>{row.category}</span>
                 ),
-                width: FIRST_COLUMN_WIDTH,
+                headerRender: () => {
+                    return (
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                            }}
+                        >
+                            <span>{this.props.categoryColumnName}</span>
+                            <div
+                                onMouseDown={this.startCategoryColumnDrag}
+                                style={{
+                                    color: '#ddd',
+                                    width: 1,
+                                    height: 15,
+                                    cursor: 'ew-resize',
+                                }}
+                            >
+                                |
+                            </div>
+                        </div>
+                    );
+                },
+                width: FIRST_COLUMN_WIDTH + this.extraCategoryColumnWidth,
                 sortBy: (row: ClinicalViolinPlotRowData) => row.category,
                 filter: (
                     row: ClinicalViolinPlotRowData,
@@ -215,6 +360,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
                     filterStringUpper: string
                 ) => row.category.toUpperCase().includes(filterStringUpper),
                 visible: true,
+                resizable: true,
             },
             {
                 name: this.props.violinColumnName,
@@ -232,6 +378,14 @@ export default class StudyViewViolinPlotTable extends React.Component<
                             onMouseOverPoint={(p, x, y) =>
                                 this.onMouseOverPoint(p, x, y, row.category)
                             }
+                            onMouseOverBoxPlot={(x, y) => {
+                                this.onMouseOverBoxPlot(
+                                    row.boxData,
+                                    x,
+                                    y,
+                                    row.category
+                                );
+                            }}
                             onMouseOverBackground={this.onMouseOverBackground}
                         />
                     );
@@ -302,19 +456,47 @@ export default class StudyViewViolinPlotTable extends React.Component<
     }
 
     @computed get gridLabelsOffset() {
+        let offset = 0;
         if (this.props.dimension.w > 2) {
-            return 140;
+            offset += 140;
         } else {
-            return 139;
+            offset += 139;
         }
+        offset += this.extraCategoryColumnWidth;
+        return offset;
     }
 
     @computed get gridTicks() {
-        return getTickValues(
-            this.props.violinBounds,
-            this.props.dimension.w,
-            this.props.logScale
-        );
+        if (this.data.length > 0) {
+            const allTicks = getTickValues(
+                this.props.violinBounds,
+                this.props.dimension.w,
+                this.props.logScale
+            );
+            // The first and last ticks, which are the endpoints of the scale,
+            //  might happen to overlap with their neighbors. If so, remove the neighbors.
+            const guaranteedTickGap = 30;
+            if (allTicks.length > 2) {
+                if (
+                    this.violinX(allTicks[1]) <
+                    this.violinX(allTicks[0]) + guaranteedTickGap
+                ) {
+                    allTicks.splice(1, 1);
+                }
+            }
+            if (allTicks.length > 2) {
+                if (
+                    this.violinX(allTicks[allTicks.length - 2]) >
+                    this.violinX(allTicks[allTicks.length - 1]) -
+                        guaranteedTickGap
+                ) {
+                    allTicks.splice(allTicks.length - 2, 1);
+                }
+            }
+            return allTicks;
+        } else {
+            return [];
+        }
     }
     renderGridLabels() {
         return (
@@ -346,7 +528,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
                                           Math.exp(val) - 1,
                                           1
                                       )
-                                    : val}
+                                    : toFixedWithoutTrailingZeros(val, 2)}
                             </text>
                         );
                     })}
@@ -385,6 +567,21 @@ export default class StudyViewViolinPlotTable extends React.Component<
                 />
             </div>,
         ];
+        if (this.props.dimension.w <= 2) {
+            ret.push(
+                <div
+                    style={{
+                        width: 71, //99,
+                        position: 'absolute',
+                        right: 18, //-10,
+                        fontSize: 11,
+                        lineHeight: 1.1,
+                    }}
+                >
+                    Expand to see quartiles →
+                </div>
+            );
+        }
         return ret;
     }
 
@@ -393,6 +590,17 @@ export default class StudyViewViolinPlotTable extends React.Component<
         if (!model) {
             return null;
         }
+        let body;
+        if (model.point) {
+            body = renderTooltipForPoint(
+                model.point,
+                this.props.violinColumnName,
+                this.props.logScale
+            );
+        } else if (model.boxData) {
+            body = renderTooltipForBoxPlot(model.boxData, this.props.logScale);
+        }
+
         return (ReactDOM as any).createPortal(
             <Popover
                 arrowOffsetTop={17}
@@ -406,34 +614,86 @@ export default class StudyViewViolinPlotTable extends React.Component<
                 onMouseEnter={this.onMouseEnterTooltip}
                 onMouseLeave={this.onMouseLeaveTooltip}
             >
-                <b>Study ID:</b>
-                {` `}
-                <a href={getStudySummaryUrl(model.point.studyId)}>
-                    {model.point.studyId}
-                </a>
-                <br />
-                <b>Sample ID:</b>
-                {` `}
-                <a
-                    href={getSampleViewUrl(
-                        model.point.studyId,
-                        model.point.sampleId
-                    )}
-                >
-                    {model.point.sampleId}
-                </a>
-                <br />
-                <b>{this.props.violinColumnName}:</b>
-                {` `}
-                {model.point.value}
+                {body}
             </Popover>,
             document.body
         );
     }
+
     @action.bound onScroll() {
         // hide tooltip on scroll
         this.tooltipModel = null;
         this.cancelResetTooltip();
+    }
+
+    private renderRangeFilterIndicator() {
+        if (
+            !this.props.isLoading &&
+            this.props.violinFilterRange &&
+            this.data.length > 0
+        ) {
+            const range = {
+                min:
+                    this.props.logScale &&
+                    this.props.violinFilterRange.min !== undefined
+                        ? Math.log(this.props.violinFilterRange.min + 1)
+                        : this.props.violinFilterRange.min,
+                max:
+                    this.props.logScale &&
+                    this.props.violinFilterRange.max !== undefined
+                        ? Math.log(this.props.violinFilterRange.max + 1)
+                        : this.props.violinFilterRange.max,
+            };
+            return (
+                <>
+                    {this.props.violinFilterRange.min !== undefined && (
+                        <div
+                            style={{
+                                top: ROWS_Y_START,
+                                height: this.props.height - HEADER_HEIGHT - 0.5,
+                                position: 'absolute',
+                                background: '#fff',
+                                borderRight: '1px solid #404040',
+                                left:
+                                    this.violinPlotStartX +
+                                    this.violinX(this.props.violinBounds.min) -
+                                    1,
+                                width:
+                                    1 +
+                                    this.violinX(range.min!) -
+                                    this.violinX(this.props.violinBounds.min),
+                                zIndex: 100,
+                                opacity: 0.95,
+                                pointerEvents: 'none',
+                            }}
+                        />
+                    )}
+                    {this.props.violinFilterRange.max !== undefined && (
+                        <div
+                            style={{
+                                top: ROWS_Y_START,
+                                height: this.props.height - HEADER_HEIGHT - 0.5,
+                                position: 'absolute',
+                                background: '#fff',
+                                borderLeft: '1px solid #404040',
+                                left:
+                                    this.violinPlotStartX +
+                                    this.violinX(range.max!),
+                                width:
+                                    1 +
+                                    this.violinX(this.props.violinBounds.max) -
+                                    this.violinX(range.max!),
+                                zIndex: 100,
+                                opacity: 0.95,
+                                pointerEvents: 'none',
+                            }}
+                        />
+                    )}
+                </>
+            );
+        } else {
+            return null;
+        }
     }
 
     private renderRangeSelectUI() {
@@ -444,8 +704,8 @@ export default class StudyViewViolinPlotTable extends React.Component<
             return (
                 <div
                     style={{
-                        top: 73,
-                        height: this.props.height - HEADER_HEIGHT,
+                        top: ROWS_Y_START,
+                        height: this.props.height - HEADER_HEIGHT - 0.5,
                         position: 'absolute',
                         background: '#ccc',
                         left: this.rangeSelection.rectX,
@@ -455,12 +715,15 @@ export default class StudyViewViolinPlotTable extends React.Component<
                     }}
                 />
             );
-        } else if (this.rangeSelection.mouseX !== undefined) {
+        } else if (
+            this.rangeSelection.mouseX !== undefined &&
+            !this.categoryColumnDragging.dragging
+        ) {
             return (
                 <div
                     style={{
-                        top: 73,
-                        height: this.props.height - HEADER_HEIGHT,
+                        top: ROWS_Y_START,
+                        height: this.props.height - HEADER_HEIGHT - 0.5,
                         position: 'absolute',
                         left: this.rangeSelection.mouseX,
                         borderLeft: '1px dashed #999',
@@ -478,85 +741,67 @@ export default class StudyViewViolinPlotTable extends React.Component<
         return !this.props.isLoading && this.data.length > 0;
     }
 
+    @computed get violinPlotStartX() {
+        return this.extraCategoryColumnWidth + VIOLIN_PLOT_START_X;
+    }
+
     private handlers = {
-        isMouseInside: (mouseX: number) => {
+        isMouseInside: (mouseX: number, mouseY: number) => {
             return (
-                mouseX >= VIOLIN_PLOT_START_X - 3 &&
+                mouseX >= this.violinPlotStartX &&
                 mouseX <=
-                    VIOLIN_PLOT_START_X +
+                    this.violinPlotStartX +
                         this.violinColumnWidth -
                         2 * violinPlotXPadding +
-                        3
+                        6 &&
+                mouseY >= HEADER_HEIGHT &&
+                mouseY <= this.props.height
             );
         },
         onMouseMove: action((e: any) => {
             if (!this.mouseInteractionPossible) {
                 return;
             }
+            this.doCategoryColumnDrag(e);
             const elementX = this.ref!.getBoundingClientRect().x;
-            const mouseX = e.pageX - elementX;
-            if (this.handlers.isMouseInside(mouseX)) {
+            const elementY = this.ref!.getBoundingClientRect().y;
+            const mouseX = e.clientX - elementX;
+            const mouseY = e.clientY - elementY;
+            if (this.handlers.isMouseInside(mouseX, mouseY)) {
                 this.rangeSelection.mouseX = mouseX;
             } else {
                 if (this.rangeSelection.dragging) {
-                    this.handlers.onMouseUp();
-                } else {
-                    this.handlers.onMouseLeave();
+                    this.executeRangeSelection();
                 }
+                this.stopRangeSelectionDrag(e);
             }
         }),
-        onMouseLeave: action(() => {
-            if (!this.mouseInteractionPossible) {
-                return;
-            }
-            this.rangeSelection.mouseX = undefined;
-            this.rangeSelection.dragging = false;
+        onMouseLeave: action((e: any) => {
+            this.stopRangeSelectionDrag(e);
+            this.stopCategoryColumnDrag(e);
         }),
         onMouseDown: action((e: any) => {
             if (!this.mouseInteractionPossible) {
                 return;
             }
             const elementX = this.ref!.getBoundingClientRect().x;
-            const mouseX = e.pageX - elementX;
-            if (this.handlers.isMouseInside(mouseX)) {
+            const elementY = this.ref!.getBoundingClientRect().y;
+            const mouseX = e.clientX - elementX;
+            const mouseY = e.clientY - elementY;
+            if (this.handlers.isMouseInside(mouseX, mouseY)) {
                 this.rangeSelection.startX = mouseX;
                 this.rangeSelection.dragging = true;
             }
         }),
-        onMouseUp: action(() => {
+        onMouseUp: action((e: any) => {
             if (!this.mouseInteractionPossible) {
                 return;
             }
-            this.rangeSelection.dragging = false;
-            if (this.rangeSelection.rectWidth > 5) {
-                // execute zoom
-                let start = clamp(
-                    getDataX(
-                        this.rangeSelection.rectX - VIOLIN_PLOT_START_X + 4,
-                        this.props.violinBounds,
-                        this.violinPlotWidth
-                    ),
-                    this.props.violinBounds.min,
-                    this.props.violinBounds.max
-                );
-                let end = clamp(
-                    getDataX(
-                        this.rangeSelection.rectX +
-                            this.rangeSelection.rectWidth -
-                            VIOLIN_PLOT_START_X +
-                            4,
-                        this.props.violinBounds,
-                        this.violinPlotWidth
-                    ),
-                    this.props.violinBounds.min,
-                    this.props.violinBounds.max
-                );
-                if (this.props.logScale) {
-                    start = Math.exp(start) - 1;
-                    end = Math.exp(end) - 1;
-                }
-                this.onSelectRange({ start, end });
+            if (this.rangeSelection.dragging) {
+                this.executeRangeSelection();
             }
+            this.stopRangeSelectionDrag(e);
+            this.stopCategoryColumnDrag(e);
         }),
     };
     private renderLoadingIndicator() {
@@ -602,14 +847,21 @@ export default class StudyViewViolinPlotTable extends React.Component<
                 onMouseLeave={this.handlers.onMouseLeave}
                 onMouseDown={this.handlers.onMouseDown}
                 onMouseUp={this.handlers.onMouseUp}
-                className={this.rangeSelection.dragging ? 'noselect' : ''}
+                className={
+                    this.rangeSelection.dragging ||
+                    this.categoryColumnDragging.dragging
+                        ? 'noselect'
+                        : ''
+                }
             >
                 <>
                     <FixedHeaderTable
                         columns={this.columns}
                         data={this.data}
                         headerHeight={HEADER_HEIGHT}
-                        headerClassName={'violinPlotTableHeader'}
+                        headerClassName={classnames('violinPlotTableHeader', {
+                            nomouse: this.categoryColumnDragging.dragging,
+                        })}
                         rowHeight={30}
                         width={this.props.width}
                         height={this.props.height}
@@ -619,6 +871,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
                         onScroll={this.onScroll}
                     />
                     {this.renderGridLabels()}
+                    {this.renderRangeFilterIndicator()}
                     {this.renderRangeSelectUI()}
                     {this.renderTooltip()}
                     {this.renderLoadingIndicator()}

@@ -296,63 +296,6 @@ describe('oncoprint', function() {
                 resultsPageSettingsDropdown +
                 ' input[data-test="annotateCOSMICCount"]';
         });
-        it('annotates all types of mutations with cbioportal count and cosmic', () => {
-            setSettingsMenuOpen(true);
-            // select only mutation coloring by cbioportal count
-            $(cbioportalCheckbox).click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-            $(oncoKbCheckbox).click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-            $(hotspotsCheckbox).click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-            // set threshold 1
-            browser.execute(function() {
-                resultsViewOncoprint.setAnnotateCBioPortalInputValue('1');
-            });
-            browser.pause(100); // give time to take effect
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-            let legendText = getTextInOncoprintLegend();
-            assert(
-                legendText.indexOf('Inframe Mutation (putative driver)') > -1,
-                'cbio count annotates inframe mutations'
-            );
-            assert(
-                legendText.indexOf('Missense Mutation (putative driver)') > -1,
-                'cbio count annotates missense mutations'
-            );
-            assert(
-                legendText.indexOf('Truncating Mutation (putative driver)') >
-                    -1,
-                'cbio count annotates truncating mutations'
-            );
-
-            // select only mutation coloring by cosmic count
-            setSettingsMenuOpen(true);
-            $(cosmicCheckbox).click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-            $(cbioportalCheckbox).click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-            // set threshold 1
-            browser.execute(function() {
-                resultsViewOncoprint.setAnnotateCOSMICInputValue('1');
-            });
-            browser.pause(100); // give time to take effect
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-            legendText = getTextInOncoprintLegend();
-            assert(
-                legendText.indexOf('Inframe Mutation (putative driver)') > -1,
-                'cosmic count annotates inframe mutations'
-            );
-            assert(
-                legendText.indexOf('Missense Mutation (putative driver)') > -1,
-                'cosmic count annotates missense mutations'
-            );
-            assert(
-                legendText.indexOf('Truncating Mutation (putative driver)') >
-                    -1,
-                'cosmic count annotates truncating mutations'
-            );
-        });
     });
 
     describe('germline mutation', () => {

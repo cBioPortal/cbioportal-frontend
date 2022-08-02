@@ -6,6 +6,7 @@ import {
     IMtb,
     MtbState,
     IDeletions,
+    IClinicalTrial,
 } from '../../../shared/model/TherapyRecommendation';
 import { computed, makeObservable, observable } from 'mobx';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
@@ -60,6 +61,7 @@ export type IMtbProps = {
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
+    clinicalTrialClipboard: IClinicalTrial[];
 };
 
 export type IMtbState = {
@@ -126,7 +128,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             )}
                             destroyTooltipOnHide={false}
                         >
-                            <i className={'fa fa-user-circle'}></i>
+                            <i className={'fa fa-user-md fa-2x'}></i>
                         </DefaultTooltip>
                     </span>
                     <label
@@ -373,6 +375,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     pubMedCache={this.props.pubMedCache}
                     isDisabled={this.isDisabled(mtb) || !this.state.permission}
                     showButtons={true}
+                    clinicalTrialClipboard={this.props.clinicalTrialClipboard}
                 />
             ),
             width: this.columnWidths[ColumnKey.THERAPYRECOMMENDATIONS],
@@ -434,7 +437,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
         if (index === -1) {
             newMtbs
                 .find(x => x.id === mtbId)!
-                .therapyRecommendations.push(therapyRecommendationToAdd);
+                .therapyRecommendations.unshift(therapyRecommendationToAdd);
         } else {
             newMtbs
                 .find(x => x.id === mtbId)!
@@ -485,7 +488,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             samples: [],
             author: getAuthor(),
         } as IMtb;
-        newMtbs.push(newMtb);
+        newMtbs.unshift(newMtb);
         this.setState({ mtbs: newMtbs });
     }
 
@@ -655,7 +658,6 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
     }
 
     componentDidMount() {
-        // console.log('cDM got invoked');
         this.props.checkPermission().then(res => {
             console.log('checkPermission returned with ' + res);
             this.setState({ loggedIn: res[0] });

@@ -10,9 +10,13 @@ import {
     Sample,
     SampleIdentifier,
     SampleMolecularIdentifier,
+} from 'cbioportal-ts-api-client';
+
+import {
     StructuralVariant,
     StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
+
 import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { LoadingPhase } from 'pages/groupComparison/GroupComparisonLoading';
 import comparisonClient from 'shared/api/comparisonGroupClientInstance';
@@ -21,6 +25,7 @@ import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import { getGeneFromUniqueKey } from './TableUtils';
 import client from 'shared/api/cbioportalClientInstance';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 export function doesChartHaveComparisonGroupsLimit(chartMeta: ChartMeta) {
     return chartMeta.uniqueKey !== SpecialChartsUniqueKeyEnum.CANCER_STUDIES;
@@ -145,7 +150,7 @@ export async function getSvData(
         geneIds: hugoGeneSymbols,
     });
 
-    return client.fetchStructuralVariantsUsingPOST({
+    return internalClient.fetchStructuralVariantsUsingPOST({
         structuralVariantFilter: {
             entrezGeneIds: genes.map(g => g.entrezGeneId),
             sampleMolecularIdentifiers,
@@ -192,10 +197,12 @@ export function getComparisonParamsForTable(
             return {
                 hugoGeneSymbols,
             };
-        case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE:
-        case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE:
         case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
+        case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE:
+        case ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE:
         case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+        case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE:
+        case ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE:
             return {
                 treatmentUniqueKeys: selectedRowsKeys.slice(), // slice() gets rid of mobx wrapping which messes up API calls
             };

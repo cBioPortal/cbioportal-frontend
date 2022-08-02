@@ -74,6 +74,7 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
                             this.props.className
                         )}
                         style={this.props.style || {}}
+                        data-test={'LoadingIndicator'}
                     >
                         <Spinner
                             fadeIn="none"
