@@ -42,6 +42,7 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
 import { getServerConfig } from 'config/config';
+import TherapyRecommendationFormOtherMtb from './form/TherapyRecommendationFormOtherMtb';
 
 export type ITherapyRecommendationProps = {
     patientId: string;
@@ -58,6 +59,7 @@ export type ITherapyRecommendationProps = {
     sampleManager: SampleManager | null;
     oncoKbAvailable: boolean;
     therapyRecommendations: ITherapyRecommendation[];
+    otherMtbs: ITherapyRecommendation[];
     containerWidth: number;
     onDelete?: (therapyRecommendation: ITherapyRecommendation) => boolean;
     onAddOrEdit?: (therapyRecommendation?: ITherapyRecommendation) => boolean;
@@ -129,6 +131,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
         | undefined;
     @observable backupTherapyRecommendation: ITherapyRecommendation | undefined;
     @observable showOncoKBForm: boolean;
+    @observable showOtherMtbForm: boolean;
 
     private _columns = [
         {
@@ -620,6 +623,13 @@ export default class MtbTherapyRecommendationTable extends React.Component<
         this.showOncoKBForm = true;
     }
 
+    private openAddOtherMtbForm() {
+        console.group('Adding from FhirSpark');
+        console.log('FhirSpark Data ', this.props.otherMtbs);
+        console.groupEnd();
+        this.showOtherMtbForm = true;
+    }
+
     public onHideOncoKbForm(
         newTherapyRecommendations?:
             | ITherapyRecommendation
@@ -627,6 +637,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
     ) {
         if (!_.isArray(newTherapyRecommendations)) {
             this.showOncoKBForm = false;
+            this.showOtherMtbForm = false;
             this.selectedTherapyRecommendation = newTherapyRecommendations;
             //this.onHideAddEditForm(newTherapyRecommendations);
         } else {
@@ -663,6 +674,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                 this.props.onAddOrEdit(newTherapyRecommendation);
         }
         this.showOncoKBForm = false;
+        this.showOtherMtbForm = false;
         this.updateTherapyRecommendationTable();
     }
 
@@ -775,65 +787,68 @@ export default class MtbTherapyRecommendationTable extends React.Component<
     render() {
         return (
             <div>
-                <If condition={this.props.showButtons}>
-                    <Then>
-                        <p className={styles.edit}>
+                <p className={styles.edit}>
+                    <Button
+                        type="button"
+                        className={'btn btn-default ' + styles.addButton}
+                        disabled={this.props.isDisabled}
+                        onClick={() => this.openAddForm()}
+                    >
+                        <i
+                            className={`fa fa-plus ${styles.marginLeft}`}
+                            aria-hidden="true"
+                        ></i>{' '}
+                        Add
+                    </Button>
+                    <If condition={this.props.oncoKbAvailable}>
+                        <Then>
                             <Button
                                 type="button"
                                 className={
-                                    'btn btn-default ' + styles.addButton
+                                    'btn btn-default ' + styles.addOncoKbButton
                                 }
                                 disabled={this.props.isDisabled}
-                                hidden={!this.props.showButtons}
-                                onClick={() => this.openAddForm()}
+                                onClick={() => this.openAddOncoKbForm()}
                             >
                                 <i
                                     className={`fa fa-plus ${styles.marginLeft}`}
                                     aria-hidden="true"
                                 ></i>{' '}
-                                Add
+                                Add from OncoKB
                             </Button>
-                            <If condition={this.props.oncoKbAvailable}>
-                                <Then>
-                                    <Button
-                                        type="button"
-                                        className={
-                                            'btn btn-default ' +
-                                            styles.addOncoKbButton
-                                        }
-                                        hidden={!this.props.showButtons}
-                                        disabled={this.props.isDisabled}
-                                        onClick={() => this.openAddOncoKbForm()}
-                                    >
-                                        <i
-                                            className={`fa fa-plus ${styles.marginLeft}`}
-                                            aria-hidden="true"
-                                        ></i>{' '}
-                                        Add from OncoKB
-                                    </Button>
-                                </Then>
-                                <Else>
-                                    <Button
-                                        type="button"
-                                        className={
-                                            'btn btn-default ' +
-                                            styles.addOncoKbButton
-                                        }
-                                        disabled={true}
-                                    >
-                                        <i
-                                            className={`fa fa-exclamation-triangle ${styles.marginLeft}`}
-                                            aria-hidden="true"
-                                        ></i>{' '}
-                                        OncoKB unavailable
-                                    </Button>
-                                </Else>
-                            </If>
-
-                            {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test (Update)</Button> */}
-                        </p>
-                    </Then>
-                </If>
+                        </Then>
+                        <Else>
+                            <Button
+                                type="button"
+                                className={
+                                    'btn btn-default ' + styles.addOncoKbButton
+                                }
+                                disabled={true}
+                            >
+                                <i
+                                    className={`fa fa-exclamation-triangle ${styles.marginLeft}`}
+                                    aria-hidden="true"
+                                ></i>{' '}
+                                OncoKB unavailable
+                            </Button>
+                        </Else>
+                    </If>
+                    <Button
+                        type="button"
+                        className={
+                            'btn btn-default ' + styles.addOtherMtbButton
+                        }
+                        disabled={this.props.isDisabled}
+                        onClick={() => this.openAddOtherMtbForm()}
+                    >
+                        <i
+                            className={`fa fa-plus ${styles.marginLeft}`}
+                            aria-hidden="true"
+                        ></i>{' '}
+                        Add from template
+                    </Button>
+                    {/* <Button type="button" className={"btn btn-default " + styles.testButton} onClick={() => this.test()}>Test (Update)</Button> */}
+                </p>
                 {this.selectedTherapyRecommendation && (
                     <TherapyRecommendationForm
                         show={!!this.selectedTherapyRecommendation}
@@ -884,6 +899,30 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             this.onHideOncoKbForm(therapyRecommendations);
                         }}
                         title="Add therapy recommendation from OncoKB"
+                        userEmailAddress={getServerConfig().user_email_address}
+                    />
+                )}
+                {this.showOtherMtbForm && (
+                    <TherapyRecommendationFormOtherMtb
+                        show={this.showOtherMtbForm}
+                        patientID={this.props.patientId}
+                        mutations={this.props.mutations}
+                        fhirsparkResult={this.props.otherMtbs}
+                        indexedVariantAnnotations={
+                            this.props.indexedVariantAnnotations
+                        }
+                        indexedMyVariantInfoAnnotations={
+                            this.props.indexedMyVariantInfoAnnotations
+                        }
+                        cna={this.props.cna}
+                        onHide={(
+                            therapyRecommendations?:
+                                | ITherapyRecommendation
+                                | ITherapyRecommendation[]
+                        ) => {
+                            this.onHideOncoKbForm(therapyRecommendations);
+                        }}
+                        title="Add therapy recommendation from template"
                         userEmailAddress={getServerConfig().user_email_address}
                     />
                 )}

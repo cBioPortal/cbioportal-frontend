@@ -359,6 +359,8 @@ export default class FollowUpTable extends React.Component<
                         References: true,
                         Edit: false,
                     }}
+                    otherMtbs={[]}
+                    clinicalTrialClipboard={[]}
                 />
             ),
             width: this.columnWidths[ColumnKey.THERAPYRECOMMENDATION],

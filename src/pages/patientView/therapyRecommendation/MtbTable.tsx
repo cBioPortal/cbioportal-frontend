@@ -52,6 +52,7 @@ export type IMtbProps = {
     sampleManager: SampleManager | null;
     oncoKbAvailable: boolean;
     mtbs: IMtb[];
+    otherMtbs: ITherapyRecommendation[];
     deletions: IDeletions;
     containerWidth: number;
     onDeleteData: (deletions: IDeletions) => void;
@@ -66,6 +67,7 @@ export type IMtbProps = {
 
 export type IMtbState = {
     mtbs: IMtb[];
+    otherMtbs: ITherapyRecommendation[];
     deletions: IDeletions;
     loggedIn: boolean;
     permission: boolean;
@@ -90,6 +92,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
         super(props);
         this.state = {
             mtbs: props.mtbs,
+            otherMtbs: props.otherMtbs,
             deletions: props.deletions,
             loggedIn: false,
             permission: false,
@@ -366,6 +369,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     sampleManager={this.props.sampleManager}
                     oncoKbAvailable={this.props.oncoKbAvailable}
                     therapyRecommendations={mtb.therapyRecommendations}
+                    otherMtbs={this.props.otherMtbs}
                     containerWidth={WindowStore.size.width - 20}
                     onDelete={this.therapyRecommendationOnDelete(mtb.id)}
                     onAddOrEdit={this.therapyRecommendationOnAddOrEdit(mtb.id)}
@@ -501,13 +505,6 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
     }
 
     private saveMtbs() {
-        if (
-            this.state.deletions.mtb.length > 0 ||
-            this.state.deletions.therapyRecommendation.length > 0
-        ) {
-            console.log('Save deletions');
-            this.props.onDeleteData(this.state.deletions);
-        }
         console.group('Save mtbs');
         this.isProcessingSaveData = true;
         this.props.onSaveData(this.state.mtbs).then(res => {
@@ -517,6 +514,13 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                 console.log('Showing successfulSave div');
                 this.setState({ successfulSave: true });
                 setTimeout(() => this.saveCallback(), 3000);
+                if (
+                    this.state.deletions.mtb.length > 0 ||
+                    this.state.deletions.therapyRecommendation.length > 0
+                ) {
+                    console.log('Save deletions');
+                    this.props.onDeleteData(this.state.deletions);
+                }
             } else {
                 window.alert(
                     'Saving data failed - error output is in console.'

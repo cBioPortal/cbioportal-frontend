@@ -1,6 +1,8 @@
+import { Mutation } from 'cbioportal-ts-api-client';
 import {
     IMtb,
     IDeletions,
+    ITherapyRecommendation,
     IFollowUp,
 } from 'shared/model/TherapyRecommendation';
 import * as request from 'superagent';
@@ -153,6 +155,42 @@ export async function updateFollowupUsingPUT(
             console.log(err);
             console.groupEnd();
             return false;
+        });
+}
+
+export async function fetchOtherMtbsUsingPOST(
+    url: string,
+    alterations: Mutation[]
+) {
+    console.log('### Recycling MTBs ### Calling GET: ' + url);
+    return request
+        .post(url)
+        .send(alterations)
+        .then(res => {
+            if (res.ok) {
+                console.group('### Recycling MTBs ### Success GETting ' + url);
+                console.log(JSON.parse(res.text));
+                console.groupEnd();
+                const response = JSON.parse(res.text);
+                return response as ITherapyRecommendation[];
+            } else {
+                console.group(
+                    '### Recycling MTBs ### ERROR res not ok GETting ' + url
+                );
+                console.log(JSON.parse(res.text));
+                console.groupEnd();
+
+                return [] as ITherapyRecommendation[];
+            }
+        })
+        .catch(err => {
+            console.group(
+                '### Recycling MTBs ### ERROR catched GETting ' + url
+            );
+            console.log(err);
+            console.groupEnd();
+
+            return [] as ITherapyRecommendation[];
         });
 }
 

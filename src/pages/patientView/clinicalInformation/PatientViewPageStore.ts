@@ -205,6 +205,7 @@ import {
     IMtb,
     IDeletions,
     IFollowUp,
+    ITherapyRecommendation,
     IClinicalTrial,
 } from '../../../shared/model/TherapyRecommendation';
 import {
@@ -237,6 +238,7 @@ import {
     updateFollowupUsingPUT,
     deleteFollowupUsingDELETE,
     checkPermissionUsingGET,
+    fetchOtherMtbsUsingPOST,
 } from 'shared/api/TherapyRecommendationAPI';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import { ageAsNumber } from '../clinicalTrialMatch/utils/AgeSexConverter';
@@ -2554,6 +2556,18 @@ export class PatientViewPageStore {
                 return fetchMtbsUsingGET(
                     this.getMtbJsonStoreUrl(this.getSafePatientId()),
                     this.getSafeStudyId()
+                );
+            },
+        },
+        []
+    );
+
+    readonly otherMtbs = remoteData<ITherapyRecommendation[]>(
+        {
+            invoke: () => {
+                return fetchOtherMtbsUsingPOST(
+                    this.getMtbJsonStoreUrl('alteration'),
+                    this.mutationData.result
                 );
             },
         },

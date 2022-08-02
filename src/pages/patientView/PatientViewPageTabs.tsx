@@ -887,6 +887,9 @@ export function tabs(
                         pageComponent.patientViewPageStore.cnaOncoKbData
                     }
                     pubMedCache={pageComponent.patientViewPageStore.pubMedCache}
+                    otherMtbs={
+                        pageComponent.patientViewPageStore.otherMtbs.result
+                    }
                     clinicalTrialClipboard={
                         pageComponent.patientViewPageStore
                             .clinicalTrialClipboard
@@ -896,15 +899,16 @@ export function tabs(
         );
 
     pageComponent.shouldShowFollowUpTab &&
-        this.patientViewPageStore.mutationData.isComplete &&
-        this.patientViewPageStore.followUps.isComplete &&
-        this.patientViewPageStore.discreteCNAData.isComplete &&
-        (this.patientViewPageStore.oncoKbData.isComplete ||
-            this.patientViewPageStore.oncoKbData.isError) &&
-        (this.patientViewPageStore.mtbs.isComplete ||
-            this.patientViewPageStore.mtbs.isError) &&
-        (this.patientViewPageStore.cnaOncoKbData.isComplete ||
-            this.patientViewPageStore.cnaOncoKbData.isError) && (
+        pageComponent.patientViewPageStore.mutationData.isComplete &&
+        pageComponent.patientViewPageStore.followUps.isComplete &&
+        pageComponent.patientViewPageStore.discreteCNAData.isComplete &&
+        (pageComponent.patientViewPageStore.oncoKbData.isComplete ||
+            pageComponent.patientViewPageStore.oncoKbData.isError) &&
+        (pageComponent.patientViewPageStore.mtbs.isComplete ||
+            pageComponent.patientViewPageStore.mtbs.isError) &&
+        (pageComponent.patientViewPageStore.cnaOncoKbData.isComplete ||
+            pageComponent.patientViewPageStore.cnaOncoKbData.isError) &&
+        tabs.push(
             <MSKTab
                 key={43}
                 id={PatientViewPageTabs.FollowUp}
@@ -912,41 +916,60 @@ export function tabs(
                 unmountOnHide={false}
             >
                 <FollowUpTable
-                    patientId={this.patientViewPageStore.patientId}
-                    mutations={this.patientViewPageStore.mutationData.result}
+                    patientId={pageComponent.patientViewPageStore.patientId}
+                    mutations={
+                        pageComponent.patientViewPageStore.mutationData.result
+                    }
                     indexedVariantAnnotations={
-                        this.patientViewPageStore.indexedVariantAnnotations
-                            .result
+                        pageComponent.patientViewPageStore
+                            .indexedVariantAnnotations.result
                     }
                     indexedMyVariantInfoAnnotations={
-                        this.patientViewPageStore
+                        pageComponent.patientViewPageStore
                             .indexedMyVariantInfoAnnotations.result
                     }
                     mutationSignatureData={
-                        this.patientViewPageStore
+                        pageComponent.patientViewPageStore
                             .mutationalSignatureDataGroupByVersion.result
                     }
-                    cna={this.patientViewPageStore.discreteCNAData.result}
-                    clinicalData={this.patientViewPageStore.clinicalDataPatient.result.concat(
-                        this.patientViewPageStore.clinicalDataForSamples.result
+                    cna={
+                        pageComponent.patientViewPageStore.discreteCNAData
+                            .result
+                    }
+                    clinicalData={pageComponent.patientViewPageStore.clinicalDataPatient.result.concat(
+                        pageComponent.patientViewPageStore
+                            .clinicalDataForSamples.result
                     )}
                     sampleManager={sampleManager}
-                    checkPermission={this.patientViewPageStore.checkPermission}
-                    mtbUrl={this.patientViewPageStore.getMtbJsonStoreUrl('')}
+                    checkPermission={
+                        pageComponent.patientViewPageStore.checkPermission
+                    }
+                    mtbUrl={pageComponent.patientViewPageStore.getMtbJsonStoreUrl(
+                        ''
+                    )}
                     oncoKbAvailable={
                         getServerConfig().show_oncokb &&
-                        !this.patientViewPageStore.cnaOncoKbData.isError &&
-                        !this.patientViewPageStore.oncoKbData.isError
+                        !pageComponent.patientViewPageStore.cnaOncoKbData
+                            .isError &&
+                        !pageComponent.patientViewPageStore.oncoKbData.isError
                     }
-                    mtbs={this.patientViewPageStore.mtbs.result}
-                    deletions={this.patientViewPageStore.deletions}
+                    mtbs={pageComponent.patientViewPageStore.mtbs.result}
+                    deletions={pageComponent.patientViewPageStore.deletions}
                     containerWidth={WindowStore.size.width - 20}
-                    onDeleteData={this.patientViewPageStore.deleteFollowUps}
-                    onSaveData={this.patientViewPageStore.updateFollowUps}
-                    oncoKbData={this.patientViewPageStore.oncoKbData}
-                    cnaOncoKbData={this.patientViewPageStore.cnaOncoKbData}
-                    pubMedCache={this.patientViewPageStore.pubMedCache}
-                    followUps={this.patientViewPageStore.followUps.result}
+                    onDeleteData={
+                        pageComponent.patientViewPageStore.deleteFollowUps
+                    }
+                    onSaveData={
+                        pageComponent.patientViewPageStore.updateFollowUps
+                    }
+                    oncoKbData={pageComponent.patientViewPageStore.oncoKbData}
+                    cnaOncoKbData={
+                        pageComponent.patientViewPageStore.cnaOncoKbData
+                    }
+                    pubMedCache={pageComponent.patientViewPageStore.pubMedCache}
+                    followUps={
+                        pageComponent.patientViewPageStore.followUps.result
+                    }
                 />
             </MSKTab>
         );
