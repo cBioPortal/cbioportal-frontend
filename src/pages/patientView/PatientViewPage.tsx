@@ -110,9 +110,6 @@ export default class PatientViewPage extends React.Component<
 
     public patientViewPageStore: PatientViewPageStore;
 
-    @observable
-    public activeLocus: string | undefined;
-
     constructor(props: IPatientViewPageProps) {
         super(props);
         makeObservable(this);
@@ -245,8 +242,8 @@ export default class PatientViewPage extends React.Component<
 
     @action.bound
     public handleLocusChange(locus: string) {
-        if (this.activeLocus !== locus) {
-            this.activeLocus = locus;
+        if (this.patientViewPageStore.activeLocus !== locus) {
+            this.patientViewPageStore.activeLocus = locus;
         }
     }
 
