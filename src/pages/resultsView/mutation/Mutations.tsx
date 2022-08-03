@@ -203,8 +203,74 @@ export default class Mutations extends React.Component<
                         />
                         <CaseFilterWarning store={this.props.store} />
                     </div>
+                    <ResultsViewMutationMapper
+                        {...convertToMutationMapperProps({
+                            ...getServerConfig(),
+                            // override ensemblLink
+                            ensembl_transcript_url: this.props.store
+                                .ensemblLink,
+                            // only disable oncokb and hotspots track if
+                            // non-canonical transcript is selected
+                            show_oncokb: mutationMapperStore.isCanonicalTranscript
+                                ? getServerConfig().show_oncokb
+                                : false,
+                            show_hotspot: mutationMapperStore.isCanonicalTranscript
+                                ? getServerConfig().show_hotspot
+                                : false,
+                        })}
+                        oncoKbPublicApiUrl={getOncoKbApiUrl()}
+                        mergeOncoKbIcons={
+                            this.userSelectionStore.mergeOncoKbIcons
+                        }
+                        onOncoKbIconToggle={this.handleOncoKbIconToggle}
+                        store={mutationMapperStore}
+                        isPutativeDriver={
+                            this.props.store.driverAnnotationSettings
+                                .driversAnnotated
+                                ? (m: AnnotatedMutation) => m.putativeDriver
+                                : undefined
+                        }
+                        trackVisibility={
+                            this.userSelectionStore.trackVisibility
+                        }
+                        columnVisibility={
+                            this.userSelectionStore.columnVisibility
+                        }
+                        storeColumnVisibility={
+                            this.userSelectionStore.storeColumnVisibility
+                        }
+                        discreteCNACache={this.props.store.discreteCNACache}
+                        pubMedCache={this.props.store.pubMedCache}
+                        cancerTypeCache={this.props.store.cancerTypeCache}
+                        mutationCountCache={this.props.store.mutationCountCache}
+                        clinicalAttributeCache={
+                            this.props.store.clinicalAttributeCache
+                        }
+                        genomeNexusCache={this.props.store.genomeNexusCache}
+                        genomeNexusMutationAssessorCache={
+                            this.props.store.genomeNexusMutationAssessorCache
+                        }
+                        pdbHeaderCache={this.props.store.pdbHeaderCache}
+                        userEmailAddress={this.props.appStore.userName!}
+                        generateGenomeNexusHgvsgUrl={
+                            this.props.store.generateGenomeNexusHgvsgUrl
+                        }
+                        existsSomeMutationWithAscnProperty={
+                            this.props.store.existsSomeMutationWithAscnProperty
+                        }
+                        mutationAlignerUrlTemplate={getMutationAlignerUrlTemplate()}
+                        showTranscriptDropDown={
+                            getServerConfig().show_transcript_dropdown
+                        }
+                        onTranscriptChange={this.onTranscriptChange}
+                        onClickSettingMenu={this.onClickSettingMenu}
+                        compactStyle={true}
+                        ptmSources={getServerConfig().ptmSources}
+                    />
                 </div>
             );
+        } else {
+            return null;
         }
     }
 

@@ -89,7 +89,6 @@ export default class Mutations extends React.Component<
         });
     }
 
-    // while rendering, general page view
     public render() {
         const activeTabId = this.selectedGeneSymbol;
 
@@ -120,9 +119,8 @@ export default class Mutations extends React.Component<
                 )}
             </div>
         );
-    }
+    } // general page view + logic
 
-    //function creates different tabs (by the genes), each tab refers to lollipop plot on that gene
     protected generateTabs(
         genes: string[],
         mutationsByGene: {
@@ -154,7 +152,7 @@ export default class Mutations extends React.Component<
         });
 
         return tabs;
-    }
+    } // tabs for each selected gene
 
     @autobind
     protected handleTabChange(id: string) {
@@ -167,7 +165,6 @@ export default class Mutations extends React.Component<
         updateOncoKbIconStyle({ mergeIcons });
     }
 
-    // THE ACTUAL CONTENT - LOLLIPOP PLOT + TABLE FOR EACH GENE
     @computed get geneTabContent() {
         if (
             this.selectedGene &&
@@ -225,7 +222,7 @@ export default class Mutations extends React.Component<
                         oncoKbPublicApiUrl={getOncoKbApiUrl()}
                         mergeOncoKbIcons={
                             this.userSelectionStore.mergeOncoKbIcons
-                        }
+                        } //icons under annotation column of table
                         onOncoKbIconToggle={this.handleOncoKbIconToggle}
                         store={mutationMapperStore}
                         isPutativeDriver={
@@ -233,28 +230,12 @@ export default class Mutations extends React.Component<
                                 .driversAnnotated
                                 ? (m: AnnotatedMutation) => m.putativeDriver
                                 : undefined
-                        }
+                        } // tags on L panel of plot
                         trackVisibility={
+                            //req
                             this.userSelectionStore.trackVisibility
                         }
-                        columnVisibility={
-                            this.userSelectionStore.columnVisibility
-                        }
-                        storeColumnVisibility={
-                            this.userSelectionStore.storeColumnVisibility
-                        }
-                        discreteCNACache={this.props.store.discreteCNACache}
-                        pubMedCache={this.props.store.pubMedCache}
-                        cancerTypeCache={this.props.store.cancerTypeCache}
-                        mutationCountCache={this.props.store.mutationCountCache}
-                        clinicalAttributeCache={
-                            this.props.store.clinicalAttributeCache
-                        }
-                        genomeNexusCache={this.props.store.genomeNexusCache}
-                        genomeNexusMutationAssessorCache={
-                            this.props.store.genomeNexusMutationAssessorCache
-                        }
-                        pdbHeaderCache={this.props.store.pdbHeaderCache}
+                        genomeNexusCache={this.props.store.genomeNexusCache} //req
                         userEmailAddress={this.props.appStore.userName!}
                         generateGenomeNexusHgvsgUrl={
                             this.props.store.generateGenomeNexusHgvsgUrl
@@ -265,7 +246,7 @@ export default class Mutations extends React.Component<
                         mutationAlignerUrlTemplate={getMutationAlignerUrlTemplate()}
                         showTranscriptDropDown={
                             getServerConfig().show_transcript_dropdown
-                        }
+                        } // dropdown menu for transcripts on L panel of plot
                         onTranscriptChange={this.onTranscriptChange}
                         onClickSettingMenu={this.onClickSettingMenu}
                         compactStyle={true}
