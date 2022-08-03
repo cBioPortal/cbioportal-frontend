@@ -702,12 +702,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           }
         ],
@@ -721,8 +720,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/generic-assay-data/{molecularProfileId}/fetch": {
@@ -731,7 +729,7 @@
           "Generic Assay Data"
         ],
         "summary": "fetch generic_assay_data in a molecular profile",
-        "operationId": "fetchGenericAssayDataInMolecularProfileRedirectUsingPOST",
+        "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -762,12 +760,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           }
         ],
@@ -781,8 +778,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/generic-assay-data/{molecularProfileId}/generic-assay/{genericAssayStableId}": {
@@ -844,7 +840,7 @@
           "Generic Assays"
         ],
         "summary": "Fetch meta data for generic-assay by ID",
-        "operationId": "fetchGenericAssayMetaRedirectUsingPOST",
+        "operationId": "fetchGenericAssayMetaUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -868,12 +864,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           }
         ],
@@ -887,8 +882,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/generic-assay-meta/generic-assay/{genericAssayStableId}": {

@@ -1798,7 +1798,7 @@ export default class CBioPortalAPI {
     };
     fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
         'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1827,7 +1827,7 @@ export default class CBioPortalAPI {
      */
     fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
         'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1877,7 +1877,7 @@ export default class CBioPortalAPI {
      */
     fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(parameters: {
             'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayData >
@@ -1889,7 +1889,7 @@ export default class CBioPortalAPI {
     fetchGenericAssayDataInMolecularProfileUsingPOSTURL(parameters: {
         'genericAssayDataFilter': GenericAssayFilter,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1921,7 +1921,7 @@ export default class CBioPortalAPI {
     fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
         'genericAssayDataFilter': GenericAssayFilter,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1980,7 +1980,7 @@ export default class CBioPortalAPI {
     fetchGenericAssayDataInMolecularProfileUsingPOST(parameters: {
             'genericAssayDataFilter': GenericAssayFilter,
             'molecularProfileId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayData >
@@ -2093,7 +2093,7 @@ export default class CBioPortalAPI {
         };
     fetchGenericAssayMetaUsingPOSTURL(parameters: {
         'genericAssayMetaFilter': GenericAssayMetaFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2122,7 +2122,7 @@ export default class CBioPortalAPI {
      */
     fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters: {
         'genericAssayMetaFilter': GenericAssayMetaFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -2172,7 +2172,7 @@ export default class CBioPortalAPI {
      */
     fetchGenericAssayMetaUsingPOST(parameters: {
             'genericAssayMetaFilter': GenericAssayMetaFilter,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayMeta >
