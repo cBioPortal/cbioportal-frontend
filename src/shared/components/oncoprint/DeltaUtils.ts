@@ -34,12 +34,12 @@ import {
     linebreakGenesetId,
     makeCategoricalTrackTooltip,
     makeClinicalTrackTooltip,
-    makeGeneticTrackTooltip,
     makeHeatmapTrackTooltip,
 } from './TooltipUtils';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import ifNotDefined from '../../lib/ifNotDefined';
+import { makeGeneticTrackTooltip } from 'shared/components/oncoprint/makeGeneticTrackTooltip';
 
 // This file implements functions that call imperative OncoprintJS library
 //  methods in order to keep the oncoprint in a state consistent with the
