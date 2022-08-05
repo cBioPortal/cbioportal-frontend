@@ -1,6 +1,6 @@
 import { IServerConfig } from './IAppConfig';
 
-const ServerConfigDefaults: Partial<IServerConfig> = {
+export const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',
     api_cache_limit: 450,
     dat_method: 'none',
@@ -67,7 +67,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_documentation_faq: 'user-guide/faq.md',
     skin_footer_show_dev: false,
     skin_login_saml_registration_html: 'Sign in with MSK',
-    skin_documentation_news: 'News.md',
+    skin_documentation_news: 'https://docs.cbioportal.org/news/',
     skin_documentation_oql: 'user-guide/oql.md',
     skin_query_max_tree_depth: '3',
     skin_right_nav_show_data_sets: true,

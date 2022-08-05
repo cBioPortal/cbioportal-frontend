@@ -60,7 +60,7 @@ export default class PortalHeader extends React.Component<
             {
                 id: 'news',
                 text: 'News',
-                address: 'https://docs.cbioportal.org/news/',
+                address: getServerConfig().skin_documentation_news!,
                 internal: false,
                 hide: () => getServerConfig().skin_show_news_tab === false,
             },

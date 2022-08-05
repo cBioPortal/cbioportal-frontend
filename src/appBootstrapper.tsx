@@ -238,8 +238,6 @@ $(document).ready(async () => {
 
     initializeServerConfiguration(initialServerConfig);
 
-    //setConfigDefaults();
-
     initializeGenericAssayServerConfig();
 
     initializeAPIClients();
