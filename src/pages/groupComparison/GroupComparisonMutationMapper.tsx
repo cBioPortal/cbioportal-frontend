@@ -182,7 +182,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
             ? transcript.exons.length.toString()
             : 'None';
     }
-
+    /*
     protected get mutationTableComponent(): JSX.Element | null {
         return (
             <ResultsViewMutationTable
@@ -733,5 +733,5 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 />
             );
         }
-    };
+    };*/
 }

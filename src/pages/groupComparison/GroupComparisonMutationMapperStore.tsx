@@ -166,6 +166,8 @@ export default class GroupComparisonMutationMapperStore extends MutationMapperSt
         // return true if transcript dropdown is disabled
         return true;
     }
+
+    /*
     @computed get numericalFilterColumns() {
         const columnIds = new Set<string>([
             MutationTableColumnType.CLONAL,
@@ -363,5 +365,5 @@ export default class GroupComparisonMutationMapperStore extends MutationMapperSt
         );
 
         return columnIds;
-    }
+    }*/
 }
