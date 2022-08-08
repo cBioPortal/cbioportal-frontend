@@ -1,11 +1,8 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
-import {
-    AnnotatedMutation,
-    ResultsViewPageStore,
-} from '../resultsView/ResultsViewPageStore';
-import ResultsViewMutationMapper from '../resultsView/mutation/ResultsViewMutationMapper';
+import { AnnotatedMutation } from '../resultsView/ResultsViewPageStore';
+import GroupComparisonMutationMapper from './GroupComparisonMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { computed, action, makeObservable } from 'mobx';
@@ -23,7 +20,6 @@ import {
 import CaseFilterWarning from '../../shared/components/banners/CaseFilterWarning';
 import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
-import ResultsViewURLWrapper from '../resultsView/ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
@@ -204,7 +200,7 @@ export default class Mutations extends React.Component<
                         />
                         <CaseFilterWarning store={this.props.store} />
                     </div>
-                    <ResultsViewMutationMapper
+                    <GroupComparisonMutationMapper
                         {...convertToMutationMapperProps({
                             ...getServerConfig(),
                             // override ensemblLink
