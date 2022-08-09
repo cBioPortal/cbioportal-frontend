@@ -175,6 +175,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     query_product_limit: 1000000,
 
+    clinical_attribute_product_limit: 6500000,
+
     skin_show_gsva: false,
 
     skin_geneset_hierarchy_default_gsva_score: 0.5,
