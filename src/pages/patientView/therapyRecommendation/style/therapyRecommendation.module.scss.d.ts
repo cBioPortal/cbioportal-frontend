@@ -1,6 +1,6 @@
 declare const styles: {
   readonly "addButton": string;
-  readonly "addMtbButton": string;
+  readonly "addMTBFUButton": string;
   readonly "addOncoKbButton": string;
   readonly "addOtherMtbButton": string;
   readonly "alterationUl": string;

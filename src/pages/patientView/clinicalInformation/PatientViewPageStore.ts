@@ -204,6 +204,7 @@ import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
 import {
     IMtb,
     IDeletions,
+    IFollowUp,
     ITherapyRecommendation,
     IClinicalTrial,
 } from '../../../shared/model/TherapyRecommendation';
@@ -233,6 +234,9 @@ import {
     fetchMtbsUsingGET,
     updateMtbUsingPUT,
     deleteMtbUsingDELETE,
+    fetchFollowupUsingGET,
+    updateFollowupUsingPUT,
+    deleteFollowupUsingDELETE,
     checkPermissionUsingGET,
     fetchOtherMtbsUsingPOST,
 } from 'shared/api/TherapyRecommendationAPI';
@@ -2535,6 +2539,17 @@ export class PatientViewPageStore {
         []
     );
 
+    readonly followUps = remoteData<IFollowUp[]>(
+        {
+            invoke: () => {
+                return fetchFollowupUsingGET(
+                    this.getMtbJsonStoreUrl(this.getSafePatientId(), true)
+                );
+            },
+        },
+        []
+    );
+
     readonly mtbs = remoteData<IMtb[]>(
         {
             invoke: () => {
@@ -2569,9 +2584,20 @@ export class PatientViewPageStore {
         );
     };
 
+    updateFollowUps = (followUps: IFollowUp[]): Promise<boolean> => {
+        console.log('update');
+
+        return updateFollowupUsingPUT(
+            this.getSafePatientId(),
+            this.getMtbJsonStoreUrl(this.getSafePatientId(), true),
+            followUps
+        );
+    };
+
     readonly deletions: IDeletions = {
         mtb: [],
         therapyRecommendation: [],
+        followUp: [],
     };
 
     deleteMtbs = (deletions: IDeletions) => {
@@ -2584,13 +2610,22 @@ export class PatientViewPageStore {
         );
     };
 
+    deleteFollowUps = (deletions: IDeletions) => {
+        console.log('delete');
+        deleteFollowupUsingDELETE(
+            this.getSafePatientId(),
+            this.getMtbJsonStoreUrl(this.getSafePatientId(), true),
+            deletions
+        );
+    };
+
     checkPermission = async (): Promise<boolean[]> => {
         let checkUrl =
             this.getMtbJsonStoreUrl(this.getSafePatientId()) + '/permission';
         return checkPermissionUsingGET(checkUrl, this.getSafeStudyId());
     };
 
-    getMtbJsonStoreUrl = (id: string) => {
+    getMtbJsonStoreUrl = (id: string, followUp: boolean = false) => {
         let host: string | null = window.location.hostname;
         let port = ':' + window.location.port;
         if (
@@ -2605,7 +2640,7 @@ export class PatientViewPageStore {
             getServerConfig().fhirspark!.port !== 'undefined'
         )
             port = ':' + getServerConfig().fhirspark!.port;
-        return '//' + host + port + '/mtb/' + id;
+        return '//' + host + port + (followUp ? '/followup/' : '/mtb/') + id;
     };
 
     private getSafePatientId = () => {

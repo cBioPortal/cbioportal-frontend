@@ -61,9 +61,9 @@ export type ITherapyRecommendationProps = {
     therapyRecommendations: ITherapyRecommendation[];
     otherMtbs: ITherapyRecommendation[];
     containerWidth: number;
-    onDelete: (therapyRecommendation: ITherapyRecommendation) => boolean;
-    onAddOrEdit: (therapyRecommendation?: ITherapyRecommendation) => boolean;
-    onReposition: (
+    onDelete?: (therapyRecommendation: ITherapyRecommendation) => boolean;
+    onAddOrEdit?: (therapyRecommendation?: ITherapyRecommendation) => boolean;
+    onReposition?: (
         therapyRecommendation: ITherapyRecommendation,
         newIndex: number
     ) => boolean;
@@ -71,6 +71,8 @@ export type ITherapyRecommendationProps = {
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     pubMedCache?: PubMedCache;
     isDisabled: boolean;
+    showButtons: boolean;
+    columnVisibility?: { [columnId: string]: boolean };
     clinicalTrialClipboard: IClinicalTrial[];
 };
 
@@ -145,6 +147,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                                 this.findIndex(therapyRecommendation) <= 0
                             }
                             onClick={() =>
+                                this.props.onReposition &&
                                 this.props.onReposition(
                                     therapyRecommendation,
                                     this.findIndex(therapyRecommendation) - 1
@@ -167,6 +170,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                                     this.props.therapyRecommendations.length - 1
                             }
                             onClick={() =>
+                                this.props.onReposition &&
                                 this.props.onReposition(
                                     therapyRecommendation,
                                     this.findIndex(therapyRecommendation) + 1
@@ -504,7 +508,15 @@ export default class MtbTherapyRecommendationTable extends React.Component<
             ),
             // width: this.columnWidths[ColumnKey.EDIT]
         },
-    ];
+    ].filter(col => {
+        if (this.props.columnVisibility === undefined) {
+            return true;
+        }
+        if (this.props.columnVisibility[col.name] === undefined) {
+            return false;
+        }
+        return this.props.columnVisibility[col.name];
+    });
 
     public getSampleIdIcons(fittingSampleIds: string[]) {
         let sortedSampleIds = fittingSampleIds;
@@ -588,7 +600,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
     }
 
     public openDeleteForm(therapyRecommendation: ITherapyRecommendation) {
-        if (this.props.onDelete(therapyRecommendation))
+        if (this.props.onDelete && this.props.onDelete(therapyRecommendation))
             this.updateTherapyRecommendationTable();
     }
 
@@ -651,14 +663,15 @@ export default class MtbTherapyRecommendationTable extends React.Component<
             isTherapyRecommendationEmpty(newTherapyRecommendation)
         ) {
             if (this.backupTherapyRecommendation) {
-                this.props.onAddOrEdit(undefined);
+                this.props.onAddOrEdit && this.props.onAddOrEdit(undefined);
                 this.backupTherapyRecommendation = undefined;
             }
         } else {
             newTherapyRecommendation = setAuthorInTherapyRecommendation(
                 newTherapyRecommendation
             );
-            this.props.onAddOrEdit(newTherapyRecommendation);
+            this.props.onAddOrEdit &&
+                this.props.onAddOrEdit(newTherapyRecommendation);
         }
         this.showOncoKBForm = false;
         this.showOtherMtbForm = false;

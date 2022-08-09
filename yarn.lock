@@ -15910,6 +15910,11 @@ meow@^5.0.0:
     trim-newlines "^2.0.0"
     yargs-parser "^10.0.0"
 
+merge-class-names@^1.1.1:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/merge-class-names/-/merge-class-names-1.4.2.tgz#78d6d95ab259e7e647252a7988fd25a27d5a8835"
+  integrity sha512-bOl98VzwCGi25Gcn3xKxnR5p/WrhWFQB59MS/aGENcmUc6iSm96yrFDF0XSNurX9qN4LbJm0R9kfvsQ17i8zCw==
+
 merge-descriptors@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/merge-descriptors/-/merge-descriptors-1.0.1.tgz#b00aaa556dd8b44568150ec9d1b953f3f90cbb61"

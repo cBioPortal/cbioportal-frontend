@@ -42,7 +42,6 @@ import { QueryParams } from 'url';
 import { AppStore } from '../../AppStore';
 import request from 'superagent';
 import { remoteData, getBrowserWindow } from 'cbioportal-frontend-commons';
-
 import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
@@ -378,6 +377,11 @@ export default class PatientViewPage extends React.Component<
 
     @computed
     public get shouldShowMtbTab(): boolean {
+        return true;
+    }
+
+    @computed
+    public get shouldShowFollowUpTab(): boolean {
         return true;
     }
 

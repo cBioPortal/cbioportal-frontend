@@ -378,6 +378,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     cnaOncoKbData={this.props.cnaOncoKbData}
                     pubMedCache={this.props.pubMedCache}
                     isDisabled={this.isDisabled(mtb) || !this.state.permission}
+                    showButtons={true}
                     clinicalTrialClipboard={this.props.clinicalTrialClipboard}
                 />
             ),
@@ -578,7 +579,9 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     <div className="btn-group">
                         <Button
                             type="button"
-                            className={'btn btn-default ' + styles.addMtbButton}
+                            className={
+                                'btn btn-default ' + styles.addMTBFUButton
+                            }
                             disabled={!this.state.permission}
                             onClick={() => this.addMtb()}
                         >
