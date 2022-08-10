@@ -142,6 +142,7 @@ export interface IServerConfig {
     session_url_length_threshold: string;
     mskWholeSlideViewerToken: string;
     query_product_limit: number;
+    clinical_attribute_product_limit: number;
     dat_method: string;
     skin_show_gsva: boolean;
     skin_geneset_hierarchy_default_gsva_score: number;

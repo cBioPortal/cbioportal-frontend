@@ -23,6 +23,8 @@ import ProgressIndicator, {
 } from '../../../shared/components/progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
+import { getServerConfig } from 'config/config';
+import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -178,46 +180,119 @@ export class ClinicalDataTab extends React.Component<
                 <WindowWidthBox offset={60}>
                     <If
                         condition={
-                            this.columns.isPending ||
-                            this.props.store.getDataForClinicalDataTab.isPending
+                            this.props.store.clinicalAttributeProduct
+                                .isPending ||
+                            this.props.store.maxSamplesForClinicalTab
+                                .isPending ||
+                            this.props.store.selectedSamples.isPending
                         }
                     >
                         <Then>
                             <LoadingIndicator
                                 isLoading={
-                                    this.columns.isPending ||
-                                    this.props.store.getDataForClinicalDataTab
-                                        .isPending
+                                    this.props.store.clinicalAttributeProduct
+                                        .isPending ||
+                                    this.props.store.maxSamplesForClinicalTab
+                                        .isPending ||
+                                    this.props.store.selectedSamples.isPending
                                 }
                                 size={'big'}
                                 center={true}
-                            >
-                                <ProgressIndicator
-                                    getItems={this.getProgressItems}
-                                    show={
-                                        this.columns.isPending ||
-                                        this.props.store
-                                            .getDataForClinicalDataTab.isPending
-                                    }
-                                />
-                            </LoadingIndicator>
+                            />
                         </Then>
                         <Else>
-                            <ClinicalDataTabTableComponent
-                                initialItemsPerPage={20}
-                                showCopyDownload={true}
-                                showColumnVisibility={false}
-                                data={
-                                    this.props.store.getDataForClinicalDataTab
-                                        .result || []
+                            <If
+                                condition={
+                                    this.props.store.clinicalAttributeProduct
+                                        .result >
+                                    getServerConfig()
+                                        .clinical_attribute_product_limit
                                 }
-                                columns={this.columns.result}
-                                copyDownloadProps={{
-                                    showCopy: false,
-                                    downloadFilename: this.props.store
-                                        .clinicalDataDownloadFilename,
-                                }}
-                            />
+                            >
+                                <Then>
+                                    Too many samples selected. The maximum table
+                                    length is{' '}
+                                    <b>
+                                        {
+                                            this.props.store
+                                                .maxSamplesForClinicalTab.result
+                                        }
+                                    </b>{' '}
+                                    rows, but your current selection would be{' '}
+                                    <b>
+                                        {
+                                            this.props.store.selectedSamples
+                                                .result.length
+                                        }
+                                    </b>{' '}
+                                    rows. Select fewer samples on the{' '}
+                                    <a
+                                        onClick={() =>
+                                            this.props.store.handleTabChange(
+                                                StudyViewPageTabKeyEnum.SUMMARY
+                                            )
+                                        }
+                                    >
+                                        Summary tab
+                                    </a>
+                                    .{' '}
+                                </Then>
+                                <Else>
+                                    <If
+                                        condition={
+                                            this.columns.isPending ||
+                                            this.props.store
+                                                .getDataForClinicalDataTab
+                                                .isPending
+                                        }
+                                    >
+                                        <Then>
+                                            <LoadingIndicator
+                                                isLoading={
+                                                    this.columns.isPending ||
+                                                    this.props.store
+                                                        .getDataForClinicalDataTab
+                                                        .isPending
+                                                }
+                                                size={'big'}
+                                                center={true}
+                                            >
+                                                <ProgressIndicator
+                                                    getItems={
+                                                        this.getProgressItems
+                                                    }
+                                                    show={
+                                                        this.columns
+                                                            .isPending ||
+                                                        this.props.store
+                                                            .getDataForClinicalDataTab
+                                                            .isPending
+                                                    }
+                                                />
+                                            </LoadingIndicator>
+                                        </Then>
+                                        <Else>
+                                            <ClinicalDataTabTableComponent
+                                                initialItemsPerPage={20}
+                                                showCopyDownload={true}
+                                                showColumnVisibility={false}
+                                                data={
+                                                    this.props.store
+                                                        .getDataForClinicalDataTab
+                                                        .result || []
+                                                }
+                                                columns={this.columns.result}
+                                                copyDownloadProps={{
+                                                    showCopy: false,
+                                                    downloadFilename: this.props
+                                                        .store
+                                                        .clinicalDataDownloadFilename,
+                                                }}
+                                            />
+                                        </Else>
+                                    </If>
+                                </Else>
+                            </If>
                         </Else>
                     </If>
                 </WindowWidthBox>
