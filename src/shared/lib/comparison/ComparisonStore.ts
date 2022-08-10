@@ -138,7 +138,7 @@ import {
 } from 'shared/lib/StoreUtils';
 
 import ResultsViewMutationMapperStore from '../../../pages/resultsView/mutation/ResultsViewMutationMapperStore';
-
+import GeneCache from '../../../shared/cache/GeneCache';
 import AccessorsForOqlFilter, {
     SimplifiedMutationType,
 } from '../../../shared/lib/oql/AccessorsForOqlFilter';
@@ -3118,6 +3118,126 @@ export default abstract class ComparisonStore
         },
         []
     );
+
+    readonly structuralVariantsReportByGene = remoteData<{
+        [hugeGeneSymbol: string]: FilteredAndAnnotatedStructuralVariantsReport;
+    }>({
+        await: () => [
+            this._filteredAndAnnotatedStructuralVariantsReport,
+            this.genes,
+        ],
+        invoke: () => {
+            let structuralVariantsGroups = this
+                ._filteredAndAnnotatedStructuralVariantsReport.result!;
+            const ret: {
+                [hugoGeneSymbol: string]: FilteredAndAnnotatedStructuralVariantsReport;
+            } = {};
+            for (const gene of this.genes.result!) {
+                ret[gene.hugoGeneSymbol] = {
+                    data: [],
+                    vus: [],
+                    germline: [],
+                    vusAndGermline: [],
+                };
+            }
+            for (const structuralVariant of structuralVariantsGroups.data) {
+                ret[structuralVariant.site1HugoSymbol].data.push(
+                    structuralVariant
+                );
+            }
+            for (const structuralVariant of structuralVariantsGroups.vus) {
+                ret[structuralVariant.site1HugoSymbol].vus.push(
+                    structuralVariant
+                );
+            }
+            for (const structuralVariant of structuralVariantsGroups.germline) {
+                ret[structuralVariant.site1HugoSymbol].germline.push(
+                    structuralVariant
+                );
+            }
+            for (const structuralVariant of structuralVariantsGroups.vusAndGermline) {
+                ret[structuralVariant.site1HugoSymbol].vusAndGermline.push(
+                    structuralVariant
+                );
+            }
+            return Promise.resolve(ret);
+        },
+    });
+
+    readonly filteredSampleKeyToSample = remoteData({
+        await: () => [this.filteredSamples],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.filteredSamples.result!, s => s.uniqueSampleKey)
+            ),
+    });
+
+    @computed get oqlText() {
+        return this.urlWrapper.query.gene_list;
+    }
+
+    readonly mutationsReportByGene = remoteData<{
+        [hugeGeneSymbol: string]: FilteredAndAnnotatedMutationsReport;
+    }>({
+        await: () => [this._filteredAndAnnotatedMutationsReport, this.genes],
+        invoke: () => {
+            let mutationGroups: FilteredAndAnnotatedMutationsReport = this
+                ._filteredAndAnnotatedMutationsReport.result!;
+            const ret: {
+                [hugoGeneSymbol: string]: FilteredAndAnnotatedMutationsReport;
+            } = {};
+            for (const gene of this.genes.result!) {
+                ret[gene.hugoGeneSymbol] = {
+                    data: [],
+                    vus: [],
+                    germline: [],
+                    vusAndGermline: [],
+                };
+            }
+            for (const mutation of mutationGroups.data) {
+                ret[mutation.gene.hugoGeneSymbol].data.push(mutation);
+            }
+            for (const mutation of mutationGroups.vus) {
+                ret[mutation.gene.hugoGeneSymbol].vus.push(mutation);
+            }
+            for (const mutation of mutationGroups.germline) {
+                ret[mutation.gene.hugoGeneSymbol].germline.push(mutation);
+            }
+            for (const mutation of mutationGroups.vusAndGermline) {
+                ret[mutation.gene.hugoGeneSymbol].vusAndGermline.push(mutation);
+            }
+            return Promise.resolve(ret);
+        },
+    });
+
+    readonly mutations_preload = remoteData<Mutation[]>({
+        // fetch all mutation data for profiles
+        // We do it this way - fetch all data for profiles, then filter based on samples -
+        //  because
+        //  (1) this means sending less data as parameters
+        //  (2) this means the requests can be cached on the server based on the molecular profile id
+        //  (3) We can initiate the mutations call before the samples call completes, thus
+        //      putting more response waiting time in parallel
+        await: () => [this.genes, this.mutationProfiles],
+        invoke: () => {
+            if (
+                this.genes.result!.length === 0 ||
+                this.mutationProfiles.result!.length === 0
+            ) {
+                return Promise.resolve([]);
+            }
+
+            return client.fetchMutationsInMultipleMolecularProfilesUsingPOST({
+                projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                mutationMultipleStudyFilter: {
+                    entrezGeneIds: this.genes.result!.map(g => g.entrezGeneId),
+                    molecularProfileIds: this.mutationProfiles.result!.map(
+                        p => p.molecularProfileId
+                    ),
+                } as MutationMultipleStudyFilter,
+            });
+        },
+    });
 
     readonly defaultOQLQuery = remoteData({
         await: () => [this.selectedMolecularProfiles],
