@@ -51,9 +51,9 @@ if [[ "$CIRCLECI" = true ]]; then
         # draft state. We do allow setting custom.sh programmatically on CI (as
         # is done in the backend repo), which is why we use `git show`.
         if git show HEAD:env/custom.sh | grep -q BACKEND && [[ $PULL_REQUEST_STATE != "draft" ]]; then
-           echo "Error: BACKEND variable defined in custom.sh, but pull request state is not 'draft'"
-           echo "Remove BACKEND variable from custom.sh or change the pull request into a draft pull request."
-           exit 1
+            echo "Error: BACKEND variable defined in custom.sh, but pull request state is not 'draft'"
+            echo "Remove BACKEND variable from custom.sh or change the pull request into a draft pull request."
+            exit 1
         fi
 
     fi
