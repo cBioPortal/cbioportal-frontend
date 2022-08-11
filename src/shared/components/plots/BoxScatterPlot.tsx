@@ -46,7 +46,6 @@ import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
-import { lowerCaseAndCapitalizeString } from '../../../../packages/cbioportal-frontend-commons/src';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;

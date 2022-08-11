@@ -13,10 +13,7 @@ import {
     makeGeneticTrackTooltip_getCoverageInformation,
     TOOLTIP_DIV_CLASS,
 } from 'shared/components/oncoprint/TooltipUtils';
-import {
-    MolecularProfile,
-    StructuralVariant,
-} from 'cbioportal-ts-api-client/src';
+import { MolecularProfile, StructuralVariant } from 'cbioportal-ts-api-client';
 
 import { deriveStructuralVariantType } from 'cbioportal-utils';
 
