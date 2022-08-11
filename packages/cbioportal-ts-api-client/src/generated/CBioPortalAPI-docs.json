@@ -5307,7 +5307,6 @@
           "type": "string",
           "enum": [
             "COPY_NUMBER_ALTERATION",
-            "FUSION",
             "GENERIC_ASSAY",
             "GENESET_SCORE",
             "METHYLATION",
@@ -5727,9 +5726,6 @@
         },
         "patientId": {
           "type": "string"
-        },
-        "profiledForFusions": {
-          "type": "boolean"
         },
         "sampleId": {
           "type": "string"

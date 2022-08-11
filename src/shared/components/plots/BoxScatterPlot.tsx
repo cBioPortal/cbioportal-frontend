@@ -538,7 +538,7 @@ export default class BoxScatterPlot<
 
     @bind
     private formatCategoryTick(t: number, index: number) {
-        //return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
+        //return lowerCaseAndCapitalizeString(this.labels[index]);
         return this.labels[index];
     }
 

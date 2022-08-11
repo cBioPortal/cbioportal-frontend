@@ -17,6 +17,7 @@ import {
     generateQueryStructuralVariantId,
     OncoKbCardDataType,
     calculateOncoKbAvailableDataType,
+    deriveStructuralVariantType,
 } from 'cbioportal-utils';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
@@ -167,7 +168,7 @@ export default class AnnotationColumnFormatter {
             uniqueSampleKeyToTumorType![
                 structuralVariantData[0].uniqueSampleKey
             ],
-            structuralVariantData[0].variantClass.toUpperCase() as any
+            deriveStructuralVariantType(structuralVariantData[0])
         );
 
         if (oncoKbData.indicatorMap[id]) {
