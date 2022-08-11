@@ -11,12 +11,23 @@ import {
     isGroupEmpty,
     partitionCasesByGroupMembership,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
+import {
+    countMutations,
+    mutationCountByPositionKey,
+} from '../../../pages/resultsView/mutationCountHelpers';
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import {
     findFirstMostCommonElt,
     remoteData,
     stringListToMap,
 } from 'cbioportal-frontend-commons';
+import {
+    generateQueryStructuralVariantId,
+    getProteinPositionFromProteinChange,
+    IHotspotIndex,
+    indexHotspotsData,
+    IOncoKbData,
+} from 'cbioportal-utils';
 import {
     AlterationFilter,
     CancerStudy,
@@ -28,8 +39,14 @@ import {
     MolecularProfile,
     MolecularProfileCasesGroupFilter,
     MolecularProfileFilter,
+    MutationMultipleStudyFilter,
     ReferenceGenomeGene,
+    MutationCountByPosition,
     Sample,
+} from 'cbioportal-ts-api-client';
+import {
+    StructuralVariant,
+    StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 import {
     action,
@@ -51,9 +68,16 @@ import {
     pickProteinEnrichmentProfiles,
     pickStructuralVariantEnrichmentProfiles,
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
     makeEnrichmentDataPromise,
     makeGenericAssayEnrichmentDataPromise,
+    compileMutations,
+    filterAndAnnotateStructuralVariants,
+    compileStructuralVariants,
+    FilteredAndAnnotatedStructuralVariantsReport,
+    FilteredAndAnnotatedMutationsReport,
+    fetchQueriedStudies,
 } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import autobind from 'autobind-decorator';
@@ -70,12 +94,32 @@ import ComplexKeyGroupsMap from '../complexKeyDataStructures/ComplexKeyGroupsMap
 import { AppStore } from '../../../AppStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
-    fetchVariantAnnotationsIndexedByGenomicLocation,
-    fetchAllReferenceGenomeGenes,
     fetchSurvivalDataExists,
-    generateUniqueSampleKeyToTumorTypeMap,
+    cancerTypeForOncoKb,
+    evaluateDiscreteCNAPutativeDriverInfo,
+    evaluateMutationPutativeDriverInfo,
+    fetchAllReferenceGenomeGenes,
+    fetchCnaOncoKbDataForOncoprint,
+    fetchCopyNumberSegmentsForSamples,
+    fetchGermlineConsentedSamples,
     fetchOncoKbCancerGenes,
+    fetchOncoKbDataForOncoprint,
+    fetchStructuralVariantOncoKbData,
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    fetchVariantAnnotationsIndexedByGenomicLocation,
+    filterAndAnnotateMolecularData,
+    filterAndAnnotateMutations,
+    generateDataQueryFilter,
+    generateUniqueSampleKeyToTumorTypeMap,
+    getAllGenes,
     getSurvivalClinicalAttributesPrefix,
+    groupBySampleId,
+    makeGetOncoKbCnaAnnotationForOncoprint,
+    makeGetOncoKbMutationAnnotationForOncoprint,
+    makeIsHotspotForOncoprint,
+    getOncoKbOncogenic,
+    mapSampleIdToClinicalData,
+    ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
 import {
@@ -104,7 +148,7 @@ import {
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { getServerConfig } from 'config/config';
 import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
-import sessionServiceClient from '../../shared/api/sessionServiceInstance';
+import sessionServiceClient from '../../../shared/api/sessionServiceInstance';
 import { isSampleProfiledInMultiple } from '../../../shared/lib/isSampleProfiled';
 import {
     ComparisonSession,
@@ -129,6 +173,7 @@ import MutationCountCache from 'shared/cache/MutationCountCache';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
+import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
 import {
     existsSomeMutationWithAscnPropertyInCollection,
     fetchGenes,
@@ -149,12 +194,6 @@ import {
 } from '../../../shared/lib/oql/oqlfilter';
 
 import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
-import {
-    compileMutations,
-    compileStructuralVariants,
-    FilteredAndAnnotatedMutationsReport,
-    fetchQueriedStudies,
-} from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 
 import { ErrorMessages } from '../../../shared/enums/ErrorEnums';
 
@@ -3119,6 +3158,249 @@ export default abstract class ComparisonStore
         []
     );
 
+    readonly _filteredAndAnnotatedStructuralVariantsReport = remoteData({
+        await: () => [
+            this.structuralVariants,
+            this.getStructuralVariantPutativeDriverInfo,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                filterAndAnnotateStructuralVariants(
+                    this.structuralVariants.result!,
+                    this.getStructuralVariantPutativeDriverInfo.result!
+                )
+            );
+        },
+    });
+
+    readonly oncoKbAnnotatedGenes = remoteData(
+        {
+            await: () => [this.oncoKbCancerGenes],
+            invoke: () => {
+                if (getServerConfig().show_oncokb) {
+                    return Promise.resolve(
+                        _.reduce(
+                            this.oncoKbCancerGenes.result,
+                            (
+                                map: { [entrezGeneId: number]: boolean },
+                                next: CancerGene
+                            ) => {
+                                if (next.oncokbAnnotated) {
+                                    map[next.entrezGeneId] = true;
+                                }
+                                return map;
+                            },
+                            {}
+                        )
+                    );
+                } else {
+                    return Promise.resolve({});
+                }
+            },
+        },
+        {}
+    );
+
+    readonly structuralVariantOncoKbDataForOncoprint = remoteData<
+        IOncoKbData | Error
+    >(
+        {
+            await: () => [this.structuralVariants, this.oncoKbAnnotatedGenes],
+            invoke: async () => {
+                if (getServerConfig().show_oncokb) {
+                    let result;
+                    try {
+                        result = await fetchStructuralVariantOncoKbData(
+                            {},
+                            this.oncoKbAnnotatedGenes.result!,
+                            this.structuralVariants
+                        );
+                    } catch (e) {
+                        result = new Error();
+                    }
+                    return result;
+                } else {
+                    return ONCOKB_DEFAULT;
+                }
+            },
+            onError: (err: Error) => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        },
+        ONCOKB_DEFAULT
+    );
+
+    readonly oncoKbStructuralVariantAnnotationForOncoprint = remoteData<
+        | Error
+        | ((
+              structuralVariant: StructuralVariant
+          ) => IndicatorQueryResp | undefined)
+    >({
+        await: () => [this.structuralVariantOncoKbDataForOncoprint],
+        invoke: () => {
+            const structuralVariantOncoKbDataForOncoprint = this
+                .structuralVariantOncoKbDataForOncoprint.result!;
+            if (structuralVariantOncoKbDataForOncoprint instanceof Error) {
+                return Promise.resolve(new Error());
+            } else {
+                return Promise.resolve(
+                    (structuralVariant: StructuralVariant) => {
+                        const id = generateQueryStructuralVariantId(
+                            structuralVariant.site1EntrezGeneId,
+                            structuralVariant.site2EntrezGeneId,
+                            cancerTypeForOncoKb(
+                                structuralVariant.uniqueSampleKey,
+                                {}
+                            ),
+                            structuralVariant.variantClass.toUpperCase() as any
+                        );
+                        return structuralVariantOncoKbDataForOncoprint.indicatorMap![
+                            id
+                        ];
+                    }
+                );
+            }
+        },
+    });
+
+    readonly getStructuralVariantPutativeDriverInfo = remoteData({
+        await: () => {
+            const toAwait = [];
+            if (this.driverAnnotationSettings.oncoKb) {
+                toAwait.push(
+                    this.oncoKbStructuralVariantAnnotationForOncoprint
+                );
+            }
+            return toAwait;
+        },
+        invoke: () => {
+            return Promise.resolve((structualVariant: StructuralVariant): {
+                oncoKb: string;
+                hotspots: boolean;
+                cbioportalCount: boolean;
+                cosmicCount: boolean;
+                customDriverBinary: boolean;
+                customDriverTier?: string;
+            } => {
+                const getOncoKbStructuralVariantAnnotationForOncoprint = this
+                    .oncoKbStructuralVariantAnnotationForOncoprint.result!;
+                const oncoKbDatum:
+                    | IndicatorQueryResp
+                    | undefined
+                    | null
+                    | false =
+                    this.driverAnnotationSettings.oncoKb &&
+                    getOncoKbStructuralVariantAnnotationForOncoprint &&
+                    !(
+                        getOncoKbStructuralVariantAnnotationForOncoprint instanceof
+                        Error
+                    ) &&
+                    getOncoKbStructuralVariantAnnotationForOncoprint(
+                        structualVariant
+                    );
+
+                let oncoKb: string = '';
+                if (oncoKbDatum) {
+                    oncoKb = getOncoKbOncogenic(oncoKbDatum);
+                }
+                return {
+                    oncoKb,
+                    hotspots: false,
+                    cbioportalCount: false,
+                    cosmicCount: false,
+                    customDriverBinary: false,
+                    customDriverTier: undefined,
+                };
+            });
+        },
+    });
+
+    readonly studyToStructuralVariantMolecularProfile = remoteData<{
+        [studyId: string]: MolecularProfile;
+    }>(
+        {
+            await: () => [this.structuralVariantProfiles],
+            invoke: () => {
+                return Promise.resolve(
+                    _.keyBy(
+                        this.structuralVariantProfiles.result,
+                        (profile: MolecularProfile) => profile.studyId
+                    )
+                );
+            },
+        },
+        {}
+    );
+
+    readonly structuralVariants = remoteData<StructuralVariant[]>({
+        await: () => [
+            this.genes,
+            this.samples,
+            this.studyToStructuralVariantMolecularProfile,
+        ],
+        invoke: async () => {
+            if (
+                _.isEmpty(this.studyToStructuralVariantMolecularProfile.result)
+            ) {
+                return [];
+            }
+            const studyIdToProfileMap = this
+                .studyToStructuralVariantMolecularProfile.result;
+
+            const filters = this.samples.result.reduce(
+                (memo, sample: Sample) => {
+                    if (sample.studyId in studyIdToProfileMap) {
+                        memo.push({
+                            molecularProfileId:
+                                studyIdToProfileMap[sample.studyId]
+                                    .molecularProfileId,
+                            sampleId: sample.sampleId,
+                        });
+                    }
+                    return memo;
+                },
+                [] as StructuralVariantFilter['sampleMolecularIdentifiers']
+            );
+
+            // filters can be an empty list
+            // when all selected samples are coming from studies that don't have structural variant profile
+            // in this case, we should not fetch structural variants data
+            if (_.isEmpty(filters)) {
+                return [];
+            } else {
+                const data = {
+                    entrezGeneIds: _.map(
+                        this.genes.result,
+                        (gene: Gene) => gene.entrezGeneId
+                    ),
+                    sampleMolecularIdentifiers: filters,
+                } as StructuralVariantFilter;
+
+                return await internalClient.fetchStructuralVariantsUsingPOST({
+                    structuralVariantFilter: data,
+                });
+            }
+        },
+    });
+
+    readonly entrezGeneIdToGeneAll = remoteData<{
+        [entrezGeneId: string]: Gene;
+    }>({
+        await: () => [this.allGenes],
+        invoke: () => {
+            // build reference gene map
+            return Promise.resolve(
+                _.keyBy(this.allGenes.result!, g => g.entrezGeneId)
+            );
+        },
+    });
+
+    readonly allGenes = remoteData<Gene[]>({
+        invoke: () => {
+            return getAllGenes();
+        },
+    });
+
     readonly structuralVariantsReportByGene = remoteData<{
         [hugeGeneSymbol: string]: FilteredAndAnnotatedStructuralVariantsReport;
     }>({
@@ -3176,6 +3458,237 @@ export default abstract class ComparisonStore
         return this.urlWrapper.query.gene_list;
     }
 
+    readonly entrezGeneIdToGene = remoteData<{ [entrezGeneId: number]: Gene }>({
+        await: () => [this.genes],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.genes.result!, gene => gene.entrezGeneId)
+            ),
+    });
+
+    readonly _filteredAndAnnotatedMutationsReport = remoteData({
+        await: () => [
+            this.mutations,
+            this.getMutationPutativeDriverInfo,
+            this.entrezGeneIdToGene,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                filterAndAnnotateMutations(
+                    this.mutations.result!,
+                    this.getMutationPutativeDriverInfo.result!,
+                    this.entrezGeneIdToGene.result!
+                )
+            );
+        },
+    });
+
+    readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
+        {
+            await: () => [this.mutations, this.oncoKbAnnotatedGenes],
+            invoke: async () =>
+                fetchOncoKbDataForOncoprint(
+                    this.oncoKbAnnotatedGenes,
+                    this.mutations
+                ),
+            onError: (err: Error) => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        },
+        ONCOKB_DEFAULT
+    );
+
+    readonly oncoKbMutationAnnotationForOncoprint = remoteData<
+        Error | ((mutation: Mutation) => IndicatorQueryResp | undefined)
+    >({
+        await: () => [this.oncoKbDataForOncoprint],
+        invoke: () =>
+            makeGetOncoKbMutationAnnotationForOncoprint(
+                this.oncoKbDataForOncoprint
+            ),
+    });
+
+    public readonly isHotspotForOncoprint = remoteData<
+        ((m: Mutation) => boolean) | Error
+    >({
+        invoke: () => makeIsHotspotForOncoprint(this.indexedHotspotData),
+    });
+
+    readonly getCBioportalCount: MobxPromise<
+        (mutation: Mutation) => number
+    > = remoteData({
+        await: () => [this.cbioportalMutationCountData],
+        invoke: () => {
+            return Promise.resolve((mutation: Mutation): number => {
+                const key = mutationCountByPositionKey(mutation);
+                return this.cbioportalMutationCountData.result![key] || -1;
+            });
+        },
+    });
+
+    readonly cbioportalMutationCountData = remoteData<{
+        [mutationCountByPositionKey: string]: number;
+    }>({
+        await: () => [this.mutations],
+        invoke: async () => {
+            const mutationPositionIdentifiers = _.values(
+                countMutations(this.mutations.result!)
+            );
+
+            if (mutationPositionIdentifiers.length > 0) {
+                const data = await internalClient.fetchMutationCountsByPositionUsingPOST(
+                    {
+                        mutationPositionIdentifiers,
+                    }
+                );
+                return _.mapValues(
+                    _.groupBy(data, mutationCountByPositionKey),
+                    (counts: MutationCountByPosition[]) =>
+                        _.sumBy(counts, c => c.count)
+                );
+            } else {
+                return {};
+            }
+        },
+    });
+
+    readonly cosmicCountsByKeywordAndStart = remoteData<ComplexKeyCounter>({
+        await: () => [this.mutations],
+        invoke: async () => {
+            const keywords = _.uniq(
+                this.mutations
+                    .result!.filter((m: Mutation) => {
+                        // keyword is what we use to query COSMIC count with, so we need
+                        //  the unique list of mutation keywords to query. If a mutation has
+                        //  no keyword, it cannot be queried for.
+                        return !!m.keyword;
+                    })
+                    .map((m: Mutation) => m.keyword)
+            );
+
+            if (keywords.length > 0) {
+                const data = await internalClient.fetchCosmicCountsUsingPOST({
+                    keywords,
+                });
+                const map = new ComplexKeyCounter();
+                for (const d of data) {
+                    const position = getProteinPositionFromProteinChange(
+                        d.proteinChange
+                    );
+                    if (position) {
+                        map.add(
+                            {
+                                keyword: d.keyword,
+                                start: position.start,
+                            },
+                            d.count
+                        );
+                    }
+                }
+                return map;
+            } else {
+                return new ComplexKeyCounter();
+            }
+        },
+    });
+
+    readonly getCosmicCount: MobxPromise<
+        (mutation: Mutation) => number
+    > = remoteData({
+        await: () => [this.cosmicCountsByKeywordAndStart],
+        invoke: () => {
+            return Promise.resolve((mutation: Mutation): number => {
+                const targetPosObj = getProteinPositionFromProteinChange(
+                    mutation.proteinChange
+                );
+                if (targetPosObj) {
+                    const keyword = mutation.keyword;
+                    const cosmicCount = this.cosmicCountsByKeywordAndStart.result!.get(
+                        {
+                            keyword,
+                            start: targetPosObj.start,
+                        }
+                    );
+                    return cosmicCount;
+                } else {
+                    return -1;
+                }
+            });
+        },
+    });
+
+    readonly getMutationPutativeDriverInfo = remoteData({
+        await: () => {
+            const toAwait = [];
+            if (this.driverAnnotationSettings.oncoKb) {
+                toAwait.push(this.oncoKbMutationAnnotationForOncoprint);
+            }
+            if (this.driverAnnotationSettings.hotspots) {
+                toAwait.push(this.isHotspotForOncoprint);
+            }
+            if (this.driverAnnotationSettings.cbioportalCount) {
+                toAwait.push(this.getCBioportalCount);
+            }
+            if (this.driverAnnotationSettings.cosmicCount) {
+                toAwait.push(this.getCosmicCount);
+            }
+            return toAwait;
+        },
+        invoke: () => {
+            return Promise.resolve((mutation: Mutation): {
+                oncoKb: string;
+                hotspots: boolean;
+                cbioportalCount: boolean;
+                cosmicCount: boolean;
+                customDriverBinary: boolean;
+                customDriverTier?: string;
+            } => {
+                const getOncoKbMutationAnnotationForOncoprint = this
+                    .oncoKbMutationAnnotationForOncoprint.result!;
+                const oncoKbDatum:
+                    | IndicatorQueryResp
+                    | undefined
+                    | null
+                    | false =
+                    this.driverAnnotationSettings.oncoKb &&
+                    getOncoKbMutationAnnotationForOncoprint &&
+                    !(
+                        getOncoKbMutationAnnotationForOncoprint instanceof Error
+                    ) &&
+                    getOncoKbMutationAnnotationForOncoprint(mutation);
+
+                const isHotspotDriver =
+                    this.driverAnnotationSettings.hotspots &&
+                    !(this.isHotspotForOncoprint.result instanceof Error) &&
+                    this.isHotspotForOncoprint.result!(mutation);
+                const cbioportalCountExceeded =
+                    this.driverAnnotationSettings.cbioportalCount &&
+                    this.getCBioportalCount.isComplete &&
+                    this.getCBioportalCount.result!(mutation) >=
+                        this.driverAnnotationSettings.cbioportalCountThreshold;
+                const cosmicCountExceeded =
+                    this.driverAnnotationSettings.cosmicCount &&
+                    this.getCosmicCount.isComplete &&
+                    this.getCosmicCount.result!(mutation) >=
+                        this.driverAnnotationSettings.cosmicCountThreshold;
+
+                // Note: custom driver annotations are part of the incoming datum
+                return evaluateMutationPutativeDriverInfo(
+                    mutation,
+                    oncoKbDatum,
+                    this.driverAnnotationSettings.hotspots,
+                    isHotspotDriver,
+                    this.driverAnnotationSettings.cbioportalCount,
+                    cbioportalCountExceeded,
+                    this.driverAnnotationSettings.cosmicCount,
+                    cosmicCountExceeded,
+                    this.driverAnnotationSettings.customBinary,
+                    this.driverAnnotationSettings.driverTiers
+                );
+            });
+        },
+    });
+
     readonly mutationsReportByGene = remoteData<{
         [hugeGeneSymbol: string]: FilteredAndAnnotatedMutationsReport;
     }>({
@@ -3208,6 +3721,19 @@ export default abstract class ComparisonStore
             }
             return Promise.resolve(ret);
         },
+    });
+
+    readonly mutationProfiles = remoteData({
+        await: () => [this.selectedMolecularProfiles],
+        invoke: async () => {
+            return this.selectedMolecularProfiles.result!.filter(
+                profile =>
+                    profile.molecularAlterationType ===
+                    AlterationTypeConstants.MUTATION_EXTENDED
+            );
+        },
+        onError: error => {},
+        default: [],
     });
 
     readonly mutations_preload = remoteData<Mutation[]>({
