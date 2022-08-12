@@ -177,7 +177,7 @@ describe('group comparison page screenshot tests', function() {
         });
     });
 
-    describe('Clinical tab', () => {
+    describe.skip('Clinical tab', () => {
         before(function() {
             openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,

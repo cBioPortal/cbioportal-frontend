@@ -326,7 +326,7 @@ describe('check the filters are working properly', () => {
 // This needs to be done separately due to leak of data in the other tests
 describe('check the fusion filter is working properly', () => {
     before(function() {
-        const url = `${CBIOPORTAL_URL}/study/summary?id=es_dfarber_broad_2014&filters=%7B%22geneFilters%22%3A%5B%7B%22molecularProfileIds%22%3A%5B%22es_dfarber_broad_2014_fusion%22%5D%2C%22geneQueries%22%3A%5B%5B%22FLI1%22%5D%5D%7D%5D%7D`;
+        const url = `${CBIOPORTAL_URL}/study/summary?id=es_dfarber_broad_2014&filters=%7B%22geneFilters%22%3A%5B%7B%22molecularProfileIds%22%3A%5B%22es_dfarber_broad_2014_structural_variants%22%5D%2C%22geneQueries%22%3A%5B%5B%22FLI1%22%5D%5D%7D%5D%7D`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet(60000);
     });

@@ -109,6 +109,7 @@ export type GeneticTrackDatum_Data = Pick<
     | 'driverTiersFilterAnnotation'
     | 'oncoKbOncogenic'
     | 'alterationSubType'
+    | 'alterationType'
     | 'value'
     | 'mutationType'
     | 'isHotspot'

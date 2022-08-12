@@ -209,6 +209,18 @@ function ResultsViewQueryParamsAdjuster(oldParams: ResultsViewURLQuery) {
         ]);
         changeMade = true;
     }
+
+    // we used to call the structural variant alteration class "fusions"
+    // we have generalized it to structural variants
+    const profileRegex = /fusion/;
+    if (profileRegex.test(oldParams.profileFilter)) {
+        newParams.profileFilter = oldParams.profileFilter.replace(
+            profileRegex,
+            'structural_variants'
+        );
+        changeMade = true;
+    }
+
     if (changeMade) {
         return newParams;
     } else {
