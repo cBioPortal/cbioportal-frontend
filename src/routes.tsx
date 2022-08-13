@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { FunctionComponent, useEffect } from 'react';
 import { Route, Redirect, Switch } from 'react-router-dom';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
@@ -301,6 +301,11 @@ let getBlankPage = function(onLoad: any) {
     };
 };
 
+let redirectToNews: FunctionComponent<any> = function() {
+    getBrowserWindow().location = 'https://docs.cbioportal.org/news';
+    return null;
+};
+
 /* when route changes, we want to:
 1. in spa, deep links from url (#) don't work because content is loading and thus doesn't exist to link to
    at time url changes.  seekHash is a somewhat dirty way of solving this issue
@@ -344,7 +349,6 @@ export const makeRoutes = () => {
                     path="/loading/comparison"
                     component={ScrollToTop(GroupComparisonLoading)}
                 />
-
                 {/* Redirect legacy survival route directly to survival tab in comparison */}
                 <Route
                     path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
@@ -355,7 +359,6 @@ export const makeRoutes = () => {
                         );
                     })}
                 />
-
                 {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
                 <Route
                     path={`/results/${ResultsViewTab.EXPRESSION_REDIRECT}`}
@@ -378,7 +381,6 @@ export const makeRoutes = () => {
                         );
                     })}
                 />
-
                 {/* Redirect legacy enrichments route directly to mutations tab in comparison */}
                 <Route
                     path="/results/enrichments"
@@ -415,7 +417,6 @@ export const makeRoutes = () => {
                         )
                     )}
                 />
-
                 <Route
                     path={`/comparison/${LegacyGroupComparisonTab.MUTATIONS}`}
                     component={getBlankPage(() => {
@@ -451,7 +452,6 @@ export const makeRoutes = () => {
                         )
                     )}
                 />
-
                 <Route path="/mutation_mapper" component={MutationMapperTool} />
                 <Route path="/oncoprinter" component={OncoprinterTool} />
                 <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
@@ -462,7 +462,8 @@ export const makeRoutes = () => {
                 <Route path="/visualize" component={ScrollToTop(Visualize)} />
                 <Route path="/about" component={ScrollToTop(AboutUs)} />
                 <Route path="/software" component={ScrollToTop(Software)} />
-                <Route path="/news" component={GoToHashLink(News)} />
+                // redirect to docs site news page
+                <Route path="/news" component={redirectToNews} />
                 <Route path="/faq" component={GoToHashLink(FAQ)} />
                 <Route path="/oql" component={GoToHashLink(OQL)} />
                 <Route
@@ -478,7 +479,6 @@ export const makeRoutes = () => {
                     path="/study.do"
                     component={getBlankPage(handleStudyDO)}
                 />
-
                 <Route path="/ln" component={getBlankPage(handleLinkOut)} />
                 <Route
                     path="/link.do"
@@ -488,7 +488,6 @@ export const makeRoutes = () => {
                     path="/encodedRedirect"
                     component={getBlankPage(handleEncodedRedirect)}
                 />
-
                 <Redirect
                     path={'/mutation_mapper.jsp'}
                     to={'/mutation_mapper'}
@@ -500,7 +499,6 @@ export const makeRoutes = () => {
                 <Redirect path={'/tutorials.jsp'} to={'/tutorials'} />
                 <Redirect path={'/tutorial.jsp'} to={'/tutorials'} />
                 <Redirect path={'/cgds_r.jsp'} to={'/rmatlab'} />
-
                 <Route
                     path="*"
                     component={ScrollToTop(() => (
