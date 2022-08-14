@@ -84,9 +84,17 @@ import autobind from 'autobind-decorator';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
+    parseSamplesSpecifications,
+    populateSampleSpecificationsFromVirtualStudies,
+    ResultsViewTab,
+    substitutePhysicalStudiesForVirtualStudies,
+} from 'pages/resultsView/ResultsViewPageHelpers';
+import {
     getFilteredMolecularProfilesByAlterationType,
     getPatientIdentifiers,
     buildSelectedDriverTiersMap,
+    StudyWithSamples,
+    getFilteredStudiesWithSamples,
 } from 'pages/studyView/StudyViewUtils';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
@@ -239,6 +247,41 @@ import {
 export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
+}
+
+const DEFAULT_RPPA_THRESHOLD = 2;
+const DEFAULT_Z_SCORE_THRESHOLD = 2;
+
+export function buildDefaultOQLProfile(
+    profilesTypes: string[],
+    zScoreThreshold: number,
+    rppaScoreThreshold: number
+) {
+    var default_oql_uniq: any = {};
+    for (var i = 0; i < profilesTypes.length; i++) {
+        var type = profilesTypes[i];
+        switch (type) {
+            case AlterationTypeConstants.MUTATION_EXTENDED:
+                default_oql_uniq['MUT'] = true;
+                break;
+            case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
+                default_oql_uniq['AMP'] = true;
+                default_oql_uniq['HOMDEL'] = true;
+                break;
+            case AlterationTypeConstants.MRNA_EXPRESSION:
+                default_oql_uniq['EXP>=' + zScoreThreshold] = true;
+                default_oql_uniq['EXP<=-' + zScoreThreshold] = true;
+                break;
+            case AlterationTypeConstants.PROTEIN_LEVEL:
+                default_oql_uniq['PROT>=' + rppaScoreThreshold] = true;
+                default_oql_uniq['PROT<=-' + rppaScoreThreshold] = true;
+                break;
+            case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                default_oql_uniq['FUSION'] = true;
+                break;
+        }
+    }
+    return Object.keys(default_oql_uniq).join(' ');
 }
 
 export default abstract class ComparisonStore
@@ -3784,6 +3827,19 @@ export default abstract class ComparisonStore
         },
     });
 
+    @computed
+    get rppaScoreThreshold() {
+        return this.urlWrapper.query.RPPA_SCORE_THRESHOLD
+            ? parseFloat(this.urlWrapper.query.RPPA_SCORE_THRESHOLD)
+            : DEFAULT_RPPA_THRESHOLD;
+    }
+
+    @computed get zScoreThreshold() {
+        return this.urlWrapper.query.Z_SCORE_THRESHOLD
+            ? parseFloat(this.urlWrapper.query.Z_SCORE_THRESHOLD)
+            : DEFAULT_Z_SCORE_THRESHOLD;
+    }
+
     @computed get genomeNexusInternalClient() {
         return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
     }
@@ -4043,6 +4099,157 @@ export default abstract class ComparisonStore
                 filter: { studyIds: this.studyIds.result },
                 attributesMetaSet: this.chartMetaSet,
             } as IVirtualStudyProps),
+    });
+
+    @computed
+    get chartMetaSet(): { [id: string]: ChartMeta } {
+        let _chartMetaSet: { [id: string]: ChartMeta } = {} as {
+            [id: string]: ChartMeta;
+        };
+
+        // Add meta information for each of the clinical attribute
+        // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
+        _.reduce(
+            this.clinicalAttributes.result,
+            (acc: { [id: string]: ChartMeta }, attribute) => {
+                const uniqueKey = getUniqueKey(attribute);
+                acc[uniqueKey] = {
+                    displayName: attribute.displayName,
+                    uniqueKey: uniqueKey,
+                    dataType: getChartMetaDataType(uniqueKey),
+                    patientAttribute: attribute.patientAttribute,
+                    description: attribute.description,
+                    priority: getPriorityByClinicalAttribute(attribute),
+                    renderWhenDataChange: false,
+                    clinicalAttribute: attribute,
+                };
+                return acc;
+            },
+            _chartMetaSet
+        );
+
+        if (!_.isEmpty(this.mutationProfiles.result!)) {
+            const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                this.mutationProfiles.result.map(
+                    profile => profile.molecularProfileId
+                )
+            );
+            _chartMetaSet[uniqueKey] = {
+                uniqueKey: uniqueKey,
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
+                patientAttribute: false,
+                displayName: 'Mutated Genes',
+                priority: getDefaultPriorityByUniqueKey(
+                    ChartTypeEnum.MUTATED_GENES_TABLE
+                ),
+                renderWhenDataChange: false,
+                description: '',
+            };
+        }
+
+        if (!_.isEmpty(this.cnaProfiles.result)) {
+            const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                this.cnaProfiles.result.map(
+                    profile => profile.molecularProfileId
+                )
+            );
+            _chartMetaSet[uniqueKey] = {
+                uniqueKey: uniqueKey,
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
+                patientAttribute: false,
+                displayName: 'CNA Genes',
+                renderWhenDataChange: false,
+                priority: getDefaultPriorityByUniqueKey(
+                    ChartTypeEnum.CNA_GENES_TABLE
+                ),
+                description: '',
+            };
+        }
+
+        const scatterRequiredParams = _.reduce(
+            this.clinicalAttributes.result,
+            (acc, next) => {
+                if (
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT ===
+                    next.clinicalAttributeId
+                ) {
+                    acc[SpecialChartsUniqueKeyEnum.MUTATION_COUNT] = true;
+                }
+                if (
+                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED ===
+                    next.clinicalAttributeId
+                ) {
+                    acc[
+                        SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+                    ] = true;
+                }
+                return acc;
+            },
+            {
+                [SpecialChartsUniqueKeyEnum.MUTATION_COUNT]: false,
+                [SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED]: false,
+            }
+        );
+
+        if (
+            scatterRequiredParams[SpecialChartsUniqueKeyEnum.MUTATION_COUNT] &&
+            scatterRequiredParams[
+                SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+            ]
+        ) {
+            _chartMetaSet[FGA_VS_MUTATION_COUNT_KEY] = {
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
+                patientAttribute: false,
+                uniqueKey: FGA_VS_MUTATION_COUNT_KEY,
+                displayName: 'Mutation Count vs Fraction of Genome Altered',
+                priority: getDefaultPriorityByUniqueKey(
+                    FGA_VS_MUTATION_COUNT_KEY
+                ),
+                renderWhenDataChange: false,
+                description: '',
+            };
+        }
+        return _chartMetaSet;
+    }
+
+    readonly studyIds = remoteData(
+        {
+            await: () => [this.queriedVirtualStudies],
+            invoke: () => {
+                let physicalStudies: string[];
+                if (this.queriedVirtualStudies.result!.length > 0) {
+                    // we want to replace virtual studies with their underlying physical studies
+                    physicalStudies = substitutePhysicalStudiesForVirtualStudies(
+                        this.cancerStudyIds,
+                        this.queriedVirtualStudies.result!
+                    );
+                } else {
+                    physicalStudies = this.cancerStudyIds.slice();
+                }
+                return Promise.resolve(physicalStudies);
+            },
+        },
+        []
+    );
+
+    // used in building virtual study
+    readonly studyWithSamples = remoteData<StudyWithSamples[]>({
+        await: () => [
+            this.samples,
+            this.queriedStudies,
+            this.queriedVirtualStudies,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                getFilteredStudiesWithSamples(
+                    this.samples.result,
+                    this.queriedStudies.result,
+                    this.queriedVirtualStudies.result
+                )
+            );
+        },
+        onError: error => {},
+        default: [],
     });
 
     @computed get showDriverAnnotationMenuSection() {
