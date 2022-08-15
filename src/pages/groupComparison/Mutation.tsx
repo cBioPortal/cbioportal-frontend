@@ -7,22 +7,22 @@ import { convertToMutationMapperProps } from 'shared/components/mutationMapper/M
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { computed, action, makeObservable } from 'mobx';
 import { getServerConfig } from 'config/config';
-import OqlStatusBanner from '../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../AppStore';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 import './mutations.scss';
-import AlterationFilterWarning from '../../shared/components/banners/AlterationFilterWarning';
 import {
     getMutationAlignerUrlTemplate,
     getOncoKbApiUrl,
 } from 'shared/api/urls';
-import CaseFilterWarning from '../../shared/components/banners/CaseFilterWarning';
 import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import CaseFilterWarning from '../../shared/components/banners/CaseFilterWarning';
+import AlterationFilterWarning from '../../shared/components/banners/AlterationFilterWarning';
+import OqlStatusBanner from '../../shared/components/banners/OqlStatusBanner';
 
 export interface IMutationsPageProps {
     routing?: any;

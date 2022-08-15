@@ -1436,6 +1436,7 @@ export default abstract class ComparisonStore
     });
 
     readonly geneCache = new GeneCache();
+    @observable public isSettingsMenuVisible = false;
 
     readonly overlapComputations = remoteData<
         IOverlapComputations<ComparisonGroup>

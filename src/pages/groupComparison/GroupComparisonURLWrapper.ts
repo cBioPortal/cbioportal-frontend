@@ -25,6 +25,11 @@ export type GroupComparisonURLQuery = {
     selectedEnrichmentEventTypes: string;
 };
 
+export enum GroupComparisonURLQueryEnum {
+    mutations_gene = 'mutations_gene',
+    mutations_transcript_id = 'mutations_transcript_id',
+}
+
 export default class GroupComparisonURLWrapper
     extends URLWrapper<GroupComparisonURLQuery>
     implements IComparisonURLWrapper {
