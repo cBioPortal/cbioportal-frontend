@@ -28,6 +28,7 @@ import {
     indexHotspotsData,
     IOncoKbData,
 } from 'cbioportal-utils';
+import { toSampleUuid } from '../../../shared/lib/UuidUtils';
 import {
     AlterationFilter,
     CancerStudy,
@@ -40,8 +41,14 @@ import {
     MolecularProfileCasesGroupFilter,
     MolecularProfileFilter,
     MutationMultipleStudyFilter,
+    ClinicalAttributeCount,
+    ClinicalAttributeCountFilter,
+    ClinicalDataSingleStudyFilter,
+    GenePanelData,
+    SampleIdentifier,
     ReferenceGenomeGene,
     MutationCountByPosition,
+    GenePanelDataMultipleStudyFilter,
     Sample,
 } from 'cbioportal-ts-api-client';
 import {
@@ -70,13 +77,20 @@ import {
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
+    CoverageInformation,
+    getCoverageInformation,
+} from 'shared/lib/GenePanelUtils';
+import {
     makeEnrichmentDataPromise,
     makeGenericAssayEnrichmentDataPromise,
     compileMutations,
     filterAndAnnotateStructuralVariants,
     compileStructuralVariants,
     FilteredAndAnnotatedStructuralVariantsReport,
+    ExtendedClinicalAttribute,
+    getExtendsClinicalAttributesFromCustomData,
     FilteredAndAnnotatedMutationsReport,
+    fetchPatients,
     fetchQueriedStudies,
 } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import internalClient from '../../api/cbioportalInternalClientInstance';
@@ -89,11 +103,16 @@ import {
     ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies,
 } from 'pages/resultsView/ResultsViewPageHelpers';
+import ClinicalDataCache, {
+    clinicalAttributeIsINCOMPARISONGROUP,
+    SpecialAttribute,
+} from '../../../shared/cache/ClinicalDataCache';
 import {
     getFilteredMolecularProfilesByAlterationType,
     getPatientIdentifiers,
     buildSelectedDriverTiersMap,
     StudyWithSamples,
+    ChartMeta,
     getFilteredStudiesWithSamples,
 } from 'pages/studyView/StudyViewUtils';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
@@ -130,6 +149,7 @@ import {
     ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
+import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import {
     AlterationTypeConstants,
     DataTypeConstants,
@@ -200,7 +220,11 @@ import {
     filterCBioPortalWebServiceData,
     uniqueGenesInOQLQuery,
 } from '../../../shared/lib/oql/oqlfilter';
-
+import {
+    convertComparisonGroupClinicalAttribute,
+    makeComparisonGroupClinicalAttributes,
+    makeProfiledInClinicalAttributes,
+} from '../../../shared/components/oncoprint/ResultsViewOncoprintUtils';
 import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
 
 import { ErrorMessages } from '../../../shared/enums/ErrorEnums';
@@ -208,7 +232,9 @@ import { ErrorMessages } from '../../../shared/enums/ErrorEnums';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import {
+    CLINICAL_ATTRIBUTE_FIELD_ENUM,
     GENOME_NEXUS_ARG_FIELD_ENUM,
+    CLINICAL_ATTRIBUTE_ID_ENUM,
     REQUEST_ARG_ENUM,
 } from 'shared/constants';
 
@@ -248,6 +274,27 @@ export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
 }
+
+export enum SampleListCategoryType {
+    'w_mut' = 'w_mut',
+    'w_cna' = 'w_cna',
+    'w_mut_cna' = 'w_mut_cna',
+}
+
+export type CaseAggregatedData<T> = {
+    samples: { [uniqueSampleKey: string]: T[] };
+    patients: { [uniquePatientKey: string]: T[] };
+};
+
+export const SampleListCategoryTypeToFullId = {
+    [SampleListCategoryType.w_mut]: 'all_cases_with_mutation_data',
+    [SampleListCategoryType.w_cna]: 'all_cases_with_cna_data',
+    [SampleListCategoryType.w_mut_cna]: 'all_cases_with_mutation_and_cna_data',
+};
+
+export type SamplesSpecificationElement =
+    | { studyId: string; sampleId: string; sampleListId: undefined }
+    | { studyId: string; sampleId: undefined; sampleListId: string };
 
 const DEFAULT_RPPA_THRESHOLD = 2;
 const DEFAULT_Z_SCORE_THRESHOLD = 2;
@@ -3844,6 +3891,144 @@ export default abstract class ComparisonStore
         return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
     }
 
+    @computed get sampleListCategory(): SampleListCategoryType | undefined {
+        if (
+            this.urlWrapper.query.case_set_id &&
+            [
+                SampleListCategoryType.w_mut,
+                SampleListCategoryType.w_cna,
+                SampleListCategoryType.w_mut_cna,
+            ].includes(this.urlWrapper.query.case_set_id as any)
+        ) {
+            return this.urlWrapper.query.case_set_id as SampleListCategoryType;
+        } else {
+            return undefined;
+        }
+    }
+
+    @computed get samplesSpecificationParams() {
+        return parseSamplesSpecifications(
+            this.urlWrapper.query.case_ids,
+            this.urlWrapper.query.sample_list_ids,
+            this.urlWrapper.query.case_set_id,
+            this.cancerStudyIds
+        );
+    }
+
+    readonly samplesSpecification = remoteData({
+        await: () => [this.queriedVirtualStudies],
+        invoke: async () => {
+            // is this a sample list category query?
+            // if YES, we need to derive the sample lists by:
+            // 1. looking up all sample lists in selected studies
+            // 2. using those with matching category
+            if (!this.sampleListCategory) {
+                if (this.queriedVirtualStudies.result!.length > 0) {
+                    return populateSampleSpecificationsFromVirtualStudies(
+                        this.samplesSpecificationParams,
+                        this.queriedVirtualStudies.result!
+                    );
+                } else {
+                    return this.samplesSpecificationParams;
+                }
+            } else {
+                // would be nice to have an endpoint that would return multiple sample lists
+                // but this will only ever happen one for each study selected (and in queries where a sample list is specified)
+                let samplesSpecifications = [];
+                // get sample specifications from physical studies if we are querying virtual study
+                if (this.queriedVirtualStudies.result!.length > 0) {
+                    samplesSpecifications = populateSampleSpecificationsFromVirtualStudies(
+                        this.samplesSpecificationParams,
+                        this.queriedVirtualStudies.result!
+                    );
+                } else {
+                    samplesSpecifications = this.samplesSpecificationParams;
+                }
+                // get unique study ids to reduce the API requests
+                const uniqueStudyIds = _.chain(samplesSpecifications)
+                    .map(specification => specification.studyId)
+                    .uniq()
+                    .value();
+                const allSampleLists = await Promise.all(
+                    uniqueStudyIds.map(studyId => {
+                        return client.getAllSampleListsInStudyUsingGET({
+                            studyId: studyId,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
+                        });
+                    })
+                );
+
+                const category =
+                    SampleListCategoryTypeToFullId[this.sampleListCategory!];
+                const specs = allSampleLists.reduce(
+                    (
+                        aggregator: SamplesSpecificationElement[],
+                        sampleLists
+                    ) => {
+                        //find the sample list matching the selected category using the map from shortname to full category name :(
+                        const matchingList = _.find(
+                            sampleLists,
+                            list => list.category === category
+                        );
+                        if (matchingList) {
+                            aggregator.push({
+                                studyId: matchingList.studyId,
+                                sampleListId: matchingList.sampleListId,
+                                sampleId: undefined,
+                            } as SamplesSpecificationElement);
+                        }
+                        return aggregator;
+                    },
+                    []
+                );
+
+                return specs;
+            }
+        },
+    });
+
+    readonly studyToCustomSampleList = remoteData<{
+        [studyId: string]: string[];
+    }>(
+        {
+            await: () => [this.samplesSpecification],
+            invoke: () => {
+                const ret: {
+                    [studyId: string]: string[];
+                } = {};
+                for (const sampleSpec of this.samplesSpecification.result!) {
+                    if (sampleSpec.sampleId) {
+                        // add sample id to study
+                        ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || [];
+                        ret[sampleSpec.studyId].push(sampleSpec.sampleId);
+                    }
+                }
+                return Promise.resolve(ret);
+            },
+        },
+        {}
+    );
+
+    readonly studyIds = remoteData(
+        {
+            await: () => [this.queriedVirtualStudies],
+            invoke: () => {
+                let physicalStudies: string[];
+                if (this.queriedVirtualStudies.result!.length > 0) {
+                    // we want to replace virtual studies with their underlying physical studies
+                    physicalStudies = substitutePhysicalStudiesForVirtualStudies(
+                        this.cancerStudyIds,
+                        this.queriedVirtualStudies.result!
+                    );
+                } else {
+                    physicalStudies = this.cancerStudyIds.slice();
+                }
+                return Promise.resolve(physicalStudies);
+            },
+        },
+        []
+    );
+
     readonly studyToDataQueryFilter = remoteData<{
         [studyId: string]: IDataQueryFilter;
     }>(
@@ -3868,6 +4053,18 @@ export default abstract class ComparisonStore
         {}
     );
 
+    readonly studyToSampleListId = remoteData<{ [studyId: string]: string }>({
+        await: () => [this.samplesSpecification],
+        invoke: async () => {
+            return this.samplesSpecification.result!.reduce((map, next) => {
+                if (next.sampleListId) {
+                    map[next.studyId] = next.sampleListId;
+                }
+                return map;
+            }, {} as { [studyId: string]: string });
+        },
+    });
+
     readonly samplesWithoutCancerTypeClinicalData = remoteData<Sample[]>(
         {
             await: () => [this.samples, this.clinicalDataForSamples],
@@ -3890,90 +4087,43 @@ export default abstract class ComparisonStore
         []
     );
 
-    readonly clinicalAttributeIdToAvailableFrequency = remoteData({
-        await: () => [
-            this.clinicalAttributeIdToAvailableSampleCount,
-            this.samples,
-        ],
-        invoke: () => {
-            const numSamples = this.samples.result!.length;
-            return Promise.resolve(
-                _.mapValues(
-                    this.clinicalAttributeIdToAvailableSampleCount.result!,
-                    count => (100 * count) / numSamples
-                )
-            );
-        },
-    });
-
-    readonly mutationsTabClinicalAttributes = remoteData<ClinicalAttribute[]>({
-        await: () => [this.studyIds],
-        invoke: async () => {
-            const clinicalAttributes = await client.fetchClinicalAttributesUsingPOST(
-                {
-                    studyIds: this.studyIds.result!,
-                }
-            );
-            const excludeList = ['CANCER_TYPE_DETAILED', 'MUTATION_COUNT'];
-
-            return _.uniqBy(
-                clinicalAttributes.filter(
-                    x => !excludeList.includes(x.clinicalAttributeId)
+    private getClinicalData(
+        clinicalDataType: 'SAMPLE' | 'PATIENT',
+        studies: any[],
+        entities: any[],
+        attributeIds: string[]
+    ): Promise<Array<ClinicalData>> {
+        // single study query endpoint is optimal so we should use it
+        // when there's only one study
+        if (studies.length === 1) {
+            const study = this.studies.result[0];
+            const filter: ClinicalDataSingleStudyFilter = {
+                attributeIds: attributeIds,
+                ids: _.map(
+                    entities,
+                    clinicalDataType === 'SAMPLE' ? 'sampleId' : 'patientId'
                 ),
-                x => x.clinicalAttributeId
-            );
-        },
-    });
-
-    readonly clinicalDataGroupedBySampleMap = remoteData(
-        {
-            await: () => [this.ascnClinicalDataGroupedBySample],
-            invoke: async () =>
-                mapSampleIdToClinicalData(
-                    this.ascnClinicalDataGroupedBySample.result
+            };
+            return client.fetchAllClinicalDataInStudyUsingPOST({
+                studyId: study.studyId,
+                clinicalDataSingleStudyFilter: filter,
+                clinicalDataType: clinicalDataType,
+            });
+        } else {
+            const filter: ClinicalDataMultiStudyFilter = {
+                attributeIds: attributeIds,
+                identifiers: entities.map((s: any) =>
+                    clinicalDataType === 'SAMPLE'
+                        ? { entityId: s.sampleId, studyId: s.studyId }
+                        : { entityId: s.patientId, studyId: s.studyId }
                 ),
-        },
-        {}
-    );
-
-    readonly indexedHotspotData = remoteData<IHotspotIndex | undefined>({
-        await: () => [this.hotspotData],
-        invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
-    });
-
-    readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>(
-        {
-            await: () => [this.studyIds, this.sampleMap],
-            invoke: async () => {
-                const germlineConsentedSamples: SampleIdentifier[] = await fetchGermlineConsentedSamples(
-                    this.studyIds,
-                    getServerConfig().studiesWithGermlineConsentedSamples
-                );
-
-                // do not simply return all germline consented samples,
-                // only include the ones matching current sample selection
-                const sampleMap = this.sampleMap.result!;
-                return germlineConsentedSamples.filter(s =>
-                    sampleMap.has(s, ['sampleId', 'studyId'])
-                );
-            },
-            onError: () => {
-                // fail silently
-            },
-        },
-        []
-    );
-
-    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData(
-        {
-            await: () => [this.samplesWithoutCancerTypeClinicalData],
-            invoke: async () =>
-                fetchStudiesForSamplesWithoutCancerTypeClinicalData(
-                    this.samplesWithoutCancerTypeClinicalData
-                ),
-        },
-        []
-    );
+            };
+            return client.fetchClinicalDataUsingPOST({
+                clinicalDataType: clinicalDataType,
+                clinicalDataMultiStudyFilter: filter,
+            });
+        }
+    }
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>(
         {
@@ -3992,6 +4142,41 @@ export default abstract class ComparisonStore
         []
     );
 
+    readonly clinicalAttributeIdToAvailableFrequency = remoteData({
+        await: () => [
+            this.clinicalAttributeIdToAvailableSampleCount,
+            this.samples,
+        ],
+        invoke: () => {
+            const numSamples = this.samples.result!.length;
+            return Promise.resolve(
+                _.mapValues(
+                    this.clinicalAttributeIdToAvailableSampleCount.result!,
+                    count => (100 * count) / numSamples
+                )
+            );
+        },
+    });
+
+    readonly genePanelDataForAllProfiles = remoteData<GenePanelData[]>({
+        // fetch all gene panel data for profiles
+        // We do it this way - fetch all data for profiles, then filter based on samples -
+        //  because
+        //  (1) this means sending less data as parameters
+        //  (2) this means the requests can be cached on the server based on the molecular profile id
+        //  (3) We can initiate the gene panel data call before the samples call completes, thus
+        //      putting more response waiting time in parallel
+        await: () => [this.molecularProfilesInStudies],
+        invoke: () =>
+            client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
+                genePanelDataMultipleStudyFilter: {
+                    molecularProfileIds: this.molecularProfilesInStudies.result.map(
+                        p => p.molecularProfileId
+                    ),
+                } as GenePanelDataMultipleStudyFilter,
+            }),
+    });
+
     readonly coverageInformation = remoteData<CoverageInformation>({
         await: () => [
             this.genePanelDataForAllProfiles,
@@ -4006,6 +4191,12 @@ export default abstract class ComparisonStore
                 this.patients.result!,
                 this.genes.result!
             ),
+    });
+
+    readonly patients = remoteData({
+        await: () => [this.samples],
+        invoke: () => fetchPatients(this.samples.result!),
+        default: [],
     });
 
     readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>({
@@ -4075,6 +4266,377 @@ export default abstract class ComparisonStore
             }
         },
     });
+
+    readonly clinicalAttributes_profiledIn = remoteData<
+        (ClinicalAttribute & { molecularProfileIds: string[] })[]
+    >({
+        await: () => [
+            this.coverageInformation,
+            this.molecularProfileIdToMolecularProfile,
+            this.selectedMolecularProfiles,
+            this.studyIds,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                makeProfiledInClinicalAttributes(
+                    this.coverageInformation.result!.samples,
+                    this.molecularProfileIdToMolecularProfile.result!,
+                    this.selectedMolecularProfiles.result!,
+                    this.studyIds.result!.length === 1
+                )
+            );
+        },
+    });
+
+    readonly clinicalAttributes_comparisonGroupMembership = remoteData<
+        (ClinicalAttribute & { comparisonGroup: Group })[]
+    >({
+        await: () => [this.savedComparisonGroupsForStudies],
+        invoke: () =>
+            Promise.resolve(
+                makeComparisonGroupClinicalAttributes(
+                    this.savedComparisonGroupsForStudies.result!
+                )
+            ),
+    });
+
+    readonly savedComparisonGroupsForStudies = remoteData<Group[]>({
+        await: () => [this.queriedStudies],
+        invoke: async () => {
+            let ret: Group[] = [];
+            if (this.appStore.isLoggedIn) {
+                try {
+                    ret = ret.concat(
+                        await comparisonClient.getGroupsForStudies(
+                            this.queriedStudies.result!.map(x => x.studyId)
+                        )
+                    );
+                } catch (e) {
+                    // fail silently
+                }
+            }
+            // add any groups that are referenced in URL
+            for (const id of this.comparisonGroupsReferencedInURL) {
+                try {
+                    ret.push(await comparisonClient.getGroup(id));
+                } catch (e) {
+                    // ignore any errors with group ids that don't exist
+                }
+            }
+            return ret;
+        },
+    });
+
+    @computed.struct get comparisonGroupsReferencedInURL() {
+        // The oncoprint can have tracks which indicate comparison group membership per sample.
+        //  We want to know which comparison groups are referenced in these tracks, if any
+        //  are currently visible.
+
+        // Start by getting all the selected clinical attribute tracks
+        const groupIds = this.urlWrapper.oncoprintSelectedClinicalTracks
+            .filter((clinicalAttributeId: string) =>
+                clinicalAttributeIsINCOMPARISONGROUP({
+                    clinicalAttributeId,
+                })
+            ) // filter for comparison group tracks
+
+            .map((clinicalAttributeId: string) =>
+                convertComparisonGroupClinicalAttribute(
+                    clinicalAttributeId,
+                    false
+                )
+            ); // convert track ids to group ids
+        return groupIds;
+    }
+
+    readonly clinicalAttributes_customCharts = remoteData({
+        await: () => [this.sampleMap],
+        invoke: async () => {
+            let ret: ExtendedClinicalAttribute[] = [];
+            if (this.appStore.isLoggedIn) {
+                try {
+                    //Add custom data from user profile
+                    const customChartSessions = await sessionServiceClient.getCustomDataForStudies(
+                        this.cancerStudyIds
+                    );
+
+                    ret = getExtendsClinicalAttributesFromCustomData(
+                        customChartSessions,
+                        this.sampleMap.result!
+                    );
+                } catch (e) {}
+            }
+            return ret;
+        },
+    });
+
+    readonly clinicalAttributes = remoteData<ExtendedClinicalAttribute[]>({
+        await: () => [
+            this.studyIds,
+            this.clinicalAttributes_profiledIn,
+            this.clinicalAttributes_comparisonGroupMembership,
+            this.clinicalAttributes_customCharts,
+            this.samples,
+            this.patients,
+        ],
+        invoke: async () => {
+            const serverAttributes = await client.fetchClinicalAttributesUsingPOST(
+                {
+                    studyIds: this.studyIds.result!,
+                }
+            );
+            const specialAttributes = [
+                {
+                    clinicalAttributeId: SpecialAttribute.MutationSpectrum,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_COUNTS_MAP,
+                    description:
+                        'Number of point mutations in the sample counted by different types of nucleotide changes.',
+                    displayName: 'Mutation spectrum',
+                    patientAttribute: false,
+                    studyId: '',
+                    priority: '0', // TODO: change?
+                } as ClinicalAttribute,
+            ];
+            if (this.studyIds.result!.length > 1) {
+                // if more than one study, add "Study of Origin" attribute
+                specialAttributes.push({
+                    clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_STRING,
+                    description: 'Study which the sample is a part of.',
+                    displayName: 'Study of origin',
+                    patientAttribute: false,
+                    studyId: '',
+                    priority: '0', // TODO: change?
+                } as ClinicalAttribute);
+            }
+            if (this.samples.result!.length !== this.patients.result!.length) {
+                // if different number of samples and patients, add "Num Samples of Patient" attribute
+                specialAttributes.push({
+                    clinicalAttributeId: SpecialAttribute.NumSamplesPerPatient,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_NUMBER,
+                    description: 'Number of queried samples for each patient.',
+                    displayName: '# Samples per Patient',
+                    patientAttribute: true,
+                } as ClinicalAttribute);
+            }
+            return [
+                ...serverAttributes,
+                ...specialAttributes,
+                ...this.clinicalAttributes_profiledIn.result!,
+                ...this.clinicalAttributes_comparisonGroupMembership.result!,
+                ...this.clinicalAttributes_customCharts.result!,
+            ];
+        },
+    });
+    readonly clinicalAttributeIdToAvailableSampleCount = remoteData({
+        await: () => [
+            this.samples,
+            this.sampleMap,
+            this.studies,
+            this.clinicalAttributes,
+            this.studyToDataQueryFilter,
+            this.clinicalAttributes_profiledIn,
+            this.clinicalAttributes_comparisonGroupMembership,
+            this.clinicalAttributes_customCharts,
+        ],
+        invoke: async () => {
+            let clinicalAttributeCountFilter: ClinicalAttributeCountFilter;
+            if (this.studies.result.length === 1) {
+                // try using sample list id
+                const studyId = this.studies.result![0].studyId;
+                const dqf = this.studyToDataQueryFilter.result[studyId];
+                if (dqf.sampleListId) {
+                    clinicalAttributeCountFilter = {
+                        sampleListId: dqf.sampleListId,
+                    } as ClinicalAttributeCountFilter;
+                } else {
+                    clinicalAttributeCountFilter = {
+                        sampleIdentifiers: dqf.sampleIds!.map(sampleId => ({
+                            sampleId,
+                            studyId,
+                        })),
+                    } as ClinicalAttributeCountFilter;
+                }
+            } else {
+                // use sample identifiers
+                clinicalAttributeCountFilter = {
+                    sampleIdentifiers: this.samples.result!.map(sample => ({
+                        sampleId: sample.sampleId,
+                        studyId: sample.studyId,
+                    })),
+                } as ClinicalAttributeCountFilter;
+            }
+
+            const result = await internalClient.getClinicalAttributeCountsUsingPOST(
+                {
+                    clinicalAttributeCountFilter,
+                }
+            );
+            // build map
+            const ret: { [clinicalAttributeId: string]: number } = _.reduce(
+                result,
+                (
+                    map: { [clinicalAttributeId: string]: number },
+                    next: ClinicalAttributeCount
+                ) => {
+                    map[next.clinicalAttributeId] =
+                        map[next.clinicalAttributeId] || 0;
+                    map[next.clinicalAttributeId] += next.count;
+                    return map;
+                },
+                {}
+            );
+            // add count = 0 for any remaining clinical attributes, since service doesnt return count 0
+            for (const clinicalAttribute of this.clinicalAttributes.result!) {
+                if (!(clinicalAttribute.clinicalAttributeId in ret)) {
+                    ret[clinicalAttribute.clinicalAttributeId] = 0;
+                }
+            }
+            // add counts for "special" clinical attributes
+            ret[
+                SpecialAttribute.NumSamplesPerPatient
+            ] = this.samples.result!.length;
+            ret[SpecialAttribute.StudyOfOrigin] = this.samples.result!.length;
+            let samplesWithMutationData = 0,
+                samplesWithCNAData = 0;
+            for (const sample of this.samples.result!) {
+                samplesWithMutationData += +!!sample.sequenced;
+                samplesWithCNAData += +!!sample.copyNumberSegmentPresent;
+            }
+            ret[SpecialAttribute.MutationSpectrum] = samplesWithMutationData;
+            // add counts for "ProfiledIn" clinical attributes
+            for (const attr of this.clinicalAttributes_profiledIn.result!) {
+                ret[attr.clinicalAttributeId] = this.samples.result!.length;
+            }
+            // add counts for "ComparisonGroup" clinical attributes
+            const sampleMap = this.sampleMap.result!;
+            for (const attr of this.clinicalAttributes_comparisonGroupMembership
+                .result!) {
+                ret[attr.clinicalAttributeId] = getNumSamples(
+                    attr.comparisonGroup!.data,
+                    (studyId, sampleId) => {
+                        return sampleMap.has({ studyId, sampleId });
+                    }
+                );
+            }
+            // add counts for custom chart clinical attributes
+            for (const attr of this.clinicalAttributes_customCharts.result!) {
+                ret[attr.clinicalAttributeId] = attr.data!.filter(
+                    d => d.value !== 'NA'
+                ).length;
+            }
+            return ret;
+        },
+    });
+
+    readonly mutationsTabClinicalAttributes = remoteData<ClinicalAttribute[]>({
+        await: () => [this.studyIds],
+        invoke: async () => {
+            const clinicalAttributes = await client.fetchClinicalAttributesUsingPOST(
+                {
+                    studyIds: this.studyIds.result!,
+                }
+            );
+            const excludeList = ['CANCER_TYPE_DETAILED', 'MUTATION_COUNT'];
+
+            return _.uniqBy(
+                clinicalAttributes.filter(
+                    x => !excludeList.includes(x.clinicalAttributeId)
+                ),
+                x => x.clinicalAttributeId
+            );
+        },
+    });
+
+    readonly ascnClinicalDataForSamples = remoteData<ClinicalData[]>(
+        {
+            await: () => [this.studies, this.samples],
+            invoke: () =>
+                this.getClinicalData(
+                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
+                    this.studies.result!,
+                    this.samples.result,
+                    [
+                        CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_PURITY,
+                    ]
+                ),
+        },
+        []
+    );
+
+    readonly ascnClinicalDataGroupedBySample = remoteData(
+        {
+            await: () => [this.ascnClinicalDataForSamples],
+            invoke: async () =>
+                groupBySampleId(
+                    this.sampleIds,
+                    this.ascnClinicalDataForSamples.result
+                ),
+        },
+        []
+    );
+
+    readonly clinicalDataGroupedBySampleMap = remoteData(
+        {
+            await: () => [this.ascnClinicalDataGroupedBySample],
+            invoke: async () =>
+                mapSampleIdToClinicalData(
+                    this.ascnClinicalDataGroupedBySample.result
+                ),
+        },
+        {}
+    );
+
+    readonly hotspotData = remoteData({
+        await: () => [this.mutations],
+        invoke: () => {
+            return fetchHotspotsData(
+                this.mutations,
+                undefined,
+                this.genomeNexusInternalClient
+            );
+        },
+    });
+
+    readonly indexedHotspotData = remoteData<IHotspotIndex | undefined>({
+        await: () => [this.hotspotData],
+        invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
+    });
+
+    readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>(
+        {
+            await: () => [this.studyIds, this.sampleMap],
+            invoke: async () => {
+                const germlineConsentedSamples: SampleIdentifier[] = await fetchGermlineConsentedSamples(
+                    this.studyIds,
+                    getServerConfig().studiesWithGermlineConsentedSamples
+                );
+
+                // do not simply return all germline consented samples,
+                // only include the ones matching current sample selection
+                const sampleMap = this.sampleMap.result!;
+                return germlineConsentedSamples.filter(s =>
+                    sampleMap.has(s, ['sampleId', 'studyId'])
+                );
+            },
+            onError: () => {
+                // fail silently
+            },
+        },
+        []
+    );
+
+    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData(
+        {
+            await: () => [this.samplesWithoutCancerTypeClinicalData],
+            invoke: async () =>
+                fetchStudiesForSamplesWithoutCancerTypeClinicalData(
+                    this.samplesWithoutCancerTypeClinicalData
+                ),
+        },
+        []
+    );
 
     readonly virtualStudyParams = remoteData<IVirtualStudyProps>({
         await: () => [
@@ -4211,26 +4773,6 @@ export default abstract class ComparisonStore
         }
         return _chartMetaSet;
     }
-
-    readonly studyIds = remoteData(
-        {
-            await: () => [this.queriedVirtualStudies],
-            invoke: () => {
-                let physicalStudies: string[];
-                if (this.queriedVirtualStudies.result!.length > 0) {
-                    // we want to replace virtual studies with their underlying physical studies
-                    physicalStudies = substitutePhysicalStudiesForVirtualStudies(
-                        this.cancerStudyIds,
-                        this.queriedVirtualStudies.result!
-                    );
-                } else {
-                    physicalStudies = this.cancerStudyIds.slice();
-                }
-                return Promise.resolve(physicalStudies);
-            },
-        },
-        []
-    );
 
     // used in building virtual study
     readonly studyWithSamples = remoteData<StudyWithSamples[]>({
