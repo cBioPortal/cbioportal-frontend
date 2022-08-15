@@ -90,6 +90,7 @@ import {
     ExtendedClinicalAttribute,
     getExtendsClinicalAttributesFromCustomData,
     FilteredAndAnnotatedMutationsReport,
+    getMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
 } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
@@ -97,6 +98,8 @@ import internalClient from '../../api/cbioportalInternalClientInstance';
 import autobind from 'autobind-decorator';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
+import { getDefaultMolecularProfiles } from '../../../shared/lib/getDefaultMolecularProfiles';
+import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import {
     parseSamplesSpecifications,
     populateSampleSpecificationsFromVirtualStudies,
@@ -111,9 +114,17 @@ import {
     getFilteredMolecularProfilesByAlterationType,
     getPatientIdentifiers,
     buildSelectedDriverTiersMap,
-    StudyWithSamples,
     ChartMeta,
+    ChartMetaDataTypeEnum,
+    FGA_VS_MUTATION_COUNT_KEY,
+    getChartMetaDataType,
+    getDefaultPriorityByUniqueKey,
     getFilteredStudiesWithSamples,
+    getPriorityByClinicalAttribute,
+    getUniqueKey,
+    getUniqueKeyFromMolecularProfileIds,
+    SpecialChartsUniqueKeyEnum,
+    StudyWithSamples,
 } from 'pages/studyView/StudyViewUtils';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
@@ -4199,6 +4210,31 @@ export default abstract class ComparisonStore
         default: [],
     });
 
+    readonly studyToMolecularProfiles = remoteData({
+        await: () => [this.molecularProfilesInStudies],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(
+                    this.molecularProfilesInStudies.result!,
+                    profile => profile.studyId
+                )
+            );
+        },
+    });
+
+    @computed
+    get selectedMolecularProfileIds() {
+        //use profileFilter when both profileFilter and MolecularProfileIds are present in query
+        if (isNaN(parseInt(this.urlWrapper.query.profileFilter, 10))) {
+            return [];
+        }
+        return getMolecularProfiles(this.urlWrapper.query);
+    }
+
+    @computed get profileFilter() {
+        return this.urlWrapper.query.profileFilter || '0';
+    }
+
     readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>({
         await: () => [
             this.studyToMolecularProfiles,
@@ -4577,6 +4613,13 @@ export default abstract class ComparisonStore
         []
     );
 
+    @computed get sampleIds(): string[] {
+        if (this.samples.result) {
+            return this.samples.result.map(sample => sample.sampleId);
+        }
+        return [];
+    }
+
     readonly clinicalDataGroupedBySampleMap = remoteData(
         {
             await: () => [this.ascnClinicalDataGroupedBySample],
@@ -4773,6 +4816,20 @@ export default abstract class ComparisonStore
         }
         return _chartMetaSet;
     }
+
+    readonly cnaProfiles = remoteData({
+        await: () => [this.selectedMolecularProfiles],
+        invoke: async () => {
+            return this.selectedMolecularProfiles.result!.filter(
+                profile =>
+                    profile.molecularAlterationType ===
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                    profile.datatype === DataTypeConstants.DISCRETE
+            );
+        },
+        onError: error => {},
+        default: [],
+    });
 
     // used in building virtual study
     readonly studyWithSamples = remoteData<StudyWithSamples[]>({
