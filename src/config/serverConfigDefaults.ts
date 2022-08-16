@@ -39,7 +39,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     pubmed_url: 'https://www.ncbi.nlm.nih.gov/pubmed/<%=pmid%>',
 
-    isoformOverrideSource: 'uniprot',
+    isoformOverrideSource: 'mskcc',
     show_hotspot: true,
     show_oncokb: true,
     show_civic: false,
