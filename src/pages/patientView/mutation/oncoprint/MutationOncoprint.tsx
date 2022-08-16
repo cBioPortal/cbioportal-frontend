@@ -69,8 +69,8 @@ export default class MutationOncoprint extends React.Component<
     IMutationOncoprintProps,
     {}
 > {
-    private oncoprint: OncoprintJS | null = null;
-    private oncoprintComponent: Oncoprint | null = null;
+    private oncoprintJs: OncoprintJS | null = null;
+    private oncoprint: Oncoprint | null = null;
 
     private get showMutationLabels() {
         const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
@@ -125,8 +125,8 @@ export default class MutationOncoprint extends React.Component<
 
         (window as any).mutationOncoprint = this;
         this.minZoomUpdater = setInterval(() => {
-            if (this.oncoprint) {
-                this.minZoom = this.oncoprint.model.getMinHorzZoom();
+            if (this.oncoprintJs) {
+                this.minZoom = this.oncoprintJs.model.getMinHorzZoom();
             }
         }, 500);
     }
@@ -136,16 +136,16 @@ export default class MutationOncoprint extends React.Component<
     }
 
     @autobind
-    private oncoprintComponentRef(oncoprint: Oncoprint | null) {
-        this.oncoprintComponent = oncoprint;
+    private oncoprintRef(oncoprint: Oncoprint | null) {
+        this.oncoprint = oncoprint;
     }
 
     @autobind
-    private oncoprintRef(oncoprint: OncoprintJS) {
-        this.oncoprint = oncoprint;
-        this.oncoprint.onHorzZoom(z => (this.horzZoomSliderState = z));
-        this.horzZoomSliderState = this.oncoprint.getHorzZoom();
-        this.oncoprint.onCellMouseOver(
+    private oncoprintJsRef(oncoprintJs: OncoprintJS) {
+        this.oncoprintJs = oncoprintJs;
+        this.oncoprintJs.onHorzZoom(z => (this.horzZoomSliderState = z));
+        this.horzZoomSliderState = this.oncoprintJs.getHorzZoom();
+        this.oncoprintJs.onCellMouseOver(
             (uid: string | null, track_id?: TrackId) => {
                 if (
                     this.mode === MutationOncoprintMode.SAMPLE_TRACKS &&
@@ -160,10 +160,8 @@ export default class MutationOncoprint extends React.Component<
                     track_id !== undefined
                 ) {
                     // set mouseover mutation based on track
-                    if (this.oncoprintComponent) {
-                        const key = this.oncoprintComponent.getTrackSpecKey(
-                            track_id
-                        );
+                    if (this.oncoprint) {
+                        const key = this.oncoprint.getTrackSpecKey(track_id);
                         const mutation = key && this.mutationKeyToMutation[key];
                         if (mutation) {
                             this.props.dataStore.setMouseOverMutation(mutation);
@@ -174,7 +172,7 @@ export default class MutationOncoprint extends React.Component<
                 }
             }
         );
-        this.oncoprint.onCellClick(
+        this.oncoprintJs.onCellClick(
             (uid: ColumnId | null, track_id?: TrackId) => {
                 if (
                     this.mode === MutationOncoprintMode.SAMPLE_TRACKS &&
@@ -188,11 +186,9 @@ export default class MutationOncoprint extends React.Component<
                     this.mode === MutationOncoprintMode.MUTATION_TRACKS &&
                     track_id !== undefined
                 ) {
-                    if (this.oncoprintComponent) {
+                    if (this.oncoprint) {
                         // toggle highlighted mutation based on track
-                        const key = this.oncoprintComponent.getTrackSpecKey(
-                            track_id
-                        );
+                        const key = this.oncoprint.getTrackSpecKey(track_id);
                         const mutation = key && this.mutationKeyToMutation[key];
                         if (mutation) {
                             this.props.dataStore.toggleSelectedMutation(
@@ -292,19 +288,20 @@ export default class MutationOncoprint extends React.Component<
 
     @autobind
     private updateOncoprintHorzZoom() {
-        this.oncoprint && this.oncoprint.setHorzZoom(this.horzZoomSliderState);
+        this.oncoprintJs &&
+            this.oncoprintJs.setHorzZoom(this.horzZoomSliderState);
     }
 
     @autobind
     private onClickZoomIn() {
-        this.oncoprint &&
-            this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() / 0.7);
+        this.oncoprintJs &&
+            this.oncoprintJs.setHorzZoom(this.oncoprintJs.getHorzZoom() / 0.7);
     }
 
     @autobind
     private onClickZoomOut() {
-        this.oncoprint &&
-            this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() * 0.7);
+        this.oncoprintJs &&
+            this.oncoprintJs.setHorzZoom(this.oncoprintJs.getHorzZoom() * 0.7);
     }
 
     @computed get mutationKeyToMutation() {
@@ -652,7 +649,7 @@ export default class MutationOncoprint extends React.Component<
                 <DownloadControls
                     filename="vafHeatmap"
                     getSvg={() =>
-                        this.oncoprint ? this.oncoprint.toSVG(true) : null
+                        this.oncoprintJs ? this.oncoprintJs.toSVG(true) : null
                     }
                     getData={() => {
                         const data = _.flatMap(
@@ -691,8 +688,8 @@ export default class MutationOncoprint extends React.Component<
                         {this.header}
                         <Oncoprint
                             key="MutationOncoprint"
-                            ref={this.oncoprintComponentRef}
-                            broadcastOncoprintJsRef={this.oncoprintRef}
+                            ref={this.oncoprintRef}
+                            broadcastOncoprintJsRef={this.oncoprintJsRef}
                             highlightedIds={this.highlightedIds}
                             highlightedTracks={this.highlightedTracks}
                             initParams={INIT_PARAMS}

@@ -29,6 +29,10 @@ import {
 import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
 import { ClinicalAttribute, MolecularProfile } from 'cbioportal-ts-api-client';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import {
+    ClinicalTrackConfig,
+    ClinicalTrackConfigMap,
+} from 'shared/components/oncoprint/Oncoprint';
 export interface IAddTrackProps {
     store: ResultsViewPageStore;
     heatmapMenu: JSX.Element | null;
@@ -114,8 +118,9 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
     }
 
     @autobind
-    private getSelectedClinicalAttributeIds() {
-        return this.props.state.selectedClinicalAttributeIds;
+    private getSelectedClinicalAttributes(): ClinicalTrackConfig[] {
+        let attr = this.props.state.selectedClinicalAttributeSpecInits;
+        return attr ? _.values(attr) : [];
     }
 
     @action.bound
@@ -239,14 +244,14 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
         // TODO: remove labelKey specification, leave to default prop, when possible
         if (
             this.props.store &&
-            this.props.state.selectedClinicalAttributeIds &&
+            this.props.state.selectedClinicalAttributeSpecInits &&
             this.props.handlers.onChangeSelectedClinicalTracks
         ) {
             return (
                 <AddClinicalTracks
                     store={this.props.store}
-                    getSelectedClinicalAttributeIds={
-                        this.getSelectedClinicalAttributeIds as () => string[]
+                    getSelectedClinicalAttributes={
+                        this.getSelectedClinicalAttributes
                     }
                     onChangeSelectedClinicalTracks={
                         this.props.handlers.onChangeSelectedClinicalTracks

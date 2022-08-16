@@ -20,6 +20,7 @@ import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 import _ from 'lodash';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 
 export type PlotsSelectionParam = {
     selectedGeneOption?: string;
@@ -286,6 +287,8 @@ function backwardsCompatibilityMapping(oldParams: any) {
     return newParams;
 }
 
+const ALL_TRACKS_DELETED = 'null';
+
 export default class ResultsViewURLWrapper
     extends URLWrapper<ResultsViewURLQuery>
     implements IComparisonURLWrapper {
@@ -314,33 +317,70 @@ export default class ResultsViewURLWrapper
         }
     }
 
-    public getOncoprintClinicalTrackParams(clinicalTracks: string[]) {
-        let clinicallist: string;
-        if (clinicalTracks.length > 0) {
-            clinicallist = clinicalTracks.join(',');
+    /**
+     * Query param clinicallist can be:
+     * - url encoded json object
+     * - comma seperated list (legacy)
+     * - undefined: clinical tracks not configured
+     * - 'null': all clinical tracks were deleted by user
+     *
+     * Ideally, we would like to simply give an empty string.
+     * The problem is that, in order to know whether to show
+     * some clinical tracks by default (such as "profiled-in",
+     * "samples per patient", etc), we need to know whether
+     * the clinical tracks have been updated by the user. If we
+     * pass an empty string, the router just deletes that parameter
+     * from the URL completely, making it indistinguishable from
+     * the initialization state. So we have to use 'null' here to
+     * distinguish the state of user having deleted all clinical tracks,
+     * because the alternative is to make a breaking change to the router library.
+     *
+     * @param clinicalTracks
+     */
+    public convertClinicalTracksToUrlParam(
+        clinicalTracks: ClinicalTrackConfig[]
+    ) {
+        if (clinicalTracks.length) {
+            return { clinicallist: JSON.stringify(clinicalTracks) };
         } else {
-            // ideally, we would like to simply give an empty string.
-            //   The problem is that, in order to know whether to show
-            //   some clinical tracks by default (such as "profiled-in",
-            //   "samples per patient", etc), we need to know whether
-            //  the clinical tracks have been updated by the user. If we
-            //  pass an empty string, the router just deletes that parameter
-            //  from the URL completely, making it indistinguishable from
-            //  the initialization state. So we have to use "null" here to
-            //  distinguish the state of user having deleted all clinical tracks,
-            //  because the alternative is to make a breaking change to the router library.
-
-            clinicallist = 'null';
+            return { clinicallist: ALL_TRACKS_DELETED };
         }
-        return { clinicallist };
     }
 
-    @computed public get oncoprintSelectedClinicalTracks(): string[] {
-        if (!this.query.clinicallist || this.query.clinicallist === 'null') {
+    /**
+     * Clinical tracks as configured in url
+     *
+     * See also: {@link convertClinicalTracksToUrlParam}
+     */
+    @computed
+    public get oncoprintSelectedClinicalTracks(): ClinicalTrackConfig[] {
+        if (
+            !this.query.clinicallist ||
+            this.query.clinicallist === ALL_TRACKS_DELETED
+        ) {
             return [];
-        } else {
-            return this.query.clinicallist.split(',');
         }
+        try {
+            return JSON.parse(this.query.clinicallist) as ClinicalTrackConfig[];
+        } catch {
+            return this.query.clinicallist
+                .split(',')
+                .map(id => new ClinicalTrackConfig(id));
+        }
+    }
+
+    /**
+     * Check if clinical tracks are initialized
+     * See also: {@link convertClinicalTracksToUrlParam}
+     */
+    @computed public get hasClinicalTracksConfig(): boolean {
+        return !!this.query.clinicallist;
+    }
+
+    @computed public get oncoprintSelectedClinicalTrackIds(): string[] {
+        return this.oncoprintSelectedClinicalTracks.map(track =>
+            _.isString(track) ? track : track.stableId
+        );
     }
 
     @computed public get comparisonSubTabId() {

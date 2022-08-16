@@ -42,6 +42,7 @@ import {
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';
 import pako from 'pako';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 
 const win = window as any;
 
@@ -123,6 +124,16 @@ export class ServerConfigHelpers {
             return JSON.parse(json);
         } catch (ex) {
             return undefined;
+        }
+    }
+
+    @memoize static parseDefaultOncoprintClinicalTracks(json: string) {
+        if (!json) return [];
+        try {
+            const defaultTracks: ClinicalTrackConfig[] = JSON.parse(json);
+            return defaultTracks;
+        } catch (ex) {
+            return [];
         }
     }
 
