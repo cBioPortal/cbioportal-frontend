@@ -36,6 +36,10 @@ import {
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
 import { AppContext } from 'cbioportal-frontend-commons';
+import {
+    ClinicalTrackConfig,
+    ClinicalTrackConfigMap,
+} from 'shared/components/oncoprint/Oncoprint';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -63,7 +67,7 @@ export interface IOncoprintControlsHandlers
         type: 'pdf' | 'png' | 'svg' | 'order' | 'tabular' | 'oncoprinter'
     ) => void;
     onChangeSelectedClinicalTracks?: (
-        attributeIds: (string | SpecialAttribute)[]
+        trackConfigs: ClinicalTrackConfig[]
     ) => void;
     onClickAddGenesToHeatmap?: () => void;
     onSelectGenericAssayProfile?: (molecularProfileId: string) => void;
@@ -96,7 +100,7 @@ export interface IOncoprintControlsState
     clinicalAttributeSampleCountPromise?: MobxPromise<{
         [clinicalAttributeId: string]: number;
     }>;
-    selectedClinicalAttributeIds?: string[];
+    selectedClinicalAttributeSpecInits?: ClinicalTrackConfigMap;
     heatmapProfilesPromise?: MobxPromise<MolecularProfile[]>;
     genericAssayEntitiesGroupedByGenericAssayTypePromise?: MobxPromise<{
         [genericAssayType: string]: GenericAssayMeta[];
