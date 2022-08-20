@@ -23,6 +23,8 @@ export type GroupComparisonURLQuery = {
     overlapStrategy?: OverlapStrategy;
     patientEnrichments?: string;
     selectedEnrichmentEventTypes: string;
+    mutations_gene?: string;
+    mutations_transcript_id?: string;
 };
 
 export enum GroupComparisonURLQueryEnum {

@@ -11,6 +11,7 @@ import {
     isGroupEmpty,
     partitionCasesByGroupMembership,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
+//import query from "../../../shared/lib/URLWrapper";
 import {
     countMutations,
     mutationCountByPositionKey,
@@ -343,7 +344,7 @@ export function buildDefaultOQLProfile(
 }
 
 export default abstract class ComparisonStore
-    implements IAnnotationFilterSettings {
+    implements IAnnotationFilterSettings, IComparisonURLWrapper {
     private tabHasBeenShown = observable.map<GroupComparisonTab, boolean>();
 
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
@@ -358,6 +359,7 @@ export default abstract class ComparisonStore
     @observable includeUnknownStatusMutations = true;
 
     constructor(
+        public selectedEnrichmentEventTypes: EnrichmentEventType[] | undefined,
         protected appStore: AppStore,
         protected urlWrapper: IComparisonURLWrapper,
         protected resultsViewStore?: ResultsViewPageStore
@@ -4108,7 +4110,7 @@ export default abstract class ComparisonStore
         // single study query endpoint is optimal so we should use it
         // when there's only one study
         if (studies.length === 1) {
-            const study = this.studies.result[0];
+            const study = zs.result[0];
             const filter: ClinicalDataSingleStudyFilter = {
                 attributeIds: attributeIds,
                 ids: _.map(
