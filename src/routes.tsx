@@ -87,6 +87,11 @@ const ErrorPage = SuspenseWrapper(
     React.lazy(() => import('./pages/resultsView/ErrorPage'))
 );
 
+const WebAPIPage = SuspenseWrapper(
+    // @ts-ignore
+    React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
+);
+
 import $ from 'jquery';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
@@ -435,6 +440,7 @@ export const makeRoutes = () => {
                         )
                     )}
                 />
+                <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
                 <Route path="/mutation_mapper" component={MutationMapperTool} />
                 <Route path="/oncoprinter" component={OncoprinterTool} />
                 <Route path="/datasets" component={ScrollToTop(DatasetPage)} />
@@ -446,12 +452,6 @@ export const makeRoutes = () => {
                     path="/tutorials"
                     component={externalRedirect(
                         'https://docs.cbioportal.org/user-guide/overview/#tutorial-slides'
-                    )}
-                />
-                <Route
-                    path="/webAPI"
-                    component={externalRedirect(
-                        'https://docs.cbioportal.org/web-api-and-clients/'
                     )}
                 />
                 <Route
