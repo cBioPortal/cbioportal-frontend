@@ -667,6 +667,8 @@ export default abstract class ComparisonStore
         if (!this.studies.isComplete) {
             throw new Error('Failed to get studies');
         }
+        if (typeof this.studies.result === 'undefined')
+            throw new Error('Failed to get studies');
         return getGenomeBuildFromStudies(this.studies.result);
     }
 
@@ -3466,7 +3468,8 @@ export default abstract class ComparisonStore
             }
             const studyIdToProfileMap = this
                 .studyToStructuralVariantMolecularProfile.result;
-
+            if (typeof this.samples.result === 'undefined')
+                throw new Error('Failed to get studies');
             const filters = this.samples.result.reduce(
                 (memo, sample: Sample) => {
                     if (sample.studyId in studyIdToProfileMap) {
@@ -3481,7 +3484,6 @@ export default abstract class ComparisonStore
                 },
                 [] as StructuralVariantFilter['sampleMolecularIdentifiers']
             );
-
             // filters can be an empty list
             // when all selected samples are coming from studies that don't have structural variant profile
             // in this case, we should not fetch structural variants data
@@ -4126,7 +4128,9 @@ export default abstract class ComparisonStore
         // single study query endpoint is optimal so we should use it
         // when there's only one study
         if (studies.length === 1) {
-            const study = zs.result[0];
+            if (typeof this.studies.result === 'undefined')
+                throw new Error('Failed to get studies');
+            const study = this.studies.result[0];
             const filter: ClinicalDataSingleStudyFilter = {
                 attributeIds: attributeIds,
                 ids: _.map(
@@ -4496,6 +4500,8 @@ export default abstract class ComparisonStore
         ],
         invoke: async () => {
             let clinicalAttributeCountFilter: ClinicalAttributeCountFilter;
+            if (typeof this.studies.result === 'undefined')
+                throw new Error('Failed to get studies');
             if (this.studies.result.length === 1) {
                 // try using sample list id
                 const studyId = this.studies.result![0].studyId;
@@ -4610,7 +4616,7 @@ export default abstract class ComparisonStore
                 this.getClinicalData(
                     REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
                     this.studies.result!,
-                    this.samples.result,
+                    this.samples.result!,
                     [
                         CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD,
                         CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_PURITY,
@@ -4858,6 +4864,8 @@ export default abstract class ComparisonStore
             this.queriedVirtualStudies,
         ],
         invoke: () => {
+            if (typeof this.samples.result === 'undefined')
+                throw new Error('Failed to get studies');
             return Promise.resolve(
                 getFilteredStudiesWithSamples(
                     this.samples.result,
