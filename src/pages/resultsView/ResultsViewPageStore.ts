@@ -52,6 +52,7 @@ import {
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
+    deriveStructuralVariantType,
 } from 'cbioportal-utils';
 import {
     GenomeNexusAPI,
@@ -100,6 +101,7 @@ import {
     makeIsHotspotForOncoprint,
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
+    buildProteinChange,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -367,6 +369,9 @@ export interface AnnotatedMutation extends Mutation {
     oncoKbOncogenic: string;
     isHotspot: boolean;
     simplifiedMutationType: SimplifiedMutationType;
+    // following is a cloodge for when we need to
+    // make synthetic mutations to represent structural variants
+    structuralVariant?: AnnotatedStructuralVariant;
 }
 
 export interface AnnotatedStructuralVariant extends StructuralVariant {
@@ -896,26 +901,24 @@ export class ResultsViewPageStore
         },
     });
 
+    /**
+     * The oncoprint can have tracks which indicate comparison group membership per sample.
+     *  We want to know which comparison groups are referenced in these tracks, if any
+     *  are currently visible.
+     */
     @computed.struct get comparisonGroupsReferencedInURL() {
-        // The oncoprint can have tracks which indicate comparison group membership per sample.
-        //  We want to know which comparison groups are referenced in these tracks, if any
-        //  are currently visible.
-
-        // Start by getting all the selected clinical attribute tracks
-        const groupIds = this.urlWrapper.oncoprintSelectedClinicalTracks
-            .filter((clinicalAttributeId: string) =>
+        // Get selected clinical attribute tracks:
+        const inComparisonGroupTracks = this.urlWrapper.oncoprintSelectedClinicalTrackIds.filter(
+            (clinicalAttributeId: string) =>
                 clinicalAttributeIsINCOMPARISONGROUP({
                     clinicalAttributeId,
                 })
-            ) // filter for comparison group tracks
+        );
 
-            .map((clinicalAttributeId: string) =>
-                convertComparisonGroupClinicalAttribute(
-                    clinicalAttributeId,
-                    false
-                )
-            ); // convert track ids to group ids
-        return groupIds;
+        // Convert track ids to group ids:
+        return inComparisonGroupTracks.map((clinicalAttributeId: string) =>
+            convertComparisonGroupClinicalAttribute(clinicalAttributeId, false)
+        );
     }
 
     readonly savedComparisonGroupsForStudies = remoteData<Group[]>({
@@ -924,11 +927,13 @@ export class ResultsViewPageStore
             let ret: Group[] = [];
             if (this.appStore.isLoggedIn) {
                 try {
-                    ret = ret.concat(
-                        await comparisonClient.getGroupsForStudies(
-                            this.queriedStudies.result!.map(x => x.studyId)
-                        )
+                    const queriedStudyIds = this.queriedStudies.result!.map(
+                        x => x.studyId
                     );
+                    const groups = await comparisonClient.getGroupsForStudies(
+                        queriedStudyIds
+                    );
+                    ret = ret.concat(groups);
                 } catch (e) {
                     // fail silently
                 }
@@ -1833,8 +1838,25 @@ export class ResultsViewPageStore
                         d,
                         accessors
                     );
-                    extendedD.hugoGeneSymbol =
-                        entrezGeneIdToGene[d.entrezGeneId].hugoGeneSymbol;
+
+                    // we are folding structural variants into the alterations collect
+                    // and thus need to provide them with hugoGeneGeneSymbol
+                    // this is a problem with intermingling SVs (which have two genes)
+                    // with all other alterations, which have only one
+                    if (
+                        extendedD.molecularProfileAlterationType ===
+                        'STRUCTURAL_VARIANT'
+                    ) {
+                        extendedD.hugoGeneSymbol =
+                            entrezGeneIdToGene[extendedD.site1EntrezGeneId]
+                                ?.hugoGeneSymbol ||
+                            entrezGeneIdToGene[extendedD.site2EntrezGeneId]
+                                ?.hugoGeneSymbol;
+                    } else {
+                        extendedD.hugoGeneSymbol =
+                            entrezGeneIdToGene[d.entrezGeneId].hugoGeneSymbol;
+                    }
+
                     extendedD.molecularProfileAlterationType = accessors.molecularAlterationType(
                         d.molecularProfileId
                     );
@@ -2347,10 +2369,36 @@ export class ResultsViewPageStore
         await: () => [this.genes, this.oqlFilteredAlterations],
         invoke: () => {
             // first group them by gene symbol
-            const groupedGenesMap = _.groupBy(
-                this.oqlFilteredAlterations.result!,
-                alteration => alteration.hugoGeneSymbol
+            const groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
+                (
+                    agg: { [getHugoGeneSymbol: string]: ExtendedAlteration[] },
+                    alt
+                ) => {
+                    // a structural variant can apply to two genes, so we have account for the alteration twice
+                    if (
+                        alt.alterationType ===
+                        AlterationTypeConstants.STRUCTURAL_VARIANT
+                    ) {
+                        if (alt.site1HugoSymbol) {
+                            agg[alt.site1HugoSymbol]
+                                ? agg[alt.site1HugoSymbol].push(alt)
+                                : (agg[alt.site1HugoSymbol] = [alt]);
+                        }
+                        if (alt.site1HugoSymbol) {
+                            agg[alt.site2HugoSymbol]
+                                ? agg[alt.site2HugoSymbol].push(alt)
+                                : (agg[alt.site2HugoSymbol] = [alt]);
+                        }
+                    } else {
+                        agg[alt.hugoGeneSymbol]
+                            ? agg[alt.hugoGeneSymbol].push(alt)
+                            : (agg[alt.hugoGeneSymbol] = [alt]);
+                    }
+                    return agg;
+                },
+                {}
             );
+
             // kind of ugly but this fixes a bug where sort order of genes not respected
             // yes we are relying on add order of js map. in theory not guaranteed, in practice guaranteed
             const ret = this.genes.result!.reduce(
@@ -3367,23 +3415,37 @@ export class ResultsViewPageStore
                     vusAndGermline: [],
                 };
             }
+            // we need to add structural variante to gene collection for BOTH site1 and site2 genes
+            // so that features will see the structural variant in either gene context (e.g mutations tab gene pages)
             for (const structuralVariant of structuralVariantsGroups.data) {
-                ret[structuralVariant.site1HugoSymbol].data.push(
+                ret[structuralVariant.site1HugoSymbol]?.data.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.data.push(
                     structuralVariant
                 );
             }
             for (const structuralVariant of structuralVariantsGroups.vus) {
-                ret[structuralVariant.site1HugoSymbol].vus.push(
+                ret[structuralVariant.site1HugoSymbol]?.vus.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.vus.push(
                     structuralVariant
                 );
             }
             for (const structuralVariant of structuralVariantsGroups.germline) {
-                ret[structuralVariant.site1HugoSymbol].germline.push(
+                ret[structuralVariant.site1HugoSymbol]?.germline.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.germline.push(
                     structuralVariant
                 );
             }
             for (const structuralVariant of structuralVariantsGroups.vusAndGermline) {
-                ret[structuralVariant.site1HugoSymbol].vusAndGermline.push(
+                ret[structuralVariant.site1HugoSymbol]?.vusAndGermline.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.vusAndGermline.push(
                     structuralVariant
                 );
             }
@@ -3472,6 +3534,7 @@ export class ResultsViewPageStore
                                 )
                         );
                     }
+
                     let filteredStructuralVariants = compileStructuralVariants(
                         structuralVariantsGroups,
                         this.mutationsTabFilteringSettings.excludeVus,
@@ -3488,7 +3551,7 @@ export class ResultsViewPageStore
 
                     filteredStructuralVariants.forEach(structuralVariant => {
                         const mutation = {
-                            center: structuralVariant.center,
+                            center: 'N/A',
                             chr: structuralVariant.site1Chromosome,
                             entrezGeneId: structuralVariant.site1EntrezGeneId,
                             keyword: structuralVariant.comments,
@@ -3497,7 +3560,9 @@ export class ResultsViewPageStore
                             mutationType: CanonicalMutationType.FUSION,
                             ncbiBuild: structuralVariant.ncbiBuild,
                             patientId: structuralVariant.patientId,
-                            proteinChange: structuralVariant.eventInfo,
+                            proteinChange: buildProteinChange(
+                                structuralVariant
+                            ),
                             sampleId: structuralVariant.sampleId,
                             startPosition: structuralVariant.site1Position,
                             studyId: structuralVariant.studyId,
@@ -3505,6 +3570,7 @@ export class ResultsViewPageStore
                                 structuralVariant.uniquePatientKey,
                             uniqueSampleKey: structuralVariant.uniqueSampleKey,
                             variantType: structuralVariant.variantClass,
+                            mutationStatus: structuralVariant.svStatus,
                             gene: {
                                 entrezGeneId:
                                     structuralVariant.site1EntrezGeneId,
@@ -3517,6 +3583,7 @@ export class ResultsViewPageStore
                             isHotspot: structuralVariant.isHotspot,
                             simplifiedMutationType:
                                 CanonicalMutationType.FUSION,
+                            structuralVariant,
                         } as AnnotatedMutation;
 
                         mutationsByGene[hugoGeneSymbol].push(mutation);
@@ -5460,7 +5527,7 @@ export class ResultsViewPageStore
                                 structuralVariant.uniqueSampleKey,
                                 {}
                             ),
-                            structuralVariant.variantClass.toUpperCase() as any
+                            deriveStructuralVariantType(structuralVariant)
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
                             id

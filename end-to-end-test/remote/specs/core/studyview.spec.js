@@ -326,7 +326,7 @@ describe('check the filters are working properly', () => {
 // This needs to be done separately due to leak of data in the other tests
 describe('check the fusion filter is working properly', () => {
     before(function() {
-        const url = `${CBIOPORTAL_URL}/study/summary?id=es_dfarber_broad_2014&filters=%7B%22geneFilters%22%3A%5B%7B%22molecularProfileIds%22%3A%5B%22es_dfarber_broad_2014_fusion%22%5D%2C%22geneQueries%22%3A%5B%5B%22FLI1%22%5D%5D%7D%5D%7D`;
+        const url = `${CBIOPORTAL_URL}/study/summary?id=es_dfarber_broad_2014&filters=%7B%22geneFilters%22%3A%5B%7B%22molecularProfileIds%22%3A%5B%22es_dfarber_broad_2014_structural_variants%22%5D%2C%22geneQueries%22%3A%5B%5B%22FLI1%22%5D%5D%7D%5D%7D`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet(60000);
     });
@@ -721,12 +721,10 @@ describe('submit genes to results view query', () => {
             waitForNetworkQuiet();
         });
         it('generic assay chart should be added in the summary tab', () => {
-            $(ADD_CHART_BUTTON).waitForDisplayed({
-                timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+            $(ADD_CHART_BUTTON).waitForEnabled({
+                timeout: 60000,
             });
             $(ADD_CHART_BUTTON).click();
-
-            waitForNetworkQuiet();
 
             // Change to GENERIC ASSAY tab
             $(ADD_CHART_GENERIC_ASSAY_TAB).waitForDisplayed({

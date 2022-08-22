@@ -3,6 +3,7 @@ import _ from 'lodash';
 import {
     CancerStudy,
     ClinicalData,
+    DiscreteCopyNumberData,
     ResourceData,
 } from 'cbioportal-ts-api-client';
 import {
@@ -108,9 +109,6 @@ export default class PatientViewPage extends React.Component<
     public patientViewMutationDataStore: PatientViewMutationsDataStore;
 
     public patientViewPageStore: PatientViewPageStore;
-
-    @observable
-    public activeLocus: string | undefined;
 
     constructor(props: IPatientViewPageProps) {
         super(props);
@@ -244,14 +242,9 @@ export default class PatientViewPage extends React.Component<
 
     @action.bound
     public handleLocusChange(locus: string) {
-        if (this.activeLocus !== locus) {
-            this.activeLocus = locus;
+        if (this.patientViewPageStore.activeLocus !== locus) {
+            this.patientViewPageStore.activeLocus = locus;
         }
-    }
-
-    @action.bound
-    public handleCNATableGeneClick(hugoGeneSymbol: string) {
-        this.handleLocusChange(hugoGeneSymbol);
     }
 
     @action.bound
@@ -478,15 +471,24 @@ export default class PatientViewPage extends React.Component<
             this.handleLocusChange(d[0].gene.hugoGeneSymbol);
         }
     }
+
     @autobind
     onMutationTableRowMouseEnter(d: Mutation[]) {
         if (d.length) {
             this.patientViewMutationDataStore.setMouseOverMutation(d[0]);
         }
     }
+
     @autobind
     onMutationTableRowMouseLeave() {
         this.patientViewMutationDataStore.setMouseOverMutation(null);
+    }
+
+    @action.bound
+    onCnaTableRowClick(d: DiscreteCopyNumberData[]) {
+        if (d.length) {
+            this.handleLocusChange(d[0].gene.hugoGeneSymbol);
+        }
     }
 
     readonly resourceTabs = MakeMobxView({

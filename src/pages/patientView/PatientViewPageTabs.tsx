@@ -35,7 +35,6 @@ import {
     doesFrequencyExist,
 } from 'pages/patientView/genomicOverview/GenomicOverviewUtils';
 import genomicOverviewStyles from 'pages/patientView/genomicOverview/styles.module.scss';
-import { useCallback, useRef } from 'react';
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
@@ -53,6 +52,8 @@ export enum PatientViewPageTabs {
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
+export const TABLE_FEATURE_INSTRUCTION =
+    'Click on an alteration to zoom in on the gene in the IGV browser above';
 
 export function getPatientViewResourceTabId(resourceId: string) {
     return `${PatientViewResourceTabPrefix}${resourceId}`;
@@ -188,6 +189,7 @@ export function tabs(
                         style={{ top: -10 }}
                     >
                         <GenomicOverview
+                            store={pageComponent.patientViewPageStore}
                             mergedMutations={
                                 pageComponent.patientViewPageStore
                                     .mergedMutationDataFilteredByGene
@@ -217,8 +219,6 @@ export function tabs(
                                 pageComponent.toggleGenePanelModal
                             }
                             disableTooltip={pageComponent.genePanelModal.isOpen}
-                            locus={pageComponent.activeLocus}
-                            handleLocusChange={pageComponent.handleLocusChange}
                             // assuming that all studies have the same reference genome
                             genome={
                                 pageComponent.patientViewPageStore.studies
@@ -254,9 +254,7 @@ export function tabs(
                     .isComplete &&
                 !!sampleManager && (
                     <div data-test="patientview-mutation-table">
-                        <FeatureInstruction
-                            content={'Click gene row to zoom IGV browser'}
-                        >
+                        <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
                             <PatientViewMutationTable
                                 studyIdToStudy={
                                     pageComponent.patientViewPageStore
@@ -529,109 +527,116 @@ export function tabs(
                 pageComponent.patientViewPageStore.referenceGenes
                     .isComplete && (
                     <div data-test="patientview-copynumber-table">
-                        <CopyNumberTableWrapper
-                            uniqueSampleKeyToTumorType={
-                                pageComponent.patientViewPageStore
-                                    .uniqueSampleKeyToTumorType
-                            }
-                            studyIdToStudy={
-                                pageComponent.patientViewPageStore
-                                    .studyIdToStudy.result
-                            }
-                            sampleIds={
-                                sampleManager
-                                    ? sampleManager.getSampleIdsInOrder()
-                                    : []
-                            }
-                            sampleManager={sampleManager}
-                            sampleToGenePanelId={
-                                pageComponent.patientViewPageStore
-                                    .sampleToDiscreteGenePanelId.result
-                            }
-                            genePanelIdToEntrezGeneIds={
-                                pageComponent.patientViewPageStore
-                                    .genePanelIdToEntrezGeneIds.result
-                            }
-                            cnaOncoKbData={
-                                pageComponent.patientViewPageStore.cnaOncoKbData
-                            }
-                            cnaCivicGenes={
-                                pageComponent.patientViewPageStore.cnaCivicGenes
-                            }
-                            cnaCivicVariants={
-                                pageComponent.patientViewPageStore
-                                    .cnaCivicVariants
-                            }
-                            oncoKbCancerGenes={
-                                pageComponent.patientViewPageStore
-                                    .oncoKbCancerGenes
-                            }
-                            usingPublicOncoKbInstance={
-                                pageComponent.patientViewPageStore
-                                    .usingPublicOncoKbInstance
-                            }
-                            mergeOncoKbIcons={
-                                pageComponent.patientViewPageStore
-                                    .mergeOncoKbIcons
-                            }
-                            enableOncoKb={getServerConfig().show_oncokb}
-                            enableCivic={getServerConfig().show_civic}
-                            userEmailAddress={
-                                getServerConfig().user_email_address
-                            }
-                            pubMedCache={
-                                pageComponent.patientViewPageStore.pubMedCache
-                            }
-                            referenceGenes={
-                                pageComponent.patientViewPageStore
-                                    .referenceGenes.result
-                            }
-                            data={
-                                pageComponent.patientViewPageStore
-                                    .mergedDiscreteCNADataFilteredByGene
-                            }
-                            copyNumberCountCache={
-                                pageComponent.patientViewPageStore
-                                    .copyNumberCountCache
-                            }
-                            mrnaExprRankCache={
-                                pageComponent.patientViewPageStore
-                                    .mrnaExprRankCache
-                            }
-                            gisticData={
-                                pageComponent.patientViewPageStore.gisticData
-                                    .result
-                            }
-                            mrnaExprRankMolecularProfileId={
-                                pageComponent.patientViewPageStore
-                                    .mrnaRankMolecularProfileId.result ||
-                                undefined
-                            }
-                            status={pageComponent.cnaTableStatus}
-                            columnVisibility={
-                                pageComponent.cnaTableColumnVisibility
-                            }
-                            showGeneFilterMenu={
-                                pageComponent.patientViewPageStore
-                                    .cnaTableShowGeneFilterMenu.result
-                            }
-                            currentGeneFilter={
-                                pageComponent.patientViewPageStore
-                                    .copyNumberTableGeneFilterOption
-                            }
-                            onFilterGenes={
-                                pageComponent.onFilterGenesCopyNumberTable
-                            }
-                            columnVisibilityProps={{
-                                onColumnToggled:
-                                    pageComponent.onCnaTableColumnVisibilityToggled,
-                            }}
-                            onSelectGenePanel={
-                                pageComponent.toggleGenePanelModal
-                            }
-                            disableTooltip={pageComponent.genePanelModal.isOpen}
-                            onGeneClick={pageComponent.handleCNATableGeneClick}
-                        />
+                        <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
+                            <CopyNumberTableWrapper
+                                uniqueSampleKeyToTumorType={
+                                    pageComponent.patientViewPageStore
+                                        .uniqueSampleKeyToTumorType
+                                }
+                                studyIdToStudy={
+                                    pageComponent.patientViewPageStore
+                                        .studyIdToStudy.result
+                                }
+                                sampleIds={
+                                    sampleManager
+                                        ? sampleManager.getSampleIdsInOrder()
+                                        : []
+                                }
+                                sampleManager={sampleManager}
+                                sampleToGenePanelId={
+                                    pageComponent.patientViewPageStore
+                                        .sampleToDiscreteGenePanelId.result
+                                }
+                                genePanelIdToEntrezGeneIds={
+                                    pageComponent.patientViewPageStore
+                                        .genePanelIdToEntrezGeneIds.result
+                                }
+                                cnaOncoKbData={
+                                    pageComponent.patientViewPageStore
+                                        .cnaOncoKbData
+                                }
+                                cnaCivicGenes={
+                                    pageComponent.patientViewPageStore
+                                        .cnaCivicGenes
+                                }
+                                cnaCivicVariants={
+                                    pageComponent.patientViewPageStore
+                                        .cnaCivicVariants
+                                }
+                                oncoKbCancerGenes={
+                                    pageComponent.patientViewPageStore
+                                        .oncoKbCancerGenes
+                                }
+                                usingPublicOncoKbInstance={
+                                    pageComponent.patientViewPageStore
+                                        .usingPublicOncoKbInstance
+                                }
+                                mergeOncoKbIcons={
+                                    pageComponent.patientViewPageStore
+                                        .mergeOncoKbIcons
+                                }
+                                enableOncoKb={getServerConfig().show_oncokb}
+                                enableCivic={getServerConfig().show_civic}
+                                userEmailAddress={
+                                    getServerConfig().user_email_address
+                                }
+                                pubMedCache={
+                                    pageComponent.patientViewPageStore
+                                        .pubMedCache
+                                }
+                                referenceGenes={
+                                    pageComponent.patientViewPageStore
+                                        .referenceGenes.result
+                                }
+                                data={
+                                    pageComponent.patientViewPageStore
+                                        .mergedDiscreteCNADataFilteredByGene
+                                }
+                                copyNumberCountCache={
+                                    pageComponent.patientViewPageStore
+                                        .copyNumberCountCache
+                                }
+                                mrnaExprRankCache={
+                                    pageComponent.patientViewPageStore
+                                        .mrnaExprRankCache
+                                }
+                                gisticData={
+                                    pageComponent.patientViewPageStore
+                                        .gisticData.result
+                                }
+                                mrnaExprRankMolecularProfileId={
+                                    pageComponent.patientViewPageStore
+                                        .mrnaRankMolecularProfileId.result ||
+                                    undefined
+                                }
+                                status={pageComponent.cnaTableStatus}
+                                columnVisibility={
+                                    pageComponent.cnaTableColumnVisibility
+                                }
+                                showGeneFilterMenu={
+                                    pageComponent.patientViewPageStore
+                                        .cnaTableShowGeneFilterMenu.result
+                                }
+                                currentGeneFilter={
+                                    pageComponent.patientViewPageStore
+                                        .copyNumberTableGeneFilterOption
+                                }
+                                onFilterGenes={
+                                    pageComponent.onFilterGenesCopyNumberTable
+                                }
+                                columnVisibilityProps={{
+                                    onColumnToggled:
+                                        pageComponent.onCnaTableColumnVisibilityToggled,
+                                }}
+                                onSelectGenePanel={
+                                    pageComponent.toggleGenePanelModal
+                                }
+                                disableTooltip={
+                                    pageComponent.genePanelModal.isOpen
+                                }
+                                onRowClick={pageComponent.onCnaTableRowClick}
+                            />
+                        </FeatureInstruction>
                     </div>
                 )}
         </MSKTab>

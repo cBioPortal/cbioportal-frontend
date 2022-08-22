@@ -21,7 +21,7 @@ describe('group comparison page screenshot tests', function() {
             openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',
-                5000
+                10000
             );
             $('.tabAnchor_alterations').click();
             $(
@@ -203,12 +203,14 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('displays 100% stacked bar chart by default', () => {
+        it('displays 100 percent stacked bar chart for categorical data', () => {
+            $('[data-test="Oncotree Code"]').click();
             var res = checkClinicalTabPlot();
             assertScreenShotMatch(res);
         });
 
-        it('displays heatmap when picked from plot dropdown', () => {
+        it('displays heatmap when picked from categorical plot type dropdown', () => {
+            $('[data-test="Oncotree Code"]').click();
             selectClinicalTabPlotType('Heatmap');
 
             var res = checkClinicalTabPlot();

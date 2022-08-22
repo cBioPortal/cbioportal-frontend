@@ -6,13 +6,13 @@ import { action, computed, observable, makeObservable } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import _ from 'lodash';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import { toggleIncluded } from '../../../shared/lib/ArrayUtils';
 import MobxPromise from 'mobxpromise';
 import { ChartDataCountSet } from 'pages/studyView/StudyViewUtils';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 
 export interface IAddClinicalTrackProps {
     store: ResultsViewPageStore;
@@ -21,10 +21,10 @@ export interface IAddClinicalTrackProps {
     //  mobx considers every prop changed if one prop changes, so it would do
     //  unnecessary recomputation -> some rendering jitters whenever
     //  selected clinical attributes would change. This way, that doesn't happen.
-    getSelectedClinicalAttributeIds: () => (string | SpecialAttribute)[];
+    getSelectedClinicalAttributes: () => ClinicalTrackConfig[];
 
     onChangeSelectedClinicalTracks: (
-        ids: (string | SpecialAttribute)[]
+        trackConfigs: ClinicalTrackConfig[]
     ) => void;
     clinicalTrackOptionsPromise: MobxPromise<{
         clinical: {
@@ -77,8 +77,8 @@ export default class AddClinicalTracks extends React.Component<
     private addAll(clinicalAttributeIds: string[]) {
         this.props.onChangeSelectedClinicalTracks(
             _.union(
-                this.props.getSelectedClinicalAttributeIds(),
-                clinicalAttributeIds
+                this.props.getSelectedClinicalAttributes(),
+                clinicalAttributeIds.map(id => new ClinicalTrackConfig(id))
             )
         );
     }
@@ -86,25 +86,28 @@ export default class AddClinicalTracks extends React.Component<
     @action.bound
     private clear(clinicalAttributeIds: string[]) {
         this.props.onChangeSelectedClinicalTracks(
-            _.difference(
-                this.props.getSelectedClinicalAttributeIds(),
-                clinicalAttributeIds
+            _.differenceBy(
+                this.props.getSelectedClinicalAttributes(),
+                clinicalAttributeIds.map(id => new ClinicalTrackConfig(id)),
+                'stableId'
             )
         );
     }
 
     @action.bound
     private toggleClinicalTrack(clinicalAttributeId: string) {
-        this.props.onChangeSelectedClinicalTracks(
-            toggleIncluded(
-                clinicalAttributeId,
-                this.props.getSelectedClinicalAttributeIds()
-            )
+        const toggled = toggleIncluded(
+            new ClinicalTrackConfig(clinicalAttributeId),
+            this.props.getSelectedClinicalAttributes(),
+            track => track.stableId === clinicalAttributeId
         );
+        this.props.onChangeSelectedClinicalTracks(toggled);
     }
 
     @computed get selectedClinicalAttributeIds() {
-        return _.keyBy(this.props.getSelectedClinicalAttributeIds());
+        return _.keyBy(
+            this.props.getSelectedClinicalAttributes().map(a => a.stableId)
+        );
     }
 
     readonly options = remoteData({
