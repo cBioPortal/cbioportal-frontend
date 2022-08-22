@@ -11,7 +11,7 @@ import {
     isGroupEmpty,
     partitionCasesByGroupMembership,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
-//import query from "../../../shared/lib/URLWrapper";
+import URLWrapper from '../../../shared/lib/URLWrapper';
 import {
     countMutations,
     mutationCountByPositionKey,
@@ -476,8 +476,11 @@ export default abstract class ComparisonStore
 
     @computed get referenceGenomeBuild() {
         if (!this.studies.isComplete) {
+            // undefined results this.studies.result.
             throw new Error('Failed to get studies');
         }
+        if (typeof this.studies.result === 'undefined')
+            throw new Error('Failed to get studies');
         return getGenomeNexusUrl(this.studies.result);
     }
 
@@ -1056,6 +1059,19 @@ export default abstract class ComparisonStore
         },
         []
     );
+
+    protected _query: QueryParamsType;
+    public get query(): Readonly<QueryParamsType> {
+        // use typescript to make it readonly
+
+        // NOTE: `query` always contains every URL property (including nested properties) declared, even
+        //  if it's not present in the URL. If it's not present in the URL, that property will have
+        //  value undefined in the `query` object.
+
+        // `query` ONLY reflects properties that are passed through in `propertiesMap` in the constructor.
+
+        return this._query;
+    }
 
     readonly sample = remoteData(
         {
