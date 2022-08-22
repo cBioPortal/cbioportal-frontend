@@ -103,6 +103,8 @@ export enum ResultsViewURLQueryEnum {
 
     mutations_gene = 'mutations_gene',
     mutations_transcript_id = 'mutations_transcript_id',
+
+    pathways_source = 'pathways_source',
 }
 
 type StringValuedParams = Exclude<
@@ -145,6 +147,9 @@ const shouldForceRemount: { [prop in keyof ResultsViewURLQuery]: boolean } = {
     // mutations
     mutations_gene: false,
     mutations_transcript_id: false,
+
+    // pathways
+    pathways_source: false,
 
     // session props here
     gene_list: true,
@@ -211,6 +216,11 @@ const propertiesMap = _.mapValues(
             isSessionProp: false,
         },
         mutations_transcript_id: {
+            isSessionProp: false,
+        },
+
+        // pathways
+        pathways_source: {
             isSessionProp: false,
         },
 

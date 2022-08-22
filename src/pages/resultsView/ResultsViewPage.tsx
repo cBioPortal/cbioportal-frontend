@@ -19,7 +19,6 @@ import DownloadTab from './download/DownloadTab';
 import { getServerConfig } from 'config/config';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
-import ResultsViewPathwayMapper from './pathwayMapper/ResultsViewPathwayMapper';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
 import PlotsTab from './plots/PlotsTab';
@@ -67,7 +66,6 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 import { AppContext } from 'cbioportal-frontend-commons';
 import PathWayMapperContainer from 'pages/resultsView/pathwayMapper/PathWayMapperContainer';
 
@@ -411,6 +409,7 @@ export default class ResultsViewPage extends React.Component<
                                 <PathWayMapperContainer
                                     resultsViewPageStore={store}
                                     appStore={this.appStore}
+                                    urlWrapper={this.urlWrapper}
                                 />
                             ) : (
                                 <LoadingIndicator
