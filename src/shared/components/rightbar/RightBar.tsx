@@ -104,7 +104,21 @@ export default class RightBar extends React.Component<
                                 ></i>
                             </a>
                         </h3>
-                        <div style={{ marginTop: 3 }}>
+                        {
+                            // TODO this is a temporary workaround to limit the vertical size of the Timeline container
+                            //  ideally this should be fixed within the corresponding react component
+                            //  we should revisit this once there is a newer and properly working version of the library
+                            //  another alternative is to directly use the twitter generated code
+                            //  (https://publish.twitter.com/?maxheight=200&query=%40cbioportal&widget=Timeline)
+                            //  but then we lose the "onLoad" functionality
+                        }
+                        <div
+                            style={{
+                                marginTop: 3,
+                                maxHeight: 200,
+                                overflowY: 'scroll',
+                            }}
+                        >
                             <Timeline
                                 dataSource={{
                                     sourceType: 'profile',
@@ -112,6 +126,8 @@ export default class RightBar extends React.Component<
                                 }}
                                 options={{
                                     username: 'cbioportal',
+                                    // TODO height option does not seem to work anymore
+                                    //  (see the workaround and comments above)
                                     height: '200',
                                     chrome: 'noheader%20nofooter',
                                 }}
