@@ -127,6 +127,7 @@ import {
     SpecialChartsUniqueKeyEnum,
     StudyWithSamples,
 } from 'pages/studyView/StudyViewUtils';
+import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
 import ComplexKeyGroupsMap from '../complexKeyDataStructures/ComplexKeyGroupsMap';
@@ -4386,13 +4387,15 @@ export default abstract class ComparisonStore
         },
     });
 
+    public urlWrapper1: ResultsViewURLWrapper;
+
     @computed.struct get comparisonGroupsReferencedInURL() {
         // The oncoprint can have tracks which indicate comparison group membership per sample.
         //  We want to know which comparison groups are referenced in these tracks, if any
         //  are currently visible.
 
         // Start by getting all the selected clinical attribute tracks
-        const groupIds = this.urlWrapper.oncoprintSelectedClinicalTracks
+        const groupIds = this.urlWrapper1.oncoprintSelectedClinicalTracks
             .filter((clinicalAttributeId: string) =>
                 clinicalAttributeIsINCOMPARISONGROUP({
                     clinicalAttributeId,
