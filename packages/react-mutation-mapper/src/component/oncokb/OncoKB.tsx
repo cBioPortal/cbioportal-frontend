@@ -13,8 +13,11 @@ import {
     calcSensitivityLevelScore,
 } from '../../util/OncoKbUtils';
 import { errorIcon, loaderIcon } from '../StatusHelpers';
-import { AnnotationIcon, AnnotationIconWithTooltip } from './AnnotationIcon';
-import { CompactAnnotationIcon } from './CompactAnnotationIcon';
+import {
+    AnnotationIcon,
+    AnnotationIconWithTooltip,
+} from './icon/AnnotationIcon';
+import { CompactAnnotationIcon } from './icon/CompactAnnotationIcon';
 import OncoKbTooltip from './OncoKbTooltip';
 import OncoKbFeedback from './OncoKbFeedback';
 

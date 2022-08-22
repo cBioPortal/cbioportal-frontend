@@ -1105,7 +1105,7 @@ class DefaultMutationMapperStore<T extends Mutation>
     protected getDefaultTumorType(mutation: T): string {
         return this.config.getTumorType
             ? this.config.getTumorType(mutation)
-            : 'Unknown';
+            : '';
     }
 
     @autobind

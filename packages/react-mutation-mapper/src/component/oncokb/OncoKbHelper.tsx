@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {
     normalizeLevel,
-    levelIconClassNames,
     mergeAlterations,
     getPositionalVariant,
 } from '../../util/OncoKbUtils';
@@ -13,6 +12,7 @@ import {
     LEVELS,
     OncoKbCardDataType,
 } from 'cbioportal-utils';
+import LevelIcon from './icon/LevelIcon';
 
 export default class OncoKbHelper {
     public static get TX_LEVELS(): string[] {
@@ -133,14 +133,6 @@ export default class OncoKbHelper {
         };
     }
 
-    public static levelTooltipContent = (level: string) => {
-        return (
-            <div style={{ maxWidth: '200px' }}>
-                {OncoKbHelper.LEVEL_DESC[level]}
-            </div>
-        );
-    };
-
     public static getDefaultColumnDefinition(
         columnKey: 'level' | 'alterations'
     ) {
@@ -160,21 +152,10 @@ export default class OncoKbHelper {
                         const normalizedLevel =
                             normalizeLevel(props.value) || '';
                         return (
-                            <DefaultTooltip
-                                overlay={this.levelTooltipContent(
-                                    normalizedLevel
-                                )}
-                                placement="left"
-                                trigger={['hover', 'focus']}
-                                destroyTooltipOnHide={true}
-                            >
-                                <i
-                                    className={levelIconClassNames(
-                                        normalizedLevel
-                                    )}
-                                    style={{ margin: 'auto' }}
-                                />
-                            </DefaultTooltip>
+                            <LevelIcon
+                                level={normalizedLevel}
+                                showDescription
+                            />
                         );
                     },
                 };
