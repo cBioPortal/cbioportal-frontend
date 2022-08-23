@@ -11,7 +11,7 @@ import {
     defaultSortMethod,
     defaultStringArraySortMethod,
 } from 'cbioportal-utils';
-import { levelIconClassNames } from '../../util/OncoKbUtils';
+import LevelIcon from './icon/LevelIcon';
 
 export type OncoKbSummaryTableProps = {
     usingPublicOncoKbInstance: boolean;
@@ -109,11 +109,9 @@ export default class OncoKbSummaryTable extends React.Component<
                                     textOverflow: 'ellipsis',
                                 }}
                             >
-                                <i
-                                    className={levelIconClassNames(level.level)}
-                                    style={{
-                                        verticalAlign: 'text-bottom',
-                                    }}
+                                <LevelIcon
+                                    level={level.level}
+                                    showDescription
                                 />
                                 <span
                                     style={{

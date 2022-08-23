@@ -6,9 +6,9 @@ import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
     annotationIconClassNames,
     calcHighestIndicatorLevel,
-} from '../../util/OncoKbUtils';
+} from '../../../util/OncoKbUtils';
 
-import annotationStyles from '../column/annotation.module.scss';
+import annotationStyles from '../../column/annotation.module.scss';
 
 function hideArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');

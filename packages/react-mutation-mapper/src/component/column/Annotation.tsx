@@ -104,7 +104,7 @@ function getDefaultEntrezGeneId(mutation: Mutation): number {
 }
 
 function getDefaultTumorType(): string {
-    return 'Unknown';
+    return '';
 }
 
 const memoized: Map<string, IAnnotation> = new Map();
