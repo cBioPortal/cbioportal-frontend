@@ -4,7 +4,10 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable from 'react-table';
 
-import { getTumorTypeName } from '../../util/OncoKbUtils';
+import {
+    getTumorTypeName,
+    getTumorTypeNameWithExclusionInfo,
+} from '../../util/OncoKbUtils';
 import OncoKbHelper from './OncoKbHelper';
 import { EvidenceReferenceContent } from './oncokbCard/EvidenceReferenceContent';
 
@@ -92,7 +95,10 @@ export default class OncoKbTreatmentTable extends React.Component<
             minWidth: 120,
             Cell: (props: { original: IndicatorQueryTreatment }) => (
                 <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
-                    {getTumorTypeName(props.original.levelAssociatedCancerType)}
+                    {getTumorTypeNameWithExclusionInfo(
+                        props.original.levelAssociatedCancerType,
+                        props.original.levelExcludedCancerTypes
+                    )}
                 </div>
             ),
         },
