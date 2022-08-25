@@ -19,7 +19,7 @@ import { deriveStructuralVariantType } from 'cbioportal-utils';
 
 const hotspotsImg = require('../../../rootImages/cancer-hotspots.svg');
 const oncokbImg = require('oncokb-styles/images/oncogenic.svg');
-const customDriverImg = require('../../../rootImages/driver.png');
+const customDriverImg = require('../../../rootImages/driver.svg');
 const customDriverTiersImg = require('../../../rootImages/driver_tiers.png');
 
 export type DataUnderMouse = Pick<
