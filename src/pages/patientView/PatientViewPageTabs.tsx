@@ -190,6 +190,7 @@ export function tabs(
                     >
                         <GenomicOverview
                             store={pageComponent.patientViewPageStore}
+                            onResetView={pageComponent.onResetViewClick}
                             mergedMutations={
                                 pageComponent.patientViewPageStore
                                     .mergedMutationDataFilteredByGene
@@ -256,6 +257,9 @@ export function tabs(
                     <div data-test="patientview-mutation-table">
                         <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
                             <PatientViewMutationTable
+                                dataStore={
+                                    pageComponent.patientViewMutationDataStore
+                                }
                                 studyIdToStudy={
                                     pageComponent.patientViewPageStore
                                         .studyIdToStudy.result
@@ -529,6 +533,9 @@ export function tabs(
                     <div data-test="patientview-copynumber-table">
                         <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
                             <CopyNumberTableWrapper
+                                dataStore={
+                                    pageComponent.patientViewCnaDataStore
+                                }
                                 uniqueSampleKeyToTumorType={
                                     pageComponent.patientViewPageStore
                                         .uniqueSampleKeyToTumorType
