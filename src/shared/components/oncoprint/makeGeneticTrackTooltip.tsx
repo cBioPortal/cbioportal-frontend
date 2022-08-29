@@ -427,9 +427,13 @@ export function makeGeneticTrackTooltip(
             ret.append('<br>');
         } else if (noneProfiledCount === dataUnderMouse.length) {
             // the moused over sample/case is not profiled
+            // but there IS a structural variant
+            // it means that the fusion partner of the structural variant
+            // is profiled
             if (
-                profiledGenePanelEntries.length ||
-                notProfiledGenePanelEntries.length
+                (profiledGenePanelEntries.length ||
+                    notProfiledGenePanelEntries.length) &&
+                structuralVariants.length
             ) {
                 // there is assumption that if the above condition is true
                 // the gene must be a fusion partner of a gene which IS profiled
