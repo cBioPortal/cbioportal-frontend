@@ -3538,7 +3538,7 @@ export function getFilteredMolecularProfilesByAlterationType(
                         profile.molecularAlterationType === alterationType;
                     if (!_.isEmpty(allowedDataTypes)) {
                         isFiltered =
-                            isFiltered ||
+                            isFiltered &&
                             allowedDataTypes!.includes(profile.datatype);
                     }
                     return isFiltered;
