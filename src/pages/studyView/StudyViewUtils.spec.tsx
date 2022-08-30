@@ -32,6 +32,7 @@ import {
     getDataIntervalFilterValues,
     getDefaultChartTypeByClinicalAttribute,
     getExponent,
+    getFilteredMolecularProfilesByAlterationType,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
@@ -69,6 +70,7 @@ import {
     CancerStudy,
     ClinicalAttribute,
     DataFilterValue,
+    MolecularProfile,
     Sample,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
@@ -91,6 +93,10 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import { remoteData, toPromise } from 'cbioportal-frontend-commons';
 import { autorun, observable, runInAction } from 'mobx';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+} from 'pages/resultsView/ResultsViewPageStore';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -4821,6 +4827,88 @@ describe('StudyViewUtils', () => {
             ];
 
             assert.deepEqual(actual.sort(), expected.sort());
+        });
+    });
+
+    describe('getFilteredMolecularProfilesByAlterationType', () => {
+        const studyIdToMolecularProfiles: any = {
+            study_1: [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_1_cna',
+                    studyId: 'study_1',
+                },
+            ],
+            study_2: [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_2_cna',
+                    studyId: 'study_2',
+                },
+            ],
+            study_3: [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'LOG2-VALUE',
+                    molecularProfileId: 'study_3_log2_cna',
+                    studyId: 'study_3',
+                },
+            ],
+        };
+        it('filter profiles by alteration type', () => {
+            const result = [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_1_cna',
+                    studyId: 'study_1',
+                },
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_2_cna',
+                    studyId: 'study_2',
+                },
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'LOG2-VALUE',
+                    molecularProfileId: 'study_3_log2_cna',
+                    studyId: 'study_3',
+                },
+            ];
+            assert.deepEqual(
+                getFilteredMolecularProfilesByAlterationType(
+                    studyIdToMolecularProfiles,
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                ),
+                result
+            );
+        });
+        it('filter profiles by alteration type, also filte by allowed data types', () => {
+            const result = [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_1_cna',
+                    studyId: 'study_1',
+                },
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_2_cna',
+                    studyId: 'study_2',
+                },
+            ];
+            assert.deepEqual(
+                getFilteredMolecularProfilesByAlterationType(
+                    studyIdToMolecularProfiles,
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    [DataTypeConstants.DISCRETE]
+                ),
+                result
+            );
         });
     });
 });
