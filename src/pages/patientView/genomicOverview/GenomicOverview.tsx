@@ -49,6 +49,7 @@ interface IGenomicOverviewProps {
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
     store?: IGenomicOverviewStore;
+    onResetView: () => void;
     genome?: string;
 }
 
@@ -415,6 +416,7 @@ export default class GenomicOverview extends React.Component<
         // reset to default view
         this.compactIgvView = true;
         this.handleResetZoom();
+        this.props.onResetView();
     }
 
     @action.bound
