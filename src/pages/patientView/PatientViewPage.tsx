@@ -29,6 +29,7 @@ import { validateParametersPatientView } from '../../shared/lib/validateParamete
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ValidationAlert from 'shared/components/ValidationAlert';
 import PatientViewMutationsDataStore from './mutation/PatientViewMutationsDataStore';
+import PatientViewCnaDataStore from './copyNumberAlterations/PatientViewCnaDataStore';
 
 import './patient.scss';
 
@@ -107,6 +108,7 @@ export default class PatientViewPage extends React.Component<
     @observable
     public urlWrapper: PatientViewUrlWrapper;
     public patientViewMutationDataStore: PatientViewMutationsDataStore;
+    public patientViewCnaDataStore: PatientViewCnaDataStore;
 
     public patientViewPageStore: PatientViewPageStore;
 
@@ -123,6 +125,11 @@ export default class PatientViewPage extends React.Component<
 
         this.patientViewMutationDataStore = new PatientViewMutationsDataStore(
             () => this.mergedMutations,
+            this.urlWrapper
+        );
+
+        this.patientViewCnaDataStore = new PatientViewCnaDataStore(
+            () => this.mergedCnas,
             this.urlWrapper
         );
 
@@ -206,6 +213,10 @@ export default class PatientViewPage extends React.Component<
                 return !isFusion(mutationArray[0]);
             }
         );
+    }
+
+    @computed get mergedCnas() {
+        return this.patientViewPageStore.mergedDiscreteCNADataFilteredByGene;
     }
 
     componentDidMount() {
@@ -466,8 +477,14 @@ export default class PatientViewPage extends React.Component<
 
     @autobind
     onMutationTableRowClick(d: Mutation[]) {
+        // select mutation and toggle off previous selected
         if (d.length) {
-            this.patientViewMutationDataStore.toggleSelectedMutation(d[0]);
+            this.patientViewMutationDataStore.setSelectedMutations([d[0]]);
+            if (this.patientViewCnaDataStore.selectedCna.length > 0) {
+                this.patientViewCnaDataStore.toggleSelectedCna(
+                    this.patientViewCnaDataStore.selectedCna[0]
+                );
+            }
             this.handleLocusChange(d[0].gene.hugoGeneSymbol);
         }
     }
@@ -486,8 +503,33 @@ export default class PatientViewPage extends React.Component<
 
     @action.bound
     onCnaTableRowClick(d: DiscreteCopyNumberData[]) {
+        // select cna and toggle off previous selected
         if (d.length) {
+            this.patientViewCnaDataStore.setSelectedCna([d[0]]);
+            if (
+                this.patientViewMutationDataStore.selectedMutations.length > 0
+            ) {
+                this.patientViewMutationDataStore.toggleSelectedMutation(
+                    this.patientViewMutationDataStore.selectedMutations[0]
+                );
+            }
             this.handleLocusChange(d[0].gene.hugoGeneSymbol);
+        }
+    }
+
+    @action.bound
+    onResetViewClick() {
+        // toggle off selected cna/mutation row
+        if (this.patientViewCnaDataStore.selectedCna.length > 0) {
+            this.patientViewCnaDataStore.toggleSelectedCna(
+                this.patientViewCnaDataStore.selectedCna[0]
+            );
+        } else if (
+            this.patientViewMutationDataStore.selectedMutations.length > 0
+        ) {
+            this.patientViewMutationDataStore.toggleSelectedMutation(
+                this.patientViewMutationDataStore.selectedMutations[0]
+            );
         }
     }
 

@@ -38,6 +38,7 @@ import {
     DEFAULT_ONCOKB_CONTENT_WIDTH,
     updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
+import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -61,6 +62,7 @@ type ICopyNumberTableWrapperProps = {
     pubMedCache?: PubMedCache;
     referenceGenes: ReferenceGenomeGene[];
     data: DiscreteCopyNumberData[][];
+    dataStore?: ILazyMobXTableApplicationDataStore<DiscreteCopyNumberData[]>;
     copyNumberCountCache?: CopyNumberCountCache;
     mrnaExprRankCache?: MrnaExprRankCache;
     gisticData: IGisticData;
@@ -376,6 +378,7 @@ export default class CopyNumberTableWrapper extends React.Component<
                     <CNATableComponent
                         columns={orderedColumns}
                         data={this.props.data}
+                        dataStore={this.props.dataStore}
                         initialSortColumn="Annotation"
                         initialSortDirection="desc"
                         initialItemsPerPage={10}
