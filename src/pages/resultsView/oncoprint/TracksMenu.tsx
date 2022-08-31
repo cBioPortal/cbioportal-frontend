@@ -30,7 +30,7 @@ import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
-import SaveClinicalTracks from 'pages/resultsView/oncoprint/SaveClinicalTracks';
+import SaveClinicalTracksButton from 'pages/resultsView/oncoprint/SaveClinicalTracksButton';
 export interface IAddTrackProps {
     store: ResultsViewPageStore;
     heatmapMenu: JSX.Element | null;
@@ -248,13 +248,15 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
             return (
                 <>
                     {this.props.oncoprinterMode}
-                    <SaveClinicalTracks
-                        store={this.props.store}
-                        isEnabled={
-                            this.props.state
-                                .isSaveTracksToUserSessionButtonEnabled
-                        }
-                    />
+                    {this.props.state.isSessionServiceEnabled && (
+                        <SaveClinicalTracksButton
+                            store={this.props.store}
+                            isDirty={
+                                this.props.state.isClinicalTrackConfigDirty
+                            }
+                            isLoggedIn={this.props.state.isLoggedIn}
+                        />
+                    )}
                     <AddClinicalTracks
                         store={this.props.store}
                         getSelectedClinicalAttributes={

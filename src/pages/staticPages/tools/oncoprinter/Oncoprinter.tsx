@@ -141,7 +141,15 @@ export default class Oncoprinter extends React.Component<
                     return undefined;
                 }
             },
-            get isSaveTracksToUserSessionButtonEnabled() {
+            get isLoggedIn() {
+                // do nothing in oncoprinter mode:
+                return false;
+            },
+            get isClinicalTrackConfigDirty() {
+                // do nothing in oncoprinter mode:
+                return false;
+            },
+            get isSessionServiceEnabled() {
                 // do nothing in oncoprinter mode:
                 return false;
             },

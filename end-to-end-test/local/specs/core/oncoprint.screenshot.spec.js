@@ -174,11 +174,12 @@ describe('oncoprint', function() {
          * Note: to rerun test locally, first clean user session
          */
         it('stores config in user session when save button clicked', () => {
-            // Load page with a default config that differs from SERVER_CLINICAL_TRACK_CONFIG:
+            // Load page with a default config that differs from SERVER_CLINICAL_TRACK_CONFIG
             const customConfig = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
-            customConfig.pop(); // <-- remove track
+            // Remove track to create diff
+            customConfig.pop();
             const urlWithUserConfig = createUrlWithSettingsQueryParam(
                 customConfig
             );
@@ -189,17 +190,16 @@ describe('oncoprint', function() {
             // Check save button enabled
             openTracksMenu();
             const $saveSessionBtn = $('#save-oncoprint-config-to-session');
-            const saveBtnIsEnabled =
-                $saveSessionBtn.getAttribute('disabled') === null;
+            let classes = $saveSessionBtn.getAttribute('class').split(' ');
+            const saveBtnIsEnabled = !classes.includes('disabled');
             expect(saveBtnIsEnabled).toBe(true);
 
             // Click save button
             $saveSessionBtn.click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
-
             // Check save button disabled
-            const saveBtnIsDisabled =
-                $saveSessionBtn.getAttribute('disabled') === '';
+            classes = $saveSessionBtn.getAttribute('class').split(' ');
+            const saveBtnIsDisabled = classes.includes('disabled');
             expect(saveBtnIsDisabled).toBe(true);
         });
 

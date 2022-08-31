@@ -90,6 +90,7 @@ import { buildCBioPortalPageUrl } from '../../api/urls';
 import '../../../globalStyles/oncoprintStyles.scss';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import { toDirectionString } from './SortUtils';
+import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -622,8 +623,14 @@ export default class ResultsViewOncoprint extends React.Component<
                     return self.horzZoom;
                 }
             },
-            get isSaveTracksToUserSessionButtonEnabled() {
+            get isClinicalTrackConfigDirty() {
                 return self.props.store.pageUserSession.isDirty;
+            },
+            get isLoggedIn() {
+                return self.props.store.pageUserSession.isLoggedIn;
+            },
+            get isSessionServiceEnabled() {
+                return self.props.store.pageUserSession.isSessionServiceEnabled;
             },
         });
 
@@ -1849,6 +1856,15 @@ export default class ResultsViewOncoprint extends React.Component<
                     onMouseEnter={this.onMouseEnter}
                     onMouseLeave={this.onMouseLeave}
                 >
+                    {this.props.store.pageUserSession.hasSavedConfig &&
+                        this.props.store.pageUserSession
+                            .hasUnsavedChangesFromBeforeLogin && (
+                            <RestoreClinicalTracksMenu
+                                pageUserSession={
+                                    this.props.store.pageUserSession
+                                }
+                            />
+                        )}
                     <Observer>{this.getControls}</Observer>
 
                     <div style={{ position: 'relative', marginTop: 15 }}>

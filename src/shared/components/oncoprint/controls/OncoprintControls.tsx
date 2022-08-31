@@ -87,7 +87,9 @@ export interface IOncoprintControlsState
     onlyShowClinicalLegendForAlteredCases?: boolean;
     showOqlInLabels?: boolean;
     showMinimap: boolean;
-    isSaveTracksToUserSessionButtonEnabled: boolean;
+    isClinicalTrackConfigDirty: boolean;
+    isLoggedIn: boolean;
+    isSessionServiceEnabled: boolean;
     distinguishMutationType: boolean;
     distinguishGermlineMutations: boolean;
     sortByMutationType: boolean;
