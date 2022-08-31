@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { ResourceData, Sample } from 'cbioportal-ts-api-client';
-import LazyMobXTable, { Column } from '../lazyMobXTable/LazyMobXTable';
+import { ResourceData } from 'cbioportal-ts-api-client';
 import SampleManager from '../../../pages/patientView/SampleManager';
 import { computed, makeObservable } from 'mobx';
-import ResourceLink from './ResourceLink';
 import _ from 'lodash';
 import { ResourcesTableRowData } from './ResourcesTableUtils';
 import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import ResourceTable from './ResourceTable';
 
 export interface ISampleResourcesTableProps {
     data: ResourcesTableRowData[];
@@ -35,43 +34,30 @@ export default class SampleResourcesTable extends React.Component<
         );
     }
 
-    @computed get columns(): Column<ResourcesTableRowData>[] {
-        return [
-            {
-                name: 'Sample',
-                sortBy: datum => datum.sample.sampleId,
-                render: datum =>
-                    this.props.sampleManager.getComponentForSample(
-                        datum.sample.sampleId
-                    ) || <span>{datum.sample.sampleId}</span>,
-            },
-            {
-                name: 'Resources',
-                render: datum => (
-                    <>
-                        {_.sortBy(
-                            datum.resources,
-                            r => r.resourceDefinition.priority
-                        ).map(resource => (
-                            <ResourceLink
-                                resource={resource}
+    render() {
+        return (
+            <>
+                {this.data.map((datum, index) => {
+                    return (
+                        <>
+                            <h5 className="blackHeader">
+                                Sample {datum.sample.sampleId}{' '}
+                                {this.props.sampleManager.getComponentForSample(
+                                    datum.sample.sampleId
+                                )}
+                            </h5>
+                            <ResourceTable
+                                resources={datum.resources}
                                 isTabOpen={this.props.isTabOpen}
                                 openResource={this.props.openResource}
                             />
-                        ))}
-                    </>
-                ),
-            },
-        ];
-    }
-
-    render() {
-        return (
-            <LazyMobXTable
-                columns={this.columns}
-                data={this.data}
-                showPagination={false}
-            />
+                            {index < this.data.length - 1 && (
+                                <hr style={{ marginTop: 20 }}></hr>
+                            )}
+                        </>
+                    );
+                })}
+            </>
         );
     }
 }

@@ -7,9 +7,9 @@ import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStor
 import { remoteData } from 'cbioportal-frontend-commons';
 import { ResourcesTableRowData } from '../../../shared/components/resources/ResourcesTableUtils';
 import { MakeMobxView } from '../../../shared/components/MobxView';
-import ResourceLink from '../../../shared/components/resources/ResourceLink';
 import _ from 'lodash';
 import { ResourceData } from 'cbioportal-ts-api-client';
+import ResourceTable from 'shared/components/resources/ResourceTable';
 
 export interface IResourcesTabProps {
     sampleManager: SampleManager | null;
@@ -75,16 +75,13 @@ export default class ResourcesTab extends React.Component<
                         <h4 className="blackHeader">
                             Patient Resources for {this.props.store.patientId}
                         </h4>
-                        {_.sortBy(
-                            this.props.store.patientResourceData.result!,
-                            r => parseFloat(r.resourceDefinition.priority)
-                        ).map(d => (
-                            <ResourceLink
-                                resource={d}
-                                isTabOpen={this.props.store.isResourceTabOpen}
-                                openResource={this.props.openResource}
-                            />
-                        ))}
+                        <ResourceTable
+                            resources={
+                                this.props.store.patientResourceData.result!
+                            }
+                            isTabOpen={this.props.store.isResourceTabOpen}
+                            openResource={this.props.openResource}
+                        />
                     </div>
                 );
             } else {
@@ -106,16 +103,13 @@ export default class ResourcesTab extends React.Component<
                             Study Resources for{' '}
                             {this.props.store.studies.result![0].name}
                         </h4>
-                        {_.sortBy(
-                            this.props.store.studyResourceData.result!,
-                            r => r.resourceDefinition.priority
-                        ).map(d => (
-                            <ResourceLink
-                                resource={d}
-                                isTabOpen={this.props.store.isResourceTabOpen}
-                                openResource={this.props.openResource}
-                            />
-                        ))}
+                        <ResourceTable
+                            resources={
+                                this.props.store.studyResourceData.result!
+                            }
+                            isTabOpen={this.props.store.isResourceTabOpen}
+                            openResource={this.props.openResource}
+                        />
                     </div>
                 );
             } else {
