@@ -1,4 +1,5 @@
 import * as React from 'react';
+import _ from 'lodash';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import './errorScreen.scss';
@@ -37,12 +38,16 @@ export default class ErrorScreen extends React.Component<
     }
 
     @computed get errorLog() {
-        const errorLog: any = this.props.errorLog
-            ? JSON.parse(this.props.errorLog)
-            : undefined;
-
-        // add the current url to error log
-        if (errorLog) errorLog.url = window.location.href;
+        let errorLog: any;
+        try {
+            errorLog = this.props.errorLog
+                ? JSON.parse(this.props.errorLog)
+                : undefined;
+            // add the current url to error log
+            if (errorLog) errorLog.url = window.location.href;
+        } catch (ex) {
+            errorLog = this.props.errorLog;
+        }
 
         return errorLog;
     }
