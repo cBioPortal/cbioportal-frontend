@@ -7111,11 +7111,11 @@ export class StudyViewPageStore
                 );
 
                 if (invalidMolecularProfiles.length > 0) {
-                    return Promise.reject({
-                        detailedErrorMessage: `Invalid molecular profile id(s): ${invalidMolecularProfiles.join(
+                    this.appStore.addError(
+                        `Invalid molecular profile id(s): ${invalidMolecularProfiles.join(
                             ', '
-                        )}`,
-                    });
+                        )}`
+                    );
                 }
 
                 return internalClient.fetchFilteredSamplesUsingPOST({
