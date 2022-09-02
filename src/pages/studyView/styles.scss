@@ -91,23 +91,6 @@ $selectHeightInner: $selectHeight - 2px;
     right: 7% !important;
 }
 
-.addChartTabs {
-    .nav > li > a {
-        padding: 5px;
-    }
-    .nav .active a {
-        padding-top: 5px !important;
-    }
-    .tab-content {
-        min-height: 100px !important;
-        padding: 10px 0 10px 0 !important;
-        .msk-tab {
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-        }
-    }
-}
-
 iframe.mdacc-heatmap-iframe {
     height: calc(100vh - 200px);
     min-height: 700px;
