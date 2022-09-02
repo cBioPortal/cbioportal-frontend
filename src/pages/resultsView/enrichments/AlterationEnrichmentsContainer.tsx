@@ -586,6 +586,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             showCNAInTable={this.props.showCNAInTable}
                             categoryToColor={this.categoryToColor}
                             dataStore={this.dataStore}
+                            comparisonStore={this.props.comparisonStore}
                         />
                     </div>
                 </div>

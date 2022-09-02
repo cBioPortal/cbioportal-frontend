@@ -273,10 +273,12 @@ export default class GroupComparisonPage extends React.Component<
                             }
                         >
                             <GroupComparisonPathwayMapper
-                                alterationRowData={
-                                    this.store.maxFrequencedGenes
+                                genesOfInterest={this.store.maxFrequencedGenes}
+                                genomicData={
+                                    this.store.alterationEnrichmentRowData
                                 }
                                 activeGroups={this.store.activeGroups.result}
+                                store={this.store}
                             />
                         </MSKTab>
                     }

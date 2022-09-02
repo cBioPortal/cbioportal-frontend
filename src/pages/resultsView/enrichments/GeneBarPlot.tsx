@@ -26,6 +26,8 @@ import {
     QueryStore,
 } from 'shared/components/query/QueryStore';
 import { EnrichmentsTableDataStore } from './EnrichmentsTableDataStore';
+import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
+import { transitionHighlightedIds } from 'shared/components/oncoprint/DeltaUtils';
 
 export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
@@ -37,6 +39,7 @@ export interface IGeneBarPlotProps {
         [id: string]: string;
     };
     dataStore: EnrichmentsTableDataStore;
+    comparisonStore?: ComparisonStore;
 }
 
 const DEFAULT_GENES_COUNT = 10;
@@ -62,6 +65,26 @@ export default class GeneBarPlot extends React.Component<
     constructor(props: any) {
         super(props);
         makeObservable(this);
+        if (
+            this.props.comparisonStore?.isHighestFrequencedGenesCalculated ===
+            false
+        ) {
+            let value: string = '';
+            let i: number = 0;
+            for (
+                i = 0;
+                i < this.props.comparisonStore.maxFrequencedGenes.length;
+                i++
+            ) {
+                value =
+                    value +
+                    this.props.comparisonStore.maxFrequencedGenes[i]
+                        .hugoGeneSymbol +
+                    ' ';
+            }
+            this.props.comparisonStore.alterationAndPathwaysFlag = value;
+            this.props.comparisonStore.isHighestFrequencedGenesCalculated = true;
+        }
     }
 
     @computed get geneListOptions() {
@@ -134,11 +157,48 @@ export default class GeneBarPlot extends React.Component<
                 genes = this.selectedGenes.map(
                     geneWithAlteration => geneWithAlteration.gene
                 );
+                genes = this.getPlotGenes;
             }
         }
         return genes;
     }
 
+    @computed get getPlotGenes() {
+        let genes: string[] = [];
+        let i: number = 0;
+        let newGene: string = '';
+        if (this.props.comparisonStore)
+            for (
+                i = 0;
+                i <
+                this.props.comparisonStore?.alterationAndPathwaysFlag.length;
+                i++
+            ) {
+                if (
+                    this.props.comparisonStore?.alterationAndPathwaysFlag[
+                        i
+                    ].charCodeAt(0) !== 10 &&
+                    this.props.comparisonStore?.alterationAndPathwaysFlag[
+                        i
+                    ].charCodeAt(0) !== 32
+                ) {
+                    newGene =
+                        newGene +
+                        this.props.comparisonStore?.alterationAndPathwaysFlag[
+                            i
+                        ].toUpperCase();
+                    console.log(newGene);
+                } else {
+                    console.log(newGene);
+                    if (newGene !== '') genes.push(newGene);
+                    newGene = '';
+                }
+            }
+        if (newGene !== '') genes.push(newGene);
+        //console.log(newGenes);
+        return genes;
+        //this.genes = newGeneOfInterest;
+    }
     @computed get horzCategoryOrder() {
         //include significant genes
         return _.flatMap(this.barPlotOrderedGenes, gene => [gene + '*', gene]);
@@ -237,7 +297,7 @@ export default class GeneBarPlot extends React.Component<
                     <div className={styles.ChartControls}>
                         <DefaultTooltip
                             trigger={['click']}
-                            destroyTooltipOnHide={false}
+                            destroyTooltipOnHide={true}
                             visible={this.isGeneSelectionPopupVisible}
                             onVisibleChange={visible => {
                                 this.isGeneSelectionPopupVisible = visible;
@@ -255,8 +315,11 @@ export default class GeneBarPlot extends React.Component<
                                         this.selectedGenes = genes;
                                         this._label = label;
                                         this.isGeneSelectionPopupVisible = false;
+                                        if (this.props.comparisonStore)
+                                            this.props.comparisonStore.alterationAndPathwaysFlag = value;
                                     }}
                                     defaultNumberOfGenes={DEFAULT_GENES_COUNT}
+                                    comparisonStore={this.props.comparisonStore}
                                 />
                             }
                             placement="bottomLeft"
@@ -334,6 +397,7 @@ interface IGeneSelectionProps {
     ) => void;
     defaultNumberOfGenes: number;
     maxNumberOfGenes?: number;
+    comparisonStore?: ComparisonStore;
 }
 
 @observer
@@ -420,6 +484,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         }
         if (!this.selectedGenesHasError) {
             this.genesToPlot = oql.query;
+            console.log(this.genesToPlot);
         }
         if (this.geneQuery !== queryStr) {
             this._selectedGeneListOption = {
@@ -429,6 +494,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
             };
         }
         this._geneQuery = queryStr;
+        console.log(this._geneQuery);
     }
 
     @computed get hasUnsupportedOQL() {
@@ -458,6 +524,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     }
 
     @computed get addGenesButtonDisabled() {
+        console.log('ziya');
         if (this.inSyncMode) {
             return (
                 this.props.selectedOption !== undefined &&
@@ -536,6 +603,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     }
 
     public render() {
+        console.log(this.geneQuery);
         return (
             <div style={{ width: 300 }}>
                 {this.props.options.length > 0 && (
@@ -578,7 +646,10 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                     {!this.inSyncMode && (
                         <div>
                             <OQLTextArea
-                                inputGeneQuery={this.geneQuery}
+                                inputGeneQuery={
+                                    this.props.comparisonStore
+                                        ?.alterationAndPathwaysFlag
+                                }
                                 validateInputGeneQuery={false}
                                 callback={this.onChangeGeneInput}
                                 location={GeneBoxType.ONCOPRINT_HEATMAP}
@@ -618,3 +689,5 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         );
     }
 }
+
+export { GenesSelection };

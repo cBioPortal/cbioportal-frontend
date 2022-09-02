@@ -106,6 +106,7 @@ import {
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import { string } from 'yargs';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -126,6 +127,9 @@ export default abstract class ComparisonStore
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
+
+    @observable alterationAndPathwaysFlag = '';
+    @observable isHighestFrequencedGenesCalculated = false;
 
     constructor(
         protected appStore: AppStore,
@@ -1078,6 +1082,50 @@ export default abstract class ComparisonStore
             );
         return [];
     }
+
+    @computed get genesOfInterestForPathwayMapper(): AlterationEnrichmentRow[] {
+        let i: number = 0;
+        let newGeneOfInterest: AlterationEnrichmentRow[] = [];
+        let newGene: string = '';
+        let newGenes: string[] = [];
+        console.log(this.alterationAndPathwaysFlag);
+        console.log('adsds');
+        for (i = 0; i < this.alterationAndPathwaysFlag.length; i++) {
+            if (
+                this.alterationAndPathwaysFlag[i].charCodeAt(0) !== 10 &&
+                this.alterationAndPathwaysFlag[i].charCodeAt(0) !== 32
+            ) {
+                newGene =
+                    newGene + this.alterationAndPathwaysFlag[i].toUpperCase();
+                console.log(newGene);
+            } else {
+                console.log(newGene);
+                if (newGene !== '') newGenes.push(newGene);
+                newGene = '';
+            }
+        }
+        if (newGene !== '') newGenes.push(newGene);
+        console.log(newGenes);
+        console.log(this.alterationEnrichmentRowData);
+        newGeneOfInterest = this.alterationEnrichmentRowData.filter(gene => {
+            return this.doesInclude(gene.hugoGeneSymbol, newGenes);
+        });
+        console.log(newGeneOfInterest);
+        return newGeneOfInterest;
+    }
+
+    doesInclude(gene: string, newGenes: string[]) {
+        let i: number = 0;
+        //console.log(gene);
+        for (i = 0; i < newGenes.length; i++) {
+            if (newGenes[i] === gene) {
+                console.log(gene);
+                return true;
+            }
+        }
+        return false;
+    }
+
     @computed get maxFrequencedGenes(): AlterationEnrichmentRow[] {
         if (
             this.alterationsEnrichmentData.isComplete &&
@@ -2246,4 +2294,7 @@ export default abstract class ComparisonStore
             this.structuralVariantEnrichmentProfiles.result!.length > 0
         );
     }
+}
+function doesInclude(gene: any, string: any, newGenes: any, arg3: any) {
+    throw new Error('Function not implemented.');
 }

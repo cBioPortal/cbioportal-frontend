@@ -9,6 +9,7 @@ import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { ResultsViewPageStore } from '../resultsView/ResultsViewPageStore';
 import { GENOMIC_ALTERATIONS_TAB_NAME } from 'pages/groupComparison/GroupComparisonTabs';
 import { getServerConfig } from 'config/config';
+import GroupComparisonStore from './GroupComparisonStore';
 
 export interface IAlterationEnrichmentsProps {
     store: ComparisonStore;

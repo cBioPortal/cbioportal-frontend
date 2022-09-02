@@ -21,13 +21,19 @@ import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
 import 'cytoscape-navigator/cytoscape.js-navigator.css';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { ComparisonGroup } from '../GroupComparisonUtils';
+import { GenesSelection } from 'pages/resultsView/enrichments/GeneBarPlot';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { toUpper } from 'lodash';
+import GroupComparisonStore from '../GroupComparisonStore';
 
 interface IGroupComparisonPathwayMapperProps {
-    alterationRowData: AlterationEnrichmentRow[];
+    genesOfInterest: AlterationEnrichmentRow[];
     activeGroups: ComparisonGroup[] | undefined;
+    genomicData: AlterationEnrichmentRow[];
+    store: GroupComparisonStore;
 }
 
-function getMaxFrequencedGenes(
+/*function getMaxFrequencedGenes(
     alterationRowData: AlterationEnrichmentRow[],
     activeGroups: ComparisonGroup[] | undefined
 ) {
@@ -59,7 +65,7 @@ function getMaxFrequencedGenes(
         MaxFrequencedGenes.push(alterationRowData[idOfGene]);
         usedGenes.push(idOfGene);
     }
-}
+}*/
 
 const DEFAULT_RULESET_PARAMS = getGeneticTrackRuleSetParams(true, true, true);
 
@@ -79,11 +85,33 @@ export default class GroupComparisonPathwayMapper extends React.Component<
                     .default as PathwayMapper;
             }
         );
+        if (this.props.store.isHighestFrequencedGenesCalculated === false) {
+            this.updateGenesOfInterestValue();
+            this.props.store.isHighestFrequencedGenesCalculated = true;
+        }
     }
     @observable.ref PathwayMapperComponent:
         | PathwayMapper
         | undefined = undefined;
 
+    @observable
+    isGeneSelectionPopupVisible: boolean = false;
+
+    @observable.ref
+    genes: AlterationEnrichmentRow[] = this.props.genesOfInterest;
+    @observable.ref
+    newlyAddedGenes: AlterationEnrichmentRow[] = this.props.genesOfInterest;
+    updateGenesOfInterestValue() {
+        let value: string = '';
+        let i: number = 0;
+        for (i = 0; i < this.props.store.maxFrequencedGenes.length; i++) {
+            value =
+                value +
+                this.props.store.maxFrequencedGenes[i].hugoGeneSymbol +
+                ' ';
+        }
+        this.props.store.alterationAndPathwaysFlag = value;
+    }
     public render() {
         if (!this.PathwayMapperComponent) {
             return null;
@@ -118,30 +146,130 @@ export default class GroupComparisonPathwayMapper extends React.Component<
         usedGenes.push(idOfGene);
         }
         */
+        console.log('Pathway Mapper Rendered');
+        console.log(this.genes);
+
         return (
-            <div className="pathwayMapper">
-                <div
-                    data-test="pathwayMapperTabDiv"
-                    className="cBioMode"
-                    style={{ width: '99%' }}
-                >
-                    <Row>
-                        {/*
+            <div>
+                <div className="alert alert-info">
+                    Ranking is based on top 10 genes having highest frequency by
+                    default. Genes of interest can be changed.
+                    <DefaultTooltip
+                        trigger={['click']}
+                        destroyTooltipOnHide={true}
+                        visible={this.isGeneSelectionPopupVisible}
+                        onVisibleChange={visible => {
+                            console.log(this.isGeneSelectionPopupVisible);
+                            this.isGeneSelectionPopupVisible = !this
+                                .isGeneSelectionPopupVisible;
+                        }}
+                        overlay={
+                            <GenesSelection
+                                options={[]}
+                                /*selectedOption={this.selectedOption}*/
+                                onSelectedGenesChange={(
+                                    value,
+                                    genes,
+                                    label
+                                ) => {
+                                    console.log(genes);
+                                    console.log(this.genes);
+                                    //setTimeout(this.render,100);
+                                    console.log('genes' + ' ' + genes);
+                                    //this.changeGenesOfInterest( value );
+                                    console.log('value ' + value);
+                                    console.log('label ' + label);
+                                    this.newlyAddedGenes = [];
+                                    this.props.store.alterationAndPathwaysFlag = value;
+                                    console.log(
+                                        this.props.store
+                                            .genesOfInterestForPathwayMapper
+                                    );
+                                    this.isGeneSelectionPopupVisible = false;
+
+                                    console.log(this.genes);
+                                    //  this.genes = this.newlyAddedGenes;
+                                }}
+                                defaultNumberOfGenes={10}
+                                comparisonStore={this.props.store}
+                            />
+                        }
+                        placement="bottomLeft"
+                    >
+                        <button
+                            data-test="selectGenes"
+                            className="btn btn-default btn-xs"
+                            style={{ marginLeft: 5 }}
+                        >
+                            Select genes
+                        </button>
+                    </DefaultTooltip>
+                </div>
+                <div className="pathwayMapper">
+                    <div
+                        data-test="pathwayMapperTabDiv"
+                        className="cBioMode"
+                        style={{ width: '99%' }}
+                    >
+                        <Row>
+                            {/*
                               // @ts-ignore */}
-                        <this.PathwayMapperComponent
-                            isCBioPortal={true}
-                            isCollaborative={false}
-                            genes={this.props.alterationRowData as any}
-                            cBioAlterationData={[]}
-                            tableComponent={this.renderTable}
-                            patientView={false}
-                            groupComparisonView={true}
-                            activeGroups={this.props.activeGroups as any}
-                        />
-                    </Row>
+                            <this.PathwayMapperComponent
+                                isCBioPortal={true}
+                                isCollaborative={false}
+                                genes={
+                                    this.props.store
+                                        .genesOfInterestForPathwayMapper as any
+                                }
+                                // newGenes = { this.newlyAddedGenes as any}
+                                cBioAlterationData={[]}
+                                genomicData={this.props.genomicData as any}
+                                tableComponent={this.renderTable}
+                                patientView={false}
+                                groupComparisonView={true}
+                                activeGroups={this.props.activeGroups as any}
+                                //  genesSelectionComponent = {this.renderGenesSelection}
+                            />
+                        </Row>
+                    </div>
                 </div>
             </div>
         );
+    }
+
+    changeGenesOfInterest(genes: string) {
+        let i: number = 0;
+        let newGeneOfInterest: AlterationEnrichmentRow[] = [];
+        let newGene: string = '';
+        let newGenes: string[] = [];
+        for (i = 0; i < genes.length; i++) {
+            if (
+                genes[i].charCodeAt(0) !== 10 &&
+                genes[i].charCodeAt(0) !== 32
+            ) {
+                newGene = newGene + genes[i].toUpperCase();
+                console.log(newGene);
+            } else {
+                console.log(newGene);
+                if (newGene !== '') newGenes.push(newGene);
+                newGene = '';
+            }
+        }
+        if (newGene !== '') newGenes.push(newGene);
+        console.log(newGenes);
+        newGeneOfInterest = this.props.genomicData.filter(gene => {
+            return this.doesInclude(gene.hugoGeneSymbol, newGenes);
+        });
+        console.log(newGeneOfInterest);
+        //this.genes = newGeneOfInterest;
+    }
+
+    doesInclude(gene: string, newGenes: string[]) {
+        let i: number = 0;
+        for (i = 0; i < newGenes.length; i++) {
+            if (newGenes[i] === gene) return true;
+        }
+        return false;
     }
 
     @autobind
@@ -157,6 +285,107 @@ export default class GroupComparisonPathwayMapper extends React.Component<
                 changePathway={onPathwaySelect}
                 onSelectedPathwayChange={this.clearMessage}
             />
+            /*<DefaultTooltip
+                            trigger={['click']}
+                            destroyTooltipOnHide={true}
+                            visible={this.isGeneSelectionPopupVisible}
+                            onVisibleChange={visible => {
+                                console.log(this.isGeneSelectionPopupVisible);
+                                this.isGeneSelectionPopupVisible = !this.isGeneSelectionPopupVisible;
+                            }}
+                           
+                            overlay={
+                                <GenesSelection
+                                options={[]}
+                                selectedOption={this.selectedOption}
+                                                    onSelectedGenesChange={(
+                                                        value,
+                                                        genes,
+                                                        label
+                                                    ) => {
+                                                        this._geneQuery = value;
+                                                        this.selectedGenes = genes;
+                                                        this._label = label;
+                                                        this.isGeneSelectionPopupVisible = false;
+                                                    }}
+                                                    defaultNumberOfGenes={10}
+                                                />
+                            }
+                            placement="bottomLeft"
+                        >
+                            <div>
+                                <button
+                                    data-test="selectGenes"
+                                    className="btn btn-default btn-xs"
+                                >
+                                    Select genes
+                                </button>
+                            </div>
+                        </DefaultTooltip>*/
+            /*<GenesSelection
+            options={[]}
+            selectedOption={this.selectedOption}
+                                onSelectedGenesChange={(
+                                    value,
+                                    genes,
+                                    label
+                                ) => {
+                                    this._geneQuery = value;
+                                    this.selectedGenes = genes;
+                                    this._label = label;
+                                    this.isGeneSelectionPopupVisible = false;
+                                }}
+                                defaultNumberOfGenes={10}
+                            />*/
+        );
+    }
+
+    @autobind
+    private renderGenesSelection() {
+        return (
+            <DefaultTooltip
+                trigger={['click']}
+                destroyTooltipOnHide={true}
+                visible={this.isGeneSelectionPopupVisible}
+                onVisibleChange={visible => {
+                    console.log(this.isGeneSelectionPopupVisible);
+                    this.isGeneSelectionPopupVisible = !this
+                        .isGeneSelectionPopupVisible;
+                }}
+                overlay={
+                    <GenesSelection
+                        options={[]}
+                        /*selectedOption={this.selectedOption}*/
+                        onSelectedGenesChange={(value, genes, label) => {
+                            console.log(genes);
+                            console.log(this.genes);
+                            //setTimeout(this.render,100);
+                            console.log('genes' + ' ' + genes);
+                            //this.changeGenesOfInterest( value );
+                            console.log('value ' + value);
+                            console.log('label ' + label);
+                            this.newlyAddedGenes = [];
+                            this.props.store.alterationAndPathwaysFlag = value;
+                            console.log(
+                                this.props.store.genesOfInterestForPathwayMapper
+                            );
+                            console.log(this.genes);
+                            //  this.genes = this.newlyAddedGenes;
+                        }}
+                        defaultNumberOfGenes={10}
+                        comparisonStore={this.props.store}
+                    />
+                }
+            >
+                <div>
+                    <button
+                        data-test="selectGenes"
+                        className="btn btn-default btn-xs"
+                    >
+                        Select genes
+                    </button>
+                </div>
+            </DefaultTooltip>
         );
     }
 }

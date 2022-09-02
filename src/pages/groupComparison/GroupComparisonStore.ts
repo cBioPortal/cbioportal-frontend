@@ -58,7 +58,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
 
     @action.bound
-    public setUsePatientLevelEnrichments(e: boolean) {
+    public setUsFePatientLevelEnrichments(e: boolean) {
         this.urlWrapper.updateURL({ patientEnrichments: e.toString() });
     }
 
