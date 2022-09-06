@@ -48,7 +48,7 @@ function waitForPatientView(timeout) {
 }
 
 function waitForOncoprint(timeout) {
-    browser.pause(100); // give oncoprint time to disappear
+    browser.pause(200); // give oncoprint time to disappear
     browser.waitUntil(
         () => {
             return (
@@ -145,6 +145,11 @@ function setCheckboxChecked(checked, selector, failure_message) {
     );
 }
 
+/**
+ * Note: before calling this function,
+ * check if dropdown element is in correct state
+ * (i.e. displayed or not)qq
+ */
 function setDropdownOpen(
     open,
     button_selector_or_elt,

@@ -127,16 +127,6 @@ export class ServerConfigHelpers {
         }
     }
 
-    @memoize static parseDefaultOncoprintClinicalTracks(json: string) {
-        if (!json) return [];
-        try {
-            const defaultTracks: ClinicalTrackConfig[] = JSON.parse(json);
-            return defaultTracks;
-        } catch (ex) {
-            return [];
-        }
-    }
-
     static sessionServiceIsEnabled() {
         return getServerConfig().sessionServiceEnabled;
     }
