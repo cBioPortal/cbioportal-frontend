@@ -345,6 +345,19 @@ export function getTumorTypeName(tumorType?: TumorType) {
     }
 }
 
+export function getTumorTypeNameWithExclusionInfo(
+    tumorType?: TumorType,
+    excludedTumorTypes?: TumorType[]
+) {
+    let name = getTumorTypeName(tumorType);
+    if (!_.isEmpty(excludedTumorTypes)) {
+        name = `${name} (excluding ${excludedTumorTypes!
+            .map(ett => getTumorTypeName(ett))
+            .join(', ')})`;
+    }
+    return name;
+}
+
 export function groupOncoKbIndicatorDataByMutations(
     mutationsByPosition: { [pos: number]: Mutation[] },
     oncoKbData: IOncoKbData,
