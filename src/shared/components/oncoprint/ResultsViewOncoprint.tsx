@@ -90,6 +90,7 @@ import { buildCBioPortalPageUrl } from '../../api/urls';
 import '../../../globalStyles/oncoprintStyles.scss';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import { toDirectionString } from './SortUtils';
+import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -261,44 +262,48 @@ export default class ResultsViewOncoprint extends React.Component<
     } = {};
 
     @computed get selectedClinicalTrackConfig(): ClinicalTrackConfigMap {
-        const clinicalTracks = _.clone(
-            this.urlWrapper.oncoprintSelectedClinicalTracks
-        );
+        let clinicalTracks: ClinicalTrackConfig[] | undefined = this.props.store
+            .pageUserSession.userSettings?.clinicallist;
+        if (clinicalTracks) {
+            const userSettingsTracksMap = {} as ClinicalTrackConfigMap;
+            clinicalTracks.forEach(
+                cl => (userSettingsTracksMap[cl.stableId] = cl)
+            );
+            return userSettingsTracksMap;
+        }
+
+        clinicalTracks = [];
 
         // when there is no user selection in URL, we want to
         // have some default tracks based on certain conditions
-        if (this.urlWrapper.query.clinicallist === undefined) {
-            if (
-                this.props.store.studyIds.result &&
-                this.props.store.studyIds.result.length > 1
-            ) {
-                clinicalTracks.push(
-                    new ClinicalTrackConfig(SpecialAttribute.StudyOfOrigin)
-                );
-            }
-
-            if (
-                this.props.store.filteredSamples.result &&
-                this.props.store.filteredPatients.result &&
-                this.props.store.filteredSamples.result.length >
-                    this.props.store.filteredPatients.result.length
-            ) {
-                clinicalTracks.push(
-                    new ClinicalTrackConfig(
-                        SpecialAttribute.NumSamplesPerPatient
-                    )
-                );
-            }
-
-            _.forEach(
-                this.props.store.clinicalAttributes_profiledIn.result,
-                attr => {
-                    clinicalTracks.push(
-                        new ClinicalTrackConfig(attr.clinicalAttributeId)
-                    );
-                }
+        if (
+            this.props.store.studyIds.result &&
+            this.props.store.studyIds.result.length > 1
+        ) {
+            clinicalTracks.push(
+                new ClinicalTrackConfig(SpecialAttribute.StudyOfOrigin)
             );
         }
+
+        if (
+            this.props.store.filteredSamples.result &&
+            this.props.store.filteredPatients.result &&
+            this.props.store.filteredSamples.result.length >
+                this.props.store.filteredPatients.result.length
+        ) {
+            clinicalTracks.push(
+                new ClinicalTrackConfig(SpecialAttribute.NumSamplesPerPatient)
+            );
+        }
+
+        _.forEach(
+            this.props.store.clinicalAttributes_profiledIn.result,
+            attr => {
+                clinicalTracks!.push(
+                    new ClinicalTrackConfig(attr.clinicalAttributeId)
+                );
+            }
+        );
         return _.keyBy(
             clinicalTracks,
             a => a.stableId
@@ -408,7 +413,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
         const self = this;
 
-        this.onChangeSelectedClinicalTracks = this.onChangeSelectedClinicalTracks.bind(
+        this.setSessionClinicalTracks = this.setSessionClinicalTracks.bind(
             this
         );
         this.onDeleteClinicalTrack = this.onDeleteClinicalTrack.bind(this);
@@ -618,20 +623,58 @@ export default class ResultsViewOncoprint extends React.Component<
                     return self.horzZoom;
                 }
             },
+            get isClinicalTrackConfigDirty() {
+                return self.props.store.pageUserSession.isDirty;
+            },
+            get isLoggedIn() {
+                return self.props.store.pageUserSession.isLoggedIn;
+            },
+            get isSessionServiceEnabled() {
+                return self.props.store.pageUserSession.isSessionServiceEnabled;
+            },
         });
-        if (!this.urlWrapper.hasClinicalTracksConfig) {
+
+        this.configureClinicalTracks();
+    }
+
+    private configureClinicalTracks() {
+        const sessionConfig = this.props.store.pageUserSession.userSettings
+            ?.clinicallist;
+        const urlConfig = this.urlWrapper.oncoprintSelectedClinicalTracks;
+
+        if (!urlConfig && !sessionConfig) {
             this.initializeClinicalTracksFromServerConfig();
+        } else if (!urlConfig && sessionConfig) {
+            // do not update deprecated clinicallist url param
+        } else if (urlConfig) {
+            this.setSessionClinicalTracks(
+                this.urlWrapper.oncoprintSelectedClinicalTracks!
+            );
         }
     }
 
+    /**
+     * Configures the default oncoprint clinical tracks
+     * from a JSON file configured on the server
+     */
     private initializeClinicalTracksFromServerConfig(): void {
-        const defaultClinicalTracks = getServerConfig()
+        const clinicalTracksConfig = getServerConfig()
             .oncoprint_clinical_tracks_config_json;
-        if (defaultClinicalTracks) {
-            this.onChangeSelectedClinicalTracks(
-                JSON.parse(defaultClinicalTracks) as ClinicalTrackConfig[]
-            );
+        if (!clinicalTracksConfig) {
+            return;
         }
+        const clinicalTracks = JSON.parse(
+            clinicalTracksConfig
+        ) as ClinicalTrackConfig[];
+        this.setSessionClinicalTracks(clinicalTracks);
+    }
+
+    private setSessionClinicalTracks(clinicalTracks: ClinicalTrackConfig[]) {
+        let pageUserSession = this.props.store.pageUserSession;
+        pageUserSession.userSettings = {
+            ...pageUserSession.userSettings,
+            clinicallist: clinicalTracks,
+        };
     }
 
     get urlWrapper() {
@@ -779,7 +822,7 @@ export default class ResultsViewOncoprint extends React.Component<
                     oncoprint_cluster_profile: '',
                 });
             },
-            onChangeSelectedClinicalTracks: this.onChangeSelectedClinicalTracks,
+            onChangeSelectedClinicalTracks: this.setSessionClinicalTracks,
             onChangeHeatmapGeneInputValue: action((s: string) => {
                 this.heatmapGeneInputValue = s;
                 this.heatmapGeneInputValueUpdater(); // stop updating heatmap input if user has typed
@@ -1213,14 +1256,6 @@ export default class ResultsViewOncoprint extends React.Component<
         return `${CLINICAL_TRACK_KEY_PREFIX}${clinicalAttributeId}`;
     }
 
-    @action private onChangeSelectedClinicalTracks(
-        clinicalAttributes: ClinicalTrackConfig[]
-    ) {
-        this.urlWrapper.updateURL(
-            this.urlWrapper.convertClinicalTracksToUrlParam(clinicalAttributes)
-        );
-    }
-
     private onDeleteClinicalTrack(clinicalTrackKey: string): void {
         // ignore tracks being deleted due to rendering process reasons
         if (!this.isHidden) {
@@ -1233,9 +1268,11 @@ export default class ResultsViewOncoprint extends React.Component<
                     entry.stableId ===
                     this.clinicalTrackKeyToAttributeId(clinicalTrackKey)
             ) as ClinicalTrackConfigMap;
-            this.urlWrapper.updateURL(
-                this.urlWrapper.convertClinicalTracksToUrlParam(_.values(json))
-            );
+            const session = this.props.store.pageUserSession;
+            session.userSettings = {
+                ...session.userSettings,
+                clinicallist: _.values(json),
+            };
         }
     }
 
@@ -1279,11 +1316,11 @@ export default class ResultsViewOncoprint extends React.Component<
         }
         Object.assign(clinicalTracks[stableId], change);
 
-        this.urlWrapper.updateURL(
-            this.urlWrapper.convertClinicalTracksToUrlParam(
-                _.values(clinicalTracks)
-            )
-        );
+        const session = this.props.store.pageUserSession;
+        session.userSettings = {
+            ...session.userSettings,
+            clinicallist: _.values(clinicalTracks),
+        };
     }
 
     @action.bound
@@ -1819,6 +1856,15 @@ export default class ResultsViewOncoprint extends React.Component<
                     onMouseEnter={this.onMouseEnter}
                     onMouseLeave={this.onMouseLeave}
                 >
+                    {this.props.store.pageUserSession.hasSavedConfig &&
+                        this.props.store.pageUserSession
+                            .hasUnsavedChangesFromBeforeLogin && (
+                            <RestoreClinicalTracksMenu
+                                pageUserSession={
+                                    this.props.store.pageUserSession
+                                }
+                            />
+                        )}
                     <Observer>{this.getControls}</Observer>
 
                     <div style={{ position: 'relative', marginTop: 15 }}>

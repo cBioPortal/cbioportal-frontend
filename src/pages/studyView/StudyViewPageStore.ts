@@ -26,6 +26,7 @@ import {
     ClinicalDataCountItem,
     ClinicalDataFilter,
     ClinicalDataMultiStudyFilter,
+    ClinicalViolinPlotData,
     CopyNumberSeg,
     DataFilterValue,
     DensityPlotBin,
@@ -88,7 +89,6 @@ import {
     findInvalidMolecularProfileIds,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
-    generateScatterPlotDownloadData,
     generateXvsYScatterPlotDownloadData,
     getBinBounds,
     getCategoricalFilterValues,
@@ -144,8 +144,10 @@ import {
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
-import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
-import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
+import {
+    isQueriedStudyAuthorized,
+    updateGeneQuery,
+} from 'pages/studyView/StudyViewUtils';
 import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
 import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
@@ -163,7 +165,14 @@ import {
     getStudyDownloadListUrl,
     redirectToComparisonPage,
 } from '../../shared/api/urls';
-import { onMobxPromise, toPromise } from 'cbioportal-frontend-commons';
+import {
+    DataType as DownloadDataType,
+    onMobxPromise,
+    pluralize,
+    remoteData,
+    stringListToSet,
+    toPromise,
+} from 'cbioportal-frontend-commons';
 import request from 'superagent';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
@@ -178,12 +187,6 @@ import { LoadingPhase } from '../groupComparison/GroupComparisonLoading';
 import { sleepUntil } from '../../shared/lib/TimeUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import {
-    DataType as DownloadDataType,
-    pluralize,
-    remoteData,
-    stringListToSet,
-} from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 
 import { AppStore } from 'AppStore';
@@ -261,7 +264,7 @@ import {
     StudyPageSettings,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
-import { ClinicalViolinPlotData } from 'cbioportal-ts-api-client';
+import { PageType } from 'shared/userSession/PageType';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -5953,6 +5956,7 @@ export class StudyViewPageStore
 
     public updateUserSettings() {
         sessionServiceClient.updateUserSettings({
+            page: PageType.STUDY_VIEW,
             origin: toJS(this.studyIds),
             chartSettings: _.values(this.currentChartSettingsMap),
             groupColors: toJS(this.userGroupColors),
@@ -5968,6 +5972,7 @@ export class StudyViewPageStore
             this.previousSettings = this.currentChartSettingsMap;
             if (!_.isEmpty(this.currentChartSettingsMap)) {
                 sessionServiceClient.updateUserSettings({
+                    page: PageType.STUDY_VIEW,
                     origin: toJS(this.studyIds),
                     chartSettings: _.values(this.currentChartSettingsMap),
                     groupColors: toJS(this.userGroupColors),
@@ -6007,7 +6012,7 @@ export class StudyViewPageStore
                 this.isSavingUserPreferencePossible &&
                 this.studyIds.length > 0
             ) {
-                return sessionServiceClient.fetchUserSettings(
+                return sessionServiceClient.fetchStudyPageSettings(
                     toJS(this.studyIds)
                 );
             }

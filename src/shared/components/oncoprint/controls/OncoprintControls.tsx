@@ -28,7 +28,7 @@ import {
 import OQLTextArea, { GeneBoxType } from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
-import AddTracks from 'pages/resultsView/oncoprint/AddTracks';
+import TracksMenu from 'pages/resultsView/oncoprint/TracksMenu';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import {
     IDriverAnnotationControlsHandlers,
@@ -87,6 +87,9 @@ export interface IOncoprintControlsState
     onlyShowClinicalLegendForAlteredCases?: boolean;
     showOqlInLabels?: boolean;
     showMinimap: boolean;
+    isClinicalTrackConfigDirty: boolean;
+    isLoggedIn: boolean;
+    isSessionServiceEnabled: boolean;
     distinguishMutationType: boolean;
     distinguishGermlineMutations: boolean;
     sortByMutationType: boolean;
@@ -460,10 +463,10 @@ export default class OncoprintControls extends React.Component<
         this.tabId = newId;
     }
 
-    private AddTracksMenu = observer(() => {
+    private tracksMenu = observer(() => {
         if (this.props.store) {
             return (
-                <AddTracks
+                <TracksMenu
                     store={this.props.store}
                     heatmapMenu={this.heatmapMenu}
                     handlers={this.props.handlers}
@@ -1200,7 +1203,7 @@ export default class OncoprintControls extends React.Component<
         return (
             <div className="oncoprint__controls">
                 <ButtonGroup>
-                    <this.AddTracksMenu />
+                    <this.tracksMenu />
                     <this.SortMenu />
                     <this.MutationColorMenu />
                     <this.ViewMenu />

@@ -2,10 +2,10 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import FeatureTitle from '../../../shared/components/featureTitle/FeatureTitle';
 import { MakeMobxView } from '../../../shared/components/MobxView';
-import ResourceLink from '../../../shared/components/resources/ResourceLink';
 import _ from 'lodash';
 import { StudyViewPageStore } from '../StudyViewPageStore';
 import { ResourceData } from 'cbioportal-ts-api-client';
+import ResourceTable from 'shared/components/resources/ResourceTable';
 
 export interface IResourcesTabProps {
     store: StudyViewPageStore;
@@ -35,16 +35,13 @@ export default class ResourcesTab extends React.Component<
                                     .result![0].name
                             }
                         </h4>
-                        {_.sortBy(
-                            this.props.store.studyResourceData.result!,
-                            r => parseFloat(r.resourceDefinition.priority)
-                        ).map(d => (
-                            <ResourceLink
-                                resource={d}
-                                isTabOpen={this.props.store.isResourceTabOpen}
-                                openResource={this.props.openResource}
-                            />
-                        ))}
+                        <ResourceTable
+                            resources={
+                                this.props.store.studyResourceData.result!
+                            }
+                            isTabOpen={this.props.store.isResourceTabOpen}
+                            openResource={this.props.openResource}
+                        />
                     </div>
                 );
             } else {

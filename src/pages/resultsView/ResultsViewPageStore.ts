@@ -45,7 +45,15 @@ import {
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import { action, computed, makeObservable, observable, reaction } from 'mobx';
+import {
+    action,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+    reaction,
+    toJS,
+} from 'mobx';
 import {
     generateQueryStructuralVariantId,
     getProteinPositionFromProteinChange,
@@ -89,10 +97,10 @@ import {
     generateDataQueryFilter,
     generateUniqueSampleKeyToTumorTypeMap,
     getAllGenes,
+    getGenomeBuildFromStudies,
     getGenomeNexusUrl,
     getOncoKbOncogenic,
     getSurvivalClinicalAttributesPrefix,
-    getGenomeBuildFromStudies,
     groupBy,
     groupBySampleId,
     IDataQueryFilter,
@@ -109,7 +117,7 @@ import {
 } from 'shared/lib/GenePanelUtils';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
-import { getServerConfig } from 'config/config';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import _ from 'lodash';
 import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
@@ -254,14 +262,14 @@ import oql_parser, {
 import {
     ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
     createAnnotatedProteinImpactTypeFilter,
-    createNumericalFilter,
     createCategoricalFilter,
+    createNumericalFilter,
 } from 'shared/lib/MutationUtils';
 import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
 import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
 import {
-    MutationTableColumnType,
     getTextForDataField,
+    MutationTableColumnType,
 } from 'shared/components/mutationTable/MutationTable';
 import { getClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getCancerCellFractionValue } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
@@ -279,13 +287,17 @@ import HgvsgColumnFormatter from 'shared/components/mutationTable/column/HgvsgCo
 import ClinvarColumnFormatter from 'shared/components/mutationTable/column/ClinvarColumnFormatter';
 import SignalColumnFormatter from 'shared/components/mutationTable/column/SignalColumnFormatter';
 import {
-    Group,
     ComparisonSession,
+    Group,
+    ResultPageSettings,
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { ICBioData } from 'pathway-mapper';
 import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
+import { PageUserSession } from 'shared/userSession/PageUserSession';
+import { PageType } from 'shared/userSession/PageType';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -550,15 +562,15 @@ export class ResultsViewPageStore
         ISettingsMenuButtonVisible {
     @observable driverAnnotationSettings: DriverAnnotationSettings;
 
-    constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
+    private reactionDisposers: IReactionDisposer[] = [];
+
+    public pageUserSession: PageUserSession<ResultPageSettings>;
+
+    constructor(
+        private appStore: AppStore,
+        public urlWrapper: ResultsViewURLWrapper
+    ) {
         makeObservable(this);
-        //labelMobxPromises(this);
-
-        this.urlWrapper = urlWrapper;
-
-        // addErrorHandler((error: any) => {
-        //     this.ajaxErrors.push(error);
-        // });
         this.getURL();
 
         const store = this;
@@ -566,30 +578,51 @@ export class ResultsViewPageStore
         this.driverAnnotationSettings = buildDriverAnnotationSettings(
             () => store.didHotspotFailInOncoprint
         );
-        this.driverAnnotationsReactionDisposer = reaction(
-            () => this.urlWrapper.query.cancer_study_list,
-            () => {
-                this.driverAnnotationSettings = buildDriverAnnotationSettings(
-                    () => store.didHotspotFailInOncoprint
-                );
-            },
-            { fireImmediately: true }
+
+        this.pageUserSession = new PageUserSession<ResultPageSettings>(
+            appStore,
+            ServerConfigHelpers.sessionServiceIsEnabled()
+        );
+
+        this.pageUserSession.id = {
+            page: PageType.RESULTS_VIEW,
+            origin: this.cancerStudyIds,
+        };
+
+        this.reactionDisposers.push(
+            reaction(
+                () => this.urlWrapper.query.cancer_study_list,
+                () => {
+                    this.driverAnnotationSettings = buildDriverAnnotationSettings(
+                        () => store.didHotspotFailInOncoprint
+                    );
+                },
+                { fireImmediately: true }
+            )
+        );
+
+        this.reactionDisposers.push(
+            reaction(
+                () => [this.cancerStudyIds],
+                () => {
+                    this.pageUserSession.id = {
+                        page: PageType.RESULTS_VIEW,
+                        origin: this.cancerStudyIds,
+                    };
+                }
+            )
         );
     }
 
     destroy() {
-        this.driverAnnotationsReactionDisposer();
+        this.reactionDisposers.forEach(disposer => disposer());
     }
 
-    public urlWrapper: ResultsViewURLWrapper;
-
-    public driverAnnotationsReactionDisposer: any;
-
     // Use gene + driver as key, e.g. TP53_DRIVER or TP53_NO_DRIVER
+
     private mutationMapperStoreByGeneWithDriverKey: {
         [hugoGeneSymbolWithDriver: string]: ResultsViewMutationMapperStore;
     } = {};
-
     @computed get oqlText() {
         return this.urlWrapper.query.gene_list;
     }
@@ -908,17 +941,22 @@ export class ResultsViewPageStore
      */
     @computed.struct get comparisonGroupsReferencedInURL() {
         // Get selected clinical attribute tracks:
-        const inComparisonGroupTracks = this.urlWrapper.oncoprintSelectedClinicalTrackIds.filter(
-            (clinicalAttributeId: string) =>
+        const tracks = this.pageUserSession.userSettings?.clinicallist;
+        const inComparisonGroupTracks =
+            tracks &&
+            tracks.filter((track: ClinicalTrackConfig) =>
                 clinicalAttributeIsINCOMPARISONGROUP({
-                    clinicalAttributeId,
+                    clinicalAttributeId: track.stableId,
                 })
-        );
+            );
 
-        // Convert track ids to group ids:
-        return inComparisonGroupTracks.map((clinicalAttributeId: string) =>
-            convertComparisonGroupClinicalAttribute(clinicalAttributeId, false)
-        );
+        if (inComparisonGroupTracks) {
+            return inComparisonGroupTracks.map((track: ClinicalTrackConfig) =>
+                convertComparisonGroupClinicalAttribute(track.stableId, false)
+            );
+        } else {
+            return [];
+        }
     }
 
     readonly savedComparisonGroupsForStudies = remoteData<Group[]>({
