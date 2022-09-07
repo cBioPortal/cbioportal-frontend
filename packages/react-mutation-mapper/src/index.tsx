@@ -180,6 +180,7 @@ export {
     oncogenicityIconClassNames,
     normalizeLevel,
     levelIconClassNames,
+    getTumorTypeNameWithExclusionInfo,
 } from './util/OncoKbUtils';
 export * from './util/SelectorUtils';
 export * from './util/TrackUtils';
