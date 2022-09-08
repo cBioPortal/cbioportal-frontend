@@ -18,7 +18,6 @@ import {
     IOncoprintControlsHandlers,
     IOncoprintControlsState,
 } from 'shared/components/oncoprint/controls/OncoprintControls';
-import AddClinicalTracks from './AddClinicalTracks';
 import autobind from 'autobind-decorator';
 import { getTextWidth, remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -31,6 +30,10 @@ import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import SaveClinicalTracksButton from 'pages/resultsView/oncoprint/SaveClinicalTracksButton';
+import { toggleIncluded } from 'shared/lib/ArrayUtils';
+import AddChartByType from 'pages/studyView/addChartButton/addChartByType/AddChartByType';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { MakeMobxView } from 'shared/components/MobxView';
 export interface IAddTrackProps {
     store: ResultsViewPageStore;
     heatmapMenu: JSX.Element | null;
@@ -45,6 +48,8 @@ export interface IAddTrackProps {
 enum Tab {
     CLINICAL = 'Clinical',
     HEATMAP = 'Heatmap',
+    GROUPS = 'Groups',
+    CUSTOM_CHARTS = 'Custom Charts',
 }
 
 export const MIN_DROPDOWN_WIDTH = 500;
@@ -257,26 +262,137 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                             isLoggedIn={this.props.state.isLoggedIn}
                         />
                     )}
-                    <AddClinicalTracks
-                        store={this.props.store}
-                        getSelectedClinicalAttributes={
-                            this.getSelectedClinicalAttributes
-                        }
-                        onChangeSelectedClinicalTracks={
-                            this.props.handlers.onChangeSelectedClinicalTracks
-                        }
-                        clinicalTrackOptionsPromise={this.clinicalTrackOptions}
-                        clinicalAttributeIdToAvailableFrequencyPromise={
-                            this.clinicalAttributeIdToAvailableFrequency
-                        }
-                        width={this.dropdownWidth}
-                    />
+                    <div className="oncoprintAddClinicalTracks">
+                        {this.addClinicalTracksMenu.component}
+                    </div>
                 </>
             );
         } else {
             return null;
         }
     }
+
+    @action.bound
+    private addAll(clinicalAttributeIds: string[]) {
+        this.props.handlers.onChangeSelectedClinicalTracks!(
+            _.union(
+                this.getSelectedClinicalAttributes(),
+                clinicalAttributeIds.map(id => new ClinicalTrackConfig(id))
+            )
+        );
+    }
+
+    @action.bound
+    private clear(clinicalAttributeIds: string[]) {
+        this.props.handlers.onChangeSelectedClinicalTracks!(
+            _.differenceBy(
+                this.getSelectedClinicalAttributes(),
+                clinicalAttributeIds.map(id => new ClinicalTrackConfig(id)),
+                'stableId'
+            )
+        );
+    }
+
+    @action.bound
+    private toggleClinicalTrack(clinicalAttributeId: string) {
+        const toggled = toggleIncluded(
+            new ClinicalTrackConfig(clinicalAttributeId),
+            this.getSelectedClinicalAttributes(),
+            track => track.stableId === clinicalAttributeId
+        );
+        this.props.handlers.onChangeSelectedClinicalTracks!(toggled);
+    }
+
+    readonly addClinicalTracksMenu = MakeMobxView({
+        await: () => [this.trackOptionsByType],
+        render: () => (
+            <AddChartByType
+                options={this.trackOptionsByType.result!.clinical}
+                freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                onAddAll={this.addAll}
+                onClearAll={this.clear}
+                onToggleOption={this.toggleClinicalTrack}
+                optionsGivenInSortedOrder={true}
+                width={this.dropdownWidth}
+            />
+        ),
+        renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
+        showLastRenderWhenPending: true,
+    });
+
+    readonly addGroupTracksMenu = MakeMobxView({
+        await: () => [this.trackOptionsByType],
+        render: () => (
+            <>
+                {this.props.state.isSessionServiceEnabled && (
+                    <SaveClinicalTracksButton
+                        store={this.props.store}
+                        isDirty={this.props.state.isClinicalTrackConfigDirty}
+                        isLoggedIn={this.props.state.isLoggedIn}
+                    />
+                )}
+                <AddChartByType
+                    options={this.trackOptionsByType.result!.groups}
+                    freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                    onAddAll={this.addAll}
+                    onClearAll={this.clear}
+                    onToggleOption={this.toggleClinicalTrack}
+                    optionsGivenInSortedOrder={true}
+                    frequencyHeaderTooltip="% samples in group"
+                    width={this.dropdownWidth}
+                />
+            </>
+        ),
+        renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
+        showLastRenderWhenPending: true,
+    });
+
+    readonly addChartTracksMenu = MakeMobxView({
+        await: () => [this.trackOptionsByType],
+        render: () => (
+            <>
+                {this.props.state.isSessionServiceEnabled && (
+                    <SaveClinicalTracksButton
+                        store={this.props.store}
+                        isDirty={this.props.state.isClinicalTrackConfigDirty}
+                        isLoggedIn={this.props.state.isLoggedIn}
+                    />
+                )}
+                <AddChartByType
+                    options={this.trackOptionsByType.result!.customCharts}
+                    freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                    onAddAll={this.addAll}
+                    onClearAll={this.clear}
+                    onToggleOption={this.toggleClinicalTrack}
+                    optionsGivenInSortedOrder={true}
+                    frequencyHeaderTooltip="% samples in group"
+                    width={this.dropdownWidth}
+                />
+            </>
+        ),
+        renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
+        showLastRenderWhenPending: true,
+    });
+
+    readonly trackOptionsByType = remoteData({
+        await: () => [this.clinicalTrackOptions],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(this.clinicalTrackOptions.result, options => {
+                    return options.map(option => ({
+                        ...option,
+                        selected:
+                            option.key in
+                            _.keyBy(
+                                this.getSelectedClinicalAttributes().map(
+                                    a => a.stableId
+                                )
+                            ),
+                    }));
+                })
+            );
+        },
+    });
 
     @computed
     private get genericAssayTabs() {
@@ -402,6 +518,49 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         }
     }
 
+    @computed get groupTabText() {
+        if (
+            this.trackOptionsByType.result &&
+            !_.isEmpty(this.trackOptionsByType.result.groups)
+        ) {
+            return (
+                <div>
+                    {Tab.GROUPS}
+                    <span style={{ paddingLeft: 5 }}>
+                        <OncoprintDropdownCount
+                            count={this.trackOptionsByType.result.groups.length}
+                        />
+                    </span>
+                </div>
+            );
+        } else {
+            return Tab.GROUPS;
+        }
+    }
+
+    @computed get customChartTabText() {
+        if (
+            this.trackOptionsByType.result &&
+            !_.isEmpty(this.trackOptionsByType.result.customCharts)
+        ) {
+            return (
+                <div>
+                    {Tab.CUSTOM_CHARTS}
+                    <span style={{ paddingLeft: 5 }}>
+                        <OncoprintDropdownCount
+                            count={
+                                this.trackOptionsByType.result.customCharts
+                                    .length
+                            }
+                        />
+                    </span>
+                </div>
+            );
+        } else {
+            return Tab.CUSTOM_CHARTS;
+        }
+    }
+
     private getTextPixel(text: string, fontSize: string) {
         // This is a very specified function to calculate the text length in Add Tracks dropdown
         const FRONT_FAMILY = 'Helvetica Neue';
@@ -504,6 +663,30 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                             hide={!this.props.heatmapMenu}
                         >
                             {this.props.heatmapMenu}
+                        </MSKTab>
+                        <MSKTab
+                            key={2}
+                            id={Tab.GROUPS}
+                            linkText={this.groupTabText}
+                            hide={
+                                !this.trackOptionsByType.isComplete ||
+                                this.trackOptionsByType.result!.groups
+                                    .length === 0
+                            }
+                        >
+                            {this.addGroupTracksMenu.component}
+                        </MSKTab>
+                        <MSKTab
+                            key={3}
+                            id={Tab.CUSTOM_CHARTS}
+                            linkText={this.customChartTabText}
+                            hide={
+                                !this.trackOptionsByType.isComplete ||
+                                this.trackOptionsByType.result!.customCharts
+                                    .length === 0
+                            }
+                        >
+                            {this.addChartTracksMenu.component}
                         </MSKTab>
                         {this.genericAssayTabs}
                     </MSKTabs>
