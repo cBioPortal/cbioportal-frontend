@@ -19,6 +19,8 @@ const CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT =
     'div=mutational signature category v2 (61 samples)';
 const ADD_CHART_X_VS_Y_TAB = '.addChartTabs a.tabAnchor_X_Vs_Y';
 const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
+const MUTATIONS_GENES_TABLE = "[data-test='mutations-table']";
+const CANCER_GENE_FILTER_ICON = "[data-test='header-filter-icon']";
 
 describe('study view generic assay categorical/binary features', function() {
     it('generic assay pie chart should be added in the summary tab', () => {
@@ -216,5 +218,71 @@ describe('study view editable breadcrumbs', () => {
         // wait for session to save
         browser.pause(4000);
         waitForNetworkQuiet();
+    });
+});
+
+describe('cancer gene filter', () => {
+    before(() => {
+        const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
+        goToUrlAndSetLocalStorage(url, true);
+        waitForNetworkQuiet();
+    });
+    it('cancer gene filter should by default be disabled', () => {
+        const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
+        // set up the page without filters
+        goToUrlAndSetLocalStorage(url, true);
+        waitForNetworkQuiet();
+        $(
+            `${MUTATIONS_GENES_TABLE} [data-test='gene-column-header']`
+        ).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+        assert.equal(
+            $(
+                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+            ).isExisting(),
+            true
+        );
+        assert.equal(
+            $(
+                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+            ).getCSSProperty('color').parsed.hex,
+            '#bebebe'
+        );
+    });
+
+    // it('reset charts button should revert and disable cancer gene filter', () => {
+    //     assertScreenShotMatch(checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE));
+    // });
+
+    it('cancer gene filter should remove non cancer genes', () => {
+        $(`${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).click();
+        assert.equal(
+            $(
+                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+            ).getCSSProperty('color').parsed.hex,
+            '#000000'
+        );
+        assertScreenShotMatch(
+            checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE)
+        );
+    });
+
+    it('reset charts button should revert and disable cancer gene filter', () => {
+        setDropdownOpen(true, ADD_CHART_BUTTON, 'button=Reset charts');
+        $('button=Reset charts').click();
+        $('.modal-content')
+            .$('button=Confirm')
+            .waitForDisplayed();
+        $('.modal-content')
+            .$('button=Confirm')
+            .click();
+        assert.equal(
+            $(
+                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+            ).getCSSProperty('color').parsed.hex,
+            '#bebebe'
+        );
+        assertScreenShotMatch(
+            checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE)
+        );
     });
 });
