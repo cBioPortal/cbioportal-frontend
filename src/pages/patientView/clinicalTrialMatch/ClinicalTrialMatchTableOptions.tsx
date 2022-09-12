@@ -91,12 +91,17 @@ class ClinicalTrialMatchTableOptions extends React.Component<
     constructor(props: IClinicalTrialOptionsMatchProps) {
         super(props);
 
-        this.gender = { label: 'All', value: 'All' };
+        this.gender = null;
         let sex = this.props.store.clinicalDataPatient.result.find(
             (attribute: any) => attribute.clinicalAttributeId === 'SEX'
         )?.value;
+        let gender = this.props.store.clinicalDataPatient.result.find(
+            (attribute: any) => attribute.clinicalAttributeId === 'GENDER'
+        )?.value;
         if (sex !== undefined && sex.length > 0) {
             this.gender = { label: sex, value: sex };
+        } else if (gender !== undefined && gender.length > 0) {
+            this.gender = { label: gender, value: gender };
         }
 
         this.age =
