@@ -170,7 +170,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                 country: '',
                 admin_name: '',
             },
-            gender: sex || 'All',
+            gender: this.gender ? this.gender.value : null,
             ageState: +parseInt(this.age),
             maxDistance: '',
             isOpened: false,
@@ -681,7 +681,16 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                 })
                                             )}
                                             name="genderSearch"
-                                            defaultValue={this.gender}
+                                            defaultValue={
+                                                this.state.gender
+                                                    ? {
+                                                          label: this.state
+                                                              .gender,
+                                                          value: this.state
+                                                              .gender,
+                                                      }
+                                                    : null
+                                            }
                                             className="basic-select"
                                             classNamePrefix="select"
                                             placeholder="Select gender..."
