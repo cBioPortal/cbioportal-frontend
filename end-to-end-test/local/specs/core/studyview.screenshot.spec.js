@@ -249,10 +249,6 @@ describe('cancer gene filter', () => {
         );
     });
 
-    // it('reset charts button should revert and disable cancer gene filter', () => {
-    //     assertScreenShotMatch(checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE));
-    // });
-
     it('cancer gene filter should remove non cancer genes', () => {
         $(`${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).click();
         assert.equal(
