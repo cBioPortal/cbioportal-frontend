@@ -23,7 +23,7 @@ docker-compose $compose_extensions up -d keycloak
 healthy=
 for i in {1..30}; do
     [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8081) == 200 ]] && { healthy=1; break; } || echo "Waiting for Keycloak service                    ..."
-    sleep 10s
+    sleep 10
 done
 [ -z "$healthy" ] && { echo "Error starting Keycloak service."; exit 1; } || echo "Waiting for Keycloak service                    ... done"
 
@@ -36,7 +36,7 @@ docker-compose $compose_extensions up -d
 healthy=
 for i in {1..30}; do
     [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8080/api/health) == 200 ]] && { healthy=1; break; } || echo "Waiting for cBioPortal services                 ..."
-    sleep 30s
+    sleep 30
 done
 [ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Waiting for cBioPortal services                 ... done"
 

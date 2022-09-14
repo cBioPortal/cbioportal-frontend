@@ -30,7 +30,7 @@ echo
 healthy=
 for i in {1..30}; do
     [[ $(curl -sf http://localhost:8080/api/health) ]] && { healthy=1; break; } || echo "Waiting for cBioPortal service                 ..."
-    sleep 10s
+    sleep 10
 done
 [ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Waiting for cBioPortal service                 ... done"
 
