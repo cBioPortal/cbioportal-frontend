@@ -20,11 +20,11 @@ cd /cbioportal-frontend/end-to-end-test
 
 echo PROBE CBIOPORTAL
 curl $CBIOPORTAL_URL > /dev/null
-sleep 5s
+sleep 5
 curl $CBIOPORTAL_URL > /dev/null
-sleep 5s
+sleep 5
 curl $CBIOPORTAL_URL > /dev/null
-sleep 20s
+sleep 20
 
 echo PROBE FRONTEND SERVER
 (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null
