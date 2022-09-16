@@ -28,7 +28,7 @@ import {
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { MutationStatus } from 'react-mutation-mapper';
 
-export interface IPatientViewStructuralVariantTableProps {
+export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
     onSelectGenePanel?: (name: string) => void;
     mergeOncoKbIcons?: boolean;
@@ -43,15 +43,15 @@ class StructuralVariantTableComponent extends LazyMobXTable<
 const ANNOTATION_ELEMENT_ID = 'sv-annotation';
 
 @observer
-export default class PatientViewStructuralVariantTable extends React.Component<
-    IPatientViewStructuralVariantTableProps,
+export default class StructuralVariantTableWrapper extends React.Component<
+    IStructuralVariantTableWrapperProps,
     {}
 > {
     @observable mergeOncoKbIcons;
     @observable oncokbWidth = DEFAULT_ONCOKB_CONTENT_WIDTH;
     private oncokbInterval: any;
 
-    constructor(props: IPatientViewStructuralVariantTableProps) {
+    constructor(props: IStructuralVariantTableWrapperProps) {
         super(props);
         makeObservable(this);
 
@@ -474,12 +474,26 @@ export default class PatientViewStructuralVariantTable extends React.Component<
             this.columns,
         ],
         render: () => {
+            const isProfiled = this.props.store
+                .genePanelDataByMolecularProfileIdAndSampleId.result?.[
+                this.props.store.structuralVariantProfile.result
+                    ?.molecularProfileId!
+            ]?.[this.props.store.sampleIds?.[0]]?.profiled;
+
             if (
                 this.props.store.structuralVariantProfile.result === undefined
             ) {
                 return (
                     <div className="alert alert-info" role="alert">
-                        Structural Variants are not available.
+                        Study has no Structual Variant data.
+                    </div>
+                );
+            } else if (!isProfiled) {
+                return (
+                    <div className="alert alert-info" role="alert">
+                        {this.props.store.pageMode === 'patient'
+                            ? 'Patient is not profiled for Structural Variants.'
+                            : 'Sample is not profiled for Structural Variants.'}
                     </div>
                 );
             }

@@ -3,12 +3,9 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import TimelineWrapper from 'pages/patientView/timeline/TimelineWrapper';
 import WindowStore from 'shared/components/window/WindowStore';
 import GenomicOverview from 'pages/patientView/genomicOverview/GenomicOverview';
-import {
-    default as PatientViewMutationTable,
-    defaultAlleleFrequencyHeaderTooltip,
-} from 'pages/patientView/mutation/PatientViewMutationTable';
+import { defaultAlleleFrequencyHeaderTooltip } from 'pages/patientView/mutation/PatientViewMutationTable';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
-import PatientViewStructuralVariantTable from 'pages/patientView/structuralVariant/PatientViewStructuralVariantTable';
+import StructuralVariantTableWrapper from 'pages/patientView/structuralVariant/StructuralVariantTableWrapper';
 import CopyNumberTableWrapper from 'pages/patientView/copyNumberAlterations/CopyNumberTableWrapper';
 import PatientViewMutationsTab from 'pages/patientView/mutation/PatientViewMutationsTab';
 import PatientViewPathwayMapper from 'pages/patientView/pathwayMapper/PatientViewPathwayMapper';
@@ -37,6 +34,7 @@ import {
 import genomicOverviewStyles from 'pages/patientView/genomicOverview/styles.module.scss';
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import MutationTableWrapper from './mutation/MutationTableWrapper';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -253,10 +251,23 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.genePanelIdToEntrezGeneIds
                     .isComplete &&
+                pageComponent.patientViewPageStore.mutationMolecularProfile
+                    .isComplete &&
+                pageComponent.patientViewPageStore
+                    .genePanelDataByMolecularProfileIdAndSampleId.isComplete &&
                 !!sampleManager && (
                     <div data-test="patientview-mutation-table">
                         <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
-                            <PatientViewMutationTable
+                            <MutationTableWrapper
+                                profile={
+                                    pageComponent.patientViewPageStore
+                                        .mutationMolecularProfile.result
+                                }
+                                genePanelDataByMolecularProfileIdAndSampleId={
+                                    pageComponent.patientViewPageStore
+                                        .genePanelDataByMolecularProfileIdAndSampleId
+                                        .result
+                                }
                                 dataStore={
                                     pageComponent.patientViewMutationDataStore
                                 }
@@ -274,9 +285,7 @@ export function tabs(
                                         .genePanelIdToEntrezGeneIds.result
                                 }
                                 sampleIds={
-                                    sampleManager
-                                        ? sampleManager.getSampleIdsInOrder()
-                                        : []
+                                    pageComponent.patientViewPageStore.sampleIds
                                 }
                                 uniqueSampleKeyToTumorType={
                                     pageComponent.patientViewPageStore
@@ -438,6 +447,9 @@ export function tabs(
                                         .namespaceColumnConfig
                                 }
                                 columns={pageComponent.columns}
+                                pageMode={
+                                    pageComponent.patientViewPageStore.pageMode
+                                }
                                 alleleFreqHeaderRender={
                                     pageComponent.patientViewPageStore
                                         .mergedMutationDataFilteredByGene
@@ -510,12 +522,11 @@ export function tabs(
 
             <LoadingIndicator
                 isLoading={
-                    pageComponent.cnaTableStatus === 'loading' ||
                     pageComponent.patientViewPageStore.studyIdToStudy.isPending
                 }
             />
 
-            <PatientViewStructuralVariantTable
+            <StructuralVariantTableWrapper
                 store={pageComponent.patientViewPageStore}
                 onSelectGenePanel={pageComponent.toggleGenePanelModal}
                 mergeOncoKbIcons={
@@ -528,11 +539,24 @@ export function tabs(
             {pageComponent.patientViewPageStore.studyIdToStudy.isComplete &&
                 pageComponent.patientViewPageStore.genePanelIdToEntrezGeneIds
                     .isComplete &&
-                pageComponent.patientViewPageStore.referenceGenes
+                pageComponent.patientViewPageStore.referenceGenes.isComplete &&
+                pageComponent.patientViewPageStore.discreteMolecularProfile
+                    .isComplete &&
+                pageComponent.patientViewPageStore
+                    .genePanelDataByMolecularProfileIdAndSampleId
                     .isComplete && (
                     <div data-test="patientview-copynumber-table">
                         <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
                             <CopyNumberTableWrapper
+                                profile={
+                                    pageComponent.patientViewPageStore
+                                        .discreteMolecularProfile.result
+                                }
+                                genePanelDataByMolecularProfileIdAndSampleId={
+                                    pageComponent.patientViewPageStore
+                                        .genePanelDataByMolecularProfileIdAndSampleId
+                                        .result
+                                }
                                 dataStore={
                                     pageComponent.patientViewCnaDataStore
                                 }
@@ -545,9 +569,7 @@ export function tabs(
                                         .studyIdToStudy.result
                                 }
                                 sampleIds={
-                                    sampleManager
-                                        ? sampleManager.getSampleIdsInOrder()
-                                        : []
+                                    pageComponent.patientViewPageStore.sampleIds
                                 }
                                 sampleManager={sampleManager}
                                 sampleToGenePanelId={
@@ -616,7 +638,6 @@ export function tabs(
                                         .mrnaRankMolecularProfileId.result ||
                                     undefined
                                 }
-                                status={pageComponent.cnaTableStatus}
                                 columnVisibility={
                                     pageComponent.cnaTableColumnVisibility
                                 }
@@ -642,6 +663,9 @@ export function tabs(
                                     pageComponent.genePanelModal.isOpen
                                 }
                                 onRowClick={pageComponent.onCnaTableRowClick}
+                                pageMode={
+                                    pageComponent.patientViewPageStore.pageMode
+                                }
                             />
                         </FeatureInstruction>
                     </div>
