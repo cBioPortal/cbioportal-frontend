@@ -2641,9 +2641,9 @@ export function getChartSettingsMap(
     clinicalDataBinFilterSet: {
         [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
     },
-    filterMutatedGenesTableByCancerGenes: boolean = true,
-    filterSVGenesTableByCancerGenes: boolean = true,
-    filterCNAGenesTableByCancerGenes: boolean = true,
+    filterMutatedGenesTableByCancerGenes: boolean = false,
+    filterSVGenesTableByCancerGenes: boolean = false,
+    filterCNAGenesTableByCancerGenes: boolean = false,
     gridLayout?: ReactGridLayout.Layout[]
 ) {
     if (!gridLayout) {
