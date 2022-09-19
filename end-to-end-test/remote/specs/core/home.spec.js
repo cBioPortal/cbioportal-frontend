@@ -16,7 +16,7 @@ var {
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-var searchInputSelector = '.autosuggest input[type=text]';
+var searchInputSelector = 'div[data-test=study-search] input[type=text]';
 
 describe('homepage', function() {
     before(() => {
@@ -81,8 +81,13 @@ describe('homepage', function() {
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', () => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('.autosuggest input[type=text]').waitForExist({ timeout: 10000 });
-        setInputText('.autosuggest input[type=text]', 'breast -invasive');
+        $('div[data-test=study-search] input[type=text]').waitForExist({
+            timeout: 10000,
+        });
+        setInputText(
+            'div[data-test=study-search] input[type=text]',
+            'breast -invasive'
+        );
 
         browser.pause(500);
         $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
@@ -176,7 +181,7 @@ describe('select all/deselect all functionality in study selector', function() {
             'global deselect button DOES exist'
         );
 
-        var input = $('.autosuggest input[type=text]');
+        var input = $('div[data-test=study-search] input[type=text]');
 
         assert.equal(getCheckedCheckboxes().length, 1, 'we selected one study');
 
@@ -206,7 +211,7 @@ describe('case set selection in front page query form', function() {
     });
 
     it('selects the default case set for single study selections', () => {
-        var input = '.autosuggest input[type=text]';
+        var input = 'div[data-test=study-search] input[type=text]';
         $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ovarian nature 2011');
         waitForNumberOfStudyCheckboxes(1);
@@ -225,7 +230,7 @@ describe('case set selection in front page query form', function() {
     });
     it('selects the right default case sets in a single->multiple->single study selection flow', () => {
         // Select Ampullary Carcinoma
-        var input = '.autosuggest input[type=text]';
+        var input = 'div[data-test=study-search] input[type=text]';
         $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ampullary baylor');
         waitForNumberOfStudyCheckboxes(1);
@@ -291,7 +296,7 @@ describe('case set selection in front page query form', function() {
     });
     it('selects the right default case sets in a single->select all filtered->single study selection flow', () => {
         // Select Ampullary Carcinoma
-        var input = '.autosuggest input[type=text]';
+        var input = 'div[data-test=study-search] input[type=text]';
         $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ampullary baylor');
         waitForNumberOfStudyCheckboxes(1);
@@ -401,7 +406,7 @@ describe('genetic profile selection in front page query form', () => {
     });
     it('selects the right default genetic profiles in a single->multiple->single study selection flow', () => {
         // select a study
-        var input = '.autosuggest input[type=text]';
+        var input = 'div[data-test=study-search] input[type=text]';
         $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ovarian nature 2011');
         waitForNumberOfStudyCheckboxes(1);

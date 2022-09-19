@@ -249,7 +249,7 @@ describe('sorting', function() {
     it('oncoprint should sort patients correctly in coadread_tcga_pub', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        var inputSelector = '.autosuggest input[type="text"]';
+        var inputSelector = 'div[data-test=study-search] input[type="text"]';
 
         $(inputSelector).waitForExist({ timeout: 10000 });
 
@@ -303,7 +303,7 @@ describe('sorting', function() {
     it('oncoprint should sort patients correctly in gbm_tcga_pub', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        var inputSelector = '.autosuggest input[type="text"]';
+        var inputSelector = 'div[data-test=study-search] input[type="text"]';
 
         $(inputSelector).waitForExist({ timeout: 10000 });
 

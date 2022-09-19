@@ -20,13 +20,13 @@ import { If, Then, Else } from 'react-if';
 import { QueryStore } from './QueryStore';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import { Modal } from 'react-bootstrap';
-import Autosuggest from 'react-bootstrap-autosuggest';
 import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from '../../../config/config';
 import { PAN_CAN_SIGNATURE } from './StudyListLogic';
 import QuickSelectButtons from './QuickSelectButtons';
 import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import WindowStore from 'shared/components/window/WindowStore';
+import { StudySearch } from 'shared/components/query/StudySearch';
 
 const MIN_LIST_HEIGHT = 200;
 
@@ -136,8 +136,6 @@ export default class CancerStudySelector extends React.Component<
         }
     );
 
-    private autosuggest: React.Component<any, any>;
-
     @action.bound
     selectTCGAPanAtlas() {
         this.logic.mainView.selectAllMatchingStudies(PAN_CAN_SIGNATURE);
@@ -237,12 +235,6 @@ export default class CancerStudySelector extends React.Component<
                                 ].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;
 
-                            const optionsWithSortKeys = searchTextOptions.map(
-                                (name, i) => {
-                                    return { value: name, sortKey: i };
-                                }
-                            );
-
                             return (
                                 <div
                                     style={{
@@ -250,61 +242,15 @@ export default class CancerStudySelector extends React.Component<
                                         alignItems: 'center',
                                     }}
                                 >
-                                    {this.store.searchText && (
-                                        <span
-                                            data-test="clearStudyFilter"
-                                            onClick={e => {
-                                                this.autosuggest.setState({
-                                                    inputValue: '',
-                                                });
-                                                this.handlers.onClearFilter();
-                                            }}
-                                            style={{
-                                                fontSize: 18,
-                                                cursor: 'pointer',
-                                                color: '#999999',
-                                                position: 'relative',
-                                                left: 164,
-                                                zIndex: 10,
-                                            }}
-                                        >
-                                            x
-                                        </span>
+                                    {this.store.queryParser && (
+                                        <StudySearch
+                                            parser={this.store.queryParser}
+                                            query={this.store.searchClauses}
+                                            onSearch={query =>
+                                                (this.store.searchClauses = query)
+                                            }
+                                        />
                                     )}
-                                    <Autosuggest
-                                        datalist={optionsWithSortKeys}
-                                        ref={(el: React.Component<any, any>) =>
-                                            (this.autosuggest = el)
-                                        }
-                                        placeholder="Search..."
-                                        bsSize="small"
-                                        onChange={(currentVal: string) => {
-                                            if (searchTimeout !== null) {
-                                                window.clearTimeout(
-                                                    searchTimeout
-                                                );
-                                                searchTimeout = null;
-                                            }
-
-                                            searchTimeout = window.setTimeout(
-                                                () => {
-                                                    this.store.setSearchText(
-                                                        currentVal
-                                                    );
-                                                },
-                                                400
-                                            );
-                                        }}
-                                        onFocus={(value: string) => {
-                                            if (value.length === 0) {
-                                                setTimeout(() => {
-                                                    this.autosuggest.setState({
-                                                        open: true,
-                                                    });
-                                                }, 400);
-                                            }
-                                        }}
-                                    />
                                 </div>
                             );
                         }}

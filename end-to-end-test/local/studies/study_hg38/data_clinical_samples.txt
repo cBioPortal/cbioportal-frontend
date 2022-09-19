@@ -1,0 +1,6 @@
+#Patient Identifier	Sample Identifier	Subtype
+#Patient identifier	Sample identifier	Subtype description
+#STRING	STRING	STRING
+#1	1	1
+PATIENT_ID	SAMPLE_ID	SUBTYPE
+TCGA-A2-A04P	TCGA-A2-A04P-01	basal-like

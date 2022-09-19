@@ -1,0 +1,23 @@
+.filter-list {
+    a {
+        display: block;
+        padding: 5px;
+    }
+
+    a,
+    .dropdown-item {
+        color: $dropdown-link-color;
+        line-height: $line-height-base;
+
+        &:hover,
+        &:focus {
+            text-decoration: none;
+            color: $dropdown-link-color;
+            background-color: $dropdown-link-hover-bg;
+        }
+    }
+
+    hr {
+        margin-top: 1em;
+    }
+}

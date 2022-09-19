@@ -10645,7 +10645,7 @@ fb-watchman@^2.0.0:
   dependencies:
     bser "2.1.1"
 
-fbjs@^0.8.1, fbjs@^0.8.12, fbjs@^0.8.4, fbjs@^0.8.9:
+fbjs@^0.8.1, fbjs@^0.8.4, fbjs@^0.8.9:
   version "0.8.17"
   resolved "https://registry.yarnpkg.com/fbjs/-/fbjs-0.8.17.tgz#c4d598ead6949112653d6588b01a5cdcd9f90fdd"
   integrity sha1-xNWY6taUkRJlPWWIsBpc3Nn5D90=
@@ -14670,7 +14670,7 @@ kdbush@^1.0.1:
   resolved "https://registry.yarnpkg.com/kdbush/-/kdbush-1.0.1.tgz#3cbd03e9dead9c0f6f66ccdb96450e5cecc640e0"
   integrity sha1-PL0D6d6tnA9vZszblkUOXOzGQOA=
 
-keycode@^2.1.2, keycode@^2.1.8:
+keycode@^2.1.2:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/keycode/-/keycode-2.2.0.tgz#3d0af56dc7b8b8e5cba8d0a97f107204eec22b04"
   integrity sha1-PQr1bce4uOXLqNCpfxByBO7CKwQ=
@@ -19691,17 +19691,6 @@ react-addons-test-utils@^15.4.2:
   version "15.6.2"
   resolved "https://registry.yarnpkg.com/react-addons-test-utils/-/react-addons-test-utils-15.6.2.tgz#c12b6efdc2247c10da7b8770d185080a7b047156"
   integrity sha1-wStu/cIkfBDae4dw0YUICnsEcVY=
-
-react-bootstrap-autosuggest@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/react-bootstrap-autosuggest/-/react-bootstrap-autosuggest-0.5.0.tgz#0c8c62ca21d8d14cd5f4eeb5997152484773c439"
-  integrity sha1-DIxiyiHY0UzV9O61mXFSSEdzxDk=
-  dependencies:
-    classnames "^2.2.5"
-    fbjs "^0.8.12"
-    keycode "^2.1.8"
-    prop-types "^15.5.8"
-    warning "^3.0.0"
 
 react-bootstrap-slider@^2.0.1:
   version "2.2.2"
