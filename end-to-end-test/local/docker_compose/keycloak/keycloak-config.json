@@ -135,6 +135,9 @@
                 },
                 {
                     "name": "lgg_ucsf_2014_test_generic_assay"
+                },
+                {
+                    "name": "study_hg38"
                 }
             ]
         }

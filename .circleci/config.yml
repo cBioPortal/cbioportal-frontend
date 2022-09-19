@@ -290,7 +290,7 @@ jobs:
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/cbio_db_data
-          key: v8-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          key: v9-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - run:
           name: Start cbioportal and other services
           command: |
@@ -305,7 +305,7 @@ jobs:
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
-          key: v8-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+          key: v9-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Run end-2-end tests with studies in local database
           command: |
