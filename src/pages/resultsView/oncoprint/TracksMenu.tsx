@@ -646,7 +646,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                         activeTabId={this.tabId}
                         onTabClick={this.updateTabId}
                         unmountOnHide={false}
-                        className="mainTabs oncoprintAddTracks"
+                        className="menuTabs oncoprintAddTracks"
                     >
                         <MSKTab
                             key={0}
