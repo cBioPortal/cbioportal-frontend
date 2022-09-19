@@ -6,6 +6,8 @@ type SearchBoxProps = {
     queryString: string;
     onType: (changed: string) => void;
     onFocus: () => void;
+    onBlur: () => void;
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 };
 
 export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
@@ -34,6 +36,8 @@ export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
                 onFocus={props.onFocus}
+                onBlur={props.onBlur}
+                onKeyDown={props.onKeyDown}
                 style={{
                     width: '300px',
                 }}
