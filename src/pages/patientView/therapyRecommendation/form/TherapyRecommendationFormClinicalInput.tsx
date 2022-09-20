@@ -104,7 +104,7 @@ export default class TherapyRecommendationFormClinicalInput extends React.Compon
                                 ' (' +
                                 signatureItem.meta.description +
                                 ')',
-                            value: _.toString(signatureItem.value),
+                            value: (signatureItem.value * 100).toFixed() + '%',
                         } as IClinicalData;
                     }
                 )
