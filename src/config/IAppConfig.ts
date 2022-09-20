@@ -142,6 +142,7 @@ export interface IServerConfig {
     session_url_length_threshold: string;
     mskWholeSlideViewerToken: string;
     query_product_limit: number;
+    clinical_attribute_product_limit: number;
     dat_method: string;
     skin_show_gsva: boolean;
     skin_geneset_hierarchy_default_gsva_score: number;
@@ -160,4 +161,5 @@ export interface IServerConfig {
     skin_home_page_unauthorized_studies_global_message: string;
     skin_mutation_table_namespace_column_show_by_default: boolean;
     comparison_categorical_na_values: string;
+    oncoprint_clinical_tracks_config_json: string;
 }

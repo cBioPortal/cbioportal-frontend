@@ -28,7 +28,7 @@ import {
 import OQLTextArea, { GeneBoxType } from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
-import AddTracks from 'pages/resultsView/oncoprint/AddTracks';
+import TracksMenu from 'pages/resultsView/oncoprint/TracksMenu';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import {
     IDriverAnnotationControlsHandlers,
@@ -36,6 +36,10 @@ import {
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
 import { AppContext } from 'cbioportal-frontend-commons';
+import {
+    ClinicalTrackConfig,
+    ClinicalTrackConfigMap,
+} from 'shared/components/oncoprint/Oncoprint';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -63,7 +67,7 @@ export interface IOncoprintControlsHandlers
         type: 'pdf' | 'png' | 'svg' | 'order' | 'tabular' | 'oncoprinter'
     ) => void;
     onChangeSelectedClinicalTracks?: (
-        attributeIds: (string | SpecialAttribute)[]
+        trackConfigs: ClinicalTrackConfig[]
     ) => void;
     onClickAddGenesToHeatmap?: () => void;
     onSelectGenericAssayProfile?: (molecularProfileId: string) => void;
@@ -83,6 +87,9 @@ export interface IOncoprintControlsState
     onlyShowClinicalLegendForAlteredCases?: boolean;
     showOqlInLabels?: boolean;
     showMinimap: boolean;
+    isClinicalTrackConfigDirty: boolean;
+    isLoggedIn: boolean;
+    isSessionServiceEnabled: boolean;
     distinguishMutationType: boolean;
     distinguishGermlineMutations: boolean;
     sortByMutationType: boolean;
@@ -96,7 +103,7 @@ export interface IOncoprintControlsState
     clinicalAttributeSampleCountPromise?: MobxPromise<{
         [clinicalAttributeId: string]: number;
     }>;
-    selectedClinicalAttributeIds?: string[];
+    selectedClinicalAttributeSpecInits?: ClinicalTrackConfigMap;
     heatmapProfilesPromise?: MobxPromise<MolecularProfile[]>;
     genericAssayEntitiesGroupedByGenericAssayTypePromise?: MobxPromise<{
         [genericAssayType: string]: GenericAssayMeta[];
@@ -456,10 +463,10 @@ export default class OncoprintControls extends React.Component<
         this.tabId = newId;
     }
 
-    private AddTracksMenu = observer(() => {
+    private tracksMenu = observer(() => {
         if (this.props.store) {
             return (
-                <AddTracks
+                <TracksMenu
                     store={this.props.store}
                     heatmapMenu={this.heatmapMenu}
                     handlers={this.props.handlers}
@@ -1196,7 +1203,7 @@ export default class OncoprintControls extends React.Component<
         return (
             <div className="oncoprint__controls">
                 <ButtonGroup>
-                    <this.AddTracksMenu />
+                    <this.tracksMenu />
                     <this.SortMenu />
                     <this.MutationColorMenu />
                     <this.ViewMenu />

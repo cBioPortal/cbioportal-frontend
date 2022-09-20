@@ -227,6 +227,9 @@ export async function fetchOncoKbDataForMutations(
         return new Error();
     }
 
+    // TODO: structural variant data does not satisy this condition
+    // and thus doesn't get annotated in oncoprinter
+    // we need to decide whether to adapt or perhaps just scrap oncoprinter?
     const mutationsToQuery = _.chain(data)
         .filter(m => !!annotatedGenes[m.entrezGeneId])
         .filter(
@@ -732,6 +735,9 @@ export function annotateGeneticTrackData(
                         d.oncoKbOncogenic = getOncoKbCnaAnnotation(d);
                         break;
                     case AlterationTypeConstants.MUTATION_EXTENDED:
+                        d.oncoKbOncogenic = getOncoKbAnnotation(d);
+                        break;
+                    case AlterationTypeConstants.STRUCTURAL_VARIANT:
                         d.oncoKbOncogenic = getOncoKbAnnotation(d);
                         break;
                 }

@@ -73,6 +73,7 @@ import {
     isGenericAssayCategoricalProfile,
     isGenericAssayHeatmapProfile,
 } from 'shared/components/oncoprint/ResultsViewOncoprintUtils';
+import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -867,7 +868,7 @@ export function makeClinicalTracksMobxPromise(
                     .isComplete
             ) {
                 const attributes = Array.from(
-                    oncoprint.selectedClinicalAttributeIds.keys()
+                    _.keys(oncoprint.selectedClinicalTrackConfig)
                 )
                     .map(attrId => {
                         return oncoprint.props.store
@@ -883,17 +884,21 @@ export function makeClinicalTracksMobxPromise(
             return ret;
         },
         invoke: async () => {
-            if (oncoprint.selectedClinicalAttributeIds.size === 0) {
+            if (!_.keys(oncoprint.selectedClinicalTrackConfig).length) {
                 return [];
             }
-            const attributes = Array.from(
-                oncoprint.selectedClinicalAttributeIds.keys()
+            const attributes: ExtendedClinicalAttribute[] = Array.from(
+                _.keys(oncoprint.selectedClinicalTrackConfig)
             )
-                .map(attrId => {
-                    return oncoprint.props.store
-                        .clinicalAttributeIdToClinicalAttribute.result![attrId];
-                })
-                .filter(x => !!x); // filter out nonexistent attributes
+                .map(
+                    attrId =>
+                        oncoprint.props.store
+                            .clinicalAttributeIdToClinicalAttribute.result![
+                            attrId
+                        ]
+                )
+                // filter out nonexistent attributes:
+                .filter(x => !!x);
             return attributes.map((attribute: ClinicalAttribute) => {
                 const dataAndColors = oncoprint.props.store.clinicalDataCache.get(
                     attribute
@@ -977,6 +982,14 @@ export function makeClinicalTracksMobxPromise(
                     (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
                     (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
                 }
+
+                const trackConfig =
+                    oncoprint.selectedClinicalTrackConfig[
+                        attribute.clinicalAttributeId
+                    ];
+                ret.sortOrder = trackConfig.sortOrder || undefined;
+                ret.gapOn = trackConfig.gapOn || undefined;
+
                 return ret as ClinicalTrackSpec;
             });
         },

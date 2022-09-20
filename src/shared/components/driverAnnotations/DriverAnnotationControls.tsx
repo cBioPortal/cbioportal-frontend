@@ -319,7 +319,7 @@ export default class DriverAnnotationControls extends React.Component<
                                         .customDriverAnnotationBinaryMenuLabel
                                 }
                                 <img
-                                    src={require('../../../rootImages/driver.png')}
+                                    src={require('../../../rootImages/driver.svg')}
                                     alt="driver filter"
                                     style={{
                                         height: '15px',

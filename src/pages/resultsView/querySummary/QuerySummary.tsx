@@ -337,11 +337,13 @@ export default class QuerySummary extends React.Component<
                             </div>
 
                             <ShareUI
-                                sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
                                 bitlyAccessToken={
                                     getServerConfig().bitly_access_token
                                 }
-                                urlWrapper={this.props.store.urlWrapper}
+                                userSettings={
+                                    this.props.store.pageUserSession
+                                        .userSettings
+                                }
                             />
                         </div>
                     </div>

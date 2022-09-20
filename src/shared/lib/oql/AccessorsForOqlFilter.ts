@@ -155,7 +155,10 @@ export default class AccessorsForOqlFilter
             this.molecularAlterationType(d.molecularProfileId) ===
             AlterationTypeConstants.STRUCTURAL_VARIANT
         ) {
-            return (d as StructuralVariant).site1HugoSymbol;
+            return [
+                (d as StructuralVariant).site1HugoSymbol,
+                (d as StructuralVariant).site2HugoSymbol,
+            ];
         }
         return (d as any).gene.hugoGeneSymbol;
     }

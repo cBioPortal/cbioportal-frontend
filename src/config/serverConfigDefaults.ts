@@ -1,6 +1,6 @@
 import { IServerConfig } from './IAppConfig';
 
-const ServerConfigDefaults: Partial<IServerConfig> = {
+export const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',
     api_cache_limit: 450,
     dat_method: 'none',
@@ -39,7 +39,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     pubmed_url: 'https://www.ncbi.nlm.nih.gov/pubmed/<%=pmid%>',
 
-    isoformOverrideSource: 'uniprot',
+    isoformOverrideSource: 'mskcc',
     show_hotspot: true,
     show_oncokb: true,
     show_civic: false,
@@ -67,7 +67,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_documentation_faq: 'user-guide/faq.md',
     skin_footer_show_dev: false,
     skin_login_saml_registration_html: 'Sign in with MSK',
-    skin_documentation_news: 'News.md',
+    skin_documentation_news: 'https://docs.cbioportal.org/news/',
     skin_documentation_oql: 'user-guide/oql.md',
     skin_query_max_tree_depth: '3',
     skin_right_nav_show_data_sets: true,
@@ -175,6 +175,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     query_product_limit: 1000000,
 
+    clinical_attribute_product_limit: 6500000,
+
     skin_show_gsva: false,
 
     skin_geneset_hierarchy_default_gsva_score: 0.5,
@@ -197,6 +199,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'The study is unauthorized. You need to request access.',
     comparison_categorical_na_values: 'NA',
     skin_hide_download_controls: false,
+
+    oncoprint_clinical_tracks_config_json: '',
 };
 
 export default ServerConfigDefaults;

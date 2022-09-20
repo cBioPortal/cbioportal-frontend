@@ -796,7 +796,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     unmountOnHide={false}
                     activeTabId={this.activeId}
                     onTabClick={this.updateActiveId}
-                    className="addChartTabs mainTabs"
+                    className="addChartTabs menuTabs"
                 >
                     <MSKTab
                         key={0}
@@ -1058,8 +1058,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     <button
                         style={{
                             position: 'absolute',
-                            top: 14,
-                            right: 18,
+                            top: 10,
+                            right: 10,
                             zIndex: 2,
                         }}
                         className="btn btn-primary btn-xs"

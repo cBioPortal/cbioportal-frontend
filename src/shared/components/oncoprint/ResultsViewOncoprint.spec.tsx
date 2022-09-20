@@ -7,6 +7,8 @@ import { SortByUrlParamValue } from 'shared/components/oncoprint/ResultsViewOnco
 import { createMemoryHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import { PageUserSession } from 'shared/userSession/PageUserSession';
+import { ResultPageSettings } from 'shared/api/session-service/sessionServiceModels';
 
 describe('Oncoprint sortBy URL parameter', () => {
     let wrapper: ResultsViewURLWrapper;
@@ -55,6 +57,10 @@ describe('Oncoprint sortBy URL parameter', () => {
         filteredPatients: { isComplete: true, result: patients },
         givenSampleOrder: { isComplete: true, result: caseList },
         molecularProfileIdToMolecularProfile: { isComplete: true },
+        pageUserSession: ({
+            userSettings: {},
+            isComplete: true,
+        } as unknown) as PageUserSession<ResultPageSettings>,
     } as any) as ResultsViewPageStore;
 
     it('`case_id` provides sorted sample config to oncoprint', () => {

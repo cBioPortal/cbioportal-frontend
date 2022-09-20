@@ -3,6 +3,7 @@ import _ from 'lodash';
 import {
     CancerStudy,
     ClinicalData,
+    DiscreteCopyNumberData,
     ResourceData,
 } from 'cbioportal-ts-api-client';
 import {
@@ -28,6 +29,7 @@ import { validateParametersPatientView } from '../../shared/lib/validateParamete
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ValidationAlert from 'shared/components/ValidationAlert';
 import PatientViewMutationsDataStore from './mutation/PatientViewMutationsDataStore';
+import PatientViewCnaDataStore from './copyNumberAlterations/PatientViewCnaDataStore';
 
 import './patient.scss';
 
@@ -106,11 +108,9 @@ export default class PatientViewPage extends React.Component<
     @observable
     public urlWrapper: PatientViewUrlWrapper;
     public patientViewMutationDataStore: PatientViewMutationsDataStore;
+    public patientViewCnaDataStore: PatientViewCnaDataStore;
 
     public patientViewPageStore: PatientViewPageStore;
-
-    @observable
-    public activeLocus: string | undefined;
 
     constructor(props: IPatientViewPageProps) {
         super(props);
@@ -125,6 +125,11 @@ export default class PatientViewPage extends React.Component<
 
         this.patientViewMutationDataStore = new PatientViewMutationsDataStore(
             () => this.mergedMutations,
+            this.urlWrapper
+        );
+
+        this.patientViewCnaDataStore = new PatientViewCnaDataStore(
+            () => this.mergedCnas,
             this.urlWrapper
         );
 
@@ -210,6 +215,10 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
+    @computed get mergedCnas() {
+        return this.patientViewPageStore.mergedDiscreteCNADataFilteredByGene;
+    }
+
     componentDidMount() {
         // Load posted data, if it exists
         const postData = getBrowserWindow().clientPostedData;
@@ -244,14 +253,9 @@ export default class PatientViewPage extends React.Component<
 
     @action.bound
     public handleLocusChange(locus: string) {
-        if (this.activeLocus !== locus) {
-            this.activeLocus = locus;
+        if (this.patientViewPageStore.activeLocus !== locus) {
+            this.patientViewPageStore.activeLocus = locus;
         }
-    }
-
-    @action.bound
-    public handleCNATableGeneClick(hugoGeneSymbol: string) {
-        this.handleLocusChange(hugoGeneSymbol);
     }
 
     @action.bound
@@ -473,20 +477,60 @@ export default class PatientViewPage extends React.Component<
 
     @autobind
     onMutationTableRowClick(d: Mutation[]) {
+        // select mutation and toggle off previous selected
         if (d.length) {
-            this.patientViewMutationDataStore.toggleSelectedMutation(d[0]);
+            this.patientViewMutationDataStore.setSelectedMutations([d[0]]);
+            if (this.patientViewCnaDataStore.selectedCna.length > 0) {
+                this.patientViewCnaDataStore.toggleSelectedCna(
+                    this.patientViewCnaDataStore.selectedCna[0]
+                );
+            }
             this.handleLocusChange(d[0].gene.hugoGeneSymbol);
         }
     }
+
     @autobind
     onMutationTableRowMouseEnter(d: Mutation[]) {
         if (d.length) {
             this.patientViewMutationDataStore.setMouseOverMutation(d[0]);
         }
     }
+
     @autobind
     onMutationTableRowMouseLeave() {
         this.patientViewMutationDataStore.setMouseOverMutation(null);
+    }
+
+    @action.bound
+    onCnaTableRowClick(d: DiscreteCopyNumberData[]) {
+        // select cna and toggle off previous selected
+        if (d.length) {
+            this.patientViewCnaDataStore.setSelectedCna([d[0]]);
+            if (
+                this.patientViewMutationDataStore.selectedMutations.length > 0
+            ) {
+                this.patientViewMutationDataStore.toggleSelectedMutation(
+                    this.patientViewMutationDataStore.selectedMutations[0]
+                );
+            }
+            this.handleLocusChange(d[0].gene.hugoGeneSymbol);
+        }
+    }
+
+    @action.bound
+    onResetViewClick() {
+        // toggle off selected cna/mutation row
+        if (this.patientViewCnaDataStore.selectedCna.length > 0) {
+            this.patientViewCnaDataStore.toggleSelectedCna(
+                this.patientViewCnaDataStore.selectedCna[0]
+            );
+        } else if (
+            this.patientViewMutationDataStore.selectedMutations.length > 0
+        ) {
+            this.patientViewMutationDataStore.toggleSelectedMutation(
+                this.patientViewMutationDataStore.selectedMutations[0]
+            );
+        }
     }
 
     readonly resourceTabs = MakeMobxView({

@@ -2,7 +2,6 @@ import { assert } from 'chai';
 import {
     getCaseViewElt,
     makeClinicalTrackTooltip,
-    makeGeneticTrackTooltip,
     makeGeneticTrackTooltip_getCoverageInformation,
     makeHeatmapTrackTooltip,
 } from './TooltipUtils';
@@ -19,6 +18,7 @@ import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
 import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
+import { makeGeneticTrackTooltip } from 'shared/components/oncoprint/makeGeneticTrackTooltip';
 
 describe('Oncoprint TooltipUtils', () => {
     describe('getCaseViewElt', () => {

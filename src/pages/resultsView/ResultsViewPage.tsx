@@ -16,10 +16,9 @@ import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummar
 import Mutations from './mutation/Mutations';
 import MutualExclusivityTab from './mutualExclusivity/MutualExclusivityTab';
 import DownloadTab from './download/DownloadTab';
-import { getServerConfig } from 'config/config';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
-import ResultsViewPathwayMapper from './pathwayMapper/ResultsViewPathwayMapper';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
 import PlotsTab from './plots/PlotsTab';
@@ -43,7 +42,9 @@ import { trackQuery } from '../../shared/lib/tracking';
 import QueryAndDownloadTabs from 'shared/components/query/QueryAndDownloadTabs';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidationError';
-import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import ResultsViewURLWrapper, {
+    USER_SETTINGS_QUERY_PARAM,
+} from 'pages/resultsView/ResultsViewURLWrapper';
 import setWindowVariable from 'shared/lib/setWindowVariable';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { onMobxPromise } from 'cbioportal-frontend-commons';
@@ -67,7 +68,6 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 import { AppContext } from 'cbioportal-frontend-commons';
 import PathWayMapperContainer from 'pages/resultsView/pathwayMapper/PathWayMapperContainer';
 
@@ -155,6 +155,13 @@ export default class ResultsViewPage extends React.Component<
 
     private get routing(): ExtendedRouterStore {
         return getBrowserWindow().globalStores.routing as ExtendedRouterStore;
+    }
+
+    componentDidMount() {
+        // Remove bookmark user settings query param after initialization
+        const newParams = _.clone(this.routing.query);
+        newParams[USER_SETTINGS_QUERY_PARAM] = undefined;
+        this.routing.updateRoute(newParams);
     }
 
     componentWillUnmount() {
@@ -411,6 +418,7 @@ export default class ResultsViewPage extends React.Component<
                                 <PathWayMapperContainer
                                     resultsViewPageStore={store}
                                     appStore={this.appStore}
+                                    urlWrapper={this.urlWrapper}
                                 />
                             ) : (
                                 <LoadingIndicator

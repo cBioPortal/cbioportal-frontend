@@ -159,6 +159,7 @@ import {
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
 } from 'shared/lib/AnnotationColumnUtils';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',

@@ -7,6 +7,12 @@ import {
     OncoKbCardDataType,
 } from 'cbioportal-utils';
 import { IndicatorQueryResp, TumorType } from 'oncokb-ts-api-client';
+import {
+    deriveStructuralVariantType,
+    generateAnnotateStructuralVariantQuery,
+    generateQueryStructuralVariantId,
+} from 'cbioportal-utils';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 // oncogenic value => oncogenic class name
 const ONCOGENIC_CLASS_NAMES: { [oncogenic: string]: string } = {
@@ -339,6 +345,19 @@ export function getTumorTypeName(tumorType?: TumorType) {
     }
 }
 
+export function getTumorTypeNameWithExclusionInfo(
+    tumorType?: TumorType,
+    excludedTumorTypes?: TumorType[]
+) {
+    let name = getTumorTypeName(tumorType);
+    if (!_.isEmpty(excludedTumorTypes)) {
+        name = `${name} (excluding ${excludedTumorTypes!
+            .map(ett => getTumorTypeName(ett))
+            .join(', ')})`;
+    }
+    return name;
+}
+
 export function groupOncoKbIndicatorDataByMutations(
     mutationsByPosition: { [pos: number]: Mutation[] },
     oncoKbData: IOncoKbData,
@@ -382,12 +401,27 @@ export function getIndicatorData(
         return undefined;
     }
 
-    const id = generateQueryVariantId(
-        getEntrezGeneId(mutation),
-        getTumorType(mutation),
-        mutation.proteinChange,
-        mutation.mutationType
-    );
+    let id = '';
+
+    // @ts-ignore
+    const sv: StructuralVariant = mutation.structuralVariant;
+
+    if (sv) {
+        let structuralVariantType = deriveStructuralVariantType(sv);
+        id = generateQueryStructuralVariantId(
+            sv.site1EntrezGeneId,
+            sv.site2EntrezGeneId,
+            getTumorType(mutation),
+            structuralVariantType
+        );
+    } else {
+        id = generateQueryVariantId(
+            getEntrezGeneId(mutation),
+            getTumorType(mutation),
+            mutation.proteinChange,
+            mutation.mutationType
+        );
+    }
 
     return oncoKbData.indicatorMap[id];
 }

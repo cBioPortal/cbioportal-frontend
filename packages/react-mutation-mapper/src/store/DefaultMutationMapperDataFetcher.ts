@@ -126,7 +126,7 @@ export class DefaultMutationMapperDataFetcher
     public async fetchVariantAnnotationsIndexedByGenomicLocation(
         mutations: Partial<Mutation>[],
         fields: string[] = ['annotation_summary'],
-        isoformOverrideSource: string = 'uniprot',
+        isoformOverrideSource: string = 'mskcc',
         client: GenomeNexusAPI = this.genomeNexusClient
     ): Promise<{ [genomicLocation: string]: VariantAnnotation }> {
         return await fetchVariantAnnotationsIndexedByGenomicLocation(
@@ -344,6 +344,7 @@ export class DefaultMutationMapperDataFetcher
             ),
             'id'
         );
+
         const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
             _.map(
                 queryVariants.filter(
@@ -353,10 +354,9 @@ export class DefaultMutationMapperDataFetcher
                 ),
                 (mutation: Mutation) => {
                     return generateAnnotateStructuralVariantQuery(
-                        getEntrezGeneId(mutation),
+                        /* @ts-ignore */
+                        mutation.structuralVariant,
                         getTumorType(mutation),
-                        mutation.proteinChange,
-                        mutation.mutationType,
                         evidenceTypes
                     );
                 }

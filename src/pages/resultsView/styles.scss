@@ -6,12 +6,6 @@
 }
 
 .oncoprintAddTracks {
-    .nav > li > a {
-        padding: 5px;
-    }
-    .nav .active a {
-        padding-top: 5px !important;
-    }
     .tab-content {
         min-height: 100px !important;
         padding: 10px 0 10px 0 !important;
@@ -35,7 +29,6 @@
 
 .oncoprintAddClinicalTracks {
     > ul {
-        border-bottom: none !important;
         margin-top: -5px !important;
         padding-left: 20px;
         margin-left: -20px;

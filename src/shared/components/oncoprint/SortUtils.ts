@@ -1,4 +1,4 @@
-import { TrackSortComparator, TrackSortVector } from 'oncoprintjs';
+import { TrackSortVector } from 'oncoprintjs';
 import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
 import naturalSort from 'javascript-natural-sort';
 
@@ -300,6 +300,26 @@ export function getClinicalTrackSortComparator(track: ClinicalTrackSpec) {
         preferred: alphabeticalDefault(comparator),
         mandatory: comparator,
     };
+}
+
+export enum SortOrder {
+    ASC = 1,
+    DESC = -1,
+    UNSORTED = 0,
+}
+
+export function toDirectionEnum(val: string): SortOrder {
+    return SortOrder[val as keyof typeof SortOrder];
+}
+
+export function toDirectionString(dir: SortOrder): string {
+    return SortOrder[dir];
+}
+
+export function getClinicalTrackSortDirection(
+    track: ClinicalTrackSpec
+): SortOrder {
+    return toDirectionEnum(track?.sortOrder || 'UNSORTED');
 }
 
 export const heatmapTrackSortComparator = (() => {

@@ -26,6 +26,7 @@ import {
     getTooltip,
     FreqColumnTypeEnum,
     SelectionOperatorEnum,
+    getCancerGeneToggledOverlay,
 } from 'pages/studyView/TableUtils';
 import { GeneCell } from 'pages/studyView/table/GeneCell';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
@@ -157,6 +158,9 @@ export class MultiSelectionTable extends React.Component<
                             showFilter={!!this.props.cancerGeneFilterEnabled!}
                             isFiltered={!!this.isFilteredByCancerGeneList}
                             onClickCallback={this.toggleCancerGeneFilter}
+                            overlay={getCancerGeneToggledOverlay(
+                                !!this.isFilteredByCancerGeneList
+                            )}
                         >
                             <span>{columnKey}</span>
                         </TableHeaderCellFilterIcon>

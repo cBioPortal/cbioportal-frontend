@@ -47,7 +47,7 @@ export {
 } from './component/column/Hgvsc';
 export { default as Hgvsg } from './component/column/Hgvsg';
 export * from './component/column/HgvsHelper';
-export { default as MutationStatus } from './component/column/MutationStatus';
+export { MutationStatus } from './component/column/MutationStatus';
 export {
     default as ProteinChange,
     proteinChangeSortMethod,
@@ -180,6 +180,7 @@ export {
     oncogenicityIconClassNames,
     normalizeLevel,
     levelIconClassNames,
+    getTumorTypeNameWithExclusionInfo,
 } from './util/OncoKbUtils';
 export * from './util/SelectorUtils';
 export * from './util/TrackUtils';

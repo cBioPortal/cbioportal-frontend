@@ -413,7 +413,7 @@ describe('results view comparison tab screenshot tests', function() {
     });
 
     describe('delete group from session', function() {
-        before(function() {
+        beforeEach(function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B"Altered%20group"%2C"Unaltered%20group"%2C"KRAS"%2C"NRAS"%5D&comparison_subtab=overlap&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&comparison_createdGroupsSessionId=5e74f264e4b0ff7ef5fdb27f`
             );
@@ -422,6 +422,10 @@ describe('results view comparison tab screenshot tests', function() {
             });
         });
         it('results view comparison tab delete group from session', function() {
+            //this.retries(0);
+            $(
+                'button[data-test="groupSelectorButtontest"] [data-test="deleteButton"]'
+            ).waitForExist();
             $(
                 'button[data-test="groupSelectorButtontest"] [data-test="deleteButton"]'
             ).click();

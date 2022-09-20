@@ -9,6 +9,7 @@ import { ICache } from '../../model/SimpleCache';
 import {
     annotationIconClassNames,
     calcHighestIndicatorLevel,
+    normalizeLevel,
 } from '../../util/OncoKbUtils';
 import OncoKbCardLevelsOfEvidenceDropdown from './OncoKbCardLevelsOfEvidenceDropdown';
 import OncoKBSuggestAnnotationLinkout from './OncoKBSuggestAnnotationLinkout';
@@ -19,6 +20,8 @@ import { ImplicationContent } from './oncokbCard/ImplicationContent';
 
 import tabsStyles from './tabs.module.scss';
 import mainStyles from './main.module.scss';
+import OncogenicIcon from './icon/OncogenicIcon';
+import LevelIcon from './icon/LevelIcon';
 
 const OncoKbMedicalDisclaimer = (
     <p className={mainStyles.disclaimer}>
@@ -76,13 +79,21 @@ const TabTitle: React.FunctionComponent<{
 }> = props => {
     const title = DATA_TYPE_TO_TITLE[props.type];
     const icon = props.displayHighestLevelInTabTitle ? (
-        <i
-            className={annotationIconClassNames(
-                props.type,
-                calcHighestIndicatorLevel(props.type, props.indicator),
-                props.indicator
-            )}
-        />
+        props.type === OncoKbCardDataType.BIOLOGICAL ? (
+            <OncogenicIcon
+                oncogenicity={props.indicator?.oncogenic || ''}
+                showDescription={true}
+            />
+        ) : (
+            <LevelIcon
+                level={
+                    normalizeLevel(
+                        calcHighestIndicatorLevel(props.type, props.indicator)
+                    ) || ''
+                }
+                showDescription={true}
+            />
+        )
     ) : null;
 
     return icon ? (

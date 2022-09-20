@@ -48,7 +48,7 @@ function waitForPatientView(timeout) {
 }
 
 function waitForOncoprint(timeout) {
-    browser.pause(100); // give oncoprint time to disappear
+    browser.pause(200); // give oncoprint time to disappear
     browser.waitUntil(
         () => {
             return (
@@ -145,6 +145,11 @@ function setCheckboxChecked(checked, selector, failure_message) {
     );
 }
 
+/**
+ * Note: before calling this function,
+ * check if dropdown element is in correct state
+ * (i.e. displayed or not)qq
+ */
 function setDropdownOpen(
     open,
     button_selector_or_elt,
@@ -344,9 +349,9 @@ function waitForStudyView() {
     });
 }
 
-function waitForGroupComparisonTabOpen() {
+function waitForGroupComparisonTabOpen(timeout) {
     $('[data-test=ComparisonPageOverlapTabDiv]').waitForDisplayed({
-        timeout: 100000,
+        timeout: timeout || 10000,
     });
 }
 
@@ -587,13 +592,31 @@ function keycloakLogin(timeout) {
     $('body').waitForDisplayed(timeout);
 }
 
+function closeOtherTabs() {
+    const studyWindow = browser.getWindowHandle();
+    browser.getWindowHandles().forEach(id => {
+        if (id === studyWindow) {
+            return;
+        }
+        console.log('close tab:', id);
+        browser.switchToWindow(id);
+        browser.closeWindow();
+    });
+    browser.switchToWindow(studyWindow);
+}
+
 function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     goToUrlAndSetLocalStorage(studyViewUrl, true);
     $('[data-test=summary-tab-content]').waitForDisplayed();
     waitForNetworkQuiet();
+
+    // needed to switch to group comparison tab later on:
+    closeOtherTabs();
+
     const chart = '[data-test=' + chartDataTest + ']';
     $(chart).waitForDisplayed({ timeout: timeout || 10000 });
     jsApiHover(chart);
+
     browser.waitUntil(
         () => {
             return $(chart + ' .controls').isExisting();
@@ -610,8 +633,11 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
 
     // open comparison session
     const studyViewTabId = browser.getWindowHandle();
-    $(chart)
-        .$(hamburgerIcon)
+
+    const chartHamburgerIcon = $(chart).$(hamburgerIcon);
+    $(chartHamburgerIcon).waitForDisplayed({ timeout: timeout || 10000 });
+
+    $(chartHamburgerIcon)
         .$$('li')[1]
         .click();
 
@@ -620,8 +646,9 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     const groupComparisonTabId = browser
         .getWindowHandles()
         .find(id => id !== studyViewTabId);
+
     browser.switchToWindow(groupComparisonTabId);
-    waitForGroupComparisonTabOpen();
+    waitForGroupComparisonTabOpen(timeout);
 }
 
 function selectElementByText(text) {
