@@ -423,7 +423,7 @@ describe('hide download controls feature', function() {
             describe('files and links tab', () => {
                 it('global check for icon and occurrence of "Download" as a word', () => {
                     $('.tabAnchor_filesAndLinks').click();
-                    $('[data-test=LazyMobXTable]').waitForExist();
+                    $('.resourcesSection').waitForExist();
                     globalCheck();
                 });
             });
