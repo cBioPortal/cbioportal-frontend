@@ -4,7 +4,7 @@ import {
     toQueryString,
 } from 'shared/lib/query/textQueryUtils';
 import * as React from 'react';
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useCallback } from 'react';
 import {
     SearchClause,
     QueryUpdate,
@@ -14,6 +14,7 @@ import _ from 'lodash';
 import { SearchBox } from 'shared/components/query/filteredSearch/SearchBox';
 import { StudySearchControls } from 'shared/components/query/filteredSearch/StudySearchControls';
 import { observer, useLocalObservable } from 'mobx-react-lite';
+import { sleep } from 'shared/lib/TimeUtils';
 
 export type StudySearchProps = {
     parser: QueryParser;
@@ -33,9 +34,28 @@ export const StudySearch: FunctionComponent<StudySearchProps> = observer(
             },
         }));
 
-        const onFocusSearchBox = () => {
+        const onFocusSearchBox = useCallback(() => {
             store.setMenuOpen(true);
-        };
+        }, []);
+
+        const onBlurSearchBox = useCallback(async () => {
+            // thus pause is necessary to allow clicks
+            // from inside the dropdown menu to update state
+            // before the menu is closed
+            await sleep(200);
+            store.setMenuOpen(false);
+        }, []);
+
+        const onKeyDownSearchBox = useCallback(
+            (e: React.KeyboardEvent<HTMLInputElement>) => {
+                if ([13, 27].includes(e.keyCode)) {
+                    store.setMenuOpen(false);
+                } else {
+                    store.setMenuOpen(true);
+                }
+            },
+            []
+        );
 
         return (
             <div
@@ -49,6 +69,8 @@ export const StudySearch: FunctionComponent<StudySearchProps> = observer(
                             handleQueryTyping(props, update)
                         }
                         onFocus={onFocusSearchBox}
+                        onBlur={onBlurSearchBox}
+                        onKeyDown={onKeyDownSearchBox}
                     />
                     <SearchMenuToggle
                         onClick={store.toggle}
@@ -62,9 +84,10 @@ export const StudySearch: FunctionComponent<StudySearchProps> = observer(
                 <StudySearchControls
                     query={props.query}
                     filterConfig={props.parser.searchFilters}
-                    onChange={(update: QueryUpdate) =>
-                        handleQueryUpdate(props, update)
-                    }
+                    onChange={(update: QueryUpdate) => {
+                        handleQueryUpdate(props, update);
+                        store.setMenuOpen(false);
+                    }}
                     parser={props.parser}
                 />
             </div>
@@ -100,7 +123,7 @@ const SearchMenuToggle: FunctionComponent<{
             <button
                 type="button"
                 className="dropdown-toggle btn btn-sm btn-default"
-                onClick={props.onClick}
+                onMouseDown={props.onClick}
             >
                 <span className="caret" style={{ transform: arrowDirection }}>
                     &nbsp;

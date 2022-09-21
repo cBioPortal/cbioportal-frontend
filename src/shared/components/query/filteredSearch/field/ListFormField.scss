@@ -1,7 +1,15 @@
 .filter-list {
     a {
         display: block;
-        padding: 5px;
+        padding: 5px 0;
+    }
+
+    li:first-of-type a {
+        padding-top: 0 !important;
+    }
+
+    li:last-of-type a {
+        padding-bottom: 0 !important;
     }
 
     a,
