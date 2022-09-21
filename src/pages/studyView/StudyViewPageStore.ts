@@ -8820,7 +8820,7 @@ export class StudyViewPageStore
     }
 
     @autobind
-    onSubmitQuery(): void {
+    onSubmitQuery(url: string, gene?: string): void {
         const unknownQueriedIdsMap = stringListToSet(
             this.unknownQueriedIds.result
         );
@@ -8909,14 +8909,12 @@ export class StudyViewPageStore
             }
         }
 
-        let url = '/';
-        if (!_.isEmpty(this.geneQueries)) {
-            formOps.Action = 'Submit';
-            formOps.gene_list = this.geneQueries
-                .map(query => unparseOQLQueryLine(query))
-                .join('\n');
-            url = '/results';
-        }
+        formOps.Action = 'Submit';
+        formOps.gene_list = gene
+            ? gene
+            : this.geneQueries
+                  .map(query => unparseOQLQueryLine(query))
+                  .join('\n');
         submitToPage(url, formOps, '_blank');
     }
 

@@ -53,7 +53,11 @@ export function handleLegacySubmission(urlWrapper: ResultsViewURLWrapper) {
     if (legacySubmission) {
         const parsedSubmission: any = JSON.parse(legacySubmission);
         if (parsedSubmission.Action) {
-            urlWrapper.updateURL(parsedSubmission, 'results');
+            if (urlWrapper.pathName.includes('results')) {
+                urlWrapper.updateURL(parsedSubmission);
+            } else {
+                urlWrapper.updateURL(parsedSubmission, 'results');
+            }
         }
     }
 }

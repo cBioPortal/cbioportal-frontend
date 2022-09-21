@@ -34,6 +34,7 @@ import {
     logScalePossible,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
+    updateGeneQuery,
 } from '../StudyViewUtils';
 import { makeSurvivalChartData } from './survival/StudyViewSurvivalUtils';
 import StudyViewDensityScatterPlot from './scatterPlot/StudyViewDensityScatterPlot';
@@ -260,6 +261,26 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onDeleteChart: () => {
                 this.props.onDeleteChart(this.props.chartMeta);
             },
+            onComparisonClick: () => {
+                // selectedRowsKeys will always be gene names
+                // If we have multiple genes selected, show group comparison page
+                if (this.selectedRowsKeys!.length > 1) {
+                    this.openComparisonPage(
+                        getComparisonParamsForTable(
+                            this.selectedRowsKeys,
+                            this.chartType
+                        )
+                    );
+                }
+                // If we have a single gene selected, show altered vs unaltered comparison tab
+                // of results view page
+                else {
+                    this.props.store.onSubmitQuery(
+                        '/results/comparison',
+                        this.selectedRowsKeys[0]
+                    );
+                }
+            },
         };
 
         makeObservable(this);
@@ -416,7 +437,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed get comparisonButtonForTables() {
-        if (this.selectedRowsKeys!.length >= 2) {
+        if (this.selectedRowsKeys!.length >= 1) {
             return {
                 content: (
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -427,15 +448,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         Compare
                     </div>
                 ),
-                onClick: () => {
-                    this.openComparisonPage(
-                        getComparisonParamsForTable(
-                            this.selectedRowsKeys,
-                            this.chartType
-                        )
-                    );
-                },
-                isDisabled: () => this.selectedRowsKeys!.length < 2,
+                onClick: this.handlers.onComparisonClick,
+                isDisabled: () => this.selectedRowsKeys!.length < 1,
             };
         } else {
             return undefined;

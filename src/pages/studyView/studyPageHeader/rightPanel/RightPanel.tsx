@@ -160,7 +160,9 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                                 .result,
                         })}
                         data-test="geneSetSubmit"
-                        onClick={() => this.props.store.onSubmitQuery()}
+                        onClick={() =>
+                            this.props.store.onSubmitQuery('/results')
+                        }
                     >
                         Query
                     </button>
