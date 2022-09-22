@@ -20,20 +20,17 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
         <div className="filter-list">
             <h5>{props.filter.form.label}</h5>
             {form.options.map(option => {
-                if (!option.includes(queryString)) {
-                    return null;
-                }
                 const update = props.parser.parseSearchQuery(option);
                 return (
                     <li className="dropdown-item">
                         <a
                             tabIndex={-1}
-                            onClick={() =>
+                            onMouseDown={() => {
                                 props.onChange({
                                     toAdd: update,
                                     toRemove: allPhrases,
-                                })
-                            }
+                                });
+                            }}
                         >
                             {option}
                         </a>
