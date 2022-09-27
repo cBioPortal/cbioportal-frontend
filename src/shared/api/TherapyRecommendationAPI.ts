@@ -83,6 +83,7 @@ export async function fetchMtbsUsingGET(url: string, studyId: string) {
                     (mtb: any) =>
                         ({
                             id: mtb.id,
+                            orderId: mtb.orderId,
                             therapyRecommendations: mtb.therapyRecommendations,
                             geneticCounselingRecommendation:
                                 mtb.geneticCounselingRecommendation,
