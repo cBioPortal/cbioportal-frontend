@@ -1,6 +1,12 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type AggregateSourceInfo = {
+    'genomeNexus': GenomeNexusInfo
+
+        'vep': VEPInfo
+
+};
 export type AlleleCount = {
     'ac': number
 
@@ -299,6 +305,12 @@ export type GeneralPopulationStats = {
     'counts': SignalPopulationStats
 
         'frequencies': SignalPopulationStats
+
+};
+export type GenomeNexusInfo = {
+    'database': Version
+
+        'server': Version
 
 };
 export type GenomicLocation = {
@@ -927,6 +939,14 @@ export type UntranslatedRegion = {
         'strand': number
 
 };
+export type VEPInfo = {
+    'cache': Version
+
+        'comment': string
+
+        'server': Version
+
+};
 export type VariantAnnotation = {
     'allele_string': string
 
@@ -1008,7 +1028,9 @@ export type Vcf = {
 
 };
 export type Version = {
-    'version': string
+    'static': boolean
+
+        'version': string
 
 };
 
@@ -3093,7 +3115,7 @@ export default class GenomeNexusAPI {
     fetchVersionGET(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < Version > {
+    }): Promise < AggregateSourceInfo > {
         return this.fetchVersionGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
