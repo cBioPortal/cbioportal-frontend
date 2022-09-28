@@ -1026,7 +1026,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/Version"
+              "$ref": "#/definitions/AggregateSourceInfo"
             }
           }
         }
@@ -1034,6 +1034,17 @@
     }
   },
   "definitions": {
+    "AggregateSourceInfo": {
+      "type": "object",
+      "properties": {
+        "genomeNexus": {
+          "$ref": "#/definitions/GenomeNexusInfo"
+        },
+        "vep": {
+          "$ref": "#/definitions/VEPInfo"
+        }
+      }
+    },
     "AlleleCount": {
       "type": "object",
       "required": [
@@ -1764,6 +1775,17 @@
         "frequencies": {
           "description": "Frequencies",
           "$ref": "#/definitions/SignalPopulationStats"
+        }
+      }
+    },
+    "GenomeNexusInfo": {
+      "type": "object",
+      "properties": {
+        "database": {
+          "$ref": "#/definitions/Version"
+        },
+        "server": {
+          "$ref": "#/definitions/Version"
         }
       }
     },
@@ -3342,6 +3364,20 @@
         }
       }
     },
+    "VEPInfo": {
+      "type": "object",
+      "properties": {
+        "cache": {
+          "$ref": "#/definitions/Version"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "server": {
+          "$ref": "#/definitions/Version"
+        }
+      }
+    },
     "VariantAnnotation": {
       "type": "object",
       "required": [
@@ -3536,6 +3572,9 @@
     "Version": {
       "type": "object",
       "properties": {
+        "static": {
+          "type": "boolean"
+        },
         "version": {
           "type": "string"
         }
