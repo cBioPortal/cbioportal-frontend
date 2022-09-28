@@ -41,6 +41,7 @@ import { ICosmicData } from 'shared/model/Cosmic';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
 import MobxPromise from 'mobxpromise';
+import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
 
 type IMutationTableWrapperProps = {
     profile: MolecularProfile | undefined;
@@ -147,10 +148,11 @@ export default class MutationTableWrapper extends React.Component<
     };
 
     public render() {
-        const isProfiled = this.props
-            .genePanelDataByMolecularProfileIdAndSampleId?.[
-            this.props.profile?.molecularProfileId!
-        ]?.[this.props.sampleIds?.[0]]?.profiled;
+        const isProfiled = isSampleProfiledInProfile(
+            this.props.genePanelDataByMolecularProfileIdAndSampleId,
+            this.props.profile?.molecularProfileId,
+            this.props.sampleIds[0]
+        );
 
         if (this.props.profile === undefined) {
             return (

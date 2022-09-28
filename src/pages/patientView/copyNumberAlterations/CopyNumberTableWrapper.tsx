@@ -40,6 +40,7 @@ import {
     updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
+import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -147,10 +148,12 @@ export default class CopyNumberTableWrapper extends React.Component<
     public render() {
         const columns: CNATableColumn[] = [];
         const numSamples = this.props.sampleIds.length;
-        const isProfiled = this.props
-            .genePanelDataByMolecularProfileIdAndSampleId?.[
-            this.props.profile?.molecularProfileId!
-        ]?.[this.props.sampleIds?.[0]]?.profiled;
+
+        const isProfiled = isSampleProfiledInProfile(
+            this.props.genePanelDataByMolecularProfileIdAndSampleId,
+            this.props.profile?.molecularProfileId,
+            this.props.sampleIds[0]
+        );
 
         if (numSamples >= 2) {
             columns.push({

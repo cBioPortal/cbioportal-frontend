@@ -27,6 +27,7 @@ import {
 } from 'shared/lib/AnnotationColumnUtils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { MutationStatus } from 'react-mutation-mapper';
+import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -474,11 +475,13 @@ export default class StructuralVariantTableWrapper extends React.Component<
             this.columns,
         ],
         render: () => {
-            const isProfiled = this.props.store
-                .genePanelDataByMolecularProfileIdAndSampleId.result?.[
+            const isProfiled = isSampleProfiledInProfile(
+                this.props.store.genePanelDataByMolecularProfileIdAndSampleId
+                    .result,
                 this.props.store.structuralVariantProfile.result
-                    ?.molecularProfileId!
-            ]?.[this.props.store.sampleIds?.[0]]?.profiled;
+                    ?.molecularProfileId,
+                this.props.store.sampleIds[0]
+            );
 
             if (
                 this.props.store.structuralVariantProfile.result === undefined
