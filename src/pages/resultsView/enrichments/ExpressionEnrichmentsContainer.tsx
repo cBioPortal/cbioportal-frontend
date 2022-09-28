@@ -375,6 +375,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                             this.customColumns,
                             column => column.uniqueName || column.name
                         )}
+                        groupSize={this.props.groups.length}
                     />
                 </div>
             </div>

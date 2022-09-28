@@ -50,12 +50,17 @@ export type GenericAssayEnrichmentWithQ = GenericAssayEnrichment & {
     qValue: number;
 };
 
+export type ContinousDataPvalueTooltipProps = {
+    groupSize?: number;
+};
+
 export const CNA_AMP_VALUE = 2;
 export const CNA_HOMDEL_VALUE = -2;
 export const CNA_TO_ALTERATION: { [cna: number]: string } = {
     [CNA_AMP_VALUE]: 'AMP',
     [CNA_HOMDEL_VALUE]: 'HOMDEL',
 };
+export const PVALUE_TEST_GROUP_SIZE_THRESHOLD = 3;
 
 export enum GeneOptionLabel {
     USER_DEFINED_OPTION = 'User-defined genes',
@@ -1148,3 +1153,15 @@ export function getGeneListOptions(
         },
     ];
 }
+
+export const ContinousDataPvalueTooltip: React.FunctionComponent<ContinousDataPvalueTooltipProps> = ({
+    groupSize,
+}) => {
+    return (
+        <span>
+            {groupSize && groupSize >= PVALUE_TEST_GROUP_SIZE_THRESHOLD
+                ? 'Derived from one-way ANOVA'
+                : "Derived from Student's t-test"}
+        </span>
+    );
+};

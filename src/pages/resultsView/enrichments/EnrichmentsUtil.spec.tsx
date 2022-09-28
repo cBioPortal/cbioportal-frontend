@@ -13,11 +13,14 @@ import {
     getEnrichmentBarPlotData,
     getGeneListOptions,
     pickGenericAssayEnrichmentProfiles,
+    ContinousDataPvalueTooltip,
 } from './EnrichmentsUtil';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import _ from 'lodash';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { render } from '@testing-library/react';
+import React from 'react';
 
 expect.extend(expectJSX);
 
@@ -944,6 +947,44 @@ describe('EnrichmentsUtil', () => {
             const result = pickGenericAssayEnrichmentProfiles(profiles);
             assert.equal(result.length, 1);
             assert.deepEqual(result, expectedResult);
+        });
+    });
+
+    describe('#ContinousDataPvalueTooltip()', () => {
+        const DEFAULT_PROPS = {};
+        const LESS_THAN_THREE_GROUP_PROPS = { groupSize: 2 };
+        const GREATER_THAN_OR_EQUAL_TO_THREE_GROUP_PROPS = { groupSize: 3 };
+
+        it("returns Student's t-test by default", () => {
+            const component = render(
+                <ContinousDataPvalueTooltip {...DEFAULT_PROPS} />
+            );
+            assert.equal(
+                component.container.textContent,
+                "Derived from Student's t-test"
+            );
+        });
+
+        it("returns Student's t-test tooltip for group size < 3", () => {
+            const component = render(
+                <ContinousDataPvalueTooltip {...LESS_THAN_THREE_GROUP_PROPS} />
+            );
+            assert.equal(
+                component.container.textContent,
+                "Derived from Student's t-test"
+            );
+        });
+
+        it('returns one-way ANOVA tooltip for group size >= 3', () => {
+            const component = render(
+                <ContinousDataPvalueTooltip
+                    {...GREATER_THAN_OR_EQUAL_TO_THREE_GROUP_PROPS}
+                />
+            );
+            assert.equal(
+                component.container.textContent,
+                'Derived from one-way ANOVA'
+            );
         });
     });
 });
