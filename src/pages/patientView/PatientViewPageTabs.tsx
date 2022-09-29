@@ -95,6 +95,8 @@ export function tabs(
 ) {
     const tabs: JSX.Element[] = [];
 
+    console.log('scratch', pageComponent.patientViewPageStore.samples.result);
+
     tabs.push(
         <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
             <LoadingIndicator
@@ -285,7 +287,9 @@ export function tabs(
                                         .genePanelIdToEntrezGeneIds.result
                                 }
                                 sampleIds={
-                                    pageComponent.patientViewPageStore.sampleIds
+                                    sampleManager
+                                        ? sampleManager.getActiveSampleIdsInOrder()
+                                        : []
                                 }
                                 uniqueSampleKeyToTumorType={
                                     pageComponent.patientViewPageStore
@@ -569,7 +573,9 @@ export function tabs(
                                         .studyIdToStudy.result
                                 }
                                 sampleIds={
-                                    pageComponent.patientViewPageStore.sampleIds
+                                    sampleManager
+                                        ? sampleManager.getActiveSampleIdsInOrder()
+                                        : []
                                 }
                                 sampleManager={sampleManager}
                                 sampleToGenePanelId={
