@@ -2,6 +2,7 @@ import {
     EventPosition,
     POINT_COLOR,
     POINT_RADIUS,
+    TimeLineColorGetter,
     TimelineEvent,
     TimelineTrackSpecification,
     TimelineTrackType,
@@ -153,10 +154,25 @@ const defaultColorGetter = function(e: TimelineEvent) {
     return getSpecifiedColorIfExists(e) || POINT_COLOR;
 };
 
+// event color getter can be configured in a Timeline's baseConfiguration
+// we want to allow configuration at that level to defer to the default color getter
+// by returning undefined.
+// this factory allows to run the custom configured eventColorGetter and if it returns false
+// defer to the defaultColorGetter
+const colorGetterFactory = (eventColorGetter?: TimeLineColorGetter) => {
+    return (e: TimelineEvent) => {
+        if (eventColorGetter) {
+            return eventColorGetter(e) || defaultColorGetter(e);
+        } else {
+            return defaultColorGetter(e);
+        }
+    };
+};
+
 export function renderPoint(
     events: TimelineEvent[],
     y: number,
-    eventColorGetter: (e: TimelineEvent) => string = defaultColorGetter
+    eventColorGetter?: TimeLineColorGetter
 ) {
     // When nested tracks are collapsed, we might see multiple events that are
     //  from different tracks. So let's check if all these events actually come
@@ -178,11 +194,18 @@ export function renderPoint(
             contents = (
                 <>
                     {renderSuperscript(events.length, y)}
-                    {renderStack(events.map(eventColorGetter), y)}
+                    {renderStack(
+                        events.map(colorGetterFactory(eventColorGetter)),
+                        y
+                    )}
                 </>
             );
         } else {
-            contents = renderShape(events[0], y, eventColorGetter);
+            contents = renderShape(
+                events[0],
+                y,
+                colorGetterFactory(eventColorGetter)
+            );
         }
     }
 
@@ -192,7 +215,7 @@ export function renderPoint(
 function renderRange(
     pixelWidth: number,
     events: TimelineEvent[],
-    eventColorGetter: (e: TimelineEvent) => string = defaultColorGetter
+    eventColorGetter?: TimeLineColorGetter
 ) {
     const height = 5;
     return (
@@ -202,7 +225,7 @@ function renderRange(
             y={(TIMELINE_TRACK_HEIGHT - height) / 2}
             rx="2"
             ry="2"
-            fill={eventColorGetter(events[0])}
+            fill={colorGetterFactory(eventColorGetter)(events[0])}
         />
     );
 }

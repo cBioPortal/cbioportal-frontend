@@ -24,7 +24,7 @@ export interface ITimelineConfig {
     sortOrder?: string[];
     trackStructures?: string[][];
     trackEventRenderers?: ITrackEventConfig[];
-    eventColorGetter?: (e: TimelineEvent) => string;
+    eventColorGetter?: TimeLineColorGetter;
 }
 
 export type ITrackEventConfig = {
@@ -36,6 +36,8 @@ export enum TimelineTrackType {
     DEFAULT,
     LINE_CHART,
 }
+
+export type TimeLineColorGetter = (e: TimelineEvent) => string | void;
 
 export interface TimelineTrackSpecification {
     items: TimelineEvent[];
@@ -54,7 +56,7 @@ export interface TimelineTrackSpecification {
     trackConf?: ITrackEventConfig;
     disableHover?: boolean;
     timelineConfig?: ITimelineConfig;
-    eventColorGetter?: (e: TimelineEvent) => string; // overrides the one in timelineConfig
+    eventColorGetter?: TimeLineColorGetter; // overrides the one in timelineConfig
 }
 
 export interface TimelineTick {
