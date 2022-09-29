@@ -948,7 +948,12 @@ const PQValueLabel: React.FunctionComponent<PQValueLabelProps> = props => {
             height="3em"
             style={{ fontSize: '0.8em' }}
         >
-            <g x={props.x} y={props.y} xmlns="http://www.w3.org/1999/xhtml">
+            <g
+                x={props.x}
+                y={props.y}
+                style={{ position: 'absolute' }}
+                xmlns="http://www.w3.org/1999/xhtml"
+            >
                 <div className="p-value-label">{pFormatted}</div>
                 <div className="q-value-label">{qFormatted}</div>
             </g>

@@ -16,6 +16,7 @@ import {
     deriveDisplayTextFromGenericAssayType,
     formatGenericAssayCompactLabelByNameAndId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { ContinousDataPvalueTooltip } from './EnrichmentsUtil';
 
 export interface IGenericAssayEnrichmentTableProps {
     genericAssayType: string;
@@ -26,6 +27,7 @@ export interface IGenericAssayEnrichmentTableProps {
     dataStore: GenericAssayEnrichmentsTableDataStore;
     onEntityClick?: (stableId: string) => void;
     mutexTendency?: boolean;
+    groupSize?: number;
 }
 
 export enum GenericAssayEnrichmentTableColumnType {
@@ -116,7 +118,9 @@ export default class GenericAssayEnrichmentsTable extends React.Component<
                     {toConditionalPrecision(d.pValue, 3, 0.01)}
                 </span>
             ),
-            tooltip: <span>Derived from Student's t-test</span>,
+            tooltip: (
+                <ContinousDataPvalueTooltip groupSize={this.props.groupSize} />
+            ),
             sortBy: (d: GenericAssayEnrichmentRow) => d.pValue,
             download: (d: GenericAssayEnrichmentRow) =>
                 toConditionalPrecision(d.pValue, 3, 0.01),
