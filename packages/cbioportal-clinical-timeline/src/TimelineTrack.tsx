@@ -12,7 +12,7 @@ import _ from 'lodash';
 import {
     formatDate,
     getAttributeValue,
-    getTrackEventColorGetter,
+    getTrackEventCustomColorGetterFromConfiguration,
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
     TIMELINE_TRACK_HEIGHT,
 } from './lib/helpers';
@@ -280,7 +280,9 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                         content = renderPoint(
                             itemGroup,
                             y,
-                            getTrackEventColorGetter(trackData)
+                            getTrackEventCustomColorGetterFromConfiguration(
+                                trackData
+                            )
                         );
                         linePoints.push({
                             x: position ? position.pixelLeft : 0,
@@ -291,7 +293,9 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                     content = renderRange(
                         position.pixelWidth,
                         itemGroup,
-                        getTrackEventColorGetter(trackData)
+                        getTrackEventCustomColorGetterFromConfiguration(
+                            trackData
+                        )
                     );
                 }
 
