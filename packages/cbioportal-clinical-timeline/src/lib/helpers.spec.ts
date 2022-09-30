@@ -224,6 +224,18 @@ describe('color getter helpers', () => {
         );
 
         assert.equal(
+            colorGetterFactory(() => {})(ev),
+            '#12345',
+            'if custom color getter returns void, we use default color getter'
+        );
+
+        assert.equal(
+            colorGetterFactory(() => undefined)(ev),
+            '#12345',
+            'if custom color getter returns undefined, we use default color getter'
+        );
+
+        assert.equal(
             colorGetterFactory(() => '#54321')(ev),
             '#54321',
             'if there IS a custom getter, it gets used'
