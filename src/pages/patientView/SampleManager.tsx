@@ -334,6 +334,12 @@ class SampleManager {
         return this.samples.map((sample: ClinicalDataBySampleId) => sample.id);
     }
 
+    getActiveSampleIdsInOrder(): string[] {
+        return this.getSampleIdsInOrder().filter(s =>
+            this.sampleIdsInHeader.includes(s)
+        );
+    }
+
     @computed get sampleIdToIndexMap() {
         let indexMap: { [sampleId: string]: number } = {};
         this.samples.forEach((sample, index) => {

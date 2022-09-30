@@ -4,6 +4,7 @@ import { assert } from 'chai';
 import { default as CopyNumberTableWrapper } from './CopyNumberTableWrapper';
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
+import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
 
 function hasColumn(
     tableWrapper: ReactWrapper<any, any>,
@@ -22,13 +23,33 @@ function getTable(
 ): ReactWrapper<any, any> {
     return mount(
         <CopyNumberTableWrapper
+            profile={
+                {
+                    molecularProfileId: 'msk_impact_2017_cna',
+                } as MolecularProfile
+            }
+            genePanelDataByMolecularProfileIdAndSampleId={
+                ({
+                    msk_impact_2017_cna: {
+                        sampleA: {
+                            profiled: true,
+                        },
+                        sampleB: {
+                            profiled: true,
+                        },
+                    },
+                } as unknown) as {
+                    [profileId: string]: {
+                        [sampleId: string]: GenePanelData;
+                    };
+                }
+            }
             sampleManager={null}
             sampleToGenePanelId={{}}
             genePanelIdToEntrezGeneIds={{}}
             sampleIds={samples}
             gisticData={{}}
             usingPublicOncoKbInstance={USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB}
-            status="available"
             referenceGenes={[]}
             currentGeneFilter={GeneFilterOption.ANY_SAMPLE}
             data={[]}
