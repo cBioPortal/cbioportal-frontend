@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import {
+    colorGetterFactory,
     formatDate,
     getAttributeValue,
     getPointInTrimmedSpace,
@@ -205,5 +206,41 @@ describe('getAttributeValue', () => {
             'Breast Invasive Ductal Carcinoma'
         );
         assert.equal(getAttributeValue('CANCER_TYPE_DETA', event), undefined);
+    });
+});
+
+describe('color getter helpers', () => {
+    it('colorGetterFactory resolves to custom getter or default', () => {
+        const ev = ({
+            event: {
+                attributes: [{ key: 'STYLE_COLOR', value: '#12345' }],
+            },
+        } as unknown) as TimelineEvent;
+
+        assert.equal(
+            colorGetterFactory(undefined)(ev),
+            '#12345',
+            'if no custom getter passwed, we default getter plucks color from STYLE_COLOR'
+        );
+
+        assert.equal(
+            colorGetterFactory(() => '#54321')(ev),
+            '#54321',
+            'if there IS a custom getter, it gets used'
+        );
+    });
+
+    it('colorGetterFactory returns default color if there is not STYLE_COLOR attr', () => {
+        const ev = ({
+            event: {
+                attributes: [],
+            },
+        } as unknown) as TimelineEvent;
+
+        assert.equal(
+            colorGetterFactory(undefined)(ev),
+            'rgb(31, 119, 180)',
+            'if no custom getter passwed, we default getter plucks color from STYLE_COLOR'
+        );
     });
 });

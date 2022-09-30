@@ -1,4 +1,6 @@
 import {
+    POINT_COLOR,
+    TimeLineColorGetter,
     TimelineEvent,
     TimelineTick,
     TimelineTrackSpecification,
@@ -6,6 +8,7 @@ import {
 } from '../types';
 import { intersect } from './intersect';
 import _ from 'lodash';
+import { COLOR_ATTRIBUTE_KEY } from '../renderHelpers';
 
 export const TIMELINE_TRACK_HEIGHT = 20;
 export const TIMELINE_LINE_CHART_TRACK_HEIGHT = 100; // TODO: dynamic?
@@ -278,3 +281,26 @@ export function getTrackEventCustomColorGetterFromConfiguration(
 ) {
     return track.eventColorGetter || track.timelineConfig?.eventColorGetter;
 }
+
+export function defaultColorGetter(e: TimelineEvent) {
+    return getSpecifiedColorIfExists(e) || POINT_COLOR;
+}
+
+export function getSpecifiedColorIfExists(e: TimelineEvent) {
+    return getAttributeValue(COLOR_ATTRIBUTE_KEY, e);
+}
+
+// event color getter can be configured in a Timeline's baseConfiguration
+// we want to allow configuration at that level to defer to the default color getter
+// by returning undefined.
+// this factory allows to run the custom configured eventColorGetter and if it returns false
+// defer to the defaultColorGetter
+export const colorGetterFactory = (eventColorGetter?: TimeLineColorGetter) => {
+    return (e: TimelineEvent) => {
+        if (eventColorGetter) {
+            return eventColorGetter(e) || defaultColorGetter(e);
+        } else {
+            return defaultColorGetter(e);
+        }
+    };
+};
