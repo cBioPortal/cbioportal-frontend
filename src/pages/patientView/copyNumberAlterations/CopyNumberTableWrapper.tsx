@@ -6,7 +6,8 @@ import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import {
     CancerStudy,
     DiscreteCopyNumberData,
-    Gene,
+    GenePanelData,
+    MolecularProfile,
     ReferenceGenomeGene,
 } from 'cbioportal-ts-api-client';
 import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
@@ -39,6 +40,7 @@ import {
     updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
+import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -63,6 +65,12 @@ type ICopyNumberTableWrapperProps = {
     referenceGenes: ReferenceGenomeGene[];
     data: DiscreteCopyNumberData[][];
     dataStore?: ILazyMobXTableApplicationDataStore<DiscreteCopyNumberData[]>;
+    profile: MolecularProfile | undefined;
+    genePanelDataByMolecularProfileIdAndSampleId: {
+        [profileId: string]: {
+            [sampleId: string]: GenePanelData;
+        };
+    };
     copyNumberCountCache?: CopyNumberCountCache;
     mrnaExprRankCache?: MrnaExprRankCache;
     gisticData: IGisticData;
@@ -70,7 +78,7 @@ type ICopyNumberTableWrapperProps = {
     mrnaExprRankMolecularProfileId?: string;
     columnVisibility?: { [columnId: string]: boolean };
     columnVisibilityProps?: IColumnVisibilityControlsProps;
-    status: 'loading' | 'available' | 'unavailable';
+    pageMode?: 'sample' | 'patient';
     showGeneFilterMenu?: boolean;
     currentGeneFilter: GeneFilterOption;
     onFilterGenes?: (option: GeneFilterOption) => void;
@@ -137,9 +145,15 @@ export default class CopyNumberTableWrapper extends React.Component<
         return this.hugoGeneSymbolToCytoband[hugoGeneSymbol];
     }
 
-    render() {
+    public render() {
         const columns: CNATableColumn[] = [];
         const numSamples = this.props.sampleIds.length;
+
+        const isProfiled = isSampleProfiledInProfile(
+            this.props.genePanelDataByMolecularProfileIdAndSampleId,
+            this.props.profile?.molecularProfileId,
+            this.props.sampleIds[0]
+        );
 
         if (numSamples >= 2) {
             columns.push({
@@ -366,33 +380,39 @@ export default class CopyNumberTableWrapper extends React.Component<
             columns,
             (c: CNATableColumn) => c.order
         );
-        return (
-            <div>
-                {this.props.status === 'unavailable' && (
-                    <div className="alert alert-info" role="alert">
-                        Copy Number Alterations are not available.
-                    </div>
-                )}
 
-                {this.props.status === 'available' && (
-                    <CNATableComponent
-                        columns={orderedColumns}
-                        data={this.props.data}
-                        dataStore={this.props.dataStore}
-                        initialSortColumn="Annotation"
-                        initialSortDirection="desc"
-                        initialItemsPerPage={10}
-                        itemsLabel="Copy Number Alteration"
-                        itemsLabelPlural="Copy Number Alterations"
-                        showCountHeader={true}
-                        columnVisibility={this.props.columnVisibility}
-                        columnVisibilityProps={this.props.columnVisibilityProps}
-                        onRowClick={this.props.onRowClick}
-                        onRowMouseEnter={this.props.onRowMouseEnter}
-                        onRowMouseLeave={this.props.onRowMouseLeave}
-                    />
-                )}
-            </div>
+        if (this.props.profile === undefined) {
+            return (
+                <div className="alert alert-info" role="alert">
+                    Study has no Copy Number Alteration data.
+                </div>
+            );
+        } else if (!isProfiled) {
+            return (
+                <div className="alert alert-info" role="alert">
+                    {this.props.pageMode === 'patient'
+                        ? 'Patient is not profiled for Copy Number Alterations.'
+                        : 'Sample is not profiled for Copy Number Alterations.'}
+                </div>
+            );
+        }
+        return (
+            <CNATableComponent
+                columns={orderedColumns}
+                data={this.props.data}
+                dataStore={this.props.dataStore}
+                initialSortColumn="Annotation"
+                initialSortDirection="desc"
+                initialItemsPerPage={10}
+                itemsLabel="Copy Number Alteration"
+                itemsLabelPlural="Copy Number Alterations"
+                showCountHeader={true}
+                columnVisibility={this.props.columnVisibility}
+                columnVisibilityProps={this.props.columnVisibilityProps}
+                onRowClick={this.props.onRowClick}
+                onRowMouseEnter={this.props.onRowMouseEnter}
+                onRowMouseLeave={this.props.onRowMouseLeave}
+            />
         );
     }
 

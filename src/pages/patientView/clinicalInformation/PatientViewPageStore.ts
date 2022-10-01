@@ -200,6 +200,7 @@ import {
 import { getServerConfig } from 'config/config';
 import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
+import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -1568,9 +1569,9 @@ export class PatientViewPageStore {
         { samples: {}, patients: {} }
     );
 
-    readonly genePanelDataByMolecularProfileIdAndSampleId = remoteData<{
-        [profileId: string]: { [sampleId: string]: GenePanelData };
-    }>(
+    readonly genePanelDataByMolecularProfileIdAndSampleId = remoteData<
+        IGenePanelDataByProfileIdAndSample
+    >(
         {
             await: () => [this.genePanelData],
             invoke: async () => {

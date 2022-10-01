@@ -278,23 +278,6 @@ export default class PatientViewPage extends React.Component<
         updateOncoKbIconStyle({ mergeIcons });
     }
 
-    @computed get cnaTableStatus() {
-        if (this.patientViewPageStore.molecularProfileIdDiscrete.isComplete) {
-            if (
-                this.patientViewPageStore.molecularProfileIdDiscrete.result ===
-                undefined
-            ) {
-                return 'unavailable';
-            } else if (this.patientViewPageStore.discreteCNAData.isComplete) {
-                return 'available';
-            } else {
-                return 'loading';
-            }
-        } else {
-            return 'loading';
-        }
-    }
-
     @computed get isSampleSummaryListLoading() {
         return (
             this.patientViewPageStore.studyMetaData.isPending ||
