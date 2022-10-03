@@ -221,7 +221,12 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
         let eventsGroupedByPosition;
 
         if (trackData.items) {
+            // group events which occur on the same day offset
+            // so they can be "stacked"
             eventsGroupedByPosition = groupEventsByPosition(trackData.items);
+
+            // if this track has a custom sorting function
+            // configured for simultaneous events, employ it
             if (trackData.sortSimultaneousEvents) {
                 eventsGroupedByPosition = _.mapValues(
                     eventsGroupedByPosition,
@@ -247,6 +252,10 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                 const isPoint = firstItem.start === firstItem.end;
 
                 if (isPoint) {
+                    // if this track has a getLineChartValue
+                    // configured for it, we use that function to obtain
+                    // a y value so that the point's can be represented and connected
+                    // as a line chart, with corresponding axis
                     const y = getPointY(
                         itemGroup,
                         trackData,
