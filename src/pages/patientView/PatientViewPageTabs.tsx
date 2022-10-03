@@ -95,8 +95,6 @@ export function tabs(
 ) {
     const tabs: JSX.Element[] = [];
 
-    console.log('scratch', pageComponent.patientViewPageStore.samples.result);
-
     tabs.push(
         <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
             <LoadingIndicator
