@@ -41,6 +41,10 @@ import {
 } from 'shared/lib/AnnotationColumnUtils';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
+import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
+
+export const TABLE_FEATURE_INSTRUCTION =
+    'Click on a CNA row to zoom in on the gene in the IGV browser above';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -381,6 +385,22 @@ export default class CopyNumberTableWrapper extends React.Component<
             (c: CNATableColumn) => c.order
         );
 
+        // determine if some (but not all of the samples are not profiled
+        const notProfiledIds = this.props.sampleIds.reduce(
+            (aggr: string[], sampleId: string) => {
+                const isProfiled = isSampleProfiledInProfile(
+                    this.props.genePanelDataByMolecularProfileIdAndSampleId,
+                    this.props.profile?.molecularProfileId,
+                    sampleId
+                );
+                if (!isProfiled) {
+                    aggr.push(sampleId);
+                }
+                return aggr;
+            },
+            []
+        );
+
         if (this.props.profile === undefined) {
             return (
                 <div className="alert alert-info" role="alert">
@@ -397,22 +417,26 @@ export default class CopyNumberTableWrapper extends React.Component<
             );
         }
         return (
-            <CNATableComponent
-                columns={orderedColumns}
-                data={this.props.data}
-                dataStore={this.props.dataStore}
-                initialSortColumn="Annotation"
-                initialSortDirection="desc"
-                initialItemsPerPage={10}
-                itemsLabel="Copy Number Alteration"
-                itemsLabelPlural="Copy Number Alterations"
-                showCountHeader={true}
-                columnVisibility={this.props.columnVisibility}
-                columnVisibilityProps={this.props.columnVisibilityProps}
-                onRowClick={this.props.onRowClick}
-                onRowMouseEnter={this.props.onRowMouseEnter}
-                onRowMouseLeave={this.props.onRowMouseLeave}
-            />
+            <>
+                <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
+                    <CNATableComponent
+                        columns={orderedColumns}
+                        data={this.props.data}
+                        dataStore={this.props.dataStore}
+                        initialSortColumn="Annotation"
+                        initialSortDirection="desc"
+                        initialItemsPerPage={10}
+                        itemsLabel="Copy Number Alteration"
+                        itemsLabelPlural="Copy Number Alterations"
+                        showCountHeader={true}
+                        columnVisibility={this.props.columnVisibility}
+                        columnVisibilityProps={this.props.columnVisibilityProps}
+                        onRowClick={this.props.onRowClick}
+                        onRowMouseEnter={this.props.onRowMouseEnter}
+                        onRowMouseLeave={this.props.onRowMouseLeave}
+                    />
+                </FeatureInstruction>
+            </>
         );
     }
 

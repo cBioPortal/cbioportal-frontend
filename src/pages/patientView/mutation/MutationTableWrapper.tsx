@@ -42,6 +42,10 @@ import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
 import MobxPromise from 'mobxpromise';
 import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
+import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
+
+export const TABLE_FEATURE_INSTRUCTION =
+    'Click on an mutation to zoom in on the gene in the IGV browser above';
 
 type IMutationTableWrapperProps = {
     profile: MolecularProfile | undefined;
@@ -154,13 +158,34 @@ export default class MutationTableWrapper extends React.Component<
             this.props.sampleIds[0]
         );
 
+        const notProfiledIds = this.props.sampleIds.reduce(
+            (aggr: string[], sampleId: string) => {
+                const isProfiled = isSampleProfiledInProfile(
+                    this.props.genePanelDataByMolecularProfileIdAndSampleId,
+                    this.props.profile?.molecularProfileId,
+                    sampleId
+                );
+                if (!isProfiled) {
+                    aggr.push(sampleId);
+                }
+                return aggr;
+            },
+            []
+        );
+
+        const noneProfiled =
+            notProfiledIds.length === this.props.sampleIds.length;
+        const someProfiled =
+            notProfiledIds.length > 0 &&
+            notProfiledIds.length < this.props.sampleIds.length;
+
         if (this.props.profile === undefined) {
             return (
                 <div className="alert alert-info" role="alert">
                     Study has no Mutation data.
                 </div>
             );
-        } else if (!isProfiled) {
+        } else if (noneProfiled) {
             return (
                 <div className="alert alert-info" role="alert">
                     {this.props.pageMode === 'patient'
@@ -168,81 +193,107 @@ export default class MutationTableWrapper extends React.Component<
                         : 'Sample is not profiled for Mutations.'}
                 </div>
             );
+        } else if (someProfiled) {
         }
+
         return (
-            <PatientViewMutationTable
-                dataStore={this.props.dataStore}
-                studyIdToStudy={this.props.studyIdToStudy}
-                sampleManager={this.props.sampleManager}
-                sampleToGenePanelId={this.props.sampleToGenePanelId}
-                genePanelIdToEntrezGeneIds={
-                    this.props.genePanelIdToEntrezGeneIds
-                }
-                sampleIds={this.props.sampleIds}
-                uniqueSampleKeyToTumorType={
-                    this.props.uniqueSampleKeyToTumorType
-                }
-                molecularProfileIdToMolecularProfile={
-                    this.props.molecularProfileIdToMolecularProfile
-                }
-                variantCountCache={this.props.variantCountCache}
-                indexedVariantAnnotations={this.props.indexedVariantAnnotations}
-                indexedMyVariantInfoAnnotations={
-                    this.props.indexedMyVariantInfoAnnotations
-                }
-                discreteCNACache={this.props.discreteCNACache}
-                mrnaExprRankCache={this.props.mrnaExprRankCache}
-                pubMedCache={this.props.pubMedCache}
-                genomeNexusCache={this.props.genomeNexusCache}
-                genomeNexusMutationAssessorCache={
-                    this.props.genomeNexusMutationAssessorCache
-                }
-                mrnaExprRankMolecularProfileId={
-                    this.props.mrnaExprRankMolecularProfileId
-                }
-                discreteCNAMolecularProfileId={
-                    this.props.discreteCNAMolecularProfileId
-                }
-                data={this.props.data}
-                downloadDataFetcher={this.props.downloadDataFetcher}
-                mutSigData={this.props.mutSigData}
-                myCancerGenomeData={this.props.myCancerGenomeData}
-                hotspotData={this.props.hotspotData}
-                cosmicData={this.props.cosmicData}
-                oncoKbData={this.props.oncoKbData}
-                oncoKbCancerGenes={this.props.oncoKbCancerGenes}
-                usingPublicOncoKbInstance={this.props.usingPublicOncoKbInstance}
-                mergeOncoKbIcons={this.props.mergeOncoKbIcons}
-                onOncoKbIconToggle={this.props.onOncoKbIconToggle}
-                civicGenes={this.props.civicGenes}
-                civicVariants={this.props.civicVariants}
-                userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
-                enableOncoKb={getServerConfig().show_oncokb}
-                enableFunctionalImpact={getServerConfig().show_genomenexus}
-                enableHotspot={getServerConfig().show_hotspot}
-                enableMyCancerGenome={getServerConfig().mycancergenome_show}
-                enableCivic={getServerConfig().show_civic}
-                columnVisibility={this.props.columnVisibility}
-                showGeneFilterMenu={this.props.showGeneFilterMenu}
-                currentGeneFilter={this.props.currentGeneFilter}
-                onFilterGenes={this.props.onFilterGenes}
-                columnVisibilityProps={this.props.columnVisibilityProps}
-                onSelectGenePanel={this.props.onSelectGenePanel}
-                disableTooltip={this.props.disableTooltip}
-                generateGenomeNexusHgvsgUrl={
-                    this.props.generateGenomeNexusHgvsgUrl
-                }
-                onRowClick={this.props.onRowClick}
-                onRowMouseEnter={this.props.onRowMouseEnter}
-                onRowMouseLeave={this.props.onRowMouseLeave}
-                sampleIdToClinicalDataMap={this.props.sampleIdToClinicalDataMap}
-                existsSomeMutationWithAscnProperty={
-                    this.props.existsSomeMutationWithAscnProperty
-                }
-                namespaceColumns={this.props.namespaceColumns}
-                columns={this.props.columns}
-                alleleFreqHeaderRender={this.props.alleleFreqHeaderRender}
-            />
+            <>
+                {someProfiled && (
+                    <div className="alert alert-info" role="alert">
+                        {notProfiledIds.map(id =>
+                            this.props.sampleManager?.getComponentForSample(id)
+                        )}{' '}
+                        not profiled for Mutations
+                    </div>
+                )}
+                <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
+                    <PatientViewMutationTable
+                        dataStore={this.props.dataStore}
+                        studyIdToStudy={this.props.studyIdToStudy}
+                        sampleManager={this.props.sampleManager}
+                        sampleToGenePanelId={this.props.sampleToGenePanelId}
+                        genePanelIdToEntrezGeneIds={
+                            this.props.genePanelIdToEntrezGeneIds
+                        }
+                        sampleIds={this.props.sampleIds}
+                        uniqueSampleKeyToTumorType={
+                            this.props.uniqueSampleKeyToTumorType
+                        }
+                        molecularProfileIdToMolecularProfile={
+                            this.props.molecularProfileIdToMolecularProfile
+                        }
+                        variantCountCache={this.props.variantCountCache}
+                        indexedVariantAnnotations={
+                            this.props.indexedVariantAnnotations
+                        }
+                        indexedMyVariantInfoAnnotations={
+                            this.props.indexedMyVariantInfoAnnotations
+                        }
+                        discreteCNACache={this.props.discreteCNACache}
+                        mrnaExprRankCache={this.props.mrnaExprRankCache}
+                        pubMedCache={this.props.pubMedCache}
+                        genomeNexusCache={this.props.genomeNexusCache}
+                        genomeNexusMutationAssessorCache={
+                            this.props.genomeNexusMutationAssessorCache
+                        }
+                        mrnaExprRankMolecularProfileId={
+                            this.props.mrnaExprRankMolecularProfileId
+                        }
+                        discreteCNAMolecularProfileId={
+                            this.props.discreteCNAMolecularProfileId
+                        }
+                        data={this.props.data}
+                        downloadDataFetcher={this.props.downloadDataFetcher}
+                        mutSigData={this.props.mutSigData}
+                        myCancerGenomeData={this.props.myCancerGenomeData}
+                        hotspotData={this.props.hotspotData}
+                        cosmicData={this.props.cosmicData}
+                        oncoKbData={this.props.oncoKbData}
+                        oncoKbCancerGenes={this.props.oncoKbCancerGenes}
+                        usingPublicOncoKbInstance={
+                            this.props.usingPublicOncoKbInstance
+                        }
+                        mergeOncoKbIcons={this.props.mergeOncoKbIcons}
+                        onOncoKbIconToggle={this.props.onOncoKbIconToggle}
+                        civicGenes={this.props.civicGenes}
+                        civicVariants={this.props.civicVariants}
+                        userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
+                        enableOncoKb={getServerConfig().show_oncokb}
+                        enableFunctionalImpact={
+                            getServerConfig().show_genomenexus
+                        }
+                        enableHotspot={getServerConfig().show_hotspot}
+                        enableMyCancerGenome={
+                            getServerConfig().mycancergenome_show
+                        }
+                        enableCivic={getServerConfig().show_civic}
+                        columnVisibility={this.props.columnVisibility}
+                        showGeneFilterMenu={this.props.showGeneFilterMenu}
+                        currentGeneFilter={this.props.currentGeneFilter}
+                        onFilterGenes={this.props.onFilterGenes}
+                        columnVisibilityProps={this.props.columnVisibilityProps}
+                        onSelectGenePanel={this.props.onSelectGenePanel}
+                        disableTooltip={this.props.disableTooltip}
+                        generateGenomeNexusHgvsgUrl={
+                            this.props.generateGenomeNexusHgvsgUrl
+                        }
+                        onRowClick={this.props.onRowClick}
+                        onRowMouseEnter={this.props.onRowMouseEnter}
+                        onRowMouseLeave={this.props.onRowMouseLeave}
+                        sampleIdToClinicalDataMap={
+                            this.props.sampleIdToClinicalDataMap
+                        }
+                        existsSomeMutationWithAscnProperty={
+                            this.props.existsSomeMutationWithAscnProperty
+                        }
+                        namespaceColumns={this.props.namespaceColumns}
+                        columns={this.props.columns}
+                        alleleFreqHeaderRender={
+                            this.props.alleleFreqHeaderRender
+                        }
+                    />
+                </FeatureInstruction>
+            </>
         );
     }
 }
