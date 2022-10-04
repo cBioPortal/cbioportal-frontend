@@ -6,7 +6,7 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:16.17.0-browsers
+    - image: circleci/node:16.17.1-browsers
   resource_class: large
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
@@ -88,8 +88,8 @@ jobs:
           command: "cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
       - restore_cache:
           keys:
-            - v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-            - v8-dependencies-{{ checksum "yarn.lock" }}
+            - v28-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+            - v28-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
       - run: yarn buildModules
@@ -99,7 +99,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-          key: v8-dependencies-{{ checksum "yarn.lock" }}
+          key: v28-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: "Run build if no dist folder"
           command: 'ls dist || yarn run build'
@@ -113,7 +113,7 @@ jobs:
             - node_modules
             - dist
             - common-dist
-          key: v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+          key: v28-dependencies-plus-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -273,10 +273,10 @@ jobs:
             docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
       - restore_cache:
           keys:
-            - v8-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+            - v28-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - restore_cache:
           keys:
-            - v8-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+            - v28-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Init database
           command: |
