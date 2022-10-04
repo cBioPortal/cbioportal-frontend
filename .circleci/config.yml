@@ -6,21 +6,19 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:15.2.1-browsers
+    - image: circleci/node:16.13.1-browsers
   resource_class: large
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
-    #    - run:
-    #        name: "Install yarn at specific version"
-    #        command:
-    #          sudo npm install --global yarn@1.22.4
     - attach_workspace:
         at: /tmp/
     - run:
+        name: "Upgrade yarn"
+        command: sudo npm install --global yarn@1.22.5 --force
+    - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
-          sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
           yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
@@ -71,10 +69,10 @@ jobs:
   install:
     <<: *defaults
     steps:
-      #      - run:
-      #          name: "Install yarn at specific version"
-      #          command:
-      #            sudo npm install --global yarn@1.22.4
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       - run:
           name: "Show yarn and node versions"
           command: |
@@ -90,7 +88,14 @@ jobs:
           keys:
             - v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
             - v8-dependencies-{{ checksum "yarn.lock" }}
-      # Download and cache dependencies
+#      - run:
+#          name: Setup python libraries
+#          command: |
+#            pip3 install requests pyyaml
+      - run:
+          name: Install canvas deps [for screenshot comparison]
+          command: |
+              sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
       - run: yarn
       - run: yarn buildModules
       #- run:
@@ -124,6 +129,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # check that all api responses are still the same
       - run: "bash src/test/check_api_sync.sh"
 
@@ -136,6 +145,10 @@ jobs:
       #            sudo npm install --global yarn@1.22.4
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # run tests!
       - run:
           command: "yarn run testMain"
@@ -158,6 +171,10 @@ jobs:
       #            sudo npm install --global yarn@1.22.4
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # run tests!
       - run:
           command: "yarn run testPackagesCI"
@@ -174,6 +191,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # check that no `.only` statements are still in the tests
       # Ignore doTest.only in oql parser
       - run:
@@ -185,6 +206,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # make sure that there are no relative/incorrect package imports
       - run:
           name: "Check Incorrect Package Import Statements"
@@ -349,6 +374,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       - run:
           name: 'Check code style with Prettier'
           command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
