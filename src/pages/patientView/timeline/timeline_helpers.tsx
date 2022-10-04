@@ -125,8 +125,6 @@ export function configureTimelineToxicityColors(baseConfig: ITimelineConfig) {
             const path = e.containingTrack.uid.split('.');
             if (path[0] === 'TREATMENT' && path.length > 2) {
                 return getColor(path[2]);
-            } else {
-                return POINT_COLOR;
             }
         }
     };
