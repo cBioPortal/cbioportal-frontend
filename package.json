@@ -69,7 +69,7 @@
     "e2e:report": "npx http-server end-to-end-test -o /shared/imageCompare.html -p 8089"
   },
   "engines": {
-    "node": "16.17.1",
+    "node": "16.17.0",
     "yarn": "1.22.5"
   },
   "resolutions": {
