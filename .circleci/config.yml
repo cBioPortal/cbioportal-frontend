@@ -93,10 +93,10 @@ jobs:
           keys:
             - v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
             - v8-dependencies-{{ checksum "yarn.lock" }}
-      - run:
-          name: Setup python libraries
-          command: |
-            pip3 install requests pyyaml
+#      - run:
+#          name: Setup python libraries
+#          command: |
+#            pip3 install requests pyyaml
       - run:
           name: Install canvas deps [for screenshot comparison]
           command: |
