@@ -9,17 +9,13 @@ defaults: &defaults
     - image: circleci/node:16.13.1-browsers
   resource_class: large
 
-upgradeYarn : &upgradeYarn
-    name: "Upgrade yarn"
-    command: sudo npm install --global yarn@1.22.5 --force
-
-
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
     - attach_workspace:
         at: /tmp/
     - run:
-        <<: *upgradeYarn
+        name: "Upgrade yarn"
+        command: sudo npm install --global yarn@1.22.5 --force
     - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
@@ -73,7 +69,9 @@ jobs:
   install:
     <<: *defaults
     steps:
-      <<: *upgradeYarn
+      - run:
+          name: "Upgrade yarn"
+          command: sudo npm install --global yarn@1.22.5 --force
       - run:
           name: "Show yarn and node versions"
           command: |
