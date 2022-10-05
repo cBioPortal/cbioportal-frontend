@@ -10,20 +10,16 @@ defaults: &defaults
   resource_class: large
 
 upgradeYarn : &upgradeYarn
-    - run:
-        name: "Upgrade yarn"
-        command: sudo npm install --global yarn@1.22.5 --force
+    name: "Upgrade yarn"
+    command: sudo npm install --global yarn@1.22.5 --force
 
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
-    #    - run:
-    #        name: "Install yarn at specific version"
-    #        command:
-    #          sudo npm install --global yarn@1.22.4
     - attach_workspace:
         at: /tmp/
-    <<: *upgradeYarn
+    - run:
+        <<: *upgradeYarn
     - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
