@@ -365,12 +365,12 @@ function getNumberOfStudyViewCharts() {
     return $$('div.react-grid-item').length;
 }
 
-function setInputText(selector, text) {
+async function setInputText(selector, text) {
     // backspace to delete current contents - webdriver is supposed to clear it but it doesnt always work
-    $(selector).click();
-    browser.keys('\uE003'.repeat($(selector).getValue().length));
+    await $(selector).click();
+    await browser.keys('\uE003'.repeat($(selector).getValue().length));
 
-    $(selector).setValue(text);
+    await $(selector).setValue(text);
 }
 
 function getReactSelectOptions(parent) {

@@ -37,22 +37,25 @@ describe('homepage', function() {
     }
 
     // this just shows that we have some studies listed
-    it('it should have some (>0) studies listed ', function() {
+    it.only('it should have some (>0) studies listed ', async function() {
+
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
+        var container = await $('[data-test="cancerTypeListContainer"] > ul > ul');
 
-        studies.waitForExist({ timeout: 10000 }); // same as `$('.notification').waitForExist({timeout: 10000})`
+        await container.waitForExist({ timeout: 10000 }); // same as `$('.notification').waitForExist({timeout: 10000})`
+
+        const studies = await $$('[data-test="cancerTypeListContainer"] > ul > ul');
 
         expect(0).to.be.below(
-            $$('[data-test="cancerTypeListContainer"] > ul > ul').length
+            studies.length
         );
     });
 
-    it('should filter study list according to filter text input', function() {
-        var input = $(searchInputSelector);
+    it.only('should filter study list according to filter text input', async function() {
+        var input = await $(searchInputSelector);
 
-        input.waitForExist({ timeout: 10000 });
+        await input.waitForExist({ timeout: 10000 });
 
         setInputText(searchInputSelector, 'bladder');
 
