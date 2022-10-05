@@ -21,7 +21,10 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
+<<<<<<< HEAD
           sudo apt-get install build-essential pangocairo libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
+=======
+>>>>>>> 7b4e9eec7... stuff
           yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
@@ -94,7 +97,14 @@ jobs:
           keys:
             - v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
             - v8-dependencies-{{ checksum "yarn.lock" }}
-      # Download and cache dependencies
+      - run:
+          name: Setup python libraries
+          command: |
+            pip3 install requests pyyaml
+      - run:
+          name: Install canvas deps [for screenshot comparison]
+          command: |
+              sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
       - run: yarn
       - run: yarn buildModules
       #- run:
