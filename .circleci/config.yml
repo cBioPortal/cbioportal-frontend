@@ -71,7 +71,8 @@ jobs:
     steps:
       - run:
           name: "Upgrade yarn"
-          command: sudo npm install --global yarn@1.22.5 --force
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       - run:
           name: "Show yarn and node versions"
           command: |
