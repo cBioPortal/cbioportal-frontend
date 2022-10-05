@@ -17,10 +17,11 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     #          sudo npm install --global yarn@1.22.4
     - attach_workspace:
         at: /tmp/
+
     - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
-          sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
+          sudo apt-get install build-essential pangocairo libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
           yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
@@ -78,6 +79,8 @@ jobs:
       - run:
           name: "Upgrade yarn"
           command: sudo npm install --global yarn@1.22.5 --force
+      - run:
+          name: "
       - run:
           name: "Show yarn and node versions"
           command: |
