@@ -186,36 +186,30 @@ function setDropdownOpen(
     );
 }
 
-function goToUrlAndSetLocalStorage(url, authenticated = false) {
-    const currentUrl = browser.getUrl();
+async function goToUrlAndSetLocalStorage(url, authenticated = false) {
+    const currentUrl = await browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
     if (!useExternalFrontend) {
-        browser.url(url);
+        await browser.url(url);
         console.log('Connecting to: ' + url);
     } else if (useNetlifyDeployPreview) {
-        browser.url(url);
-        browser.execute(
+        await browser.url(url);
+        await browser.execute(
             function(config) {
                 this.localStorage.setItem('netlify', config.netlify);
             },
             { netlify: netlifyDeployPreview }
         );
-        browser.url(url);
+        await browser.url(url);
         console.log('Connecting to: ' + url);
     } else {
         var urlparam = useLocalDist ? 'localdist' : 'localdev';
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
-        browser.url(`${url}${prefix}${urlparam}=true`);
+        await browser.url(`${url}${prefix}${urlparam}=true`);
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
-    if (needToLogin) keycloakLogin(10000);
-
-    //browser.setViewportSize({ height: 1000, width: 1600 });
-
-    // move mouse out of the way
-    // move mouse out of the way
-    //browser.moveToObject('body', 0, 0);
+    if (needToLogin) await keycloakLogin(10000);
 }
 
 const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
@@ -365,12 +359,12 @@ function getNumberOfStudyViewCharts() {
     return $$('div.react-grid-item').length;
 }
 
-function setInputText(selector, text) {
+async function setInputText(selector, text) {
     // backspace to delete current contents - webdriver is supposed to clear it but it doesnt always work
-    $(selector).click();
-    browser.keys('\uE003'.repeat($(selector).getValue().length));
+    await $(selector).click();
+    await browser.keys('\uE003'.repeat($(selector).getValue().length));
 
-    $(selector).setValue(text);
+    await $(selector).setValue(text);
 }
 
 function getReactSelectOptions(parent) {
@@ -515,10 +509,10 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
     return res;
 }
 
-function clickQueryByGeneButton() {
-    $('a=Query By Gene').waitForEnabled();
-    $('a=Query By Gene').click();
-    $('body').scrollIntoView();
+async function clickQueryByGeneButton() {
+    await $('a=Query By Gene').waitForEnabled();
+    await $('a=Query By Gene').click();
+    await $('body').scrollIntoView();
 }
 
 function clickModifyStudySelectionButton() {
@@ -577,19 +571,24 @@ function postDataToUrl(url, data, authenticated = true) {
     if (needToLogin) keycloakLogin(10000);
 }
 
-function keycloakLogin(timeout) {
-    browser.waitUntil(() => browser.getUrl().includes('/auth/realms/cbio'), {
-        timeout,
-        timeoutMsg: 'No redirect to Keycloak could be detected.',
-    });
-    $('#username').waitForDisplayed(timeout);
+async function keycloakLogin(timeout) {
+    await browser.waitUntil(
+        () => browser.getUrl().includes('/auth/realms/cbio'),
+        {
+            timeout,
+            timeoutMsg: 'No redirect to Keycloak could be detected.',
+        }
+    );
+    await $('#username').waitForDisplayed(timeout);
 
-    $('#username').setValue('testuser');
-    $('#password').setValue('P@ssword1');
-    $('#kc-login').click();
+    await $('#username').setValue('testuser');
+    await $('#password').setValue('P@ssword1');
+    await $('#kc-login').click();
 
-    browser.waitUntil(() => !browser.getUrl().includes('/auth/realms/cbio'));
-    $('body').waitForDisplayed(timeout);
+    await browser.waitUntil(
+        () => !browser.getUrl().includes('/auth/realms/cbio')
+    );
+    await $('body').waitForDisplayed(timeout);
 }
 
 function closeOtherTabs() {

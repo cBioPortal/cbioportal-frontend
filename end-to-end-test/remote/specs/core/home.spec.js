@@ -37,97 +37,105 @@ describe('homepage', function() {
     }
 
     // this just shows that we have some studies listed
-    it('it should have some (>0) studies listed ', function() {
+    it.only('it should have some (>0) studies listed ', async function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
-
-        studies.waitForExist({ timeout: 10000 }); // same as `$('.notification').waitForExist({timeout: 10000})`
-
-        expect(0).to.be.below(
-            $$('[data-test="cancerTypeListContainer"] > ul > ul').length
+        var container = await $(
+            '[data-test="cancerTypeListContainer"] > ul > ul'
         );
+
+        await container.waitForExist({ timeout: 10000 }); // same as `$('.notification').waitForExist({timeout: 10000})`
+
+        const studies = await $$(
+            '[data-test="cancerTypeListContainer"] > ul > ul'
+        );
+
+        expect(0).to.be.below(studies.length);
     });
 
-    it('should filter study list according to filter text input', function() {
-        var input = $(searchInputSelector);
+    it.only('should filter study list according to filter text input', async function() {
+        var input = await $(searchInputSelector);
 
-        input.waitForExist({ timeout: 10000 });
+        await input.waitForExist({ timeout: 10000 });
 
         setInputText(searchInputSelector, 'bladder');
 
         waitForNumberOfStudyCheckboxes(4);
     });
 
-    it('when a single study is selected, a case set selector is provided', function() {
+    it.only('when a single study is selected, a case set selector is provided', async function() {
         var caseSetSelectorClass = '[data-test="CaseSetSelector"]';
 
-        var checkBox = $('[data-test="StudySelect"]');
+        var checkBox = await $('[data-test="StudySelect"]');
 
-        checkBox.waitForExist({ timeout: 10000 });
+        await checkBox.waitForExist({ timeout: 10000 });
 
-        assert.equal($(caseSetSelectorClass).isExisting(), false);
+        assert.equal(await $(caseSetSelectorClass).isExisting(), false);
 
-        $('[data-test="StudySelect"] input').click();
+        await $('[data-test="StudySelect"] input').click();
 
-        clickQueryByGeneButton();
+        await clickQueryByGeneButton();
 
-        var caseSetSelector = $(caseSetSelectorClass);
-        caseSetSelector.waitForExist({ timeout: 10000 });
+        var caseSetSelector = await $(caseSetSelectorClass);
 
-        assert.equal($(caseSetSelectorClass).isExisting(), true);
+        await caseSetSelector.waitForExist({ timeout: 10000 });
+
+        assert.equal(await $(caseSetSelectorClass).isExisting(), true);
     });
 
-    it('should not allow submission if OQL contains EXP or PROT for multiple studies', () => {
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+    it.only('should not allow submission if OQL contains EXP or PROT for multiple studies', async () => {
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('div[data-test=study-search] input[type=text]').waitForExist({
+        await $('div[data-test=study-search] input[type=text]').waitForExist({
             timeout: 10000,
         });
-        setInputText(
+
+        await setInputText(
             'div[data-test=study-search] input[type=text]',
             'breast -invasive'
         );
 
-        browser.pause(500);
-        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
-        $('[data-test="selectAllStudies"]').click();
+        await browser.pause(500);
+        await $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
 
-        clickQueryByGeneButton();
+        await $('[data-test="selectAllStudies"]').click();
 
-        var oqlEntrySel = 'textarea[data-test="geneSet"]';
-        setInputText(oqlEntrySel, 'PTEN: EXP>1');
+        await clickQueryByGeneButton();
+
+        const oqlEntrySel = 'textarea[data-test="geneSet"]';
+
+        await setInputText(oqlEntrySel, 'PTEN: EXP>1');
 
         var errorMessageSel = 'span[data-test="oqlErrorMessage"]';
-        $(errorMessageSel).waitForExist();
-        browser.waitUntil(
-            () =>
-                $(errorMessageSel).getText() ===
+        await $(errorMessageSel).waitForExist();
+        await browser.waitUntil(
+            async () =>
+                (await $(errorMessageSel).getText()) ===
                 'Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.'
         );
 
         assert.equal(
-            $(errorMessageSel).getText(),
+            await $(errorMessageSel).getText(),
             'Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.'
         );
 
-        var submitButtonSel = 'button[data-test="queryButton"]';
-        assert.ok(
-            !$(submitButtonSel).isEnabled(),
+        const submitButtonSel = 'button[data-test="queryButton"]';
+        assert.true(
+            await $(submitButtonSel).isEnabled(),
             'submit should be disabled w/ EXP in oql'
         );
 
-        setInputText(oqlEntrySel, 'PTEN: PROT>1');
-        $(errorMessageSel).waitForExist();
-        $(
+        await setInputText(oqlEntrySel, 'PTEN: PROT>1');
+        await $(errorMessageSel).waitForExist();
+        await $(
             'span=Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.'
         ).waitForExist();
         assert.equal(
-            $(errorMessageSel).getText(),
+            await $(errorMessageSel).getText(),
             'Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.'
         );
         assert.ok(
-            !$(submitButtonSel).isEnabled(),
+            !(await $(submitButtonSel).isEnabled()),
             'submit should be disabled w/ PROT in oql'
         );
     });

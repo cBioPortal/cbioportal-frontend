@@ -104,9 +104,9 @@ function saveErrorImage(
     networkLog
 ) {
     if (error) {
-        if (!fs.existsSync(errorDir)) {
-            fs.mkdirSync(errorDir, 0744);
-        }
+        // if (!fs.existsSync(errorDir)) {
+        //     fs.mkdirSync(errorDir, 0744);
+        // }
         const title = test.title.trim().replace(/\s/g, '_');
         const img = `${errorDir}/${title}.png`;
         console.log('ERROR SHOT PATH' + img);
@@ -165,9 +165,9 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    //specs: [SPEC_FILE_PATTERN],
 
-    //specs: ['./remote/specs/core/comparisonTab.screenshot.spec.js'],
+    specs: ['./remote/specs/core/home.spec.js'],
 
     // Patterns to exclude.
     exclude: [
