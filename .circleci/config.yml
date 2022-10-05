@@ -129,6 +129,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # check that all api responses are still the same
       - run: "bash src/test/check_api_sync.sh"
 
@@ -141,6 +145,10 @@ jobs:
       #            sudo npm install --global yarn@1.22.4
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # run tests!
       - run:
           command: "yarn run testMain"
@@ -163,6 +171,10 @@ jobs:
       #            sudo npm install --global yarn@1.22.4
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # run tests!
       - run:
           command: "yarn run testPackagesCI"
@@ -179,6 +191,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # check that no `.only` statements are still in the tests
       # Ignore doTest.only in oql parser
       - run:
@@ -190,6 +206,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       # make sure that there are no relative/incorrect package imports
       - run:
           name: "Check Incorrect Package Import Statements"
@@ -221,6 +241,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
 #      - run:
 #          # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
 #          name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
@@ -354,6 +378,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: "Upgrade yarn"
+          command: |
+            sudo npm install --global yarn@1.22.5 --force
       - run:
           name: 'Check code style with Prettier'
           command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
