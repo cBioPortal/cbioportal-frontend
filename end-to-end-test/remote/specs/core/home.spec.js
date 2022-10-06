@@ -120,7 +120,7 @@ describe('homepage', function() {
         );
 
         const submitButtonSel = 'button[data-test="queryButton"]';
-        assert.true(
+        assert.(
             await $(submitButtonSel).isEnabled(),
             'submit should be disabled w/ EXP in oql'
         );

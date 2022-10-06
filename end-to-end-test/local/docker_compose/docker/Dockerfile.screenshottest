@@ -6,6 +6,8 @@ LABEL Description="End-2-end test image for cBioPortal frontend"
 #echo INSTALL cavas deps [necessary for visual regression framework]
 #RUN apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
+RUN npm install --global yarn@1.22.5 --force
+
 USER root
 
 CMD /cbioportal-frontend/end-to-end-test/local/docker_compose/docker/screenshottest.sh
