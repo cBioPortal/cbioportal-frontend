@@ -47,17 +47,16 @@ function waitForPatientView(timeout) {
     });
 }
 
-function waitForOncoprint(timeout) {
-    browser.pause(200); // give oncoprint time to disappear
-    browser.waitUntil(
-        () => {
-            return (
-                !$('.oncoprintLoadingIndicator').isExisting() && // wait for loading indicator to hide, and
-                $('#oncoprintDiv svg rect').isExisting() && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-                $('.oncoprintContainer').getCSSProperty('opacity').value ===
-                    1 && // oncoprint has faded in
-                $('.oncoprint__controls').isExisting()
-            ); // oncoprint controls are showing
+async function waitForOncoprint(timeout) {
+    await browser.waitUntil(
+        async () => {
+            const svg = await $('#oncoprintDiv svg rect').isExisting();
+            const opacity = (await $('.oncoprintContainer').getCSSProperty('opacity')).value;
+
+            const controls = await $('.oncoprint__controls').isExisting()
+
+            return svg && controls && (opacity === 1)
+             // oncoprint controls are showing
         },
         { timeout }
     );
@@ -150,31 +149,31 @@ function setCheckboxChecked(checked, selector, failure_message) {
  * check if dropdown element is in correct state
  * (i.e. displayed or not)qq
  */
-function setDropdownOpen(
+async function setDropdownOpen(
     open,
     button_selector_or_elt,
     dropdown_selector_or_elt,
     failure_message
 ) {
-    browser.waitUntil(
-        () => {
+    await browser.waitUntil(
+        async () => {
             const dropdown_elt =
                 typeof dropdown_selector_or_elt === 'string'
-                    ? $(dropdown_selector_or_elt)
+                    ? await $(dropdown_selector_or_elt)
                     : dropdown_selector_or_elt;
             // check if exists first because sometimes we get errors with isVisible if it doesn't exist
-            const isOpen = dropdown_elt.isExisting()
-                ? dropdown_elt.isDisplayedInViewport()
+            const isOpen = await dropdown_elt.isExisting()
+                ? await dropdown_elt.isDisplayedInViewport()
                 : false;
             if (open === isOpen) {
                 return true;
             } else {
                 const button_elt =
                     typeof button_selector_or_elt === 'string'
-                        ? $(button_selector_or_elt)
+                        ? await $(button_selector_or_elt)
                         : button_selector_or_elt;
-                button_elt.waitForExist();
-                button_elt.click();
+                await button_elt.waitForExist();
+                await button_elt.click();
                 return false;
             }
         },
@@ -240,26 +239,25 @@ function showGsva() {
     setServerConfiguration({ skin_show_gsva: true });
 }
 
-function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
-    browser.waitUntil(
-        () => {
-            var ret =
-                $$('[data-test="cancerTypeListContainer"] > ul > ul').length ===
+async function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
+   await browser.waitUntil(
+        async () => {
+            let ret =
+                await $$('[data-test="cancerTypeListContainer"] > ul > ul').length ===
                 expectedNumber;
             if (text && ret) {
-                ret = $(
+                ret = await $(
                     '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
                 ).isExisting();
                 if (ret) {
-                    ret =
-                        $(
-                            '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-                        ).getText() === text;
+                    ret = await $(
+                            '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span')
+                        .getText() === text;
                 }
             }
             return ret;
         },
-        { timeout: 60000 }
+        { timeout: 10000 }
     );
 }
 
@@ -361,10 +359,14 @@ function getNumberOfStudyViewCharts() {
 
 async function setInputText(selector, text) {
     // backspace to delete current contents - webdriver is supposed to clear it but it doesnt always work
-    await $(selector).click();
+    //await $(selector).click();
     await browser.keys('\uE003'.repeat($(selector).getValue().length));
+    await $(selector).setValue('\uE003');
+    await browser.pause(100);
+    await $(selector).setValue('\uE003');
 
-    await $(selector).setValue(text);
+    await $(selector).setValue(text.trim());
+
 }
 
 function getReactSelectOptions(parent) {
@@ -515,8 +517,8 @@ async function clickQueryByGeneButton() {
     await $('body').scrollIntoView();
 }
 
-function clickModifyStudySelectionButton() {
-    $('[data-test="modifyStudySelectionButton"]').click();
+async function clickModifyStudySelectionButton() {
+    await $('[data-test="modifyStudySelectionButton"]').click();
 }
 
 function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
@@ -654,8 +656,8 @@ function selectElementByText(text) {
     return $(`//*[text()="${text}"]`);
 }
 
-function jq(selector) {
-    return browser.execute(selector => {
+async function jq(selector) {
+    return await browser.execute(selector => {
         return jQuery(selector).toArray();
     }, selector);
 }
