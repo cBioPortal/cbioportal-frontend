@@ -41,36 +41,22 @@ import { ICosmicData } from 'shared/model/Cosmic';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
 import MobxPromise from 'mobxpromise';
-import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
+
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
+import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
+import { MakeMobxView } from 'shared/components/MobxView';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import ErrorMessage from 'shared/components/ErrorMessage';
+import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on an mutation to zoom in on the gene in the IGV browser above';
 
 type IMutationTableWrapperProps = {
-    profile: MolecularProfile | undefined;
-    genePanelDataByMolecularProfileIdAndSampleId: {
-        [profileId: string]: {
-            [sampleId: string]: GenePanelData;
-        };
-    };
+    patientViewPageStore: PatientViewPageStore;
     dataStore?: ILazyMobXTableApplicationDataStore<Mutation[]>;
-    studyIdToStudy?: { [studyId: string]: CancerStudy };
     sampleManager: SampleManager | null;
-    sampleToGenePanelId: { [sampleId: string]: string | undefined };
-    genePanelIdToEntrezGeneIds: { [genePanelId: string]: number[] };
     sampleIds: string[];
-    uniqueSampleKeyToTumorType?: { [sampleId: string]: string };
-    molecularProfileIdToMolecularProfile: {
-        [molecularProfileId: string]: MolecularProfile;
-    };
-    variantCountCache: VariantCountCache;
-    indexedVariantAnnotations: RemoteData<
-        { [genomicLocation: string]: VariantAnnotation } | undefined
-    >;
-    indexedMyVariantInfoAnnotations: RemoteData<
-        IMyVariantInfoIndex | undefined
-    >;
     discreteCNACache?: DiscreteCNACache;
     mrnaExprRankCache?: MrnaExprRankCache;
     pubMedCache?: PubMedCache;
@@ -78,38 +64,28 @@ type IMutationTableWrapperProps = {
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     mrnaExprRankMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
-    data: Mutation[][];
-    downloadDataFetcher: MutationTableDownloadDataFetcher;
     mutSigData?: IMutSigData;
-    myCancerGenomeData: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
-    usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
     userEmailAddress?: string | undefined;
     enableOncoKb?: boolean;
-    enableFunctionalImpact: boolean;
-    enableHotspot: boolean | undefined;
-    enableMyCancerGenome: boolean | undefined;
     enableCivic?: boolean;
     columnVisibility?: { [columnId: string]: boolean };
     showGeneFilterMenu?: boolean;
-    currentGeneFilter: GeneFilterOption;
     onFilterGenes?: (option: GeneFilterOption) => void;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
-    generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
     onRowClick?: (d: Mutation[]) => void;
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
     sampleIdToClinicalDataMap?: MobxPromise<{ [x: string]: ClinicalData[] }>;
-    existsSomeMutationWithAscnProperty: { [property: string]: boolean };
     namespaceColumns: NamespaceColumnConfig;
     columns: string[];
     alleleFreqHeaderRender?: ((name: string) => JSX.Element) | undefined;
@@ -151,149 +127,203 @@ export default class MutationTableWrapper extends React.Component<
         showGeneFilterMenu: true,
     };
 
-    public render() {
-        const isProfiled = isSampleProfiledInProfile(
-            this.props.genePanelDataByMolecularProfileIdAndSampleId,
-            this.props.profile?.molecularProfileId,
-            this.props.sampleIds[0]
-        );
+    public get pageStore() {
+        return this.props.patientViewPageStore;
+    }
 
-        const notProfiledIds = this.props.sampleIds.reduce(
-            (aggr: string[], sampleId: string) => {
-                const isProfiled = isSampleProfiledInProfile(
-                    this.props.genePanelDataByMolecularProfileIdAndSampleId,
-                    this.props.profile?.molecularProfileId,
-                    sampleId
-                );
-                if (!isProfiled) {
-                    aggr.push(sampleId);
-                }
-                return aggr;
-            },
-            []
-        );
+    tableUI = MakeMobxView({
+        await: () => [
+            this.pageStore.mutationData,
+            this.pageStore.uncalledMutationData,
+            this.pageStore.oncoKbAnnotatedGenes,
+            this.pageStore.sampleToDiscreteGenePanelId,
+            this.pageStore.mutationMolecularProfile,
+            this.pageStore.mutationMolecularProfile,
+            this.pageStore.genePanelDataByMolecularProfileIdAndSampleId,
+            this.pageStore.sampleManager,
+            this.pageStore.studyIdToStudy,
+            this.pageStore.sampleToMutationGenePanelId,
+            this.pageStore.genePanelIdToEntrezGeneIds,
+            this.pageStore.molecularProfileIdToMolecularProfile,
+            this.pageStore.mrnaRankMolecularProfileId,
+            this.pageStore.molecularProfileIdDiscrete,
+            this.pageStore.mutSigData,
+            this.pageStore.cosmicData,
+            this.pageStore.mutationTableShowGeneFilterMenu,
+        ],
 
-        const noneProfiled =
-            notProfiledIds.length === this.props.sampleIds.length;
-        const someProfiled =
-            notProfiledIds.length > 0 &&
-            notProfiledIds.length < this.props.sampleIds.length;
-
-        if (this.props.profile === undefined) {
-            return (
-                <div className="alert alert-info" role="alert">
-                    Study has no Mutation data.
-                </div>
-            );
-        } else if (noneProfiled) {
-            return (
-                <div className="alert alert-info" role="alert">
-                    {this.props.pageMode === 'patient'
-                        ? 'Patient is not profiled for Mutations.'
-                        : 'Sample is not profiled for Mutations.'}
-                </div>
-            );
-        } else if (someProfiled) {
-        }
-
-        return (
-            <>
-                {someProfiled && (
+        render: () => {
+            if (!this.pageStore.mutationMolecularProfile.result) {
+                return (
                     <div className="alert alert-info" role="alert">
-                        {notProfiledIds.map(id =>
-                            this.props.sampleManager?.getComponentForSample(id)
-                        )}{' '}
-                        not profiled for Mutations
+                        Study is not profiled for mutations.
                     </div>
-                )}
-                <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
-                    <PatientViewMutationTable
-                        dataStore={this.props.dataStore}
-                        studyIdToStudy={this.props.studyIdToStudy}
-                        sampleManager={this.props.sampleManager}
-                        sampleToGenePanelId={this.props.sampleToGenePanelId}
-                        genePanelIdToEntrezGeneIds={
-                            this.props.genePanelIdToEntrezGeneIds
-                        }
-                        sampleIds={this.props.sampleIds}
-                        uniqueSampleKeyToTumorType={
-                            this.props.uniqueSampleKeyToTumorType
-                        }
-                        molecularProfileIdToMolecularProfile={
-                            this.props.molecularProfileIdToMolecularProfile
-                        }
-                        variantCountCache={this.props.variantCountCache}
-                        indexedVariantAnnotations={
-                            this.props.indexedVariantAnnotations
-                        }
-                        indexedMyVariantInfoAnnotations={
-                            this.props.indexedMyVariantInfoAnnotations
-                        }
-                        discreteCNACache={this.props.discreteCNACache}
-                        mrnaExprRankCache={this.props.mrnaExprRankCache}
-                        pubMedCache={this.props.pubMedCache}
-                        genomeNexusCache={this.props.genomeNexusCache}
-                        genomeNexusMutationAssessorCache={
-                            this.props.genomeNexusMutationAssessorCache
-                        }
-                        mrnaExprRankMolecularProfileId={
-                            this.props.mrnaExprRankMolecularProfileId
-                        }
-                        discreteCNAMolecularProfileId={
-                            this.props.discreteCNAMolecularProfileId
-                        }
-                        data={this.props.data}
-                        downloadDataFetcher={this.props.downloadDataFetcher}
-                        mutSigData={this.props.mutSigData}
-                        myCancerGenomeData={this.props.myCancerGenomeData}
-                        hotspotData={this.props.hotspotData}
-                        cosmicData={this.props.cosmicData}
-                        oncoKbData={this.props.oncoKbData}
-                        oncoKbCancerGenes={this.props.oncoKbCancerGenes}
-                        usingPublicOncoKbInstance={
-                            this.props.usingPublicOncoKbInstance
-                        }
-                        mergeOncoKbIcons={this.props.mergeOncoKbIcons}
-                        onOncoKbIconToggle={this.props.onOncoKbIconToggle}
-                        civicGenes={this.props.civicGenes}
-                        civicVariants={this.props.civicVariants}
-                        userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
-                        enableOncoKb={getServerConfig().show_oncokb}
-                        enableFunctionalImpact={
-                            getServerConfig().show_genomenexus
-                        }
-                        enableHotspot={getServerConfig().show_hotspot}
-                        enableMyCancerGenome={
-                            getServerConfig().mycancergenome_show
-                        }
-                        enableCivic={getServerConfig().show_civic}
-                        columnVisibility={this.props.columnVisibility}
-                        showGeneFilterMenu={this.props.showGeneFilterMenu}
-                        currentGeneFilter={this.props.currentGeneFilter}
-                        onFilterGenes={this.props.onFilterGenes}
-                        columnVisibilityProps={this.props.columnVisibilityProps}
-                        onSelectGenePanel={this.props.onSelectGenePanel}
-                        disableTooltip={this.props.disableTooltip}
-                        generateGenomeNexusHgvsgUrl={
-                            this.props.generateGenomeNexusHgvsgUrl
-                        }
-                        onRowClick={this.props.onRowClick}
-                        onRowMouseEnter={this.props.onRowMouseEnter}
-                        onRowMouseLeave={this.props.onRowMouseLeave}
-                        sampleIdToClinicalDataMap={
-                            this.props.sampleIdToClinicalDataMap
-                        }
-                        existsSomeMutationWithAscnProperty={
-                            this.props.existsSomeMutationWithAscnProperty
-                        }
-                        namespaceColumns={this.props.namespaceColumns}
-                        columns={this.props.columns}
-                        alleleFreqHeaderRender={
-                            this.props.alleleFreqHeaderRender
-                        }
-                    />
-                </FeatureInstruction>
-            </>
-        );
+                );
+            }
+
+            const { notProfiledIds, someProfiled } = getSamplesProfiledStatus(
+                this.props.sampleIds,
+                this.pageStore.genePanelDataByMolecularProfileIdAndSampleId
+                    .result,
+                this.pageStore.mutationMolecularProfile.result
+                    .molecularProfileId
+            );
+
+            return (
+                <>
+                    {notProfiledIds.length > 0 && (
+                        <div className="alert alert-info" role="alert">
+                            {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
+                            {notProfiledIds.map(id => (
+                                <span style={{ marginLeft: 5 }}>
+                                    {this.pageStore.sampleManager.result?.getComponentForSample(
+                                        id
+                                    )}
+                                </span>
+                            ))}{' '}
+                            not profiled for mutations.
+                        </div>
+                    )}
+                    {someProfiled && (
+                        <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
+                            <PatientViewMutationTable
+                                dataStore={this.props.dataStore}
+                                studyIdToStudy={
+                                    this.pageStore.studyIdToStudy.result
+                                }
+                                sampleManager={
+                                    this.pageStore.sampleManager.result!
+                                }
+                                sampleToGenePanelId={
+                                    this.pageStore.sampleToMutationGenePanelId
+                                        .result
+                                }
+                                genePanelIdToEntrezGeneIds={
+                                    this.pageStore.genePanelIdToEntrezGeneIds
+                                        .result
+                                }
+                                sampleIds={this.props.sampleIds}
+                                uniqueSampleKeyToTumorType={
+                                    this.pageStore.uniqueSampleKeyToTumorType
+                                }
+                                molecularProfileIdToMolecularProfile={
+                                    this.pageStore
+                                        .molecularProfileIdToMolecularProfile
+                                        .result
+                                }
+                                variantCountCache={
+                                    this.pageStore.variantCountCache
+                                }
+                                indexedVariantAnnotations={
+                                    this.pageStore.indexedVariantAnnotations
+                                }
+                                indexedMyVariantInfoAnnotations={
+                                    this.pageStore
+                                        .indexedMyVariantInfoAnnotations
+                                }
+                                discreteCNACache={
+                                    this.pageStore.discreteCNACache
+                                }
+                                mrnaExprRankCache={
+                                    this.pageStore.mrnaExprRankCache
+                                }
+                                pubMedCache={this.pageStore.pubMedCache}
+                                genomeNexusCache={
+                                    this.pageStore.genomeNexusCache
+                                }
+                                genomeNexusMutationAssessorCache={
+                                    this.pageStore
+                                        .genomeNexusMutationAssessorCache
+                                }
+                                mrnaExprRankMolecularProfileId={
+                                    this.pageStore.mrnaRankMolecularProfileId
+                                        .result || undefined
+                                }
+                                discreteCNAMolecularProfileId={
+                                    this.pageStore.molecularProfileIdDiscrete
+                                        .result
+                                }
+                                data={
+                                    this.pageStore
+                                        .mergedMutationDataIncludingUncalledFilteredByGene
+                                }
+                                downloadDataFetcher={
+                                    this.pageStore.downloadDataFetcher
+                                }
+                                mutSigData={this.pageStore.mutSigData.result}
+                                myCancerGenomeData={
+                                    this.pageStore.myCancerGenomeData
+                                }
+                                hotspotData={this.pageStore.indexedHotspotData}
+                                cosmicData={this.pageStore.cosmicData.result}
+                                oncoKbData={this.pageStore.oncoKbData}
+                                oncoKbCancerGenes={
+                                    this.pageStore.oncoKbCancerGenes
+                                }
+                                usingPublicOncoKbInstance={
+                                    this.pageStore.usingPublicOncoKbInstance
+                                }
+                                mergeOncoKbIcons={this.props.mergeOncoKbIcons}
+                                onOncoKbIconToggle={
+                                    this.props.onOncoKbIconToggle
+                                }
+                                civicGenes={this.pageStore.civicGenes}
+                                civicVariants={this.pageStore.civicVariants}
+                                userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
+                                enableOncoKb={getServerConfig().show_oncokb}
+                                enableFunctionalImpact={
+                                    getServerConfig().show_genomenexus
+                                }
+                                enableHotspot={getServerConfig().show_hotspot}
+                                enableMyCancerGenome={
+                                    getServerConfig().mycancergenome_show
+                                }
+                                enableCivic={getServerConfig().show_civic}
+                                columnVisibility={this.props.columnVisibility}
+                                showGeneFilterMenu={
+                                    this.pageStore
+                                        .mutationTableShowGeneFilterMenu.result
+                                }
+                                currentGeneFilter={
+                                    this.pageStore.mutationTableGeneFilterOption
+                                }
+                                onFilterGenes={this.props.onFilterGenes}
+                                columnVisibilityProps={
+                                    this.props.columnVisibilityProps
+                                }
+                                onSelectGenePanel={this.props.onSelectGenePanel}
+                                disableTooltip={this.props.disableTooltip}
+                                generateGenomeNexusHgvsgUrl={
+                                    this.pageStore.generateGenomeNexusHgvsgUrl
+                                }
+                                onRowClick={this.props.onRowClick}
+                                onRowMouseEnter={this.props.onRowMouseEnter}
+                                onRowMouseLeave={this.props.onRowMouseLeave}
+                                sampleIdToClinicalDataMap={
+                                    this.pageStore
+                                        .clinicalDataGroupedBySampleMap
+                                }
+                                existsSomeMutationWithAscnProperty={
+                                    this.pageStore
+                                        .existsSomeMutationWithAscnProperty
+                                }
+                                namespaceColumns={this.props.namespaceColumns}
+                                columns={this.props.columns}
+                                alleleFreqHeaderRender={
+                                    this.props.alleleFreqHeaderRender
+                                }
+                            />
+                        </FeatureInstruction>
+                    )}
+                </>
+            );
+        },
+
+        renderPending: () => <LoadingIndicator isLoading={true} />,
+        renderError: () => <ErrorMessage />,
+    });
+
+    public render() {
+        return this.tableUI.component;
     }
 }

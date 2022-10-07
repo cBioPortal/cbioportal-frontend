@@ -42,6 +42,7 @@ import {
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
+import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -153,10 +154,10 @@ export default class CopyNumberTableWrapper extends React.Component<
         const columns: CNATableColumn[] = [];
         const numSamples = this.props.sampleIds.length;
 
-        const isProfiled = isSampleProfiledInProfile(
+        const { notProfiledIds, someProfiled } = getSamplesProfiledStatus(
+            this.props.sampleIds,
             this.props.genePanelDataByMolecularProfileIdAndSampleId,
-            this.props.profile?.molecularProfileId,
-            this.props.sampleIds[0]
+            this.props.profile?.molecularProfileId
         );
 
         if (numSamples >= 2) {
@@ -386,56 +387,45 @@ export default class CopyNumberTableWrapper extends React.Component<
         );
 
         // determine if some (but not all of the samples are not profiled
-        const notProfiledIds = this.props.sampleIds.reduce(
-            (aggr: string[], sampleId: string) => {
-                const isProfiled = isSampleProfiledInProfile(
-                    this.props.genePanelDataByMolecularProfileIdAndSampleId,
-                    this.props.profile?.molecularProfileId,
-                    sampleId
-                );
-                if (!isProfiled) {
-                    aggr.push(sampleId);
-                }
-                return aggr;
-            },
-            []
-        );
 
-        if (this.props.profile === undefined) {
-            return (
-                <div className="alert alert-info" role="alert">
-                    Study has no Copy Number Alteration data.
-                </div>
-            );
-        } else if (!isProfiled) {
-            return (
-                <div className="alert alert-info" role="alert">
-                    {this.props.pageMode === 'patient'
-                        ? 'Patient is not profiled for Copy Number Alterations.'
-                        : 'Sample is not profiled for Copy Number Alterations.'}
-                </div>
-            );
-        }
         return (
             <>
-                <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
-                    <CNATableComponent
-                        columns={orderedColumns}
-                        data={this.props.data}
-                        dataStore={this.props.dataStore}
-                        initialSortColumn="Annotation"
-                        initialSortDirection="desc"
-                        initialItemsPerPage={10}
-                        itemsLabel="Copy Number Alteration"
-                        itemsLabelPlural="Copy Number Alterations"
-                        showCountHeader={true}
-                        columnVisibility={this.props.columnVisibility}
-                        columnVisibilityProps={this.props.columnVisibilityProps}
-                        onRowClick={this.props.onRowClick}
-                        onRowMouseEnter={this.props.onRowMouseEnter}
-                        onRowMouseLeave={this.props.onRowMouseLeave}
-                    />
-                </FeatureInstruction>
+                {notProfiledIds.length > 0 && (
+                    <div className="alert alert-info" role="alert">
+                        {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
+                        {notProfiledIds.map(id => (
+                            <span style={{ marginLeft: 5 }}>
+                                {this.props.sampleManager?.getComponentForSample(
+                                    id
+                                )}
+                            </span>
+                        ))}{' '}
+                        not profiled for copy number alterations.
+                    </div>
+                )}
+
+                {someProfiled && (
+                    <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
+                        <CNATableComponent
+                            columns={orderedColumns}
+                            data={this.props.data}
+                            dataStore={this.props.dataStore}
+                            initialSortColumn="Annotation"
+                            initialSortDirection="desc"
+                            initialItemsPerPage={10}
+                            itemsLabel="Copy Number Alteration"
+                            itemsLabelPlural="Copy Number Alterations"
+                            showCountHeader={true}
+                            columnVisibility={this.props.columnVisibility}
+                            columnVisibilityProps={
+                                this.props.columnVisibilityProps
+                            }
+                            onRowClick={this.props.onRowClick}
+                            onRowMouseEnter={this.props.onRowMouseEnter}
+                            onRowMouseLeave={this.props.onRowMouseLeave}
+                        />
+                    </FeatureInstruction>
+                )}
             </>
         );
     }

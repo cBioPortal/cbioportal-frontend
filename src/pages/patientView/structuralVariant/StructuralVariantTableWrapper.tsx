@@ -28,11 +28,13 @@ import {
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { MutationStatus } from 'react-mutation-mapper';
 import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
+import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
     onSelectGenePanel?: (name: string) => void;
     mergeOncoKbIcons?: boolean;
+    sampleIds: string[];
 }
 
 type CNATableColumn = Column<StructuralVariant[]> & { order: number };
@@ -472,45 +474,57 @@ export default class StructuralVariantTableWrapper extends React.Component<
         await: () => [
             this.props.store.structuralVariantProfile,
             this.props.store.groupedStructuralVariantData,
+            this.props.store.genePanelDataByMolecularProfileIdAndSampleId,
             this.columns,
         ],
         render: () => {
-            const isProfiled = isSampleProfiledInProfile(
-                this.props.store.genePanelDataByMolecularProfileIdAndSampleId
-                    .result,
-                this.props.store.structuralVariantProfile.result
-                    ?.molecularProfileId,
-                this.props.store.sampleIds[0]
-            );
-
-            if (
-                this.props.store.structuralVariantProfile.result === undefined
-            ) {
+            if (!this.props.store.structuralVariantProfile.result) {
                 return (
                     <div className="alert alert-info" role="alert">
-                        Study has no Structual Variant data.
-                    </div>
-                );
-            } else if (!isProfiled) {
-                return (
-                    <div className="alert alert-info" role="alert">
-                        {this.props.store.pageMode === 'patient'
-                            ? 'Patient is not profiled for Structural Variants.'
-                            : 'Sample is not profiled for Structural Variants.'}
+                        Study is not profiled for structural variants.
                     </div>
                 );
             }
+
+            const { notProfiledIds, someProfiled } = getSamplesProfiledStatus(
+                this.props.sampleIds,
+                this.props.store.genePanelDataByMolecularProfileIdAndSampleId
+                    .result,
+                this.props.store.structuralVariantProfile.result
+                    ?.molecularProfileId
+            );
+
             return (
-                <StructuralVariantTableComponent
-                    columns={this.columns.result}
-                    data={this.props.store.groupedStructuralVariantData.result!}
-                    initialSortColumn="Annotation"
-                    initialSortDirection="desc"
-                    initialItemsPerPage={10}
-                    itemsLabel="Structural Variants"
-                    itemsLabelPlural="Structural Variants"
-                    showCountHeader={true}
-                />
+                <>
+                    {notProfiledIds.length > 0 && (
+                        <div className="alert alert-info" role="alert">
+                            {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
+                            {notProfiledIds.map(id => (
+                                <span style={{ marginLeft: 5 }}>
+                                    {this.props.store.sampleManager.result?.getComponentForSample(
+                                        id
+                                    )}
+                                </span>
+                            ))}{' '}
+                            not profiled for structural variants.
+                        </div>
+                    )}
+                    {someProfiled && (
+                        <StructuralVariantTableComponent
+                            columns={this.columns.result}
+                            data={
+                                this.props.store.groupedStructuralVariantData
+                                    .result!
+                            }
+                            initialSortColumn="Annotation"
+                            initialSortDirection="desc"
+                            initialItemsPerPage={10}
+                            itemsLabel="Structural Variants"
+                            itemsLabelPlural="Structural Variants"
+                            showCountHeader={true}
+                        />
+                    )}
+                </>
             );
         },
         renderPending: () => <LoadingIndicator isLoading={true} />,
