@@ -405,7 +405,7 @@ export const makeRoutes = () => {
                         )
                     )}
                 />
-                <Route
+                {/* <Route
                     path={`/comparison/${LegacyGroupComparisonTab.MUTATIONS}`}
                     component={getBlankPage(() => {
                         redirectTo(
@@ -417,7 +417,7 @@ export const makeRoutes = () => {
                             `/comparison/${GroupComparisonTab.ALTERATIONS}`
                         );
                     })}
-                />
+                /> */}
                 <Route
                     path={`/comparison/${LegacyGroupComparisonTab.CNA}`}
                     component={getBlankPage(() => {

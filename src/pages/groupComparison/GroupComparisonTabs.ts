@@ -7,6 +7,7 @@ export enum GroupComparisonTab {
     DNAMETHYLATION = 'dna_methylation',
     ALTERATIONS = 'alterations',
     GENERIC_ASSAY_PREFIX = 'generic_assay',
+    MUTATIONS = 'mutations',
 }
 
 export enum LegacyGroupComparisonTab {

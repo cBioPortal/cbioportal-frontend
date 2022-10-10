@@ -12,6 +12,7 @@ import {
     DefaultMutationMapperStore,
     ONCOKB_DEFAULT_INFO,
     ApplyFilterFn,
+    DataFilter,
 } from 'react-mutation-mapper';
 import {
     defaultOncoKbIndicatorFilter,
@@ -61,6 +62,10 @@ export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
     filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
     genomeBuild?: string;
+    groupFilters?: {
+        group: string;
+        filter: DataFilter<any>;
+    }[];
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
@@ -97,6 +102,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
                 filterAppliersOverride:
                     mutationMapperStoreConfig.filterAppliersOverride,
                 genomeBuild: mutationMapperStoreConfig.genomeBuild,
+                groupFilters: mutationMapperStoreConfig.groupFilters,
             },
             getMutations,
             getTranscriptId

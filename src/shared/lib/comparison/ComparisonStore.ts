@@ -172,6 +172,11 @@ export default abstract class ComparisonStore
                         GroupComparisonTab.ALTERATIONS
                     ) || this.showAlterationsTab
                 );
+                this.tabHasBeenShown.set(
+                    GroupComparisonTab.MUTATIONS,
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS) ||
+                        this.showMutationsTab
+                );
             });
         }); // do this after timeout so that all subclasses have time to construct
     }
@@ -1577,6 +1582,30 @@ export default abstract class ComparisonStore
             (this.activeGroups.isComplete &&
                 this.activeGroups.result.length < 2) || //less than two active groups
             !this.alterationsTabShowable
+        );
+    }
+
+    @computed get mutationsTabShowable() {
+        return (
+            this.mutationEnrichmentProfiles.isComplete &&
+            this.mutationEnrichmentProfiles.result!.length > 0
+        );
+    }
+
+    @computed get showMutationsTab() {
+        return !!(
+            this.mutationsTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS))
+        );
+    }
+
+    @computed get mutationsTabUnavailable() {
+        return (
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result.length < 2) || //less than two active groups
+            !this.mutationsTabShowable
         );
     }
 

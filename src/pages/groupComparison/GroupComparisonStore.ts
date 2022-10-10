@@ -3,11 +3,19 @@ import {
     defaultGroupOrder,
     finalizeStudiesAttr,
     getOrdinals,
+    getSampleMolecularIdentifiers,
     getStudyIds,
 } from './GroupComparisonUtils';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
-import { SampleFilter, CancerStudy } from 'cbioportal-ts-api-client';
-import { action, computed, observable, makeObservable } from 'mobx';
+import {
+    SampleFilter,
+    CancerStudy,
+    MutationMultipleStudyFilter,
+    SampleMolecularIdentifier,
+    GenePanelDataMultipleStudyFilter,
+    Mutation,
+} from 'cbioportal-ts-api-client';
+import { action, observable, makeObservable, computed } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
@@ -28,6 +36,9 @@ import {
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import ComplexKeySet from 'shared/lib/complexKeyDataStructures/ComplexKeySet';
+import { REQUEST_ARG_ENUM } from 'shared/constants';
+import { Sample } from 'cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal';
+import { DataFilter } from 'react-mutation-mapper';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable.ref private sessionId: string;
@@ -311,6 +322,158 @@ export default class GroupComparisonStore extends ComparisonStore {
                     sampleId: sample.sampleId,
                 });
             });
+        },
+    });
+
+    public get mutations() {
+        return this._mutations;
+    }
+    private readonly _mutations = remoteData({
+        await: () => [this.samples, this.mutationEnrichmentProfiles],
+        invoke: async () => {
+            if (
+                this.samples.result!.length === 0 ||
+                this.mutationEnrichmentProfiles.result!.length === 0
+            ) {
+                return Promise.resolve([]);
+            }
+            // const genes = await client.fetchGenesUsingPOST({
+            //     geneIdType: 'HUGO_GENE_SYMBOL',
+            //     // geneIds: this.activeGroups.result!.map(g => g.name)
+            //     geneIds: this.genes.result!
+            // });
+            const sampleMolecularIdentifiers = getSampleMolecularIdentifiers(
+                this.samples.result!,
+                this.mutationEnrichmentProfiles.result!
+            );
+            const mutations = await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+                {
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                    mutationMultipleStudyFilter: {
+                        entrezGeneIds: [7157],
+                        sampleMolecularIdentifiers,
+                        // molecularProfileIds: this.mutationEnrichmentProfiles.result?.map(p => p.molecularProfileId)
+                    } as MutationMultipleStudyFilter,
+                }
+            );
+
+            return mutations;
+        },
+    });
+
+    // {sampleId: group}
+    @computed get groupedSamples(): { name: string; samples: string[] }[] {
+        // const map = new Map<string, string[]>();
+        const samplesByGroup = [];
+        for (const groupData of this._session.result!.groups) {
+            // map.set(groupData.name, groupData.studies[0].samples)
+            samplesByGroup.push({
+                name: groupData.name,
+                samples: groupData.studies[0].samples,
+            });
+        }
+        // console.log(map)
+        return samplesByGroup;
+    }
+
+    // @computed get mutationsByGene(): { [hugoGeneSymbol: string]: Mutation[] } | undefined {
+    //     if (this.mutations.isComplete) {
+    //         const mutationsByGene = _.groupBy(
+    //             this.mutations.result,
+    //             (mutation: Mutation) => mutation.gene.hugoGeneSymbol
+    //         );
+    //         return mutationsByGene;
+    //     }
+    //     else {
+    //         return undefined
+    //     }
+    // }
+
+    // public get genes() {
+    //     return this._genes;
+    // }
+    // private readonly _genes = remoteData({
+    //     await: () => [this.samples, this.mutationEnrichmentProfiles],
+    //     invoke: async () => {
+    //         const genes = await client.fetchGenesUsingPOST({
+    //             geneIdType: 'HUGO_GENE_SYMBOL',
+    //             geneIds: this.activeGroups.result!.map(g => g.name)
+    //         });
+    //         return genes.map(g => g.hugoGeneSymbol)
+    //         // return genes
+    //     }
+    // })
+
+    // @computed get genes () {
+    //     const genes = []
+    //     genes.push(this.mutationsByGene!['KRAS'][0].gene)
+    //     genes.push(this.mutationsByGene!['TP53'][0].gene)
+    //     return genes;
+    // }
+    // @computed get hugoGeneSymbols() {
+    //     return (
+    //         _.keys(this.mutationsByGene)
+    //     )
+    //     // return (
+    //     //     _.keys(this.mutationsByGene)
+    //     // )
+    // }
+
+    // @computed get groupedMutationsByGene() {
+    //     // return _.groupBy(
+    //     //     this.mutations.result,
+    //     //     (mutation: Mutation) => mutation.gene.hugoGeneSymbol
+    //     // );
+    //     return _.filter(
+    //         this.mutations.result,
+    //         (mutation: Mutation) => mutation.gene.hugoGeneSymbol in this.hugoGeneSymbols
+    //     )
+    // }
+
+    @autobind
+    public applySampleIdFilter(
+        filter: DataFilter<string>,
+        mutation: Mutation
+    ): boolean {
+        const group = this.groupedSamples.find(
+            g => g.name === filter.values[0]
+        );
+        if (group) {
+            return group.samples.includes(mutation.sampleId);
+        } else {
+            return false;
+        }
+    }
+
+    readonly mutationsByGroup = remoteData({
+        await: () => [this.mutations, this.activeGroups],
+        invoke: async () => {
+            const mutationsBySampleId = _.keyBy(
+                this.mutations.result!,
+                m => m.sampleId
+            );
+
+            const ret = this.activeGroups.result!.reduce(
+                (aggr: { [groupId: string]: Mutation[] }, group) => {
+                    const samplesInGroup = _(group.studies)
+                        .map(g => g.samples)
+                        .flatten()
+                        .value();
+
+                    const mutations = _(samplesInGroup)
+                        .map(s => {
+                            return mutationsBySampleId[s];
+                        })
+                        .flatten()
+                        .compact()
+                        .value();
+
+                    aggr[group.uid] = mutations;
+                    return aggr;
+                },
+                {}
+            );
+            return ret;
         },
     });
 

@@ -48,6 +48,8 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import GroupComparisonMutationMapper from './GroupComparisonMutationMapper';
+import Mutations from './Mutations';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -130,6 +132,8 @@ export default class GroupComparisonPage extends React.Component<
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
+            this.store.mutations,
+            this.store.mutationsByGroup,
         ],
         render: () => {
             return (
@@ -211,6 +215,66 @@ export default class GroupComparisonPage extends React.Component<
                                 />
                             )}
                             <AlterationEnrichments store={this.store} />
+                        </MSKTab>
+                    )}
+                    {this.store.showMutationsTab && (
+                        <MSKTab
+                            id={GroupComparisonTab.MUTATIONS}
+                            linkText="Mutations"
+                            anchorClassName={
+                                this.store.mutationsTabUnavailable
+                                    ? 'greyedOut'
+                                    : ''
+                            }
+                        >
+                            <div>
+                                <h3>
+                                    {_(this.store.mutationsByGroup.result!)
+                                        .keys()
+                                        .slice(0, 2)
+                                        .join(' vs ')}
+                                </h3>
+                                <Mutations
+                                    store={this.store}
+                                    mutations={_(
+                                        this.store.mutationsByGroup.result!
+                                    )
+                                        .values()
+                                        .flatten()
+                                        .value()}
+                                    filters={{
+                                        groupFilters: this.store.groupedSamples.map(
+                                            group => ({
+                                                group: group.name,
+                                                filter: {
+                                                    type:
+                                                        'GroupComparisonFilter',
+                                                    values: [group.name],
+                                                },
+                                            })
+                                        ),
+                                        filterAppliersOverride: {
+                                            ['GroupComparisonFilter']: this
+                                                .store.applySampleIdFilter,
+                                        },
+                                    }}
+                                />
+                            </div>
+
+                            {this.store.activeGroups.result!.map(g => {
+                                return (
+                                    <div>
+                                        <h3>{g.name}</h3>
+                                        <Mutations
+                                            store={this.store}
+                                            mutations={
+                                                this.store.mutationsByGroup
+                                                    .result![g.uid]
+                                            }
+                                        />
+                                    </div>
+                                );
+                            })}
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (
