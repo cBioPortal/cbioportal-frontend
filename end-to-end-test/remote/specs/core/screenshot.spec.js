@@ -375,7 +375,7 @@ describe('results page pathways tab with unprofiled genes', function() {
     });
 
     it(`results page pathwaymapper tab with unprofiled genes`, function() {
-        $('#cy').waitForDisplayed({ timeout: 15000 });
+        $('#cy').waitForDisplayed({ timeout: 30000 });
 
         waitForNetworkQuiet(15000);
 

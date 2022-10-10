@@ -497,7 +497,11 @@ export default class StructuralVariantTableWrapper extends React.Component<
             return (
                 <>
                     {notProfiledIds.length > 0 && (
-                        <div className="alert alert-info" role="alert">
+                        <div
+                            className="alert alert-info"
+                            role="alert"
+                            data-test={'partialProfileAlert'}
+                        >
                             {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
                             {notProfiledIds.map(id => (
                                 <span style={{ marginLeft: 5 }}>

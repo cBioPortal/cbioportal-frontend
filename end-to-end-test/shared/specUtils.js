@@ -102,6 +102,10 @@ function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
     );
 }
 
+function getElementByTestHandle(handle) {
+    return $(`[data-test=${handle}]`);
+}
+
 function setOncoprintMutationsMenuOpen(open) {
     const mutationColorMenuButton = '#mutationColorDropdown';
     const mutationColorMenuDropdown =
@@ -753,4 +757,5 @@ module.exports = {
     jq,
     setServerConfiguration,
     selectClinicalTabPlotType,
+    getElementByTestHandle,
 };
