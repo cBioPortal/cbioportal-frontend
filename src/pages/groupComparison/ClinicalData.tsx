@@ -35,8 +35,6 @@ import {
     CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
     ClinicalDataEnrichmentWithQ,
     getStatisticalCautionInfo,
-    getOverlappingPatients,
-    getOverlappingSamples,
 } from './GroupComparisonUtils';
 import ReactSelect from 'react-select1';
 import { MakeMobxView } from 'shared/components/MobxView';
@@ -44,16 +42,15 @@ import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { RESERVED_CLINICAL_VALUE_COLORS } from '../../shared/lib/Colors';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import {
-    PatientIdentifier,
-    Sample,
-    SampleIdentifier,
-} from 'cbioportal-ts-api-client';
+import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
 import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
-import { getComparisonCategoricalNaValue } from './ClinicalDataUtils';
+import {
+    filterSampleList,
+    getComparisonCategoricalNaValue,
+} from './ClinicalDataUtils';
 import {
     ClinicalNumericalDataVisualisation,
     ClinicalNumericalVisualisationType,
@@ -347,53 +344,23 @@ export default class ClinicalData extends React.Component<
             // for string like values include NA values if requested
             // TODO: implement for numbers
             // Compare clinical data(axisData) samples with sample list, assign NA to difference
-            // If exclude overlapped patients and samples, remove overlapped samples from sample list
             // If include overlapped patients and samples, keep all sample in sample list
-            let filteredSamples: Sample[] = [];
-            if (this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE) {
-                const overlappingPatients = getOverlappingPatients(
-                    this.props.store._activeGroupsNotOverlapRemoved.result!
-                );
-                const overlappingPatientsMap: {
-                    [studyId: string]: Set<string>;
-                } = {};
-                overlappingPatients.map(p => {
-                    if (!(p.studyId in overlappingPatientsMap)) {
-                        overlappingPatientsMap[p.studyId] = new Set<string>();
-                    }
-                    overlappingPatientsMap[p.studyId].add(p.patientId);
-                });
-                const overlappingSamples = getOverlappingSamples(
-                    this.props.store._activeGroupsNotOverlapRemoved.result!
-                );
-                const overlappingSamplesMap: {
-                    [studyId: string]: Set<string>;
-                } = {};
-                overlappingSamples.map(s => {
-                    if (!(s.studyId in overlappingSamplesMap)) {
-                        overlappingSamplesMap[s.studyId] = new Set<string>();
-                    }
-                    overlappingSamplesMap[s.studyId].add(s.sampleId);
-                });
-                filteredSamples = this.props.store.samples.result!.filter(
-                    sample =>
-                        !overlappingPatientsMap[sample.studyId]?.has(
-                            sample.patientId
-                        ) &&
-                        !overlappingSamplesMap[sample.studyId]?.has(
-                            sample.sampleId
-                        )
-                );
-            } else {
-                filteredSamples = this.props.store.samples.result!;
-            }
+            // If exclude overlapped patients and samples, remove overlapped samples from sample list
+            const sampleList: Sample[] =
+                this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE
+                    ? filterSampleList(
+                          this.props.store.samples.result!,
+                          this.props.store._activeGroupsNotOverlapRemoved
+                              .result!
+                      )
+                    : this.props.store.samples.result!;
             if (
                 this.showNA &&
                 axisData.datatype === 'string' &&
-                filteredSamples.length > 0
+                sampleList.length > 0
             ) {
                 const naSamples = _.difference(
-                    _.uniq(filteredSamples.map(x => x.uniqueSampleKey)),
+                    _.uniq(sampleList.map(x => x.uniqueSampleKey)),
                     _.uniq(axisData.data.map(x => x.uniqueSampleKey))
                 );
                 return Promise.resolve({
