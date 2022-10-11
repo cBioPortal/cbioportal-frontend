@@ -63,7 +63,7 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
     screenshotName: getScreenshotName(screenDir),
     diffName: getScreenshotName(diffDir),
-    misMatchTolerance: 0.01,
+    misMatchTolerance: 0.5,
 });
 
 function proxyComparisonMethod(target) {
@@ -167,7 +167,10 @@ exports.config = {
 
     //specs: [SPEC_FILE_PATTERN],
 
-    specs: ['./remote/specs/core/home.spec.js'],
+    specs: [
+        './remote/specs/core/screenshot.spec.js',
+        //'./remote/specs/core/home.spec.js'
+    ],
 
     // Patterns to exclude.
     exclude: [

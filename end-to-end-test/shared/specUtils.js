@@ -48,7 +48,7 @@ function waitForPatientView(timeout) {
 }
 
 async function waitForOncoprint(timeout) {
-    await browser.waitUntil(
+    return browser.waitUntil(
         async () => {
             const svg = await $('#oncoprintDiv svg rect').isExisting();
             const opacity = (await $('.oncoprintContainer').getCSSProperty('opacity')).value;
@@ -446,23 +446,23 @@ function executeInBrowser(callback) {
     return browser.execute(callback);
 }
 
-function checkElementWithTemporaryClass(
+async function checkElementWithTemporaryClass(
     selectorForChecking,
     selectorForTemporaryClass,
     temporaryClass,
     pauseTime,
     options
 ) {
-    browser.execute(
+    await browser.execute(
         function(selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).addClass(temporaryClass);
         },
         selectorForTemporaryClass,
         temporaryClass
     );
-    browser.pause(pauseTime);
-    var res = browser.checkElement(selectorForChecking, '', options);
-    browser.execute(
+    await browser.pause(pauseTime);
+    const res = await browser.checkElement(selectorForChecking, '', options);
+    await browser.execute(
         function(selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).removeClass(temporaryClass);
         },
@@ -472,15 +472,15 @@ function checkElementWithTemporaryClass(
     return res;
 }
 
-function checkElementWithMouseDisabled(selector, pauseTime, options) {
-    browser.execute(function() {
+async function checkElementWithMouseDisabled(selector, pauseTime, options) {
+    await browser.execute(function() {
         const style = 'display:block !important;visibility:visible !important;';
         $(`<div id='blockUIToDisableMouse' style='${style}'></div>`).appendTo(
             'body'
         );
     });
 
-    const ret = checkElementWithTemporaryClass(
+    const ret = await checkElementWithTemporaryClass(
         selector,
         selector,
         'disablePointerEvents',
@@ -488,7 +488,7 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
         options
     );
 
-    browser.execute(function() {
+    await browser.execute(function() {
         $('#blockUIToDisableMouse').remove();
     });
 

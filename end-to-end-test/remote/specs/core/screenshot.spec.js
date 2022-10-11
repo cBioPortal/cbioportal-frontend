@@ -24,24 +24,24 @@ function waitForAndCheckPlotsTab() {
 }
 
 function runResultsTestSuite(prefix, options = {}) {
-    it(`${prefix} render the oncoprint`, function() {
-        waitForOncoprint(10000);
-        var res = checkElementWithMouseDisabled('.oncoprintContainer');
+    it.only(`${prefix} render the oncoprint`, async function() {
+        await waitForOncoprint(10000);
+        var res = await checkElementWithMouseDisabled('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} igv_tab tab`, function() {
-        $('a.tabAnchor_cnSegments').click();
-        $('.igv-column-container').waitForExist({ timeout: 20000 });
-        var res = browser.checkElement('.pillTabs');
+    it.only(`${prefix} igv_tab tab`, async function() {
+        await $('a.tabAnchor_cnSegments').click();
+        await $('.igv-column-container').waitForExist({ timeout: 20000 });
+        var res = await browser.checkElement('.pillTabs');
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} cancer type summary`, function() {
-        $('a.tabAnchor_cancerTypesSummary').click();
-        $('[data-test="cancerTypeSummaryChart"]', 10000).waitForDisplayed();
-        $('[data-test="cancerTypeSummaryWrapper"]').waitForExist();
-        var res = browser.checkElement(
+    it.only(`${prefix} cancer type summary`, async function() {
+        await $('a.tabAnchor_cancerTypesSummary').click();
+        await $('[data-test="cancerTypeSummaryChart"]', 10000).waitForDisplayed();
+        await $('[data-test="cancerTypeSummaryWrapper"]').waitForExist();
+        var res = await browser.checkElement(
             '[data-test="cancerTypeSummaryWrapper"]'
         );
         assertScreenShotMatch(res);
