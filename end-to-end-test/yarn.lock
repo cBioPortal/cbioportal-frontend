@@ -6276,10 +6276,10 @@ wdio-junit-reporter@^0.3.1:
     junit-report-builder "~1.2.0"
     mkdirp "~0.5.1"
 
-wdio-novus-visual-regression-service@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/wdio-novus-visual-regression-service/-/wdio-novus-visual-regression-service-1.2.4.tgz"
-  integrity sha512-+e3q2a8HvrJnkEBI8yCW7yd3YS0yrNvoAX7WO/Nmv0CmuABQdX8p5ITUBbkeguUAnTVTuFe5120340/ghrwz1g==
+wdio-novus-visual-regression-service@1.2.5:
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/wdio-novus-visual-regression-service/-/wdio-novus-visual-regression-service-1.2.5.tgz#0761a1b090365998af6fa7c5065ddfff938eb22c"
+  integrity sha512-NNcyVQv86+mqER2c/KW+lEWyptUi5paI4QlNtsEfO66yXE6gfeL2v/nTkrLNJCXwk0HLgtduVnJaiS8faW0E3A==
   dependencies:
     "@babel/runtime" "^7.11.2"
     "@wdio/logger" "^6.0.16"
