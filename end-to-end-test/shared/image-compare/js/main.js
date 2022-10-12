@@ -157,10 +157,17 @@ function buildCurlStatement(data) {
     //      being behind a redirect, and so if we don't use the -L option we end up with a corrupted file.
     //      -L makes curl "follow" the redirect so it downloads the file correctly.
 
-    const imageUrl = window.location.href.replace(
-        /imageCompare\.html?/,
-        data.screenImagePath
-    );
+    const imageUrl = /$\./.test(data.screenImagePath) ?
+        window.location.href.replace(
+            /imageCompare\.html?/,
+            data.screenImagePath
+        ) :
+        window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + data.screenImagePath;
+
+    // const imageUrl =  window.location.href.replace(
+    //     /imageCompare\.html?/,
+    //     data.screenImagePath
+    // );
 
     const imageName = data.imageName;
 
