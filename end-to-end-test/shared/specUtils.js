@@ -72,17 +72,17 @@ function getTextInOncoprintLegend() {
         .join(' ');
 }
 
-function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
+async function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
     const button = 'button[data-test="' + buttonId + '"]';
     const dropdown = 'div[data-test="GlobalSettingsDropdown"]';
-    $(button).waitForDisplayed();
-    browser.waitUntil(
-        () => {
-            if (open === $(dropdown).isDisplayedInViewport()) {
+    await $(button).waitForDisplayed();
+    await browser.waitUntil(
+        async () => {
+            if (open === (await $(dropdown).isDisplayedInViewport())) {
                 return true;
             } else {
-                $(button).click();
-                $(dropdown).waitForDisplayed({
+                await $(button).click();
+                await $(dropdown).waitForDisplayed({
                     timeout: 6000,
                     reverse: !open,
                 });

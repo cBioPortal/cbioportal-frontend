@@ -21,8 +21,8 @@ var { COEXPRESSION_TIMEOUT } = require('../../../shared/specUtils');
 async function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, async function() {
 
-        var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
-        await goToUrlAndSetLocalStorage(url);
+        const url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
+        await await goToUrlAndSetLocalStorage(url);
 
         await waitForOncoprint(10000);
         const res = await browser.checkElement('.oncoprintContainer', '', options);
@@ -178,194 +178,194 @@ async function runResultsTestSuite(prefix, options = {}) {
     });
 }
 
-describe.only('result page screenshot tests',  async function() {
+describe('result page screenshot tests',  async function() {
     before(async function() {
-        var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
-        await goToUrlAndSetLocalStorage(url);
+        const url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
+        await await goToUrlAndSetLocalStorage(url);
         await waitForOncoprint(10000);
     });
 
     await runResultsTestSuite('no session');
 });
 
-// describe.skip('download tab screenshot tests',  function() {
-//     it('download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', async function() {
-//         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
-//         goToUrlAndSetLocalStorage(url);
-//         $('a.tabAnchor_download').waitForExist({ timeout: 10000 });
-//         $('a.tabAnchor_download').click();
-//         $(
-//             '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-//         ).waitForExist({ timeout: 20000 });
-//         $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 10000 });
-//         const res = browser.checkElement('[data-test="downloadTabDiv"]');
-//         assertScreenShotMatch(res);
-//     });
-//
-//     it('download tab - nsclc_tcga_broad_2016 with TP53', async function() {
-//         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&case_set_id=nsclc_tcga_broad_2016_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations&tab_index=tab_visualize`;
-//         goToUrlAndSetLocalStorage(url);
-//         $(
-//             '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-//         ).waitForExist({ timeout: 20000 });
-//         $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
-//         const res = browser.checkElement('[data-test="downloadTabDiv"]');
-//         assertScreenShotMatch(res);
-//     });
-//
-//     it('download tab - nsclc_tcga_broad_2016 with CDKN2A MDM2 and merged track MDM4 TP53', async function() {
-//         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=CDKN2A%2520MDM2%2520%255B%2522MERGED%2522%2520MDM4%2520TP53%255D&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
-//         goToUrlAndSetLocalStorage(url);
-//         $(
-//             '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-//         ).waitForExist({ timeout: 20000 });
-//         $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
-//         const res = browser.checkElement('[data-test="downloadTabDiv"]');
-//         assertScreenShotMatch(res);
-//     });
-//
-//     it('download tab - nsclc_tcga_broad_2016 for query EGFR: MUT=T790M AMP', async function() {
-//         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=EGFR%253A%2520MUT%253DT790M%2520AMP&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
-//         goToUrlAndSetLocalStorage(url);
-//         $(
-//             '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-//         ).waitForExist({ timeout: 20000 });
-//         $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
-//         const res = browser.checkElement('[data-test="downloadTabDiv"]');
-//         assertScreenShotMatch(res);
-//     });
-//
-//     it('download tab - nsclc_tcga_broad_2016 with overlapping TP53', async function() {
-//         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=TP53%250ATP53%253A%2520AMP%250ATP53%253A%2520MUT&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
-//         goToUrlAndSetLocalStorage(url);
-//         $(
-//             '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-//         ).waitForExist({ timeout: 20000 });
-//
-//         $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
-//
-//         const res = browser.checkElement('[data-test="downloadTabDiv"]');
-//         assertScreenShotMatch(res);
-//     });
-// });
+describe('download tab screenshot tests',  function() {
+    it('download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', async function() {
+        const url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
+        await goToUrlAndSetLocalStorage(url);
+        await $('a.tabAnchor_download').waitForExist({ timeout: 10000 });
+        await $('a.tabAnchor_download').click();
+        $(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
+        ).waitForExist({ timeout: 20000 });
+        await $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 10000 });
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
+        assertScreenShotMatch(res);
+    });
 
-// describe.skip('patient view page screenshot test', function() {
-//     it('patient view lgg_ucsf_2014 P04', async function() {
-//         var url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
-//         goToUrlAndSetLocalStorage(url);
-//
-//         // find oncokb image
-//         var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
-//         oncokbIndicator.waitForExist({ timeout: 30000 });
-//         // find vaf plot
-//         var vafPlot = $('.vafPlotThumbnail');
-//         vafPlot.waitForExist({ timeout: 30000 });
-//
-//         const res = browser.checkElement('#mainColumn');
-//         assertScreenShotMatch(res);
-//     });
-//
-//     it('patient view with 0 mutations msk_impact_2017 P-0000053-T01-IM3', async function() {
-//         var url = `${CBIOPORTAL_URL}/patient?sampleId=P-0000053-T01-IM3&studyId=msk_impact_2017`;
-//         goToUrlAndSetLocalStorage(url);
-//
-//         // should show 0 mutations
-//         $('.//*[text()[contains(.,"0 Mutations")]]').waitForExist();
-//
-//         // should show 21.6% copy number altered in genomic overview
-//         $('.//*[text()[contains(.,"21.6%")]]').waitForExist();
-//
-//         // take screenshot
-//         const res = browser.checkElement('#mainColumn', '', { hide: ['.qtip'] });
-//         assertScreenShotMatch(res);
-//     });
-//
-//     it('patient view pathways tab msk_impact_2017 P-0000377', async function() {
-//         var url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&caseId=P-0000377`;
-//         goToUrlAndSetLocalStorage(url);
-//
-//         $('#cy').waitForDisplayed({ timeout: 10000 });
-//         const res = browser.checkElement(
-//             '[data-test="pathwayMapperTabDiv"]',
-//             '',
-//             {
-//                 hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
-//             }
-//         );
-//
-//         assertScreenShotMatch(res);
-//     });
-//
-//     it('patient view pathways tab msk_impact_2017 P-0000377-T03-IM3', async function() {
-//         var url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&sampleId=P-0000377-T03-IM3`;
-//         goToUrlAndSetLocalStorage(url);
-//
-//         $('#cy').waitForDisplayed({ timeout: 10000 });
-//         const res = browser.checkElement(
-//             '[data-test="pathwayMapperTabDiv"]',
-//             '',
-//             {
-//                 hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
-//             }
-//         );
-//
-//         assertScreenShotMatch(res);
-//     });
-// });
+    it('download tab - nsclc_tcga_broad_2016 with TP53', async function() {
+        const url = `${CBIOPORTAL_URL}/results/download?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&case_set_id=nsclc_tcga_broad_2016_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations&tab_index=tab_visualize`;
+        await goToUrlAndSetLocalStorage(url);
+        await $(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
+        ).waitForExist({ timeout: 20000 });
+        await $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
+        assertScreenShotMatch(res);
+    });
 
-// describe('enrichments tab screenshot tests',  function() {
-//     beforeEach(function() {
-//         var url = `${CBIOPORTAL_URL}/results/enrichments?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
-//         goToUrlAndSetLocalStorage(url);
-//         //browser.$('.fdsa').waitForDisplayed();
-//     });
-//
-//     it('enrichments tab coadread_tcga_pub mRNA profile', async function() {
-//         browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
-//
-//         $('.comparisonTabSubTabs .tabAnchor_mrna').click();
-//         $('a=mRNA').click();
-//
-//         $('b=MERTK').click();
-//
-//         const res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
-//
-//         assertScreenShotMatch(res);
-//     });
-// });
+    it('download tab - nsclc_tcga_broad_2016 with CDKN2A MDM2 and merged track MDM4 TP53', async function() {
+        const url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=CDKN2A%2520MDM2%2520%255B%2522MERGED%2522%2520MDM4%2520TP53%255D&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        await goToUrlAndSetLocalStorage(url);
+        await $(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
+        ).waitForExist({ timeout: 20000 });
+        await $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
+        assertScreenShotMatch(res);
+    });
 
-// describe('result page tabs, loading from session id', async function() {
-//     before(function() {
-//         // only run these tests if session service is enabled
-//         if (sessionServiceIsEnabled() === false) {
-//             this.skip();
-//         }
-//
-//         var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
-//         goToUrlAndSetLocalStorage(url);
-//         waitForOncoprint(15000);
-//     });
-//
-//     runResultsTestSuite('session');
-// });
-//
-// describe('results page tabs while excluding unprofiled samples', function() {
-//     before(() => {
-//         goToUrlAndSetLocalStorage(
-//             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
-//         );
-//         waitForOncoprint(10000);
-//         setSettingsMenuOpen(true);
-//         $('input[data-test="HideUnprofiled"]').waitForExist();
-//         $('input[data-test="HideUnprofiled"]').click();
-//         waitForOncoprint(10000);
-//         setSettingsMenuOpen(false);
-//     });
-//
-//     runResultsTestSuite('excluding unprofiled samples', {
-//         mrnaEnrichmentsRowSelector: 'b=DSC1',
-//     });
-// });
+    it('download tab - nsclc_tcga_broad_2016 for query EGFR: MUT=T790M AMP', async function() {
+        const url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=EGFR%253A%2520MUT%253DT790M%2520AMP&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        await goToUrlAndSetLocalStorage(url);
+        $(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
+        ).waitForExist({ timeout: 20000 });
+        await $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
+        assertScreenShotMatch(res);
+    });
+
+    it('download tab - nsclc_tcga_broad_2016 with overlapping TP53', async function() {
+        const url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=TP53%250ATP53%253A%2520AMP%250ATP53%253A%2520MUT&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        await goToUrlAndSetLocalStorage(url);
+        await $(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
+        ).waitForExist({ timeout: 20000 });
+
+        await $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
+
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
+        assertScreenShotMatch(res);
+    });
+});
+
+describe.only('patient view page screenshot test', function() {
+    it('patient view lgg_ucsf_2014 P04', async function() {
+        const url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
+        await goToUrlAndSetLocalStorage(url);
+
+        // find oncokb image
+        const oncokbIndicator = await $('[data-test="oncogenic-icon-image"]');
+        await oncokbIndicator.waitForExist({ timeout: 30000 });
+        // find vaf plot
+        const vafPlot = await $('.vafPlotThumbnail');
+        await vafPlot.waitForExist({ timeout: 30000 });
+
+        const res = await browser.checkElement('#mainColumn');
+        assertScreenShotMatch(res);
+    });
+
+    it('patient view with 0 mutations msk_impact_2017 P-0000053-T01-IM3', async function() {
+        const url = `${CBIOPORTAL_URL}/patient?sampleId=P-0000053-T01-IM3&studyId=msk_impact_2017`;
+        await goToUrlAndSetLocalStorage(url);
+
+        // should show 0 mutations
+        await $('.//*[text()[contains(.,"0 Mutations")]]').waitForExist();
+
+        // should show 21.6% copy number altered in genomic overview
+        await $('.//*[text()[contains(.,"21.6%")]]').waitForExist();
+
+        // take screenshot
+        const res = await browser.checkElement('#mainColumn', '', { hide: ['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+
+    it('patient view pathways tab msk_impact_2017 P-0000377', async function() {
+        const url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&caseId=P-0000377`;
+        await goToUrlAndSetLocalStorage(url);
+
+        await $('#cy').waitForDisplayed({ timeout: 10000 });
+        const res = await browser.checkElement(
+            '[data-test="pathwayMapperTabDiv"]',
+            '',
+            {
+                hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
+            }
+        );
+
+        assertScreenShotMatch(res);
+    });
+
+    it('patient view pathways tab msk_impact_2017 P-0000377-T03-IM3', async function() {
+        const url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&sampleId=P-0000377-T03-IM3`;
+        await goToUrlAndSetLocalStorage(url);
+
+        await $('#cy').waitForDisplayed({ timeout: 10000 });
+        const res = await browser.checkElement(
+            '[data-test="pathwayMapperTabDiv"]',
+            '',
+            {
+                hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
+            }
+        );
+
+        assertScreenShotMatch(res);
+    });
+});
+
+describe.only('enrichments tab screenshot tests',  function() {
+    beforeEach(async function() {
+        const url = `${CBIOPORTAL_URL}/results/enrichments?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
+        await goToUrlAndSetLocalStorage(url);
+
+    });
+
+    it('enrichments tab coadread_tcga_pub mRNA profile', async function() {
+        $('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
+
+        await $('.comparisonTabSubTabs .tabAnchor_mrna').click();
+        await $('a=mRNA').click();
+
+        await $('b=MERTK').click();
+
+        const res = await browser.checkElement('div[data-test="ComparisonTabDiv"]');
+
+        assertScreenShotMatch(res);
+    });
+});
+
+describe('result page tabs, loading from session id', async function() {
+    before(async function() {
+        // only run these tests if session service is enabled
+        if (sessionServiceIsEnabled() === false) {
+            this.skip();
+        }
+
+        const url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
+        await goToUrlAndSetLocalStorage(url);
+        await waitForOncoprint(15000);
+    });
+
+    await runResultsTestSuite('session');
+});
+
+describe.only('results page tabs while excluding unprofiled samples', async function() {
+    before(async () => {
+        await goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
+        );
+        await waitForOncoprint(10000);
+        await setSettingsMenuOpen(true);
+        await $('input[data-test="HideUnprofiled"]').waitForExist();
+        await $('input[data-test="HideUnprofiled"]').click();
+        await waitForOncoprint(10000);
+        await setSettingsMenuOpen(false);
+    });
+
+    await runResultsTestSuite('excluding unprofiled samples', {
+        mrnaEnrichmentsRowSelector: 'b=DSC1',
+    });
+});
 //
 // describe('results page pathways tab with unprofiled genes', function() {
 //     before(() => {
@@ -375,11 +375,11 @@ describe.only('result page screenshot tests',  async function() {
 //     });
 //
 //     it(`results page pathwaymapper tab with unprofiled genes`, async function() {
-//         $('#cy').waitForDisplayed({ timeout: 15000 });
+//         await $('#cy').waitForDisplayed({ timeout: 15000 });
 //
 //         waitForNetworkQuiet(15000);
 //
-//         const res = browser.checkElement(
+//         const res = await browser.checkElement(
 //             '[data-test="pathwayMapperTabDiv"]',
 //             '',
 //             { hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'] }
