@@ -22,15 +22,13 @@ function waitForPlotsTab(timeout) {
     $('div.axisBlock').waitForDisplayed({ timeout: timeout || 20000 });
 }
 
-function waitForAndCheckPlotsTab() {
-    $('body').moveTo({ xOffset: 0, yOffset: 0 });
-    $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timeout: 20000 });
-    var res = checkElementWithElementHidden(
-        'div[data-test="PlotsTabEntireDiv"]',
-        '.popover',
-        { hide: ['.qtip'] }
+async function waitForAndCheckPlotsTab() {
+    //await $('body').moveTo({ xOffset: 0, yOffset: 0 });
+    await $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timeout: 20000 });
+    const res = await checkElementWithElementHidden(
+        'div[data-test="PlotsTabEntireDiv"]'
     );
-    assertScreenShotMatch(res);
+    return res;
 }
 
 function waitForCoExpressionTab(timeout) {
@@ -285,11 +283,11 @@ const useExternalFrontend = !process.env
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
-function waitForNetworkQuiet(timeout) {
-    browser.waitUntil(
-        () => {
+async function waitForNetworkQuiet(timeout) {
+    await browser.waitUntil(
+        async () => {
             return (
-                browser.execute(function() {
+                await browser.execute(function() {
                     return window.ajaxQuiet === true;
                 }) == true
             );
@@ -495,16 +493,16 @@ async function checkElementWithMouseDisabled(selector, pauseTime, options) {
     return ret;
 }
 
-function checkElementWithElementHidden(selector, selectorToHide, options) {
-    browser.execute(selectorToHide => {
+async function checkElementWithElementHidden(selector, selectorToHide, options) {
+    await browser.execute(selectorToHide => {
         $(
             `<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`
         ).appendTo('head');
     }, selectorToHide);
 
-    var res = browser.checkElement(selector, '', options);
+    const res = await browser.checkElement(selector, '', options);
 
-    browser.execute(selectorToHide => {
+    await browser.execute(selectorToHide => {
         $('#tempHiddenStyles').remove();
     }, selectorToHide);
 
