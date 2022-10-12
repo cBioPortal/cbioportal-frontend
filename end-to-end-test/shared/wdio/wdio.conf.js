@@ -24,12 +24,16 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 // correct if screenshot directory has trailing slash
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
+let headless = process.env.HEADLESS_CHROME;
+
+headless = true;
+
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
 ].concat(
     (function() {
-        return process.env.HEADLESS_CHROME
+        return headless
             ? [
                   '--headless',
                   '--no-sandbox',
@@ -63,7 +67,7 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
     screenshotName: getScreenshotName(screenDir),
     diffName: getScreenshotName(diffDir),
-    misMatchTolerance: 0.5,
+    misMatchTolerance: .01
 });
 
 function proxyComparisonMethod(target) {
@@ -169,7 +173,7 @@ exports.config = {
 
     specs: [
         './remote/specs/core/screenshot.spec.js',
-        //'./remote/specs/core/home.spec.js'
+        './remote/specs/core/home.spec.js'
     ],
 
     // Patterns to exclude.
@@ -271,9 +275,8 @@ exports.config = {
             'novus-visual-regression',
             {
                 compare: LocalCompare,
-                viewportChangePause: 300,
                 viewports: [{ width: 1600, height: 1000 }],
-                orientations: ['landscape', 'portrait'],
+                orientations: ['portrait'],
             },
         ],
     ],
