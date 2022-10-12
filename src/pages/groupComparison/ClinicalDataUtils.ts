@@ -22,28 +22,19 @@ export function getComparisonCategoricalNaValue(): string[] {
 export function getOverlappingPatientsMap(
     overlappingPatients: PatientIdentifier[]
 ): { [studyId: string]: Set<string> } {
-    const overlappingPatientsMap: { [studyId: string]: Set<string> } = {};
-    _.groupBy(overlappingPatients, p => {
-        if (!(p.studyId in overlappingPatientsMap)) {
-            overlappingPatients;
-            overlappingPatientsMap[p.studyId] = new Set<string>();
-        }
-        overlappingPatientsMap[p.studyId].add(p.patientId);
-    });
-    return overlappingPatientsMap;
+    return _.chain(overlappingPatients)
+        .groupBy(p => p.studyId)
+        .mapValues(arr => new Set(arr.map(p => p.patientId)))
+        .value();
 }
 
 export function getOverlappingSamplesMap(
     overlappingSamples: SampleIdentifier[]
 ): { [studyId: string]: Set<string> } {
-    const overlappingSamplesMap: { [studyId: string]: Set<string> } = {};
-    _.groupBy(overlappingSamples, s => {
-        if (!(s.studyId in overlappingSamplesMap)) {
-            overlappingSamplesMap[s.studyId] = new Set<string>();
-        }
-        overlappingSamplesMap[s.studyId].add(s.sampleId);
-    });
-    return overlappingSamplesMap;
+    return _.chain(overlappingSamples)
+        .groupBy(s => s.studyId)
+        .mapValues(arr => new Set(arr.map(p => p.sampleId)))
+        .value();
 }
 
 export function filterSampleList(
