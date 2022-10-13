@@ -48,7 +48,6 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
-import GroupComparisonMutationMapper from './GroupComparisonMutationMapper';
 import Mutations from './Mutations';
 
 export interface IGroupComparisonPageProps {
@@ -134,6 +133,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
             this.store.mutations,
             this.store.mutationsByGroup,
+            this.store.genes,
         ],
         render: () => {
             return (
@@ -227,6 +227,33 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
+                            <div style={{ width: 100, paddingBottom: 10 }}>
+                                <ReactSelect
+                                    name="Select gene"
+                                    onChange={(option: any | null) => {
+                                        if (option) {
+                                            this.store.setSelectedMutationMapperGene(
+                                                option.value
+                                            );
+                                        }
+                                    }}
+                                    options={this.store.genes.result!.map(
+                                        gene => ({
+                                            label: gene.hugoGeneSymbol,
+                                            value: gene,
+                                        })
+                                    )}
+                                    value={{
+                                        label: this.store
+                                            .selectedMutationMapperGene
+                                            .hugoGeneSymbol,
+                                        value: this.store
+                                            .selectedMutationMapperGene,
+                                    }}
+                                    clearable={false}
+                                    searchable={true}
+                                />
+                            </div>
                             <div>
                                 <h3>
                                     {_(this.store.mutationsByGroup.result!)
@@ -243,21 +270,25 @@ export default class GroupComparisonPage extends React.Component<
                                         .flatten()
                                         .value()}
                                     filters={{
-                                        groupFilters: this.store.groupedSamples.map(
-                                            group => ({
-                                                group: group.name,
+                                        groupFilters: _(
+                                            this.store.mutationsByGroup.result!
+                                        )
+                                            .keys()
+                                            .value()
+                                            .map(group => ({
+                                                group: group,
                                                 filter: {
                                                     type:
                                                         'GroupComparisonFilter',
-                                                    values: [group.name],
+                                                    values: [group],
                                                 },
-                                            })
-                                        ),
+                                            })),
                                         filterAppliersOverride: {
                                             ['GroupComparisonFilter']: this
                                                 .store.applySampleIdFilter,
                                         },
                                     }}
+                                    gene={this.store.selectedMutationMapperGene}
                                 />
                             </div>
 
@@ -270,6 +301,10 @@ export default class GroupComparisonPage extends React.Component<
                                             mutations={
                                                 this.store.mutationsByGroup
                                                     .result![g.uid]
+                                            }
+                                            gene={
+                                                this.store
+                                                    .selectedMutationMapperGene
                                             }
                                         />
                                     </div>

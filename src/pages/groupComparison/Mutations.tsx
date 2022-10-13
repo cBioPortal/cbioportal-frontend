@@ -31,9 +31,8 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 import { getServerConfig } from 'config/config';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
-import GroupComparisonMutationMapperStore from './GroupComparisonMutationMapperStore';
 import GroupComparisonMutationMapper from './GroupComparisonMutationMapper';
-import { Mutation } from 'cbioportal-ts-api-client';
+import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import ResultsViewMutationMapper from 'pages/resultsView/mutation/ResultsViewMutationMapper';
 import MutationMapperToolStore from 'pages/staticPages/tools/mutationMapper/MutationMapperToolStore';
 import GroupComparisonStore from './GroupComparisonStore';
@@ -44,6 +43,7 @@ interface IMutationProps {
     store: GroupComparisonStore;
     mutations: Mutation[];
     filters?: any;
+    gene?: Gene;
 }
 
 const ONCOKB_URL = 'https://www.oncokb.org/';
@@ -55,91 +55,43 @@ const GROUP_COMPARISON_FILTER_TYPE = 'GroupComparisonFilter';
 @inject('routing')
 @observer
 export default class Mutations extends React.Component<IMutationProps, {}> {
-    @observable.ref geneTab: string | undefined = undefined;
-    private mutationMapperStore: MutationMapperToolStore;
+    // @observable.ref geneTab: string | undefined = undefined;
+    private mutationMapperToolStore: MutationMapperToolStore;
 
     constructor(props: IMutationProps) {
         super(props);
-        makeObservable(this);
-        this.mutationMapperStore = new MutationMapperToolStore(
+        // makeObservable(this);
+        this.mutationMapperToolStore = new MutationMapperToolStore(
             this.props.mutations,
-            this.props.filters || null
+            this.props.filters
         );
-    }
-
-    @computed get tabs() {
-        const tabs: JSX.Element[] = [];
-
-        this.mutationMapperStore.hugoGeneSymbols.result.forEach(
-            (gene: string) => {
-                const mutationMapperStore = this.mutationMapperStore.getMutationMapperStore(
-                    gene
-                );
-                if (mutationMapperStore) {
-                    tabs.push(
-                        <MSKTab key={gene} id={gene} linkText={gene}>
-                            <GroupComparisonMutationMapper
-                                {...convertToMutationMapperProps({
-                                    ...getServerConfig(),
-                                })}
-                                mutationData={this.props.store.mutations.result}
-                                generateGenomeNexusHgvsgUrl={hgvsg =>
-                                    getGenomeNexusHgvsgUrl(hgvsg, undefined)
-                                }
-                                store={mutationMapperStore}
-                                showTranscriptDropDown={true}
-                            />
-                        </MSKTab>
-                    );
-                }
-            }
-        );
-
-        return tabs;
     }
 
     public render() {
-        if (
-            this.mutationMapperStore.hugoGeneSymbols.isComplete &&
-            this.mutationMapperStore.hugoGeneSymbols.result &&
-            this.mutationMapperStore.hugoGeneSymbols.result.length > 0
-        ) {
-            const activeTabId =
-                this.activeTabId ||
-                this.mutationMapperStore.hugoGeneSymbols.result[0];
-            return (
-                <div>
-                    <Loader
-                        isLoading={
-                            this.mutationMapperStore.mutationMapperStores
-                                .isPending &&
-                            this.props.store.mutations.isPending
+        const mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
+            this.props.gene!.hugoGeneSymbol
+        );
+        return (
+            <div>
+                <Loader
+                    isLoading={
+                        this.mutationMapperToolStore.mutationMapperStores
+                            .isPending && this.props.store.mutations.isPending
+                    }
+                />
+                {mutationMapperStore && this.props.store.mutations.isComplete && (
+                    <GroupComparisonMutationMapper
+                        {...convertToMutationMapperProps({
+                            ...getServerConfig(),
+                        })}
+                        generateGenomeNexusHgvsgUrl={hgvsg =>
+                            getGenomeNexusHgvsgUrl(hgvsg, undefined)
                         }
+                        store={mutationMapperStore}
+                        showTranscriptDropDown={true}
                     />
-                    <MSKTabs
-                        id="mutationMapperToolTabs"
-                        activeTabId={activeTabId}
-                        onTabClick={(id: string) => this.handleTabChange(id)}
-                        className="pillTabs"
-                        arrowStyle={{ 'line-height': 0.8 }}
-                        tabButtonStyle="pills"
-                        unmountOnHide={true}
-                    >
-                        {this.tabs}
-                    </MSKTabs>
-                </div>
-            );
-        } else {
-            return null;
-        }
-    }
-
-    @computed get activeTabId(): string | undefined {
-        return this.geneTab;
-    }
-
-    @action.bound
-    protected handleTabChange(id: string | undefined) {
-        this.geneTab = id;
+                )}
+            </div>
+        );
     }
 }

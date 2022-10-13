@@ -11,7 +11,6 @@ import {
 } from 'shared/components/mutationMapper/MutationMapper';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
-    mutationData?: Mutation[] | undefined;
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
 }
 
@@ -21,18 +20,11 @@ class GroupComparisonMutationMapper extends MutationMapper<
 > {
     constructor(props: IGroupComparisonMutationMapperProps) {
         super(props);
-
-        // makeObservable<GroupComparisonMutationMapper, 'geneWidth'>(this);
-        // makeObservable(this)
     }
 
     protected get mutationTableComponent() {
         return null;
     }
-
-    // protected get mutationPlot() {
-
-    // }
 }
 
 export default GroupComparisonMutationMapper;
