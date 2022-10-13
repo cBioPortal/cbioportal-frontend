@@ -43,9 +43,14 @@ import { RESERVED_CLINICAL_VALUE_COLORS } from '../../shared/lib/Colors';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Sample } from 'cbioportal-ts-api-client';
-import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import ComparisonStore, {
+    OverlapStrategy,
+} from '../../shared/lib/comparison/ComparisonStore';
 import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
-import { getComparisonCategoricalNaValue } from './ClinicalDataUtils';
+import {
+    filterSampleList,
+    getComparisonCategoricalNaValue,
+} from './ClinicalDataUtils';
 import {
     ClinicalNumericalDataVisualisation,
     ClinicalNumericalVisualisationType,
@@ -338,17 +343,24 @@ export default class ClinicalData extends React.Component<
             const axisData = this.clinicalDataPromise.result!;
             // for string like values include NA values if requested
             // TODO: implement for numbers
+            // Compare clinical data(axisData) samples with sample list, assign NA to difference
+            // If include overlapped patients and samples, keep all sample in sample list
+            // If exclude overlapped patients and samples, remove overlapped samples from sample list
+            const sampleList: Sample[] =
+                this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE
+                    ? filterSampleList(
+                          this.props.store.samples.result!,
+                          this.props.store._activeGroupsNotOverlapRemoved
+                              .result!
+                      )
+                    : this.props.store.samples.result!;
             if (
                 this.showNA &&
                 axisData.datatype === 'string' &&
-                this.props.store.samples.result!.length > 0
+                sampleList.length > 0
             ) {
                 const naSamples = _.difference(
-                    _.uniq(
-                        this.props.store.samples.result!.map(
-                            x => x.uniqueSampleKey
-                        )
-                    ),
+                    _.uniq(sampleList.map(x => x.uniqueSampleKey)),
                     _.uniq(axisData.data.map(x => x.uniqueSampleKey))
                 );
                 return Promise.resolve({
