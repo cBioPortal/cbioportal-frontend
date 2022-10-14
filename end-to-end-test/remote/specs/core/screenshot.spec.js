@@ -249,7 +249,7 @@ describe('download tab screenshot tests',  function() {
     });
 });
 
-describe.only('patient view page screenshot test', function() {
+describe('patient view page screenshot test', function() {
     it('patient view lgg_ucsf_2014 P04', async function() {
         const url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
         await goToUrlAndSetLocalStorage(url);
@@ -313,7 +313,7 @@ describe.only('patient view page screenshot test', function() {
     });
 });
 
-describe.only('enrichments tab screenshot tests',  function() {
+describe('enrichments tab screenshot tests',  function() {
     beforeEach(async function() {
         const url = `${CBIOPORTAL_URL}/results/enrichments?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
         await goToUrlAndSetLocalStorage(url);
@@ -349,7 +349,7 @@ describe('result page tabs, loading from session id', async function() {
     await runResultsTestSuite('session');
 });
 
-describe.only('results page tabs while excluding unprofiled samples', async function() {
+describe('results page tabs while excluding unprofiled samples', async function() {
     before(async () => {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
