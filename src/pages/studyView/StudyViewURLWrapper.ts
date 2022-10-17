@@ -7,12 +7,13 @@ import { StudyViewPageTabKeyEnum } from './StudyViewPageTabs';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
 
 export default class StudyViewURLWrapper extends URLWrapper<
-    Pick<StudyViewURLQuery, 'tab' | 'resourceUrl'>
+    Pick<StudyViewURLQuery, 'tab' | 'resourceUrl' | 'enable_left_truncation'>
 > {
     constructor(routing: ExtendedRouterStore) {
         super(routing, {
             tab: { isSessionProp: false },
             resourceUrl: { isSessionProp: false },
+            enable_left_truncation: { isSessionProp: false },
         });
         makeObservable(this);
     }

@@ -75,6 +75,11 @@ export class StudySummaryTab extends React.Component<
             onToggleLogScale: (chartMeta: ChartMeta) => {
                 this.store.toggleLogScale(chartMeta.uniqueKey);
             },
+            onToggleSurvivalPlotLeftTruncation: (chartMeta: ChartMeta) => {
+                this.store.toggleSurvivalPlotLeftTruncation(
+                    chartMeta.uniqueKey
+                );
+            },
             onToggleNAValue: (chartMeta: ChartMeta) => {
                 this.store.toggleNAValue(chartMeta.uniqueKey);
             },
@@ -405,6 +410,19 @@ export class StudySummaryTab extends React.Component<
                           )
                       ][0]
                     : undefined;
+                props.onToggleSurvivalPlotLeftTruncation = this.handlers.onToggleSurvivalPlotLeftTruncation;
+                props.survivalPlotLeftTruncationChecked = this.store.survivalPlotLeftTruncationToggleMap?.get(
+                    chartMeta!.uniqueKey
+                );
+                if (
+                    this.store.isLeftTruncationAvailable.result &&
+                    chartMeta.uniqueKey === 'OS_SURVIVAL'
+                ) {
+                    props.isLeftTruncationAvailable = true;
+                    props.patientSurvivalsWithoutLeftTruncation = this.store.survivalPlotData.result.find(
+                        survivalType => survivalType.id === 'OS_SURVIVAL'
+                    )?.survivalDataWithoutLeftTruncation;
+                }
                 break;
             }
             case ChartTypeEnum.VIOLIN_PLOT_TABLE:

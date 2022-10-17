@@ -28,6 +28,7 @@ import {
     filterScatterData,
     SurvivalPlotFilters,
     SurvivalSummary,
+    calculateNumberOfPatients,
 } from './SurvivalUtil';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
@@ -47,6 +48,8 @@ import {
 } from 'cbioportal-frontend-commons';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
+import FlexAlignedCheckbox from 'shared/components/FlexAlignedCheckbox';
+import InfoIcon from 'shared/components/InfoIcon';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -71,6 +74,13 @@ export interface ISurvivalChartProps {
     xLabelWithoutEventTooltip: string;
     fileName: string;
     showTable?: boolean;
+    isLeftTruncationAvailable?: boolean;
+    showLeftTruncationCheckbox?: boolean;
+    showLeftTruncationCheckboxInWarningTooltip?: boolean;
+    isLeftTruncationChecked?: boolean;
+    onToggleSurvivalPlotLeftTruncation?: () => void;
+    patientsCountWithLeftTruncation?: number;
+    patientSurvivalsWithoutLeftTruncation?: PatientSurvival[];
     legendLocation?: LegendLocation;
     showNaPatientsHiddenToggle?: boolean;
     pValue?: number | null;
@@ -243,24 +253,15 @@ export default class SurvivalChart
                 const groupName = this.analysisGroupsMap[group].name;
                 return {
                     numOfCases: survivals.length,
-                    line: getLineData(
-                        survivals,
-                        survivalSummaries.map(
-                            summary => summary.survivalFunctionEstimate
-                        )
-                    ),
+                    line: getLineData(survivals, survivalSummaries),
                     scatterWithOpacity: getScatterDataWithOpacity(
                         survivals,
-                        survivalSummaries.map(
-                            summary => summary.survivalFunctionEstimate
-                        ),
+                        survivalSummaries,
                         groupName
                     ),
                     scatter: getScatterData(
                         survivals,
-                        survivalSummaries.map(
-                            summary => summary.survivalFunctionEstimate
-                        ),
+                        survivalSummaries,
                         groupName
                     ),
                 };
@@ -426,9 +427,7 @@ export default class SurvivalChart
             data.push({
                 scatterData: getScatterData(
                     this.props.sortedGroupedSurvivals[group.value],
-                    this.survivalSummaries[group.value].map(
-                        summary => summary.survivalFunctionEstimate
-                    ),
+                    this.survivalSummaries[group.value],
                     group.value
                 ),
                 title: group.name !== undefined ? group.name : group.value,
@@ -584,6 +583,129 @@ export default class SurvivalChart
     get chart() {
         return (
             <div className={this.props.className} data-test={'SurvivalChart'}>
+                {this.props.isLeftTruncationAvailable && (
+                    <div
+                        className="alert alert-warning"
+                        role="alert"
+                        style={{
+                            marginBottom: this.props
+                                .showLeftTruncationCheckboxInWarningTooltip
+                                ? this.props.showLeftTruncationCheckbox
+                                    ? 3
+                                    : 0
+                                : undefined,
+                            backgroundColor: 'white',
+                        }}
+                    >
+                        {this.props
+                            .showLeftTruncationCheckboxInWarningTooltip && (
+                            <span
+                                onClick={
+                                    this.props
+                                        .onToggleSurvivalPlotLeftTruncation
+                                }
+                            >
+                                <FlexAlignedCheckbox
+                                    checked={
+                                        !!this.props.isLeftTruncationChecked
+                                    }
+                                    label={
+                                        <span
+                                            style={{
+                                                marginTop: -3,
+                                                paddingRight: 10,
+                                            }}
+                                        >
+                                            Adjust for left truncation
+                                            {this.props
+                                                .isLeftTruncationChecked && (
+                                                <>
+                                                    {' ('}
+                                                    <b>
+                                                        {calculateNumberOfPatients(
+                                                            this.props
+                                                                .patientSurvivalsWithoutLeftTruncation!,
+                                                            this.props
+                                                                .patientToAnalysisGroups
+                                                        ) -
+                                                            calculateNumberOfPatients(
+                                                                _.flatMap(
+                                                                    this.props
+                                                                        .sortedGroupedSurvivals
+                                                                ),
+                                                                this.props
+                                                                    .patientToAnalysisGroups
+                                                            )}
+                                                    </b>{' '}
+                                                    patients excluded)
+                                                </>
+                                            )}
+                                            <DefaultTooltip
+                                                overlay={
+                                                    <div
+                                                        style={{
+                                                            maxWidth: 300,
+                                                        }}
+                                                    >
+                                                        Patients enter a study
+                                                        when they are profiled,
+                                                        which can be months or
+                                                        even years after the
+                                                        initial diagnosis. To
+                                                        mitigate the effects of
+                                                        left truncation one can
+                                                        enable the risk-set
+                                                        adjustment method as
+                                                        described in To mitigate
+                                                        the effects of left
+                                                        truncation one can
+                                                        enable the risk-set
+                                                        adjustment method as
+                                                        described in{' '}
+                                                        <a href="https://pubmed.ncbi.nlm.nih.gov/34734967/">
+                                                            Brown et al (2022)
+                                                        </a>
+                                                        {'. '}
+                                                        This involves adjusting
+                                                        patients at risk at time
+                                                        t to date of sequencing
+                                                        rather than date of
+                                                        diagnosis (xx patients
+                                                        are excluded because
+                                                        they passed away before
+                                                        their biopsies were
+                                                        sequenced). Please note
+                                                        that not all
+                                                        Kaplan-Meier estimates
+                                                        account for the lead
+                                                        time bias introduced by
+                                                        the inclusion criteria
+                                                        for the GENIE BPC
+                                                        Project.
+                                                    </div>
+                                                }
+                                                placement="bottom"
+                                            >
+                                                <i
+                                                    className="fa fa-info-circle"
+                                                    style={Object.assign(
+                                                        {},
+                                                        {
+                                                            color: '#000000',
+                                                            cursor: 'pointer',
+                                                            paddingLeft: 5,
+                                                        }
+                                                    )}
+                                                />
+                                            </DefaultTooltip>
+                                        </span>
+                                    }
+                                    style={{ marginTop: 1, marginBottom: -3 }}
+                                />
+                            </span>
+                        )}
+                    </div>
+                )}
                 {this.props.showDownloadButtons && (
                     <DownloadControls
                         dontFade={true}
@@ -596,44 +718,50 @@ export default class SurvivalChart
                     />
                 )}
 
-                {this.props.showSlider && (
-                    <div
-                        className="small"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            marginLeft: 60,
-                        }}
-                    >
-                        <span>X-Axis Max:</span>
+                <div
+                    style={{
+                        display: 'flex',
+                    }}
+                >
+                    {this.props.showSlider && (
                         <div
-                            className={'RangeSliderContainer'}
+                            className="small"
                             style={{
-                                width: 300,
-                                marginLeft: 10,
-                                marginRight: 10,
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginLeft: 60,
                             }}
                         >
-                            <Slider
-                                min={0}
-                                max={this.maximumDataMonthValue}
-                                value={this.sliderValue}
-                                onChange={this.onSliderChange}
-                                tooltip={false}
-                                step={1}
+                            <span>X-Axis Max:</span>
+                            <div
+                                className={'RangeSliderContainer'}
+                                style={{
+                                    width: 300,
+                                    marginLeft: 10,
+                                    marginRight: 10,
+                                }}
+                            >
+                                <Slider
+                                    min={0}
+                                    max={this.maximumDataMonthValue}
+                                    value={this.sliderValue}
+                                    onChange={this.onSliderChange}
+                                    tooltip={false}
+                                    step={1}
+                                />
+                            </div>
+                            <EditableSpan
+                                className={styles['XmaxNumberInput']}
+                                value={this.sliderValue.toString()}
+                                setValue={this.onSliderTextChange}
+                                numericOnly={true}
                             />
+                            <span>
+                                {pluralize('Month', this.sliderValue)} Survival
+                            </span>
                         </div>
-                        <EditableSpan
-                            className={styles['XmaxNumberInput']}
-                            value={this.sliderValue.toString()}
-                            setValue={this.onSliderTextChange}
-                            numericOnly={true}
-                        />
-                        <span>
-                            {pluralize('Month', this.sliderValue)} Survival
-                        </span>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 <VictoryChart
                     containerComponent={
@@ -849,6 +977,9 @@ export default class SurvivalChart
                                         }
                                     </span>
                                 )}
+                                <br />
+                                Number of patients at risk:{' '}
+                                {this.tooltipModel.datum.atRisk}
                             </div>
                         </Popover>
                     )}

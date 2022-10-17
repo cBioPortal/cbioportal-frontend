@@ -41,6 +41,8 @@ export interface IChartHeaderProps {
     toggleBoxPlot?: () => void;
     toggleViolinPlot?: () => void;
     toggleNAValue?: () => void;
+    isLeftTruncationAvailable?: boolean;
+    toggleSurvivalPlotLeftTruncation?: () => void;
     swapAxes?: () => void;
     hideLabel?: boolean;
     chartControls?: ChartControls;
@@ -76,6 +78,8 @@ export interface ChartControls {
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
     showSwapAxes?: boolean;
+    showSurvivalPlotLeftTruncationToggle?: boolean;
+    survivalPlotLeftTruncationChecked?: boolean;
 }
 
 @observer
@@ -500,6 +504,39 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
+        if (
+            this.props.chartControls &&
+            this.props.chartControls.showSurvivalPlotLeftTruncationToggle &&
+            this.props.toggleSurvivalPlotLeftTruncation
+        ) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item"
+                        onClick={this.props.toggleSurvivalPlotLeftTruncation}
+                    >
+                        <FlexAlignedCheckbox
+                            checked={
+                                !!(
+                                    this.props.chartControls &&
+                                    this.props.chartControls
+                                        .survivalPlotLeftTruncationChecked
+                                )
+                            }
+                            label={
+                                <span
+                                    style={{ marginTop: -3, paddingRight: 10 }}
+                                >
+                                    Left truncation
+                                </span>
+                            }
+                            style={{ marginTop: 1, marginBottom: -3 }}
+                        />
+                    </a>
+                </li>
+            );
+        }
+
         if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
             items.push(
                 <li>
@@ -668,7 +705,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         this.props.description
                                             ? this.props.description.description
                                             : '',
-                                        this.props.chartMeta.uniqueKey
+                                        this.props.chartMeta.uniqueKey,
+                                        !!this.props.isLeftTruncationAvailable
                                     )}
                                     destroyTooltipOnHide={true}
                                 >

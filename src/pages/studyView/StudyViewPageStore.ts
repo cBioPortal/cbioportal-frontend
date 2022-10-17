@@ -27,6 +27,7 @@ import {
     ClinicalDataFilter,
     ClinicalDataMultiStudyFilter,
     ClinicalViolinPlotData,
+    ClinicalEvent,
     CopyNumberSeg,
     DataFilterValue,
     DensityPlotBin,
@@ -262,6 +263,7 @@ import {
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { PageType } from 'shared/userSession/PageType';
+import client from 'shared/api/cbioportalClientInstance';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -292,6 +294,8 @@ export type SurvivalType = {
     survivalStatusAttribute: ClinicalAttribute;
     filter: (s: string) => boolean;
     survivalData: PatientSurvival[];
+    isLeftTruncationAvailable: boolean;
+    survivalDataWithoutLeftTruncation: PatientSurvival[];
 };
 
 export type StudyViewURLQuery = {
@@ -305,6 +309,7 @@ export type StudyViewURLQuery = {
     filterValues?: string;
     sharedGroups?: string;
     sharedCustomData?: string;
+    enable_left_truncation?: string;
 };
 
 export type XvsYScatterChart = {
@@ -3279,6 +3284,19 @@ export class StudyViewPageStore
         }
     }
 
+    @action
+    toggleSurvivalPlotLeftTruncation(uniqueKey: string): void {
+        if (this.survivalPlotLeftTruncationToggleMap?.has(uniqueKey)) {
+            this.updateSurvivalPlotLeftTruncationToggleMap(
+                uniqueKey,
+                !this.survivalPlotLeftTruncationToggleMap.get(uniqueKey)
+            );
+        } else {
+            this.updateSurvivalPlotLeftTruncationToggleMap(uniqueKey, true);
+        }
+        // do nothing now
+    }
+
     public isLogScaleToggleVisible(
         uniqueKey: string,
         dataBins?: DataBin[]
@@ -5913,6 +5931,7 @@ export class StudyViewPageStore
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
             this.survivalPlots.isPending ||
+            this.survivalSequencedMonths.isPending ||
             this.shouldDisplayPatientTreatments.isPending ||
             this.sharedCustomData.isPending;
 
@@ -6599,6 +6618,17 @@ export class StudyViewPageStore
                 this.chartMetaSet[key].priority !== 0
             ) {
                 this.changeChartVisibility(key, true);
+            }
+            // apply left truncation for OS
+            if (
+                key === 'OS_SURVIVAL' &&
+                this.isLeftTruncationAvailable.result
+            ) {
+                this.updateSurvivalPlotLeftTruncationToggleMap(key, true);
+                this.chartsDimension.set(key, {
+                    w: 2,
+                    h: 2,
+                });
             }
         });
 
@@ -7620,6 +7650,7 @@ export class StudyViewPageStore
             this.survivalClinicalAttributesPrefix,
             this.clinicalAttributeIdToClinicalAttribute,
             this.survivalDescriptions,
+            this.isLeftTruncationAvailable,
         ],
         invoke: async () => {
             let survivalTypes: SurvivalType[] = this.survivalClinicalAttributesPrefix.result.map(
@@ -7650,6 +7681,11 @@ export class StudyViewPageStore
                         ],
                         filter: s => getSurvivalStatusBoolean(s, prefix),
                         survivalData: [],
+                        // Only apply to OS
+                        isLeftTruncationAvailable:
+                            !!this.isLeftTruncationAvailable.result &&
+                            new RegExp('OS', 'i').test(prefix),
+                        survivalDataWithoutLeftTruncation: [],
                     };
                 }
             );
@@ -8115,11 +8151,73 @@ export class StudyViewPageStore
         } else return '';
     }
 
+    readonly survivalSequencedMonths = remoteData<
+        { [uniquePatientKey: string]: number } | undefined
+    >({
+        invoke: async () => {
+            const studyIds = this.studyIds;
+            if (
+                studyIds.length === 1 &&
+                studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
+                this.urlWrapper.query.enable_left_truncation
+            ) {
+                const data = await client.getAllClinicalDataInStudyUsingGET({
+                    attributeId: 'TT_CPT_REPORT_MOS',
+                    clinicalDataType: 'PATIENT',
+                    studyId: studyIds[0],
+                });
+                return data.reduce(
+                    (map: { [patientKey: string]: number }, next) => {
+                        map[next.uniquePatientKey] = parseFloat(next.value);
+                        return map;
+                    },
+                    {}
+                );
+            } else {
+                return undefined;
+            }
+        },
+    });
+
+    readonly isLeftTruncationAvailable = remoteData<boolean>({
+        await: () => [this.survivalSequencedMonths],
+        invoke: async () => {
+            return !!this.survivalSequencedMonths.result;
+        },
+    });
+
+    readonly survivalPlotDataWithoutLeftTruncation = remoteData<SurvivalType[]>(
+        {
+            await: () => [
+                this.survivalData,
+                this.selectedPatientKeys,
+                this.survivalPlots,
+                this.survivalSequencedMonths,
+            ],
+            invoke: async () => {
+                return this.survivalPlots.result.map(obj => {
+                    obj.survivalData = getPatientSurvivals(
+                        this.survivalData.result,
+                        this.selectedPatientKeys.result!,
+                        obj.associatedAttrs[0],
+                        obj.associatedAttrs[1],
+                        obj.filter,
+                        undefined
+                    );
+                    return obj;
+                });
+            },
+            onError: () => {},
+            default: [],
+        }
+    );
+
     readonly survivalPlotData = remoteData<SurvivalType[]>({
         await: () => [
             this.survivalData,
             this.selectedPatientKeys,
             this.survivalPlots,
+            this.survivalSequencedMonths,
         ],
         invoke: async () => {
             return this.survivalPlots.result.map(obj => {
@@ -8128,7 +8226,19 @@ export class StudyViewPageStore
                     this.selectedPatientKeys.result!,
                     obj.associatedAttrs[0],
                     obj.associatedAttrs[1],
-                    obj.filter
+                    obj.filter,
+                    this.survivalPlotLeftTruncationToggleMap.get(obj.id) &&
+                        obj.id === 'OS_SURVIVAL'
+                        ? this.survivalSequencedMonths.result
+                        : undefined
+                );
+                obj.survivalDataWithoutLeftTruncation = getPatientSurvivals(
+                    this.survivalData.result,
+                    this.selectedPatientKeys.result!,
+                    obj.associatedAttrs[0],
+                    obj.associatedAttrs[1],
+                    obj.filter,
+                    undefined
                 );
                 return obj;
             });
@@ -9054,11 +9164,19 @@ export class StudyViewPageStore
                             if (!acc[prefix]) {
                                 acc[prefix] = [];
                             }
-                            acc[prefix].push({
-                                studyName: attr.studyId,
-                                description: attr.description,
-                                displayName: attr.displayName,
-                            } as ISurvivalDescription);
+                            if (prefix === 'OS') {
+                                acc[prefix].push({
+                                    studyName: attr.studyId,
+                                    description: attr.description,
+                                    displayName: attr.displayName,
+                                } as ISurvivalDescription);
+                            } else {
+                                acc[prefix].push({
+                                    studyName: attr.studyId,
+                                    description: attr.description,
+                                    displayName: attr.displayName,
+                                } as ISurvivalDescription);
+                            }
                         });
                     }
                     return acc;
@@ -9666,5 +9784,23 @@ export class StudyViewPageStore
             getServerConfig()
                 .oncoprint_custom_driver_annotation_tiers_menu_label
         );
+    }
+
+    private _survivalPlotLeftTruncationToggleMap = observable.map<
+        ChartUniqueKey,
+        boolean
+    >({}, { deep: false });
+
+    @computed
+    public get survivalPlotLeftTruncationToggleMap(): Map<string, boolean> {
+        return this._survivalPlotLeftTruncationToggleMap;
+    }
+
+    @action
+    public updateSurvivalPlotLeftTruncationToggleMap(
+        uniqueChartKey: string,
+        value: boolean
+    ) {
+        this._survivalPlotLeftTruncationToggleMap.set(uniqueChartKey, value);
     }
 }

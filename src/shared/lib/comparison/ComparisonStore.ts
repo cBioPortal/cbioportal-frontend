@@ -23,6 +23,7 @@ import {
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    ClinicalEvent,
     Group,
     MolecularProfile,
     MolecularProfileCasesGroupFilter,
@@ -124,6 +125,8 @@ export default abstract class ComparisonStore
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
+
+    @observable public adjestForLeftTruncation = true;
 
     constructor(
         protected appStore: AppStore,
@@ -1865,13 +1868,80 @@ export default abstract class ComparisonStore
         },
     });
 
-    readonly patientSurvivals = remoteData<{
+    readonly survivalSequencedMonths = remoteData<
+        { [uniquePatientKey: string]: number } | undefined
+    >({
+        await: () => [this.studies],
+        invoke: async () => {
+            const studyIds = this.studies.result!.map(s => s.studyId);
+            if (
+                studyIds.length === 1 &&
+                studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
+                this.resultsViewStore?.urlWrapper.query.enable_left_truncation
+            ) {
+                const data = await client.getAllClinicalDataInStudyUsingGET({
+                    attributeId: 'TT_CPT_REPORT_MOS',
+                    clinicalDataType: 'PATIENT',
+                    studyId: studyIds[0],
+                });
+                return data.reduce(
+                    (map: { [patientKey: string]: number }, next) => {
+                        map[next.uniquePatientKey] = parseFloat(next.value);
+                        return map;
+                    },
+                    {}
+                );
+            } else {
+                return undefined;
+            }
+            // const studyIds = this.studies.result!.map(s => s.studyId);
+            // if (studyIds.length === 1 && studyIds[0] === 'nsclc_genie_bpc') {
+            //     const allTimelineData = _.flatten(
+            //         await Promise.all(
+            //             studyIds.map(studyId =>
+            //                 internalClient.getAllClinicalEventsInStudyUsingGET({
+            //                     studyId,
+            //                 })
+            //             )
+            //         )
+            //     );
+            //     const sequencingData: ClinicalEvent[] = allTimelineData.filter(
+            //         d => d.eventType === 'Sequencing'
+            //     );
+            //     return sequencingData.reduce(
+            //         (map: { [uniquePatientKey: string]: number }, next) => {
+            //             map[next.uniquePatientKey] =
+            //                 next.startNumberOfDaysSinceDiagnosis;
+            //             return map;
+            //         },
+            //         {}
+            //     );
+            // } else {
+            //     return undefined;
+            // }
+        },
+    });
+
+    readonly isLeftTruncationAvailable = remoteData<boolean>({
+        await: () => [this.survivalSequencedMonths],
+        invoke: async () => {
+            return !!this.survivalSequencedMonths.result;
+        },
+    });
+
+    @action.bound
+    public toggleLeftTruncationSelection() {
+        this.adjestForLeftTruncation = !this.adjestForLeftTruncation;
+    }
+
+    readonly patientSurvivalsWithoutLeftTruncation = remoteData<{
         [prefix: string]: PatientSurvival[];
     }>({
         await: () => [
             this.survivalClinicalDataGroupByUniquePatientKey,
             this.activePatientKeysNotOverlapRemoved,
             this.survivalClinicalAttributesPrefix,
+            this.survivalSequencedMonths,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -1884,7 +1954,41 @@ export default abstract class ComparisonStore
                             this.activePatientKeysNotOverlapRemoved.result!,
                             `${key}_STATUS`,
                             `${key}_MONTHS`,
-                            s => getSurvivalStatusBoolean(s, key)
+                            s => getSurvivalStatusBoolean(s, key),
+                            undefined
+                        );
+                        return acc;
+                    },
+                    {} as { [prefix: string]: PatientSurvival[] }
+                )
+            );
+        },
+    });
+
+    readonly patientSurvivals = remoteData<{
+        [prefix: string]: PatientSurvival[];
+    }>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.activePatientKeysNotOverlapRemoved,
+            this.survivalClinicalAttributesPrefix,
+            this.survivalSequencedMonths,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.reduce(
+                    this.survivalClinicalAttributesPrefix.result!,
+                    (acc, key) => {
+                        acc[key] = getPatientSurvivals(
+                            this.survivalClinicalDataGroupByUniquePatientKey
+                                .result!,
+                            this.activePatientKeysNotOverlapRemoved.result!,
+                            `${key}_STATUS`,
+                            `${key}_MONTHS`,
+                            s => getSurvivalStatusBoolean(s, key),
+                            this.adjestForLeftTruncation && key === 'OS'
+                                ? this.survivalSequencedMonths.result
+                                : undefined
                         );
                         return acc;
                     },
