@@ -95,6 +95,14 @@ export interface PatientViewUrlParams extends QueryParams {
     sampleId?: string;
 }
 
+/*
+ * The wrapper and the inner component were instituted so that
+ * because we needed a component to remount (and create a new patient view store)
+ * whenever params changed
+ * There was a bug when user navigated between cases in a cohort
+ * Safest/easiest solution under cicumstances is just to reinstantiate everything
+ */
+
 @inject('routing', 'appStore')
 @observer
 export default class PatientViewPage extends React.Component<
@@ -116,7 +124,7 @@ export default class PatientViewPage extends React.Component<
     render() {
         return (
             <PatientViewPageInner
-                key={this.props.routing.query.caseId}
+                key={`${this.props.routing.query.caseId}-${this.props.routing.query.studyId}-${this.props.routing.query.sampleId}`}
                 {...this.props}
                 cohortIds={this.cohortIds}
             />
@@ -168,8 +176,9 @@ export class PatientViewPageInner extends React.Component<
             props.cohortIds
         );
 
-        // these don't fire the getData callback (first arg) until they know data is loaded
-        // this is not a good pattern. the await is not explicit
+        // views  don't fire the getData callback (first arg) until it's known that
+        // mutation data is loaded
+        // this is not a good pattern. awaits should be explicit
         this.patientViewMutationDataStore = new PatientViewMutationsDataStore(
             () => {
                 return this.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
