@@ -115,9 +115,14 @@ export default class PatientViewPage extends React.Component<
         super(props);
 
         const postData = getBrowserWindow().clientPostedData;
+
+        const urlData = getNavCaseIdsCache();
+
         if (postData && postData.navCaseIds) {
             this.cohortIds = buildCohortIdsFromNavCaseIds(postData.navCaseIds);
             getBrowserWindow().clientPostedData = null;
+        } else if (urlData) {
+            this.cohortIds = urlData;
         }
     }
 
