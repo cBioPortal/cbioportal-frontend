@@ -304,10 +304,25 @@ function transformClinicalInformationToStoreShape(
 }
 
 export class PatientViewPageStore {
-    constructor(private appStore: AppStore) {
+    constructor(
+        private appStore: AppStore,
+        studyId: string,
+        patientId: string,
+        sampleId: string = '',
+        cohortIds?: string[]
+    ) {
         makeObservable(this);
-        //labelMobxPromises(this);
+
+        if (cohortIds) {
+            this.patientIdsInCohort = cohortIds;
+        }
         this.internalClient = internalClient;
+
+        this._patientId = patientId;
+
+        this._sampleId = sampleId;
+
+        this.studyId = studyId;
     }
 
     public internalClient: CBioPortalAPIInternal;
@@ -379,9 +394,9 @@ export class PatientViewPageStore {
         return this._sampleId ? 'sample' : 'patient';
     }
 
-    @computed get caseId(): string {
-        return this.pageMode === 'sample' ? this.sampleId : this.patientId;
-    }
+    // @computed get caseId(): string {
+    //     return this.pageMode === 'sample' ? this.sampleId : this.patientId;
+    // }
 
     readonly mutationMolecularProfile = remoteData({
         await: () => [this.molecularProfilesInStudy],
@@ -436,20 +451,21 @@ export class PatientViewPageStore {
 
     // this is a string of concatenated ids
     @observable
-    private _patientIdsInCohort: string[] = [];
+    public patientIdsInCohort: string[] = [];
 
-    public set patientIdsInCohort(cohortIds: string[]) {
-        // cannot put action on setter
-        runInAction(() => (this._patientIdsInCohort = cohortIds));
-    }
+    // public set patientIdsInCohort(cohortIds: string[]) {
+    //     // cannot put action on setter
+    //     runInAction(() => (this._patientIdsInCohort = cohortIds || []));
+    // }
 
-    @computed
-    public get patientIdsInCohort(): string[] {
-        let concatenatedIds: string;
-        // check to see if we copied from url hash on app load
-        const memoryCachedIds = getNavCaseIdsCache();
-        return memoryCachedIds ? memoryCachedIds : this._patientIdsInCohort;
-    }
+    // @computed
+    // public get patientIdsInCohort(): string[]  {
+    //     let concatenatedIds: string;
+    //     // check to see if we copied from url hash on app load
+    //     // const memoryCachedIds = getNavCaseIdsCache();
+    //     // return memoryCachedIds ? memoryCachedIds :
+    //     return this._patientIdsInCohort;
+    // }
 
     readonly myCancerGenomeData: IMyCancerGenomeData = getMyCancerGenomeData();
 

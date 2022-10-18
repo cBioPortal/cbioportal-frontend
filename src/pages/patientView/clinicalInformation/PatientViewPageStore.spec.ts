@@ -12,7 +12,7 @@ describe('PatientViewPageStore', () => {
     let store: PatientViewPageStore;
 
     beforeAll(() => {
-        store = new PatientViewPageStore(new AppStore());
+        store = new PatientViewPageStore(new AppStore(), 'someId', '');
     });
 
     it('if there are pdf items in response and their name starts with a given patientId, return collection, otherwise returns empty array', () => {

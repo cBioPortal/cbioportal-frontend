@@ -35,6 +35,7 @@ import genomicOverviewStyles from 'pages/patientView/genomicOverview/styles.modu
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
+import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -67,7 +68,7 @@ export function extractResourceIdFromTabId(tabId: string) {
 }
 
 export function patientViewTabs(
-    pageInstance: PatientViewPage,
+    pageInstance: PatientViewPageInner,
     urlWrapper: PatientViewUrlWrapper,
     sampleManager: SampleManager | null
 ) {
@@ -90,7 +91,7 @@ export function patientViewTabs(
 }
 
 export function tabs(
-    pageComponent: PatientViewPage,
+    pageComponent: PatientViewPageInner,
     sampleManager: SampleManager | null
 ) {
     const tabs: JSX.Element[] = [];
