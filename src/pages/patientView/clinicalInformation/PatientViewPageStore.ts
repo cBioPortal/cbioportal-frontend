@@ -1699,10 +1699,6 @@ export class PatientViewPageStore {
             : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB;
     }
 
-    @computed get mergeOncoKbIcons() {
-        return getOncoKbIconStyle().mergeIcons;
-    }
-
     readonly oncoKbAnnotatedGenes = remoteData(
         {
             await: () => [this.oncoKbCancerGenes],

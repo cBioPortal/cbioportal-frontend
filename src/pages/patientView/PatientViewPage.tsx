@@ -73,7 +73,10 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import SampleSummaryList from './sampleHeader/SampleSummaryList';
-import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import {
+    getOncoKbIconStyle,
+    updateOncoKbIconStyle,
+} from 'shared/lib/AnnotationColumnUtils';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { prepareCustomTabConfigurations } from 'shared/lib/customTabs/customTabHelpers';
@@ -153,8 +156,8 @@ export class PatientViewPageInner extends React.Component<
     constructor(props: IPatientViewPageProps) {
         super(props);
         makeObservable(this);
-        this.urlWrapper = new PatientViewUrlWrapper(props.routing);
 
+        this.urlWrapper = new PatientViewUrlWrapper(props.routing);
         setWindowVariable('urlWrapper', this.urlWrapper);
 
         this.patientViewPageStore = new PatientViewPageStore(
@@ -165,86 +168,38 @@ export class PatientViewPageInner extends React.Component<
             props.cohortIds
         );
 
+        // these don't fire the getData callback (first arg) until they know data is loaded
+        // this is not a good pattern. the await is not explicit
         this.patientViewMutationDataStore = new PatientViewMutationsDataStore(
-            () => this.mergedMutations,
+            () => {
+                return this.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
+                    mutationArray => {
+                        return !isFusion(mutationArray[0]);
+                    }
+                );
+            },
             this.urlWrapper
         );
 
-        this.patientViewCnaDataStore = new PatientViewCnaDataStore(
-            () => this.mergedCnas,
-            this.urlWrapper
-        );
+        this.patientViewCnaDataStore = new PatientViewCnaDataStore(() => {
+            return this.patientViewPageStore
+                .mergedDiscreteCNADataFilteredByGene;
+        }, this.urlWrapper);
 
         getBrowserWindow().patientViewPageStore = this.patientViewPageStore;
 
+        this.setOpenResourceTabs();
+
+        this.mergeMutationTableOncoKbIcons = getOncoKbIconStyle().mergeIcons;
+    }
+
+    setOpenResourceTabs() {
         const openResourceId =
             this.urlWrapper.activeTabId &&
             extractResourceIdFromTabId(this.urlWrapper.activeTabId);
         if (openResourceId) {
             this.patientViewPageStore.setResourceTabOpen(openResourceId, true);
         }
-
-        //TODO: this should be done by a module so that it can be reused on other pages
-        // this.disposers.push(reaction(
-        //     () => [
-        //         props.routing.query,
-        //         props.routing.location.hash,
-        //         props.routing.location.pathname,
-        //     ],
-        //     ([query, hash, pathname]) => {
-        //         // we don't want to update patient if we aren't on a patient page route
-        //         if (!pathname.includes('/' + PagePath.Patient)) {
-        //             return;
-        //         }
-        //
-        //         const validationResult = validateParametersPatientView(query);
-        //
-        //         if (validationResult.isValid) {
-        //             this.patientViewPageStore.urlValidationError = null;
-        //
-        //             if ('studyId' in query) {
-        //                 //this.patientViewPageStore.studyId = query.studyId;
-        //             }
-        //             if ('caseId' in query) {
-        //                 // this.patientViewPageStore.setPatientId(
-        //                 //     query.caseId as string
-        //                 // );
-        //             } else if ('sampleId' in query) {
-        //                 // this.patientViewPageStore.setSampleId(
-        //                 //     query.sampleId as string
-        //                 // );
-        //             }
-        //
-        //         } else {
-        //             this.patientViewPageStore.urlValidationError =
-        //                 validationResult.message;
-        //         }
-        //     },
-        //     { fireImmediately: true }
-        // ));
-
-        this.mergeMutationTableOncoKbIcons = this.patientViewPageStore.mergeOncoKbIcons;
-    }
-
-    @computed get mergedMutations() {
-        // remove fusions
-        return this.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
-            mutationArray => {
-                return !isFusion(mutationArray[0]);
-            }
-        );
-    }
-
-    @computed get mergedCnas() {
-        return this.patientViewPageStore.mergedDiscreteCNADataFilteredByGene;
-    }
-
-    public get showNewTimeline() {
-        return !getServerConfig().patient_view_use_legacy_timeline;
-    }
-
-    public get showOldTimeline() {
-        return getServerConfig().patient_view_use_legacy_timeline;
     }
 
     @action.bound
