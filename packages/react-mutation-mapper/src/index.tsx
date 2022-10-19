@@ -92,24 +92,9 @@ export {
     GnomadFrequencyValue,
 } from './component/gnomad/GnomadFrequency';
 export { default as GnomadFrequencyTable } from './component/gnomad/GnomadFrequencyTable';
-export {
-    default as OncoKB,
-    sortValue as oncoKbAnnotationSortValue,
-    download as oncoKbAnnotationDownload,
-    IOncoKbProps,
-} from './component/oncokb/OncoKB';
-export { default as OncoKbHelper } from './component/oncokb/OncoKbHelper';
-export { default as OncoKBSuggestAnnotationLinkout } from './component/oncokb/OncoKBSuggestAnnotationLinkout';
-export { default as OncoKbTreatmentTable } from './component/oncokb/OncoKbTreatmentTable';
-export { default as OncoKbFeedback } from './component/oncokb/OncoKbFeedback';
-export { default as OncoKbTooltip } from './component/oncokb/OncoKbTooltip';
-export { default as ReferenceList } from './component/oncokb/ReferenceList';
-export { default as RefComponent } from './component/oncokb/RefComponent';
-export { default as SummaryWithRefs } from './component/oncokb/SummaryWithRefs';
 
 export * from './component/dataTable/ColumnSelector';
 export * from './component/mutationMapper/FilterResetPanel';
-export * from './component/StatusHelpers';
 
 export {
     default as DataTable,
@@ -177,14 +162,6 @@ export {
     getColorForProteinImpactType,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
 } from './util/MutationTypeUtils';
-export {
-    defaultOncoKbFilter,
-    groupOncoKbIndicatorDataByMutations,
-    oncogenicityIconClassNames,
-    normalizeLevel,
-    levelIconClassNames,
-    getTumorTypeNameWithExclusionInfo,
-} from './util/OncoKbUtils';
 export * from './util/SelectorUtils';
 export * from './util/TrackUtils';
 
@@ -192,4 +169,3 @@ export { default as DefaultMutationMapperDataFetcher } from './store/DefaultMuta
 export { default as DefaultMutationMapperDataStore } from './store/DefaultMutationMapperDataStore';
 export { default as DefaultMutationMapperFilterApplier } from './store/DefaultMutationMapperFilterApplier';
 export { default as DefaultMutationMapperStore } from './store/DefaultMutationMapperStore';
-export * from './component/oncokb/constants';

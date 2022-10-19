@@ -7,8 +7,8 @@ import {
     getAnnotationData,
     IAnnotation,
     myCancerGenomeDownload,
-    oncoKbAnnotationDownload,
 } from 'react-mutation-mapper';
+import { oncoKbAnnotationDownload } from 'oncokb-frontend-commons';
 import {
     ICivicGeneIndex,
     ICivicVariantIndex,

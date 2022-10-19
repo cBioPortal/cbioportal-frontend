@@ -178,7 +178,7 @@ import {
     OTHER_BIOMARKER_HUGO_SYMBOL,
     OtherBiomarkersQueryType,
     OTHER_BIOMARKER_NAME,
-} from 'react-mutation-mapper';
+} from 'oncokb-frontend-commons';
 import {
     IMutationalSignature,
     IMutationalSignatureMeta,

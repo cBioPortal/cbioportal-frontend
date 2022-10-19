@@ -56,13 +56,15 @@ import {
     toJS,
 } from 'mobx';
 import {
-    generateQueryStructuralVariantId,
     getProteinPositionFromProteinChange,
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
-    deriveStructuralVariantType,
 } from 'cbioportal-utils';
+import {
+    deriveStructuralVariantType,
+    generateQueryStructuralVariantId,
+} from 'oncokb-frontend-commons';
 import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,

@@ -56,7 +56,6 @@ import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import {
-    generateQueryVariantId,
     IOncoKbData,
     ICivicGeneIndex,
     ICivicVariantIndex,
@@ -65,6 +64,7 @@ import {
     RemoteData,
     IMyVariantInfoIndex,
 } from 'cbioportal-utils';
+import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';

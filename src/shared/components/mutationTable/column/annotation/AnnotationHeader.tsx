@@ -7,7 +7,7 @@ import {
     normalizeLevel,
     oncogenicityIconClassNames,
     OncoKbHelper,
-} from 'react-mutation-mapper';
+} from 'oncokb-frontend-commons';
 import classnames from 'classnames';
 import { getServerConfig } from 'config/config';
 
