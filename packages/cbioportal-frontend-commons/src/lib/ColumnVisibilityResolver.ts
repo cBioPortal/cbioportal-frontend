@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 export interface ISimpleColumnVisibilityDef {
     name: string;
     id?: string;
@@ -27,25 +29,28 @@ export function resolveColumnVisibilityByColumnDefinition(
 }
 
 export function resolveColumnVisibility(
-    columnVisibilityByColumnDefinition: { [columnId: string]: boolean },
-    columnVisibility?: { [columnId: string]: boolean },
-    columnVisibilityOverride?: { [columnId: string]: boolean }
+    defaultColumnVisibility: { [columnId: string]: boolean },
+    currentColumnVisibility?: { [columnId: string]: boolean },
+    userSelectionColumnVisibility?: { [columnId: string]: boolean }
 ): { [columnId: string]: boolean } {
     let colVis: { [columnId: string]: boolean };
 
-    if (columnVisibility) {
+    if (currentColumnVisibility) {
         colVis = {
-            // if a custom columnVisibility object is provided use that one
-            ...columnVisibility,
-            // if exists override with the state from the latest user selection
-            ...(columnVisibilityOverride || {}),
+            // if currentColumnVisibility object is provided (e.g. when swtiching transcripts), override corresponding default visibility
+            // so if defaultColumnVisibility contains more columns than currentColumnVisibility
+            // the extra columns can still keep the default visibility and prevent being lost
+            ...defaultColumnVisibility,
+            ...currentColumnVisibility,
+            // if userSelectionColumnVisibility exists, override to the latest user selection
+            ...(userSelectionColumnVisibility || {}),
         };
     } else {
         colVis = {
-            // resolve visibility by column definition
-            ...columnVisibilityByColumnDefinition,
-            // if exists override with the state from the latest user selection
-            ...(columnVisibilityOverride || {}),
+            // resolve visibility by default column definition
+            ...defaultColumnVisibility,
+            // if userSelectionColumnVisibility exists, override to the latest user selection
+            ...(userSelectionColumnVisibility || {}),
         };
     }
 

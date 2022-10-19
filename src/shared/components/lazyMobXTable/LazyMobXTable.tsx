@@ -910,10 +910,7 @@ export default class LazyMobXTable<T> extends React.Component<
     }
 
     protected updateColumnVisibility(id: string, visible: boolean) {
-        // ignore undefined columns
-        if (this.store.columnVisibility[id] !== undefined) {
-            this.store.updateColumnVisibility(id, visible);
-        }
+        this.store.updateColumnVisibility(id, visible);
     }
 
     constructor(props: LazyMobXTableProps<T>) {
