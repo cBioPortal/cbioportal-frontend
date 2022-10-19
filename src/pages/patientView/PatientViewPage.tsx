@@ -2,13 +2,8 @@ import * as React from 'react';
 import _ from 'lodash';
 import {
     CancerStudy,
-    ClinicalData,
     DiscreteCopyNumberData,
     ResourceData,
-} from 'cbioportal-ts-api-client';
-import {
-    ClinicalDataBySampleId,
-    RequestStatus,
 } from 'cbioportal-ts-api-client';
 import { Else, If, Then } from 'react-if';
 import SampleManager from './SampleManager';
@@ -17,23 +12,13 @@ import { PaginationControls } from '../../shared/components/paginationControls/P
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
 import {
-    parseCohortIds,
     PatientViewPageStore,
     buildCohortIdsFromNavCaseIds,
 } from './clinicalInformation/PatientViewPageStore';
 import { inject, observer } from 'mobx-react';
-import {
-    action,
-    computed,
-    observable,
-    reaction,
-    makeObservable,
-    Reaction,
-    IReactionDisposer,
-} from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import { default as PatientViewMutationTable } from './mutation/PatientViewMutationTable';
 import { MSKTab } from '../../shared/components/MSKTabs/MSKTabs';
-import { validateParametersPatientView } from '../../shared/lib/validateParameters';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ValidationAlert from 'shared/components/ValidationAlert';
 import PatientViewMutationsDataStore from './mutation/PatientViewMutationsDataStore';
@@ -56,9 +41,7 @@ import { remoteData, getBrowserWindow } from 'cbioportal-frontend-commons';
 import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
-import { trackPatient } from 'shared/lib/tracking';
 import PatientViewUrlWrapper from './PatientViewUrlWrapper';
-import { PagePath } from 'shared/enums/PagePaths';
 import { GeneFilterOption } from './mutation/GeneFilterMenu';
 import { checkNonProfiledGenesExist } from './PatientViewPageUtils';
 import PatientViewGenePanelModal from './PatientViewGenePanelModal/PatientViewGenePanelModal';
@@ -157,14 +140,6 @@ export class PatientViewPageInner extends React.Component<
     public patientViewCnaDataStore: PatientViewCnaDataStore;
 
     public patientViewPageStore: PatientViewPageStore;
-
-    private disposers: IReactionDisposer[] = [];
-
-    componentWillUnmount() {
-        // this will destroy the reaction
-        // which will free parties for gc
-        this.disposers.forEach(d => d());
-    }
 
     constructor(props: IPatientViewPageProps) {
         super(props);
