@@ -22,7 +22,15 @@ import {
     buildCohortIdsFromNavCaseIds,
 } from './clinicalInformation/PatientViewPageStore';
 import { inject, observer } from 'mobx-react';
-import { action, computed, observable, reaction, makeObservable } from 'mobx';
+import {
+    action,
+    computed,
+    observable,
+    reaction,
+    makeObservable,
+    Reaction,
+    IReactionDisposer,
+} from 'mobx';
 import { default as PatientViewMutationTable } from './mutation/PatientViewMutationTable';
 import { MSKTab } from '../../shared/components/MSKTabs/MSKTabs';
 import { validateParametersPatientView } from '../../shared/lib/validateParameters';
@@ -65,23 +73,20 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import SampleSummaryList from './sampleHeader/SampleSummaryList';
-import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import {
+    getOncoKbIconStyle,
+    updateOncoKbIconStyle,
+} from 'shared/lib/AnnotationColumnUtils';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { prepareCustomTabConfigurations } from 'shared/lib/customTabs/customTabHelpers';
 import setWindowVariable from 'shared/lib/setWindowVariable';
+import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 
 export interface IPatientViewPageProps {
-    params: any; // react route
     routing: any;
     appStore: AppStore;
-    samples?: ClinicalDataBySampleId[];
-    loadClinicalInformationTableData?: () => Promise<any>;
-    patient?: {
-        id: string;
-        clinicalData: ClinicalData[];
-    };
-    clinicalDataStatus?: RequestStatus;
+    cohortIds?: string[];
 }
 
 export interface PatientViewUrlParams extends QueryParams {
@@ -90,9 +95,50 @@ export interface PatientViewUrlParams extends QueryParams {
     sampleId?: string;
 }
 
+/*
+ * The wrapper and the inner component were instituted so that
+ * because we needed a component to remount (and create a new patient view store)
+ * whenever params changed
+ * There was a bug when user navigated between cases in a cohort
+ * Safest/easiest solution under cicumstances is just to reinstantiate everything
+ */
+
 @inject('routing', 'appStore')
 @observer
 export default class PatientViewPage extends React.Component<
+    IPatientViewPageProps,
+    {}
+> {
+    cohortIds: string[] | undefined;
+
+    constructor(props: IPatientViewPageProps) {
+        super(props);
+
+        const postData = getBrowserWindow().clientPostedData;
+
+        const urlData = getNavCaseIdsCache();
+
+        if (postData && postData.navCaseIds) {
+            this.cohortIds = buildCohortIdsFromNavCaseIds(postData.navCaseIds);
+            getBrowserWindow().clientPostedData = null;
+        } else if (urlData) {
+            this.cohortIds = urlData;
+        }
+    }
+
+    render() {
+        return (
+            <PatientViewPageInner
+                key={`${this.props.routing.query.caseId}-${this.props.routing.query.studyId}-${this.props.routing.query.sampleId}`}
+                {...this.props}
+                cohortIds={this.cohortIds}
+            />
+        );
+    }
+}
+@inject('routing', 'appStore')
+@observer
+export class PatientViewPageInner extends React.Component<
     IPatientViewPageProps,
     {}
 > {
@@ -112,130 +158,62 @@ export default class PatientViewPage extends React.Component<
 
     public patientViewPageStore: PatientViewPageStore;
 
+    private disposers: IReactionDisposer[] = [];
+
+    componentWillUnmount() {
+        // this will destroy the reaction
+        // which will free parties for gc
+        this.disposers.forEach(d => d());
+    }
+
     constructor(props: IPatientViewPageProps) {
         super(props);
         makeObservable(this);
-        this.urlWrapper = new PatientViewUrlWrapper(props.routing);
 
+        this.urlWrapper = new PatientViewUrlWrapper(props.routing);
         setWindowVariable('urlWrapper', this.urlWrapper);
 
         this.patientViewPageStore = new PatientViewPageStore(
-            this.props.appStore
+            this.props.appStore,
+            this.urlWrapper.query.studyId!,
+            this.urlWrapper.query.caseId!,
+            this.urlWrapper.query.sampleId,
+            props.cohortIds
         );
 
+        // views  don't fire the getData callback (first arg) until it's known that
+        // mutation data is loaded
+        // this is not a good pattern. awaits should be explicit
         this.patientViewMutationDataStore = new PatientViewMutationsDataStore(
-            () => this.mergedMutations,
+            () => {
+                return this.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
+                    mutationArray => {
+                        return !isFusion(mutationArray[0]);
+                    }
+                );
+            },
             this.urlWrapper
         );
 
-        this.patientViewCnaDataStore = new PatientViewCnaDataStore(
-            () => this.mergedCnas,
-            this.urlWrapper
-        );
+        this.patientViewCnaDataStore = new PatientViewCnaDataStore(() => {
+            return this.patientViewPageStore
+                .mergedDiscreteCNADataFilteredByGene;
+        }, this.urlWrapper);
 
         getBrowserWindow().patientViewPageStore = this.patientViewPageStore;
 
+        this.setOpenResourceTabs();
+
+        this.mergeMutationTableOncoKbIcons = getOncoKbIconStyle().mergeIcons;
+    }
+
+    setOpenResourceTabs() {
         const openResourceId =
             this.urlWrapper.activeTabId &&
             extractResourceIdFromTabId(this.urlWrapper.activeTabId);
         if (openResourceId) {
             this.patientViewPageStore.setResourceTabOpen(openResourceId, true);
         }
-
-        reaction(
-            () => [this.urlWrapper.query.caseId, this.urlWrapper.query.studyId],
-            ([_, studyId]) => {
-                if (
-                    studyId &&
-                    this.props.routing.location.pathname.includes(
-                        '/' + PagePath.Patient
-                    )
-                ) {
-                    trackPatient(studyId);
-                }
-            },
-            { fireImmediately: true }
-        );
-
-        //TODO: this should be done by a module so that it can be reused on other pages
-        reaction(
-            () => [
-                props.routing.query,
-                props.routing.location.hash,
-                props.routing.location.pathname,
-            ],
-            ([query, hash, pathname]) => {
-                // we don't want to update patient if we aren't on a patient page route
-                if (!pathname.includes('/' + PagePath.Patient)) {
-                    return;
-                }
-
-                const validationResult = validateParametersPatientView(query);
-
-                if (validationResult.isValid) {
-                    this.patientViewPageStore.urlValidationError = null;
-
-                    if ('studyId' in query) {
-                        this.patientViewPageStore.studyId = query.studyId;
-                    }
-                    if ('caseId' in query) {
-                        this.patientViewPageStore.setPatientId(
-                            query.caseId as string
-                        );
-                    } else if ('sampleId' in query) {
-                        this.patientViewPageStore.setSampleId(
-                            query.sampleId as string
-                        );
-                    }
-
-                    // if there is a navCaseId list in url
-                    const navCaseIdMatch = hash.match(/navCaseIds=([^&]*)/);
-                    if (navCaseIdMatch && navCaseIdMatch.length > 1) {
-                        this.patientViewPageStore.patientIdsInCohort = parseCohortIds(
-                            navCaseIdMatch[1]
-                        );
-                    }
-                } else {
-                    this.patientViewPageStore.urlValidationError =
-                        validationResult.message;
-                }
-            },
-            { fireImmediately: true }
-        );
-
-        this.mergeMutationTableOncoKbIcons = this.patientViewPageStore.mergeOncoKbIcons;
-    }
-
-    @computed get mergedMutations() {
-        // remove fusions
-        return this.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
-            mutationArray => {
-                return !isFusion(mutationArray[0]);
-            }
-        );
-    }
-
-    @computed get mergedCnas() {
-        return this.patientViewPageStore.mergedDiscreteCNADataFilteredByGene;
-    }
-
-    componentDidMount() {
-        // Load posted data, if it exists
-        const postData = getBrowserWindow().clientPostedData;
-        if (postData && postData.navCaseIds) {
-            this.patientViewPageStore.patientIdsInCohort = buildCohortIdsFromNavCaseIds(
-                postData.navCaseIds
-            );
-            getBrowserWindow().clientPostedData = null;
-        }
-    }
-
-    public get showNewTimeline() {
-        return !getServerConfig().patient_view_use_legacy_timeline;
-    }
-
-    public get showOldTimeline() {
-        return getServerConfig().patient_view_use_legacy_timeline;
     }
 
     @action.bound

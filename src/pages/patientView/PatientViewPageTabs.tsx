@@ -35,6 +35,7 @@ import genomicOverviewStyles from 'pages/patientView/genomicOverview/styles.modu
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
+import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -67,7 +68,7 @@ export function extractResourceIdFromTabId(tabId: string) {
 }
 
 export function patientViewTabs(
-    pageInstance: PatientViewPage,
+    pageInstance: PatientViewPageInner,
     urlWrapper: PatientViewUrlWrapper,
     sampleManager: SampleManager | null
 ) {
@@ -90,7 +91,7 @@ export function patientViewTabs(
 }
 
 export function tabs(
-    pageComponent: PatientViewPage,
+    pageComponent: PatientViewPageInner,
     sampleManager: SampleManager | null
 ) {
     const tabs: JSX.Element[] = [];
@@ -114,39 +115,30 @@ export function tabs(
                                 marginBottom: 20,
                             }}
                         >
-                            {' '}
-                            {pageComponent.showNewTimeline && (
-                                <TimelineWrapper
-                                    dataStore={
-                                        pageComponent.patientViewMutationDataStore
-                                    }
-                                    caseMetaData={{
-                                        color: sampleManager.sampleColors,
-                                        label: sampleManager.sampleLabels,
-                                        index: sampleManager.sampleIndex,
-                                    }}
-                                    data={
-                                        pageComponent.patientViewPageStore
-                                            .clinicalEvents.result
-                                    }
-                                    sampleManager={sampleManager}
-                                    width={WindowStore.size.width}
-                                    samples={
-                                        pageComponent.patientViewPageStore
-                                            .samples.result
-                                    }
-                                    mutationProfileId={
-                                        pageComponent.patientViewPageStore
-                                            .mutationMolecularProfileId.result!
-                                    }
-                                    // coverageInformation={
-                                    //     this
-                                    //         .patientViewPageStore
-                                    //         .coverageInformation
-                                    //         .result
-                                    // }
-                                />
-                            )}
+                            <TimelineWrapper
+                                dataStore={
+                                    pageComponent.patientViewMutationDataStore
+                                }
+                                caseMetaData={{
+                                    color: sampleManager.sampleColors,
+                                    label: sampleManager.sampleLabels,
+                                    index: sampleManager.sampleIndex,
+                                }}
+                                data={
+                                    pageComponent.patientViewPageStore
+                                        .clinicalEvents.result
+                                }
+                                sampleManager={sampleManager}
+                                width={WindowStore.size.width}
+                                samples={
+                                    pageComponent.patientViewPageStore.samples
+                                        .result
+                                }
+                                mutationProfileId={
+                                    pageComponent.patientViewPageStore
+                                        .mutationMolecularProfileId.result!
+                                }
+                            />
                         </div>
                         <hr />
                     </div>
@@ -531,9 +523,7 @@ export function tabs(
             <StructuralVariantTableWrapper
                 store={pageComponent.patientViewPageStore}
                 onSelectGenePanel={pageComponent.toggleGenePanelModal}
-                mergeOncoKbIcons={
-                    pageComponent.patientViewPageStore.mergeOncoKbIcons
-                }
+                mergeOncoKbIcons={pageComponent.mergeMutationTableOncoKbIcons}
             />
 
             <hr />
@@ -605,8 +595,7 @@ export function tabs(
                                         .usingPublicOncoKbInstance
                                 }
                                 mergeOncoKbIcons={
-                                    pageComponent.patientViewPageStore
-                                        .mergeOncoKbIcons
+                                    pageComponent.mergeMutationTableOncoKbIcons
                                 }
                                 enableOncoKb={getServerConfig().show_oncokb}
                                 enableCivic={getServerConfig().show_civic}
