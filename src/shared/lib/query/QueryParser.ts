@@ -162,8 +162,18 @@ export class QueryParser {
                 this.createAndClause(phrases.slice(currInd, nextDash))
             );
             return nextDash;
-        } else if (nextOr > 0 && nextDash === -1) {
-            clauses.push(this.createAndClause(phrases.slice(currInd, nextOr)));
+        } else if (nextOr >= 0 && nextDash === -1) {
+            if (nextOr === phrases.length - 1) {
+                // When query ends with 'or', interpret 'or' as a phrase:
+                clauses.push(
+                    this.createAndClause(phrases.slice(currInd, nextOr + 1))
+                );
+            } else {
+                // When 'or' is between phrases, interpret 'or' as separator of and-clauses:
+                clauses.push(
+                    this.createAndClause(phrases.slice(currInd, nextOr))
+                );
+            }
             return nextOr + 1;
         } else {
             if (nextOr < nextDash) {

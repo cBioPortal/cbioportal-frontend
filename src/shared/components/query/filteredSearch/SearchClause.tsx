@@ -1,6 +1,4 @@
-import { CancerTreeNodeFields } from 'shared/lib/query/textQueryUtils';
 import _ from 'lodash';
-import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
 import { Phrase } from 'shared/components/query/filteredSearch/Phrase';
 
 export const FILTER_SEPARATOR = `:`;
