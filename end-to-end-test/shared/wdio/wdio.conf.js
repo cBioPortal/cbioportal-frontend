@@ -24,12 +24,16 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 // correct if screenshot directory has trailing slash
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
+let headless = process.env.HEADLESS_CHROME;
+
+headless = true;
+
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
 ].concat(
     (function() {
-        return process.env.HEADLESS_CHROME
+        return headless
             ? [
                   '--headless',
                   '--no-sandbox',
@@ -63,7 +67,7 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
     screenshotName: getScreenshotName(screenDir),
     diffName: getScreenshotName(diffDir),
-    misMatchTolerance: 0.01,
+    misMatchTolerance: 50
 });
 
 function proxyComparisonMethod(target) {
@@ -104,9 +108,9 @@ function saveErrorImage(
     networkLog
 ) {
     if (error) {
-        if (!fs.existsSync(errorDir)) {
-            fs.mkdirSync(errorDir, 0744);
-        }
+        // if (!fs.existsSync(errorDir)) {
+        //     fs.mkdirSync(errorDir, 0744);
+        // }
         const title = test.title.trim().replace(/\s/g, '_');
         const img = `${errorDir}/${title}.png`;
         console.log('ERROR SHOT PATH' + img);
@@ -165,9 +169,12 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    //specs: [SPEC_FILE_PATTERN],
 
-    //specs: ['./remote/specs/core/comparisonTab.screenshot.spec.js'],
+    specs: [
+        './remote/specs/core/screenshot.spec.js',
+        // './remote/specs/core/home.spec.js'
+    ],
 
     // Patterns to exclude.
     exclude: [
@@ -268,9 +275,8 @@ exports.config = {
             'novus-visual-regression',
             {
                 compare: LocalCompare,
-                viewportChangePause: 300,
                 viewports: [{ width: 1600, height: 1000 }],
-                orientations: ['landscape', 'portrait'],
+                orientations: ['portrait'],
             },
         ],
     ],

@@ -1,4 +1,4 @@
-FROM circleci/node:15.2.1-browsers
+FROM circleci/node:16.13.1-browsers
 MAINTAINER Pim van Nierop <pim@thehyve.nl>
 
 LABEL Description="End-2-end test image for cBioPortal frontend"
@@ -7,5 +7,7 @@ LABEL Description="End-2-end test image for cBioPortal frontend"
 #RUN apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
 USER root
+
+RUN sudo npm install --global yarn@1.22.5 --force
 
 CMD /cbioportal-frontend/end-to-end-test/local/docker_compose/docker/screenshottest.sh
