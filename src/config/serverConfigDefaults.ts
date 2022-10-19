@@ -187,7 +187,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
         'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature,ARMLEVEL_CNA:Arm-level CNA',
 
     saml_logout_local: false,
-    patient_view_use_legacy_timeline: false,
+
     enable_request_body_gzip_compression: false,
     enable_treatment_groups: false,
 
