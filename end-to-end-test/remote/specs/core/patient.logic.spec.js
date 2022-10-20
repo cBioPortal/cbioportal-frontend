@@ -2,7 +2,7 @@ var assert = require('assert');
 
 var {
     goToUrlAndSetLocalStorage,
-    getElementsByTestHandle,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -20,16 +20,12 @@ describe('patient page', function() {
         $('button=Show all 4 samples').waitForExist();
     });
 
-    it('show appropriate messaging when a patient has only some profiled samples', async () => {
+    it('show appropriate messaging when a patient has only some profiled samples', () => {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/patient?studyId=mpcproject_broad_2021&caseId=MPCPROJECT_0013`
         );
 
         // there is one partial profile message for CNA and sample 2
-        await getElByTestHandle(
-            'patientview-mutation-table'
-        ).waitForDisplayed();
-        //let text = await getElementsByTestHandle("partialProfileAlert")[0].getText();
-        //assert.equal(text.replace(/\s+/g," "), "Sample 2 not profiled for mutations.");
+        getElementByTestHandle('patientview-mutation-table').waitForDisplayed();
     });
 });
