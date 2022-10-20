@@ -152,7 +152,6 @@ export interface IServerConfig {
     oncokb_merge_icons_by_default: boolean;
     generic_assay_display_text: string; // this has a default
     saml_logout_local: boolean;
-    patient_view_use_legacy_timeline: boolean;
     installation_map_url: string;
     enable_request_body_gzip_compression: boolean;
     enable_treatment_groups: boolean;

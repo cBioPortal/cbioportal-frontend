@@ -112,5 +112,19 @@ describe('QueryParser', () => {
             expect(toQueryString(parsedQuery)).toEqual(toQueryString(expected));
             expect(toQueryString(parsedQuery)).toEqual(query);
         });
+
+        it('interprets or as search phrase when query consists of single or', () => {
+            const query = 'or';
+            const result = parser.parseSearchQuery(query);
+            const expected = 'or';
+            expect(toQueryString(result)).toEqual(expected);
+        });
+
+        it('interprets or as search phrase when query ends with or', () => {
+            const query = 'part1 or';
+            const result = parser.parseSearchQuery(query);
+            const expected = 'part1 or';
+            expect(toQueryString(result)).toEqual(expected);
+        });
     });
 });
