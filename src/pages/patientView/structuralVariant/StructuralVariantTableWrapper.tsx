@@ -35,6 +35,7 @@ export interface IStructuralVariantTableWrapperProps {
     onSelectGenePanel?: (name: string) => void;
     mergeOncoKbIcons?: boolean;
     sampleIds: string[];
+    onOncoKbIconToggle: (mergeIcons: boolean) => void;
 }
 
 type CNATableColumn = Column<StructuralVariant[]> & { order: number };
@@ -62,7 +63,10 @@ export default class StructuralVariantTableWrapper extends React.Component<
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
             ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => (this.oncokbWidth = oncoKbContentWidth)
+            oncoKbContentWidth => {
+                if (this.oncokbWidth !== oncoKbContentWidth)
+                    this.oncokbWidth = oncoKbContentWidth;
+            }
         );
 
         this.mergeOncoKbIcons = !!props.mergeOncoKbIcons;
@@ -269,8 +273,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     AnnotationColumnFormatter.headerRender(
                         name,
                         this.oncokbWidth,
-                        this.mergeOncoKbIcons,
-                        this.handleOncoKbIconModeToggle
+                        this.props.mergeOncoKbIcons,
+                        this.props.onOncoKbIconToggle
                     ),
                 render: (d: StructuralVariant[]) => (
                     <span id="sv-annotation">
@@ -283,7 +287,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                 .oncoKbCancerGenes,
                             usingPublicOncoKbInstance: this.props.store
                                 .usingPublicOncoKbInstance,
-                            mergeOncoKbIcons: this.mergeOncoKbIcons,
+                            mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                             oncoKbContentPadding: calculateOncoKbContentPadding(
                                 this.oncokbWidth
                             ),
@@ -539,15 +543,15 @@ export default class StructuralVariantTableWrapper extends React.Component<
         return this.tableUI.component;
     }
 
-    @action.bound
-    private handleOncoKbIconModeToggle(mergeIcons: boolean) {
-        this.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
-
-        // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
-        calculateOncoKbContentWidthOnNextFrame(
-            ANNOTATION_ELEMENT_ID,
-            width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
-        );
-    }
+    // @action.bound
+    // private handleOncoKbIconModeToggle(mergeIcons: boolean) {
+    //     this.mergeOncoKbIcons = mergeIcons;
+    //     updateOncoKbIconStyle({ mergeIcons });
+    //
+    //     // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
+    //     calculateOncoKbContentWidthOnNextFrame(
+    //         ANNOTATION_ELEMENT_ID,
+    //         width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
+    //     );
+    // }
 }

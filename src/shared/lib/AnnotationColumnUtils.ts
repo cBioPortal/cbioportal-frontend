@@ -41,7 +41,6 @@ export function calculateOncoKbContentWidthWithInterval(
         if (oncoKbContentWidth) {
             oncoKbContentWidth =
                 Number(oncoKbContentWidth) || DEFAULT_ONCOKB_CONTENT_WIDTH;
-            clearInterval(interval);
             callback(oncoKbContentWidth);
         }
     }, 500);

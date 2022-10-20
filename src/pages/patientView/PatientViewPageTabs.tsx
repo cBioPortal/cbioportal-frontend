@@ -332,9 +332,8 @@ export function tabs(
             <StructuralVariantTableWrapper
                 store={pageComponent.patientViewPageStore}
                 onSelectGenePanel={pageComponent.toggleGenePanelModal}
-                mergeOncoKbIcons={
-                    pageComponent.mergeMutationTableOncoKbIcons
-                }
+                mergeOncoKbIcons={pageComponent.mergeMutationTableOncoKbIcons}
+                onOncoKbIconToggle={pageComponent.handleOncoKbIconToggle}
                 sampleIds={
                     sampleManager
                         ? sampleManager.getActiveSampleIdsInOrder()
@@ -393,6 +392,12 @@ export function tabs(
                                 }
                                 disableTooltip={
                                     pageComponent.genePanelModal.isOpen
+                                }
+                                mergeOncoKbIcons={
+                                    pageComponent.mergeMutationTableOncoKbIcons
+                                }
+                                onOncoKbIconToggle={
+                                    pageComponent.handleOncoKbIconToggle
                                 }
                                 onRowClick={pageComponent.onCnaTableRowClick}
                             />

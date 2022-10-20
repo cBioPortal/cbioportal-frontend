@@ -99,8 +99,8 @@ export default class MutationTableWrapper extends React.Component<
     IMutationTableWrapperProps,
     {}
 > {
-    @observable mergeOncoKbIcons;
     @observable oncokbWidth = DEFAULT_ONCOKB_CONTENT_WIDTH;
+
     private oncokbInterval: any;
 
     constructor(props: IMutationTableWrapperProps) {
@@ -109,12 +109,12 @@ export default class MutationTableWrapper extends React.Component<
 
         // here we wait for the oncokb icons to fully finish rendering
         // then update the oncokb width in order to align annotation column header icons with the cell content
-        this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
-            ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => (this.oncokbWidth = oncoKbContentWidth)
-        );
-
-        this.mergeOncoKbIcons = !!props.mergeOncoKbIcons;
+        // this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
+        //     ANNOTATION_ELEMENT_ID,
+        //     oncoKbContentWidth => {
+        //         (this.oncokbWidth = oncoKbContentWidth)
+        //     }
+        // );
     }
 
     public destroy() {

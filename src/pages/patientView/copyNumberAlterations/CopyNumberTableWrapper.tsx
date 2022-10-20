@@ -31,6 +31,7 @@ import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import { MakeMobxView } from 'shared/components/MobxView';
 import { getServerConfig } from 'config/config';
+import autobind from 'autobind-decorator';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -54,7 +55,9 @@ type ICopyNumberTableWrapperProps = {
     onRowClick: (d: DiscreteCopyNumberData[]) => void;
     onRowMouseEnter?: (d: DiscreteCopyNumberData[]) => void;
     onRowMouseLeave?: (d: DiscreteCopyNumberData[]) => void;
+    onOncoKbIconToggle: (mergeIcons: boolean) => void;
     disableTooltip: boolean;
+    mergeOncoKbIcons?: boolean;
 };
 
 const ANNOTATION_ELEMENT_ID = 'copy-number-annotation';
@@ -64,7 +67,6 @@ export default class CopyNumberTableWrapper extends React.Component<
     ICopyNumberTableWrapperProps,
     {}
 > {
-    @observable mergeOncoKbIcons;
     @observable oncokbWidth = DEFAULT_ONCOKB_CONTENT_WIDTH;
     private oncokbInterval: any;
 
@@ -76,10 +78,12 @@ export default class CopyNumberTableWrapper extends React.Component<
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
             ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => (this.oncokbWidth = oncoKbContentWidth)
+            oncoKbContentWidth => {
+                // only set if it's different to avoid unnecessary render cycles
+                if (this.oncokbWidth !== oncoKbContentWidth)
+                    this.oncokbWidth = oncoKbContentWidth;
+            }
         );
-
-        this.mergeOncoKbIcons = !!props.pageStore.mergeOncoKbIcons;
     }
 
     public destroy() {
@@ -91,6 +95,15 @@ export default class CopyNumberTableWrapper extends React.Component<
         enableCivic: false,
         showGeneFilterMenu: true,
     };
+
+    @autobind
+    handleOncoKBToggle(mergeIcons: boolean) {
+        this.props.onOncoKbIconToggle(mergeIcons);
+        // calculateOncoKbContentWidthOnNextFrame(
+        //     ANNOTATION_ELEMENT_ID,
+        //     width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
+        // );
+    }
 
     @computed get hugoGeneSymbolToCytoband() {
         // build reference gene map
@@ -229,8 +242,8 @@ export default class CopyNumberTableWrapper extends React.Component<
                 AnnotationColumnFormatter.headerRender(
                     name,
                     this.oncokbWidth,
-                    this.mergeOncoKbIcons,
-                    this.handleOncoKbIconModeToggle
+                    this.props.mergeOncoKbIcons,
+                    this.handleOncoKBToggle
                 ),
             render: (d: DiscreteCopyNumberData[]) => (
                 <span id="copy-number-annotation">
@@ -241,7 +254,7 @@ export default class CopyNumberTableWrapper extends React.Component<
                         oncoKbCancerGenes: this.pageStore.oncoKbCancerGenes,
                         usingPublicOncoKbInstance: this.pageStore
                             .usingPublicOncoKbInstance,
-                        mergeOncoKbIcons: this.mergeOncoKbIcons,
+                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                         oncoKbContentPadding: calculateOncoKbContentPadding(
                             this.oncokbWidth
                         ),
@@ -431,15 +444,15 @@ export default class CopyNumberTableWrapper extends React.Component<
         },
     });
 
-    @action.bound
-    private handleOncoKbIconModeToggle(mergeIcons: boolean) {
-        this.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
-
-        // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
-        calculateOncoKbContentWidthOnNextFrame(
-            ANNOTATION_ELEMENT_ID,
-            width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
-        );
-    }
+    // @action.bound
+    // private handleOncoKbIconModeToggle(mergeIcons: boolean) {
+    //     this.mergeOncoKbIcons = mergeIcons;
+    //     updateOncoKbIconStyle({ mergeIcons });
+    //
+    //     // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
+    //     calculateOncoKbContentWidthOnNextFrame(
+    //         ANNOTATION_ELEMENT_ID,
+    //         width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
+    //     );
+    // }
 }
