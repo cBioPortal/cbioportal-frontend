@@ -3,12 +3,15 @@ var assert = require('assert');
 const {
     goToUrlAndSetLocalStorage,
     checkOncoprintElement,
+    checkElementWithMouseDisabled,
     waitForNetworkQuiet,
 } = require('../../../shared/specUtils');
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 
+const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
+
 describe('Patient Cohort View Custom Tab Tests', () => {
-    const patientUrl = `https://www.cbioportal.org/patient?studyId=coadread_tcga_pub&caseId=TCGA-A6-2670#navCaseIds=coadread_tcga_pub:TCGA-A6-2670,coadread_tcga_pub:TCGA-A6-2672`;
+    const patientUrl = `${CBIOPORTAL_URL}/patient?studyId=coadread_tcga_pub&caseId=TCGA-A6-2670#navCaseIds=coadread_tcga_pub:TCGA-A6-2670,coadread_tcga_pub:TCGA-A6-2672`;
 
     it('Patient page valid after cohort navigation', function() {
         goToUrlAndSetLocalStorage(patientUrl);
@@ -32,3 +35,17 @@ describe('Patient Cohort View Custom Tab Tests', () => {
         assertScreenShotMatch(res2);
     });
 });
+
+// describe('patient page', function() {
+//     before(() => {
+//         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+//     });
+//
+//     it('should show all samples button for single sample view of multi sample patient', function() {
+//         goToUrlAndSetLocalStorage(
+//             `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&tab=summaryTab&sampleId=P04_Pri`
+//         );
+//
+//         checkElementWithMouseDisabled();
+//     });
+// });

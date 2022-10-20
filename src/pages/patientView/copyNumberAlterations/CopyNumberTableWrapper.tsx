@@ -4,10 +4,7 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import {
-    CancerStudy,
     DiscreteCopyNumberData,
-    GenePanelData,
-    MolecularProfile,
     ReferenceGenomeGene,
 } from 'cbioportal-ts-api-client';
 import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
@@ -18,20 +15,9 @@ import CnaColumnFormatter from './column/CnaColumnFormatter';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import SampleManager from '../SampleManager';
-import PubMedCache from 'shared/cache/PubMedCache';
-import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
-import { IGisticData } from 'shared/model/Gistic';
-import CopyNumberCountCache from '../clinicalInformation/CopyNumberCountCache';
 import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
-import {
-    ICivicGeneIndex,
-    ICivicVariantIndex,
-    IOncoKbData,
-    RemoteData,
-} from 'cbioportal-utils';
-import { CancerGene } from 'oncokb-ts-api-client';
 import {
     calculateOncoKbContentPadding,
     calculateOncoKbContentWidthOnNextFrame,
@@ -40,53 +26,38 @@ import {
     updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
-import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
+import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
+import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
+import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
+import { MakeMobxView } from 'shared/components/MobxView';
+import { getServerConfig } from 'config/config';
+import autobind from 'autobind-decorator';
+
+export const TABLE_FEATURE_INSTRUCTION =
+    'Click on a CNA row to zoom in on the gene in the IGV browser above';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
 type CNATableColumn = Column<DiscreteCopyNumberData[]> & { order: number };
 
 type ICopyNumberTableWrapperProps = {
-    studyIdToStudy?: { [studyId: string]: CancerStudy };
+    pageStore: PatientViewPageStore;
     sampleIds: string[];
     sampleManager: SampleManager | null;
-    sampleToGenePanelId: { [sampleId: string]: string | undefined };
-    uniqueSampleKeyToTumorType?: { [sampleId: string]: string };
-    genePanelIdToEntrezGeneIds: { [genePanelId: string]: number[] };
-    cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
-    cnaCivicGenes?: RemoteData<ICivicGeneIndex | undefined>;
-    cnaCivicVariants?: RemoteData<ICivicVariantIndex | undefined>;
-    oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
-    usingPublicOncoKbInstance: boolean;
-    mergeOncoKbIcons?: boolean;
-    enableOncoKb?: boolean;
-    enableCivic?: boolean;
-    pubMedCache?: PubMedCache;
-    referenceGenes: ReferenceGenomeGene[];
-    data: DiscreteCopyNumberData[][];
-    dataStore?: ILazyMobXTableApplicationDataStore<DiscreteCopyNumberData[]>;
-    profile: MolecularProfile | undefined;
-    genePanelDataByMolecularProfileIdAndSampleId: {
-        [profileId: string]: {
-            [sampleId: string]: GenePanelData;
-        };
-    };
-    copyNumberCountCache?: CopyNumberCountCache;
-    mrnaExprRankCache?: MrnaExprRankCache;
-    gisticData: IGisticData;
-    userEmailAddress?: string;
-    mrnaExprRankMolecularProfileId?: string;
-    columnVisibility?: { [columnId: string]: boolean };
-    columnVisibilityProps?: IColumnVisibilityControlsProps;
-    pageMode?: 'sample' | 'patient';
+    enableOncoKb: boolean;
+    enableCivic: boolean;
+    dataStore: ILazyMobXTableApplicationDataStore<DiscreteCopyNumberData[]>;
+    columnVisibility: { [columnId: string]: boolean } | undefined;
+    columnVisibilityProps: IColumnVisibilityControlsProps;
     showGeneFilterMenu?: boolean;
-    currentGeneFilter: GeneFilterOption;
-    onFilterGenes?: (option: GeneFilterOption) => void;
-    onSelectGenePanel?: (name: string) => void;
-    onRowClick?: (d: DiscreteCopyNumberData[]) => void;
+    onFilterGenes: (option: GeneFilterOption) => void;
+    onSelectGenePanel: (name: string) => void;
+    onRowClick: (d: DiscreteCopyNumberData[]) => void;
     onRowMouseEnter?: (d: DiscreteCopyNumberData[]) => void;
     onRowMouseLeave?: (d: DiscreteCopyNumberData[]) => void;
-    disableTooltip?: boolean;
+    onOncoKbIconToggle: (mergeIcons: boolean) => void;
+    disableTooltip: boolean;
+    mergeOncoKbIcons?: boolean;
 };
 
 const ANNOTATION_ELEMENT_ID = 'copy-number-annotation';
@@ -96,7 +67,6 @@ export default class CopyNumberTableWrapper extends React.Component<
     ICopyNumberTableWrapperProps,
     {}
 > {
-    @observable mergeOncoKbIcons;
     @observable oncokbWidth = DEFAULT_ONCOKB_CONTENT_WIDTH;
     private oncokbInterval: any;
 
@@ -108,10 +78,12 @@ export default class CopyNumberTableWrapper extends React.Component<
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
             ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => (this.oncokbWidth = oncoKbContentWidth)
+            oncoKbContentWidth => {
+                // only set if it's different to avoid unnecessary render cycles
+                if (this.oncokbWidth !== oncoKbContentWidth)
+                    this.oncokbWidth = oncoKbContentWidth;
+            }
         );
-
-        this.mergeOncoKbIcons = !!props.mergeOncoKbIcons;
     }
 
     public destroy() {
@@ -124,11 +96,20 @@ export default class CopyNumberTableWrapper extends React.Component<
         showGeneFilterMenu: true,
     };
 
+    @autobind
+    handleOncoKBToggle(mergeIcons: boolean) {
+        this.props.onOncoKbIconToggle(mergeIcons);
+        // calculateOncoKbContentWidthOnNextFrame(
+        //     ANNOTATION_ELEMENT_ID,
+        //     width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
+        // );
+    }
+
     @computed get hugoGeneSymbolToCytoband() {
         // build reference gene map
         const result: {
             [hugosymbol: string]: string;
-        } = this.props.referenceGenes!.reduce(
+        } = this.pageStore.referenceGenes.result!.reduce(
             (
                 map: { [hugosymbol: string]: string },
                 next: ReferenceGenomeGene
@@ -146,14 +127,12 @@ export default class CopyNumberTableWrapper extends React.Component<
     }
 
     public render() {
+        return this.tableUI.component;
+    }
+
+    @computed get columns() {
         const columns: CNATableColumn[] = [];
         const numSamples = this.props.sampleIds.length;
-
-        const isProfiled = isSampleProfiledInProfile(
-            this.props.genePanelDataByMolecularProfileIdAndSampleId,
-            this.props.profile?.molecularProfileId,
-            this.props.sampleIds[0]
-        );
 
         if (numSamples >= 2) {
             columns.push({
@@ -162,8 +141,8 @@ export default class CopyNumberTableWrapper extends React.Component<
                     TumorColumnFormatter.renderFunction(
                         d,
                         this.props.sampleManager,
-                        this.props.sampleToGenePanelId,
-                        this.props.genePanelIdToEntrezGeneIds,
+                        this.pageStore.sampleToDiscreteGenePanelId.result,
+                        this.pageStore.genePanelIdToEntrezGeneIds.result,
                         this.props.onSelectGenePanel,
                         this.props.disableTooltip
                     ),
@@ -199,11 +178,15 @@ export default class CopyNumberTableWrapper extends React.Component<
                 return (
                     <HeaderIconMenu
                         name={name}
-                        showIcon={this.props.showGeneFilterMenu}
+                        showIcon={
+                            this.pageStore.cnaTableShowGeneFilterMenu.result
+                        }
                     >
                         <GeneFilterMenu
                             onOptionChanged={this.props.onFilterGenes}
-                            currentSelection={this.props.currentGeneFilter}
+                            currentSelection={
+                                this.pageStore.copyNumberTableGeneFilterOption
+                            }
                         />
                     </HeaderIconMenu>
                 );
@@ -214,9 +197,10 @@ export default class CopyNumberTableWrapper extends React.Component<
 
         const GenePanelProps = (d: DiscreteCopyNumberData[]) => ({
             data: d,
-            sampleToGenePanelId: this.props.sampleToGenePanelId,
+            sampleToGenePanelId: this.pageStore.sampleToDiscreteGenePanelId
+                .result,
             sampleManager: this.props.sampleManager,
-            genePanelIdToGene: this.props.genePanelIdToEntrezGeneIds,
+            genePanelIdToGene: this.pageStore.genePanelIdToEntrezGeneIds.result,
             onSelectGenePanel: this.props.onSelectGenePanel,
         });
 
@@ -258,43 +242,43 @@ export default class CopyNumberTableWrapper extends React.Component<
                 AnnotationColumnFormatter.headerRender(
                     name,
                     this.oncokbWidth,
-                    this.mergeOncoKbIcons,
-                    this.handleOncoKbIconModeToggle
+                    this.props.mergeOncoKbIcons,
+                    this.handleOncoKBToggle
                 ),
             render: (d: DiscreteCopyNumberData[]) => (
                 <span id="copy-number-annotation">
                     {AnnotationColumnFormatter.renderFunction(d, {
-                        uniqueSampleKeyToTumorType: this.props
+                        uniqueSampleKeyToTumorType: this.pageStore
                             .uniqueSampleKeyToTumorType,
-                        oncoKbData: this.props.cnaOncoKbData,
-                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                        usingPublicOncoKbInstance: this.props
+                        oncoKbData: this.pageStore.cnaOncoKbData,
+                        oncoKbCancerGenes: this.pageStore.oncoKbCancerGenes,
+                        usingPublicOncoKbInstance: this.pageStore
                             .usingPublicOncoKbInstance,
-                        mergeOncoKbIcons: this.mergeOncoKbIcons,
+                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                         oncoKbContentPadding: calculateOncoKbContentPadding(
                             this.oncokbWidth
                         ),
                         enableOncoKb: this.props.enableOncoKb as boolean,
-                        pubMedCache: this.props.pubMedCache,
-                        civicGenes: this.props.cnaCivicGenes,
-                        civicVariants: this.props.cnaCivicVariants,
-                        enableCivic: this.props.enableCivic as boolean,
+                        pubMedCache: this.pageStore.pubMedCache,
+                        civicGenes: this.pageStore.cnaCivicGenes,
+                        civicVariants: this.pageStore.cnaCivicVariants,
+                        enableCivic: getServerConfig().show_civic as boolean,
                         enableMyCancerGenome: false,
                         enableHotspot: false,
-                        userEmailAddress: this.props.userEmailAddress,
-                        studyIdToStudy: this.props.studyIdToStudy,
+                        userEmailAddress: getServerConfig().user_email_address,
+                        studyIdToStudy: this.pageStore.studyIdToStudy.result,
                     })}
                 </span>
             ),
             sortBy: (d: DiscreteCopyNumberData[]) => {
                 return AnnotationColumnFormatter.sortValue(
                     d,
-                    this.props.oncoKbCancerGenes,
-                    this.props.usingPublicOncoKbInstance,
-                    this.props.cnaOncoKbData,
-                    this.props.uniqueSampleKeyToTumorType,
-                    this.props.cnaCivicGenes,
-                    this.props.cnaCivicVariants
+                    this.pageStore.oncoKbCancerGenes,
+                    this.pageStore.usingPublicOncoKbInstance,
+                    this.pageStore.cnaOncoKbData,
+                    this.pageStore.uniqueSampleKeyToTumorType,
+                    this.pageStore.cnaCivicGenes,
+                    this.pageStore.cnaCivicVariants
                 );
             },
             order: 50,
@@ -316,30 +300,30 @@ export default class CopyNumberTableWrapper extends React.Component<
         columns.push({
             name: 'Cohort',
             render: (d: DiscreteCopyNumberData[]) =>
-                this.props.copyNumberCountCache ? (
+                this.pageStore.copyNumberCountCache ? (
                     CohortColumnFormatter.renderFunction(
                         d,
-                        this.props.copyNumberCountCache,
-                        this.props.gisticData
+                        this.pageStore.copyNumberCountCache,
+                        this.pageStore.gisticData.result
                     )
                 ) : (
                     <span />
                 ),
             sortBy: (d: DiscreteCopyNumberData[]) => {
-                if (this.props.copyNumberCountCache) {
+                if (this.pageStore.copyNumberCountCache) {
                     return CohortColumnFormatter.getSortValue(
                         d,
-                        this.props.copyNumberCountCache
+                        this.pageStore.copyNumberCountCache
                     );
                 } else {
                     return 0;
                 }
             },
             download: (d: DiscreteCopyNumberData[]) => {
-                if (this.props.copyNumberCountCache) {
+                if (this.pageStore.copyNumberCountCache) {
                     return CohortColumnFormatter.getDownloadValue(
                         d,
-                        this.props.copyNumberCountCache
+                        this.pageStore.copyNumberCountCache
                     );
                 } else {
                     return 'N/A';
@@ -350,23 +334,26 @@ export default class CopyNumberTableWrapper extends React.Component<
             order: 80,
         });
 
-        if (numSamples === 1 && this.props.mrnaExprRankMolecularProfileId) {
+        if (
+            numSamples === 1 &&
+            this.pageStore.mrnaRankMolecularProfileId.result
+        ) {
             columns.push({
                 name: 'mRNA Expr.',
                 render: (d: DiscreteCopyNumberData[]) =>
-                    this.props.mrnaExprRankCache ? (
+                    this.pageStore.mrnaExprRankCache ? (
                         MrnaExprColumnFormatter.cnaRenderFunction(
                             d,
-                            this.props.mrnaExprRankCache
+                            this.pageStore.mrnaExprRankCache
                         )
                     ) : (
                         <span />
                     ),
                 download: (d: DiscreteCopyNumberData[]) => {
-                    if (this.props.mrnaExprRankCache) {
+                    if (this.pageStore.mrnaExprRankCache) {
                         return MrnaExprColumnFormatter.getDownloadData(
                             d,
-                            this.props.mrnaExprRankCache
+                            this.pageStore.mrnaExprRankCache
                         );
                     } else {
                         return 'N/A';
@@ -380,51 +367,92 @@ export default class CopyNumberTableWrapper extends React.Component<
             columns,
             (c: CNATableColumn) => c.order
         );
-
-        if (this.props.profile === undefined) {
-            return (
-                <div className="alert alert-info" role="alert">
-                    Study has no Copy Number Alteration data.
-                </div>
-            );
-        } else if (!isProfiled) {
-            return (
-                <div className="alert alert-info" role="alert">
-                    {this.props.pageMode === 'patient'
-                        ? 'Patient is not profiled for Copy Number Alterations.'
-                        : 'Sample is not profiled for Copy Number Alterations.'}
-                </div>
-            );
-        }
-        return (
-            <CNATableComponent
-                columns={orderedColumns}
-                data={this.props.data}
-                dataStore={this.props.dataStore}
-                initialSortColumn="Annotation"
-                initialSortDirection="desc"
-                initialItemsPerPage={10}
-                itemsLabel="Copy Number Alteration"
-                itemsLabelPlural="Copy Number Alterations"
-                showCountHeader={true}
-                columnVisibility={this.props.columnVisibility}
-                columnVisibilityProps={this.props.columnVisibilityProps}
-                onRowClick={this.props.onRowClick}
-                onRowMouseEnter={this.props.onRowMouseEnter}
-                onRowMouseLeave={this.props.onRowMouseLeave}
-            />
-        );
+        return orderedColumns;
     }
 
-    @action.bound
-    private handleOncoKbIconModeToggle(mergeIcons: boolean) {
-        this.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
-
-        // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
-        calculateOncoKbContentWidthOnNextFrame(
-            ANNOTATION_ELEMENT_ID,
-            width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
-        );
+    get pageStore() {
+        return this.props.pageStore;
     }
+
+    tableUI = MakeMobxView({
+        await: () => [
+            this.pageStore.studyIdToStudy,
+            this.pageStore.genePanelDataByMolecularProfileIdAndSampleId,
+            this.pageStore.discreteMolecularProfile,
+            this.pageStore.genePanelIdToEntrezGeneIds,
+            this.pageStore.gisticData,
+            this.pageStore.mrnaRankMolecularProfileId,
+            this.pageStore.cnaTableShowGeneFilterMenu,
+            this.pageStore.referenceGenes,
+        ],
+        render: () => {
+            const { notProfiledIds, someProfiled } = getSamplesProfiledStatus(
+                this.props.sampleIds,
+                this.pageStore.genePanelDataByMolecularProfileIdAndSampleId
+                    .result,
+                this.pageStore.discreteMolecularProfile.result
+                    ?.molecularProfileId
+            );
+
+            return (
+                <>
+                    {notProfiledIds.length > 0 && (
+                        <div
+                            className="alert alert-info"
+                            role="alert"
+                            data-test={'partialProfileAlert'}
+                        >
+                            {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
+                            {notProfiledIds.map(id => (
+                                <span style={{ marginLeft: 5 }}>
+                                    {this.props.sampleManager?.getComponentForSample(
+                                        id
+                                    )}
+                                </span>
+                            ))}{' '}
+                            not profiled for copy number alterations.
+                        </div>
+                    )}
+
+                    {someProfiled && (
+                        <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
+                            <CNATableComponent
+                                columns={this.columns}
+                                data={
+                                    this.pageStore
+                                        .mergedDiscreteCNADataFilteredByGene
+                                }
+                                dataStore={this.props.dataStore}
+                                initialSortColumn="Annotation"
+                                initialSortDirection="desc"
+                                initialItemsPerPage={10}
+                                itemsLabel="Copy Number Alteration"
+                                itemsLabelPlural="Copy Number Alterations"
+                                showCountHeader={true}
+                                columnVisibility={this.props.columnVisibility}
+                                columnVisibilityProps={
+                                    this.props.columnVisibilityProps
+                                }
+                                onRowClick={this.props.onRowClick}
+                                onRowMouseEnter={this.props.onRowMouseEnter}
+                                onRowMouseLeave={this.props.onRowMouseLeave}
+                            />
+                        </FeatureInstruction>
+                    )}
+                </>
+            );
+        },
+    });
+
+    // @action.bound
+    // private handleOncoKbIconModeToggle(mergeIcons: boolean) {
+    //     this.mergeOncoKbIcons = mergeIcons;
+    //     updateOncoKbIconStyle({ mergeIcons });
+    //
+    //     // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
+    //     calculateOncoKbContentWidthOnNextFrame(
+    //         ANNOTATION_ELEMENT_ID,
+    //         width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
+    //     );
+    // }
 }
