@@ -28,11 +28,14 @@ import {
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { MutationStatus } from 'react-mutation-mapper';
 import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
+import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
     onSelectGenePanel?: (name: string) => void;
     mergeOncoKbIcons?: boolean;
+    sampleIds: string[];
+    onOncoKbIconToggle: (mergeIcons: boolean) => void;
 }
 
 type CNATableColumn = Column<StructuralVariant[]> & { order: number };
@@ -60,7 +63,10 @@ export default class StructuralVariantTableWrapper extends React.Component<
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
             ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => (this.oncokbWidth = oncoKbContentWidth)
+            oncoKbContentWidth => {
+                if (this.oncokbWidth !== oncoKbContentWidth)
+                    this.oncokbWidth = oncoKbContentWidth;
+            }
         );
 
         this.mergeOncoKbIcons = !!props.mergeOncoKbIcons;
@@ -267,8 +273,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     AnnotationColumnFormatter.headerRender(
                         name,
                         this.oncokbWidth,
-                        this.mergeOncoKbIcons,
-                        this.handleOncoKbIconModeToggle
+                        this.props.mergeOncoKbIcons,
+                        this.props.onOncoKbIconToggle
                     ),
                 render: (d: StructuralVariant[]) => (
                     <span id="sv-annotation">
@@ -281,7 +287,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                 .oncoKbCancerGenes,
                             usingPublicOncoKbInstance: this.props.store
                                 .usingPublicOncoKbInstance,
-                            mergeOncoKbIcons: this.mergeOncoKbIcons,
+                            mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                             oncoKbContentPadding: calculateOncoKbContentPadding(
                                 this.oncokbWidth
                             ),
@@ -472,45 +478,61 @@ export default class StructuralVariantTableWrapper extends React.Component<
         await: () => [
             this.props.store.structuralVariantProfile,
             this.props.store.groupedStructuralVariantData,
+            this.props.store.genePanelDataByMolecularProfileIdAndSampleId,
             this.columns,
         ],
         render: () => {
-            const isProfiled = isSampleProfiledInProfile(
-                this.props.store.genePanelDataByMolecularProfileIdAndSampleId
-                    .result,
-                this.props.store.structuralVariantProfile.result
-                    ?.molecularProfileId,
-                this.props.store.sampleIds[0]
-            );
-
-            if (
-                this.props.store.structuralVariantProfile.result === undefined
-            ) {
+            if (!this.props.store.structuralVariantProfile.result) {
                 return (
                     <div className="alert alert-info" role="alert">
-                        Study has no Structual Variant data.
-                    </div>
-                );
-            } else if (!isProfiled) {
-                return (
-                    <div className="alert alert-info" role="alert">
-                        {this.props.store.pageMode === 'patient'
-                            ? 'Patient is not profiled for Structural Variants.'
-                            : 'Sample is not profiled for Structural Variants.'}
+                        Study is not profiled for structural variants.
                     </div>
                 );
             }
+
+            const { notProfiledIds, someProfiled } = getSamplesProfiledStatus(
+                this.props.sampleIds,
+                this.props.store.genePanelDataByMolecularProfileIdAndSampleId
+                    .result,
+                this.props.store.structuralVariantProfile.result
+                    ?.molecularProfileId
+            );
+
             return (
-                <StructuralVariantTableComponent
-                    columns={this.columns.result}
-                    data={this.props.store.groupedStructuralVariantData.result!}
-                    initialSortColumn="Annotation"
-                    initialSortDirection="desc"
-                    initialItemsPerPage={10}
-                    itemsLabel="Structural Variants"
-                    itemsLabelPlural="Structural Variants"
-                    showCountHeader={true}
-                />
+                <>
+                    {notProfiledIds.length > 0 && (
+                        <div
+                            className="alert alert-info"
+                            role="alert"
+                            data-test={'partialProfileAlert'}
+                        >
+                            {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
+                            {notProfiledIds.map(id => (
+                                <span style={{ marginLeft: 5 }}>
+                                    {this.props.store.sampleManager.result?.getComponentForSample(
+                                        id
+                                    )}
+                                </span>
+                            ))}{' '}
+                            not profiled for structural variants.
+                        </div>
+                    )}
+                    {someProfiled && (
+                        <StructuralVariantTableComponent
+                            columns={this.columns.result}
+                            data={
+                                this.props.store.groupedStructuralVariantData
+                                    .result!
+                            }
+                            initialSortColumn="Annotation"
+                            initialSortDirection="desc"
+                            initialItemsPerPage={10}
+                            itemsLabel="Structural Variants"
+                            itemsLabelPlural="Structural Variants"
+                            showCountHeader={true}
+                        />
+                    )}
+                </>
             );
         },
         renderPending: () => <LoadingIndicator isLoading={true} />,
@@ -521,15 +543,15 @@ export default class StructuralVariantTableWrapper extends React.Component<
         return this.tableUI.component;
     }
 
-    @action.bound
-    private handleOncoKbIconModeToggle(mergeIcons: boolean) {
-        this.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
-
-        // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
-        calculateOncoKbContentWidthOnNextFrame(
-            ANNOTATION_ELEMENT_ID,
-            width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
-        );
-    }
+    // @action.bound
+    // private handleOncoKbIconModeToggle(mergeIcons: boolean) {
+    //     this.mergeOncoKbIcons = mergeIcons;
+    //     updateOncoKbIconStyle({ mergeIcons });
+    //
+    //     // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
+    //     calculateOncoKbContentWidthOnNextFrame(
+    //         ANNOTATION_ELEMENT_ID,
+    //         width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
+    //     );
+    // }
 }
