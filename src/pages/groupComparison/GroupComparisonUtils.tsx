@@ -544,6 +544,12 @@ export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups: number) {
     }
 }
 
+export const MUTATIONS_NOT_ENOUGH_GROUPS_MSG =
+    'We need 2 groups to show mutations. Please select more groups from the Groups section above.';
+
+export const MUTATIONS_TOO_MANY_GROUPS_MSG =
+    "We can't show mutations for more than 2 groups. Please deselect groups in the Groups section.";
+
 export function getDefaultGroupName(
     filters: StudyViewFilter,
     customChartFilterSet: { [chartId: string]: string[] },

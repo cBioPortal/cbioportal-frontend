@@ -1604,7 +1604,7 @@ export default abstract class ComparisonStore
     @computed get mutationsTabUnavailable() {
         return (
             (this.activeGroups.isComplete &&
-                this.activeGroups.result.length < 2) || //less than two active groups
+                this.activeGroups.result.length !== 2) || // not two active groups
             !this.mutationsTabShowable
         );
     }

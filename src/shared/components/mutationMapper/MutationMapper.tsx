@@ -44,7 +44,7 @@ import styles from './mutationMapper.module.scss';
 import { ProteinImpactType } from 'cbioportal-frontend-commons';
 import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
-import { PtmSource } from 'cbioportal-utils';
+import { Mutation, PtmSource } from 'cbioportal-utils';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -76,6 +76,11 @@ export interface IMutationMapperProps {
     onTranscriptChange?: (transcript: string) => void;
     onClickSettingMenu?: (visible: boolean) => void;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
+    getMutationCount?: (mutation: Partial<Mutation>) => number;
+    plotLollipopTooltipCountInfo?: (
+        count: number,
+        mutations?: Partial<Mutation>[]
+    ) => JSX.Element;
     compactStyle?: boolean;
     mergeOncoKbIcons?: boolean; // TODO add server config param for this as well?
 
@@ -543,6 +548,15 @@ export default class MutationMapper<
                         : undefined
                 }
                 legend={this.legendColorCodes}
+                customControls={this.customControls}
+                topYAxisSymbol={this.plotTopYAxisSymbol}
+                bottomYAxisSymbol={this.plotBottomYAxisSymbol}
+                topYAxisDefaultMax={this.plotTopYAxisDefaultMax}
+                bottomYAxisDefaultMax={this.plotBottomYAxisDefaultMax}
+                yMaxLabelPostfix={this.plotYMaxLabelPostfix}
+                lollipopTooltipCountInfo={
+                    this.props.plotLollipopTooltipCountInfo
+                }
             />
         );
     }

@@ -131,9 +131,11 @@ export default class GroupComparisonPage extends React.Component<
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
-            this.store.mutations,
             this.store.mutationsByGroup,
-            this.store.genes,
+            this.store.availableGenes,
+            this.store.mutations,
+            // this.store.allSamples,
+            this.store.countProfiledSamples,
         ],
         render: () => {
             return (
@@ -227,72 +229,9 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            <div style={{ width: 100, paddingBottom: 10 }}>
-                                <ReactSelect
-                                    name="Select gene"
-                                    onChange={(option: any | null) => {
-                                        if (option) {
-                                            this.store.setSelectedMutationMapperGene(
-                                                option.value
-                                            );
-                                        }
-                                    }}
-                                    options={this.store.genes.result!.map(
-                                        gene => ({
-                                            label: gene.hugoGeneSymbol,
-                                            value: gene,
-                                        })
-                                    )}
-                                    value={{
-                                        label: this.store
-                                            .selectedMutationMapperGene
-                                            .hugoGeneSymbol,
-                                        value: this.store
-                                            .selectedMutationMapperGene,
-                                    }}
-                                    clearable={false}
-                                    searchable={true}
-                                />
-                            </div>
-                            <div>
-                                <h3>
-                                    {_(this.store.mutationsByGroup.result!)
-                                        .keys()
-                                        .slice(0, 2)
-                                        .join(' vs ')}
-                                </h3>
-                                <Mutations
-                                    store={this.store}
-                                    mutations={_(
-                                        this.store.mutationsByGroup.result!
-                                    )
-                                        .values()
-                                        .flatten()
-                                        .value()}
-                                    filters={{
-                                        groupFilters: _(
-                                            this.store.mutationsByGroup.result!
-                                        )
-                                            .keys()
-                                            .value()
-                                            .map(group => ({
-                                                group: group,
-                                                filter: {
-                                                    type:
-                                                        'GroupComparisonFilter',
-                                                    values: [group],
-                                                },
-                                            })),
-                                        filterAppliersOverride: {
-                                            ['GroupComparisonFilter']: this
-                                                .store.applySampleIdFilter,
-                                        },
-                                    }}
-                                    gene={this.store.selectedMutationMapperGene}
-                                />
-                            </div>
-
-                            {this.store.activeGroups.result!.map(g => {
+                            <Mutations store={this.store} />
+                            {/* stacked lollipop plots for > 2 groups */}
+                            {/* {this.store.activeGroups.result!.map(g => {
                                 return (
                                     <div>
                                         <h3>{g.name}</h3>
@@ -302,14 +241,11 @@ export default class GroupComparisonPage extends React.Component<
                                                 this.store.mutationsByGroup
                                                     .result![g.uid]
                                             }
-                                            gene={
-                                                this.store
-                                                    .selectedMutationMapperGene
-                                            }
+                                            filters={{}}
                                         />
                                     </div>
                                 );
-                            })}
+                            })} */}
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (
@@ -384,7 +320,9 @@ export default class GroupComparisonPage extends React.Component<
         renderPending: () => (
             <LoadingIndicator center={true} isLoading={true} size={'big'} />
         ),
-        renderError: () => <ErrorMessage />,
+        renderError: () => {
+            return <ErrorMessage />;
+        },
     });
 
     readonly studyLink = MakeMobxView({

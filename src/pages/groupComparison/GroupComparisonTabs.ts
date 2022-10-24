@@ -10,9 +10,4 @@ export enum GroupComparisonTab {
     MUTATIONS = 'mutations',
 }
 
-export enum LegacyGroupComparisonTab {
-    MUTATIONS = 'mutations',
-    CNA = 'cna',
-}
-
 export const GENOMIC_ALTERATIONS_TAB_NAME = 'Genomic Alterations';

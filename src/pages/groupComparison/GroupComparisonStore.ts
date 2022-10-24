@@ -15,6 +15,7 @@ import {
     GenePanelDataMultipleStudyFilter,
     Mutation,
     Gene,
+    GenePanelData,
 } from 'cbioportal-ts-api-client';
 import { action, observable, makeObservable, computed } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
@@ -39,6 +40,13 @@ import {
 import ComplexKeySet from 'shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
 import { DataFilter } from 'react-mutation-mapper';
+import { getAllGenes } from 'shared/lib/StoreUtils';
+import {
+    CoverageInformation,
+    getCoverageInformation,
+} from 'shared/lib/GenePanelUtils';
+import { fetchPatients } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
@@ -288,21 +296,8 @@ export default class GroupComparisonStore extends ComparisonStore {
         return this._samples;
     }
     private readonly _samples = remoteData({
-        await: () => [this._session],
+        await: () => [this._session, this.allSamples],
         invoke: async () => {
-            const allStudies = _(this._session.result!.groups)
-                .flatMapDeep(groupData => groupData.studies.map(s => s.id))
-                .uniq()
-                .value();
-
-            // fetch all samples - faster backend processing time
-            const allSamples = await client.fetchSamplesUsingPOST({
-                sampleFilter: {
-                    sampleListIds: allStudies.map(studyId => `${studyId}_all`),
-                } as SampleFilter,
-                projection: 'DETAILED',
-            });
-
             // filter to get samples in our groups
             const sampleSet = new ComplexKeySet();
             for (const groupData of this._session.result!.groups) {
@@ -317,7 +312,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                 }
             }
 
-            return allSamples.filter(sample => {
+            return this.allSamples.result!.filter(sample => {
                 return sampleSet.has({
                     studyId: sample.studyId,
                     sampleId: sample.sampleId,
@@ -326,15 +321,13 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    public get mutations() {
-        return this._mutations;
-    }
-    private readonly _mutations = remoteData({
+    readonly mutations = remoteData({
         await: () => [this.samples, this.mutationEnrichmentProfiles],
         invoke: async () => {
             if (
                 this.samples.result!.length === 0 ||
-                this.mutationEnrichmentProfiles.result!.length === 0
+                this.mutationEnrichmentProfiles.result!.length === 0 ||
+                !this.selectedMutationMapperGene
             ) {
                 return Promise.resolve([]);
             }
@@ -353,59 +346,149 @@ export default class GroupComparisonStore extends ComparisonStore {
                     } as MutationMultipleStudyFilter,
                 }
             );
-
             return mutations;
         },
     });
 
-    // @computed get groupedSamples(): { name: string; samples: string[] }[] {
-    //     const samplesByGroup = [];
-    //     for (const groupData of this._session.result!.groups) {
-    //         samplesByGroup.push({
-    //             name: groupData.name,
-    //             samples: groupData.studies[0].samples,
-    //         });
-    //     }
-    //     return samplesByGroup;
-    // }
-
-    // @computed get mutationsByGene(): { [hugoGeneSymbol: string]: Mutation[] } | undefined {
-    //     if (this.mutations.isComplete) {
-    //         const mutationsByGene = _.groupBy(
-    //             this.mutations.result,
-    //             (mutation: Mutation) => mutation.gene.hugoGeneSymbol
-    //         );
-    //         return mutationsByGene;
-    //     }
-    //     else {
-    //         return undefined
-    //     }
-    // }
-
-    readonly genes = remoteData({
+    readonly countProfiledSamples = remoteData({
+        await: () => [this.allSamples, this.coverageInformation],
         invoke: async () => {
-            const genes = await client.fetchGenesUsingPOST({
-                geneIdType: 'HUGO_GENE_SYMBOL',
-                geneIds: ['TP53', 'KRAS', 'NRAS'],
-            });
-            return genes;
+            let count = 0;
+            if (this.selectedMutationMapperGene) {
+                const sampleKeys = this.allSamples.result!.map(
+                    s => s.uniqueSampleKey
+                );
+                sampleKeys.map(k => {
+                    if (
+                        isSampleProfiled(
+                            k,
+                            this.mutationEnrichmentProfiles.result![0]
+                                .molecularProfileId,
+                            this.selectedMutationMapperGene!.hugoGeneSymbol,
+                            this.coverageInformation.result!
+                        )
+                    ) {
+                        count += 1;
+                    }
+                });
+            }
+            return count;
         },
     });
 
-    @computed get selectedMutationMapperGene() {
-        const gene =
-            this.genes.result!.find(
-                g => g.hugoGeneSymbol === this._selectedMutationMapperGene
-            ) || this.genes.result![0];
-        if (!gene) {
-            debugger;
+    readonly allSamples = remoteData({
+        await: () => [this._session],
+        invoke: async () => {
+            const allStudies = _(this._session.result!.groups)
+                .flatMapDeep(groupData => groupData.studies.map(s => s.id))
+                .uniq()
+                .value();
+            // fetch all samples - faster backend processing time
+            const allSamples = await client.fetchSamplesUsingPOST({
+                sampleFilter: {
+                    sampleListIds: allStudies.map(studyId => `${studyId}_all`),
+                } as SampleFilter,
+                projection: 'DETAILED',
+            });
+
+            return allSamples;
+        },
+    });
+
+    readonly genePanelDataForAllProfiles = remoteData({
+        await: () => [this.allSamples, this.mutationEnrichmentProfiles],
+        invoke: async () => {
+            if (
+                this.allSamples.result!.length === 0 ||
+                this.mutationEnrichmentProfiles.result!.length === 0 ||
+                !this.selectedMutationMapperGene
+            ) {
+                return Promise.resolve([]);
+            }
+            const sampleMolecularIdentifiers = getSampleMolecularIdentifiers(
+                this.allSamples.result!,
+                this.mutationEnrichmentProfiles.result!
+            );
+            const genePanelData = client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
+                {
+                    genePanelDataMultipleStudyFilter: {
+                        sampleMolecularIdentifiers,
+                    } as GenePanelDataMultipleStudyFilter,
+                }
+            );
+            return genePanelData;
+        },
+    });
+
+    readonly coverageInformation = remoteData<CoverageInformation | undefined>({
+        await: () => [
+            this.genePanelDataForAllProfiles,
+            this.sampleKeyToSample,
+            this.patients,
+        ],
+        invoke: () => {
+            if (this.selectedMutationMapperGene) {
+                return Promise.resolve(
+                    getCoverageInformation(
+                        this.genePanelDataForAllProfiles.result!,
+                        this.sampleKeyToSample.result!,
+                        this.patients.result!,
+                        [this.selectedMutationMapperGene!]
+                    )
+                );
+            }
+            return Promise.resolve(undefined);
+        },
+    });
+
+    readonly patients = remoteData({
+        await: () => [this.allSamples],
+        invoke: () => fetchPatients(this.allSamples.result!),
+        default: [],
+    });
+
+    readonly availableGenes = remoteData<Gene[]>({
+        invoke: async () => {
+            const genes = await getAllGenes();
+            return genes.sort((a, b) =>
+                a.hugoGeneSymbol.localeCompare(b.hugoGeneSymbol)
+            );
+        },
+    });
+
+    readonly loadOptions = (inputText: string, callback: any) => {
+        if (!inputText) {
+            callback([]);
         }
+        const stringCompare = (item: any) =>
+            item.hugoGeneSymbol.startsWith(inputText.toUpperCase());
+        const options = this.availableGenes.result!;
+        callback(
+            options
+                .filter(stringCompare)
+                .map(g => ({
+                    label: g.hugoGeneSymbol,
+                    value: g,
+                }))
+                .slice(0, 200)
+        );
+    };
+
+    @computed get selectedMutationMapperGene() {
+        const gene = this.availableGenes.result!.find(
+            g => g.hugoGeneSymbol === this._selectedMutationMapperGene
+        );
         return gene;
     }
 
     @action.bound
     public setSelectedMutationMapperGene(gene: Gene) {
         this._selectedMutationMapperGene = gene.hugoGeneSymbol;
+    }
+
+    @action.bound
+    public clearSelectedMutationMapperGene() {
+        this._selectedMutationMapperGene = '';
     }
 
     @autobind
@@ -434,8 +517,9 @@ export default class GroupComparisonStore extends ComparisonStore {
                 m => m.sampleId
             );
 
-            const ret = this.activeGroups.result!.reduce(
-                (aggr: { [groupId: string]: Mutation[] }, group) => {
+            const ret = this.activeGroups
+                .result!.slice(0, 2)
+                .reduce((aggr: { [groupId: string]: Mutation[] }, group) => {
                     const samplesInGroup = _(group.studies)
                         .map(g => g.samples)
                         .flatten()
@@ -451,9 +535,7 @@ export default class GroupComparisonStore extends ComparisonStore {
 
                     aggr[group.uid] = mutations;
                     return aggr;
-                },
-                {}
-            );
+                }, {});
             return ret;
         },
     });
