@@ -619,4 +619,9 @@ export default class GroupComparisonStore extends ComparisonStore {
                 this.customDriverAnnotationReport.result!.tiers.length > 0)
         );
     }
+
+    // override parent method
+    protected get enableLeftTruncation() {
+        return !!this.urlWrapper.query.enable_left_truncation;
+    }
 }

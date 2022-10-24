@@ -23,6 +23,7 @@ export type GroupComparisonURLQuery = {
     overlapStrategy?: OverlapStrategy;
     patientEnrichments?: string;
     selectedEnrichmentEventTypes: string;
+    enable_left_truncation?: string;
 };
 
 export default class GroupComparisonURLWrapper
@@ -38,6 +39,7 @@ export default class GroupComparisonURLWrapper
                 overlapStrategy: { isSessionProp: false },
                 patientEnrichments: { isSessionProp: false },
                 selectedEnrichmentEventTypes: { isSessionProp: true },
+                enable_left_truncation: { isSessionProp: false },
             },
             true,
             getServerConfig().session_url_length_threshold

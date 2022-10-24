@@ -49,7 +49,6 @@ import {
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
 import FlexAlignedCheckbox from 'shared/components/FlexAlignedCheckbox';
-import InfoIcon from 'shared/components/InfoIcon';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',

@@ -182,4 +182,9 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     public get studies() {
         return this.resultsViewStore.studies;
     }
+
+    // override parent method
+    protected get enableLeftTruncation() {
+        return !!this.urlWrapper.query.enable_left_truncation;
+    }
 }

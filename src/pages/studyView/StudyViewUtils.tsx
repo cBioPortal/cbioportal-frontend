@@ -464,8 +464,7 @@ const OPERATOR_MAP: { [op: string]: string } = {
 export function getClinicalAttributeOverlay(
     displayName: string,
     description: string,
-    clinicalAttributeId?: string,
-    isLeftTruncationAvailable?: boolean
+    clinicalAttributeId?: string
 ): JSX.Element {
     const comparisonDisplayName = displayName.toLowerCase().trim();
     let comparisonDescription = description
@@ -485,22 +484,6 @@ export function getClinicalAttributeOverlay(
             {comparisonDescription !== comparisonDisplayName && (
                 <div>{description}</div>
             )}
-            {/* {isLeftTruncationAvailable && (
-                <div>
-                    Patients enter a study when they are profiled, which can be
-                    months or even years after the initial diagnosis. To
-                    mitigate the effects of left truncation one can enable the
-                    risk-set adjustment method as described in{' '}
-                    <a href="https://pubmed.ncbi.nlm.nih.gov/34734967/">
-                        Brown et al (2022)
-                    </a>
-                    {'. '}
-                    This involves adjusting patients at risk at time t to date
-                    of sequencing rather than date of diagnosis (xx patients are
-                    excluded because they passed away before their biopsies were
-                    sequenced).
-                </div>
-            )} */}
         </div>
     );
 }

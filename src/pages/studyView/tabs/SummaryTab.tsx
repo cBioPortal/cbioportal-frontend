@@ -414,15 +414,19 @@ export class StudySummaryTab extends React.Component<
                 props.survivalPlotLeftTruncationChecked = this.store.survivalPlotLeftTruncationToggleMap?.get(
                     chartMeta!.uniqueKey
                 );
+                /* start of left truncation adjustment related settings */
+                // Currently, left truncation is only appliable for Overall Survival data
                 if (
                     this.store.isLeftTruncationAvailable.result &&
-                    chartMeta.uniqueKey === 'OS_SURVIVAL'
+                    new RegExp('OS_SURVIVAL').test(chartMeta.uniqueKey)
                 ) {
                     props.isLeftTruncationAvailable = true;
                     props.patientSurvivalsWithoutLeftTruncation = this.store.survivalPlotData.result.find(
-                        survivalType => survivalType.id === 'OS_SURVIVAL'
+                        survivalType =>
+                            new RegExp('OS_SURVIVAL').test(survivalType.id)
                     )?.survivalDataWithoutLeftTruncation;
                 }
+                /* end of left truncation adjustment related settings */
                 break;
             }
             case ChartTypeEnum.VIOLIN_PLOT_TABLE:

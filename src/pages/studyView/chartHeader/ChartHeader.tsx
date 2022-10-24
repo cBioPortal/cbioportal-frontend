@@ -705,8 +705,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         this.props.description
                                             ? this.props.description.description
                                             : '',
-                                        this.props.chartMeta.uniqueKey,
-                                        !!this.props.isLeftTruncationAvailable
+                                        this.props.chartMeta.uniqueKey
                                     )}
                                     destroyTooltipOnHide={true}
                                 >

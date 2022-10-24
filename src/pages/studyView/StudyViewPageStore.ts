@@ -27,7 +27,6 @@ import {
     ClinicalDataFilter,
     ClinicalDataMultiStudyFilter,
     ClinicalViolinPlotData,
-    ClinicalEvent,
     CopyNumberSeg,
     DataFilterValue,
     DensityPlotBin,
@@ -84,7 +83,6 @@ import {
     DataType,
     driverTierFilterActive,
     ensureBackwardCompatibilityOfFilters,
-    excludeFiltersForAttribute,
     FGA_PLOT_DOMAIN,
     FGA_VS_MUTATION_COUNT_KEY,
     findInvalidMolecularProfileIds,
@@ -3294,7 +3292,6 @@ export class StudyViewPageStore
         } else {
             this.updateSurvivalPlotLeftTruncationToggleMap(uniqueKey, true);
         }
-        // do nothing now
     }
 
     public isLogScaleToggleVisible(
@@ -5931,7 +5928,7 @@ export class StudyViewPageStore
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
             this.survivalPlots.isPending ||
-            this.survivalSequencedMonths.isPending ||
+            this.survivalEntryMonths.isPending ||
             this.shouldDisplayPatientTreatments.isPending ||
             this.sharedCustomData.isPending;
 
@@ -6619,9 +6616,9 @@ export class StudyViewPageStore
             ) {
                 this.changeChartVisibility(key, true);
             }
-            // apply left truncation for OS
+            // Currently, left truncation is only appliable for Overall Survival data
             if (
-                key === 'OS_SURVIVAL' &&
+                new RegExp('OS_SURVIVAL').test(key) &&
                 this.isLeftTruncationAvailable.result
             ) {
                 this.updateSurvivalPlotLeftTruncationToggleMap(key, true);
@@ -7681,10 +7678,10 @@ export class StudyViewPageStore
                         ],
                         filter: s => getSurvivalStatusBoolean(s, prefix),
                         survivalData: [],
-                        // Only apply to OS
+                        // Currently, left truncation is only appliable for Overall Survival data
                         isLeftTruncationAvailable:
                             !!this.isLeftTruncationAvailable.result &&
-                            new RegExp('OS', 'i').test(prefix),
+                            new RegExp('OS').test(prefix),
                         survivalDataWithoutLeftTruncation: [],
                     };
                 }
@@ -8151,11 +8148,14 @@ export class StudyViewPageStore
         } else return '';
     }
 
-    readonly survivalSequencedMonths = remoteData<
+    readonly survivalEntryMonths = remoteData<
         { [uniquePatientKey: string]: number } | undefined
     >({
         invoke: async () => {
             const studyIds = this.studyIds;
+            // Please note:
+            // The left truncation adjustment is only available for one study: heme_onc_nsclc_genie_bpc at this time
+            // clinical attributeId still need to be decided in the future
             if (
                 studyIds.length === 1 &&
                 studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
@@ -8180,9 +8180,9 @@ export class StudyViewPageStore
     });
 
     readonly isLeftTruncationAvailable = remoteData<boolean>({
-        await: () => [this.survivalSequencedMonths],
+        await: () => [this.survivalEntryMonths],
         invoke: async () => {
-            return !!this.survivalSequencedMonths.result;
+            return !_.isEmpty(this.survivalEntryMonths.result);
         },
     });
 
@@ -8192,7 +8192,7 @@ export class StudyViewPageStore
                 this.survivalData,
                 this.selectedPatientKeys,
                 this.survivalPlots,
-                this.survivalSequencedMonths,
+                this.survivalEntryMonths,
             ],
             invoke: async () => {
                 return this.survivalPlots.result.map(obj => {
@@ -8217,7 +8217,7 @@ export class StudyViewPageStore
             this.survivalData,
             this.selectedPatientKeys,
             this.survivalPlots,
-            this.survivalSequencedMonths,
+            this.survivalEntryMonths,
         ],
         invoke: async () => {
             return this.survivalPlots.result.map(obj => {
@@ -8229,7 +8229,7 @@ export class StudyViewPageStore
                     obj.filter,
                     this.survivalPlotLeftTruncationToggleMap.get(obj.id) &&
                         obj.id === 'OS_SURVIVAL'
-                        ? this.survivalSequencedMonths.result
+                        ? this.survivalEntryMonths.result
                         : undefined
                 );
                 obj.survivalDataWithoutLeftTruncation = getPatientSurvivals(
@@ -9164,19 +9164,11 @@ export class StudyViewPageStore
                             if (!acc[prefix]) {
                                 acc[prefix] = [];
                             }
-                            if (prefix === 'OS') {
-                                acc[prefix].push({
-                                    studyName: attr.studyId,
-                                    description: attr.description,
-                                    displayName: attr.displayName,
-                                } as ISurvivalDescription);
-                            } else {
-                                acc[prefix].push({
-                                    studyName: attr.studyId,
-                                    description: attr.description,
-                                    displayName: attr.displayName,
-                                } as ISurvivalDescription);
-                            }
+                            acc[prefix].push({
+                                studyName: attr.studyId,
+                                description: attr.description,
+                                displayName: attr.displayName,
+                            } as ISurvivalDescription);
                         });
                     }
                     return acc;

@@ -664,6 +664,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     )}
                                     showCurveInTooltip={true}
                                     isLeftTruncationAvailable={
+                                        // Currently, left truncation is only appliable for Overall Survival data
                                         key === 'OS'
                                             ? this.props.store
                                                   .isLeftTruncationAvailable
@@ -671,6 +672,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             : false
                                     }
                                     showLeftTruncationCheckbox={
+                                        // Currently, left truncation is only appliable for Overall Survival data
                                         key === 'OS'
                                             ? this.props.store
                                                   .isLeftTruncationAvailable
@@ -678,13 +680,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             : false
                                     }
                                     isLeftTruncationChecked={
-                                        this.props.store.adjestForLeftTruncation
+                                        this.props.store.adjustForLeftTruncation
                                     }
                                     patientsCountWithLeftTruncation={
                                         this.props.store.patientSurvivals
                                             .result![key].length
                                     }
                                     showLeftTruncationCheckboxInWarningTooltip={
+                                        // Currently, left truncation is only appliable for Overall Survival data
                                         key === 'OS'
                                             ? this.props.store
                                                   .isLeftTruncationAvailable

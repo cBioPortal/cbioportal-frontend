@@ -23,7 +23,6 @@ import {
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
-    ClinicalEvent,
     Group,
     MolecularProfile,
     MolecularProfileCasesGroupFilter,
@@ -126,7 +125,7 @@ export default abstract class ComparisonStore
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
 
-    @observable public adjestForLeftTruncation = true;
+    @observable public adjustForLeftTruncation = true;
 
     constructor(
         protected appStore: AppStore,
@@ -1868,16 +1867,24 @@ export default abstract class ComparisonStore
         },
     });
 
-    readonly survivalSequencedMonths = remoteData<
+    // This method should be updated in the child component
+    protected get enableLeftTruncation() {
+        return false;
+    }
+
+    readonly survivalEntryMonths = remoteData<
         { [uniquePatientKey: string]: number } | undefined
     >({
         await: () => [this.studies],
         invoke: async () => {
             const studyIds = this.studies.result!.map(s => s.studyId);
+            // Please note:
+            // The left truncation adjustment is only available for one study: heme_onc_nsclc_genie_bpc at this time
+            // clinical attributeId still need to be decided in the future
             if (
                 studyIds.length === 1 &&
                 studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
-                this.resultsViewStore?.urlWrapper.query.enable_left_truncation
+                this.enableLeftTruncation
             ) {
                 const data = await client.getAllClinicalDataInStudyUsingGET({
                     attributeId: 'TT_CPT_REPORT_MOS',
@@ -1894,46 +1901,23 @@ export default abstract class ComparisonStore
             } else {
                 return undefined;
             }
-            // const studyIds = this.studies.result!.map(s => s.studyId);
-            // if (studyIds.length === 1 && studyIds[0] === 'nsclc_genie_bpc') {
-            //     const allTimelineData = _.flatten(
-            //         await Promise.all(
-            //             studyIds.map(studyId =>
-            //                 internalClient.getAllClinicalEventsInStudyUsingGET({
-            //                     studyId,
-            //                 })
-            //             )
-            //         )
-            //     );
-            //     const sequencingData: ClinicalEvent[] = allTimelineData.filter(
-            //         d => d.eventType === 'Sequencing'
-            //     );
-            //     return sequencingData.reduce(
-            //         (map: { [uniquePatientKey: string]: number }, next) => {
-            //             map[next.uniquePatientKey] =
-            //                 next.startNumberOfDaysSinceDiagnosis;
-            //             return map;
-            //         },
-            //         {}
-            //     );
-            // } else {
-            //     return undefined;
-            // }
         },
     });
 
     readonly isLeftTruncationAvailable = remoteData<boolean>({
-        await: () => [this.survivalSequencedMonths],
+        await: () => [this.survivalEntryMonths],
         invoke: async () => {
-            return !!this.survivalSequencedMonths.result;
+            return !!this.survivalEntryMonths.result;
         },
     });
 
     @action.bound
     public toggleLeftTruncationSelection() {
-        this.adjestForLeftTruncation = !this.adjestForLeftTruncation;
+        this.adjustForLeftTruncation = !this.adjustForLeftTruncation;
     }
 
+    // patientSurvivalsWithoutLeftTruncation is used to compare with patient survival data with left truncation adjustment
+    // This is used for generating information about how many patients get excluded by enabling left truncation adjustment
     readonly patientSurvivalsWithoutLeftTruncation = remoteData<{
         [prefix: string]: PatientSurvival[];
     }>({
@@ -1941,7 +1925,7 @@ export default abstract class ComparisonStore
             this.survivalClinicalDataGroupByUniquePatientKey,
             this.activePatientKeysNotOverlapRemoved,
             this.survivalClinicalAttributesPrefix,
-            this.survivalSequencedMonths,
+            this.survivalEntryMonths,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -1972,7 +1956,7 @@ export default abstract class ComparisonStore
             this.survivalClinicalDataGroupByUniquePatientKey,
             this.activePatientKeysNotOverlapRemoved,
             this.survivalClinicalAttributesPrefix,
-            this.survivalSequencedMonths,
+            this.survivalEntryMonths,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -1986,8 +1970,9 @@ export default abstract class ComparisonStore
                             `${key}_STATUS`,
                             `${key}_MONTHS`,
                             s => getSurvivalStatusBoolean(s, key),
-                            this.adjestForLeftTruncation && key === 'OS'
-                                ? this.survivalSequencedMonths.result
+                            // Currently, left truncation is only appliable for Overall Survival data
+                            this.adjustForLeftTruncation && key === 'OS'
+                                ? this.survivalEntryMonths.result
                                 : undefined
                         );
                         return acc;
