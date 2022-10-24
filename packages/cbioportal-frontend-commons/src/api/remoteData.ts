@@ -24,12 +24,15 @@ export function addServiceErrorHandler(handler: errorHandler) {
 
 export const remoteData: MobxPromiseFactory = function<R>(
     input: MobxPromiseInputUnion<R>,
-    defaultResult?: R
+    defaultResult: R | undefined = undefined,
+    label?: string
 ) {
     const normalizedInput = MobxPromiseImpl.normalizeInput(
         input,
-        defaultResult
+        defaultResult,
+        label
     );
+
     const { invoke, onError } = normalizedInput;
     const mobxPromise = new MobxPromise({
         ...input,
@@ -44,7 +47,9 @@ export const remoteData: MobxPromiseFactory = function<R>(
                 });
             }
         },
+        label: normalizedInput.label,
     });
+
     return mobxPromise;
 };
 
