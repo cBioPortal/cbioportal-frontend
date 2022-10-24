@@ -8,6 +8,7 @@ import { getLoadConfig, getServerConfig } from './config/config';
 import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
 import { sendSentryMessage } from './shared/lib/tracking';
+import { FeatureFlagStore } from 'shared/FeatureFlagStore';
 
 export type SiteError = {
     errorObj: any;
@@ -16,7 +17,9 @@ export type SiteError = {
 };
 
 export class AppStore {
-    constructor() {
+    constructor(
+        public featureFlagStore: FeatureFlagStore = new FeatureFlagStore()
+    ) {
         makeObservable(this);
         getBrowserWindow().me = this;
         addServiceErrorHandler((error: any) => {
