@@ -25,6 +25,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<
             );
         },
         default: [],
+        label: 'molecularProfileCategorySet',
     });
 
     readonly flexRowContent = MakeMobxView({

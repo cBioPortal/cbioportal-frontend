@@ -52,9 +52,13 @@ export default class UserMessager extends React.Component<
     constructor(props: IUserMessagerProps) {
         super(props);
         makeObservable(this);
-        this.messageData = remoteData<IUserMessage[]>(async () => {
-            return Promise.resolve(props.messages || MESSAGE_DATA);
-        });
+        this.messageData = remoteData<IUserMessage[]>(
+            async () => {
+                return Promise.resolve(props.messages || MESSAGE_DATA);
+            },
+            undefined,
+            'messageData'
+        );
     }
     private messageData: MobxPromise<IUserMessage[]>;
 

@@ -130,23 +130,30 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
     }
 
     // tslint:disable-next-line:member-ordering
-    readonly geneStudyQueryVirtualStudy = remoteData(async () => {
-        const virtualStudyId = getServerConfig()
-            .default_cross_cancer_study_session_id;
+    readonly geneStudyQueryVirtualStudy = remoteData(
+        async () => {
+            const virtualStudyId = getServerConfig()
+                .default_cross_cancer_study_session_id;
 
-        if (ServerConfigHelpers.sessionServiceIsEnabled() && virtualStudyId) {
-            try {
-                const study = await sessionServiceClient.getVirtualStudy(
-                    virtualStudyId
-                );
-                return study;
-            } catch (ex) {
+            if (
+                ServerConfigHelpers.sessionServiceIsEnabled() &&
+                virtualStudyId
+            ) {
+                try {
+                    const study = await sessionServiceClient.getVirtualStudy(
+                        virtualStudyId
+                    );
+                    return study;
+                } catch (ex) {
+                    return null;
+                }
+            } else {
                 return null;
             }
-        } else {
-            return null;
-        }
-    }, null);
+        },
+        null,
+        'geneStudyQueryVirtualStudy'
+    );
 
     // tslint:disable-next-line:member-ordering
     private geneStudyQuery = remoteData<GeneStudyQuery>({
@@ -167,6 +174,7 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
                 });
             }
         },
+        label: 'geneStudyQuery',
     });
 
     // tslint:disable-next-line:member-ordering
@@ -340,6 +348,7 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
                 return Promise.resolve([]);
             }
         },
+        label: 'quicksearchoptions',
     });
 
     @action.bound

@@ -154,6 +154,8 @@ export async function getCoverageInformation(
         d => d.uniqueSampleKey in sampleKeyToSample
     );
 
+    console.log(patients);
+
     // query for gene panel metadata
     const genePanelIds = _.uniq(
         genePanelData.map(gpData => gpData.genePanelId).filter(id => !!id)

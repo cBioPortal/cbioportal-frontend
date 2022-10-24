@@ -572,154 +572,188 @@ export class QueryStore {
                 });
             },
         },
-        []
+        [],
+        'cancerTypes'
     );
 
     readonly cancerStudies = remoteData(
         client.getAllStudiesUsingGET({ projection: 'SUMMARY' }),
-        []
+        [],
+        'cancerStudies'
     );
-    readonly cancerStudyIdsSet = remoteData<{ [studyId: string]: boolean }>({
-        await: () => [this.cancerStudies],
-        invoke: async () => {
-            return stringListToSet(
-                this.cancerStudies.result.map(x => x.studyId)
-            );
+    readonly cancerStudyIdsSet = remoteData<{ [studyId: string]: boolean }>(
+        {
+            await: () => [this.cancerStudies],
+            invoke: async () => {
+                return stringListToSet(
+                    this.cancerStudies.result.map(x => x.studyId)
+                );
+            },
         },
-        default: {},
-    });
+        {},
+        'cancerStudyIdSet'
+    );
 
     private readonly physicalStudiesIdsSet = remoteData<{
         [studyId: string]: string[];
-    }>({
-        await: () => [this.cancerStudies],
-        invoke: async () => {
-            return this.cancerStudies.result.reduce(
-                (obj: { [studyId: string]: string[] }, item) => {
-                    obj[item.studyId] = [item.studyId];
-                    return obj;
-                },
-                {}
-            );
+    }>(
+        {
+            await: () => [this.cancerStudies],
+            invoke: async () => {
+                return this.cancerStudies.result.reduce(
+                    (obj: { [studyId: string]: string[] }, item) => {
+                        obj[item.studyId] = [item.studyId];
+                        return obj;
+                    },
+                    {}
+                );
+            },
         },
-        default: {},
-    });
+        {},
+        'physicalStudiesIdsSet'
+    );
 
     private readonly virtualStudiesIdsSet = remoteData<{
         [studyId: string]: string[];
-    }>({
-        await: () => [this.userVirtualStudies],
-        invoke: async () => {
-            return this.userVirtualStudies.result.reduce(
-                (obj: { [studyId: string]: string[] }, item) => {
-                    obj[item.id] = [item.id];
-                    return obj;
-                },
-                {}
-            );
+    }>(
+        {
+            await: () => [this.userVirtualStudies],
+            invoke: async () => {
+                return this.userVirtualStudies.result.reduce(
+                    (obj: { [studyId: string]: string[] }, item) => {
+                        obj[item.id] = [item.id];
+                        return obj;
+                    },
+                    {}
+                );
+            },
+            default: {},
         },
-        default: {},
-    });
+        {},
+        'virtualStudiesIdsSet'
+    );
 
     readonly sharedQueriedStudiesSet = remoteData<{
         [studyId: string]: string[];
-    }>({
-        await: () => [this.physicalStudiesIdsSet, this.virtualStudiesIdsSet],
-        invoke: async () => {
-            let physicalStudiesIdsSet: { [studyId: string]: string[] } = this
-                .physicalStudiesIdsSet.result;
-            let virtualStudiesIdsSet: { [studyId: string]: string[] } = this
-                .virtualStudiesIdsSet.result;
+    }>(
+        {
+            await: () => [
+                this.physicalStudiesIdsSet,
+                this.virtualStudiesIdsSet,
+            ],
+            invoke: async () => {
+                let physicalStudiesIdsSet: {
+                    [studyId: string]: string[];
+                } = this.physicalStudiesIdsSet.result;
+                let virtualStudiesIdsSet: { [studyId: string]: string[] } = this
+                    .virtualStudiesIdsSet.result;
 
-            let knownSelectableIdsSet: {
-                [studyId: string]: string[];
-            } = Object.assign({}, physicalStudiesIdsSet, virtualStudiesIdsSet);
+                let knownSelectableIdsSet: {
+                    [studyId: string]: string[];
+                } = Object.assign(
+                    {},
+                    physicalStudiesIdsSet,
+                    virtualStudiesIdsSet
+                );
 
-            //queried id that are not selectable(this would mostly be shared virtual study)
-            const unknownQueriedIds: string[] = Array.from(
-                this._defaultSelectedIds.keys()
-            ).filter(id => !knownSelectableIdsSet[id]);
+                //queried id that are not selectable(this would mostly be shared virtual study)
+                const unknownQueriedIds: string[] = Array.from(
+                    this._defaultSelectedIds.keys()
+                ).filter(id => !knownSelectableIdsSet[id]);
 
-            let result: { [studyId: string]: string[] } = {};
+                let result: { [studyId: string]: string[] } = {};
 
-            await Promise.all(
-                unknownQueriedIds.map(id => {
-                    return new Promise((resolve, reject) => {
-                        sessionServiceClient
-                            .getVirtualStudy(id)
-                            .then(virtualStudy => {
-                                //physical study ids iin virtual study
-                                let ids = virtualStudy.data.studies.map(
-                                    study => study.id
-                                );
-                                //unknown/unauthorized studies within virtual study
-                                let unKnownPhysicalStudyIds = ids.filter(
-                                    id => !physicalStudiesIdsSet[id]
-                                );
-                                if (_.isEmpty(unKnownPhysicalStudyIds)) {
-                                    result[id] = ids;
-                                }
-                                resolve();
-                            })
-                            .catch(() => {
-                                //error is thrown when the id is not found
-                                resolve();
-                            });
-                    });
-                })
-            );
-            return result;
+                await Promise.all(
+                    unknownQueriedIds.map(id => {
+                        return new Promise((resolve, reject) => {
+                            sessionServiceClient
+                                .getVirtualStudy(id)
+                                .then(virtualStudy => {
+                                    //physical study ids iin virtual study
+                                    let ids = virtualStudy.data.studies.map(
+                                        study => study.id
+                                    );
+                                    //unknown/unauthorized studies within virtual study
+                                    let unKnownPhysicalStudyIds = ids.filter(
+                                        id => !physicalStudiesIdsSet[id]
+                                    );
+                                    if (_.isEmpty(unKnownPhysicalStudyIds)) {
+                                        result[id] = ids;
+                                    }
+                                    resolve();
+                                })
+                                .catch(() => {
+                                    //error is thrown when the id is not found
+                                    resolve();
+                                });
+                        });
+                    })
+                );
+                return result;
+            },
         },
-        default: {},
-    });
+        {},
+        'sharedQueriedStudiesSet'
+    );
 
     private readonly physicalStudiesSet = remoteData<{
         [studyId: string]: CancerStudy;
-    }>({
-        await: () => [this.cancerStudies],
-        invoke: async () => {
-            return this.cancerStudies.result.reduce(
-                (obj: { [studyId: string]: CancerStudy }, item) => {
-                    obj[item.studyId] = item;
-                    return obj;
-                },
-                {} as { [studyId: string]: CancerStudy }
-            );
+    }>(
+        {
+            await: () => [this.cancerStudies],
+            invoke: async () => {
+                return this.cancerStudies.result.reduce(
+                    (obj: { [studyId: string]: CancerStudy }, item) => {
+                        obj[item.studyId] = item;
+                        return obj;
+                    },
+                    {} as { [studyId: string]: CancerStudy }
+                );
+            },
+            default: {},
         },
-        default: {},
-    });
+        {},
+        'physicalStudiesSet'
+    );
 
-    readonly userVirtualStudies = remoteData(async () => {
-        if (
-            ServerConfigHelpers.sessionServiceIsEnabled() &&
-            this.userLoggedIn
-        ) {
-            try {
-                const studies = await sessionServiceClient.getUserVirtualStudies();
-                return studies;
-            } catch (ex) {
+    readonly userVirtualStudies = remoteData(
+        async () => {
+            if (
+                ServerConfigHelpers.sessionServiceIsEnabled() &&
+                this.userLoggedIn
+            ) {
+                try {
+                    const studies = await sessionServiceClient.getUserVirtualStudies();
+                    return studies;
+                } catch (ex) {
+                    return [];
+                }
+            } else {
                 return [];
             }
-        } else {
-            return [];
-        }
-    }, []);
+        },
+        [],
+        'userVirtualStudies'
+    );
 
     private readonly userVirtualStudiesSet = remoteData<{
         [studyId: string]: VirtualStudy;
-    }>({
-        await: () => [this.userVirtualStudies],
-        invoke: async () => {
-            return this.userVirtualStudies.result.reduce(
-                (obj: { [studyId: string]: VirtualStudy }, item) => {
-                    obj[item.id] = item;
-                    return obj;
-                },
-                {}
-            );
+    }>(
+        {
+            await: () => [this.userVirtualStudies],
+            invoke: async () => {
+                return this.userVirtualStudies.result.reduce(
+                    (obj: { [studyId: string]: VirtualStudy }, item) => {
+                        obj[item.id] = item;
+                        return obj;
+                    },
+                    {}
+                );
+            },
         },
-        default: {},
-    });
+        {},
+        'userVirtualStudiesSet'
+    );
 
     private readonly sharedVirtualStudiesSet = remoteData<{
         [studyId: string]: VirtualStudy;
@@ -771,6 +805,7 @@ export class QueryStore {
             return result;
         },
         default: {},
+        label: 'sharedVirtualStudiesSet',
     });
 
     //this is mainly used when custom case set is selected
@@ -898,6 +933,7 @@ export class QueryStore {
                 }
             }
         },
+        label: 'selectableStudySet',
     });
 
     @action setCaseIds(studySampleMap: { [id: string]: string[] }) {
@@ -922,6 +958,7 @@ export class QueryStore {
             return ids.filter(id => !(id in _selectableStudiesSet));
         },
         default: [],
+        label: 'unknownStudyIds',
     });
 
     readonly molecularProfilesInSelectedStudies = remoteData<
@@ -946,6 +983,7 @@ export class QueryStore {
                 this.profileFilterSet = undefined;
             }
         },
+        label: 'molecularProfilesInSelectedStudies',
     });
 
     readonly sampleListInSelectedStudies = remoteData<SampleList[]>({
@@ -977,6 +1015,7 @@ export class QueryStore {
                 this._selectedSampleListId = undefined;
             }
         },
+        label: 'sampleListInSelectedStudies',
     });
 
     readonly validProfileIdSetForSelectedStudies = remoteData({
@@ -1012,6 +1051,7 @@ export class QueryStore {
             return stringListToSet(validProfileIds);
         },
         default: {},
+        label: 'validProfileIdSetForSelectedStudies',
     });
 
     readonly profiledSamplesCount = remoteData<{
@@ -1034,6 +1074,7 @@ export class QueryStore {
             w_mut_cna: 0,
             all: 0,
         },
+        label: 'profiledSamplesCount',
     });
 
     @computed get sampleCountForSelectedStudies() {
@@ -1061,6 +1102,7 @@ export class QueryStore {
                 this._selectedSampleListId = undefined;
             }
         },
+        label: 'sampleLists',
     });
 
     readonly mutSigForSingleStudy = remoteData({
@@ -1073,6 +1115,7 @@ export class QueryStore {
             });
         },
         default: [],
+        label: 'mutSigForSingleStudy',
     });
 
     readonly gisticForSingleStudy = remoteData({
@@ -1087,16 +1130,19 @@ export class QueryStore {
             );
         },
         default: [],
+        label: 'gisticForSingleStudy',
     });
 
     readonly genes = remoteData({
         invoke: () => this.invokeGenesLater(this.geneIds),
         default: { found: [], suggestions: [] },
+        label: 'genes',
     });
 
     readonly genesets = remoteData({
         invoke: () => this.invokeGenesetsLater(this.genesetIds),
         default: { found: [], invalid: [] },
+        label: 'genesets',
     });
 
     private invokeGenesLater = debounceAsync(
@@ -1225,6 +1271,7 @@ export class QueryStore {
             });
         },
         default: [],
+        label: 'asyncCustomCaseSet',
     });
 
     private invokeCustomCaseSetLater = debounceAsync(
@@ -1786,6 +1833,7 @@ export class QueryStore {
             );
             return hierarchyData;
         },
+        label: 'hierarchyData',
     });
 
     readonly volcanoPlotTableData = remoteData<Geneset[]>({

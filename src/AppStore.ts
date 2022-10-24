@@ -138,5 +138,6 @@ export class AppStore {
             }
             return undefined;
         },
+        label: 'portalVersion',
     });
 }

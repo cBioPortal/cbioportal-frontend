@@ -2209,128 +2209,155 @@ export class ResultsViewPageStore
         },
     });
 
-    readonly studyToMolecularProfiles = remoteData({
-        await: () => [this.molecularProfilesInStudies],
-        invoke: () => {
-            return Promise.resolve(
-                _.groupBy(
-                    this.molecularProfilesInStudies.result!,
-                    profile => profile.studyId
-                )
-            );
+    readonly studyToMolecularProfiles = remoteData(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: () => {
+                return Promise.resolve(
+                    _.groupBy(
+                        this.molecularProfilesInStudies.result!,
+                        profile => profile.studyId
+                    )
+                );
+            },
         },
-    });
+        undefined,
+        'studyToMolecularProfiles'
+    );
 
-    readonly genePanelDataForAllProfiles = remoteData<GenePanelData[]>({
-        // fetch all gene panel data for profiles
-        // We do it this way - fetch all data for profiles, then filter based on samples -
-        //  because
-        //  (1) this means sending less data as parameters
-        //  (2) this means the requests can be cached on the server based on the molecular profile id
-        //  (3) We can initiate the gene panel data call before the samples call completes, thus
-        //      putting more response waiting time in parallel
-        await: () => [this.molecularProfilesInStudies],
-        invoke: () =>
-            client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
-                genePanelDataMultipleStudyFilter: {
-                    molecularProfileIds: this.molecularProfilesInStudies.result.map(
-                        p => p.molecularProfileId
-                    ),
-                } as GenePanelDataMultipleStudyFilter,
-            }),
-    });
+    readonly genePanelDataForAllProfiles = remoteData<GenePanelData[]>(
+        {
+            // fetch all gene panel data for profiles
+            // We do it this way - fetch all data for profiles, then filter based on samples -
+            //  because
+            //  (1) this means sending less data as parameters
+            //  (2) this means the requests can be cached on the server based on the molecular profile id
+            //  (3) We can initiate the gene panel data call before the samples call completes, thus
+            //      putting more response waiting time in parallel
+            await: () => [this.molecularProfilesInStudies],
+            invoke: () =>
+                client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
+                    genePanelDataMultipleStudyFilter: {
+                        molecularProfileIds: this.molecularProfilesInStudies.result.map(
+                            p => p.molecularProfileId
+                        ),
+                    } as GenePanelDataMultipleStudyFilter,
+                }),
+        },
+        undefined,
+        'genePanelDataForAllProfiles'
+    );
 
-    readonly coverageInformation = remoteData<CoverageInformation>({
-        await: () => [
-            this.genePanelDataForAllProfiles,
-            this.sampleKeyToSample,
-            this.patients,
-            this.genes,
-        ],
-        invoke: () =>
-            getCoverageInformation(
-                this.genePanelDataForAllProfiles.result!,
-                this.sampleKeyToSample.result!,
-                this.patients.result!,
-                this.genes.result!
-            ),
-    });
+    readonly coverageInformation = remoteData<CoverageInformation>(
+        {
+            await: () => [
+                this.genePanelDataForAllProfiles,
+                this.sampleKeyToSample,
+                this.patients,
+                this.genes,
+            ],
+            invoke: () =>
+                getCoverageInformation(
+                    this.genePanelDataForAllProfiles.result!,
+                    this.sampleKeyToSample.result!,
+                    this.patients.result!,
+                    this.genes.result!
+                ),
+        },
+        undefined,
+        'coverageInformation'
+    );
 
     readonly filteredSequencedSampleKeysByGene = remoteData<{
         [hugoGeneSymbol: string]: string[];
-    }>({
-        await: () => [
-            this.filteredSamples,
-            this.genes,
-            this.coverageInformation,
-            this.selectedMolecularProfiles,
-        ],
-        invoke: () => {
-            const genePanelInformation = this.coverageInformation.result!;
-            const profileIds = this.selectedMolecularProfiles.result!.map(
-                p => p.molecularProfileId
-            );
-            return Promise.resolve(
-                this.genes.result!.reduce(
-                    (
-                        map: { [hugoGeneSymbol: string]: string[] },
-                        next: Gene
-                    ) => {
-                        map[next.hugoGeneSymbol] = this.filteredSamples
-                            .result!.map(s => s.uniqueSampleKey)
-                            .filter(k => {
-                                return _.some(
-                                    isSampleProfiledInMultiple(
-                                        k,
-                                        profileIds,
-                                        genePanelInformation,
-                                        next.hugoGeneSymbol
-                                    )
-                                );
-                            });
-                        return map;
-                    },
-                    {}
-                )
-            );
+    }>(
+        {
+            await: () => [
+                this.filteredSamples,
+                this.genes,
+                this.coverageInformation,
+                this.selectedMolecularProfiles,
+            ],
+            invoke: () => {
+                const genePanelInformation = this.coverageInformation.result!;
+                const profileIds = this.selectedMolecularProfiles.result!.map(
+                    p => p.molecularProfileId
+                );
+                return Promise.resolve(
+                    this.genes.result!.reduce(
+                        (
+                            map: { [hugoGeneSymbol: string]: string[] },
+                            next: Gene
+                        ) => {
+                            map[next.hugoGeneSymbol] = this.filteredSamples
+                                .result!.map(s => s.uniqueSampleKey)
+                                .filter(k => {
+                                    return _.some(
+                                        isSampleProfiledInMultiple(
+                                            k,
+                                            profileIds,
+                                            genePanelInformation,
+                                            next.hugoGeneSymbol
+                                        )
+                                    );
+                                });
+                            return map;
+                        },
+                        {}
+                    )
+                );
+            },
         },
-    });
+        undefined,
+        'filteredSequencedSampleKeysByGene'
+    );
 
     readonly filteredSequencedPatientKeysByGene = remoteData<{
         [hugoGeneSymbol: string]: string[];
-    }>({
-        await: () => [
-            this.sampleKeyToSample,
-            this.filteredSequencedSampleKeysByGene,
-        ],
-        invoke: async () => {
-            const sampleKeyToSample = this.sampleKeyToSample.result!;
-            return _.mapValues(
-                this.filteredSequencedSampleKeysByGene.result!,
-                sampleKeys => {
-                    return _.chain(sampleKeys)
-                        .map(k => sampleKeyToSample[k].uniquePatientKey)
-                        .uniq()
-                        .value();
-                }
-            );
+    }>(
+        {
+            await: () => [
+                this.sampleKeyToSample,
+                this.filteredSequencedSampleKeysByGene,
+            ],
+            invoke: async () => {
+                const sampleKeyToSample = this.sampleKeyToSample.result!;
+                return _.mapValues(
+                    this.filteredSequencedSampleKeysByGene.result!,
+                    sampleKeys => {
+                        return _.chain(sampleKeys)
+                            .map(k => sampleKeyToSample[k].uniquePatientKey)
+                            .uniq()
+                            .value();
+                    }
+                );
+            },
         },
-    });
+        undefined,
+        'filteredSequencedPatientKeysByGene'
+    );
 
-    readonly filteredAlteredSampleKeys = remoteData({
-        await: () => [this.filteredSamples, this.oqlFilteredCaseAggregatedData],
-        invoke: () => {
-            const caseAggregatedData = this.oqlFilteredCaseAggregatedData
-                .result!.samples;
-            return Promise.resolve(
-                this.filteredSamples
-                    .result!.map(s => s.uniqueSampleKey)
-                    .filter(sampleKey => {
-                        return caseAggregatedData[sampleKey].length > 0;
-                    })
-            );
+    readonly filteredAlteredSampleKeys = remoteData(
+        {
+            await: () => [
+                this.filteredSamples,
+                this.oqlFilteredCaseAggregatedData,
+            ],
+            invoke: () => {
+                const caseAggregatedData = this.oqlFilteredCaseAggregatedData
+                    .result!.samples;
+                return Promise.resolve(
+                    this.filteredSamples
+                        .result!.map(s => s.uniqueSampleKey)
+                        .filter(sampleKey => {
+                            return caseAggregatedData[sampleKey].length > 0;
+                        })
+                );
+            },
         },
-    });
+        undefined,
+        'filteredAlteredSampleKeys'
+    );
 
     readonly filteredAlteredSamples = remoteData<Sample[]>(
         {
@@ -2346,148 +2373,178 @@ export class ResultsViewPageStore
                 );
             },
         },
-        []
+        [],
+        'filteredAlteredSamples'
     );
 
-    readonly filteredAlteredPatients = remoteData({
-        await: () => [
-            this.filteredPatients,
-            this.oqlFilteredCaseAggregatedData,
-        ],
-        invoke: () => {
-            const caseAggregatedData = this.oqlFilteredCaseAggregatedData
-                .result!;
-            return Promise.resolve(
-                this.filteredPatients.result!.filter(
-                    patient =>
-                        !!caseAggregatedData.patients[patient.uniquePatientKey]
-                            .length
-                )
-            );
+    readonly filteredAlteredPatients = remoteData(
+        {
+            await: () => [
+                this.filteredPatients,
+                this.oqlFilteredCaseAggregatedData,
+            ],
+            invoke: () => {
+                const caseAggregatedData = this.oqlFilteredCaseAggregatedData
+                    .result!;
+                return Promise.resolve(
+                    this.filteredPatients.result!.filter(
+                        patient =>
+                            !!caseAggregatedData.patients[
+                                patient.uniquePatientKey
+                            ].length
+                    )
+                );
+            },
         },
-    });
+        undefined,
+        'filteredAlteredPatients'
+    );
 
-    readonly filteredAlteredPatientKeys = remoteData({
-        await: () => [this.filteredAlteredPatients],
-        invoke: () =>
-            Promise.resolve(
-                this.filteredAlteredPatients.result!.map(
-                    p => p.uniquePatientKey
-                )
-            ),
-    });
-
-    readonly filteredUnalteredAndProfiledSamples = remoteData({
-        await: () => [
-            this.filteredSamples,
-            this.oqlFilteredCaseAggregatedData,
-            this.totallyUnprofiledSamples,
-        ],
-        invoke: () => {
-            const caseAggregatedData = this.oqlFilteredCaseAggregatedData
-                .result!;
-            const unprofiledSamples = _.keyBy(
-                this.totallyUnprofiledSamples.result!,
-                s => s.uniqueSampleKey
-            );
-            return Promise.resolve(
-                this.filteredSamples.result!.filter(
-                    sample =>
-                        !caseAggregatedData.samples[sample.uniqueSampleKey]
-                            .length &&
-                        !(sample.uniqueSampleKey in unprofiledSamples)
-                )
-            );
+    readonly filteredAlteredPatientKeys = remoteData(
+        {
+            await: () => [this.filteredAlteredPatients],
+            invoke: () =>
+                Promise.resolve(
+                    this.filteredAlteredPatients.result!.map(
+                        p => p.uniquePatientKey
+                    )
+                ),
         },
-    });
+        undefined,
+        'filteredAlteredPatientKeys'
+    );
+
+    readonly filteredUnalteredAndProfiledSamples = remoteData(
+        {
+            await: () => [
+                this.filteredSamples,
+                this.oqlFilteredCaseAggregatedData,
+                this.totallyUnprofiledSamples,
+            ],
+            invoke: () => {
+                const caseAggregatedData = this.oqlFilteredCaseAggregatedData
+                    .result!;
+                const unprofiledSamples = _.keyBy(
+                    this.totallyUnprofiledSamples.result!,
+                    s => s.uniqueSampleKey
+                );
+                return Promise.resolve(
+                    this.filteredSamples.result!.filter(
+                        sample =>
+                            !caseAggregatedData.samples[sample.uniqueSampleKey]
+                                .length &&
+                            !(sample.uniqueSampleKey in unprofiledSamples)
+                    )
+                );
+            },
+        },
+        undefined,
+        'filteredUnalteredAndProfiledSamples'
+    );
 
     readonly oqlFilteredAlterationsByGene = remoteData<{
         [hugoGeneSymbol: string]: ExtendedAlteration[];
-    }>({
-        await: () => [this.genes, this.oqlFilteredAlterations],
-        invoke: () => {
-            // first group them by gene symbol
-            const groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
-                (
-                    agg: { [getHugoGeneSymbol: string]: ExtendedAlteration[] },
-                    alt
-                ) => {
-                    // a structural variant can apply to two genes, so we have account for the alteration twice
-                    if (
-                        alt.alterationType ===
-                        AlterationTypeConstants.STRUCTURAL_VARIANT
-                    ) {
-                        if (alt.site1HugoSymbol) {
-                            agg[alt.site1HugoSymbol]
-                                ? agg[alt.site1HugoSymbol].push(alt)
-                                : (agg[alt.site1HugoSymbol] = [alt]);
+    }>(
+        {
+            await: () => [this.genes, this.oqlFilteredAlterations],
+            invoke: () => {
+                // first group them by gene symbol
+                const groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
+                    (
+                        agg: {
+                            [getHugoGeneSymbol: string]: ExtendedAlteration[];
+                        },
+                        alt
+                    ) => {
+                        // a structural variant can apply to two genes, so we have account for the alteration twice
+                        if (
+                            alt.alterationType ===
+                            AlterationTypeConstants.STRUCTURAL_VARIANT
+                        ) {
+                            if (alt.site1HugoSymbol) {
+                                agg[alt.site1HugoSymbol]
+                                    ? agg[alt.site1HugoSymbol].push(alt)
+                                    : (agg[alt.site1HugoSymbol] = [alt]);
+                            }
+                            if (alt.site1HugoSymbol) {
+                                agg[alt.site2HugoSymbol]
+                                    ? agg[alt.site2HugoSymbol].push(alt)
+                                    : (agg[alt.site2HugoSymbol] = [alt]);
+                            }
+                        } else {
+                            agg[alt.hugoGeneSymbol]
+                                ? agg[alt.hugoGeneSymbol].push(alt)
+                                : (agg[alt.hugoGeneSymbol] = [alt]);
                         }
-                        if (alt.site1HugoSymbol) {
-                            agg[alt.site2HugoSymbol]
-                                ? agg[alt.site2HugoSymbol].push(alt)
-                                : (agg[alt.site2HugoSymbol] = [alt]);
-                        }
-                    } else {
-                        agg[alt.hugoGeneSymbol]
-                            ? agg[alt.hugoGeneSymbol].push(alt)
-                            : (agg[alt.hugoGeneSymbol] = [alt]);
-                    }
-                    return agg;
-                },
-                {}
-            );
-
-            // kind of ugly but this fixes a bug where sort order of genes not respected
-            // yes we are relying on add order of js map. in theory not guaranteed, in practice guaranteed
-            const ret = this.genes.result!.reduce(
-                (
-                    memo: { [hugoGeneSymbol: string]: ExtendedAlteration[] },
-                    gene: Gene
-                ) => {
-                    memo[gene.hugoGeneSymbol] =
-                        groupedGenesMap[gene.hugoGeneSymbol];
-                    return memo;
-                },
-                {}
-            );
-
-            return Promise.resolve(ret);
-        },
-    });
-
-    readonly defaultOQLQuery = remoteData({
-        await: () => [this.selectedMolecularProfiles],
-        invoke: () => {
-            const profileTypes = _.uniq(
-                _.map(
-                    this.selectedMolecularProfiles.result,
-                    profile => profile.molecularAlterationType
-                )
-            );
-            return Promise.resolve(
-                buildDefaultOQLProfile(
-                    profileTypes,
-                    this.zScoreThreshold,
-                    this.rppaScoreThreshold
-                )
-            );
-        },
-    });
-
-    readonly defaultOQLQueryAlterations = remoteData<Alteration[] | false>({
-        await: () => [this.defaultOQLQuery],
-        invoke: () => {
-            if (this.defaultOQLQuery.result) {
-                return Promise.resolve(
-                    (oql_parser.parse(
-                        `DUMMYGENE: ${this.defaultOQLQuery.result!}`
-                    )![0] as SingleGeneQuery).alterations
+                        return agg;
+                    },
+                    {}
                 );
-            } else {
-                return Promise.resolve(false);
-            }
+
+                // kind of ugly but this fixes a bug where sort order of genes not respected
+                // yes we are relying on add order of js map. in theory not guaranteed, in practice guaranteed
+                const ret = this.genes.result!.reduce(
+                    (
+                        memo: {
+                            [hugoGeneSymbol: string]: ExtendedAlteration[];
+                        },
+                        gene: Gene
+                    ) => {
+                        memo[gene.hugoGeneSymbol] =
+                            groupedGenesMap[gene.hugoGeneSymbol];
+                        return memo;
+                    },
+                    {}
+                );
+
+                return Promise.resolve(ret);
+            },
         },
-    });
+        undefined,
+        'oqlFilteredAlterationsByGene'
+    );
+
+    readonly defaultOQLQuery = remoteData(
+        {
+            await: () => [this.selectedMolecularProfiles],
+            invoke: () => {
+                const profileTypes = _.uniq(
+                    _.map(
+                        this.selectedMolecularProfiles.result,
+                        profile => profile.molecularAlterationType
+                    )
+                );
+                return Promise.resolve(
+                    buildDefaultOQLProfile(
+                        profileTypes,
+                        this.zScoreThreshold,
+                        this.rppaScoreThreshold
+                    )
+                );
+            },
+        },
+        undefined,
+        'defaultOQLQuery'
+    );
+
+    readonly defaultOQLQueryAlterations = remoteData<Alteration[] | false>(
+        {
+            await: () => [this.defaultOQLQuery],
+            invoke: () => {
+                if (this.defaultOQLQuery.result) {
+                    return Promise.resolve(
+                        (oql_parser.parse(
+                            `DUMMYGENE: ${this.defaultOQLQuery.result!}`
+                        )![0] as SingleGeneQuery).alterations
+                    );
+                } else {
+                    return Promise.resolve(false);
+                }
+            },
+        },
+        undefined,
+        'defaultOQLQueryAlterations'
+    );
 
     readonly survivalClinicalAttributesPrefix = remoteData({
         await: () => [this.clinicalAttributes],
@@ -2500,58 +2557,69 @@ export class ResultsViewPageStore
         },
     });
 
-    readonly survivalClinicalDataExists = remoteData<boolean>({
-        await: () => [
-            this.clinicalAttributeIdToAvailableSampleCount,
-            this.survivalClinicalAttributesPrefix,
-        ],
-        invoke: async () => {
-            const attributeNames = _.reduce(
-                this.survivalClinicalAttributesPrefix.result,
-                (attributeNames, prefix: string) => {
-                    attributeNames.push(prefix + '_STATUS');
-                    attributeNames.push(prefix + '_MONTHS');
-                    return attributeNames;
-                },
-                [] as string[]
-            );
-            if (attributeNames.length === 0) {
-                return false;
-            }
+    readonly survivalClinicalDataExists = remoteData<boolean>(
+        {
+            await: () => [
+                this.clinicalAttributeIdToAvailableSampleCount,
+                this.survivalClinicalAttributesPrefix,
+            ],
+            invoke: async () => {
+                const attributeNames = _.reduce(
+                    this.survivalClinicalAttributesPrefix.result,
+                    (attributeNames, prefix: string) => {
+                        attributeNames.push(prefix + '_STATUS');
+                        attributeNames.push(prefix + '_MONTHS');
+                        return attributeNames;
+                    },
+                    [] as string[]
+                );
+                if (attributeNames.length === 0) {
+                    return false;
+                }
 
-            const clinicalAttributeIdToAvailableSampleCount =
-                this.clinicalAttributeIdToAvailableSampleCount.result || {};
+                const clinicalAttributeIdToAvailableSampleCount =
+                    this.clinicalAttributeIdToAvailableSampleCount.result || {};
 
-            return _.some(
-                attributeNames,
-                attributeName =>
-                    clinicalAttributeIdToAvailableSampleCount[attributeName] !==
-                        undefined &&
-                    clinicalAttributeIdToAvailableSampleCount[attributeName] > 0
-            );
+                return _.some(
+                    attributeNames,
+                    attributeName =>
+                        clinicalAttributeIdToAvailableSampleCount[
+                            attributeName
+                        ] !== undefined &&
+                        clinicalAttributeIdToAvailableSampleCount[
+                            attributeName
+                        ] > 0
+                );
+            },
         },
-    });
+        undefined,
+        'survivalClinicalDataExists'
+    );
 
     readonly filteredSamplesByDetailedCancerType = remoteData<{
         [cancerType: string]: Sample[];
-    }>({
-        await: () => [this.filteredSamples, this.clinicalDataForSamples],
-        invoke: () => {
-            let groupedSamples = this.groupSamplesByCancerType(
-                this.clinicalDataForSamples.result,
-                this.filteredSamples.result!,
-                'CANCER_TYPE'
-            );
-            if (_.size(groupedSamples) === 1) {
-                groupedSamples = this.groupSamplesByCancerType(
+    }>(
+        {
+            await: () => [this.filteredSamples, this.clinicalDataForSamples],
+            invoke: () => {
+                let groupedSamples = this.groupSamplesByCancerType(
                     this.clinicalDataForSamples.result,
                     this.filteredSamples.result!,
-                    'CANCER_TYPE_DETAILED'
+                    'CANCER_TYPE'
                 );
-            }
-            return Promise.resolve(groupedSamples);
+                if (_.size(groupedSamples) === 1) {
+                    groupedSamples = this.groupSamplesByCancerType(
+                        this.clinicalDataForSamples.result,
+                        this.filteredSamples.result!,
+                        'CANCER_TYPE_DETAILED'
+                    );
+                }
+                return Promise.resolve(groupedSamples);
+            },
         },
-    });
+        undefined,
+        'filteredSamplesByDetailedCancerType'
+    );
 
     readonly filteredSamplesExtendedWithClinicalData = remoteData<
         ExtendedSample[]
