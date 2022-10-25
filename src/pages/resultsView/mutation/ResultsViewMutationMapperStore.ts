@@ -50,7 +50,7 @@ import CategoricalNamespaceColumnFormatter from 'shared/components/mutationTable
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
-        protected mutationMapperConfig: IServerConfig,
+        protected mutationMapperServerConfig: IServerConfig,
         protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
         public gene: Gene,
         public samples: MobxPromise<SampleIdentifier[]>,
@@ -101,7 +101,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         public getTranscriptId?: () => string
     ) {
         super(
-            mutationMapperConfig,
+            mutationMapperServerConfig,
             (() => {
                 mutationMapperStoreConfig['filterAppliersOverride']![
                     MutationTableColumnType.GNOMAD
