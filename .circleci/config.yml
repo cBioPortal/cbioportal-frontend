@@ -366,7 +366,7 @@ workflows:
               ignore:
                 - master
                 - release-*
-                - rc
+ #               - rc
       - unit_tests_main:
           requires:
             - install
@@ -396,7 +396,7 @@ workflows:
             branches:
               only:
                 - master
-                - rc
+#                - rc
     jobs:
       - install
       - api_sync:
