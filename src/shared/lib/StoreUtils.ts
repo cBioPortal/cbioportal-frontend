@@ -165,7 +165,7 @@ export async function fetchMutationData(
 export async function fetchVariantAnnotationsByMutation(
     mutations: Mutation[],
     fields: string[] = [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
-    isoformOverrideSource: string = 'uniprot',
+    isoformOverrideSource: string = 'mskcc',
     client: GenomeNexusAPI = genomeNexusClient
 ) {
     return fetchDefaultVariantAnnotationsByMutation(
@@ -179,7 +179,7 @@ export async function fetchVariantAnnotationsByMutation(
 export async function fetchVariantAnnotationsIndexedByGenomicLocation(
     mutations: Mutation[],
     fields: string[] = [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
-    isoformOverrideSource: string = 'uniprot',
+    isoformOverrideSource: string = 'mskcc',
     client: GenomeNexusAPI = genomeNexusClient
 ) {
     return fetchDefaultVariantAnnotationsIndexedByGenomicLocation(

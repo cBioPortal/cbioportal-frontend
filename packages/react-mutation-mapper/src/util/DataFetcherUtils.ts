@@ -68,7 +68,7 @@ export function getUrl(urlTemplate: string, templateVariables: any) {
 export async function fetchVariantAnnotationsByMutation(
     mutations: Partial<Mutation>[],
     fields: string[] = ['annotation_summary'],
-    isoformOverrideSource: string = 'uniprot',
+    isoformOverrideSource: string = 'mskcc',
     client: Partial<GenomeNexusAPI> = DEFAULT_GENOME_NEXUS_CLIENT
 ) {
     const genomicLocations = uniqueGenomicLocations(mutations);
@@ -86,7 +86,7 @@ export async function fetchVariantAnnotationsByMutation(
 export async function fetchVariantAnnotationsIndexedByGenomicLocation(
     mutations: Partial<Mutation>[],
     fields: string[] = ['annotation_summary'],
-    isoformOverrideSource: string = 'uniprot',
+    isoformOverrideSource: string = 'mskcc',
     client: Partial<GenomeNexusAPI> = DEFAULT_GENOME_NEXUS_CLIENT
 ) {
     const variantAnnotations = await fetchVariantAnnotationsByMutation(

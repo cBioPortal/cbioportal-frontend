@@ -16,7 +16,7 @@ export function defaultGNFetch(
         return fetchVariantAnnotationsByMutation(
             queries,
             [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
-            getServerConfig().isoformOverrideSource
+            getServerConfig().genomenexus_isoform_override_source
         );
     } else {
         return Promise.resolve([]);

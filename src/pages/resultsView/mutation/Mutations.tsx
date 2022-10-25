@@ -6,7 +6,7 @@ import {
     ResultsViewPageStore,
 } from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
-import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
+import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperServerConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { computed, action, makeObservable } from 'mobx';
 import { getServerConfig } from 'config/config';

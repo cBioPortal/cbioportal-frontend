@@ -49,7 +49,7 @@ import {
 } from 'shared/lib/MutationUtils';
 import PdbChainDataStore from './PdbChainDataStore';
 import MutationMapperDataStore from './MutationMapperDataStore';
-import { IMutationMapperConfig } from './MutationMapperConfig';
+import { IMutationMapperServerConfig } from './MutationMapperServerConfig';
 import {
     buildNamespaceColumnConfig,
     normalizeMutations,
@@ -67,7 +67,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     Mutation
 > {
     constructor(
-        protected mutationMapperConfig: IMutationMapperConfig,
+        protected mutationMapperServerConfig: IMutationMapperServerConfig,
         protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
         public gene: Gene,
         protected getMutations: () => Mutation[],
@@ -88,12 +88,12 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
             gene,
             {
                 isoformOverrideSource:
-                    mutationMapperConfig.isoformOverrideSource,
-                ptmSources: mutationMapperConfig.ptmSources,
+                    mutationMapperServerConfig.genomenexus_isoform_override_source,
+                ptmSources: mutationMapperServerConfig.ptmSources,
                 filterMutationsBySelectedTranscript:
                     mutationMapperStoreConfig.filterMutationsBySelectedTranscript,
-                enableCivic: mutationMapperConfig.show_civic,
-                enableOncoKb: mutationMapperConfig.show_oncokb,
+                enableCivic: mutationMapperServerConfig.show_civic,
+                enableOncoKb: mutationMapperServerConfig.show_oncokb,
                 filterAppliersOverride:
                     mutationMapperStoreConfig.filterAppliersOverride,
                 genomeBuild: mutationMapperStoreConfig.genomeBuild,
@@ -114,11 +114,13 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         return new DefaultMutationMapperDataFetcher(
             {
                 myGeneUrlTemplate:
-                    this.mutationMapperConfig.mygene_info_url || undefined,
+                    this.mutationMapperServerConfig.mygene_info_url ||
+                    undefined,
                 uniprotIdUrlTemplate:
-                    this.mutationMapperConfig.uniprot_id_url || undefined,
+                    this.mutationMapperServerConfig.uniprot_id_url || undefined,
                 genomeNexusUrl:
-                    this.mutationMapperConfig.genomenexus_url || undefined,
+                    this.mutationMapperServerConfig.genomenexus_url ||
+                    undefined,
                 oncoKbUrl: getOncoKbApiUrl() || undefined,
             },
             this.genomenexusClient || defaultGenomeNexusClient,

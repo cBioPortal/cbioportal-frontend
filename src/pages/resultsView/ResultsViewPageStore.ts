@@ -5400,7 +5400,7 @@ export class ResultsViewPageStore
                                   ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                                   : '',
                           ].filter(f => f),
-                          getServerConfig().isoformOverrideSource,
+                          getServerConfig().genomenexus_isoform_override_source,
                           this.genomeNexusClient
                       )
                     : undefined,

@@ -139,7 +139,7 @@ export class DefaultMutationMapperDataFetcher
 
     public async fetchMyVariantInfoAnnotationsIndexedByGenomicLocation(
         mutations: Partial<Mutation>[],
-        isoformOverrideSource: string = 'uniprot',
+        isoformOverrideSource: string = 'mskcc',
         client: GenomeNexusAPI = this.genomeNexusClient
     ): Promise<{ [genomicLocation: string]: MyVariantInfo }> {
         const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
