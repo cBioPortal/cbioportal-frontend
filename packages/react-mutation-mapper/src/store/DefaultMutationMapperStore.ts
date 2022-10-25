@@ -184,7 +184,7 @@ class DefaultMutationMapperStore<T extends Mutation>
 
     @computed
     public get isoformOverrideSource(): string {
-        return this.config.isoformOverrideSource || 'uniprot';
+        return this.config.isoformOverrideSource || 'mskcc';
     }
 
     @computed

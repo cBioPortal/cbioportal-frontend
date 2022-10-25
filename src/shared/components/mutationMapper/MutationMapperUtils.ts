@@ -26,7 +26,7 @@ export function createVariantAnnotationsByMutationFetcher(
             return fetchVariantAnnotationsByMutation(
                 queries,
                 fields,
-                getServerConfig().isoformOverrideSource,
+                getServerConfig().genomenexus_isoform_override_source,
                 client
             );
         } else {

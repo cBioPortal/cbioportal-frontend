@@ -49,10 +49,10 @@ export interface IServerConfig {
     genomenexus_url: string | null;
     genomenexus_url_grch38: string | null;
     genomenexus_website_url: string | null;
+    genomenexus_isoform_override_source: string;
     mygene_info_url: string | null;
     g2s_url: string | null;
     google_analytics_profile_id: string | null;
-    isoformOverrideSource: string;
     ptmSources: string[] | undefined;
     oncoprint_hide_vus_default: boolean;
     mycancergenome_show: boolean | undefined;

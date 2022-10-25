@@ -94,7 +94,7 @@ export default class MutationMapperToolStore {
     }
 
     @computed get isoformOverrideSource(): string {
-        return getServerConfig().isoformOverrideSource;
+        return getServerConfig().genomenexus_isoform_override_source;
     }
 
     @computed get genomeNexusClient() {
@@ -228,7 +228,7 @@ export default class MutationMapperToolStore {
                             ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                             : '',
                     ].filter(f => f),
-                    getServerConfig().isoformOverrideSource,
+                    getServerConfig().genomenexus_isoform_override_source,
                     this.genomeNexusClient
                 ),
             onError: (err: Error) => {
@@ -246,7 +246,7 @@ export default class MutationMapperToolStore {
                 const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
                     this.rawMutations,
                     ['my_variant_info'],
-                    getServerConfig().isoformOverrideSource,
+                    getServerConfig().genomenexus_isoform_override_source,
                     this.genomeNexusClient
                 );
 

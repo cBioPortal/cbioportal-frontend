@@ -97,7 +97,7 @@ describe('DataFetcherUtils', () => {
             fetchVariantAnnotationsIndexedByGenomicLocation(
                 [],
                 ['annotation_summary'],
-                'uniprot',
+                'mskcc',
                 genomeNexusClient
             ).then(
                 (indexedVariantAnnotations: {
@@ -124,7 +124,7 @@ describe('DataFetcherUtils', () => {
             fetchVariantAnnotationsIndexedByGenomicLocation(
                 _.cloneDeep(mutationsWithNoGenomicLocation),
                 ['annotation_summary'],
-                'uniprot',
+                'mskcc',
                 genomeNexusClient
             ).then(indexedVariantAnnotations => {
                 assert.isFalse(
@@ -147,7 +147,7 @@ describe('DataFetcherUtils', () => {
             fetchVariantAnnotationsIndexedByGenomicLocation(
                 _.cloneDeep(mutationsWithGenomicLocation),
                 ['annotation_summary'],
-                'uniprot',
+                'mskcc',
                 genomeNexusClient
             ).then(indexedVariantAnnotations => {
                 assert.isTrue(

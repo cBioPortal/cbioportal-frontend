@@ -49,7 +49,7 @@ import {
 } from 'shared/lib/MutationUtils';
 import PdbChainDataStore from './PdbChainDataStore';
 import MutationMapperDataStore from './MutationMapperDataStore';
-import { IMutationMapperConfig } from './MutationMapperConfig';
+import { IMutationMapperServerConfig } from './MutationMapperConfig';
 import {
     buildNamespaceColumnConfig,
     normalizeMutations,
@@ -67,7 +67,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     Mutation
 > {
     constructor(
-        protected mutationMapperConfig: IMutationMapperConfig,
+        protected mutationMapperConfig: IMutationMapperServerConfig,
         protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
         public gene: Gene,
         protected getMutations: () => Mutation[],
@@ -88,7 +88,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
             gene,
             {
                 isoformOverrideSource:
-                    mutationMapperConfig.isoformOverrideSource,
+                    mutationMapperConfig.genomenexus_isoform_override_source,
                 ptmSources: mutationMapperConfig.ptmSources,
                 filterMutationsBySelectedTranscript:
                     mutationMapperStoreConfig.filterMutationsBySelectedTranscript,

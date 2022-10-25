@@ -1054,7 +1054,7 @@ export class PatientViewPageStore {
                             ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                             : '',
                     ].filter(f => f),
-                    getServerConfig().isoformOverrideSource,
+                    getServerConfig().genomenexus_isoform_override_source,
                     this.genomeNexusClient
                 ),
             onError: (err: Error) => {
@@ -1075,7 +1075,7 @@ export class PatientViewPageStore {
                     this.uncalledMutationData
                 ),
                 [GENOME_NEXUS_ARG_FIELD_ENUM.MY_VARIANT_INFO],
-                getServerConfig().isoformOverrideSource,
+                getServerConfig().genomenexus_isoform_override_source,
                 this.genomeNexusClient
             );
             return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(

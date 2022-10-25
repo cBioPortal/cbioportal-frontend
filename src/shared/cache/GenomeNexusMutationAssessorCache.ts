@@ -19,7 +19,7 @@ export function defaultGNFetch(
                 GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
                 GENOME_NEXUS_ARG_FIELD_ENUM.MUTATION_ASSESSOR,
             ],
-            getServerConfig().isoformOverrideSource
+            getServerConfig().genomenexus_isoform_override_source
         );
     } else {
         return Promise.resolve([]);

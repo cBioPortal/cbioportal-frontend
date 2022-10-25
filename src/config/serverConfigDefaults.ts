@@ -8,6 +8,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     genomenexus_url: 'https://v1.genomenexus.org',
     genomenexus_url_grch38: 'https://grch38.genomenexus.org',
     genomenexus_website_url: 'https://www.genomenexus.org',
+    genomenexus_isoform_override_source: 'mskcc',
     g2s_url: 'https://g2s.genomenexus.org',
     mycancergenome_show: false,
 
@@ -39,7 +40,6 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     pubmed_url: 'https://www.ncbi.nlm.nih.gov/pubmed/<%=pmid%>',
 
-    isoformOverrideSource: 'mskcc',
     show_hotspot: true,
     show_oncokb: true,
     show_civic: false,
