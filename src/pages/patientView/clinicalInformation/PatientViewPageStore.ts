@@ -164,7 +164,6 @@ import {
 import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
 import {
-    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     DataTypeConstants,
     CustomDriverNumericGeneMolecularData,
@@ -180,6 +179,7 @@ import {
     GENOME_NEXUS_ARG_FIELD_ENUM,
     MSI_H_THRESHOLD,
     TMB_H_THRESHOLD,
+    AlterationTypeConstants,
 } from 'shared/constants';
 import {
     OTHER_BIOMARKER_HUGO_SYMBOL,

@@ -13,10 +13,8 @@ import {
     IGenesetHeatmapTrackDatum,
     IGenericAssayHeatmapTrackDatum,
 } from 'shared/components/oncoprint/Oncoprint';
-import {
-    AlterationTypeConstants,
-    AnnotatedExtendedAlteration,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { AnnotatedExtendedAlteration } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
     ClinicalAttribute,
     GenePanelData,

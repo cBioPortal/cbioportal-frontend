@@ -11,10 +11,8 @@ import {
 } from 'shared/model/EnrichmentRow';
 import { formatLogOddsRatio, roundLogRatio } from 'shared/lib/FormatUtils';
 import _ from 'lodash';
-import {
-    AlterationTypeConstants,
-    DataTypeConstants,
-} from '../ResultsViewPageStore';
+import { DataTypeConstants } from '../ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { filterAndSortProfiles } from '../coExpression/CoExpressionTabUtils';
 import { IMiniFrequencyScatterChartData } from './MiniFrequencyScatterChart';
 import {

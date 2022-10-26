@@ -5,10 +5,6 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from '../api/cbioportalClientInstance';
 import _ from 'lodash';
-import {
-    DataTypeConstants,
-    AlterationTypeConstants,
-} from 'pages/resultsView/ResultsViewPageStore';
 
 function queryToKey(studyId: string) {
     return studyId;

@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
-import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { makeProfiledInClinicalAttributes } from './ResultsViewOncoprintUtils';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import { AlterationTypeText } from 'shared/constants';

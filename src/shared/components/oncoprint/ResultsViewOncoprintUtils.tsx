@@ -21,7 +21,7 @@ import { TrackGroupHeader, TrackGroupIndex } from 'oncoprintjs';
 import ResultsViewOncoprint, {
     AdditionalTrackGroupRecord,
 } from 'shared/components/oncoprint/ResultsViewOncoprint';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { Group } from 'shared/api/session-service/sessionServiceModels';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { AlterationTypeText } from 'shared/constants';

@@ -38,7 +38,7 @@ import {
     makeHeatmapTrackTooltip,
 } from './TooltipUtils';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import ifNotDefined from '../../lib/ifNotDefined';
 import { makeGeneticTrackTooltip } from 'shared/components/oncoprint/makeGeneticTrackTooltip';
 

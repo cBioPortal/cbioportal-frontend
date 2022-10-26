@@ -10,10 +10,10 @@ import {
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
-    AlterationTypeConstants,
     DataTypeConstants,
     ResultsViewPageStore,
 } from '../ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { Button, FormControl } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
 import Select from 'react-select';

@@ -115,7 +115,7 @@ import {
 } from 'pages/groupComparison/GroupComparisonTabs';
 import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
     cnaGroup,
     mutationGroup,

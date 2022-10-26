@@ -44,12 +44,12 @@ import { BLACK, DEFAULT_GREY, LIGHT_GREY } from 'shared/lib/Colors';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
-    AlterationTypeConstants,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
     DataTypeConstants,
 } from '../ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
 import ClinicalDataCache, {

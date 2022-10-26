@@ -22,11 +22,11 @@ import {
 } from './PlotsTabUtils';
 import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
 import {
-    AlterationTypeConstants,
     AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
     DataTypeConstants,
 } from '../ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
 import {
     CoverageInformation,

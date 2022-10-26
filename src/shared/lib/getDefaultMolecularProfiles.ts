@@ -1,6 +1,6 @@
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
-import { AlterationTypeConstants } from '../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { GeneSetProfilesEnum } from 'shared/components/query/QueryStoreUtils';
 import { getSuffixOfMolecularProfile } from './molecularProfileUtils';
 

@@ -9,7 +9,7 @@ import {
 import { makeUniqueColorGetter } from '../../../../shared/components/plots/PlotUtils';
 import { MUTATION_SPECTRUM_FILLS } from '../../../../shared/cache/ClinicalDataCache';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { capitalize } from 'cbioportal-frontend-commons';
 
 export const ONCOPRINTER_VAL_NA = 'N/A';

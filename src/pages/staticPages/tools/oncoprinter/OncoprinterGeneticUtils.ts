@@ -7,10 +7,7 @@ import {
     GeneticTrackDatum_Data,
 } from '../../../../shared/components/oncoprint/Oncoprint';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
-import {
-    AlterationTypeConstants,
-    AnnotatedExtendedAlteration,
-} from '../../../resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     fillGeneticTrackDatum,

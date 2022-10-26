@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import {
-    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     CaseAggregatedData,
     ExtendedAlteration,
     IQueriedCaseData,
     IQueriedMergedTrackCaseData,
 } from '../ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { alterationInfoForCaseAggregatedDataByOQLLine } from 'shared/components/oncoprint/OncoprintUtils';
 import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';

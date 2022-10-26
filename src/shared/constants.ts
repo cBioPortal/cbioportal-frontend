@@ -90,3 +90,19 @@ export const AlterationTypeText: {
     PROTEIN_ARRAY_PROTEIN_LEVEL: 'protein array protein level',
     RNA_EXPRESSION: 'RNA expression',
 };
+
+// TODO: type this like the above so that it contains
+// all possible keys (need to figure out FUSION first though, which is no longer a type)
+// do we still need to support it?
+export const AlterationTypeConstants = {
+    MUTATION_EXTENDED: 'MUTATION_EXTENDED',
+    COPY_NUMBER_ALTERATION: 'COPY_NUMBER_ALTERATION',
+    MRNA_EXPRESSION: 'MRNA_EXPRESSION',
+    PROTEIN_LEVEL: 'PROTEIN_LEVEL',
+    FUSION: 'FUSION',
+    GENESET_SCORE: 'GENESET_SCORE',
+    METHYLATION: 'METHYLATION',
+    GENERIC_ASSAY: 'GENERIC_ASSAY',
+    STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT',
+    MUTATION_UNCALLED: 'MUTATION_UNCALLED',
+};

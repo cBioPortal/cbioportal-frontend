@@ -93,10 +93,9 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import { remoteData, toPromise } from 'cbioportal-frontend-commons';
 import { autorun, observable, runInAction } from 'mobx';
-import {
-    AlterationTypeConstants,
-    DataTypeConstants,
-} from 'pages/resultsView/ResultsViewPageStore';
+import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+
+import { AlterationTypeConstants } from 'shared/constants';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {

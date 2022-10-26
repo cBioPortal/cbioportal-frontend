@@ -75,10 +75,10 @@ import {
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
 import {
-    AlterationTypeConstants,
     DataTypeConstants,
     ResultsViewPageStore,
 } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {

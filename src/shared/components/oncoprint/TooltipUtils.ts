@@ -1,24 +1,15 @@
 import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
 import $ from 'jquery';
-import {
-    NumericGeneMolecularData,
-    GenePanel,
-    GenePanelData,
-    MolecularProfile,
-    Mutation,
-} from 'cbioportal-ts-api-client';
-
-import { StructuralVariant } from 'cbioportal-ts-api-client';
+import { GenePanel, MolecularProfile } from 'cbioportal-ts-api-client';
 
 import client from 'shared/api/cbioportalClientInstance';
 import {
     ClinicalTrackSpec,
-    GeneticTrackDatum,
     IBaseHeatmapTrackSpec,
     ICategoricalTrackSpec,
     IHeatmapTrackSpec,
 } from './Oncoprint';
-import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import _ from 'lodash';
 
 export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
