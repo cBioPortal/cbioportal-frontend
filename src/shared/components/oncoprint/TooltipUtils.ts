@@ -18,18 +18,8 @@ import {
     ICategoricalTrackSpec,
     IHeatmapTrackSpec,
 } from './Oncoprint';
-import {
-    AnnotatedExtendedAlteration,
-    ExtendedAlteration,
-    AlterationTypeConstants,
-    CustomDriverNumericGeneMolecularData,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import _ from 'lodash';
-import { alterationTypeToProfiledForText } from './ResultsViewOncoprintUtils';
-import { isNotGermlineMutation } from '../../lib/MutationUtils';
-import ListIndexedMap, {
-    ListIndexedMapOfCounts,
-} from '../../lib/ListIndexedMap';
 
 export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 
@@ -37,6 +27,7 @@ const tooltipTextElementNaN = 'N/A';
 import './styles.scss';
 
 import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { AlterationTypeText } from 'shared/constants';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
     return `<a class="nobreak" href="${getSampleViewUrl(
@@ -427,7 +418,12 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
             dispNotProfiledIn = dispNotProfiledIn.concat(
                 alterationTypesInQuery
                     .filter(t => !profiledInTypes![t] && !notProfiledInTypes[t])
-                    .map(t => alterationTypeToProfiledForText[t])
+                    .map(
+                        t =>
+                            AlterationTypeText[
+                                t as keyof typeof AlterationTypeText
+                            ]
+                    )
             );
         }
         dispNotProfiledGenePanelIds = _.uniq(

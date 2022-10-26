@@ -1,16 +1,9 @@
 import { assert } from 'chai';
-import {
-    GenePanelData,
-    MolecularProfile,
-    GenericAssayMeta,
-} from 'cbioportal-ts-api-client';
+import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
-import {
-    alterationTypeToProfiledForText,
-    makeProfiledInClinicalAttributes,
-} from './ResultsViewOncoprintUtils';
+import { makeProfiledInClinicalAttributes } from './ResultsViewOncoprintUtils';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { AlterationTypeText } from 'shared/constants';
 
 describe('ResultsViewOncoprintUtils', () => {
     describe('makeProfiledInClinicalAttributes', () => {
@@ -178,11 +171,7 @@ describe('ResultsViewOncoprintUtils', () => {
                         clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${AlterationTypeConstants.MUTATION_EXTENDED}`,
                         datatype: 'STRING',
                         description: '',
-                        displayName: `Profiled for ${
-                            alterationTypeToProfiledForText[
-                                AlterationTypeConstants.MUTATION_EXTENDED
-                            ]
-                        }`,
+                        displayName: `Profiled for ${AlterationTypeText.MUTATION_EXTENDED}`,
                         molecularProfileIds: ['mutations'],
                         patientAttribute: false,
                     },
@@ -243,11 +232,7 @@ describe('ResultsViewOncoprintUtils', () => {
                         clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${AlterationTypeConstants.COPY_NUMBER_ALTERATION}`,
                         datatype: 'STRING',
                         description: '',
-                        displayName: `Profiled for ${
-                            alterationTypeToProfiledForText[
-                                AlterationTypeConstants.COPY_NUMBER_ALTERATION
-                            ]
-                        }`,
+                        displayName: `Profiled for ${AlterationTypeText.COPY_NUMBER_ALTERATION}`,
                         molecularProfileIds: ['linearCna'],
                         patientAttribute: false,
                     },
@@ -334,11 +319,7 @@ describe('ResultsViewOncoprintUtils', () => {
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${AlterationTypeConstants.MUTATION_EXTENDED}`,
                     datatype: 'STRING',
                     description: '',
-                    displayName: `Profiled for ${
-                        alterationTypeToProfiledForText[
-                            AlterationTypeConstants.MUTATION_EXTENDED
-                        ]
-                    }`,
+                    displayName: `Profiled for ${AlterationTypeText.MUTATION_EXTENDED}`,
                     molecularProfileIds: ['mutations'],
                     patientAttribute: false,
                 } as any,
@@ -355,11 +336,7 @@ describe('ResultsViewOncoprintUtils', () => {
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${AlterationTypeConstants.MRNA_EXPRESSION}`,
                     datatype: 'STRING',
                     description: '',
-                    displayName: `Profiled for ${
-                        alterationTypeToProfiledForText[
-                            AlterationTypeConstants.MRNA_EXPRESSION
-                        ]
-                    }`,
+                    displayName: `Profiled for ${AlterationTypeText.MRNA_EXPRESSION}`,
                     molecularProfileIds: ['mrna'],
                     patientAttribute: false,
                 } as any,

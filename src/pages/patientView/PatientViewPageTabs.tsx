@@ -417,6 +417,7 @@ export function tabs(
                     mutationTableColumnVisibility={
                         pageComponent.mutationTableColumnVisibility
                     }
+                    sampleIds={pageComponent.patientViewPageStore.sampleIds}
                     onMutationTableColumnVisibilityToggled={
                         pageComponent.onMutationTableColumnVisibilityToggled
                     }

@@ -20,15 +20,13 @@ import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/Ch
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
     calculateOncoKbContentPadding,
-    calculateOncoKbContentWidthOnNextFrame,
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
-    updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { MutationStatus } from 'react-mutation-mapper';
-import { isSampleProfiledInProfile } from 'shared/lib/isSampleProfiled';
 import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
+import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -490,7 +488,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 );
             }
 
-            const { notProfiledIds, someProfiled } = getSamplesProfiledStatus(
+            const { someProfiled } = getSamplesProfiledStatus(
                 this.props.sampleIds,
                 this.props.store.genePanelDataByMolecularProfileIdAndSampleId
                     .result,
@@ -500,23 +498,17 @@ export default class StructuralVariantTableWrapper extends React.Component<
 
             return (
                 <>
-                    {notProfiledIds.length > 0 && (
-                        <div
-                            className="alert alert-info"
-                            role="alert"
-                            data-test={'partialProfileAlert'}
-                        >
-                            {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
-                            {notProfiledIds.map(id => (
-                                <span style={{ marginLeft: 5 }}>
-                                    {this.props.store.sampleManager.result?.getComponentForSample(
-                                        id
-                                    )}
-                                </span>
-                            ))}{' '}
-                            not profiled for structural variants.
-                        </div>
-                    )}
+                    <SampleNotProfiledAlert
+                        sampleManager={this.props.store.sampleManager.result!}
+                        genePanelDataByMolecularProfileIdAndSampleId={
+                            this.props.store
+                                .genePanelDataByMolecularProfileIdAndSampleId
+                                .result
+                        }
+                        molecularProfiles={[
+                            this.props.store.structuralVariantProfile.result!,
+                        ]}
+                    />
                     {someProfiled && (
                         <StructuralVariantTableComponent
                             columns={this.columns.result}

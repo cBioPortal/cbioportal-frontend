@@ -38,7 +38,6 @@ import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAs
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { IMutSigData } from 'shared/model/MutSig';
 import { ICosmicData } from 'shared/model/Cosmic';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
 import MobxPromise from 'mobxpromise';
 
@@ -48,6 +47,7 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
+import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on an mutation to zoom in on the gene in the IGV browser above';
@@ -161,7 +161,7 @@ export default class MutationTableWrapper extends React.Component<
                 );
             }
 
-            const { notProfiledIds, someProfiled } = getSamplesProfiledStatus(
+            const { someProfiled } = getSamplesProfiledStatus(
                 this.props.sampleIds,
                 this.pageStore.genePanelDataByMolecularProfileIdAndSampleId
                     .result,
@@ -171,23 +171,17 @@ export default class MutationTableWrapper extends React.Component<
 
             return (
                 <>
-                    {notProfiledIds.length > 0 && (
-                        <div
-                            className="alert alert-info"
-                            role="alert"
-                            data-test={'partialProfileAlert'}
-                        >
-                            {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
-                            {notProfiledIds.map(id => (
-                                <span style={{ marginLeft: 5 }}>
-                                    {this.pageStore.sampleManager.result?.getComponentForSample(
-                                        id
-                                    )}
-                                </span>
-                            ))}{' '}
-                            not profiled for mutations.
-                        </div>
-                    )}
+                    <SampleNotProfiledAlert
+                        sampleManager={this.props.sampleManager!}
+                        genePanelDataByMolecularProfileIdAndSampleId={
+                            this.pageStore
+                                .genePanelDataByMolecularProfileIdAndSampleId
+                                .result
+                        }
+                        molecularProfiles={[
+                            this.pageStore.mutationMolecularProfile.result!,
+                        ]}
+                    />
                     {someProfiled && (
                         <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
                             <PatientViewMutationTable

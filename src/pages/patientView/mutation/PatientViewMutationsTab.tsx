@@ -24,6 +24,7 @@ import VAFChartWrapperStore from '../timeline/VAFChartWrapperStore';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import _ from 'lodash';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
+import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 
 export interface IPatientViewMutationsTabProps {
     patientViewPageStore: PatientViewPageStore;
@@ -35,6 +36,7 @@ export interface IPatientViewMutationsTabProps {
         columnVisibility?: IColumnVisibilityDef[]
     ) => void;
     sampleManager: SampleManager | null;
+    sampleIds: string[];
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
 }
@@ -436,44 +438,69 @@ export default class PatientViewMutationsTab extends React.Component<
     });
 
     readonly tabUI = MakeMobxView({
-        await: () => [this.table, this.vafLineChart, this.timeline],
+        await: () => [
+            this.table,
+            this.vafLineChart,
+            this.timeline,
+            this.props.patientViewPageStore
+                .genePanelDataByMolecularProfileIdAndSampleId,
+            this.props.patientViewPageStore.mutationMolecularProfile,
+        ],
         renderPending: () => (
             <LoadingIndicator isLoading={true} size="big" center={true} />
         ),
-        render: () => (
-            <div data-test="GenomicEvolutionTab">
-                <MSKTabs
-                    activeTabId={this.plotTab}
-                    onTabClick={this.setPlotTab}
-                    className="secondaryNavigation vafVizNavTabs"
-                    unmountOnHide={false}
-                >
-                    <MSKTab id={PlotTab.LINE_CHART} linkText="Line Chart">
-                        <div
-                            style={{
-                                paddingBottom: 10,
-                                width: WindowStore.size.width - 50,
-                            }}
-                        >
-                            {this.timeline.component}
+        render: () => {
+            // if there are unprofiled samples, list them here
+            const alert = (
+                <SampleNotProfiledAlert
+                    sampleManager={this.props.sampleManager!}
+                    genePanelDataByMolecularProfileIdAndSampleId={
+                        this.props.patientViewPageStore
+                            .genePanelDataByMolecularProfileIdAndSampleId.result
+                    }
+                    molecularProfiles={[
+                        this.props.patientViewPageStore.mutationMolecularProfile
+                            .result!,
+                    ]}
+                />
+            );
 
-                            {this.vafLineChart.component}
-                        </div>
-                    </MSKTab>
-                    <MSKTab id={PlotTab.HEATMAP} linkText="Heatmap">
-                        <div style={{ paddingBottom: 10 }}>
-                            <MutationOncoprint
-                                store={this.props.patientViewPageStore}
-                                dataStore={this.dataStore}
-                                sampleManager={this.props.sampleManager}
-                                urlWrapper={this.props.urlWrapper}
-                            />
-                        </div>
-                    </MSKTab>
-                </MSKTabs>
-                <div style={{ marginTop: 20 }}>{this.table.component}</div>
-            </div>
-        ),
+            return (
+                <div data-test="GenomicEvolutionTab">
+                    <MSKTabs
+                        activeTabId={this.plotTab}
+                        onTabClick={this.setPlotTab}
+                        className="secondaryNavigation vafVizNavTabs"
+                        unmountOnHide={false}
+                        contentWindowExtra={alert}
+                    >
+                        <MSKTab id={PlotTab.LINE_CHART} linkText="Line Chart">
+                            <div
+                                style={{
+                                    paddingBottom: 10,
+                                    width: WindowStore.size.width - 50,
+                                }}
+                            >
+                                {this.timeline.component}
+                                {this.vafLineChart.component}
+                            </div>
+                        </MSKTab>
+                        <MSKTab id={PlotTab.HEATMAP} linkText="Heatmap">
+                            <div style={{ paddingBottom: 10 }}>
+                                <MutationOncoprint
+                                    store={this.props.patientViewPageStore}
+                                    dataStore={this.dataStore}
+                                    sampleManager={this.props.sampleManager}
+                                    urlWrapper={this.props.urlWrapper}
+                                />
+                            </div>
+                        </MSKTab>
+                    </MSKTabs>
+
+                    <div style={{ marginTop: 20 }}>{this.table.component}</div>
+                </div>
+            );
+        },
     });
 
     render() {
