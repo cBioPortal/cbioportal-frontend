@@ -15,7 +15,7 @@ import Helmet from 'react-helmet';
 
 import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
-import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
+import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperServerConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { parseInput } from 'shared/lib/MutationInputParser';
 
