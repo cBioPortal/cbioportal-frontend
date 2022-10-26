@@ -24,9 +24,8 @@ import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
 import {
     AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
-    DataTypeConstants,
 } from '../ResultsViewPageStore';
-import { AlterationTypeConstants } from 'shared/constants';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
 import {
     CoverageInformation,
@@ -37,8 +36,7 @@ import {
     IAxisData,
     axisHasNegativeNumbers,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import { getServerConfig } from 'config/config';
-import ServerConfigDefaults from 'config/serverConfigDefaults';
+
 import _ from 'lodash';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 

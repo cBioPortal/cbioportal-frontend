@@ -74,11 +74,8 @@ import {
     getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
-import {
-    DataTypeConstants,
-    ResultsViewPageStore,
-} from '../../../pages/resultsView/ResultsViewPageStore';
-import { AlterationTypeConstants } from 'shared/constants';
+import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {

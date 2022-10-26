@@ -5,12 +5,11 @@ import {
     getOncoprinterGeneticInput,
     getOncoprinterHeatmapInput,
 } from './OncoprinterImportUtils';
-import { DataTypeConstants } from '../../../resultsView/ResultsViewPageStore';
 import { SpecialAttribute } from '../../../../shared/cache/ClinicalDataCache';
 import { ONCOPRINTER_VAL_NA } from './OncoprinterClinicalAndHeatmapUtils';
 import { IHeatmapTrackSpec } from '../../../../shared/components/oncoprint/Oncoprint';
 import { PUTATIVE_DRIVER } from 'shared/lib/StoreUtils';
-import { AlterationTypeConstants } from 'shared/constants';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 
 describe('OncoprinterImportUtils', () => {
     describe('generateUniqueLabel', () => {

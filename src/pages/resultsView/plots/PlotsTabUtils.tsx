@@ -26,11 +26,7 @@ import {
 
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 
-import {
-    capitalize,
-    remoteData,
-    stringListToIndexSet,
-} from 'cbioportal-frontend-commons';
+import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
 import { getSampleViewUrl, getStudySummaryUrl } from '../../../shared/api/urls';
 import _ from 'lodash';
@@ -47,9 +43,9 @@ import {
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
-    DataTypeConstants,
 } from '../ResultsViewPageStore';
-import { AlterationTypeConstants } from 'shared/constants';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
 import ClinicalDataCache, {

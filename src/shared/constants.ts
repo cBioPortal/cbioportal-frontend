@@ -1,4 +1,4 @@
-import { MolecularProfile } from 'cbioportal-ts-api-client/src';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 
 export const MOLECULAR_PROFILE_MUTATIONS_SUFFIX = '_mutations';
 export const MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX = `${MOLECULAR_PROFILE_MUTATIONS_SUFFIX}_uncalled`;
@@ -105,4 +105,18 @@ export const AlterationTypeConstants = {
     GENERIC_ASSAY: 'GENERIC_ASSAY',
     STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT',
     MUTATION_UNCALLED: 'MUTATION_UNCALLED',
+};
+
+export const DataTypeConstants = {
+    DISCRETE: 'DISCRETE',
+    CONTINUOUS: 'CONTINUOUS',
+    ZSCORE: 'Z-SCORE',
+    MAF: 'MAF',
+    LOGVALUE: 'LOG-VALUE',
+    LOG2VALUE: 'LOG2-VALUE',
+    FUSION: 'FUSION',
+    SV: 'SV',
+    LIMITVALUE: 'LIMIT-VALUE',
+    BINARY: 'BINARY',
+    CATEGORICAL: 'CATEGORICAL',
 };

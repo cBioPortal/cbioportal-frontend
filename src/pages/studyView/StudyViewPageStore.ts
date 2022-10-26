@@ -198,8 +198,7 @@ import {
 } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
-import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
-import { AlterationTypeConstants } from 'shared/constants';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import {
     createSurvivalAttributeIdsDict,
     generateStudyViewSurvivalPlotTitle,

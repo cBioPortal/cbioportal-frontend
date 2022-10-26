@@ -24,13 +24,7 @@ import {
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
-import {
-    computed,
-    observable,
-    action,
-    runInAction,
-    makeObservable,
-} from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';
 import { cached, labelMobxPromises } from 'mobxpromise';
@@ -128,7 +122,6 @@ import {
     IndicatorQueryResp,
 } from 'oncokb-ts-api-client';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
-import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import {
     fetchTrialMatchesUsingPOST,
     fetchTrialsById,
@@ -165,7 +158,6 @@ import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
 import {
     AnnotatedExtendedAlteration,
-    DataTypeConstants,
     CustomDriverNumericGeneMolecularData,
 } from 'pages/resultsView/ResultsViewPageStore';
 import {
@@ -180,6 +172,7 @@ import {
     MSI_H_THRESHOLD,
     TMB_H_THRESHOLD,
     AlterationTypeConstants,
+    DataTypeConstants,
 } from 'shared/constants';
 import {
     OTHER_BIOMARKER_HUGO_SYMBOL,
@@ -198,7 +191,6 @@ import {
     validateMutationalSignatureRawData,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
-import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
 import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled';
 

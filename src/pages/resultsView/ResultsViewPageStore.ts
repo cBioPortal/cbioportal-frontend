@@ -244,6 +244,7 @@ import {
     AlterationTypeConstants,
     CLINICAL_ATTRIBUTE_FIELD_ENUM,
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    DataTypeConstants,
     GENETIC_PROFILE_FIELD_ENUM,
     GENOME_NEXUS_ARG_FIELD_ENUM,
     REQUEST_ARG_ENUM,
@@ -306,27 +307,6 @@ type Optional<T> =
 
 const DEFAULT_RPPA_THRESHOLD = 2;
 const DEFAULT_Z_SCORE_THRESHOLD = 2;
-
-export const AlterationTypeDisplayConstants = {
-    COPY_NUMBER_ALTERATION: 'CNA',
-    MRNA_EXPRESSION: 'EXP',
-    PROTEIN_LEVEL: 'PROT',
-    MUTATION_EXTENDED: ['MUT', 'FUSION'],
-};
-
-export const DataTypeConstants = {
-    DISCRETE: 'DISCRETE',
-    CONTINUOUS: 'CONTINUOUS',
-    ZSCORE: 'Z-SCORE',
-    MAF: 'MAF',
-    LOGVALUE: 'LOG-VALUE',
-    LOG2VALUE: 'LOG2-VALUE',
-    FUSION: 'FUSION',
-    SV: 'SV',
-    LIMITVALUE: 'LIMIT-VALUE',
-    BINARY: 'BINARY',
-    CATEGORICAL: 'CATEGORICAL',
-};
 
 export enum SampleListCategoryType {
     'w_mut' = 'w_mut',

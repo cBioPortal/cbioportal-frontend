@@ -3,7 +3,7 @@ import * as React from 'react';
 import { FunctionComponent } from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
 import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled';
-import { MolecularProfile } from 'cbioportal-ts-api-client/src';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeText } from 'shared/constants';
 
 interface ISampleNotProfiledAlertProps {
