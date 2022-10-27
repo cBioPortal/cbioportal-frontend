@@ -1,35 +1,16 @@
 import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
 import $ from 'jquery';
-import {
-    NumericGeneMolecularData,
-    GenePanel,
-    GenePanelData,
-    MolecularProfile,
-    Mutation,
-} from 'cbioportal-ts-api-client';
-
-import { StructuralVariant } from 'cbioportal-ts-api-client';
+import { GenePanel, MolecularProfile } from 'cbioportal-ts-api-client';
 
 import client from 'shared/api/cbioportalClientInstance';
 import {
     ClinicalTrackSpec,
-    GeneticTrackDatum,
     IBaseHeatmapTrackSpec,
     ICategoricalTrackSpec,
     IHeatmapTrackSpec,
 } from './Oncoprint';
-import {
-    AnnotatedExtendedAlteration,
-    ExtendedAlteration,
-    AlterationTypeConstants,
-    CustomDriverNumericGeneMolecularData,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import _ from 'lodash';
-import { alterationTypeToProfiledForText } from './ResultsViewOncoprintUtils';
-import { isNotGermlineMutation } from '../../lib/MutationUtils';
-import ListIndexedMap, {
-    ListIndexedMapOfCounts,
-} from '../../lib/ListIndexedMap';
 
 export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 
@@ -37,6 +18,7 @@ const tooltipTextElementNaN = 'N/A';
 import './styles.scss';
 
 import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { AlterationTypeText } from 'shared/constants';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
     return `<a class="nobreak" href="${getSampleViewUrl(
@@ -427,7 +409,12 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
             dispNotProfiledIn = dispNotProfiledIn.concat(
                 alterationTypesInQuery
                     .filter(t => !profiledInTypes![t] && !notProfiledInTypes[t])
-                    .map(t => alterationTypeToProfiledForText[t])
+                    .map(
+                        t =>
+                            AlterationTypeText[
+                                t as keyof typeof AlterationTypeText
+                            ]
+                    )
             );
         }
         dispNotProfiledGenePanelIds = _.uniq(

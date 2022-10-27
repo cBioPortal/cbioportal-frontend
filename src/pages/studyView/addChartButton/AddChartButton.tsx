@@ -40,7 +40,7 @@ import {
     deriveDisplayTextFromGenericAssayType,
     makeGenericAssayOption,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
-import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+
 import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
 import classnames from 'classnames';
 import styles from './styles.module.scss';
@@ -48,6 +48,7 @@ import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import ReactSelect from 'react-select';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
+import { DataTypeConstants } from 'shared/constants';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;

@@ -1,8 +1,8 @@
 import {
-    AlterationTypeConstants,
     ExtendedAlteration,
     ExtendedSample,
 } from '../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
     IAlterationCountMap,
     IAlterationData,

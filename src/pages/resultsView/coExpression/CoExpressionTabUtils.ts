@@ -1,10 +1,7 @@
 import _ from 'lodash';
 import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
-import {
-    AlterationTypeConstants,
-    GeneticEntityType,
-} from '../ResultsViewPageStore';
 import { CoExpression } from 'cbioportal-ts-api-client';
+import { AlterationTypeConstants } from 'shared/constants';
 
 export type CoExpressionWithEntityInfo = CoExpression & {
     geneticEntityName: string;

@@ -241,8 +241,10 @@ import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import {
+    AlterationTypeConstants,
     CLINICAL_ATTRIBUTE_FIELD_ENUM,
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    DataTypeConstants,
     GENETIC_PROFILE_FIELD_ENUM,
     GENOME_NEXUS_ARG_FIELD_ENUM,
     REQUEST_ARG_ENUM,
@@ -305,40 +307,6 @@ type Optional<T> =
 
 const DEFAULT_RPPA_THRESHOLD = 2;
 const DEFAULT_Z_SCORE_THRESHOLD = 2;
-
-export const AlterationTypeConstants = {
-    MUTATION_EXTENDED: 'MUTATION_EXTENDED',
-    COPY_NUMBER_ALTERATION: 'COPY_NUMBER_ALTERATION',
-    MRNA_EXPRESSION: 'MRNA_EXPRESSION',
-    PROTEIN_LEVEL: 'PROTEIN_LEVEL',
-    FUSION: 'FUSION',
-    GENESET_SCORE: 'GENESET_SCORE',
-    METHYLATION: 'METHYLATION',
-    GENERIC_ASSAY: 'GENERIC_ASSAY',
-    STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT',
-    MUTATION_UNCALLED: 'MUTATION_UNCALLED',
-};
-
-export const AlterationTypeDisplayConstants = {
-    COPY_NUMBER_ALTERATION: 'CNA',
-    MRNA_EXPRESSION: 'EXP',
-    PROTEIN_LEVEL: 'PROT',
-    MUTATION_EXTENDED: ['MUT', 'FUSION'],
-};
-
-export const DataTypeConstants = {
-    DISCRETE: 'DISCRETE',
-    CONTINUOUS: 'CONTINUOUS',
-    ZSCORE: 'Z-SCORE',
-    MAF: 'MAF',
-    LOGVALUE: 'LOG-VALUE',
-    LOG2VALUE: 'LOG2-VALUE',
-    FUSION: 'FUSION',
-    SV: 'SV',
-    LIMITVALUE: 'LIMIT-VALUE',
-    BINARY: 'BINARY',
-    CATEGORICAL: 'CATEGORICAL',
-};
 
 export enum SampleListCategoryType {
     'w_mut' = 'w_mut',

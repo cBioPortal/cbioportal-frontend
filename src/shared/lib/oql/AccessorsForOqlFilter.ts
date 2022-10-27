@@ -7,15 +7,14 @@ import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 import _ from 'lodash';
 import {
-    AlterationTypeConstants,
     CustomDriverNumericGeneMolecularData,
-    AnnotatedExtendedAlteration,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { isNotGermlineMutation } from '../MutationUtils';
 import { IAccessorsForOqlFilter } from './oqlfilter';
+import { AlterationTypeConstants } from 'shared/constants';
 
 export const cna_profile_data_to_string: any = {
     '-2': 'homdel',

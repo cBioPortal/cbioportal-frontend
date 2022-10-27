@@ -28,7 +28,6 @@ import {
 import { Alteration } from '../../shared/lib/oql/oql-parser';
 import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
 import {
-    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
@@ -59,6 +58,7 @@ import {
     Group,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import { AlterationTypeConstants } from 'shared/constants';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 

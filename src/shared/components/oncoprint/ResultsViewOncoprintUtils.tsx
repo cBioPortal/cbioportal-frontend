@@ -2,7 +2,6 @@ import { CoverageInformation } from '../../lib/GenePanelUtils';
 import {
     ClinicalAttribute,
     MolecularProfile,
-    Sample,
     GenericAssayMeta,
 } from 'cbioportal-ts-api-client';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
@@ -22,19 +21,10 @@ import { TrackGroupHeader, TrackGroupIndex } from 'oncoprintjs';
 import ResultsViewOncoprint, {
     AdditionalTrackGroupRecord,
 } from 'shared/components/oncoprint/ResultsViewOncoprint';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { Group } from 'shared/api/session-service/sessionServiceModels';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
-
-export const alterationTypeToProfiledForText: {
-    [alterationType: string]: string;
-} = {
-    MUTATION_EXTENDED: 'mutations',
-    COPY_NUMBER_ALTERATION: 'copy number alterations',
-    MRNA_EXPRESSION: 'mRNA expression',
-    PROTEIN_LEVEL: 'protein expression',
-    STRUCTURAL_VARIANT: 'structural variants',
-};
+import { AlterationTypeText } from 'shared/constants';
 
 export function getAnnotatingProgressMessage(
     usingOncokb: boolean,
@@ -230,7 +220,11 @@ export function makeProfiledInClinicalAttributes(
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${alterationType}`,
                     datatype: 'STRING',
                     description: '',
-                    displayName: `Profiled for ${alterationTypeToProfiledForText[alterationType]}`,
+                    displayName: `Profiled for ${
+                        AlterationTypeText[
+                            alterationType as keyof typeof AlterationTypeText
+                        ]
+                    }`,
                     molecularProfileIds: group.map(p => p.molecularProfileId),
                     patientAttribute: false,
                 } as ClinicalAttribute & { molecularProfileIds: string[] };

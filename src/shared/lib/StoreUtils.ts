@@ -66,18 +66,15 @@ import { IMutSigData } from 'shared/model/MutSig';
 import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     GENOME_NEXUS_ARG_FIELD_ENUM,
-    MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
-    MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from 'shared/constants';
 import {
-    AlterationTypeConstants,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
 } from '../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getServerConfig } from 'config/config';
-import { getFrontendAssetUrl } from 'shared/api/urls';
 import {
     AnnotateCopyNumberAlterationQuery,
     AnnotateStructuralVariantQuery,

@@ -3,7 +3,6 @@ import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import { action, computed, observable, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import {
-    AlterationTypeConstants,
     ResultsViewPageStore,
     GeneticEntity,
     GeneticEntityType,
@@ -34,6 +33,7 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
+import { AlterationTypeConstants } from 'shared/constants';
 
 export interface ICoExpressionTabProps {
     store: ResultsViewPageStore;

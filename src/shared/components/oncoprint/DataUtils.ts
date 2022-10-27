@@ -2,9 +2,8 @@ import {
     AnnotatedExtendedAlteration,
     CaseAggregatedData,
     CustomDriverNumericGeneMolecularData,
-    ExtendedAlteration,
-    AlterationTypeConstants,
 } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
     ClinicalAttribute,
     ClinicalData,

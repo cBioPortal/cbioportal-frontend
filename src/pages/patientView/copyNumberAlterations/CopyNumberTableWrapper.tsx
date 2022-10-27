@@ -20,10 +20,8 @@ import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
 import {
     calculateOncoKbContentPadding,
-    calculateOncoKbContentWidthOnNextFrame,
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
-    updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
@@ -32,6 +30,7 @@ import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/Pati
 import { MakeMobxView } from 'shared/components/MobxView';
 import { getServerConfig } from 'config/config';
 import autobind from 'autobind-decorator';
+import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -386,7 +385,7 @@ export default class CopyNumberTableWrapper extends React.Component<
             this.pageStore.referenceGenes,
         ],
         render: () => {
-            const { notProfiledIds, someProfiled } = getSamplesProfiledStatus(
+            const { someProfiled } = getSamplesProfiledStatus(
                 this.props.sampleIds,
                 this.pageStore.genePanelDataByMolecularProfileIdAndSampleId
                     .result,
@@ -396,23 +395,17 @@ export default class CopyNumberTableWrapper extends React.Component<
 
             return (
                 <>
-                    {notProfiledIds.length > 0 && (
-                        <div
-                            className="alert alert-info"
-                            role="alert"
-                            data-test={'partialProfileAlert'}
-                        >
-                            {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
-                            {notProfiledIds.map(id => (
-                                <span style={{ marginLeft: 5 }}>
-                                    {this.props.sampleManager?.getComponentForSample(
-                                        id
-                                    )}
-                                </span>
-                            ))}{' '}
-                            not profiled for copy number alterations.
-                        </div>
-                    )}
+                    <SampleNotProfiledAlert
+                        sampleManager={this.props.sampleManager!}
+                        genePanelDataByMolecularProfileIdAndSampleId={
+                            this.pageStore
+                                .genePanelDataByMolecularProfileIdAndSampleId
+                                .result
+                        }
+                        molecularProfiles={[
+                            this.pageStore.discreteMolecularProfile.result!,
+                        ]}
+                    />
 
                     {someProfiled && (
                         <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>

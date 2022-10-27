@@ -57,7 +57,7 @@ import {
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from '../../lib/formSubmit';
 import { getServerConfig, ServerConfigHelpers } from '../../../config/config';
-import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
     ResultsViewURLQuery,
     ResultsViewURLQueryEnum,
