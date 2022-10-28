@@ -21,6 +21,8 @@ import 'pathway-mapper/dist/base.css';
 import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
 import 'cytoscape-navigator/cytoscape.js-navigator.css';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
+import _ from 'lodash';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 interface IPatientViewPathwayMapperProps {
     store: PatientViewPageStore;
@@ -120,7 +122,9 @@ export default class PatientViewPathwayMapper extends React.Component<
 
     public render() {
         if (!this.PathwayMapperComponent) {
-            return null;
+            return (
+                <LoadingIndicator isLoading={true} center={true} size={'big'} />
+            );
         }
 
         return (
@@ -137,10 +141,10 @@ export default class PatientViewPathwayMapper extends React.Component<
                                 .genePanelDataByMolecularProfileIdAndSampleId
                                 .result
                         }
-                        molecularProfiles={[
-                            this.props.store.mutationMolecularProfile.result!,
-                            this.props.store.discreteMolecularProfile.result!,
-                        ]}
+                        molecularProfiles={_.compact([
+                            this.props.store.mutationMolecularProfile?.result!,
+                            this.props.store.discreteMolecularProfile?.result!,
+                        ])}
                     />
 
                     {/*@ts-ignore */}
