@@ -37,10 +37,8 @@ import {
     Patient,
     Sample,
 } from 'cbioportal-ts-api-client';
-import {
-    AlterationTypeConstants,
-    ResultsViewPageStore,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
+import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     getAlteredUids,
     getUnalteredUids,

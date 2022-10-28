@@ -3,10 +3,10 @@ import { NumericGeneMolecularData } from 'cbioportal-ts-api-client';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 import {
-    AlterationTypeConstants,
     AnnotatedMutation,
     ExtendedAlteration,
 } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 
 export function annotateAlterationTypes(
     datum: (AnnotatedMutation | NumericGeneMolecularData | StructuralVariant) &

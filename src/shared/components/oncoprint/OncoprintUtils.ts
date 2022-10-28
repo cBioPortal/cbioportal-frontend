@@ -24,12 +24,12 @@ import {
     germline_rule_params,
 } from './geneticrules';
 import {
-    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     CaseAggregatedData,
     IQueriedCaseData,
     IQueriedMergedTrackCaseData,
 } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {

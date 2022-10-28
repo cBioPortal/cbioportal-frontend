@@ -1,3 +1,5 @@
+import { MolecularProfile } from 'cbioportal-ts-api-client';
+
 export const MOLECULAR_PROFILE_MUTATIONS_SUFFIX = '_mutations';
 export const MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX = `${MOLECULAR_PROFILE_MUTATIONS_SUFFIX}_uncalled`;
 export const MUTATION_STATUS_GERMLINE = 'Germline';
@@ -67,3 +69,54 @@ export const enum GENOME_NEXUS_ARG_FIELD_ENUM {
     SIGNAL = 'signal',
     CLINVAR = 'clinvar',
 }
+
+export const AlterationTypeText: {
+    [K in MolecularProfile['molecularAlterationType']]: string;
+} = {
+    MUTATION_EXTENDED: 'mutations',
+    COPY_NUMBER_ALTERATION: 'copy number alterations',
+    MRNA_EXPRESSION: 'mRNA expression',
+    PROTEIN_LEVEL: 'protein expression',
+    STRUCTURAL_VARIANT: 'structural variants',
+    GENERIC_ASSAY: 'generic assay',
+    GENESET_SCORE: 'geneset score',
+    METHYLATION: 'methylation',
+    MICRO_RNA_EXPRESSION: 'micro rna expression',
+    MRNA_EXPRESSION_NORMALS: 'MRNA expression normals',
+    METHYLATION_BINARY: 'methylation binary',
+    MUTATION_UNCALLED: 'mutation uncalled',
+    PHOSPHORYLATION: 'phosphorylation',
+    PROTEIN_ARRAY_PHOSPHORYLATION: 'protein array phosphorylation',
+    PROTEIN_ARRAY_PROTEIN_LEVEL: 'protein array protein level',
+    RNA_EXPRESSION: 'RNA expression',
+};
+
+// TODO: type this like the above so that it contains
+// all possible keys (need to figure out FUSION first though, which is no longer a type)
+// do we still need to support it?
+export const AlterationTypeConstants = {
+    MUTATION_EXTENDED: 'MUTATION_EXTENDED',
+    COPY_NUMBER_ALTERATION: 'COPY_NUMBER_ALTERATION',
+    MRNA_EXPRESSION: 'MRNA_EXPRESSION',
+    PROTEIN_LEVEL: 'PROTEIN_LEVEL',
+    FUSION: 'FUSION',
+    GENESET_SCORE: 'GENESET_SCORE',
+    METHYLATION: 'METHYLATION',
+    GENERIC_ASSAY: 'GENERIC_ASSAY',
+    STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT',
+    MUTATION_UNCALLED: 'MUTATION_UNCALLED',
+};
+
+export const DataTypeConstants = {
+    DISCRETE: 'DISCRETE',
+    CONTINUOUS: 'CONTINUOUS',
+    ZSCORE: 'Z-SCORE',
+    MAF: 'MAF',
+    LOGVALUE: 'LOG-VALUE',
+    LOG2VALUE: 'LOG2-VALUE',
+    FUSION: 'FUSION',
+    SV: 'SV',
+    LIMITVALUE: 'LIMIT-VALUE',
+    BINARY: 'BINARY',
+    CATEGORICAL: 'CATEGORICAL',
+};

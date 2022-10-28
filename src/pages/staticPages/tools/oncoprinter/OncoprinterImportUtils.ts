@@ -11,7 +11,7 @@ import {
 } from './OncoprinterGeneticUtils';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { isNotGermlineMutation } from '../../../../shared/lib/MutationUtils';
-import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { getOncoprintMutationType } from '../../../../shared/components/oncoprint/DataUtils';
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {

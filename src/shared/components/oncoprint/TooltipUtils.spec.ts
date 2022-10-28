@@ -5,15 +5,13 @@ import {
     makeGeneticTrackTooltip_getCoverageInformation,
     makeHeatmapTrackTooltip,
 } from './TooltipUtils';
-import { GeneticTrackDatum } from './Oncoprint';
 import {
-    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import $ from 'jquery';
-import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
