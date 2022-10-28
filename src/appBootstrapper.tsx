@@ -13,7 +13,6 @@ import {
     initializeAppStore,
     initializeLoadConfiguration,
     initializeServerConfiguration,
-    setServerConfig,
 } from './config/config';
 
 import './shared/lib/ajaxQuiet';
@@ -31,9 +30,9 @@ import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 import Container from 'appShell/App/Container';
-import request from 'superagent';
 import { IServerConfig } from 'config/IAppConfig';
 import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { FeatureFlagStore } from 'shared/FeatureFlagStore';
 
 export interface ICBioWindow {
     globalStores: {
@@ -154,10 +153,12 @@ const history = createBrowserHistory({
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
+const featureFlagStore = new FeatureFlagStore();
+
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
-    appStore: new AppStore(),
+    appStore: new AppStore(featureFlagStore),
 };
 
 browserWindow.globalStores = stores;
