@@ -109,7 +109,6 @@ export enum ResultsViewURLQueryEnum {
     mutations_transcript_id = 'mutations_transcript_id',
 
     pathways_source = 'pathways_source',
-    enable_left_truncation = 'enable_left_truncation',
 }
 
 type StringValuedParams = Exclude<
@@ -174,7 +173,6 @@ const shouldForceRemount: { [prop in keyof ResultsViewURLQuery]: boolean } = {
     genetic_profile_ids_GENERIC_ASSAY: true,
     genetic_profile_ids: true,
     comparison_createdGroupsSessionId: false,
-    enable_left_truncation: false,
 };
 
 const propertiesMap = _.mapValues(
@@ -271,7 +269,6 @@ const propertiesMap = _.mapValues(
         comparison_createdGroupsSessionId: {
             isSessionProp: true,
         },
-        enable_left_truncation: { isSessionProp: false },
     } as PropertiesMap<ResultsViewURLQuery>,
     (propertySpec, propertyName) => {
         propertySpec.isHashedProp =

@@ -47,6 +47,7 @@ import {
 import { fetchPatients } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { getSampleMolecularIdentifiers } from 'pages/studyView/StudyViewComparisonUtils';
+import { LEFT_TRUNCATION_ADJUSTMENT_FLAG } from 'pages/resultsView/survival/SurvivalUtil';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
@@ -622,6 +623,8 @@ export default class GroupComparisonStore extends ComparisonStore {
 
     // override parent method
     protected get enableLeftTruncation() {
-        return !!this.urlWrapper.query.enable_left_truncation;
+        return this.appStore.featureFlagStore.has(
+            LEFT_TRUNCATION_ADJUSTMENT_FLAG
+        );
     }
 }

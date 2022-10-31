@@ -200,6 +200,7 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import {
     createSurvivalAttributeIdsDict,
+    LEFT_TRUNCATION_ADJUSTMENT_FLAG,
     generateStudyViewSurvivalPlotTitle,
     getSurvivalStatusBoolean,
 } from 'pages/resultsView/survival/SurvivalUtil';
@@ -307,7 +308,6 @@ export type StudyViewURLQuery = {
     filterValues?: string;
     sharedGroups?: string;
     sharedCustomData?: string;
-    enable_left_truncation?: string;
 };
 
 export type XvsYScatterChart = {
@@ -8159,7 +8159,7 @@ export class StudyViewPageStore
             if (
                 studyIds.length === 1 &&
                 studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
-                this.urlWrapper.query.enable_left_truncation
+                this.enableLeftTruncation
             ) {
                 const data = await client.getAllClinicalDataInStudyUsingGET({
                     attributeId: 'TT_CPT_REPORT_MOS',
@@ -9794,5 +9794,11 @@ export class StudyViewPageStore
         value: boolean
     ) {
         this._survivalPlotLeftTruncationToggleMap.set(uniqueChartKey, value);
+    }
+
+    public get enableLeftTruncation() {
+        return this.appStore.featureFlagStore.has(
+            LEFT_TRUNCATION_ADJUSTMENT_FLAG
+        );
     }
 }
