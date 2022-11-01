@@ -100,6 +100,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
         count: number,
         mutations?: Partial<T>[]
     ) => JSX.Element;
+    yAxisLabelFormatter: (symbol?: string, groupName?: string) => string;
     customControls?: JSX.Element;
     onXAxisOffset?: (offset: number) => void;
     geneWidth: number;
@@ -892,6 +893,7 @@ export default class LollipopMutationPlot<
                         topYAxisSymbol={this.props.topYAxisSymbol}
                         bottomYAxisSymbol={this.props.bottomYAxisSymbol}
                         groups={this.groups}
+                        yAxisLabelFormatter={this.props.yAxisLabelFormatter}
                     />
                     <TrackPanel
                         store={this.props.store}

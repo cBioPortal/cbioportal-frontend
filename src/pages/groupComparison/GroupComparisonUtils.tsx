@@ -1063,20 +1063,3 @@ const AlterationMenuHeader: React.FunctionComponent<{
         );
     }
 );
-
-export function getSampleMolecularIdentifiers(
-    selectedSamples: Sample[],
-    profiles: MolecularProfile[]
-) {
-    const studyToProfile = _.keyBy(profiles, p => p.studyId);
-    return selectedSamples.reduce((array, sample) => {
-        if (sample.studyId in studyToProfile) {
-            array.push({
-                sampleId: sample.sampleId,
-                molecularProfileId:
-                    studyToProfile[sample.studyId].molecularProfileId,
-            });
-        }
-        return array;
-    }, [] as SampleMolecularIdentifier[]);
-}

@@ -76,11 +76,11 @@ export interface IMutationMapperProps {
     onTranscriptChange?: (transcript: string) => void;
     onClickSettingMenu?: (visible: boolean) => void;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
-    getMutationCount?: (mutation: Partial<Mutation>) => number;
     plotLollipopTooltipCountInfo?: (
         count: number,
         mutations?: Partial<Mutation>[]
     ) => JSX.Element;
+    plotYAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
     compactStyle?: boolean;
     mergeOncoKbIcons?: boolean; // TODO add server config param for this as well?
 
@@ -557,6 +557,7 @@ export default class MutationMapper<
                 lollipopTooltipCountInfo={
                     this.props.plotLollipopTooltipCountInfo
                 }
+                yAxisLabelFormatter={this.props.plotYAxisLabelFormatter}
             />
         );
     }

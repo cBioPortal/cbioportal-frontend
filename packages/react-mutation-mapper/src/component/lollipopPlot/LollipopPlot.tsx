@@ -36,6 +36,7 @@ export type LollipopPlotProps = {
     hugoGeneSymbol?: string;
     dataStore?: DataStore;
     onXAxisOffset?: (offset: number) => void;
+    yAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
 };
 
 @observer

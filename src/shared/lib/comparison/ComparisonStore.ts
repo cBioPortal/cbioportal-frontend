@@ -42,6 +42,8 @@ import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import {
+    compareByAlterationPercentage,
+    getAlterationRowData,
     pickCopyNumberEnrichmentProfiles,
     pickGenericAssayEnrichmentProfiles,
     pickMethylationEnrichmentProfiles,
@@ -101,6 +103,7 @@ import {
     ComparisonSession,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
+import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -1064,6 +1067,24 @@ export default abstract class ComparisonStore
             return Promise.resolve([]);
         },
     });
+
+    @computed get genesWithMaxFrequency(): AlterationEnrichmentRow[] {
+        if (
+            this.alterationsEnrichmentData.isComplete &&
+            this.alterationsEnrichmentAnalysisGroups.isComplete
+        ) {
+            const alterationRowData: AlterationEnrichmentRow[] = getAlterationRowData(
+                this.alterationsEnrichmentData.result!,
+                this.resultsViewStore
+                    ? this.resultsViewStore.hugoGeneSymbols
+                    : [],
+                this.alterationsEnrichmentAnalysisGroups.result!
+            );
+            alterationRowData.sort(compareByAlterationPercentage);
+            return alterationRowData.slice(0, 10);
+        }
+        return [];
+    }
 
     readonly mrnaEnrichmentAnalysisGroups = remoteData({
         await: () => [

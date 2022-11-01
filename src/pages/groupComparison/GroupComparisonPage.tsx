@@ -48,7 +48,7 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
-import Mutations from './Mutations';
+import GroupComparisonMutationsTab from './GroupComparisonMutationsTab';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -131,11 +131,8 @@ export default class GroupComparisonPage extends React.Component<
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
-            this.store.mutationsByGroup,
-            this.store.availableGenes,
-            this.store.mutations,
-            // this.store.allSamples,
-            this.store.countProfiledSamples,
+            this.store.alterationsEnrichmentData,
+            this.store.alterationsEnrichmentAnalysisGroups,
         ],
         render: () => {
             return (
@@ -229,7 +226,7 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            <Mutations store={this.store} />
+                            <GroupComparisonMutationsTab store={this.store} />
                             {/* stacked lollipop plots for > 2 groups */}
                             {/* {this.store.activeGroups.result!.map(g => {
                                 return (

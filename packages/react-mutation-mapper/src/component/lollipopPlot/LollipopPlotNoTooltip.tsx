@@ -689,10 +689,12 @@ export default class LollipopPlotNoTooltip extends React.Component<
         groupName?: string,
         symbol: string = '#'
     ) {
-        const label = groupName
-            ? `${symbol} ${groupName} Mutations`
+        const label = this.props.yAxisLabelFormatter
+            ? this.props.yAxisLabelFormatter(symbol, groupName)
+            : groupName
+            ? `${symbol} ${this.props.hugoGeneSymbol ||
+                  ''} ${groupName} Mutations`
             : `${symbol} ${this.props.hugoGeneSymbol || ''} Mutations`;
-
         const placeOnBottom = placement === LollipopPlacement.BOTTOM;
 
         return (

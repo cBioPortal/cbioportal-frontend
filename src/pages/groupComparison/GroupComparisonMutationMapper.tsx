@@ -11,20 +11,16 @@ import { PercentToggle } from './PercentToggle';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
-    onScaleToggle?: (showPercent: boolean) => void;
+    onScaleToggle?: (selectedScale: AxisScale) => void;
+    showPercent?: boolean;
 }
 
 @observer
 export default class GroupComparisonMutationMapper extends MutationMapper<
     IGroupComparisonMutationMapperProps
 > {
-    @observable public showPercent = true;
     constructor(props: IGroupComparisonMutationMapperProps) {
         super(props);
-        makeObservable(this);
-        if (props.onInit) {
-            props.onInit(this);
-        }
     }
 
     protected get mutationTableComponent() {
@@ -32,35 +28,23 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     protected get plotTopYAxisSymbol() {
-        return this.showPercent ? '%' : '#';
+        return this.props.showPercent ? '%' : '#';
     }
 
     protected get plotBottomYAxisSymbol() {
-        return this.showPercent ? '%' : '#';
+        return this.props.showPercent ? '%' : '#';
     }
 
     protected get plotTopYAxisDefaultMax() {
-        return this.showPercent ? 0 : 5;
+        return this.props.showPercent ? 0 : 5;
     }
 
     protected get plotBottomYAxisDefaultMax() {
-        return this.showPercent ? 0 : 5;
+        return this.props.showPercent ? 0 : 5;
     }
 
     protected get plotYMaxLabelPostfix() {
-        return this.showPercent ? '%' : '';
-    }
-
-    @action.bound
-    private onScaleToggle(selectedScale: AxisScale) {
-        this.lollipopPlotControlsConfig.yMaxInput = undefined;
-        this.lollipopPlotControlsConfig.bottomYMaxInput = undefined;
-
-        this.showPercent = selectedScale === AxisScale.PERCENT;
-
-        if (this.props.onScaleToggle) {
-            this.props.onScaleToggle(this.showPercent);
-        }
+        return this.props.showPercent ? '%' : '';
     }
 
     /**
@@ -69,8 +53,8 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     protected get customControls(): JSX.Element | undefined {
         return (
             <PercentToggle
-                showPercent={this.showPercent}
-                onScaleToggle={this.onScaleToggle}
+                showPercent={this.props.showPercent}
+                onScaleToggle={this.props.onScaleToggle}
             />
         );
     }

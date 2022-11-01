@@ -3,7 +3,6 @@ import {
     defaultGroupOrder,
     finalizeStudiesAttr,
     getOrdinals,
-    getSampleMolecularIdentifiers,
     getStudyIds,
 } from './GroupComparisonUtils';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
@@ -47,6 +46,7 @@ import {
 } from 'shared/lib/GenePanelUtils';
 import { fetchPatients } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
+import { getSampleMolecularIdentifiers } from 'pages/studyView/StudyViewComparisonUtils';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
@@ -324,13 +324,6 @@ export default class GroupComparisonStore extends ComparisonStore {
     readonly mutations = remoteData({
         await: () => [this.samples, this.mutationEnrichmentProfiles],
         invoke: async () => {
-            if (
-                this.samples.result!.length === 0 ||
-                this.mutationEnrichmentProfiles.result!.length === 0 ||
-                !this.selectedMutationMapperGene
-            ) {
-                return Promise.resolve([]);
-            }
             const sampleMolecularIdentifiers = getSampleMolecularIdentifiers(
                 this.samples.result!,
                 this.mutationEnrichmentProfiles.result!
@@ -340,7 +333,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     mutationMultipleStudyFilter: {
                         entrezGeneIds: [
-                            this.selectedMutationMapperGene.entrezGeneId,
+                            this.selectedMutationMapperGene!.entrezGeneId,
                         ],
                         sampleMolecularIdentifiers,
                     } as MutationMultipleStudyFilter,
@@ -350,29 +343,19 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    readonly countProfiledSamples = remoteData({
+    readonly profiledSamplesCount = remoteData({
         await: () => [this.allSamples, this.coverageInformation],
         invoke: async () => {
-            let count = 0;
-            if (this.selectedMutationMapperGene) {
-                const sampleKeys = this.allSamples.result!.map(
-                    s => s.uniqueSampleKey
-                );
-                sampleKeys.map(k => {
-                    if (
-                        isSampleProfiled(
-                            k,
-                            this.mutationEnrichmentProfiles.result![0]
-                                .molecularProfileId,
-                            this.selectedMutationMapperGene!.hugoGeneSymbol,
-                            this.coverageInformation.result!
-                        )
-                    ) {
-                        count += 1;
-                    }
-                });
-            }
-            return count;
+            return this.allSamples.result!.filter(s =>
+                this.mutationEnrichmentProfiles.result!.some(p =>
+                    isSampleProfiled(
+                        s.uniqueSampleKey,
+                        p.molecularProfileId,
+                        this.selectedMutationMapperGene!.hugoGeneSymbol,
+                        this.coverageInformation.result!
+                    )
+                )
+            ).length;
         },
     });
 
@@ -395,16 +378,9 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    readonly genePanelDataForAllProfiles = remoteData({
+    readonly genePanelDataForMutationProfiles = remoteData({
         await: () => [this.allSamples, this.mutationEnrichmentProfiles],
         invoke: async () => {
-            if (
-                this.allSamples.result!.length === 0 ||
-                this.mutationEnrichmentProfiles.result!.length === 0 ||
-                !this.selectedMutationMapperGene
-            ) {
-                return Promise.resolve([]);
-            }
             const sampleMolecularIdentifiers = getSampleMolecularIdentifiers(
                 this.allSamples.result!,
                 this.mutationEnrichmentProfiles.result!
@@ -422,22 +398,19 @@ export default class GroupComparisonStore extends ComparisonStore {
 
     readonly coverageInformation = remoteData<CoverageInformation | undefined>({
         await: () => [
-            this.genePanelDataForAllProfiles,
+            this.genePanelDataForMutationProfiles,
             this.sampleKeyToSample,
             this.patients,
         ],
         invoke: () => {
-            if (this.selectedMutationMapperGene) {
-                return Promise.resolve(
-                    getCoverageInformation(
-                        this.genePanelDataForAllProfiles.result!,
-                        this.sampleKeyToSample.result!,
-                        this.patients.result!,
-                        [this.selectedMutationMapperGene!]
-                    )
-                );
-            }
-            return Promise.resolve(undefined);
+            return Promise.resolve(
+                getCoverageInformation(
+                    this.genePanelDataForMutationProfiles.result!,
+                    this.sampleKeyToSample.result!,
+                    this.patients.result!,
+                    [this.selectedMutationMapperGene!]
+                )
+            );
         },
     });
 
@@ -451,31 +424,17 @@ export default class GroupComparisonStore extends ComparisonStore {
         invoke: async () => {
             const genes = await getAllGenes();
             return genes.sort((a, b) =>
-                a.hugoGeneSymbol.localeCompare(b.hugoGeneSymbol)
+                a.hugoGeneSymbol < b.hugoGeneSymbol ? -1 : 1
             );
         },
     });
 
-    readonly loadOptions = (inputText: string, callback: any) => {
-        if (!inputText) {
-            callback([]);
-        }
-        const stringCompare = (item: any) =>
-            item.hugoGeneSymbol.startsWith(inputText.toUpperCase());
-        const options = this.availableGenes.result!;
-        callback(
-            options
-                .filter(stringCompare)
-                .map(g => ({
-                    label: g.hugoGeneSymbol,
-                    value: g,
-                }))
-                .slice(0, 200)
-        );
-    };
+    public setDefaultGene() {
+        this._selectedMutationMapperGene = this.genesWithMaxFrequency[0].hugoGeneSymbol;
+    }
 
     @computed get selectedMutationMapperGene() {
-        const gene = this.availableGenes.result!.find(
+        let gene = this.availableGenes.result!.find(
             g => g.hugoGeneSymbol === this._selectedMutationMapperGene
         );
         return gene;
@@ -496,17 +455,9 @@ export default class GroupComparisonStore extends ComparisonStore {
         filter: DataFilter<string>,
         mutation: Mutation
     ): boolean {
-        const group = _(this.mutationsByGroup.result!)
-            .keys()
-            .value()
-            .find(g => g === filter.values[0]);
-        if (group) {
-            return this.mutationsByGroup.result![group].some(
-                m => m.sampleId === mutation.sampleId
-            );
-        } else {
-            return false;
-        }
+        return this.mutationsByGroup.result![filter.values[0]].some(
+            m => m.sampleId === mutation.sampleId
+        );
     }
 
     readonly mutationsByGroup = remoteData({
@@ -517,9 +468,8 @@ export default class GroupComparisonStore extends ComparisonStore {
                 m => m.sampleId
             );
 
-            const ret = this.activeGroups
-                .result!.slice(0, 2)
-                .reduce((aggr: { [groupId: string]: Mutation[] }, group) => {
+            const ret = this.activeGroups.result!.reduce(
+                (aggr: { [groupId: string]: Mutation[] }, group) => {
                     const samplesInGroup = _(group.studies)
                         .map(g => g.samples)
                         .flatten()
@@ -535,7 +485,9 @@ export default class GroupComparisonStore extends ComparisonStore {
 
                     aggr[group.uid] = mutations;
                     return aggr;
-                }, {});
+                },
+                {}
+            );
             return ret;
         },
     });
