@@ -32,6 +32,9 @@
       "description": "OncoKB Levels"
     }
   ],
+  "schemes": [
+    "https"
+  ],
   "paths": {
     "/annotate/copyNumberAlterations": {
       "get": {
