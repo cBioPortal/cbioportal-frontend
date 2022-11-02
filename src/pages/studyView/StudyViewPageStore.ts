@@ -8195,26 +8195,28 @@ export class StudyViewPageStore
         ],
         invoke: async () => {
             return this.survivalPlots.result.map(obj => {
-                obj.survivalData = getPatientSurvivals(
-                    this.survivalData.result,
-                    this.selectedPatientKeys.result!,
-                    obj.associatedAttrs[0],
-                    obj.associatedAttrs[1],
-                    obj.filter,
-                    this.survivalPlotLeftTruncationToggleMap.get(obj.id) &&
-                        obj.id === 'OS_SURVIVAL'
-                        ? this.survivalEntryMonths.result
-                        : undefined
-                );
-                obj.survivalDataWithoutLeftTruncation = getPatientSurvivals(
-                    this.survivalData.result,
-                    this.selectedPatientKeys.result!,
-                    obj.associatedAttrs[0],
-                    obj.associatedAttrs[1],
-                    obj.filter,
-                    undefined
-                );
-                return obj;
+                return {
+                    ...obj,
+                    survivalData: getPatientSurvivals(
+                        this.survivalData.result,
+                        this.selectedPatientKeys.result!,
+                        obj.associatedAttrs[0],
+                        obj.associatedAttrs[1],
+                        obj.filter,
+                        this.survivalPlotLeftTruncationToggleMap.get(obj.id) &&
+                            obj.id === 'OS_SURVIVAL'
+                            ? this.survivalEntryMonths.result
+                            : undefined
+                    ),
+                    survivalDataWithoutLeftTruncation: getPatientSurvivals(
+                        this.survivalData.result,
+                        this.selectedPatientKeys.result!,
+                        obj.associatedAttrs[0],
+                        obj.associatedAttrs[1],
+                        obj.filter,
+                        undefined
+                    ),
+                };
             });
         },
         onError: () => {},
