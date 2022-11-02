@@ -33,6 +33,7 @@ import {
     generateSurvivalPlotYAxisLabelFromDisplayName,
     sortPatientSurvivals,
     calculateNumberOfPatients,
+    LeftTruncationCheckbox,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -618,12 +619,44 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             </div>
                         );
                     }
+                    // Currently, left truncation is only appliable for Overall Survival data
+                    const showLeftTruncationCheckbox =
+                        key === 'OS'
+                            ? this.props.store.isLeftTruncationAvailable.result
+                            : false;
                     content = (
                         <div style={{ marginBottom: 40 }}>
                             <h4 className="forceHeaderStyle h4">
                                 {survivalTitleText[key]}
                             </h4>
                             <p>{attributeDescriptions[key]}</p>
+                            {showLeftTruncationCheckbox && (
+                                <LeftTruncationCheckbox
+                                    className={
+                                        survivalPlotStyle.NoPaddingLeftTruncationCheckbox
+                                    }
+                                    onToggleSurvivalPlotLeftTruncation={
+                                        this.props.store
+                                            .toggleLeftTruncationSelection
+                                    }
+                                    isLeftTruncationChecked={
+                                        this.props.store.adjustForLeftTruncation
+                                    }
+                                    patientSurvivalsWithoutLeftTruncation={
+                                        this.props.store
+                                            .patientSurvivalsWithoutLeftTruncation
+                                            .result![key]
+                                    }
+                                    patientToAnalysisGroups={
+                                        patientToAnalysisGroups
+                                    }
+                                    sortedGroupedSurvivals={
+                                        this.sortedGroupedSurvivals.result![
+                                            this.selectedSurvivalPlotPrefix
+                                        ]
+                                    }
+                                />
+                            )}
                             <div
                                 className="borderedChart"
                                 style={{ width: '920px' }}
@@ -663,46 +696,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                         '_'
                                     )}
                                     showCurveInTooltip={true}
-                                    isLeftTruncationAvailable={
-                                        // Currently, left truncation is only appliable for Overall Survival data
-                                        key === 'OS'
-                                            ? this.props.store
-                                                  .isLeftTruncationAvailable
-                                                  .result
-                                            : false
-                                    }
-                                    showLeftTruncationCheckbox={
-                                        // Currently, left truncation is only appliable for Overall Survival data
-                                        key === 'OS'
-                                            ? this.props.store
-                                                  .isLeftTruncationAvailable
-                                                  .result
-                                            : false
-                                    }
-                                    isLeftTruncationChecked={
-                                        this.props.store.adjustForLeftTruncation
-                                    }
-                                    patientsCountWithLeftTruncation={
-                                        this.props.store.patientSurvivals
-                                            .result![key].length
-                                    }
-                                    showLeftTruncationCheckboxInWarningTooltip={
-                                        // Currently, left truncation is only appliable for Overall Survival data
-                                        key === 'OS'
-                                            ? this.props.store
-                                                  .isLeftTruncationAvailable
-                                                  .result
-                                            : false
-                                    }
-                                    patientSurvivalsWithoutLeftTruncation={
-                                        this.props.store
-                                            .patientSurvivalsWithoutLeftTruncation
-                                            .result![key]
-                                    }
-                                    onToggleSurvivalPlotLeftTruncation={
-                                        this.props.store
-                                            .toggleLeftTruncationSelection
-                                    }
                                     legendLabelComponent={
                                         this.props.store.overlapStrategy ===
                                         OverlapStrategy.INCLUDE ? (

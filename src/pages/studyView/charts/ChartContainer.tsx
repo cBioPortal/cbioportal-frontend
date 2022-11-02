@@ -880,12 +880,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             isLeftTruncationAvailable={
                                 this.props.isLeftTruncationAvailable
                             }
-                            showLeftTruncationCheckbox={false}
+                            showLeftTruncationCheckbox={
+                                this.props.isLeftTruncationAvailable
+                            }
                             isLeftTruncationChecked={
                                 this.props.survivalPlotLeftTruncationChecked
-                            }
-                            showLeftTruncationCheckboxInWarningTooltip={
-                                this.props.isLeftTruncationAvailable
                             }
                             onToggleSurvivalPlotLeftTruncation={() =>
                                 this.props.onToggleSurvivalPlotLeftTruncation!(

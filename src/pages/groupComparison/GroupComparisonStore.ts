@@ -622,7 +622,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
 
     // override parent method
-    protected get enableLeftTruncation() {
+    protected get enableLeftTruncationForSuvivalData() {
         return this.appStore.featureFlagStore.has(
             LEFT_TRUNCATION_ADJUSTMENT_FLAG
         );

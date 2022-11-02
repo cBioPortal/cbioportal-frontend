@@ -8159,7 +8159,7 @@ export class StudyViewPageStore
             if (
                 studyIds.length === 1 &&
                 studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
-                this.enableLeftTruncation
+                this.enableLeftTruncationForSuvivalData
             ) {
                 const data = await client.getAllClinicalDataInStudyUsingGET({
                     attributeId: 'TT_CPT_REPORT_MOS',
@@ -8185,32 +8185,6 @@ export class StudyViewPageStore
             return !_.isEmpty(this.survivalEntryMonths.result);
         },
     });
-
-    readonly survivalPlotDataWithoutLeftTruncation = remoteData<SurvivalType[]>(
-        {
-            await: () => [
-                this.survivalData,
-                this.selectedPatientKeys,
-                this.survivalPlots,
-                this.survivalEntryMonths,
-            ],
-            invoke: async () => {
-                return this.survivalPlots.result.map(obj => {
-                    obj.survivalData = getPatientSurvivals(
-                        this.survivalData.result,
-                        this.selectedPatientKeys.result!,
-                        obj.associatedAttrs[0],
-                        obj.associatedAttrs[1],
-                        obj.filter,
-                        undefined
-                    );
-                    return obj;
-                });
-            },
-            onError: () => {},
-            default: [],
-        }
-    );
 
     readonly survivalPlotData = remoteData<SurvivalType[]>({
         await: () => [
@@ -9796,7 +9770,7 @@ export class StudyViewPageStore
         this._survivalPlotLeftTruncationToggleMap.set(uniqueChartKey, value);
     }
 
-    public get enableLeftTruncation() {
+    public get enableLeftTruncationForSuvivalData() {
         return this.appStore.featureFlagStore.has(
             LEFT_TRUNCATION_ADJUSTMENT_FLAG
         );

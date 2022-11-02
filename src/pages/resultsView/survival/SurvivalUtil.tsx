@@ -4,6 +4,10 @@ import _ from 'lodash';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { Dictionary } from 'lodash';
 import { calculateLogConfidenceIntervals } from './SurvivalHelper';
+import React from 'react';
+import styles from './styles.module.scss';
+import FlexAlignedCheckbox from 'shared/components/FlexAlignedCheckbox';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 export type ScatterData = {
     x: number;
@@ -644,3 +648,98 @@ export function calculateNumberOfPatients(
         s.uniquePatientKey in patientToAnalysisGroups ? 1 : 0
     );
 }
+
+export type LeftTruncationCheckboxProps = {
+    className: string;
+    onToggleSurvivalPlotLeftTruncation?: () => void;
+    isLeftTruncationChecked?: boolean;
+    patientSurvivalsWithoutLeftTruncation?: PatientSurvival[];
+    patientToAnalysisGroups: { [uniquePatientKey: string]: string[] };
+    sortedGroupedSurvivals: { [group: string]: PatientSurvival[] };
+};
+
+export const LeftTruncationCheckbox: React.FunctionComponent<LeftTruncationCheckboxProps> = props => {
+    return (
+        <div className={props.className}>
+            <span onClick={props.onToggleSurvivalPlotLeftTruncation}>
+                <FlexAlignedCheckbox
+                    checked={!!props.isLeftTruncationChecked}
+                    label={
+                        <span
+                            style={{
+                                marginTop: -3,
+                                paddingRight: 10,
+                            }}
+                        >
+                            Adjust for left truncation
+                            {props.isLeftTruncationChecked && (
+                                <>
+                                    {' ('}
+                                    <b>
+                                        {calculateNumberOfPatients(
+                                            props.patientSurvivalsWithoutLeftTruncation!,
+                                            props.patientToAnalysisGroups
+                                        ) -
+                                            calculateNumberOfPatients(
+                                                _.flatMap(
+                                                    props.sortedGroupedSurvivals
+                                                ),
+                                                props.patientToAnalysisGroups
+                                            )}
+                                    </b>{' '}
+                                    patients excluded)
+                                </>
+                            )}
+                            <DefaultTooltip
+                                overlay={
+                                    <div
+                                        style={{
+                                            maxWidth: 300,
+                                        }}
+                                    >
+                                        Patients enter a study when they are
+                                        profiled, which can be months or even
+                                        years after the initial diagnosis. To
+                                        mitigate the effects of left truncation
+                                        one can enable the risk-set adjustment
+                                        method as described in To mitigate the
+                                        effects of left truncation one can
+                                        enable the risk-set adjustment method as
+                                        described in{' '}
+                                        <a href="https://pubmed.ncbi.nlm.nih.gov/34734967/">
+                                            Brown et al (2022)
+                                        </a>
+                                        {'. '}
+                                        This involves adjusting patients at risk
+                                        at time t to date of sequencing rather
+                                        than date of diagnosis (xx patients are
+                                        excluded because they passed away before
+                                        their biopsies were sequenced). Please
+                                        note that not all Kaplan-Meier estimates
+                                        account for the lead time bias
+                                        introduced by the inclusion criteria for
+                                        the GENIE BPC Project.
+                                    </div>
+                                }
+                                placement="bottom"
+                            >
+                                <i
+                                    className="fa fa-info-circle"
+                                    style={Object.assign(
+                                        {},
+                                        {
+                                            color: '#000000',
+                                            cursor: 'pointer',
+                                            paddingLeft: 5,
+                                        }
+                                    )}
+                                />
+                            </DefaultTooltip>
+                        </span>
+                    }
+                    style={{ marginTop: 1, marginBottom: -3 }}
+                />
+            </span>
+        </div>
+    );
+};
