@@ -20,7 +20,7 @@ const SampleNotProfiledAlert: FunctionComponent<ISampleNotProfiledAlertProps> = 
     const messages = molecularProfiles.reduce(
         (aggr: JSX.Element[], profile) => {
             const { notProfiledIds } = getSamplesProfiledStatus(
-                sampleManager!.getSampleIdsInOrder(),
+                sampleManager!.getActiveSampleIdsInOrder(),
                 genePanelDataByMolecularProfileIdAndSampleId,
                 profile.molecularProfileId
             );
