@@ -292,8 +292,12 @@ export type SurvivalType = {
     associatedAttrs: string[];
     survivalStatusAttribute: ClinicalAttribute;
     filter: (s: string) => boolean;
-    survivalData: PatientSurvival[];
     isLeftTruncationAvailable: boolean;
+};
+
+export type SurvivalData = {
+    id: string;
+    survivalData: PatientSurvival[];
     survivalDataWithoutLeftTruncation: PatientSurvival[];
 };
 
@@ -7677,12 +7681,10 @@ export class StudyViewPageStore
                             `${prefix}_MONTHS`,
                         ],
                         filter: s => getSurvivalStatusBoolean(s, prefix),
-                        survivalData: [],
                         // Currently, left truncation is only appliable for Overall Survival data
                         isLeftTruncationAvailable:
                             !!this.isLeftTruncationAvailable.result &&
                             new RegExp('OS').test(prefix),
-                        survivalDataWithoutLeftTruncation: [],
                     };
                 }
             );
@@ -8186,7 +8188,7 @@ export class StudyViewPageStore
         },
     });
 
-    readonly survivalPlotData = remoteData<SurvivalType[]>({
+    readonly survivalPlotDataById = remoteData<{ [id: string]: SurvivalData }>({
         await: () => [
             this.survivalData,
             this.selectedPatientKeys,
@@ -8194,33 +8196,37 @@ export class StudyViewPageStore
             this.survivalEntryMonths,
         ],
         invoke: async () => {
-            return this.survivalPlots.result.map(obj => {
-                return {
-                    ...obj,
-                    survivalData: getPatientSurvivals(
-                        this.survivalData.result,
-                        this.selectedPatientKeys.result!,
-                        obj.associatedAttrs[0],
-                        obj.associatedAttrs[1],
-                        obj.filter,
-                        this.survivalPlotLeftTruncationToggleMap.get(obj.id) &&
-                            obj.id === 'OS_SURVIVAL'
-                            ? this.survivalEntryMonths.result
-                            : undefined
-                    ),
-                    survivalDataWithoutLeftTruncation: getPatientSurvivals(
-                        this.survivalData.result,
-                        this.selectedPatientKeys.result!,
-                        obj.associatedAttrs[0],
-                        obj.associatedAttrs[1],
-                        obj.filter,
-                        undefined
-                    ),
-                };
-            });
+            return _.chain(this.survivalPlots.result)
+                .map(plot => {
+                    return {
+                        id: plot.id,
+                        survivalData: getPatientSurvivals(
+                            this.survivalData.result,
+                            this.selectedPatientKeys.result!,
+                            plot.associatedAttrs[0],
+                            plot.associatedAttrs[1],
+                            plot.filter,
+                            this.survivalPlotLeftTruncationToggleMap.get(
+                                plot.id
+                            ) && plot.id === 'OS_SURVIVAL'
+                                ? this.survivalEntryMonths.result
+                                : undefined
+                        ),
+                        survivalDataWithoutLeftTruncation: getPatientSurvivals(
+                            this.survivalData.result,
+                            this.selectedPatientKeys.result!,
+                            plot.associatedAttrs[0],
+                            plot.associatedAttrs[1],
+                            plot.filter,
+                            undefined
+                        ),
+                    };
+                })
+                .keyBy(plot => plot.id)
+                .value();
         },
         onError: () => {},
-        default: [],
+        default: {},
     });
 
     readonly survivalData = remoteData<{ [id: string]: ClinicalData[] }>({
@@ -8617,11 +8623,14 @@ export class StudyViewPageStore
                     {}
                 );
 
-                _.each(this.survivalPlotData.result, survivalPlot => {
-                    if (survivalPlot.id in this.chartMetaSet) {
-                        ret[survivalPlot.id] = survivalPlot.survivalData.length;
+                _.each(
+                    this.survivalPlotDataById.result,
+                    (survivalPlotData, id) => {
+                        if (id in this.chartMetaSet) {
+                            ret[id] = survivalPlotData.survivalData.length;
+                        }
                     }
-                });
+                );
 
                 if (
                     SpecialChartsUniqueKeyEnum.CANCER_STUDIES in

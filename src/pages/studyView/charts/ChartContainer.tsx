@@ -399,6 +399,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         //   a rerender with delay
         if (
             this.props.promise.isComplete &&
+            this.props.store.survivalPlotDataById.isComplete &&
             this.props.patientToAnalysisGroup &&
             this.props.patientToAnalysisGroup.isComplete
         ) {
@@ -409,7 +410,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 }
             );
             return makeSurvivalChartData(
-                survival.survivalData,
+                this.props.store.survivalPlotDataById.result[
+                    this.props.chartMeta.uniqueKey
+                ]?.survivalData,
                 this.props.analysisGroupsSettings.groups,
                 this.props.patientToAnalysisGroup!.result!
             );

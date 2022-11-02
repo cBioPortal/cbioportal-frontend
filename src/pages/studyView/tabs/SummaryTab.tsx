@@ -397,7 +397,7 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.SURVIVAL: {
-                props.promise = this.store.survivalPlotData;
+                props.promise = this.store.survivalPlots;
                 props.getData = () =>
                     this.store.getSurvivalDownloadData(chartMeta);
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
@@ -421,10 +421,9 @@ export class StudySummaryTab extends React.Component<
                     new RegExp('OS_SURVIVAL').test(chartMeta.uniqueKey)
                 ) {
                     props.isLeftTruncationAvailable = true;
-                    props.patientSurvivalsWithoutLeftTruncation = this.store.survivalPlotData.result.find(
-                        survivalType =>
-                            new RegExp('OS_SURVIVAL').test(survivalType.id)
-                    )?.survivalDataWithoutLeftTruncation;
+                    props.patientSurvivalsWithoutLeftTruncation = this.store.survivalPlotDataById.result[
+                        'OS_SURVIVAL'
+                    ]?.survivalDataWithoutLeftTruncation;
                 }
                 /* end of left truncation adjustment related settings */
                 break;
