@@ -67,7 +67,6 @@ export const SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP = 'Time of event';
 export const SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP =
     'Time of last observation';
 export const SURVIVAL_PLOT_Y_LABEL_TOOLTIP = '% event free';
-export const LEFT_TRUNCATION_ADJUSTMENT_FLAG = 'LEFT_TRUNCATION_ADJUSTMENT';
 
 // OS, DFS, PFS, DSS are four reserved KM plot types
 // use priority from RESERVED_SURVIVAL_PLOT_PRIORITY for these four types

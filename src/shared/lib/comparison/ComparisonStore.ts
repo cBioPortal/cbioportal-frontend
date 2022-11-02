@@ -1868,7 +1868,7 @@ export default abstract class ComparisonStore
     });
 
     // This method should be updated in the child component
-    protected get enableLeftTruncationForSuvivalData() {
+    protected get isLeftTruncationForSurvivalDataEnabled() {
         return false;
     }
 
@@ -1884,7 +1884,7 @@ export default abstract class ComparisonStore
             if (
                 studyIds.length === 1 &&
                 studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
-                this.enableLeftTruncationForSuvivalData
+                this.isLeftTruncationForSurvivalDataEnabled
             ) {
                 const data = await client.getAllClinicalDataInStudyUsingGET({
                     attributeId: 'TT_CPT_REPORT_MOS',

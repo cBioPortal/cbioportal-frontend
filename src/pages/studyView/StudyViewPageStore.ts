@@ -200,7 +200,6 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import {
     createSurvivalAttributeIdsDict,
-    LEFT_TRUNCATION_ADJUSTMENT_FLAG,
     generateStudyViewSurvivalPlotTitle,
     getSurvivalStatusBoolean,
 } from 'pages/resultsView/survival/SurvivalUtil';
@@ -263,6 +262,7 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import { PageType } from 'shared/userSession/PageType';
 import client from 'shared/api/cbioportalClientInstance';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -8159,7 +8159,7 @@ export class StudyViewPageStore
             if (
                 studyIds.length === 1 &&
                 studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
-                this.enableLeftTruncationForSuvivalData
+                this.isLeftTruncationForSurvivalDataEnabled
             ) {
                 const data = await client.getAllClinicalDataInStudyUsingGET({
                     attributeId: 'TT_CPT_REPORT_MOS',
@@ -9772,9 +9772,9 @@ export class StudyViewPageStore
         this._survivalPlotLeftTruncationToggleMap.set(uniqueChartKey, value);
     }
 
-    public get enableLeftTruncationForSuvivalData() {
+    public get isLeftTruncationForSurvivalDataEnabled() {
         return this.appStore.featureFlagStore.has(
-            LEFT_TRUNCATION_ADJUSTMENT_FLAG
+            FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
         );
     }
 }
