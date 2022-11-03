@@ -11,11 +11,11 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import MutationMapperToolStore from 'pages/staticPages/tools/mutationMapper/MutationMapperToolStore';
 import GroupComparisonStore from './GroupComparisonStore';
 import _ from 'lodash';
-import { AxisScale } from './AxisScaleSwitch';
 import { MakeMobxView } from 'shared/components/MobxView';
 import { countUniqueMutations } from 'shared/lib/MutationUtils';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
+import { AxisScale } from 'react-mutation-mapper';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
@@ -25,6 +25,20 @@ interface IGroupComparisonMutationsTabPlotProps {
 
 function plotYAxisLabelFormatter(symbol?: string, groupName?: string) {
     return `${symbol} ${groupName} Mutations`;
+}
+
+function plotLollipopTooltipCountInfo(
+    count: number,
+    mutations?: Mutation[],
+    axisMode?: AxisScale
+): JSX.Element {
+    return (
+        <LollipopTooltipCountInfo
+            count={count}
+            mutations={mutations}
+            axisMode={axisMode}
+        />
+    );
 }
 
 @observer
@@ -60,20 +74,6 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         this.axisMode = selectedScale;
     }
 
-    @autobind
-    protected plotLollipopTooltipCountInfo(
-        count: number,
-        mutations?: Mutation[]
-    ): JSX.Element {
-        return (
-            <LollipopTooltipCountInfo
-                count={count}
-                mutations={mutations}
-                axisMode={this.axisMode}
-            />
-        );
-    }
-
     readonly plotUI = MakeMobxView({
         await: () => [
             this.props.store.mutations,
@@ -102,7 +102,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                         store={mutationMapperStore}
                         showTranscriptDropDown={true}
                         plotLollipopTooltipCountInfo={
-                            this.plotLollipopTooltipCountInfo
+                            plotLollipopTooltipCountInfo
                         }
                         axisMode={this.axisMode}
                         onScaleToggle={this.onScaleToggle}

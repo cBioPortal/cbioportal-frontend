@@ -8,7 +8,6 @@ interface IPercentToggleProps {
     onScaleToggle?: (selectedScale: AxisScale) => void;
 }
 
-// @observer
 export class PercentToggle extends React.Component<IPercentToggleProps, {}> {
     constructor(props: IPercentToggleProps) {
         super(props);

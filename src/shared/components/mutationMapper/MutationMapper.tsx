@@ -4,6 +4,7 @@ import { action, computed, makeObservable } from 'mobx';
 import classnames from 'classnames';
 import {
     applyDataFilters,
+    AxisScale,
     DataFilterType,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
     FilterResetPanel,
@@ -78,9 +79,11 @@ export interface IMutationMapperProps {
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
     plotLollipopTooltipCountInfo?: (
         count: number,
-        mutations?: Partial<Mutation>[]
+        mutations?: Partial<Mutation>[],
+        axisMode?: AxisScale
     ) => JSX.Element;
     plotYAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
+    axisMode?: AxisScale;
     compactStyle?: boolean;
     mergeOncoKbIcons?: boolean; // TODO add server config param for this as well?
 
@@ -558,6 +561,7 @@ export default class MutationMapper<
                     this.props.plotLollipopTooltipCountInfo
                 }
                 yAxisLabelFormatter={this.props.plotYAxisLabelFormatter}
+                axisMode={this.props.axisMode}
             />
         );
     }

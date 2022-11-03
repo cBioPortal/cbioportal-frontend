@@ -6,7 +6,7 @@ import {
     formatPercentValue,
     numberOfLeadingDecimalZeros,
 } from 'cbioportal-utils';
-import { AxisScale } from './AxisScaleSwitch';
+import { AxisScale } from 'react-mutation-mapper';
 
 interface ILollipopTooltipCountInfoProps {
     count: number;

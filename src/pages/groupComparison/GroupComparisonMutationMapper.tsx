@@ -5,9 +5,7 @@ import {
     IMutationMapperProps,
     default as MutationMapper,
 } from 'shared/components/mutationMapper/MutationMapper';
-import { AxisScale } from './AxisScaleSwitch';
-import autobind from 'autobind-decorator';
-import { PercentToggle } from './PercentToggle';
+import { PercentToggle, AxisScale } from 'react-mutation-mapper';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
