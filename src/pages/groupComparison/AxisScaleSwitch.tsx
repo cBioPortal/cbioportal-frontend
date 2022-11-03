@@ -65,15 +65,10 @@ export class AxisScaleSwitch extends React.Component<
 
     public render() {
         return (
-            <React.Fragment>
-                <ButtonGroup aria-label="">
-                    {this.toggleButton(
-                        AxisScale.PERCENT,
-                        this.handlePercentClick
-                    )}
-                    {this.toggleButton(AxisScale.COUNT, this.handleCountClick)}
-                </ButtonGroup>
-            </React.Fragment>
+            <ButtonGroup aria-label="">
+                {this.toggleButton(AxisScale.PERCENT, this.handlePercentClick)}
+                {this.toggleButton(AxisScale.COUNT, this.handleCountClick)}
+            </ButtonGroup>
         );
     }
 

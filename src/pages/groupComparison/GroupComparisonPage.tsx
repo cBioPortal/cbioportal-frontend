@@ -221,7 +221,7 @@ export default class GroupComparisonPage extends React.Component<
                             id={GroupComparisonTab.MUTATIONS}
                             linkText="Mutations"
                             anchorClassName={
-                                this.store.mutationsTabUnavailable
+                                this.store.isMutationsTabUnavailable
                                     ? 'greyedOut'
                                     : ''
                             }

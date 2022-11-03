@@ -1,15 +1,18 @@
 import { action, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
+import { Gene } from 'cbioportal-ts-api-client';
 import * as React from 'react';
 import AsyncSelect from 'react-select/async';
 import GroupComparisonStore from './GroupComparisonStore';
 
 interface ILollipopGeneSelectorProps {
     store: GroupComparisonStore;
+    genes: Gene[];
 }
 
 export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = ({
     store,
+    genes,
 }: ILollipopGeneSelectorProps) => {
     const loadOptions = (inputText: string, callback: any) => {
         if (!inputText) {
@@ -17,7 +20,7 @@ export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = ({
         }
         const stringCompare = (item: any) =>
             item.hugoGeneSymbol.startsWith(inputText.toUpperCase());
-        const options = store.availableGenes.result!;
+        const options = genes;
         callback(
             options
                 .filter(stringCompare)
@@ -42,23 +45,18 @@ export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = ({
                 }}
                 isClearable={true}
                 isSearchable={true}
-                defaultOptions={store.availableGenes
-                    .result!.slice(0, 200)
-                    .map(gene => ({
-                        label: gene.hugoGeneSymbol,
-                        value: gene,
-                    }))}
-                defaultValue={
-                    store.selectedMutationMapperGene
-                        ? {
-                              label:
-                                  store.selectedMutationMapperGene
-                                      .hugoGeneSymbol,
-                              value: store.selectedMutationMapperGene,
-                          }
-                        : null
+                defaultOptions={genes.slice(0, 200).map(gene => ({
+                    label: gene.hugoGeneSymbol,
+                    value: gene,
+                }))}
+                value={{
+                    label: store.activeMutationMapperGene!.hugoGeneSymbol,
+                    value: store.activeMutationMapperGene,
+                }}
+                placeholder={
+                    store.activeMutationMapperGene!.hugoGeneSymbol ||
+                    'Select a gene'
                 }
-                placeholder={'Select a gene'}
                 loadOptions={loadOptions}
                 cacheOptions={true}
             />

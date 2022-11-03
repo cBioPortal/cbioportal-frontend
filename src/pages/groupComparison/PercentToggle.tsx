@@ -4,7 +4,7 @@ import * as React from 'react';
 import { AxisScale, AxisScaleSwitch } from './AxisScaleSwitch';
 
 interface IPercentToggleProps {
-    showPercent?: boolean;
+    axisMode?: AxisScale;
     onScaleToggle?: (selectedScale: AxisScale) => void;
 }
 
@@ -24,11 +24,7 @@ export class PercentToggle extends React.Component<IPercentToggleProps, {}> {
                     Y-Axis:{' '}
                 </span>
                 <AxisScaleSwitch
-                    selectedScale={
-                        this.props.showPercent
-                            ? AxisScale.PERCENT
-                            : AxisScale.COUNT
-                    }
+                    selectedScale={this.props.axisMode}
                     onChange={this.props.onScaleToggle}
                 />
             </div>

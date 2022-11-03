@@ -12,7 +12,7 @@ import { PercentToggle } from './PercentToggle';
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
     onScaleToggle?: (selectedScale: AxisScale) => void;
-    showPercent?: boolean;
+    axisMode?: AxisScale;
 }
 
 @observer
@@ -28,23 +28,23 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     protected get plotTopYAxisSymbol() {
-        return this.props.showPercent ? '%' : '#';
+        return this.props.axisMode;
     }
 
     protected get plotBottomYAxisSymbol() {
-        return this.props.showPercent ? '%' : '#';
+        return this.props.axisMode;
     }
 
     protected get plotTopYAxisDefaultMax() {
-        return this.props.showPercent ? 0 : 5;
+        return this.props.axisMode === AxisScale.PERCENT ? 0 : 5;
     }
 
     protected get plotBottomYAxisDefaultMax() {
-        return this.props.showPercent ? 0 : 5;
+        return this.props.axisMode === AxisScale.PERCENT ? 0 : 5;
     }
 
     protected get plotYMaxLabelPostfix() {
-        return this.props.showPercent ? '%' : '';
+        return this.props.axisMode === AxisScale.PERCENT ? '%' : '';
     }
 
     /**
@@ -53,7 +53,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     protected get customControls(): JSX.Element | undefined {
         return (
             <PercentToggle
-                showPercent={this.props.showPercent}
+                axisMode={this.props.axisMode}
                 onScaleToggle={this.props.onScaleToggle}
             />
         );

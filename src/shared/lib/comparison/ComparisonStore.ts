@@ -1606,7 +1606,7 @@ export default abstract class ComparisonStore
         );
     }
 
-    @computed get mutationsTabShowable() {
+    @computed get isMutationsTabShowable() {
         return (
             this.mutationEnrichmentProfiles.isComplete &&
             this.mutationEnrichmentProfiles.result!.length > 0
@@ -1615,18 +1615,18 @@ export default abstract class ComparisonStore
 
     @computed get showMutationsTab() {
         return !!(
-            this.mutationsTabShowable ||
+            this.isMutationsTabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
                 this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS))
         );
     }
 
-    @computed get mutationsTabUnavailable() {
+    @computed get isMutationsTabUnavailable() {
         return (
             (this.activeGroups.isComplete &&
                 this.activeGroups.result.length !== 2) || // not two active groups
-            !this.mutationsTabShowable
+            !this.isMutationsTabShowable
         );
     }
 

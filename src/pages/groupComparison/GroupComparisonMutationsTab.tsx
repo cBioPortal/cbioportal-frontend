@@ -27,30 +27,35 @@ export default class GroupComparisonMutationsTab extends React.Component<
         super(props);
     }
 
-    readonly selectorUI = MakeMobxView({
-        await: () => [this.props.store.availableGenes],
-        render: () => {
-            this.props.store.setDefaultGene();
-            return <LollipopGeneSelector store={this.props.store} />;
-        },
-    });
-
     readonly tabUI = MakeMobxView({
         await: () => [this.props.store.availableGenes],
         render: () => {
             // We only want 2 groups for our mirrored lollipop plot. Display message if not 2 groups
             if (this.props.store.activeGroups.result!.length < 2) {
-                return <span>{MUTATIONS_NOT_ENOUGH_GROUPS_MSG}</span>;
+                return (
+                    <div className="alert alert-info">
+                        {MUTATIONS_NOT_ENOUGH_GROUPS_MSG}
+                    </div>
+                );
             } else if (this.props.store.activeGroups.result!.length > 2) {
-                return <span>{MUTATIONS_TOO_MANY_GROUPS_MSG}</span>;
+                return (
+                    <div className="alert alert-info">
+                        {MUTATIONS_TOO_MANY_GROUPS_MSG}
+                    </div>
+                );
             }
             return (
                 <>
-                    <div className="alert alert-info">
-                        Gene with highest frequency is displayed by default.
-                        Gene can be changed in the dropdown below.
-                    </div>
-                    {this.selectorUI.component}
+                    {!this.props.store.userSelectedMutationMapperGene && (
+                        <div className="alert alert-info">
+                            Gene with highest frequency is displayed by default.
+                            Gene can be changed in the dropdown below.
+                        </div>
+                    )}
+                    <LollipopGeneSelector
+                        store={this.props.store}
+                        genes={this.props.store.availableGenes.result!}
+                    />
                     <GroupComparisonMutationsTabPlot
                         store={this.props.store}
                         mutations={_(this.props.store.mutationsByGroup.result!)
@@ -58,21 +63,18 @@ export default class GroupComparisonMutationsTab extends React.Component<
                             .flatten()
                             .value()}
                         filters={{
-                            groupFilters: _(
+                            groupFilters: _.keys(
                                 this.props.store.mutationsByGroup.result!
-                            )
-                                .keys()
-                                .value()
-                                .map(group => ({
-                                    group: group,
-                                    filter: {
-                                        type: 'GroupComparisonFilter',
-                                        values: [group],
-                                    },
-                                })),
+                            ).map(group => ({
+                                group: group,
+                                filter: {
+                                    type: 'GroupComparisonFilter',
+                                    values: [group],
+                                },
+                            })),
                             filterAppliersOverride: {
                                 GroupComparisonFilter: this.props.store
-                                    .applySampleIdFilter,
+                                    .shouldApplySampleIdFilter,
                             },
                         }}
                     />

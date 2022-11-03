@@ -50,7 +50,7 @@ import { getSampleMolecularIdentifiers } from 'pages/studyView/StudyViewComparis
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
-    @observable private _selectedMutationMapperGene: string;
+    @observable private _userSelectedMutationMapperGene: string;
 
     constructor(
         sessionId: string,
@@ -333,7 +333,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     mutationMultipleStudyFilter: {
                         entrezGeneIds: [
-                            this.selectedMutationMapperGene!.entrezGeneId,
+                            this.activeMutationMapperGene!.entrezGeneId,
                         ],
                         sampleMolecularIdentifiers,
                     } as MutationMultipleStudyFilter,
@@ -344,14 +344,18 @@ export default class GroupComparisonStore extends ComparisonStore {
     });
 
     readonly profiledSamplesCount = remoteData({
-        await: () => [this.allSamples, this.coverageInformation],
+        await: () => [
+            this.allSamples,
+            this.coverageInformation,
+            this.mutationEnrichmentProfiles,
+        ],
         invoke: async () => {
             return this.allSamples.result!.filter(s =>
                 this.mutationEnrichmentProfiles.result!.some(p =>
                     isSampleProfiled(
                         s.uniqueSampleKey,
                         p.molecularProfileId,
-                        this.selectedMutationMapperGene!.hugoGeneSymbol,
+                        this.activeMutationMapperGene!.hugoGeneSymbol,
                         this.coverageInformation.result!
                     )
                 )
@@ -408,7 +412,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                     this.genePanelDataForMutationProfiles.result!,
                     this.sampleKeyToSample.result!,
                     this.patients.result!,
-                    [this.selectedMutationMapperGene!]
+                    [this.activeMutationMapperGene!]
                 )
             );
         },
@@ -429,29 +433,35 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    public setDefaultGene() {
-        this._selectedMutationMapperGene = this.genesWithMaxFrequency[0].hugoGeneSymbol;
+    @computed get userSelectedMutationMapperGene() {
+        return this._userSelectedMutationMapperGene;
     }
 
-    @computed get selectedMutationMapperGene() {
-        let gene = this.availableGenes.result!.find(
-            g => g.hugoGeneSymbol === this._selectedMutationMapperGene
-        );
+    @computed get activeMutationMapperGene() {
+        let gene =
+            this.availableGenes.result!.find(
+                g => g.hugoGeneSymbol === this.userSelectedMutationMapperGene
+            ) ||
+            this.availableGenes.result!.find(
+                g =>
+                    g.hugoGeneSymbol ===
+                    this.genesWithMaxFrequency[0].hugoGeneSymbol
+            );
         return gene;
     }
 
     @action.bound
     public setSelectedMutationMapperGene(gene: Gene) {
-        this._selectedMutationMapperGene = gene.hugoGeneSymbol;
+        this._userSelectedMutationMapperGene = gene.hugoGeneSymbol;
     }
 
     @action.bound
     public clearSelectedMutationMapperGene() {
-        this._selectedMutationMapperGene = '';
+        this._userSelectedMutationMapperGene = '';
     }
 
     @autobind
-    public applySampleIdFilter(
+    public shouldApplySampleIdFilter(
         filter: DataFilter<string>,
         mutation: Mutation
     ): boolean {
