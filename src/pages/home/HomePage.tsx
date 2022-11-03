@@ -8,6 +8,9 @@ import QueryAndDownloadTabs from '../../shared/components/query/QueryAndDownload
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import RightBar from '../../shared/components/rightbar/RightBar';
 // tslint:disable-next-line:no-import-side-effect
+
+import styles from '../../globalStyles/variables.scss';
+
 import './homePage.scss';
 import autobind from 'autobind-decorator';
 import { createQueryStore } from 'shared/lib/createQueryStore';
@@ -31,6 +34,8 @@ export default class HomePage extends React.Component<
     constructor(props: IResultsViewPageProps) {
         super(props);
         makeObservable(this);
+
+        console.log('aaron', styles.primaryColor);
     }
 
     componentWillMount() {
