@@ -9,7 +9,10 @@ import {
 } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
-import { ResultsViewPageStore } from '../ResultsViewPageStore';
+import {
+    allowExpressionProfiles,
+    ResultsViewPageStore,
+} from '../ResultsViewPageStore';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { Button, FormControl } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
@@ -789,7 +792,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
                 // otherwise, pick the default based on available options
                 const dataTypeOptions = dataTypeOptionsPromise.result!;
-                if (this._dataType === undefined && dataTypeOptions.length) {
+
+                // due to legacy urls, it's possible that selections can be made which
+                // are no longer avaiable.  this handles that case
+                const selectedDataTypeDoesNotExists = !_.some(
+                    dataTypeOptions,
+                    o => o.value === this._dataType
+                );
+
+                if (
+                    (this._dataType === undefined && dataTypeOptions.length) ||
+                    selectedDataTypeDoesNotExists
+                ) {
                     // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (
                         isAlterationTypePresent(
@@ -5486,6 +5500,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         store={this.props.store}
                         tabReflectsOql={false}
                     />
+
+                    {!allowExpressionProfiles(
+                        this.props.store.studies.result
+                    ) && (
+                        <div className={'alert alert-info'}>
+                            Expression data cannot be compared across the
+                            selected studies.
+                        </div>
+                    )}
+
                     <AlterationFilterWarning
                         store={this.props.store}
                         isUnaffected={true}

@@ -42,6 +42,7 @@ import {
 import client from 'shared/api/cbioportalClientInstance';
 import {
     CanonicalMutationType,
+    getBrowserWindow,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
@@ -420,6 +421,26 @@ export type GeneticEntity = {
     cytoband: string; //will be "" for "geneset"
     geneticEntityData: Gene | Geneset;
 };
+
+// this can be adapted to consume new profile membership data
+export function allowExpressionProfiles(studies: CancerStudy[]) {
+    if (
+        /\.cbioportal\.org$|\.mskcc\.org$/.test(
+            getBrowserWindow().location.hostname
+        )
+    ) {
+        // if there is only one study
+        // or ALL studies are part of pan_can_atlas and thus have normalized data across expression profiles
+        if (
+            studies.length === 1 ||
+            _.every(studies, s => /pan_can_atlas/i.test(s.studyId))
+        ) {
+            return true;
+        }
+    } else {
+        return true;
+    }
+}
 
 export function buildDefaultOQLProfile(
     profilesTypes: string[],
@@ -4328,11 +4349,28 @@ export class ResultsViewPageStore
         {
             await: () => [this.studyIds],
             invoke: async () => {
-                return client.fetchMolecularProfilesUsingPOST({
+                let profiles = await client.fetchMolecularProfilesUsingPOST({
                     molecularProfileFilter: {
                         studyIds: this.studyIds.result!,
                     } as MolecularProfileFilter,
                 });
+
+                // expression profiles are not allowed
+                // under some circumstances
+                if (allowExpressionProfiles(this.studies.result)) {
+                    return profiles;
+                } else {
+                    return profiles.filter(
+                        p =>
+                            ![
+                                AlterationTypeConstants.MRNA_EXPRESSION,
+                                AlterationTypeConstants.MICRO_RNA_EXPRESSION,
+                                AlterationTypeConstants.PROTEIN_LEVEL,
+                                AlterationTypeConstants.RNA_EXPRESSION,
+                                AlterationTypeConstants.MICRO_RNA_EXPRESSION,
+                            ].includes(p.molecularAlterationType)
+                    );
+                }
             },
         },
         []
