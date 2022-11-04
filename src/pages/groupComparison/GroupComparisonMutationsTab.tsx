@@ -13,6 +13,7 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { LollipopGeneSelector } from './LollipopGeneSelector';
 import GroupComparisonMutationsTabPlot from './GroupComparisonMutationsTabPlot';
+import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;
@@ -52,6 +53,10 @@ export default class GroupComparisonMutationsTab extends React.Component<
                             Gene can be changed in the dropdown below.
                         </div>
                     )}
+                    <OverlapExclusionIndicator
+                        store={this.props.store}
+                        only="sample"
+                    />
                     <LollipopGeneSelector
                         store={this.props.store}
                         genes={this.props.store.availableGenes.result!}
