@@ -124,6 +124,7 @@ export { default as Lollipop } from './component/lollipopPlot/Lollipop';
 export { default as LollipopMutationPlot } from './component/lollipopMutationPlot/LollipopMutationPlot';
 export * from './component/lollipopMutationPlot/PercentToggle';
 export * from './component/lollipopMutationPlot/AxisScaleSwitch';
+export * from './component/lollipopMutationPlot/LollipopTooltipCountInfo';
 export { default as LollipopPlot } from './component/lollipopPlot/LollipopPlot';
 export { default as LollipopPlotNoTooltip } from './component/lollipopPlot/LollipopPlotNoTooltip';
 export { default as Sequence } from './component/lollipopPlot/LollipopPlot';

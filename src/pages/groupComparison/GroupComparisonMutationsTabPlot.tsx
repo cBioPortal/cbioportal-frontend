@@ -14,8 +14,7 @@ import _ from 'lodash';
 import { MakeMobxView } from 'shared/components/MobxView';
 import { countUniqueMutations } from 'shared/lib/MutationUtils';
 import ErrorMessage from 'shared/components/ErrorMessage';
-import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
-import { AxisScale } from 'react-mutation-mapper';
+import { AxisScale, LollipopTooltipCountInfo } from 'react-mutation-mapper';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;

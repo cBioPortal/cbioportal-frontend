@@ -53,7 +53,6 @@ import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
 import { getServerConfig } from 'config/config';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
-import { DataFilterType } from 'react-mutation-mapper';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;

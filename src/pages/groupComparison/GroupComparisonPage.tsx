@@ -223,11 +223,6 @@ export default class GroupComparisonPage extends React.Component<
                             <MSKTab
                                 id={GroupComparisonTab.MUTATIONS}
                                 linkText="Mutations"
-                                anchorClassName={
-                                    this.store.isMutationsTabUnavailable
-                                        ? 'greyedOut'
-                                        : ''
-                                }
                             >
                                 <GroupComparisonMutationsTab
                                     store={this.store}

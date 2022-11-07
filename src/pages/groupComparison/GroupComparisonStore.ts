@@ -345,12 +345,12 @@ export default class GroupComparisonStore extends ComparisonStore {
 
     readonly profiledSamplesCount = remoteData({
         await: () => [
-            this.allSamples,
+            this.samples,
             this.coverageInformation,
             this.mutationEnrichmentProfiles,
         ],
         invoke: async () => {
-            return this.allSamples.result!.filter(s =>
+            return this.samples.result!.filter(s =>
                 this.mutationEnrichmentProfiles.result!.some(p =>
                     isSampleProfiled(
                         s.uniqueSampleKey,
@@ -383,10 +383,10 @@ export default class GroupComparisonStore extends ComparisonStore {
     });
 
     readonly genePanelDataForMutationProfiles = remoteData({
-        await: () => [this.allSamples, this.mutationEnrichmentProfiles],
+        await: () => [this.samples, this.mutationEnrichmentProfiles],
         invoke: async () => {
             const sampleMolecularIdentifiers = getSampleMolecularIdentifiers(
-                this.allSamples.result!,
+                this.samples.result!,
                 this.mutationEnrichmentProfiles.result!
             );
             const genePanelData = client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
@@ -419,8 +419,8 @@ export default class GroupComparisonStore extends ComparisonStore {
     });
 
     readonly patients = remoteData({
-        await: () => [this.allSamples],
-        invoke: () => fetchPatients(this.allSamples.result!),
+        await: () => [this.samples],
+        invoke: () => fetchPatients(this.samples.result!),
         default: [],
     });
 
