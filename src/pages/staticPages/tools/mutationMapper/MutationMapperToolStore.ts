@@ -61,7 +61,23 @@ export default class MutationMapperToolStore {
     readonly genes = remoteData<Gene[]>(
         {
             await: () => [this.hugoGeneSymbols],
-            invoke: () => fetchGenes(this.hugoGeneSymbols.result),
+            invoke: async () => {
+                const fixMap: Record<string, string> = {
+                    HIST1H1B: 'H1-5',
+                    WHSC1: 'NSD2',
+                };
+                _.forEach(fixMap, (n, k) => (fixMap[n] = k));
+
+                const fixedSymbols = _.map(this.hugoGeneSymbols.result, s => {
+                    return fixMap[s] || s;
+                });
+                const ret = await fetchGenes(fixedSymbols);
+                ret.forEach(g => {
+                    g.hugoGeneSymbol =
+                        fixMap[g.hugoGeneSymbol] || g.hugoGeneSymbol;
+                });
+                return ret;
+            },
         },
         []
     );
