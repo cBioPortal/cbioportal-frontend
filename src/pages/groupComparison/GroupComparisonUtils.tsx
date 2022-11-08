@@ -1,8 +1,10 @@
 import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
 import {
+    MolecularProfile,
     PatientIdentifier,
     Sample,
     SampleIdentifier,
+    SampleMolecularIdentifier,
 } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
@@ -541,6 +543,12 @@ export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups: number) {
         return 'We need at least 2 groups to show clinical data enrichments. Please select more groups from the Groups section above.';
     }
 }
+
+export const MUTATIONS_NOT_ENOUGH_GROUPS_MSG =
+    'We need 2 groups to show mutations. Please select more groups from the Groups section above.';
+
+export const MUTATIONS_TOO_MANY_GROUPS_MSG =
+    "We can't show mutations for more than 2 groups. Please deselect groups in the Groups section.";
 
 export function getDefaultGroupName(
     filters: StudyViewFilter,

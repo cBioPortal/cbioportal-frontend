@@ -42,6 +42,8 @@ import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import {
+    compareByAlterationPercentage,
+    getAlterationRowData,
     pickCopyNumberEnrichmentProfiles,
     pickGenericAssayEnrichmentProfiles,
     pickMethylationEnrichmentProfiles,
@@ -101,6 +103,7 @@ import {
     ComparisonSession,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
+import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -171,6 +174,11 @@ export default abstract class ComparisonStore
                     !!this.tabHasBeenShown.get(
                         GroupComparisonTab.ALTERATIONS
                     ) || this.showAlterationsTab
+                );
+                this.tabHasBeenShown.set(
+                    GroupComparisonTab.MUTATIONS,
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS) ||
+                        this.showMutationsTab
                 );
             });
         }); // do this after timeout so that all subclasses have time to construct
@@ -1060,6 +1068,24 @@ export default abstract class ComparisonStore
         },
     });
 
+    @computed get genesWithMaxFrequency(): AlterationEnrichmentRow[] {
+        if (
+            this.alterationsEnrichmentData.isComplete &&
+            this.alterationsEnrichmentAnalysisGroups.isComplete
+        ) {
+            const alterationRowData: AlterationEnrichmentRow[] = getAlterationRowData(
+                this.alterationsEnrichmentData.result!,
+                this.resultsViewStore
+                    ? this.resultsViewStore.hugoGeneSymbols
+                    : [],
+                this.alterationsEnrichmentAnalysisGroups.result!
+            );
+            alterationRowData.sort(compareByAlterationPercentage);
+            return alterationRowData.slice(0, 10);
+        }
+        return [];
+    }
+
     readonly mrnaEnrichmentAnalysisGroups = remoteData({
         await: () => [
             this.selectedmRNAEnrichmentProfileMap,
@@ -1577,6 +1603,30 @@ export default abstract class ComparisonStore
             (this.activeGroups.isComplete &&
                 this.activeGroups.result.length < 2) || //less than two active groups
             !this.alterationsTabShowable
+        );
+    }
+
+    @computed get isMutationsTabShowable() {
+        return (
+            this.mutationEnrichmentProfiles.isComplete &&
+            this.mutationEnrichmentProfiles.result!.length > 0
+        );
+    }
+
+    @computed get showMutationsTab() {
+        return !!(
+            this.isMutationsTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS))
+        );
+    }
+
+    @computed get isMutationsTabUnavailable() {
+        return (
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result.length !== 2) || // not two active groups
+            !this.isMutationsTabShowable
         );
     }
 

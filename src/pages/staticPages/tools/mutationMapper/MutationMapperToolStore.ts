@@ -38,7 +38,9 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
-import MutationMapperStore from 'shared/components/mutationMapper/MutationMapperStore';
+import MutationMapperStore, {
+    IMutationMapperStoreConfig,
+} from 'shared/components/mutationMapper/MutationMapperStore';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import {
     normalizeMutations,
@@ -89,8 +91,12 @@ export default class MutationMapperToolStore {
         undefined
     );
 
-    constructor() {
+    constructor(
+        mutationData?: Partial<MutationInput>[],
+        private mutationMapperStoreConfigOverride?: IMutationMapperStoreConfig
+    ) {
         makeObservable(this);
+        this.mutationData = mutationData;
     }
 
     @computed get isoformOverrideSource(): string {
@@ -317,6 +323,8 @@ export default class MutationMapperToolStore {
                                         genomeBuild: this.grch38GenomeNexusUrl
                                             ? REFERENCE_GENOME.grch38.UCSC
                                             : REFERENCE_GENOME.grch37.UCSC,
+                                        ...this
+                                            .mutationMapperStoreConfigOverride,
                                     },
                                     gene,
                                     getMutations,

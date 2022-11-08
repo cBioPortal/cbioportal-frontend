@@ -1033,6 +1033,29 @@ export function getEnrichmentBarPlotData(
     );
 }
 
+export function compareByAlterationPercentage(
+    kv1: AlterationEnrichmentRow,
+    kv2: AlterationEnrichmentRow
+) {
+    const t1 = _.reduce(
+        kv1.groupsSet,
+        (acc, next) => {
+            acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
+            return acc;
+        },
+        0
+    );
+    const t2 = _.reduce(
+        kv2.groupsSet,
+        (acc, next) => {
+            acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
+            return acc;
+        },
+        0
+    );
+    return t2 - t1;
+}
+
 export function getGeneListOptions(
     data: AlterationEnrichmentRow[],
     includeAlteration?: boolean

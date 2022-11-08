@@ -69,7 +69,7 @@ export function getHugoGeneSymbols(
     }
 }
 
-function getSampleMolecularIdentifiers(
+export function getSampleMolecularIdentifiers(
     selectedSamples: Sample[],
     profiles: MolecularProfile[]
 ) {

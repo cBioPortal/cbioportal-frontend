@@ -48,6 +48,7 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import GroupComparisonMutationsTab from './GroupComparisonMutationsTab';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -130,6 +131,8 @@ export default class GroupComparisonPage extends React.Component<
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
+            this.store.alterationsEnrichmentData,
+            this.store.alterationsEnrichmentAnalysisGroups,
         ],
         render: () => {
             return (
@@ -213,6 +216,35 @@ export default class GroupComparisonPage extends React.Component<
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}
+                    {this.props.appStore.featureFlagStore.has(
+                        'group_comparison_mutations_lollipop_plot'
+                    ) &&
+                        this.store.showMutationsTab && (
+                            <MSKTab
+                                id={GroupComparisonTab.MUTATIONS}
+                                linkText="Mutations"
+                            >
+                                <GroupComparisonMutationsTab
+                                    store={this.store}
+                                />
+                                {/* stacked lollipop plots for > 2 groups */}
+                                {/* {this.store.activeGroups.result!.map(g => {
+                                return (
+                                    <div>
+                                        <h3>{g.name}</h3>
+                                        <Mutations
+                                            store={this.store}
+                                            mutations={
+                                                this.store.mutationsByGroup
+                                                    .result![g.uid]
+                                            }
+                                            filters={{}}
+                                        />
+                                    </div>
+                                );
+                            })} */}
+                            </MSKTab>
+                        )}
                     {this.store.showMRNATab && (
                         <MSKTab
                             id={GroupComparisonTab.MRNA}
@@ -285,7 +317,9 @@ export default class GroupComparisonPage extends React.Component<
         renderPending: () => (
             <LoadingIndicator center={true} isLoading={true} size={'big'} />
         ),
-        renderError: () => <ErrorMessage />,
+        renderError: () => {
+            return <ErrorMessage />;
+        },
     });
 
     readonly studyLink = MakeMobxView({

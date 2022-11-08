@@ -47,6 +47,7 @@ import TrackPanel from '../track/TrackPanel';
 
 import './lollipopMutationPlot.scss';
 import DomainTooltip from '../lollipopPlot/DomainTooltip';
+import { AxisScale } from './AxisScaleSwitch';
 
 const DEFAULT_PROTEIN_LENGTH = 10;
 
@@ -98,8 +99,11 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     yAxisLabelPadding?: number;
     lollipopTooltipCountInfo?: (
         count: number,
-        mutations?: Partial<T>[]
+        mutations?: Partial<T>[],
+        axisMode?: AxisScale
     ) => JSX.Element;
+    yAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
+    axisMode?: AxisScale;
     customControls?: JSX.Element;
     onXAxisOffset?: (offset: number) => void;
     geneWidth: number;
@@ -161,7 +165,11 @@ export default class LollipopMutationPlot<
         const codon = mutationsAtPosition[0].proteinPosStart;
         const count = countsByPosition[codon];
         const countInfo = this.props.lollipopTooltipCountInfo ? (
-            this.props.lollipopTooltipCountInfo(count, mutationsAtPosition)
+            this.props.lollipopTooltipCountInfo(
+                count,
+                mutationsAtPosition,
+                this.props.axisMode
+            )
         ) : (
             <strong>
                 {count} mutation{`${count !== 1 ? 's' : ''}`}
@@ -892,6 +900,7 @@ export default class LollipopMutationPlot<
                         topYAxisSymbol={this.props.topYAxisSymbol}
                         bottomYAxisSymbol={this.props.bottomYAxisSymbol}
                         groups={this.groups}
+                        yAxisLabelFormatter={this.props.yAxisLabelFormatter}
                     />
                     <TrackPanel
                         store={this.props.store}

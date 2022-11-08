@@ -20,6 +20,7 @@ const config = {
             'mobx-react',
             'victory',
             'react-select',
+            'react-select/async',
             'react-rangeslider',
             'mobx-utils',
             'd3',
