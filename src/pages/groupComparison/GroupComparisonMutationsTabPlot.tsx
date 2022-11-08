@@ -84,31 +84,35 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             const mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
                 this.props.store.activeMutationMapperGene!.hugoGeneSymbol
             );
-            return (
-                <>
-                    <h3>
-                        {_(this.props.store.mutationsByGroup.result!)
-                            .keys()
-                            .join(' vs ')}
-                    </h3>
-                    <GroupComparisonMutationMapper
-                        {...convertToMutationMapperProps({
-                            ...getServerConfig(),
-                        })}
-                        generateGenomeNexusHgvsgUrl={hgvsg =>
-                            getGenomeNexusHgvsgUrl(hgvsg, undefined)
-                        }
-                        store={mutationMapperStore}
-                        showTranscriptDropDown={true}
-                        plotLollipopTooltipCountInfo={
-                            plotLollipopTooltipCountInfo
-                        }
-                        axisMode={this.axisMode}
-                        onScaleToggle={this.onScaleToggle}
-                        plotYAxisLabelFormatter={plotYAxisLabelFormatter}
-                    />
-                </>
-            );
+            if (mutationMapperStore) {
+                return (
+                    <>
+                        <h3>
+                            {_(this.props.store.mutationsByGroup.result!)
+                                .keys()
+                                .join(' vs ')}
+                        </h3>
+                        <GroupComparisonMutationMapper
+                            {...convertToMutationMapperProps({
+                                ...getServerConfig(),
+                            })}
+                            generateGenomeNexusHgvsgUrl={hgvsg =>
+                                getGenomeNexusHgvsgUrl(hgvsg, undefined)
+                            }
+                            store={mutationMapperStore}
+                            showTranscriptDropDown={true}
+                            plotLollipopTooltipCountInfo={
+                                plotLollipopTooltipCountInfo
+                            }
+                            axisMode={this.axisMode}
+                            onScaleToggle={this.onScaleToggle}
+                            plotYAxisLabelFormatter={plotYAxisLabelFormatter}
+                        />
+                    </>
+                );
+            } else {
+                return null;
+            }
         },
         renderPending: () => (
             <LoadingIndicator isLoading={true} center={true} size={'big'} />
