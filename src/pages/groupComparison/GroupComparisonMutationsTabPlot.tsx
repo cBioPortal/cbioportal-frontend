@@ -81,10 +81,14 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             this.mutationMapperToolStore.mutationMapperStores,
         ],
         render: () => {
-            const mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
-                this.props.store.activeMutationMapperGene!.hugoGeneSymbol
-            );
-            if (mutationMapperStore) {
+            if (
+                this.mutationMapperToolStore.getMutationMapperStore(
+                    this.props.store.activeMutationMapperGene!.hugoGeneSymbol
+                )
+            ) {
+                const mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
+                    this.props.store.activeMutationMapperGene!.hugoGeneSymbol
+                );
                 return (
                     <>
                         <h3>
