@@ -1,9 +1,7 @@
 import { assert } from 'chai';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
-import {
-    buildNamespaceColumnConfig,
-    createNamespaceColumnName,
-} from 'shared/components/mutationMapper/MutationMapperUtils';
+import { createNamespaceColumnName } from 'shared/components/namespaceColumns/createNamespaceColumnName';
+import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/buildNamespaceColumnConfig';
 
 describe('MutationMapperUtils', () => {
     describe('buildNamespaceColumnConfig', () => {

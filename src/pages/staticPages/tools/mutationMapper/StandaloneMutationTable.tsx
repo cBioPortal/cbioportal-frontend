@@ -8,7 +8,7 @@ import {
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
 import _ from 'lodash';
-import { createNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
+import { createMutationNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
 
 export interface IStandaloneMutationTableProps extends IMutationTableProps {
     // add standalone specific props here if needed
@@ -59,7 +59,7 @@ export default class StandaloneMutationTable extends MutationTable<
         super.generateColumns();
 
         // generate namespace columns
-        const namespaceColumns = createNamespaceColumns(
+        const namespaceColumns = createMutationNamespaceColumns(
             this.props.namespaceColumns
         );
         _.forIn(

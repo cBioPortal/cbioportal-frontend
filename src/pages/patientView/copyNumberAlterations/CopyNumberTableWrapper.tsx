@@ -31,6 +31,8 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import { getServerConfig } from 'config/config';
 import autobind from 'autobind-decorator';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { createNamespaceColumns } from 'shared/components/namespaceColumns/createNamespaceColumns';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -57,6 +59,7 @@ type ICopyNumberTableWrapperProps = {
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
     disableTooltip: boolean;
     mergeOncoKbIcons?: boolean;
+    namespaceColumns?: NamespaceColumnConfig;
 };
 
 const ANNOTATION_ELEMENT_ID = 'copy-number-annotation';
@@ -193,6 +196,8 @@ export default class CopyNumberTableWrapper extends React.Component<
             visible: true,
             order: 30,
         });
+
+        columns.push(...createCnaNamespaceColumns(this.props.namespaceColumns));
 
         const GenePanelProps = (d: DiscreteCopyNumberData[]) => ({
             data: d,
@@ -436,16 +441,15 @@ export default class CopyNumberTableWrapper extends React.Component<
             );
         },
     });
+}
 
-    // @action.bound
-    // private handleOncoKbIconModeToggle(mergeIcons: boolean) {
-    //     this.mergeOncoKbIcons = mergeIcons;
-    //     updateOncoKbIconStyle({ mergeIcons });
-    //
-    //     // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
-    //     calculateOncoKbContentWidthOnNextFrame(
-    //         ANNOTATION_ELEMENT_ID,
-    //         width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
-    //     );
-    // }
+function createCnaNamespaceColumns(
+    config?: NamespaceColumnConfig
+): CNATableColumn[] {
+    const namespaceColumnRecords = createNamespaceColumns(config);
+    const namespaceColumns = Object.values(
+        namespaceColumnRecords
+    ) as CNATableColumn[];
+    namespaceColumns.forEach(c => (c.visible = false));
+    return namespaceColumns;
 }

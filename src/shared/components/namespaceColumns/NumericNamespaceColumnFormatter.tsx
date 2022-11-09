@@ -1,16 +1,20 @@
 import * as React from 'react';
-import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
+import generalStyles from 'shared/components/mutationTable/column/styles.module.scss';
+
+export type WithNamespace = {
+    namespaceColumns: {};
+};
 
 /**
  * @author Pim van Nierop
  */
-export default class CategoricalNamespaceColumnFormatter {
+export default class NumericNamespaceColumnFormatter {
     public static getData(
-        data: Mutation[],
+        data: WithNamespace[],
         namespaceName: any,
         namespaceColumnName: any
-    ): string | null {
+    ): number | null {
         if (data) {
             const namespaces = data[0].namespaceColumns;
             const namespace = _.get(namespaces, namespaceName, undefined);
@@ -22,11 +26,11 @@ export default class CategoricalNamespaceColumnFormatter {
     }
 
     public static sortValue(
-        data: Mutation[],
+        data: WithNamespace[],
         namespaceName: string,
         namespaceColumnName: string
-    ): string | null {
-        return CategoricalNamespaceColumnFormatter.getData(
+    ): number | null {
+        return NumericNamespaceColumnFormatter.getData(
             data,
             namespaceName,
             namespaceColumnName
@@ -34,11 +38,11 @@ export default class CategoricalNamespaceColumnFormatter {
     }
 
     public static download(
-        data: Mutation[],
+        data: WithNamespace[],
         namespaceName: string,
         namespaceColumnName: string
     ): string {
-        const value = CategoricalNamespaceColumnFormatter.getData(
+        const value = NumericNamespaceColumnFormatter.getData(
             data,
             namespaceName,
             namespaceColumnName
@@ -47,15 +51,15 @@ export default class CategoricalNamespaceColumnFormatter {
     }
 
     public static renderFunction(
-        data: Mutation[],
+        data: WithNamespace[],
         namespaceName: string,
         namespaceColumnName: string
     ) {
-        const download = CategoricalNamespaceColumnFormatter.getData(
+        const download = NumericNamespaceColumnFormatter.getData(
             data,
             namespaceName,
             namespaceColumnName
         );
-        return <div>{download}</div>;
+        return <div className={generalStyles['integer-data']}>{download}</div>;
     }
 }

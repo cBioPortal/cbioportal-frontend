@@ -869,6 +869,8 @@ export type StructuralVariant = {
 
         'molecularProfileId': string
 
+        'namespaceColumns': {}
+
         'ncbiBuild': string
 
         'normalPairedEndReadCount': number

@@ -38,7 +38,6 @@ import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAs
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { IMutSigData } from 'shared/model/MutSig';
 import { ICosmicData } from 'shared/model/Cosmic';
-import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
 import MobxPromise from 'mobxpromise';
 
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
@@ -48,6 +47,7 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on an mutation to zoom in on the gene in the IGV browser above';

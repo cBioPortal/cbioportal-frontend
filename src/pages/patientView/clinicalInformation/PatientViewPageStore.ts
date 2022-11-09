@@ -193,6 +193,8 @@ import {
 import { getServerConfig } from 'config/config';
 import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
 import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/buildNamespaceColumnConfig';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -1350,6 +1352,10 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    @computed get namespaceColumnConfig(): NamespaceColumnConfig {
+        return buildNamespaceColumnConfig(this.discreteCNAData.result);
+    }
 
     readonly molecularData = remoteData<NumericGeneMolecularData[]>(
         {

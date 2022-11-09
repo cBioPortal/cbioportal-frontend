@@ -15,7 +15,7 @@ import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import AddColumns from './AddColumns';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
-import { createNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
+import { createMutationNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
 import _ from 'lodash';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
@@ -177,7 +177,7 @@ export default class ResultsViewMutationTable extends MutationTable<
         }
 
         // generate namespace columns
-        const namespaceColumns = createNamespaceColumns(
+        const namespaceColumns = createMutationNamespaceColumns(
             this.props.namespaceColumns
         );
         _.forIn(
