@@ -185,7 +185,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     }
 
     // override parent method
-    protected get isLeftTruncationForSurvivalDataEnabled() {
+    protected get isLeftTruncationFeatureFlagEnabled() {
         return this.appStore.featureFlagStore.has(
             FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
         );

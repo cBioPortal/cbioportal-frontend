@@ -33,7 +33,6 @@ import {
     generateSurvivalPlotYAxisLabelFromDisplayName,
     sortPatientSurvivals,
     calculateNumberOfPatients,
-    LeftTruncationCheckbox,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -41,6 +40,7 @@ import SurvivalPrefixTable from 'pages/resultsView/survival/SurvivalPrefixTable'
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
+import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
 
 export interface ISurvivalProps {
     store: ComparisonStore;
@@ -633,7 +633,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             {showLeftTruncationCheckbox && (
                                 <LeftTruncationCheckbox
                                     className={
-                                        survivalPlotStyle.NoPaddingLeftTruncationCheckbox
+                                        survivalPlotStyle.noPaddingLeftTruncationCheckbox
                                     }
                                     onToggleSurvivalPlotLeftTruncation={
                                         this.props.store

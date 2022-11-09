@@ -114,7 +114,7 @@ describe('SurvivalStoreHelper', () => {
             );
         });
 
-        it('returns correct result for example data without entry data', () => {
+        it('returns 1 result for example data when no entry data provided', () => {
             assert.deepEqual(
                 getPatientSurvivals(
                     exampleClinicalData,
@@ -136,7 +136,7 @@ describe('SurvivalStoreHelper', () => {
             );
         });
 
-        it('returns correct result for example data with entry data', () => {
+        it('returns empty result for example data when entry data provided because event months is less than entry months (0 < 5), so the result should be truncated', () => {
             assert.deepEqual(
                 getPatientSurvivals(
                     exampleClinicalData,

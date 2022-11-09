@@ -8159,9 +8159,8 @@ export class StudyViewPageStore
             // The left truncation adjustment is only available for one study: heme_onc_nsclc_genie_bpc at this time
             // clinical attributeId still need to be decided in the future
             if (
-                studyIds.length === 1 &&
-                studyIds[0] === 'heme_onc_nsclc_genie_bpc' &&
-                this.isLeftTruncationForSurvivalDataEnabled
+                this.isGeniebpcStudy &&
+                this.isLeftTruncationFeatureFlagEnabled
             ) {
                 const data = await client.getAllClinicalDataInStudyUsingGET({
                     attributeId: 'TT_CPT_REPORT_MOS',
@@ -9781,9 +9780,16 @@ export class StudyViewPageStore
         this._survivalPlotLeftTruncationToggleMap.set(uniqueChartKey, value);
     }
 
-    public get isLeftTruncationForSurvivalDataEnabled() {
+    public get isLeftTruncationFeatureFlagEnabled() {
         return this.appStore.featureFlagStore.has(
             FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
+        );
+    }
+
+    @computed get isGeniebpcStudy() {
+        return (
+            this.studyIds.length === 1 &&
+            this.studyIds[0] === 'heme_onc_nsclc_genie_bpc'
         );
     }
 }

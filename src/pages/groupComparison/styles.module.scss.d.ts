@@ -1,5 +1,4 @@
 declare const styles: {
-  readonly "NoPaddingLeftTruncationCheckbox": string;
   readonly "buttonAlterationTypeSelectorMenu": string;
   readonly "buttonExcludedFromAnalysis": string;
   readonly "buttonUnselected": string;
@@ -13,6 +12,7 @@ declare const styles: {
   readonly "inlineAlterationTypeSelectorMenu": string;
   readonly "markedForDeletion": string;
   readonly "noGroupsMessage": string;
+  readonly "noPaddingLeftTruncationCheckbox": string;
   readonly "sharedGroup": string;
   readonly "survivalPlotHeader": string;
   readonly "survivalPlotHeaderContainer": string;

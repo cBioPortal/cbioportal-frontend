@@ -28,7 +28,6 @@ import {
     filterScatterData,
     SurvivalPlotFilters,
     SurvivalSummary,
-    LeftTruncationCheckbox,
 } from './SurvivalUtil';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
@@ -48,6 +47,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
+import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -581,7 +581,7 @@ export default class SurvivalChart
             <div className={this.props.className} data-test={'SurvivalChart'}>
                 {this.props.showLeftTruncationCheckbox && (
                     <LeftTruncationCheckbox
-                        className={styles.PaddingLeftTruncationCheckbox}
+                        className={styles.paddingLeftTruncationCheckbox}
                         onToggleSurvivalPlotLeftTruncation={
                             this.props.onToggleSurvivalPlotLeftTruncation
                         }
