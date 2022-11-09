@@ -69,6 +69,7 @@ import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
 import { toQueryString } from 'shared/lib/query/textQueryUtils';
 import { SearchClause } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
+import { AppStore } from 'AppStore';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -554,6 +555,10 @@ export class QueryStore {
 
     @computed get userLoggedIn() {
         return getBrowserWindow().globalStores.appStore.isLoggedIn;
+    }
+
+    get appStore(): AppStore {
+        return getBrowserWindow().globalStores.appStore as AppStore;
     }
 
     ////////////////////////////////////////////////////////////////////////////////

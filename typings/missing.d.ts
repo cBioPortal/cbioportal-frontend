@@ -42,6 +42,7 @@ declare module 'react-mfb';
 declare module 'regression';
 declare module 'react-select1';
 declare module 'react-select';
+declare module 'react-select/async';
 declare module 'pluralize';
 declare module 'svg2pdf.js';
 declare module 'jspdf-yworks';

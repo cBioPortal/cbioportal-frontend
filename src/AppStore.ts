@@ -61,6 +61,10 @@ export class AppStore {
         return false;
     }
 
+    get isPublicPortal() {
+        return this.serverConfig.app_name === 'public-portal';
+    }
+
     @computed get logoutUrl() {
         if (
             this.authMethod === 'saml' ||

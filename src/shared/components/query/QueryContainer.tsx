@@ -118,6 +118,23 @@ export default class QueryContainer extends React.Component<
             <CancerStudySelector
                 queryStore={this.store}
                 forkedMode={this.props.forkedMode!}
+                aboveStudyListBlurb={
+                    this.store.appStore.isPublicPortal ? (
+                        <div className={'e2eHide'} style={{ marginLeft: 19 }}>
+                            Looking for <strong>AACR GENIE</strong>, the largest
+                            public clinicogenomic cancer dataset?&nbsp;
+                            <a
+                                href={'https://genie.cbioportal.org'}
+                                target={'_blank'}
+                            >
+                                It's available here
+                            </a>
+                            .
+                        </div>
+                    ) : (
+                        undefined
+                    )
+                }
             />
         );
         //NOTE: we have to wrap with div in order to deal with margin applied by css selector
