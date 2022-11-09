@@ -34,6 +34,7 @@ export interface ICancerStudySelectorProps {
     style?: React.CSSProperties;
     queryStore: QueryStore;
     forkedMode: boolean;
+    aboveStudyListBlurb?: JSX.Element;
 }
 
 @observer
@@ -280,6 +281,7 @@ export default class CancerStudySelector extends React.Component<
                                     Help <i className={'fa fa-book'}></i>
                                 </a>
                             </div>
+
                             <div
                                 className="checkbox"
                                 style={{ marginLeft: 19 }}
@@ -361,6 +363,7 @@ export default class CancerStudySelector extends React.Component<
                                 </If>
                             </div>
 
+                            {this.props.aboveStudyListBlurb}
                             <StudyList />
                         </div>
                     </FlexRow>
