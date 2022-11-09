@@ -117,6 +117,7 @@ interface IMSKTabsProps {
     contentWindowExtra?: JSX.Element;
     hrefRoot?: string;
     onMount?: () => void;
+    defaultTabId?: string | Boolean;
 }
 
 @observer
@@ -218,9 +219,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                 ) {
                     return this.props.activeTabId;
                 } else {
-                    return (toArrayedChildren[0] as React.ReactElement<
-                        IMSKTabProps
-                    >).props.id;
+                    return this.props.defaultTabId === false
+                        ? undefined
+                        : (toArrayedChildren[0] as React.ReactElement<
+                              IMSKTabProps
+                          >).props.id;
                 }
             })();
 
@@ -287,7 +290,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
     protected navTabs(
         children: React.ReactElement<IMSKTabProps>[],
-        effectiveActiveTab: string
+        effectiveActiveTab: string | undefined
     ) {
         // restart the tab refs before each tab rendering
         this.tabRefs = [];
@@ -349,7 +352,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
     protected tabPages(
         children: React.ReactElement<IMSKTabProps>[],
-        effectiveActiveTab: string
+        effectiveActiveTab: string | undefined
     ): JSX.Element[][] {
         const pages: JSX.Element[][] = [[]];
         let currentPage = 1;
