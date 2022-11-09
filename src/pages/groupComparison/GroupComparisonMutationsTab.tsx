@@ -14,6 +14,7 @@ import ErrorMessage from 'shared/components/ErrorMessage';
 import { LollipopGeneSelector } from './LollipopGeneSelector';
 import GroupComparisonMutationsTabPlot from './GroupComparisonMutationsTabPlot';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
+import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;
@@ -24,8 +25,39 @@ export default class GroupComparisonMutationsTab extends React.Component<
     IGroupComparisonMutationsTabProps,
     {}
 > {
+    @observable public geneTab: string | undefined;
     constructor(props: IGroupComparisonMutationsTabProps) {
         super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
+    protected handleGeneChange(id: string | undefined) {
+        this.geneTab = id;
+        this.props.store.setSelectedMutationMapperGene(id);
+    }
+
+    @computed get tabs() {
+        return this.props.store.genesWithMaxFrequency.map(g => (
+            <MSKTab
+                key={g.hugoGeneSymbol}
+                id={g.hugoGeneSymbol}
+                linkText={g.hugoGeneSymbol}
+            />
+        ));
+    }
+
+    @computed get activeTabId(): string | undefined {
+        let activeTabId;
+        if (this.geneTab) {
+            activeTabId = this.geneTab;
+        } else if (this.props.store.userSelectedMutationMapperGene) {
+            activeTabId = this.props.store.userSelectedMutationMapperGene;
+        } else {
+            activeTabId = this.props.store.activeMutationMapperGene!
+                .hugoGeneSymbol;
+        }
+        return activeTabId;
     }
 
     readonly tabUI = MakeMobxView({
@@ -45,14 +77,29 @@ export default class GroupComparisonMutationsTab extends React.Component<
                     </div>
                 );
             }
+
             return (
                 <>
-                    {!this.props.store.userSelectedMutationMapperGene && (
+                    {/* {!this.props.store.userSelectedMutationMapperGene ? (
                         <div className="alert alert-info">
-                            Gene with highest frequency is displayed by default.
-                            Gene can be changed in the dropdown below.
+                            <div>
+                                Gene with highest frequency is displayed by
+                                default. Gene can be changed in the dropdown
+                                below.
+                            </div>
+                            <div>
+                                The top 10 genes with highest frequency are
+                                shown below the dropdown and can be selected by
+                                clicking on their respective tabs.
+                            </div>
                         </div>
-                    )}
+                    ) : (
+                        <div className="alert alert-info">
+                            The top 10 genes with highest frequency are shown
+                            below the dropdown and can be selected by clicking
+                            on their respective tabs.
+                        </div>
+                    )} */}
                     <OverlapExclusionIndicator
                         store={this.props.store}
                         only="sample"
@@ -60,7 +107,29 @@ export default class GroupComparisonMutationsTab extends React.Component<
                     <LollipopGeneSelector
                         store={this.props.store}
                         genes={this.props.store.availableGenes.result!}
+                        handleGeneChange={this.handleGeneChange}
+                        key={
+                            'comparisonLollipopGene' +
+                            this.props.store.activeMutationMapperGene!
+                                .hugoGeneSymbol
+                        }
                     />
+                    <div style={{ display: 'flex' }}>
+                        <div style={{ paddingRight: '5px' }}>
+                            Highest Frequency:
+                        </div>
+                        <MSKTabs
+                            activeTabId={this.activeTabId}
+                            onTabClick={(id: string) =>
+                                this.handleGeneChange(id)
+                            }
+                            className="pillTabs comparisonMutationMapperTabs"
+                            tabButtonStyle="pills"
+                            defaultTabId={false}
+                        >
+                            {this.tabs}
+                        </MSKTabs>
+                    </div>
                     <GroupComparisonMutationsTabPlot
                         store={this.props.store}
                         mutations={_(this.props.store.mutationsByGroup.result!)
