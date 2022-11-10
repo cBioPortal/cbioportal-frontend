@@ -47,6 +47,7 @@ import {
 import { fetchPatients } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { getSampleMolecularIdentifiers } from 'pages/studyView/StudyViewComparisonUtils';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
@@ -617,6 +618,13 @@ export default class GroupComparisonStore extends ComparisonStore {
             this.customDriverAnnotationReport.isComplete &&
             (!!this.customDriverAnnotationReport.result!.hasBinary ||
                 this.customDriverAnnotationReport.result!.tiers.length > 0)
+        );
+    }
+
+    // override parent method
+    protected get isLeftTruncationFeatureFlagEnabled() {
+        return this.appStore.featureFlagStore.has(
+            FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
         );
     }
 }

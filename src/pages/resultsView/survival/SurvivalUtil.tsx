@@ -14,6 +14,7 @@ export type ScatterData = {
     status: boolean;
     opacity?: number;
     group?: string;
+    atRisk?: number;
 };
 
 export type DownSamplingOpts = {
@@ -31,6 +32,7 @@ export type SurvivalSummary = {
     standardError?: number;
     low95ConfidenceInterval?: number;
     high95ConfidenceInterval?: number;
+    atRisk?: number;
 };
 
 export type SurvivalCurveData = {
@@ -85,8 +87,54 @@ export const survivalClinicalDataNullValueSet = new Set([
     'na',
 ]);
 
+export function sortPatientSurvivals(patientSurvivals: PatientSurvival[]) {
+    // First sort by month in asc order (smaller number to the front)
+    // Then sort by status in desc order (status is boolean, if status equals to true, then go to the front, false goes after it in the same time stamp)
+    return _.orderBy(patientSurvivals, [s => s.months, s => !s.status]);
+}
+
+// Concept of Number at risk:
+// In order to calculate survival probability using the Kaplan-Meier product limit method
+// We need to know how many individuals were still accounted for in the study that had not yet experienced the event of interest.
+// Therefore, the number at risk at any specific time point will be equal to the total number of subjects remaining in the study,
+// including any individuals that experience the event of interest or individuals that are censored at this time point.
+export function getNumPatientsAtRisk(
+    // In order to calculate correct result
+    // Patient survivals need to be sorted by months and status
+    // First sort by month in asc order (smaller number to the front)
+    // Then sort by status in desc order (status is boolean, if status equals to true, then go to the front, false goes after it in the same time stamp)
+    sortedPatientSurvivals: Pick<PatientSurvival, 'entryMonths' | 'months'>[]
+): number[] {
+    // returns an array in the same order as patientSurvivals
+
+    // When we see one entry time is not zero, we consider the data is left truncated
+    if (
+        _.some(sortedPatientSurvivals, survival => survival.entryMonths !== 0)
+    ) {
+        // Calculate number of patients at risk for data with entry time (left truncation)
+        return _.map(sortedPatientSurvivals, (patientSurvival, index) => {
+            const exitTime = patientSurvival.months;
+            // This step is to count the total number of subjects remaining in the study at this specific exit time
+            // subtract index from atRisk because previous subjects are no longer remain in the study at this specific exit time
+            return (
+                sortedPatientSurvivals.filter(
+                    survival => survival.entryMonths < exitTime
+                ).length - index
+            );
+        });
+    } else {
+        // Calculate the number of patients at risk for data without an entry time
+        // we need this in descending order, so reverse
+        return sortedPatientSurvivals.map((el, i) => i + 1).reverse();
+    }
+}
+
 export function getSurvivalSummaries(
-    patientSurvivals: PatientSurvival[]
+    // In order to calculate correct result
+    // Patient survivals need to be sorted by months and status
+    // First sort by month in asc order (smaller number to the front)
+    // Then sort by status in desc order (status is boolean, if status equals to true, then go to the front, false goes after it in the same time stamp)
+    sortedPatientSurvivals: PatientSurvival[]
 ): SurvivalSummary[] {
     let summaries: SurvivalSummary[] = [];
     let previousEstimate: number = 1;
@@ -97,19 +145,22 @@ export function getSurvivalSummaries(
 
     // calculate number of events
     const eventCountsByMonths: Dictionary<number> = _.reduce(
-        patientSurvivals,
+        sortedPatientSurvivals,
         (dict, patientSurvival) => {
-            if (patientSurvival.months in dict && patientSurvival.status) {
-                dict[patientSurvival.months] = dict[patientSurvival.months] + 1;
-            } else {
-                dict[patientSurvival.months] = 1;
+            if (patientSurvival.status) {
+                dict[patientSurvival.months] =
+                    patientSurvival.months in dict
+                        ? dict[patientSurvival.months] + 1
+                        : 1;
             }
             return dict;
         },
         {} as Dictionary<number>
     );
 
-    patientSurvivals.forEach((patientSurvival, index) => {
+    const atRisk = getNumPatientsAtRisk(sortedPatientSurvivals);
+
+    sortedPatientSurvivals.forEach((patientSurvival, index) => {
         // we may see multiple data points at the same time
         // only calculate the error for the last data point of the same months
         if (
@@ -128,8 +179,8 @@ export function getSurvivalSummaries(
         }
         // only calculate standard error and confidence intervals for event data
         if (patientSurvival.status) {
-            const atRisk = patientSurvivals.length - index;
-            const estimate = previousEstimate * ((atRisk - 1) / atRisk);
+            const estimate =
+                previousEstimate * ((atRisk[index] - 1) / atRisk[index]);
             previousEstimate = estimate;
             // define calculate standard error and confidence intervals
             // undefined is default value, means it's not found
@@ -141,7 +192,9 @@ export function getSurvivalSummaries(
                 // calculate standard error
                 // adjustedAtRisk need to add number of events back since we may have multiple events at the same time
                 const adjustedAtRisk =
-                    atRisk + eventCountsByMonths[patientSurvival.months] - 1;
+                    atRisk[index] +
+                    eventCountsByMonths[patientSurvival.months] -
+                    1;
                 const toBeAccumulated =
                     eventCountsByMonths[patientSurvival.months] /
                     (adjustedAtRisk *
@@ -164,10 +217,12 @@ export function getSurvivalSummaries(
                 standardError,
                 low95ConfidenceInterval,
                 high95ConfidenceInterval,
+                atRisk: atRisk[index],
             } as SurvivalSummary);
         } else {
             summaries.push({
                 survivalFunctionEstimate: previousEstimate,
+                atRisk: atRisk[index],
             });
         }
     });
@@ -286,7 +341,7 @@ export function getMedian(
 
 export function getLineData(
     patientSurvivals: PatientSurvival[],
-    estimates: number[]
+    survivalSummaries: SurvivalSummary[]
 ): any[] {
     let chartData: any[] = [];
 
@@ -294,7 +349,7 @@ export function getLineData(
     patientSurvivals.forEach((patientSurvival, index) => {
         chartData.push({
             x: patientSurvival.months,
-            y: estimates[index] * 100,
+            y: survivalSummaries[index].survivalFunctionEstimate * 100,
         });
     });
 
@@ -303,17 +358,18 @@ export function getLineData(
 
 export function getScatterData(
     patientSurvivals: PatientSurvival[],
-    estimates: number[],
+    survivalSummaries: SurvivalSummary[],
     group?: string
 ): ScatterData[] {
     return patientSurvivals.map((patientSurvival, index) => {
         const ret: ScatterData = {
             x: patientSurvival.months,
-            y: estimates[index] * 100,
+            y: survivalSummaries[index].survivalFunctionEstimate * 100,
             patientId: patientSurvival.patientId,
             studyId: patientSurvival.studyId,
             uniquePatientKey: patientSurvival.uniquePatientKey,
             status: patientSurvival.status,
+            atRisk: survivalSummaries[index].atRisk,
         };
         if (group) {
             ret.group = group;
@@ -324,15 +380,19 @@ export function getScatterData(
 
 export function getScatterDataWithOpacity(
     patientSurvivals: PatientSurvival[],
-    estimates: number[],
+    survivalSummaries: SurvivalSummary[],
     group?: string
 ): any[] {
-    let scatterData = getScatterData(patientSurvivals, estimates, group);
+    let scatterData = getScatterData(
+        patientSurvivals,
+        survivalSummaries,
+        group
+    );
     let chartData: any[] = [];
     let previousEstimate: number;
 
     patientSurvivals.forEach((patientSurvival, index) => {
-        const estimate = estimates[index];
+        const estimate = survivalSummaries[index].survivalFunctionEstimate;
         let opacity: number = 1;
         if (previousEstimate && estimate !== previousEstimate) {
             opacity = 0;
@@ -572,5 +632,14 @@ export function createSurvivalAttributeIdsDict(
             return dict;
         },
         {} as { [id: string]: string }
+    );
+}
+
+export function calculateNumberOfPatients(
+    patientSurvivals: PatientSurvival[],
+    patientToAnalysisGroups: { [patientKey: string]: string[] }
+) {
+    return _.sumBy(patientSurvivals, s =>
+        s.uniquePatientKey in patientToAnalysisGroups ? 1 : 0
     );
 }

@@ -31,6 +31,8 @@ import {
     SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
     generateSurvivalPlotYAxisLabelFromDisplayName,
+    sortPatientSurvivals,
+    calculateNumberOfPatients,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -38,6 +40,7 @@ import SurvivalPrefixTable from 'pages/resultsView/survival/SurvivalPrefixTable'
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
+import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
 
 export interface ISurvivalProps {
     store: ComparisonStore;
@@ -211,7 +214,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     survivalsByPrefixByAnalysisGroup,
                     survivalsByAnalysisGroup =>
                         _.mapValues(survivalsByAnalysisGroup, survivals =>
-                            survivals.sort((a, b) => a.months - b.months)
+                            sortPatientSurvivals(survivals)
                         )
                 )
             );
@@ -288,6 +291,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     this.survivalUI,
                     this.props.store.overlapComputations,
                     this.survivalPrefixTable,
+                    this.props.store.isLeftTruncationAvailable,
                 ];
             }
         },
@@ -311,22 +315,25 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             style={{ paddingBottom: 0 }}
                         >
                             {getStatisticalCautionInfo()}
-                            {isGenieBpcStudy && (
-                                <div className="alert alert-info">
-                                    <i
-                                        className="fa fa-md fa-info-circle"
-                                        style={{
-                                            verticalAlign: 'middle !important',
-                                            marginRight: 6,
-                                            marginBottom: 1,
-                                        }}
-                                    />
-                                    Kaplan-Meier estimates do not account for
-                                    the lead time bias introduced by the
-                                    inclusion criteria for the GENIE BPC
-                                    Project.
-                                </div>
-                            )}
+                            {isGenieBpcStudy &&
+                                !this.props.store.isLeftTruncationAvailable
+                                    .result && (
+                                    <div className="alert alert-info">
+                                        <i
+                                            className="fa fa-md fa-info-circle"
+                                            style={{
+                                                verticalAlign:
+                                                    'middle !important',
+                                                marginRight: 6,
+                                                marginBottom: 1,
+                                            }}
+                                        />
+                                        Kaplan-Meier estimates do not account
+                                        for the lead time bias introduced by the
+                                        inclusion criteria for the GENIE BPC
+                                        Project.
+                                    </div>
+                                )}
                             <OverlapExclusionIndicator
                                 store={this.props.store}
                                 only="patient"
@@ -420,13 +427,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 return {
                                     prefix,
                                     displayText,
-                                    numPatients: _.sumBy(
+                                    numPatients: calculateNumberOfPatients(
                                         patientSurvivals[prefix],
-                                        s =>
-                                            s.uniquePatientKey in
-                                            patientToAnalysisGroups
-                                                ? 1
-                                                : 0
+                                        patientToAnalysisGroups
                                     ),
                                     numPatientsPerGroup: _.mapValues(
                                         patientSurvivalsPerGroup,
@@ -516,6 +519,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.survivalXAxisLabelGroupByPrefix,
             this.props.store.survivalClinicalAttributesPrefix,
             this.props.store.patientSurvivals,
+            this.props.store.patientSurvivalsWithoutLeftTruncation,
             this.props.store.activeStudiesClinicalAttributes,
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
@@ -524,6 +528,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.survivalYLabel,
             this.sortedGroupedSurvivals,
             this.pValuesByPrefix,
+            this.props.store.isLeftTruncationAvailable,
         ],
         render: () => {
             let content: any = null;
@@ -614,12 +619,44 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             </div>
                         );
                     }
+                    // Currently, left truncation is only appliable for Overall Survival data
+                    const showLeftTruncationCheckbox =
+                        key === 'OS'
+                            ? this.props.store.isLeftTruncationAvailable.result
+                            : false;
                     content = (
                         <div style={{ marginBottom: 40 }}>
                             <h4 className="forceHeaderStyle h4">
                                 {survivalTitleText[key]}
                             </h4>
                             <p>{attributeDescriptions[key]}</p>
+                            {showLeftTruncationCheckbox && (
+                                <LeftTruncationCheckbox
+                                    className={
+                                        survivalPlotStyle.noPaddingLeftTruncationCheckbox
+                                    }
+                                    onToggleSurvivalPlotLeftTruncation={
+                                        this.props.store
+                                            .toggleLeftTruncationSelection
+                                    }
+                                    isLeftTruncationChecked={
+                                        this.props.store.adjustForLeftTruncation
+                                    }
+                                    patientSurvivalsWithoutLeftTruncation={
+                                        this.props.store
+                                            .patientSurvivalsWithoutLeftTruncation
+                                            .result![key]
+                                    }
+                                    patientToAnalysisGroups={
+                                        patientToAnalysisGroups
+                                    }
+                                    sortedGroupedSurvivals={
+                                        this.sortedGroupedSurvivals.result![
+                                            this.selectedSurvivalPlotPrefix
+                                        ]
+                                    }
+                                />
+                            )}
                             <div
                                 className="borderedChart"
                                 style={{ width: '920px' }}

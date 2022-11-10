@@ -3,6 +3,7 @@ import { IChartContainerProps } from '../ChartContainer';
 import { AnalysisGroup } from '../../StudyViewUtils';
 import _ from 'lodash';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
+import { sortPatientSurvivals } from 'pages/resultsView/survival/SurvivalUtil';
 
 export function makeSurvivalChartData(
     patientSurvivals: ReadonlyArray<PatientSurvival>,
@@ -31,7 +32,7 @@ export function makeSurvivalChartData(
     );
 
     const sortedGroupedSurvivals = _.mapValues(groupedSurvivals, survivals =>
-        survivals.sort((a, b) => a.months - b.months)
+        sortPatientSurvivals(survivals)
     );
     let pValue = null;
     if (analysisGroups.length > 1) {
