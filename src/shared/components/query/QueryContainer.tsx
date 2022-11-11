@@ -121,13 +121,13 @@ export default class QueryContainer extends React.Component<
                 aboveStudyListBlurb={
                     this.store.appStore.isPublicPortal ? (
                         <div className={'e2eHide'} style={{ marginLeft: 19 }}>
+                            Looking for <strong>AACR Project GENIE</strong>, the
+                            largest public clinicogenomic cancer dataset?&nbsp;
                             <a
                                 href={'https://genie.cbioportal.org'}
                                 target={'_blank'}
                             >
-                                Looking for <strong>AACR Project GENIE</strong>,
-                                the largest public clinicogenomic cancer
-                                dataset?&nbsp; It's available here.
+                                It's available here.
                             </a>{' '}
                             <DefaultTooltip
                                 overlayStyle={{ width: 200 }}
