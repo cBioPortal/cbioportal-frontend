@@ -536,6 +536,9 @@ class DefaultMutationMapperStore<T extends Mutation>
                     return undefined;
                 }
             },
+            onError: () => {
+                // allow client level handler to work
+            },
         },
         undefined
     );
@@ -975,7 +978,7 @@ class DefaultMutationMapperStore<T extends Mutation>
                             map: { [entrezGeneId: number]: boolean },
                             next: CancerGene
                         ) => {
-                            if (next.oncokbAnnotated) {
+                            if (next && next.oncokbAnnotated) {
                                 map[next.entrezGeneId] = true;
                             }
                             return map;

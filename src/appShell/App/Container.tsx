@@ -30,6 +30,10 @@ import {
 import makeRoutes from 'routes';
 import { AppContext } from 'cbioportal-frontend-commons';
 import { IAppContext } from 'cbioportal-frontend-commons';
+import { ErrorAlert } from 'shared/components/errorScreen/ErrorAlert';
+import { ErrorInfo } from 'react';
+import { observable } from 'mobx';
+import { sendToLoggly } from 'shared/lib/tracking';
 
 interface IContainerProps {
     location: Location;
@@ -96,57 +100,110 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
         return (
             <AppContext.Provider value={this.appContext}>
-                <div>
-                    <Helmet>
-                        <meta charSet="utf-8" />
-                        <title>{getServerConfig().skin_title}</title>
-                        <meta
-                            name="description"
-                            content={getServerConfig().skin_description}
-                        />
-                    </Helmet>
+                <ErrorBoundary>
+                    <div>
+                        <Helmet>
+                            <meta charSet="utf-8" />
+                            <title>{getServerConfig().skin_title}</title>
+                            <meta
+                                name="description"
+                                content={getServerConfig().skin_description}
+                            />
+                        </Helmet>
 
-                    <div id="pageTopContainer" className="pageTopContainer">
-                        <UserMessager />
+                        <div id="pageTopContainer" className="pageTopContainer">
+                            <UserMessager />
 
-                        {shouldShowStudyViewWarning() && <StudyAgreement />}
+                            {shouldShowStudyViewWarning() && <StudyAgreement />}
 
-                        {shouldShowGenieWarning() && <GenieAgreement />}
+                            {shouldShowGenieWarning() && <GenieAgreement />}
 
-                        <div className="contentWidth">
-                            <PortalHeader appStore={this.appStore} />
-                        </div>
-                    </div>
-                    <If condition={this.appStore.isErrorCondition}>
-                        <Then>
-                            <div className="contentWrapper">
-                                <ErrorScreen
-                                    title={
-                                        formatErrorTitle(
-                                            this.appStore.undismissedSiteErrors
-                                        ) ||
-                                        'Oops. There was an error retrieving data.'
-                                    }
-                                    body={
-                                        <a href={buildCBioPortalPageUrl('/')}>
-                                            Return to homepage
-                                        </a>
-                                    }
-                                    errorLog={formatErrorLog(
-                                        this.appStore.undismissedSiteErrors
-                                    )}
-                                    errorMessages={formatErrorMessages(
-                                        this.appStore.undismissedSiteErrors
-                                    )}
-                                />
+                            <div className="contentWidth">
+                                <PortalHeader appStore={this.appStore} />
                             </div>
-                        </Then>
-                        <Else>
-                            <div className="contentWrapper">{makeRoutes()}</div>
-                        </Else>
-                    </If>
-                </div>
+                        </div>
+                        <If condition={this.appStore.isErrorCondition}>
+                            <Then>
+                                <div className="contentWrapper">
+                                    <ErrorScreen
+                                        title={
+                                            formatErrorTitle(
+                                                this.appStore.siteErrors
+                                            ) ||
+                                            'Oops. There was an error retrieving data.'
+                                        }
+                                        body={
+                                            <a
+                                                href={buildCBioPortalPageUrl(
+                                                    '/'
+                                                )}
+                                            >
+                                                Return to homepage
+                                            </a>
+                                        }
+                                        errorLog={formatErrorLog(
+                                            this.appStore.siteErrors
+                                        )}
+                                        errorMessages={formatErrorMessages(
+                                            this.appStore.siteErrors
+                                        )}
+                                    />
+                                </div>
+                            </Then>
+                            <Else>
+                                <div className="contentWrapper">
+                                    <ErrorAlert appStore={this.appStore} />
+
+                                    {makeRoutes()}
+                                </div>
+                            </Else>
+                        </If>
+                    </div>
+                </ErrorBoundary>
             </AppContext.Provider>
         );
+    }
+}
+
+class ErrorBoundary extends React.Component<
+    any,
+    { hasError: boolean; error?: Error }
+> {
+    @observable hasError = false;
+
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            hasError: false,
+        };
+    }
+
+    static getDerivedStateFromError(error: any) {
+        // Update state so the next render will show the fallback UI.
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        // You can also log the error to an error reporting service
+
+        sendToLoggly(error.message, 'ERROR_JS');
+        this.hasError = true;
+    }
+
+    render() {
+        if (this.state.hasError) {
+            // fallback UI
+            return (
+                <ErrorScreen
+                    title={'Oh no! We encountered an error.'}
+                    errorLog={JSON.stringify({
+                        type: 'ErrorBoundary',
+                        log: this.state.error?.toString(),
+                    })}
+                />
+            );
+        } else {
+            return this.props.children;
+        }
     }
 }

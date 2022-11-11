@@ -10,7 +10,6 @@ import {
     SampleFilter,
     CancerStudy,
     MutationMultipleStudyFilter,
-    SampleMolecularIdentifier,
     GenePanelDataMultipleStudyFilter,
     Mutation,
     Gene,
