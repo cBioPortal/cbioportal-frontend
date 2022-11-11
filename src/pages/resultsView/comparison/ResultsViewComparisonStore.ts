@@ -18,6 +18,7 @@ import ifNotDefined from '../../../shared/lib/ifNotDefined';
 import comparisonClient from '../../../shared/api/comparisonGroupClientInstance';
 import { ComparisonGroup } from '../../groupComparison/GroupComparisonUtils';
 import { ComparisonSession } from 'shared/api/session-service/sessionServiceModels';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
     constructor(
@@ -181,5 +182,12 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     public get studies() {
         return this.resultsViewStore.studies;
+    }
+
+    // override parent method
+    protected get isLeftTruncationFeatureFlagEnabled() {
+        return this.appStore.featureFlagStore.has(
+            FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
+        );
     }
 }

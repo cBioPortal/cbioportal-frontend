@@ -114,7 +114,7 @@ describe('SurvivalStoreHelper', () => {
             );
         });
 
-        it('returns correct result for example data', () => {
+        it('returns 1 result for example data when no entry data provided', () => {
             assert.deepEqual(
                 getPatientSurvivals(
                     exampleClinicalData,
@@ -129,9 +129,24 @@ describe('SurvivalStoreHelper', () => {
                         uniquePatientKey: '1',
                         studyId: 'study_1',
                         months: 0,
+                        entryMonths: 0,
                         status: true,
                     },
                 ]
+            );
+        });
+
+        it('returns empty result for example data when entry data provided because event months is less than entry months (0 < 5), so the result should be truncated', () => {
+            assert.deepEqual(
+                getPatientSurvivals(
+                    exampleClinicalData,
+                    exampleTargetKeys,
+                    'OS_STATUS',
+                    'OS_MONTHS',
+                    s => s === 'DECEASED',
+                    { '1': 5 }
+                ),
+                []
             );
         });
     });
