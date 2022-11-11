@@ -22,10 +22,10 @@ import * as superagent from 'superagent';
 import { buildCBioPortalPageUrl } from './shared/api/urls';
 import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
-import { initializeTracking } from 'shared/lib/tracking';
+import { initializeTracking, sendToLoggly } from 'shared/lib/tracking';
 import superagentCache from 'superagent-cache';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
-import { AppStore } from './AppStore';
+import { AppStore, SiteError } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
@@ -33,6 +33,7 @@ import Container from 'appShell/App/Container';
 import { IServerConfig } from 'config/IAppConfig';
 import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';
+import eventBus from 'shared/events/eventBus';
 
 export interface ICBioWindow {
     globalStores: {
@@ -162,6 +163,11 @@ const stores = {
 };
 
 browserWindow.globalStores = stores;
+
+eventBus.on('error', (err: SiteError) => {
+    sendToLoggly(err?.errorObj?.message);
+    stores.appStore.addError(err);
+});
 
 //@ts-ignore
 const end = superagent.Request.prototype.end;

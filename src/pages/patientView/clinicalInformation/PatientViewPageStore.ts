@@ -136,7 +136,7 @@ import { groupTrialMatchesById } from '../trialMatch/TrialMatchTableUtils';
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
-import { AppStore, SiteError } from 'AppStore';
+import { AppStore, SiteError } from '../../../AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';
@@ -761,11 +761,7 @@ export class PatientViewPageStore {
                     this.sampleId
                 ),
             onError: (err: Error) => {
-                this.appStore.siteErrors.push({
-                    errorObj: err,
-                    dismissed: false,
-                    title: 'Samples / Patients not valid',
-                } as SiteError);
+                this.appStore.siteErrors.push(new SiteError(err));
             },
         },
         []
@@ -1684,6 +1680,7 @@ export class PatientViewPageStore {
                     return Promise.resolve([]);
                 }
             },
+            onError: () => {},
         },
         []
     );
@@ -1719,7 +1716,7 @@ export class PatientViewPageStore {
                                 map: { [entrezGeneId: number]: boolean },
                                 next: CancerGene
                             ) => {
-                                if (next.oncokbAnnotated) {
+                                if (next?.oncokbAnnotated) {
                                     map[next.entrezGeneId] = true;
                                 }
                                 return map;
@@ -1731,6 +1728,7 @@ export class PatientViewPageStore {
                     return Promise.resolve({});
                 }
             },
+            onError: () => {},
         },
         {}
     );
@@ -2453,6 +2451,7 @@ export class PatientViewPageStore {
                     this.oncoKbAnnotatedGenes,
                     this.mutationData
                 ),
+            onError: () => {},
         },
         ONCOKB_DEFAULT
     );
@@ -2714,5 +2713,6 @@ export class PatientViewPageStore {
                 .value();
         },
         default: {},
+        onError: () => {},
     });
 }

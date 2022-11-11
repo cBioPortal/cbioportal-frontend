@@ -335,7 +335,7 @@ export default class OncoprinterStore {
                                 map: { [entrezGeneId: number]: boolean },
                                 next: CancerGene
                             ) => {
-                                if (next.oncokbAnnotated) {
+                                if (next?.oncokbAnnotated) {
                                     map[next.entrezGeneId] = true;
                                 }
                                 return map;

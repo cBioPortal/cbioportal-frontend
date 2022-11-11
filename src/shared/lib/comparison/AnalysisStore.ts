@@ -31,13 +31,19 @@ import {
     IOncoKbData,
 } from 'cbioportal-utils';
 import { fetchHotspotsData } from '../CancerHotspotsUtils';
-import { GenomeNexusAPIInternal } from 'genome-nexus-ts-api-client';
+import {
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+} from 'genome-nexus-ts-api-client';
 import {
     countMutations,
     mutationCountByPositionKey,
 } from 'pages/resultsView/mutationCountHelpers';
 import ComplexKeyCounter from '../complexKeyDataStructures/ComplexKeyCounter';
 import GeneCache from 'shared/cache/GeneCache';
+import eventBus from 'shared/events/eventBus';
+import { SiteError } from 'AppStore';
+import { ErrorMessages } from 'shared/errorMessages';
 
 export default abstract class AnalysisStore {
     @observable driverAnnotationSettings: DriverAnnotationSettings;
@@ -58,6 +64,7 @@ export default abstract class AnalysisStore {
                     return Promise.resolve([]);
                 }
             },
+            onError: () => {},
         },
         []
     );
@@ -66,7 +73,10 @@ export default abstract class AnalysisStore {
         {
             await: () => [this.oncoKbCancerGenes],
             invoke: () => {
-                if (getServerConfig().show_oncokb) {
+                if (
+                    getServerConfig().show_oncokb &&
+                    !_.isError(this.oncoKbCancerGenes.result)
+                ) {
                     return Promise.resolve(
                         _.reduce(
                             this.oncoKbCancerGenes.result,
@@ -74,7 +84,7 @@ export default abstract class AnalysisStore {
                                 map: { [entrezGeneId: number]: boolean },
                                 next: CancerGene
                             ) => {
-                                if (next.oncokbAnnotated) {
+                                if (next?.oncokbAnnotated) {
                                     map[next.entrezGeneId] = true;
                                 }
                                 return map;
@@ -86,6 +96,7 @@ export default abstract class AnalysisStore {
                     return Promise.resolve({});
                 }
             },
+            onError: e => {},
         },
         {}
     );
@@ -97,8 +108,38 @@ export default abstract class AnalysisStore {
         return getGenomeNexusUrl(this.studies.result);
     }
 
+    @computed get genomeNexusClient() {
+        const client = new GenomeNexusAPI(this.referenceGenomeBuild);
+
+        client.addErrorHandler(err => {
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(
+                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
+                    'alert'
+                )
+            );
+        });
+
+        return client;
+    }
+
     @computed get genomeNexusInternalClient() {
-        return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
+        const client = new GenomeNexusAPIInternal(this.referenceGenomeBuild);
+
+        client.addErrorHandler(err => {
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(
+                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
+                    'alert'
+                )
+            );
+        });
+
+        return client;
     }
 
     readonly entrezGeneIdToGene = remoteData<{ [entrezGeneId: number]: Gene }>({
@@ -196,6 +237,7 @@ export default abstract class AnalysisStore {
                 );
             });
         },
+        onError: () => {},
     });
 
     // Hotspots
@@ -208,17 +250,20 @@ export default abstract class AnalysisStore {
                 this.genomeNexusInternalClient
             );
         },
+        onError: () => {},
     });
 
     readonly indexedHotspotData = remoteData<IHotspotIndex | undefined>({
         await: () => [this.hotspotData],
         invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
+        onError: () => {},
     });
 
     public readonly isHotspotForOncoprint = remoteData<
         ((m: Mutation) => boolean) | Error
     >({
         invoke: () => makeIsHotspotForOncoprint(this.indexedHotspotData),
+        onError: () => {},
     });
 
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
@@ -226,11 +271,12 @@ export default abstract class AnalysisStore {
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
             await: () => [this.mutations, this.oncoKbAnnotatedGenes],
-            invoke: async () =>
-                fetchOncoKbDataForOncoprint(
+            invoke: async () => {
+                return await fetchOncoKbDataForOncoprint(
                     this.oncoKbAnnotatedGenes,
                     this.mutations
-                ),
+                );
+            },
             onError: (err: Error) => {
                 // fail silently, leave the error handling responsibility to the data consumer
             },
@@ -246,6 +292,7 @@ export default abstract class AnalysisStore {
             makeGetOncoKbMutationAnnotationForOncoprint(
                 this.oncoKbDataForOncoprint
             ),
+        onError: () => {},
     });
 
     readonly cbioportalMutationCountData = remoteData<{
@@ -350,6 +397,7 @@ export default abstract class AnalysisStore {
                 }
             });
         },
+        onError: () => {},
     });
 
     readonly geneCache = new GeneCache();
