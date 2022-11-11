@@ -121,15 +121,22 @@ export default class QueryContainer extends React.Component<
                 aboveStudyListBlurb={
                     this.store.appStore.isPublicPortal ? (
                         <div className={'e2eHide'} style={{ marginLeft: 19 }}>
-                            Looking for <strong>AACR GENIE</strong>, the largest
-                            public clinicogenomic cancer dataset?&nbsp;
                             <a
                                 href={'https://genie.cbioportal.org'}
                                 target={'_blank'}
                             >
-                                It's available here
-                            </a>
-                            .
+                                Looking for <strong>AACR Project GENIE</strong>,
+                                the largest public clinicogenomic cancer
+                                dataset?&nbsp; It's available here.
+                            </a>{' '}
+                            <DefaultTooltip
+                                overlayStyle={{ width: 200 }}
+                                overlay={
+                                    'AACR Project GENIE is a publicly accessible cancer registry of real world data assembled through data sharing between 19 leading international cancer centers. The latest data release includes sequencing data for more than 150,000 tumor samples. For a subset of these cases there is additional longitudinal clinical information available, including treatment and outcome data, as collected by the GENIE Biopharma Collaborative (BPC).'
+                                }
+                            >
+                                <i className={'fa fa-info-circle'}></i>
+                            </DefaultTooltip>
                         </div>
                     ) : (
                         undefined
