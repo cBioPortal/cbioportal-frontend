@@ -104,7 +104,10 @@ export class TherapyRecommendationFormAlterationInput extends React.Component<
                 if (myVariantInfo.cosmic) {
                     cosmic = myVariantInfo.cosmic.cosmicId;
                 }
-                if (myVariantInfo.gnomadExome) {
+                if (
+                    myVariantInfo.gnomadExome &&
+                    myVariantInfo.gnomadExome.alleleFrequency
+                ) {
                     gnomad = myVariantInfo.gnomadExome.alleleFrequency.af;
                 }
             }
