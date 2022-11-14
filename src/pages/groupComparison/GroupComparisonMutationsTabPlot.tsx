@@ -23,7 +23,21 @@ interface IGroupComparisonMutationsTabPlotProps {
 }
 
 function plotYAxisLabelFormatter(symbol?: string, groupName?: string) {
-    return `${symbol} ${groupName} Mutations`;
+    // lowercase = 1 and uppercase = 1.3 (based on 'w' and 'W'), if groupName >= 13, stop and + "..."
+    let length = 0;
+    let label = '';
+    for (let c of groupName!) {
+        let value = c === c.toLowerCase() ? 1 : 1.3;
+        if (length + value >= 13) {
+            label += '...';
+            break;
+        } else {
+            label += c;
+            length += value;
+        }
+    }
+    return `${symbol} ${label}`;
+    // return `${symbol} ${groupName}`;
 }
 
 function plotLollipopTooltipCountInfo(
