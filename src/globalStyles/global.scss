@@ -254,6 +254,10 @@ th.reactable-header-sort-asc:after {
     }
 }
 
+.comparisonMutationMapperTabs {
+    height: 0;
+}
+
 .mainTabs {
     > .nav {
         @extend .portalWidth;

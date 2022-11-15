@@ -79,6 +79,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             this.props.store.mutationsByGroup,
             this.props.store.profiledSamplesCount,
             this.mutationMapperToolStore.mutationMapperStores,
+            this.props.store.coverageInformation,
         ],
         render: () => {
             if (
@@ -92,9 +93,12 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                 return (
                     <>
                         <h3>
-                            {_(this.props.store.mutationsByGroup.result!)
-                                .keys()
-                                .join(' vs ')}
+                            {this.props.store.activeMutationMapperGene
+                                ?.hugoGeneSymbol +
+                                ' mutations: ' +
+                                _(this.props.store.mutationsByGroup.result!)
+                                    .keys()
+                                    .join(' vs ')}
                         </h3>
                         <GroupComparisonMutationMapper
                             {...convertToMutationMapperProps({
@@ -115,7 +119,24 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                     </>
                 );
             } else {
-                return null;
+                if (
+                    Object.values(
+                        this.props.store.coverageInformation.result!.samples
+                    ).some(s => !_.isEmpty(s.allGenes) || !_.isEmpty(s.byGene))
+                ) {
+                    return (
+                        <div style={{ marginTop: '20px' }}>
+                            Selected gene has no mutations for profiled samples.
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div style={{ marginTop: '20px' }}>
+                            Selected gene has no mutations due to no profiled
+                            samples.
+                        </div>
+                    );
+                }
             }
         },
         renderPending: () => (

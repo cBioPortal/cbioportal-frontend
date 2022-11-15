@@ -8,58 +8,59 @@ import GroupComparisonStore from './GroupComparisonStore';
 interface ILollipopGeneSelectorProps {
     store: GroupComparisonStore;
     genes: Gene[];
+    handleGeneChange: (id?: string) => void;
 }
 
-export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = ({
-    store,
-    genes,
-}: ILollipopGeneSelectorProps) => {
-    const loadOptions = (inputText: string, callback: any) => {
-        if (!inputText) {
-            callback([]);
-        }
-        const stringCompare = (item: any) =>
-            item.hugoGeneSymbol.startsWith(inputText.toUpperCase());
-        const options = genes;
-        callback(
-            options
-                .filter(stringCompare)
-                .slice(0, 200)
-                .map(g => ({
-                    label: g.hugoGeneSymbol,
-                    value: g,
-                }))
-        );
-    };
+export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = observer(
+    ({ store, genes, handleGeneChange }: ILollipopGeneSelectorProps) => {
+        const loadOptions = (inputText: string, callback: any) => {
+            if (!inputText) {
+                callback([]);
+            }
+            const stringCompare = (item: any) =>
+                item.hugoGeneSymbol.startsWith(inputText.toUpperCase());
+            const options = genes;
+            callback(
+                options
+                    .filter(stringCompare)
+                    .slice(0, 200)
+                    .map(g => ({
+                        label: g.hugoGeneSymbol,
+                        value: g,
+                    }))
+            );
+        };
 
-    return (
-        <div style={{ width: 200, paddingBottom: 10 }}>
-            <AsyncSelect
-                name="Select gene"
-                onChange={(option: any | null) => {
-                    if (option) {
-                        store.setSelectedMutationMapperGene(option.value);
-                    } else {
-                        store.clearSelectedMutationMapperGene();
+        return (
+            <div style={{ width: 200, paddingBottom: 10 }}>
+                <AsyncSelect
+                    name="Select gene"
+                    onChange={(option: any | null) => {
+                        if (option) {
+                            handleGeneChange(option.value.hugoGeneSymbol);
+                        } else {
+                            handleGeneChange(undefined);
+                        }
+                    }}
+                    isClearable={true}
+                    isSearchable={true}
+                    defaultOptions={genes.slice(0, 200).map(gene => ({
+                        label: gene.hugoGeneSymbol,
+                        value: gene,
+                    }))}
+                    value={
+                        store.userSelectedMutationMapperGene
+                            ? {
+                                  label: store.userSelectedMutationMapperGene,
+                                  value: store.activeMutationMapperGene,
+                              }
+                            : null
                     }
-                }}
-                isClearable={true}
-                isSearchable={true}
-                defaultOptions={genes.slice(0, 200).map(gene => ({
-                    label: gene.hugoGeneSymbol,
-                    value: gene,
-                }))}
-                value={{
-                    label: store.activeMutationMapperGene!.hugoGeneSymbol,
-                    value: store.activeMutationMapperGene,
-                }}
-                placeholder={
-                    store.activeMutationMapperGene!.hugoGeneSymbol ||
-                    'Select a gene'
-                }
-                loadOptions={loadOptions}
-                cacheOptions={true}
-            />
-        </div>
-    );
-};
+                    placeholder={'Search genes'}
+                    loadOptions={loadOptions}
+                    cacheOptions={true}
+                />
+            </div>
+        );
+    }
+);
