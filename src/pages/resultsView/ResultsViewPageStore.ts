@@ -431,12 +431,10 @@ export function allowExpressionProfiles(studies: CancerStudy[]) {
     ) {
         // if there is only one study
         // or ALL studies are part of pan_can_atlas and thus have normalized data across expression profiles
-        if (
+        return (
             studies.length === 1 ||
             _.every(studies, s => /pan_can_atlas/i.test(s.studyId))
-        ) {
-            return true;
-        }
+        );
     } else {
         return true;
     }
