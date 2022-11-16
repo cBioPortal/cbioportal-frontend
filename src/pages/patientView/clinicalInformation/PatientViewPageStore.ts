@@ -2555,7 +2555,12 @@ export class PatientViewPageStore {
             invoke: () => {
                 return fetchMtbsUsingGET(
                     this.getMtbJsonStoreUrl(this.getSafePatientId()),
-                    this.getSafeStudyId()
+                    this.getSafeStudyId(),
+                    (
+                        this.clinicalDataPatient.result.filter(
+                            e => e.clinicalAttributeId == 'ORDER_ID'
+                        )[0] || { value: '' }
+                    ).value
                 );
             },
         },

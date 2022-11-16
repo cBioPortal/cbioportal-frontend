@@ -67,7 +67,11 @@ export async function fetchFollowupUsingGET(url: string) {
         });
 }
 
-export async function fetchMtbsUsingGET(url: string, studyId: string) {
+export async function fetchMtbsUsingGET(
+    url: string,
+    studyId: string,
+    orderId: string
+) {
     url = url + '?studyId=' + studyId;
     console.log('### MTB ### Calling GET: ' + url);
     return request
@@ -83,7 +87,8 @@ export async function fetchMtbsUsingGET(url: string, studyId: string) {
                     (mtb: any) =>
                         ({
                             id: mtb.id,
-                            orderId: mtb.orderId,
+                            orderId:
+                                mtb.mtbState == 'FINAL' ? mtb.orderId : orderId,
                             therapyRecommendations: mtb.therapyRecommendations,
                             geneticCounselingRecommendation:
                                 mtb.geneticCounselingRecommendation,
