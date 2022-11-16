@@ -44,7 +44,11 @@ import {
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
 } from '../ResultsViewPageStore';
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    CnaDataTypes,
+    DataTypeConstants,
+} from 'shared/constants';
 
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
@@ -131,7 +135,7 @@ export function sortMolecularProfilesForDisplay(profiles: MolecularProfile[]) {
     let sortBy: (p: MolecularProfile) => any;
     switch (type) {
         case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
-            sortBy = p => (p.datatype === 'DISCRETE' ? 0 : 1);
+            sortBy = p => (CnaDataTypes.includes(p.datatype) ? 0 : 1);
             break;
         default:
             sortBy = p => p.name;
@@ -1077,7 +1081,7 @@ function makeAxisDataPromise_Molecular(
                     profile =>
                         profile.molecularAlterationType ===
                             AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-                        profile.datatype === 'DISCRETE'
+                        CnaDataTypes.includes(profile.datatype)
                 );
 
                 const data: NumericGeneMolecularData[] = _.flatMap(

@@ -245,6 +245,7 @@ import {
     AlterationTypeConstants,
     CLINICAL_ATTRIBUTE_FIELD_ENUM,
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    CnaDataTypes,
     DataTypeConstants,
     GENETIC_PROFILE_FIELD_ENUM,
     GENOME_NEXUS_ARG_FIELD_ENUM,
@@ -2694,7 +2695,7 @@ export class ResultsViewPageStore
                 profile =>
                     profile.molecularAlterationType ===
                         AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-                    profile.datatype === DataTypeConstants.DISCRETE
+                    CnaDataTypes.includes(profile.datatype)
             );
         },
         onError: error => {},
@@ -4472,8 +4473,7 @@ export class ResultsViewPageStore
                 for (const molecularProfile of this.molecularProfilesInStudies
                     .result) {
                     if (
-                        molecularProfile.datatype ===
-                            DataTypeConstants.DISCRETE &&
+                        CnaDataTypes.includes(molecularProfile.datatype) &&
                         molecularProfile.molecularAlterationType ===
                             AlterationTypeConstants.COPY_NUMBER_ALTERATION
                     ) {

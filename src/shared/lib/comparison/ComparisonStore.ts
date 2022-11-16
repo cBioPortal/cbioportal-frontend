@@ -77,7 +77,11 @@ import {
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    CnaDataTypes,
+    DataTypeConstants,
+} from 'shared/constants';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
@@ -2211,8 +2215,9 @@ export default abstract class ComparisonStore
                             // discrete CNA's
                             (molecularProfile.molecularAlterationType ===
                                 AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-                                molecularProfile.datatype ===
-                                    DataTypeConstants.DISCRETE) ||
+                                CnaDataTypes.includes(
+                                    molecularProfile.datatype
+                                )) ||
                             // mutations
                             molecularProfile.molecularAlterationType ===
                                 AlterationTypeConstants.MUTATION_EXTENDED ||

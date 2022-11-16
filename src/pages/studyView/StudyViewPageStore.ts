@@ -197,7 +197,11 @@ import {
 } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    CnaDataTypes,
+    DataTypeConstants,
+} from 'shared/constants';
 import {
     createSurvivalAttributeIdsDict,
     generateStudyViewSurvivalPlotTitle,
@@ -4829,7 +4833,7 @@ export class StudyViewPageStore
                 getFilteredMolecularProfilesByAlterationType(
                     this.studyIdToMolecularProfiles.result,
                     AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                    [DataTypeConstants.DISCRETE]
+                    CnaDataTypes
                 )
             );
         },

@@ -11,7 +11,11 @@ import {
 } from 'shared/model/EnrichmentRow';
 import { formatLogOddsRatio, roundLogRatio } from 'shared/lib/FormatUtils';
 import _ from 'lodash';
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    CnaDataTypes,
+    DataTypeConstants,
+} from 'shared/constants';
 import { filterAndSortProfiles } from '../coExpression/CoExpressionTabUtils';
 import { IMiniFrequencyScatterChartData } from './MiniFrequencyScatterChart';
 import {
@@ -510,7 +514,7 @@ export function pickCopyNumberEnrichmentProfiles(profiles: MolecularProfile[]) {
         (profile: MolecularProfile) =>
             profile.molecularAlterationType ===
                 AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-            profile.datatype === 'DISCRETE'
+            CnaDataTypes.includes(profile.datatype)
     );
 }
 

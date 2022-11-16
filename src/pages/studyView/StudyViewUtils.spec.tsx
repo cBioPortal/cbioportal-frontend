@@ -94,7 +94,11 @@ import {
 import { remoteData, toPromise } from 'cbioportal-frontend-commons';
 import { autorun, observable, runInAction } from 'mobx';
 
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    CnaDataTypes,
+    DataTypeConstants,
+} from 'shared/constants';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -4903,7 +4907,7 @@ describe('StudyViewUtils', () => {
                 getFilteredMolecularProfilesByAlterationType(
                     studyIdToMolecularProfiles,
                     AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                    [DataTypeConstants.DISCRETE]
+                    CnaDataTypes
                 ),
                 result
             );
