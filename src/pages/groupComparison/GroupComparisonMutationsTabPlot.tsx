@@ -16,6 +16,7 @@ import { countUniqueMutations } from 'shared/lib/MutationUtils';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { AxisScale } from 'react-mutation-mapper';
 import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
+import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
@@ -35,10 +36,13 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
     }
 
     @computed get mutationMapperToolStore() {
-        const store = new MutationMapperToolStore(this.props.mutations, {
-            ...this.props.filters,
-            countUniqueMutations: this.countUniqueMutationsInGroup,
-        });
+        const store = new MutationMapperToolStore(
+            this.props.store.filteredAndAnnotatedMutations.result,
+            {
+                ...this.props.filters,
+                countUniqueMutations: this.countUniqueMutationsInGroup,
+            }
+        );
         return store;
     }
 
@@ -107,6 +111,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         await: () => [
             this.props.store.mutations,
             this.props.store.mutationsByGroup,
+            this.props.store.filteredAndAnnotatedMutations,
             this.mutationMapperToolStore.mutationMapperStores,
             this.props.store.coverageInformation,
             this.props.store.groupToProfiledPatients,
@@ -146,6 +151,12 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             onScaleToggle={this.props.onScaleToggle}
                             plotYAxisLabelFormatter={
                                 this.plotYAxisLabelFormatter
+                            }
+                            isPutativeDriver={
+                                this.props.store.driverAnnotationSettings
+                                    .driversAnnotated
+                                    ? (m: AnnotatedMutation) => m.putativeDriver
+                                    : undefined
                             }
                         />
                     </>
