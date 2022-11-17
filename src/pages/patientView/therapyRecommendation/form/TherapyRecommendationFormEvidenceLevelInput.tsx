@@ -44,7 +44,9 @@ export default class TherapyRecommendationFormEvidenceLevelInput extends React.C
             isM3Disabled:
                 this.props.data.evidenceLevel.toString() !==
                 EvidenceLevel[EvidenceLevel.m3].toString(),
-            isM1Disabled: !this.props.data.evidenceLevel.toString().match('m1'),
+            isM1Disabled: !this.props.data.evidenceLevel
+                .toString()
+                .match('m1|m2'),
             isRDisabled:
                 this.props.data.evidenceLevel.toString() === 'NA' ||
                 this.props.data.evidenceLevel.toString() === '0',
@@ -156,7 +158,7 @@ export default class TherapyRecommendationFormEvidenceLevelInput extends React.C
                                     EvidenceLevel[EvidenceLevel.m3].toString(),
                                 isM1Disabled: !this.props.data.evidenceLevel
                                     .toString()
-                                    .match('m1'),
+                                    .match('m1|m2'),
                                 isRDisabled:
                                     this.props.data.evidenceLevel.toString() ===
                                     'NA',
