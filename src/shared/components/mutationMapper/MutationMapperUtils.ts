@@ -3,8 +3,8 @@ import { GenomeNexusAPI, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { fetchVariantAnnotationsByMutation } from 'react-mutation-mapper';
 import { getServerConfig } from 'config/config';
 import _ from 'lodash';
-import { createNamespaceColumnName } from 'shared/components/namespaceColumns/createNamespaceColumnName';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { createNamespaceColumnName } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export function normalizeMutation<T extends Pick<Mutation, 'chr'>>(
     mutation: T

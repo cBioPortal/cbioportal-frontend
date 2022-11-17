@@ -4,7 +4,7 @@ import { action, computed, observable, makeObservable } from 'mobx';
 import _ from 'lodash';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
-import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/buildNamespaceColumnConfig';
+import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 function mutationMatch(d: Mutation[], id: Mutation) {
     return (

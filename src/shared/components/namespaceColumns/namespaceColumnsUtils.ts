@@ -1,13 +1,12 @@
 import NumericNamespaceColumnFormatter, {
-    WithNamespace,
+    WithNamespaceColumns,
 } from './NumericNamespaceColumnFormatter';
 import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import _ from 'lodash';
 import CategoricalNamespaceColumnFormatter from './CategoricalNamespaceColumnFormatter';
-import { NamespaceColumnConfig } from './NamespaceColumnConfig';
-import { createNamespaceColumnName } from './createNamespaceColumnName';
+import _ from 'lodash';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
-export function createNamespaceColumns<T extends WithNamespace>(
+export function createNamespaceColumns<T extends WithNamespaceColumns>(
     namespaceColumnConfig?: NamespaceColumnConfig | undefined
 ) {
     const columns = {} as Record<string, Column<T[]>>;
@@ -76,4 +75,39 @@ export function createNamespaceColumns<T extends WithNamespace>(
         })
     );
     return columns;
+}
+
+export function buildNamespaceColumnConfig(
+    mutations: WithNamespaceColumns[]
+): NamespaceColumnConfig {
+    if (!mutations) {
+        return {};
+    }
+    const columnTypes: any = {};
+    mutations.forEach(m => {
+        _.forIn(m.namespaceColumns, (columns, namespace) => {
+            _.forIn(columns, (value, columnName) => {
+                if (columnTypes[namespace] === undefined) {
+                    columnTypes[namespace] = {};
+                }
+                if (columnTypes[namespace][columnName] === undefined) {
+                    columnTypes[namespace][columnName] = 'number';
+                }
+                if (
+                    _.isString(value) &&
+                    columnTypes[namespace][columnName] === 'number'
+                ) {
+                    columnTypes[namespace][columnName] = 'string';
+                }
+            });
+        });
+    });
+    return columnTypes;
+}
+
+export function createNamespaceColumnName(
+    namespaceName: string,
+    namespaceColumnName: string
+) {
+    return namespaceName + ' ' + _.capitalize(namespaceColumnName);
 }

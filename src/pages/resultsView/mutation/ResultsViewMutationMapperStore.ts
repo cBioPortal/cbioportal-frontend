@@ -46,7 +46,7 @@ import ClinicalAttributeColumnFormatter from 'shared/components/mutationTable/co
 import _ from 'lodash';
 import NumericNamespaceColumnFormatter from 'shared/components/namespaceColumns/NumericNamespaceColumnFormatter';
 import CategoricalNamespaceColumnFormatter from 'shared/components/namespaceColumns/CategoricalNamespaceColumnFormatter';
-import { createNamespaceColumnName } from 'shared/components/namespaceColumns/createNamespaceColumnName';
+import { createNamespaceColumnName } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(

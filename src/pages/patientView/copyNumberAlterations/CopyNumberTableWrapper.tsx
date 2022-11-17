@@ -32,7 +32,7 @@ import { getServerConfig } from 'config/config';
 import autobind from 'autobind-decorator';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
-import { createNamespaceColumns } from 'shared/components/namespaceColumns/createNamespaceColumns';
+import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';

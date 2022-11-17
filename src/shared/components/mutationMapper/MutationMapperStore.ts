@@ -54,7 +54,7 @@ import { IMutationMapperServerConfig } from './MutationMapperServerConfig';
 import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
-import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/buildNamespaceColumnConfig';
+import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;

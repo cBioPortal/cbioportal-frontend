@@ -2,7 +2,7 @@ import * as React from 'react';
 import _ from 'lodash';
 import generalStyles from 'shared/components/mutationTable/column/styles.module.scss';
 
-export type WithNamespace = {
+export type WithNamespaceColumns = {
     namespaceColumns: {};
 };
 
@@ -11,7 +11,7 @@ export type WithNamespace = {
  */
 export default class NumericNamespaceColumnFormatter {
     public static getData(
-        data: WithNamespace[],
+        data: WithNamespaceColumns[],
         namespaceName: any,
         namespaceColumnName: any
     ): number | null {
@@ -26,7 +26,7 @@ export default class NumericNamespaceColumnFormatter {
     }
 
     public static sortValue(
-        data: WithNamespace[],
+        data: WithNamespaceColumns[],
         namespaceName: string,
         namespaceColumnName: string
     ): number | null {
@@ -38,7 +38,7 @@ export default class NumericNamespaceColumnFormatter {
     }
 
     public static download(
-        data: WithNamespace[],
+        data: WithNamespaceColumns[],
         namespaceName: string,
         namespaceColumnName: string
     ): string {
@@ -51,7 +51,7 @@ export default class NumericNamespaceColumnFormatter {
     }
 
     public static renderFunction(
-        data: WithNamespace[],
+        data: WithNamespaceColumns[],
         namespaceName: string,
         namespaceColumnName: string
     ) {

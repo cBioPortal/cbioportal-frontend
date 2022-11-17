@@ -194,7 +194,7 @@ import { getServerConfig } from 'config/config';
 import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
 import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
-import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/buildNamespaceColumnConfig';
+import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;

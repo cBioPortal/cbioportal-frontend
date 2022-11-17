@@ -5,8 +5,8 @@ import {
 } from 'shared/components/mutationTable/MutationTable';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { getServerConfig } from 'config/config';
-import { createNamespaceColumns } from 'shared/components/namespaceColumns/createNamespaceColumns';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export function createMutationNamespaceColumns(
     namespaceColumnConfig: NamespaceColumnConfig | undefined
