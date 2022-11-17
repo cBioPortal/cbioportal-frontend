@@ -795,14 +795,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
                 // due to legacy urls, it's possible that selections can be made which
                 // are no longer avaiable.  this handles that case
-                const selectedDataTypeDoesNotExists = !_.some(
+                const selectedDataTypeDoesNotExist = !_.some(
                     dataTypeOptions,
-                    o => o.value === this._dataType
+                    o =>
+                        this._dataType === NONE_SELECTED_OPTION_STRING_VALUE ||
+                        o.value === this._dataType
                 );
 
                 if (
                     (this._dataType === undefined && dataTypeOptions.length) ||
-                    selectedDataTypeDoesNotExists
+                    selectedDataTypeDoesNotExist
                 ) {
                     // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (
