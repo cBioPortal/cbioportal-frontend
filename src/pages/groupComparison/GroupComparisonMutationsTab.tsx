@@ -15,9 +15,11 @@ import { LollipopGeneSelector } from './LollipopGeneSelector';
 import GroupComparisonMutationsTabPlot from './GroupComparisonMutationsTabPlot';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
+import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;
+    urlWrapper: GroupComparisonURLWrapper;
 }
 
 @observer
@@ -32,9 +34,11 @@ export default class GroupComparisonMutationsTab extends React.Component<
     }
 
     @action.bound
-    protected handleGeneChange(id: string | undefined) {
+    protected handleGeneChange(id: string) {
         this.geneTab = id;
-        this.props.store.setSelectedMutationMapperGene(id);
+        this.props.urlWrapper.updateURL({
+            selectedGene: id,
+        });
     }
 
     @computed get tabs() {

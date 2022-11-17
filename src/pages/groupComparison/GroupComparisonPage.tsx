@@ -226,6 +226,7 @@ export default class GroupComparisonPage extends React.Component<
                             >
                                 <GroupComparisonMutationsTab
                                     store={this.store}
+                                    urlWrapper={this.urlWrapper}
                                 />
                                 {/* stacked lollipop plots for > 2 groups */}
                                 {/* {this.store.activeGroups.result!.map(g => {
