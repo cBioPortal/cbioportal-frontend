@@ -273,8 +273,8 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                     </LabeledCheckbox>
                     <textarea
                         title="Comments"
-                        rows={4}
-                        cols={30}
+                        rows={10}
+                        cols={80}
                         value={mtb.generalRecommendation}
                         placeholder="Comments"
                         disabled={
