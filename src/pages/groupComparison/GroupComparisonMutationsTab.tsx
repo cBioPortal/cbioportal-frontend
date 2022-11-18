@@ -27,7 +27,6 @@ export default class GroupComparisonMutationsTab extends React.Component<
     IGroupComparisonMutationsTabProps,
     {}
 > {
-    @observable public geneTab: string | undefined;
     constructor(props: IGroupComparisonMutationsTabProps) {
         super(props);
         makeObservable(this);
@@ -35,7 +34,6 @@ export default class GroupComparisonMutationsTab extends React.Component<
 
     @action.bound
     protected handleGeneChange(id: string) {
-        this.geneTab = id;
         this.props.urlWrapper.updateURL({
             selectedGene: id,
         });
@@ -53,9 +51,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
 
     @computed get activeTabId(): string | undefined {
         let activeTabId;
-        if (this.geneTab) {
-            activeTabId = this.geneTab;
-        } else if (this.props.store.userSelectedMutationMapperGene) {
+        if (this.props.store.userSelectedMutationMapperGene) {
             activeTabId = this.props.store.userSelectedMutationMapperGene;
         } else {
             activeTabId = this.props.store.activeMutationMapperGene!
