@@ -51,7 +51,6 @@ import { FeatureFlagEnum } from 'shared/featureFlags';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
-    @observable private _userSelectedMutationMapperGene: string | undefined;
 
     constructor(
         sessionId: string,
@@ -435,7 +434,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     });
 
     @computed get userSelectedMutationMapperGene() {
-        return this._userSelectedMutationMapperGene;
+        return this.urlWrapper.query.selectedGene;
     }
 
     @computed get activeMutationMapperGene() {
@@ -449,11 +448,6 @@ export default class GroupComparisonStore extends ComparisonStore {
                     this.genesWithMaxFrequency[0].hugoGeneSymbol
             );
         return gene;
-    }
-
-    @action.bound
-    public setSelectedMutationMapperGene(gene: string | undefined) {
-        this._userSelectedMutationMapperGene = gene;
     }
 
     @autobind

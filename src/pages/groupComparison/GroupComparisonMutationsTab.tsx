@@ -15,9 +15,11 @@ import { LollipopGeneSelector } from './LollipopGeneSelector';
 import GroupComparisonMutationsTabPlot from './GroupComparisonMutationsTabPlot';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
+import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;
+    urlWrapper: GroupComparisonURLWrapper;
 }
 
 @observer
@@ -25,16 +27,16 @@ export default class GroupComparisonMutationsTab extends React.Component<
     IGroupComparisonMutationsTabProps,
     {}
 > {
-    @observable public geneTab: string | undefined;
     constructor(props: IGroupComparisonMutationsTabProps) {
         super(props);
         makeObservable(this);
     }
 
     @action.bound
-    protected handleGeneChange(id: string | undefined) {
-        this.geneTab = id;
-        this.props.store.setSelectedMutationMapperGene(id);
+    protected handleGeneChange(id: string) {
+        this.props.urlWrapper.updateURL({
+            selectedGene: id,
+        });
     }
 
     @computed get tabs() {
@@ -49,9 +51,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
 
     @computed get activeTabId(): string | undefined {
         let activeTabId;
-        if (this.geneTab) {
-            activeTabId = this.geneTab;
-        } else if (this.props.store.userSelectedMutationMapperGene) {
+        if (this.props.store.userSelectedMutationMapperGene) {
             activeTabId = this.props.store.userSelectedMutationMapperGene;
         } else {
             activeTabId = this.props.store.activeMutationMapperGene!
