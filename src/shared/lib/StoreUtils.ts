@@ -65,7 +65,7 @@ import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
 import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
-    CnaDataTypes,
+    DataTypeConstants,
     GENOME_NEXUS_ARG_FIELD_ENUM,
 } from 'shared/constants';
 import {
@@ -1029,7 +1029,7 @@ export function findDiscreteMolecularProfile(
     }
 
     return molecularProfilesInStudy.result.find((p: MolecularProfile) => {
-        return CnaDataTypes.includes(p.datatype);
+        return p.datatype === DataTypeConstants.DISCRETE;
     });
 }
 

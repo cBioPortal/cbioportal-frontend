@@ -450,6 +450,8 @@ function createCnaNamespaceColumns(
     const namespaceColumns = Object.values(
         namespaceColumnRecords
     ) as CNATableColumn[];
-    namespaceColumns.forEach(c => (c.visible = false));
+    _.forEach(namespaceColumns, c => {
+        c.visible = false;
+    });
     return namespaceColumns;
 }

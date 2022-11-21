@@ -116,7 +116,6 @@ export const AlterationTypeConstants = {
 
 export const DataTypeConstants = {
     DISCRETE: 'DISCRETE',
-    DISCRETE_LONG: 'DISCRETE_LONG',
     CONTINUOUS: 'CONTINUOUS',
     ZSCORE: 'Z-SCORE',
     MAF: 'MAF',
@@ -128,8 +127,3 @@ export const DataTypeConstants = {
     BINARY: 'BINARY',
     CATEGORICAL: 'CATEGORICAL',
 };
-
-export const CnaDataTypes = [
-    DataTypeConstants.DISCRETE,
-    DataTypeConstants.DISCRETE_LONG,
-];
