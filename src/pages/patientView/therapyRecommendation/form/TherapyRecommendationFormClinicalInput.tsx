@@ -116,8 +116,11 @@ export default class TherapyRecommendationFormClinicalInput extends React.Compon
                 value: clinicalDataItem,
                 label:
                     clinicalDataItem.attributeName +
-                    ': ' +
-                    clinicalDataItem.value,
+                    (clinicalDataItem.value === undefined ||
+                    clinicalDataItem.value === null ||
+                    clinicalDataItem.value === 'null'
+                        ? ''
+                        : ': ' + clinicalDataItem.value),
             })
         );
 
@@ -128,8 +131,11 @@ export default class TherapyRecommendationFormClinicalInput extends React.Compon
                     value: clinicalDataItem,
                     label:
                         clinicalDataItem.attributeName +
-                        ': ' +
-                        clinicalDataItem.value,
+                        (clinicalDataItem.value === undefined ||
+                        clinicalDataItem.value === null ||
+                        clinicalDataItem.value === 'null'
+                            ? ''
+                            : ': ' + clinicalDataItem.value),
                 })
             );
         return (

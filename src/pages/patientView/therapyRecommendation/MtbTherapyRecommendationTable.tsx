@@ -778,9 +778,10 @@ export default class MtbTherapyRecommendationTable extends React.Component<
 
     private getTextForClinicalDataItem(item: IClinicalData): string {
         let text = '';
-        if (item.attributeName) text += item.attributeName;
-        if (item.attributeName && item.value) text += ': ';
-        if (item.value) text += item.value;
+        if (item && item.attributeName) text += item.attributeName;
+        if (item && item.attributeName && item.value && item.value !== 'null')
+            text += ': ';
+        if (item && item.value && item.value !== 'null') text += item.value;
         return text;
     }
 
