@@ -22,8 +22,22 @@ interface IGroupComparisonMutationsTabPlotProps {
     filters?: any;
 }
 
-function plotYAxisLabelFormatter(symbol?: string, groupName?: string) {
-    return `${symbol} ${groupName} Mutations`;
+function plotYAxisLabelFormatter(symbol: string, groupName: string) {
+    // lowercase = 1 and uppercase = 1.3 (based on 'w' and 'W'), if groupName >= 22 (13 + 9 leniency), stop and + "..."
+    let length = 0;
+    let label = '';
+    for (let c of groupName!) {
+        let value = c === c.toLowerCase() ? 1 : 1.3;
+        if (length + value >= 22) {
+            label += '...';
+            break;
+        } else {
+            label += c;
+            length += value;
+        }
+    }
+    return `${symbol} ${label}`;
+    // return `${symbol} ${groupName}`;
 }
 
 function plotLollipopTooltipCountInfo(
