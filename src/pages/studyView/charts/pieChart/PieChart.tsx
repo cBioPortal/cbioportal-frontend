@@ -189,7 +189,10 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
 
     @autobind
     private label(d: ClinicalDataCountSummary) {
-        return d.count / this.totalCount > 0.5
+        // Always show label when ratio of pie is larger than 0.25
+        // If ratio of pie is less than 0.25, do check the max length we can show the text and the text length
+        // to decide if we should show the label or not
+        return d.count / this.totalCount > 0.25
             ? d.count.toLocaleString()
             : this.maxLength(
                   d.count / this.totalCount,
