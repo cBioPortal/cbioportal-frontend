@@ -201,6 +201,10 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_hide_download_controls: false,
 
     oncoprint_clinical_tracks_config_json: '',
+
+    skin_patient_view_mutation_table_columns_show_on_init: '',
+
+    skin_results_view_mutation_table_columns_show_on_init: '',
 };
 
 export default ServerConfigDefaults;
