@@ -165,9 +165,9 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    //specs: [SPEC_FILE_PATTERN],
 
-    //specs: ['./remote/specs/core/comparisonTab.screenshot.spec.js'],
+    specs: ['./local/specs/core/version.spec.js'],
 
     // Patterns to exclude.
     exclude: [

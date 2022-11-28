@@ -76,6 +76,10 @@ if [[ "$CIRCLECI" = true ]]; then
         parse_custom_backend_var
     fi
 
+
+    BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
+    echo export BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
+
     echo export FRONTEND_SHA1=$CIRCLE_SHA1
     echo export FRONTEND_SHA1_SHORT=$(echo $CIRCLE_SHA1 | awk '{print substr($0,0,10)}')
     echo export FRONTEND_PROJECT_USERNAME=$CIRCLE_PROJECT_USERNAME
