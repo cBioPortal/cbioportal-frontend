@@ -17,6 +17,8 @@ import AddColumns from './AddColumns';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
 import { createMutationNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
 import _ from 'lodash';
+import { adjustVisibility } from 'shared/components/alterationsTableUtils';
+import { getServerConfig } from 'config/config';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -324,6 +326,16 @@ export default class ResultsViewMutationTable extends MutationTable<
                 Exon
                 <br />({this.props.totalNumberOfExons} in total)
             </span>
+        );
+
+        //Adjust column visibility according to portal.properties
+        adjustVisibility(
+            this._columns,
+            Object.keys(namespaceColumns),
+            getServerConfig()
+                .skin_results_view_mutation_table_columns_show_on_init,
+            getServerConfig()
+                .skin_mutation_table_namespace_column_show_by_default
         );
     }
 }
