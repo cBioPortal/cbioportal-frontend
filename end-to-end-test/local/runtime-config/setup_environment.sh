@@ -78,8 +78,8 @@ if [[ "$CIRCLECI" = true ]]; then
     fi
 
 
-    BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
-    echo export BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
+    BACKEND_BRANCH="custom-cna-namespace-annotation-json"
+    echo export BACKEND_BRANCH="custom-cna-namespace-annotation-json"
 
     BACKEND_PROJECT_USERNAME="BasLee"
     echo export BACKEND_PROJECT_USERNAME="BasLee"

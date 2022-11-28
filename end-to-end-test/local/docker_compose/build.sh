@@ -8,7 +8,11 @@ DIR=$PWD
 
 mkdir -p $E2E_WORKSPACE
 cd $E2E_WORKSPACE
-git clone --depth 1 --branch custom-cna-namespace-annotation-json --single-branch https://github.com/BasLee/cbioportal.git
+echo "key vars ---"
+echo $BACKEND_BRANCH
+echo $BACKEND_PROJECT_USERNAME
+echo "key vars ---"
+git clone --depth 1 --branch $BACKEND_BRANCH --single-branch https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git
 cd cbioportal
 mvn -DskipTests clean install
 unzip portal/target/cbioportal*.war -d portal/target/war-exploded
