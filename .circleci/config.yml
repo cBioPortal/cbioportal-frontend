@@ -127,47 +127,47 @@ jobs:
       # check that all api responses are still the same
       - run: "bash src/test/check_api_sync.sh"
 
-  unit_tests_main:
-    <<: *defaults
-    steps:
-      #      - run:
-      #          name: "Install yarn at specific version"
-      #          command:
-      #            sudo npm install --global yarn@1.22.4
-      - attach_workspace:
-          at: /tmp/
-      # run tests!
-      - run:
-          command: "yarn run testMain"
-          environment:
-            JEST_JUNIT_OUTPUT_DIR: ./junit/unit/main/
-            JEST_JUNIT_OUTPUT_NAME: test-results-unit-main.xml
-            NODE_OPTIONS: --max-old-space-size=4096
-            DISABLE_SOURCEMAP: true
-            WEBPACK_PARALLEL: false
-          when: always
-      - store_test_results:
-          path: ./junit/unit/main/
+#  unit_tests_main:
+#    <<: *defaults
+#    steps:
+#      #      - run:
+#      #          name: "Install yarn at specific version"
+#      #          command:
+#      #            sudo npm install --global yarn@1.22.4
+#      - attach_workspace:
+#          at: /tmp/
+#      # run tests!
+#      - run:
+#          command: "yarn run testMain"
+#          environment:
+#            JEST_JUNIT_OUTPUT_DIR: ./junit/unit/main/
+#            JEST_JUNIT_OUTPUT_NAME: test-results-unit-main.xml
+#            NODE_OPTIONS: --max-old-space-size=4096
+#            DISABLE_SOURCEMAP: true
+#            WEBPACK_PARALLEL: false
+#          when: always
+#      - store_test_results:
+#          path: ./junit/unit/main/
 
-  unit_tests_packages:
-    <<: *defaults
-    steps:
-      #      - run:
-      #          name: "Install yarn at specific version"
-      #          command:
-      #            sudo npm install --global yarn@1.22.4
-      - attach_workspace:
-          at: /tmp/
-      # run tests!
-      - run:
-          command: "yarn run testPackagesCI"
-          environment:
-            DISABLE_SOURCEMAP: true
-            NODE_OPTIONS: --max-old-space-size=4096
-            WEBPACK_PARALLEL: false
-          when: always
-      - store_test_results:
-          path: /tmp/junit/module/
+#  unit_tests_packages:
+#    <<: *defaults
+#    steps:
+#      #      - run:
+#      #          name: "Install yarn at specific version"
+#      #          command:
+#      #            sudo npm install --global yarn@1.22.4
+#      - attach_workspace:
+#          at: /tmp/
+#      # run tests!
+#      - run:
+#          command: "yarn run testPackagesCI"
+#          environment:
+#            DISABLE_SOURCEMAP: true
+#            NODE_OPTIONS: --max-old-space-size=4096
+#            WEBPACK_PARALLEL: false
+#          when: always
+#      - store_test_results:
+#          path: /tmp/junit/module/
 
   check_forgotten_spec_only_statements:
     <<: *defaults
@@ -180,15 +180,15 @@ jobs:
           name: "Check Forgotten `.only` Statements"
           command: "! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult"
 
-  check_incorrect_import_statements:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/
-      # make sure that there are no relative/incorrect package imports
-      - run:
-          name: "Check Incorrect Package Import Statements"
-          command: yarn run checkIncorrectImportStatements
+#  check_incorrect_import_statements:
+#    <<: *defaults
+#    steps:
+#      - attach_workspace:
+#          at: /tmp/
+#      # make sure that there are no relative/incorrect package imports
+#      - run:
+#          name: "Check Incorrect Package Import Statements"
+#          command: yarn run checkIncorrectImportStatements
 
 #  end_to_end_tests:
 #    <<: *defaults
@@ -198,14 +198,14 @@ jobs:
 #      SCREENSHOT_DIRECTORY: ./remote/screenshots
 #    <<: *run_e2e_and_save_artifacts
 
-  end_to_end_tests_against_master:
-    <<: *defaults
-    environment:
-      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
-      JUNIT_REPORT_PATH: ./remote/junit/
-      SCREENSHOT_DIRECTORY: ./remote/screenshots
-      CBIOPORTAL_URL: https://master.cbioportal.org
-    <<: *run_e2e_and_save_artifacts
+#  end_to_end_tests_against_master:
+#    <<: *defaults
+#    environment:
+#      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
+#      JUNIT_REPORT_PATH: ./remote/junit/
+#      SCREENSHOT_DIRECTORY: ./remote/screenshots
+#      CBIOPORTAL_URL: https://master.cbioportal.org
+#    <<: *run_e2e_and_save_artifacts
 
   end_to_end_tests_localdb:
     working_directory: /tmp/repo
