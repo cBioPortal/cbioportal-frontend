@@ -64,7 +64,7 @@ describe('PanelColumnFormatter', () => {
 
     it('returns a list of gene panel ids on download', () => {
         const genePanelIds = PanelColumnFormatter.download(mock);
-        assert.deepEqual(genePanelIds, ['genePanelId']);
+        assert.deepEqual(genePanelIds, 'genePanelId');
     });
 
     it('returns a list of gene panel ids on getGenePanelIds', () => {
