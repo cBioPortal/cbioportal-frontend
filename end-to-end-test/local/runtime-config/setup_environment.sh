@@ -69,9 +69,9 @@ if [[ "$CIRCLECI" = true ]]; then
 
     #BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
 
-    echo "BEFORE $BACKEND"
+    echo "# BEFORE $BACKEND"
     eval $(source $PORTAL_SOURCE_DIR/env/$FRONTEND_BRANCH.sh || true)
-    echo "AFTER $BACKEND"
+    echo "# AFTER $BACKEND"
 
     # Check whether custom BACKEND environmental var is defined (required when running outside context of a pull request on CircleCI)
     # When the current branch is master or rc continue using corresponding master or rc backend, respectively. 
