@@ -33,8 +33,6 @@ parse_custom_backend_var() {
     fi
 }
 
-echo "echo 'monkeys'"
-
 # Check whether running in CircleCI environment
 if [[ "$CIRCLECI" = true ]]; then
 
