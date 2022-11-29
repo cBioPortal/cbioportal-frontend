@@ -61,7 +61,11 @@ if [[ "$CIRCLECI" = true ]]; then
 #            exit 1
 #        fi
 
+            echo "#FRONTEND_BRANCH INSIDE $FRONTEND_BRANCH"
+
     fi
+
+    echo "#FRONTEND_BRANCH $FRONTEND_BRANCH"
 
     BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
 
