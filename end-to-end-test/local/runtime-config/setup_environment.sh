@@ -36,7 +36,7 @@ parse_custom_backend_var() {
 # Check whether running in CircleCI environment
 if [[ "$CIRCLECI" = true ]]; then
 
-    echo "#CIRCLECI is true"
+    echo "#CIRCLECI is true $CIRCLECI"
     echo "#BACKEND $BACKEND"
     echo "#BACKEND $BACKEND_BACKEND_BRANCH"
 
@@ -62,11 +62,12 @@ if [[ "$CIRCLECI" = true ]]; then
 
     fi
 
+    BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
+
 
     # Check whether custom BACKEND environmental var is defined (required when running outside context of a pull request on CircleCI)
     # When the current branch is master or rc continue using corresponding master or rc backend, respectively. 
     if [[ -z $BACKEND ]]; then
-        echo "# we have a backend defined: $BACKEND "
         if [[ -z $CIRCLE_PULL_REQUEST ]]; then
             echo ""
             if [[ "$CIRCLE_BRANCH" = "master" ]] || [[ "$CIRCLE_BRANCH" = "rc" ]] || [[ "$CIRCLE_BRANCH" == "release-"* ]]; then
@@ -88,7 +89,7 @@ if [[ "$CIRCLECI" = true ]]; then
 
     echo "# i am here"
 
-    #BACKEND_BRANCH="custom-cna-namespace-annotation-json"
+    #
     #echo export BACKEND_BRANCH="custom-cna-namespace-annotation-json"
 
     #BACKEND_PROJECT_USERNAME="BasLee"
