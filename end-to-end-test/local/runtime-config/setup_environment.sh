@@ -67,14 +67,16 @@ if [[ "$CIRCLECI" = true ]]; then
 
     echo "#FRONTEND_BRANCH $FRONTEND_BRANCH"
 
-    BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
+    #BACKEND_BRANCH="BasLee:custom-cna-namespace-annotation-json"
 
+    echo "BEFORE $BACKEND"
+    eval $(source $PORTAL_SOURCE_DIR/env/$FRONTEND_BRANCH.sh || true)
+    echo "AFTER $BACKEND"
 
     # Check whether custom BACKEND environmental var is defined (required when running outside context of a pull request on CircleCI)
     # When the current branch is master or rc continue using corresponding master or rc backend, respectively. 
     if [[ -z $BACKEND ]]; then
         if [[ -z $CIRCLE_PULL_REQUEST ]]; then
-            echo ""
             if [[ "$CIRCLE_BRANCH" = "master" ]] || [[ "$CIRCLE_BRANCH" = "rc" ]] || [[ "$CIRCLE_BRANCH" == "release-"* ]]; then
                 echo "# overriding $BACKEND"
                 BACKEND_PROJECT_USERNAME="cbioportal"
