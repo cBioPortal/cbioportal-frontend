@@ -38,6 +38,7 @@ if [[ "$CIRCLECI" = true ]]; then
 
     echo "#CIRCLECI is true $CIRCLECI"
     echo "#BACKEND $BACKEND"
+    echo "#FRONTEND_BRANCH $FRONTEND_BRANCH"
     echo "#BACKEND $BACKEND_BACKEND_BRANCH"
 
     # Check whether running in context of a pull request
