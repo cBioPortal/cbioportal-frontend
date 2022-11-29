@@ -36,6 +36,9 @@ parse_custom_backend_var() {
 # Check whether running in CircleCI environment
 if [[ "$CIRCLECI" = true ]]; then
 
+    echo "CIRCLECI is true"
+    echo "echo CIRCLECI is true"
+
     # Check whether running in context of a pull request
     # by extracting the pull request number
     if [[ "$CIRCLE_PULL_REQUEST" =~ \/([0-9]+)$ ]] ; then
@@ -58,11 +61,14 @@ if [[ "$CIRCLECI" = true ]]; then
 
     fi
 
+
     # Check whether custom BACKEND environmental var is defined (required when running outside context of a pull request on CircleCI)
     # When the current branch is master or rc continue using corresponding master or rc backend, respectively. 
     if [[ -z $BACKEND ]]; then
         if [[ -z $CIRCLE_PULL_REQUEST ]]; then
             if [[ "$CIRCLE_BRANCH" = "master" ]] || [[ "$CIRCLE_BRANCH" = "rc" ]] || [[ "$CIRCLE_BRANCH" == "release-"* ]]; then
+                echo "overriding $BACKEND"
+                echo "echo overriding $BACKEND"
                 BACKEND_PROJECT_USERNAME="cbioportal"
                 echo "export BACKEND_PROJECT_USERNAME=$BACKEND_PROJECT_USERNAME"
                 BACKEND_BRANCH="$CIRCLE_BRANCH"
@@ -73,6 +79,7 @@ if [[ "$CIRCLECI" = true ]]; then
             fi
         fi
     else
+        echo "invoking parse_custom_backend_var"
         echo "echo invoking parse_custom_backend_var"
         parse_custom_backend_var
     fi
