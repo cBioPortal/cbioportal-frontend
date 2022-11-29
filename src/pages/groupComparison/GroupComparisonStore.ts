@@ -15,6 +15,7 @@ import {
     Mutation,
     Gene,
     GenePanelData,
+    Sample,
 } from 'cbioportal-ts-api-client';
 import { action, observable, makeObservable, computed } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
@@ -321,6 +322,46 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
+    public readonly groupToProfiledSamples = remoteData({
+        await: () => [
+            this._originalGroups,
+            this.sampleMap,
+            this.mutationEnrichmentProfiles,
+            this.coverageInformation,
+        ],
+        invoke: () => {
+            const sampleSet = this.sampleMap.result!;
+            const groups = this._originalGroups.result!;
+            const ret: {
+                [groupUid: string]: Sample[];
+            } = {};
+            for (const group of groups) {
+                for (const studyObject of group.studies) {
+                    const studyId = studyObject.id;
+                    for (const sampleId of studyObject.samples) {
+                        const sample = sampleSet.get({ sampleId, studyId });
+                        if (
+                            sample &&
+                            this.mutationEnrichmentProfiles.result!.some(p =>
+                                isSampleProfiled(
+                                    sample.uniqueSampleKey,
+                                    p.molecularProfileId,
+                                    this.activeMutationMapperGene!
+                                        .hugoGeneSymbol,
+                                    this.coverageInformation.result!
+                                )
+                            )
+                        ) {
+                            ret[group.name] = ret[group.name] || [];
+                            ret[group.name].push(sample);
+                        }
+                    }
+                }
+            }
+            return Promise.resolve(ret);
+        },
+    });
+
     readonly mutations = remoteData({
         await: () => [this.samples, this.mutationEnrichmentProfiles],
         invoke: async () => {
@@ -340,26 +381,6 @@ export default class GroupComparisonStore extends ComparisonStore {
                 }
             );
             return mutations;
-        },
-    });
-
-    readonly profiledSamplesCount = remoteData({
-        await: () => [
-            this.samples,
-            this.coverageInformation,
-            this.mutationEnrichmentProfiles,
-        ],
-        invoke: async () => {
-            return this.samples.result!.filter(s =>
-                this.mutationEnrichmentProfiles.result!.some(p =>
-                    isSampleProfiled(
-                        s.uniqueSampleKey,
-                        p.molecularProfileId,
-                        this.activeMutationMapperGene!.hugoGeneSymbol,
-                        this.coverageInformation.result!
-                    )
-                )
-            ).length;
         },
     });
 

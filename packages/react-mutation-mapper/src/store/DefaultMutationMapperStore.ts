@@ -378,7 +378,8 @@ class DefaultMutationMapperStore<T extends Mutation>
         return this.groupedMutationsByPosition.map(groupedMutations => ({
             group: groupedMutations.group,
             counts: this.countUniqueMutationsByPosition(
-                groupedMutations.mutations
+                groupedMutations.mutations,
+                groupedMutations.group
             ),
         }));
     }
@@ -393,9 +394,12 @@ class DefaultMutationMapperStore<T extends Mutation>
         );
     }
 
-    public countUniqueMutationsByPosition(mutationsByPosition: {
-        [pos: number]: T[];
-    }): { [pos: number]: number } {
+    public countUniqueMutationsByPosition(
+        mutationsByPosition: {
+            [pos: number]: T[];
+        },
+        group?: string
+    ): { [pos: number]: number } {
         const map: { [pos: number]: number } = {};
 
         Object.keys(mutationsByPosition).forEach(pos => {
@@ -403,14 +407,14 @@ class DefaultMutationMapperStore<T extends Mutation>
             // for each position multiple mutations for the same patient is counted only once
             const mutations = mutationsByPosition[position];
             if (mutations) {
-                map[position] = this.countUniqueMutations(mutations);
+                map[position] = this.countUniqueMutations(mutations, group);
             }
         });
 
         return map;
     }
 
-    public countUniqueMutations(mutations: T[]): number {
+    public countUniqueMutations(mutations: T[], group?: string): number {
         // assume by default all mutations are unique
         // child classes need to override this method to have a custom way of counting unique mutations
         return this.config.getMutationCount
