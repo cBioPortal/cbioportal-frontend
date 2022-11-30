@@ -53,7 +53,6 @@ end-to-end-test/customReport.json
 end-to-end-test/customReportJSONP.js
 end-to-end-test/shared/results
 wdio/browserstack.txt
-env/custom.sh
 image-compare/errors.js
 errorshots/
 TESTS.xml
