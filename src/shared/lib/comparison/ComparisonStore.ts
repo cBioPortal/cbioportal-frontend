@@ -129,7 +129,7 @@ export default abstract class ComparisonStore extends AnalysisStore
         protected urlWrapper: IComparisonURLWrapper,
         protected resultsViewStore?: ResultsViewPageStore
     ) {
-        super(appStore);
+        super();
         makeObservable(this);
 
         this.driverAnnotationSettings = buildDriverAnnotationSettings(

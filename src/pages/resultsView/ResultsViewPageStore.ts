@@ -558,7 +558,7 @@ export class ResultsViewPageStore extends AnalysisStore
         protected appStore: AppStore,
         public urlWrapper: ResultsViewURLWrapper
     ) {
-        super(appStore);
+        super();
         makeObservable(this);
         this.getURL();
 

@@ -44,9 +44,7 @@ import GeneCache from 'shared/cache/GeneCache';
 
 export default abstract class AnalysisStore {
     @observable driverAnnotationSettings: DriverAnnotationSettings;
-    constructor(protected appStore: AppStore) {
-        makeObservable(this);
-    }
+    constructor() {}
 
     abstract mutations: MobxPromise<Mutation[]>;
     abstract sampleKeyToSample: MobxPromise<{
