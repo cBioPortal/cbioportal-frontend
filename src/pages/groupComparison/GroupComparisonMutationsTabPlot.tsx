@@ -61,8 +61,6 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
     IGroupComparisonMutationsTabPlotProps,
     {}
 > {
-    @observable public axisMode: AxisScale =
-        this.props.urlWrapper.query.axisMode || AxisScale.PERCENT;
     constructor(props: IGroupComparisonMutationsTabPlotProps) {
         super(props);
         makeObservable(this);
@@ -81,7 +79,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         mutations: Mutation[],
         group: string
     ) {
-        return this.axisMode === AxisScale.PERCENT
+        return this.props.urlWrapper.query.axisMode === AxisScale.PERCENT
             ? (countUniqueMutations(mutations) /
                   this.props.store.groupToProfiledSamples.result![group]
                       .length) *
@@ -94,7 +92,6 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         this.props.urlWrapper.updateURL({
             axisMode: selectedScale,
         });
-        this.axisMode = selectedScale;
     }
 
     readonly plotUI = MakeMobxView({
@@ -136,7 +133,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             plotLollipopTooltipCountInfo={
                                 plotLollipopTooltipCountInfo
                             }
-                            axisMode={this.axisMode}
+                            axisMode={this.props.urlWrapper.query.axisMode}
                             onScaleToggle={this.onScaleToggle}
                             plotYAxisLabelFormatter={plotYAxisLabelFormatter}
                         />
