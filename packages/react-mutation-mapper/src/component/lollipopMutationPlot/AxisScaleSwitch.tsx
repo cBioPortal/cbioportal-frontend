@@ -55,6 +55,11 @@ export class AxisScaleSwitch extends React.Component<
                         this.props.selectedScale === scale
                             ? 'bolder'
                             : 'normal',
+                    color:
+                        this.props.selectedScale === scale ? '#fff' : '#6c757d',
+                    backgroundColor:
+                        this.props.selectedScale === scale ? '#6c757d' : '#fff',
+                    borderColor: '#6c757d',
                 }}
                 onClick={onClick}
             >

@@ -15,9 +15,11 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import { countUniqueMutations } from 'shared/lib/MutationUtils';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { AxisScale, LollipopTooltipCountInfo } from 'react-mutation-mapper';
+import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
+    urlWrapper: GroupComparisonURLWrapper;
     mutations?: Mutation[];
     filters?: any;
 }
@@ -59,7 +61,8 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
     IGroupComparisonMutationsTabPlotProps,
     {}
 > {
-    @observable public axisMode: AxisScale = AxisScale.PERCENT;
+    @observable public axisMode: AxisScale =
+        this.props.urlWrapper.query.axisMode || AxisScale.PERCENT;
     constructor(props: IGroupComparisonMutationsTabPlotProps) {
         super(props);
         makeObservable(this);
@@ -88,6 +91,9 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
 
     @action.bound
     private onScaleToggle(selectedScale: AxisScale) {
+        this.props.urlWrapper.updateURL({
+            axisMode: selectedScale,
+        });
         this.axisMode = selectedScale;
     }
 

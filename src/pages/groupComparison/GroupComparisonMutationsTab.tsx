@@ -132,6 +132,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
                     </div>
                     <GroupComparisonMutationsTabPlot
                         store={this.props.store}
+                        urlWrapper={this.props.urlWrapper}
                         mutations={_(this.props.store.mutationsByGroup.result!)
                             .values()
                             .flatten()
