@@ -64,7 +64,7 @@ export interface IMutationMapperStoreConfig {
         group: string;
         filter: DataFilter<any>;
     }[];
-    countUniqueMutations?: (mutations: Mutation[]) => number;
+    countUniqueMutations?: (mutations: Mutation[], group?: string) => number;
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
@@ -207,9 +207,12 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         return buildNamespaceColumnConfig(this.mutationData.result);
     }
 
-    public countUniqueMutations(mutations: Mutation[]): number {
+    public countUniqueMutations(mutations: Mutation[], group?: string): number {
         return this.mutationMapperStoreConfig.countUniqueMutations
-            ? this.mutationMapperStoreConfig.countUniqueMutations(mutations)
+            ? this.mutationMapperStoreConfig.countUniqueMutations(
+                  mutations,
+                  group
+              )
             : countUniqueMutations(mutations);
     }
 
