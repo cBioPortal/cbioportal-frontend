@@ -51,12 +51,10 @@ import {
 import PdbChainDataStore from './PdbChainDataStore';
 import MutationMapperDataStore from './MutationMapperDataStore';
 import { IMutationMapperServerConfig } from './MutationMapperServerConfig';
-import {
-    buildNamespaceColumnConfig,
-    normalizeMutations,
-} from './MutationMapperUtils';
+import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
-import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;

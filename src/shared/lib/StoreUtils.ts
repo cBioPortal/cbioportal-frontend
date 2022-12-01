@@ -65,6 +65,7 @@ import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
 import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    DataTypeConstants,
     GENOME_NEXUS_ARG_FIELD_ENUM,
 } from 'shared/constants';
 import {
@@ -1028,7 +1029,7 @@ export function findDiscreteMolecularProfile(
     }
 
     return molecularProfilesInStudy.result.find((p: MolecularProfile) => {
-        return p.datatype === 'DISCRETE';
+        return p.datatype === DataTypeConstants.DISCRETE;
     });
 }
 

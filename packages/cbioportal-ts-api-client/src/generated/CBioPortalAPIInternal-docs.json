@@ -5186,6 +5186,12 @@
         "molecularProfileId": {
           "type": "string"
         },
+        "namespaceColumns": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
         "ncbiBuild": {
           "type": "string"
         },

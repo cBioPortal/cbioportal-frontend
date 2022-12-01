@@ -23,7 +23,7 @@ import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/m
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import _ from 'lodash';
-import { createNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
+import { createMutationNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;
@@ -398,7 +398,7 @@ export default class PatientViewMutationTable extends MutationTable<
         };
 
         // generate namespace columns
-        const namespaceColumns = createNamespaceColumns(
+        const namespaceColumns = createMutationNamespaceColumns(
             this.props.namespaceColumns
         );
         _.forIn(

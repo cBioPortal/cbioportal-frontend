@@ -3,7 +3,7 @@ import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
     buildNamespaceColumnConfig,
     createNamespaceColumnName,
-} from 'shared/components/mutationMapper/MutationMapperUtils';
+} from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 describe('MutationMapperUtils', () => {
     describe('buildNamespaceColumnConfig', () => {

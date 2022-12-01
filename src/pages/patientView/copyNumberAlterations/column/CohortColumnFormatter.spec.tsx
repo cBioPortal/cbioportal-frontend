@@ -33,6 +33,15 @@ describe('CohortColumnFormatter', () => {
             driverFilterAnnotation: '',
             driverTiersFilter: '',
             driverTiersFilterAnnotation: '',
+            namespaceColumns: {
+                MyNamespace: {
+                    column1: 'value1b',
+                    column2: 'value2b',
+                },
+                MyNamespace2: {
+                    blarp: 'bluirp2',
+                },
+            },
         },
         {
             alteration: 2,
@@ -53,6 +62,15 @@ describe('CohortColumnFormatter', () => {
             driverFilterAnnotation: '',
             driverTiersFilter: '',
             driverTiersFilterAnnotation: '',
+            namespaceColumns: {
+                MyNamespace: {
+                    column1: null,
+                    column2: null,
+                },
+                MyNamespace2: {
+                    blarp: null,
+                },
+            },
         },
     ];
 
