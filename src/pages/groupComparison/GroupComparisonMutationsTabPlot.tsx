@@ -39,7 +39,6 @@ function plotYAxisLabelFormatter(symbol: string, groupName: string) {
         }
     }
     return `${symbol} ${label}`;
-    // return `${symbol} ${groupName}`;
 }
 
 function plotLollipopTooltipCountInfo(
@@ -79,12 +78,12 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         mutations: Mutation[],
         group: string
     ) {
-        return this.props.urlWrapper.query.axisMode === AxisScale.PERCENT
-            ? (countUniqueMutations(mutations) /
+        return this.props.urlWrapper.query.axisMode === AxisScale.COUNT
+            ? countUniqueMutations(mutations)
+            : (countUniqueMutations(mutations) /
                   this.props.store.groupToProfiledSamples.result![group]
                       .length) *
-                  100
-            : countUniqueMutations(mutations);
+                  100;
     }
 
     @action.bound
@@ -133,7 +132,11 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             plotLollipopTooltipCountInfo={
                                 plotLollipopTooltipCountInfo
                             }
-                            axisMode={this.props.urlWrapper.query.axisMode}
+                            axisMode={
+                                this.props.urlWrapper.query.axisMode
+                                    ? this.props.urlWrapper.query.axisMode
+                                    : AxisScale.PERCENT
+                            }
                             onScaleToggle={this.onScaleToggle}
                             plotYAxisLabelFormatter={plotYAxisLabelFormatter}
                         />
