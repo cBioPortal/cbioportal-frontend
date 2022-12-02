@@ -400,6 +400,10 @@ export function tabs(
                                     pageComponent.handleOncoKbIconToggle
                                 }
                                 onRowClick={pageComponent.onCnaTableRowClick}
+                                namespaceColumns={
+                                    pageComponent.patientViewPageStore
+                                        .namespaceColumnConfig
+                                }
                             />
                         </If>
                     </div>

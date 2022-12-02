@@ -1,14 +1,17 @@
 import * as React from 'react';
-import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import generalStyles from 'shared/components/mutationTable/column/styles.module.scss';
+
+export type WithNamespaceColumns = {
+    namespaceColumns: {};
+};
 
 /**
  * @author Pim van Nierop
  */
 export default class NumericNamespaceColumnFormatter {
     public static getData(
-        data: Mutation[],
+        data: WithNamespaceColumns[],
         namespaceName: any,
         namespaceColumnName: any
     ): number | null {
@@ -23,7 +26,7 @@ export default class NumericNamespaceColumnFormatter {
     }
 
     public static sortValue(
-        data: Mutation[],
+        data: WithNamespaceColumns[],
         namespaceName: string,
         namespaceColumnName: string
     ): number | null {
@@ -35,7 +38,7 @@ export default class NumericNamespaceColumnFormatter {
     }
 
     public static download(
-        data: Mutation[],
+        data: WithNamespaceColumns[],
         namespaceName: string,
         namespaceColumnName: string
     ): string {
@@ -48,7 +51,7 @@ export default class NumericNamespaceColumnFormatter {
     }
 
     public static renderFunction(
-        data: Mutation[],
+        data: WithNamespaceColumns[],
         namespaceName: string,
         namespaceColumnName: string
     ) {

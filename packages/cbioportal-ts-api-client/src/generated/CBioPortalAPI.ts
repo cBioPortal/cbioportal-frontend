@@ -222,6 +222,8 @@ export type DiscreteCopyNumberData = {
 
         'molecularProfileId': string
 
+        'namespaceColumns': {}
+
         'patientId': string
 
         'sampleId': string

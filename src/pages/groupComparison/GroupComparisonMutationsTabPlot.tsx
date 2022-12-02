@@ -68,16 +68,20 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
     @computed get mutationMapperToolStore() {
         const store = new MutationMapperToolStore(this.props.mutations, {
             ...this.props.filters,
-            countUniqueMutations: this.countUniqueMutations,
+            countUniqueMutations: this.countUniqueMutationsInGroup,
         });
         return store;
     }
 
     @autobind
-    protected countUniqueMutations(mutations: Mutation[]) {
+    protected countUniqueMutationsInGroup(
+        mutations: Mutation[],
+        group: string
+    ) {
         return this.axisMode === AxisScale.PERCENT
             ? (countUniqueMutations(mutations) /
-                  this.props.store.profiledSamplesCount.result!) *
+                  this.props.store.groupToProfiledSamples.result![group]
+                      .length) *
                   100
             : countUniqueMutations(mutations);
     }
@@ -91,9 +95,9 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         await: () => [
             this.props.store.mutations,
             this.props.store.mutationsByGroup,
-            this.props.store.profiledSamplesCount,
             this.mutationMapperToolStore.mutationMapperStores,
             this.props.store.coverageInformation,
+            this.props.store.groupToProfiledSamples,
         ],
         render: () => {
             if (

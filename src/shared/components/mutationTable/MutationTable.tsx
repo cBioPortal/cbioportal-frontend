@@ -160,6 +160,7 @@ import {
     DEFAULT_ONCOKB_CONTENT_WIDTH,
 } from 'shared/lib/AnnotationColumnUtils';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -206,21 +207,12 @@ export enum MutationTableColumnType {
     GENE_PANEL = 'Gene panel',
     SIGNAL = 'SIGNAL',
 }
+
 export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
 
 export type MutationTableColumn = Column<Mutation[]> & {
     order?: number;
     shouldExclude?: () => boolean;
-};
-
-// Namespace columns are custom columns that can be added to the MAF file.
-// They are imported via the namespace configuration during data import.
-// See: https://docs.cbioportal.org/5.1-data-loading/data-loading/file-formats#adding-mutation-annotation-columns-through-namespaces
-// The MutationTable component will render these columns dynamically.
-export type NamespaceColumnConfig = {
-    [namespaceName: string]: {
-        [namespaceColumnName: string]: 'string' | 'number';
-    };
 };
 
 export class MutationTableComponent extends LazyMobXTable<Mutation[]> {}
