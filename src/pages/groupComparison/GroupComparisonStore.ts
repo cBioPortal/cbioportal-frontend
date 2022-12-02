@@ -458,6 +458,10 @@ export default class GroupComparisonStore extends ComparisonStore {
         return this.urlWrapper.query.selectedGene;
     }
 
+    @computed get userSelectedAxisMode() {
+        return this.urlWrapper.query.axisMode;
+    }
+
     @computed get activeMutationMapperGene() {
         let gene =
             this.availableGenes.result!.find(

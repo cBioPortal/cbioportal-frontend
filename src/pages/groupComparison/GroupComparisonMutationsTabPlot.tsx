@@ -15,11 +15,10 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import { countUniqueMutations } from 'shared/lib/MutationUtils';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { AxisScale, LollipopTooltipCountInfo } from 'react-mutation-mapper';
-import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
-    urlWrapper: GroupComparisonURLWrapper;
+    onScaleToggle: (selectedScale: AxisScale) => void;
     mutations?: Mutation[];
     filters?: any;
 }
@@ -78,19 +77,12 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         mutations: Mutation[],
         group: string
     ) {
-        return this.props.urlWrapper.query.axisMode === AxisScale.COUNT
+        return this.props.store.userSelectedAxisMode === AxisScale.COUNT
             ? countUniqueMutations(mutations)
             : (countUniqueMutations(mutations) /
                   this.props.store.groupToProfiledSamples.result![group]
                       .length) *
                   100;
-    }
-
-    @action.bound
-    private onScaleToggle(selectedScale: AxisScale) {
-        this.props.urlWrapper.updateURL({
-            axisMode: selectedScale,
-        });
     }
 
     readonly plotUI = MakeMobxView({
@@ -132,12 +124,8 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             plotLollipopTooltipCountInfo={
                                 plotLollipopTooltipCountInfo
                             }
-                            axisMode={
-                                this.props.urlWrapper.query.axisMode
-                                    ? this.props.urlWrapper.query.axisMode
-                                    : AxisScale.PERCENT
-                            }
-                            onScaleToggle={this.onScaleToggle}
+                            axisMode={this.props.store.userSelectedAxisMode}
+                            onScaleToggle={this.props.onScaleToggle}
                             plotYAxisLabelFormatter={plotYAxisLabelFormatter}
                         />
                     </>

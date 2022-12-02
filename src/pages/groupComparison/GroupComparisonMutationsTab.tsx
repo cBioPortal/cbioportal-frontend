@@ -16,6 +16,7 @@ import GroupComparisonMutationsTabPlot from './GroupComparisonMutationsTabPlot';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
+import { AxisScale } from 'react-mutation-mapper';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;
@@ -58,6 +59,13 @@ export default class GroupComparisonMutationsTab extends React.Component<
                 .hugoGeneSymbol;
         }
         return activeTabId;
+    }
+
+    @action.bound
+    private onScaleToggle(selectedScale: AxisScale) {
+        this.props.urlWrapper.updateURL({
+            axisMode: selectedScale,
+        });
     }
 
     readonly tabUI = MakeMobxView({
@@ -132,7 +140,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
                     </div>
                     <GroupComparisonMutationsTabPlot
                         store={this.props.store}
-                        urlWrapper={this.props.urlWrapper}
+                        onScaleToggle={this.onScaleToggle}
                         mutations={_(this.props.store.mutationsByGroup.result!)
                             .values()
                             .flatten()
