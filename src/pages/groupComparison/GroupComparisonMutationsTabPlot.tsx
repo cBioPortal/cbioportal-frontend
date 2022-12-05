@@ -124,7 +124,10 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             plotLollipopTooltipCountInfo={
                                 plotLollipopTooltipCountInfo
                             }
-                            axisMode={this.props.store.userSelectedAxisMode}
+                            axisMode={
+                                this.props.store.userSelectedAxisMode ||
+                                AxisScale.PERCENT
+                            }
                             onScaleToggle={this.props.onScaleToggle}
                             plotYAxisLabelFormatter={plotYAxisLabelFormatter}
                         />
