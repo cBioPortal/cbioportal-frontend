@@ -339,6 +339,10 @@ export function tabs(
                         ? sampleManager.getActiveSampleIdsInOrder()
                         : []
                 }
+                namespaceColumns={
+                    pageComponent.patientViewPageStore.namespaceColumnConfig
+                        .structVar
+                }
             />
 
             <hr />
@@ -402,7 +406,7 @@ export function tabs(
                                 onRowClick={pageComponent.onCnaTableRowClick}
                                 namespaceColumns={
                                     pageComponent.patientViewPageStore
-                                        .namespaceColumnConfig
+                                        .namespaceColumnConfig.cna
                                 }
                             />
                         </If>
