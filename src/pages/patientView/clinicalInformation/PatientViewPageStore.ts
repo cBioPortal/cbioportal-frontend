@@ -199,6 +199,11 @@ import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/n
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
 
+type NamespaceColumnConfigMap = {
+    cna: NamespaceColumnConfig;
+    structVar: NamespaceColumnConfig;
+};
+
 export async function checkForTissueImage(patientId: string): Promise<boolean> {
     if (/TCGA/.test(patientId) === false) {
         return false;
@@ -1353,8 +1358,13 @@ export class PatientViewPageStore {
         []
     );
 
-    @computed get namespaceColumnConfig(): NamespaceColumnConfig {
-        return buildNamespaceColumnConfig(this.discreteCNAData.result);
+    @computed get namespaceColumnConfig(): NamespaceColumnConfigMap {
+        return {
+            cna: buildNamespaceColumnConfig(this.discreteCNAData.result),
+            structVar: buildNamespaceColumnConfig(
+                this.structuralVariantData.result
+            ),
+        };
     }
 
     readonly molecularData = remoteData<NumericGeneMolecularData[]>(

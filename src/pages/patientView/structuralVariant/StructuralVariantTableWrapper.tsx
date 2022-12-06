@@ -27,6 +27,8 @@ import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { MutationStatus } from 'react-mutation-mapper';
 import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -34,6 +36,7 @@ export interface IStructuralVariantTableWrapperProps {
     mergeOncoKbIcons?: boolean;
     sampleIds: string[];
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
+    namespaceColumns?: NamespaceColumnConfig;
 }
 
 type CNATableColumn = Column<StructuralVariant[]> & { order: number };
@@ -467,6 +470,10 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 order: 80,
             });
 
+            columns.push(
+                ...createStructVarNamespaceColumns(this.props.namespaceColumns)
+            );
+
             return _.sortBy(columns, (c: CNATableColumn) => c.order);
         },
         default: [],
@@ -532,18 +539,21 @@ export default class StructuralVariantTableWrapper extends React.Component<
     });
 
     public render() {
-        return this.tableUI.component;
+        return (
+            <div data-test="patientview-structural-variant-table">
+                {this.tableUI.component}
+            </div>
+        );
     }
+}
 
-    // @action.bound
-    // private handleOncoKbIconModeToggle(mergeIcons: boolean) {
-    //     this.mergeOncoKbIcons = mergeIcons;
-    //     updateOncoKbIconStyle({ mergeIcons });
-    //
-    //     // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
-    //     calculateOncoKbContentWidthOnNextFrame(
-    //         ANNOTATION_ELEMENT_ID,
-    //         width => (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
-    //     );
-    // }
+function createStructVarNamespaceColumns(
+    config?: NamespaceColumnConfig
+): CNATableColumn[] {
+    const namespaceColumnRecords = createNamespaceColumns(config);
+    const namespaceColumns = Object.values(
+        namespaceColumnRecords
+    ) as CNATableColumn[];
+    namespaceColumns.forEach(c => (c.visible = false));
+    return namespaceColumns;
 }
