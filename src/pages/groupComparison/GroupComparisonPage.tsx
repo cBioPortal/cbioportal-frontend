@@ -216,20 +216,24 @@ export default class GroupComparisonPage extends React.Component<
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}
-                    {this.props.appStore.featureFlagStore.has(
-                        'group_comparison_mutations_lollipop_plot'
-                    ) &&
-                        this.store.showMutationsTab && (
-                            <MSKTab
-                                id={GroupComparisonTab.MUTATIONS}
-                                linkText="Mutations"
-                            >
-                                <GroupComparisonMutationsTab
-                                    store={this.store}
-                                    urlWrapper={this.urlWrapper}
-                                />
-                                {/* stacked lollipop plots for > 2 groups */}
-                                {/* {this.store.activeGroups.result!.map(g => {
+                    {this.store.showMutationsTab && (
+                        <MSKTab
+                            id={GroupComparisonTab.MUTATIONS}
+                            linkText={
+                                <span>
+                                    Mutations{' '}
+                                    <strong className={'beta-text'}>
+                                        Beta!
+                                    </strong>
+                                </span>
+                            }
+                        >
+                            <GroupComparisonMutationsTab
+                                store={this.store}
+                                urlWrapper={this.urlWrapper}
+                            />
+                            {/* stacked lollipop plots for > 2 groups */}
+                            {/* {this.store.activeGroups.result!.map(g => {
                                 return (
                                     <div>
                                         <h3>{g.name}</h3>
@@ -244,8 +248,8 @@ export default class GroupComparisonPage extends React.Component<
                                     </div>
                                 );
                             })} */}
-                            </MSKTab>
-                        )}
+                        </MSKTab>
+                    )}
                     {this.store.showMRNATab && (
                         <MSKTab
                             id={GroupComparisonTab.MRNA}
