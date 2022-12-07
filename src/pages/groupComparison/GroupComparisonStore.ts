@@ -39,7 +39,7 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import ComplexKeySet from 'shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
-import { DataFilter } from 'react-mutation-mapper';
+import { AxisScale, DataFilter } from 'react-mutation-mapper';
 import { getAllGenes } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -458,8 +458,8 @@ export default class GroupComparisonStore extends ComparisonStore {
         return this.urlWrapper.query.selectedGene;
     }
 
-    @computed get userSelectedAxisMode() {
-        return this.urlWrapper.query.axisMode;
+    @computed get axisMode() {
+        return this.urlWrapper.query.axisMode || AxisScale.PERCENT;
     }
 
     @computed get activeMutationMapperGene() {

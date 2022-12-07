@@ -77,7 +77,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         mutations: Mutation[],
         group: string
     ) {
-        return this.props.store.userSelectedAxisMode === AxisScale.COUNT
+        return this.props.store.axisMode === AxisScale.COUNT
             ? countUniqueMutations(mutations)
             : (countUniqueMutations(mutations) /
                   this.props.store.groupToProfiledSamples.result![group]
@@ -124,7 +124,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             plotLollipopTooltipCountInfo={
                                 plotLollipopTooltipCountInfo
                             }
-                            axisMode={this.props.store.userSelectedAxisMode}
+                            axisMode={this.props.store.axisMode}
                             onScaleToggle={this.props.onScaleToggle}
                             plotYAxisLabelFormatter={plotYAxisLabelFormatter}
                         />
