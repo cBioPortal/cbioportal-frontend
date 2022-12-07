@@ -124,9 +124,7 @@ import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import _ from 'lodash';
 import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
-import AccessorsForOqlFilter, {
-    SimplifiedMutationType,
-} from '../../shared/lib/oql/AccessorsForOqlFilter';
+import AccessorsForOqlFilter from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     doesQueryContainMutationOQL,
     doesQueryContainOQL,
@@ -152,7 +150,6 @@ import {
 } from './mutationCountHelpers';
 import { CancerStudyQueryUrlParams } from 'shared/components/query/QueryStore';
 import {
-    compileMutations,
     compileStructuralVariants,
     computeCustomDriverAnnotationReport,
     createDiscreteCopyNumberDataKey,
@@ -162,7 +159,6 @@ import {
     fetchPatients,
     fetchQueriedStudies,
     filterAndAnnotateStructuralVariants,
-    FilteredAndAnnotatedMutationsReport,
     FilteredAndAnnotatedStructuralVariantsReport,
     filterSubQueryData,
     getExtendsClinicalAttributesFromCustomData,
@@ -304,6 +300,14 @@ import { PageUserSession } from 'shared/userSession/PageUserSession';
 import { PageType } from 'shared/userSession/PageType';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
+import {
+    compileMutations,
+    FilteredAndAnnotatedMutationsReport,
+} from 'shared/lib/comparison/AnalysisStoreUtils';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+} from 'shared/model/AnnotatedMutation';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -345,25 +349,6 @@ export interface ExtendedAlteration
     // alterationType?
     alterationType: string;
     alterationSubType: string;
-}
-
-export interface AnnotatedMutation extends Mutation {
-    hugoGeneSymbol: string;
-    putativeDriver: boolean;
-    oncoKbOncogenic: string;
-    isHotspot: boolean;
-    simplifiedMutationType: SimplifiedMutationType;
-    // following is a cloodge for when we need to
-    // make synthetic mutations to represent structural variants
-    structuralVariant?: AnnotatedStructuralVariant;
-}
-
-export interface AnnotatedStructuralVariant extends StructuralVariant {
-    putativeDriver: boolean;
-    oncoKbOncogenic: string;
-    isHotspot: boolean;
-    entrezGeneId: number;
-    hugoGeneSymbol: string;
 }
 
 export interface CustomDriverNumericGeneMolecularData

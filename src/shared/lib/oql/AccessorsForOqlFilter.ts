@@ -8,13 +8,16 @@ import { StructuralVariant } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
     CustomDriverNumericGeneMolecularData,
-    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
-    AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { isNotGermlineMutation } from '../MutationUtils';
 import { IAccessorsForOqlFilter } from './oqlfilter';
 import { AlterationTypeConstants } from 'shared/constants';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+    SimplifiedMutationType,
+} from 'shared/model/AnnotatedMutation';
 
 export const cna_profile_data_to_string: any = {
     '-2': 'homdel',
@@ -23,17 +26,6 @@ export const cna_profile_data_to_string: any = {
     '1': 'gain',
     '2': 'amp',
 };
-
-export type SimplifiedMutationType =
-    | 'missense'
-    | 'frameshift'
-    | 'nonsense'
-    | 'splice'
-    | 'nonstart'
-    | 'nonstop'
-    | 'fusion'
-    | 'inframe'
-    | 'other';
 
 export function getMutationSubType(d: {
     mutationType: string;

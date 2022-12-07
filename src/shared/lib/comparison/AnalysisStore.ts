@@ -8,9 +8,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
-import { compileMutations } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import internalClient from '../../api/cbioportalInternalClientInstance';
-import { AppStore } from '../../../AppStore';
 import {
     evaluateMutationPutativeDriverInfo,
     fetchOncoKbCancerGenes,
@@ -22,7 +20,6 @@ import {
     ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
 import MobxPromise, { MobxPromiseUnionTypeWithDefault } from 'mobxpromise';
-import { AnnotatedMutation } from '../../../pages/resultsView/ResultsViewPageStore';
 import { DriverAnnotationSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { getServerConfig } from 'config/config';
 import { CoverageInformation } from '../GenePanelUtils';
@@ -41,6 +38,8 @@ import {
 } from 'pages/resultsView/mutationCountHelpers';
 import ComplexKeyCounter from '../complexKeyDataStructures/ComplexKeyCounter';
 import GeneCache from 'shared/cache/GeneCache';
+import { compileMutations } from './AnalysisStoreUtils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export default abstract class AnalysisStore {
     @observable driverAnnotationSettings: DriverAnnotationSettings;

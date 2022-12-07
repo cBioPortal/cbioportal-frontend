@@ -27,7 +27,6 @@ import {
 } from './ResultsViewPageStoreUtils';
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     CustomDriverNumericGeneMolecularData,
     IQueriedMergedTrackCaseData,
 } from './ResultsViewPageStore';
@@ -55,6 +54,7 @@ import {
     VirtualStudyData,
 } from 'shared/api/session-service/sessionServiceModels';
 import $ from 'jquery';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 describe('ResultsViewPageStoreUtils', () => {
     describe('computeCustomDriverAnnotationReport', () => {

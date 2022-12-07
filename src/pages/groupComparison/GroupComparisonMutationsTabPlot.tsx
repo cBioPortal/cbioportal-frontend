@@ -16,7 +16,7 @@ import { countUniqueMutations } from 'shared/lib/MutationUtils';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { AxisScale } from 'react-mutation-mapper';
 import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
-import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;

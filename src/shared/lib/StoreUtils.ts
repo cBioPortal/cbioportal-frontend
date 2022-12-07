@@ -70,7 +70,6 @@ import {
     GENOME_NEXUS_ARG_FIELD_ENUM,
 } from 'shared/constants';
 import {
-    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
 } from '../../pages/resultsView/ResultsViewPageStore';
@@ -96,7 +95,6 @@ import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
     FilteredAndAnnotatedDiscreteCNAReport,
-    FilteredAndAnnotatedMutationsReport,
     ONCOKB_ONCOGENIC_LOWERCASE,
 } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
@@ -108,6 +106,8 @@ import { ObservableMap } from 'mobx';
 import { chunkCalls } from 'cbioportal-utils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { FilteredAndAnnotatedMutationsReport } from './comparison/AnalysisStoreUtils';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;

@@ -17,11 +17,11 @@ import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 import { AxisScale } from 'react-mutation-mapper';
-import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 import {
     ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;

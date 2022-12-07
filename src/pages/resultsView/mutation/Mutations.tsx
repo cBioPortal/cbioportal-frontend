@@ -1,10 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
-import {
-    AnnotatedMutation,
-    ResultsViewPageStore,
-} from '../ResultsViewPageStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperServerConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
@@ -26,6 +23,7 @@ import _ from 'lodash';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export interface IMutationsPageProps {
     routing?: any;

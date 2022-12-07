@@ -41,48 +41,15 @@ import {
 import ComplexKeySet from 'shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
 import { AxisScale, DataFilter } from 'react-mutation-mapper';
-import {
-    evaluateMutationPutativeDriverInfo,
-    fetchGenes,
-    fetchOncoKbCancerGenes,
-    fetchOncoKbDataForOncoprint,
-    filterAndAnnotateMutations,
-    getAllGenes,
-    getGenomeNexusUrl,
-    makeGetOncoKbMutationAnnotationForOncoprint,
-    makeIsHotspotForOncoprint,
-    ONCOKB_DEFAULT,
-} from 'shared/lib/StoreUtils';
+import { getAllGenes } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
     getCoverageInformation,
 } from 'shared/lib/GenePanelUtils';
-import {
-    compileMutations,
-    fetchPatients,
-} from 'pages/resultsView/ResultsViewPageStoreUtils';
+import { fetchPatients } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { getSampleMolecularIdentifiers } from 'pages/studyView/StudyViewComparisonUtils';
 import { FeatureFlagEnum } from 'shared/featureFlags';
-import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
-import {
-    getProteinPositionFromProteinChange,
-    IHotspotIndex,
-    indexHotspotsData,
-    IOncoKbData,
-} from 'cbioportal-utils';
-import { getServerConfig } from 'config/config';
-import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
-import { GenomeNexusAPIInternal } from 'genome-nexus-ts-api-client';
-import MobxPromise from 'mobxpromise';
-import {
-    countMutations,
-    mutationCountByPositionKey,
-} from 'pages/resultsView/mutationCountHelpers';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
-import GeneCache from 'shared/cache/GeneCache';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
