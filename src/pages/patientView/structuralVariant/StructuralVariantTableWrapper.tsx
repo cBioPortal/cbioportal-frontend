@@ -474,6 +474,20 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 ...createStructVarNamespaceColumns(this.props.namespaceColumns)
             );
 
+            //Adjust visibility
+            const visibleColumnsProperty = getServerConfig()
+                .skin_patient_view_structural_variant_table_columns_show_on_init;
+            if (visibleColumnsProperty) {
+                columns.forEach(column => {
+                    const visibleColumns = visibleColumnsProperty.split(',');
+                    if (visibleColumns.includes(column.name)) {
+                        column.visible = true;
+                    } else {
+                        column.visible = false;
+                    }
+                });
+            }
+
             return _.sortBy(columns, (c: CNATableColumn) => c.order);
         },
         default: [],
