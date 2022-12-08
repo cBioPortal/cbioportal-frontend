@@ -1012,6 +1012,59 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
+    readonly mutationsEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.alterationsEnrichmentAnalysisGroups,
+            this.selectedStudyMutationEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            if (
+                _(this.selectedMutationEnrichmentEventTypes)
+                    .values()
+                    .some()
+            ) {
+                return Promise.resolve(
+                    this.enrichmentAnalysisGroups.result!.reduce(
+                        (acc: MolecularProfileCasesGroupFilter[], group) => {
+                            let molecularProfileCaseIdentifiers: {
+                                caseId: string;
+                                molecularProfileId: string;
+                            }[] = [];
+                            group.samples.forEach(sample => {
+                                if (
+                                    this
+                                        .selectedStudyMutationEnrichmentProfileMap
+                                        .result![sample.studyId]
+                                ) {
+                                    molecularProfileCaseIdentifiers.push({
+                                        caseId: this.usePatientLevelEnrichments
+                                            ? sample.patientId
+                                            : sample.sampleId,
+                                        molecularProfileId: this
+                                            .selectedStudyMutationEnrichmentProfileMap
+                                            .result![sample.studyId]
+                                            .molecularProfileId,
+                                    });
+                                }
+                            });
+
+                            if (molecularProfileCaseIdentifiers.length > 0) {
+                                acc.push({
+                                    name: group.name,
+                                    molecularProfileCaseIdentifiers,
+                                });
+                            }
+                            return acc;
+                        },
+                        []
+                    )
+                );
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
     public readonly alterationsEnrichmentData = makeEnrichmentDataPromise({
         await: () => [this.alterationsEnrichmentDataRequestGroups],
         resultsViewPageStore: this.resultsViewStore,
@@ -1073,20 +1126,70 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    @computed get genesWithMaxFrequency(): AlterationEnrichmentRow[] {
+    public readonly mutationsEnrichmentData = makeEnrichmentDataPromise({
+        await: () => [this.mutationsEnrichmentDataRequestGroups],
+        resultsViewPageStore: this.resultsViewStore,
+        getSelectedProfileMaps: () => [
+            this.selectedStudyMutationEnrichmentProfileMap.result!,
+        ],
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        fetchData: () => {
+            if (
+                this.mutationsEnrichmentDataRequestGroups.result &&
+                this.mutationsEnrichmentDataRequestGroups.result.length > 1 &&
+                _(this.selectedMutationEnrichmentEventTypes)
+                    .values()
+                    .some()
+            ) {
+                const groupsAndAlterationTypes = {
+                    molecularProfileCasesGroupFilter: this
+                        .mutationsEnrichmentDataRequestGroups.result!,
+                    alterationEventTypes: ({
+                        mutationEventTypes: getMutationEventTypesAPIParameter(
+                            this.selectedMutationEnrichmentEventTypes
+                        ),
+                        includeDriver: this.driverAnnotationSettings
+                            .includeDriver,
+                        includeVUS: this.driverAnnotationSettings.includeVUS,
+                        includeUnknownOncogenicity: this
+                            .driverAnnotationSettings
+                            .includeUnknownOncogenicity,
+                        tiersBooleanMap: this.selectedDriverTiersMap,
+                        includeUnknownTier: this.driverAnnotationSettings
+                            .includeUnknownTier,
+                        includeGermline: this.includeGermlineMutations,
+                        includeSomatic: this.includeSomaticMutations,
+                        includeUnknownStatus: this
+                            .includeUnknownStatusMutations,
+                    } as unknown) as AlterationFilter,
+                };
+
+                return internalClient.fetchAlterationEnrichmentsUsingPOST({
+                    enrichmentType: this.usePatientLevelEnrichments
+                        ? 'PATIENT'
+                        : 'SAMPLE',
+                    groupsAndAlterationTypes,
+                });
+            }
+            return Promise.resolve([]);
+        },
+    });
+
+    @computed
+    get genesWithHighestMutationFrequency(): AlterationEnrichmentRow[] {
         if (
-            this.alterationsEnrichmentData.isComplete &&
+            this.mutationsEnrichmentData.isComplete &&
             this.alterationsEnrichmentAnalysisGroups.isComplete
         ) {
             const alterationRowData: AlterationEnrichmentRow[] = getAlterationRowData(
-                this.alterationsEnrichmentData.result!,
+                this.mutationsEnrichmentData.result!,
                 this.resultsViewStore
                     ? this.resultsViewStore.hugoGeneSymbols
                     : [],
                 this.alterationsEnrichmentAnalysisGroups.result!
             );
             alterationRowData.sort(compareByAlterationPercentage);
-            return alterationRowData.slice(0, 10);
+            return alterationRowData;
         }
         return [];
     }

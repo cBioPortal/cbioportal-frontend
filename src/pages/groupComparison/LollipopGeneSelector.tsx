@@ -8,11 +8,17 @@ import GroupComparisonStore from './GroupComparisonStore';
 interface ILollipopGeneSelectorProps {
     store: GroupComparisonStore;
     genes: Gene[];
+    genesWithMutations: Gene[];
     handleGeneChange: (id?: string) => void;
 }
 
 export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = observer(
-    ({ store, genes, handleGeneChange }: ILollipopGeneSelectorProps) => {
+    ({
+        store,
+        genes,
+        genesWithMutations,
+        handleGeneChange,
+    }: ILollipopGeneSelectorProps) => {
         const loadOptions = (inputText: string, callback: any) => {
             if (!inputText) {
                 callback([]);
@@ -32,7 +38,7 @@ export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = observ
         };
 
         return (
-            <div style={{ width: 200, paddingBottom: 10 }}>
+            <div style={{ width: 200, paddingRight: 10 }}>
                 <AsyncSelect
                     name="Select gene"
                     onChange={(option: any | null) => {
@@ -44,10 +50,12 @@ export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = observ
                     }}
                     isClearable={true}
                     isSearchable={true}
-                    defaultOptions={genes.slice(0, 200).map(gene => ({
-                        label: gene.hugoGeneSymbol,
-                        value: gene,
-                    }))}
+                    defaultOptions={genesWithMutations
+                        .slice(0, 200)
+                        .map(gene => ({
+                            label: gene.hugoGeneSymbol,
+                            value: gene,
+                        }))}
                     value={
                         store.userSelectedMutationMapperGene
                             ? {
