@@ -1,18 +1,18 @@
-function clickColumnSelectionButton(patientCnaTable) {
+const clickColumnSelectionButton = patientCnaTable => {
     $(`[data-test=${patientCnaTable}]`)
         .$('button*=Columns')
         .click();
-}
+};
 
-function selectColumn(namespaceColumn1) {
+const selectColumn = namespaceColumn1 => {
     $(`[data-id="${namespaceColumn1}"]`).click();
-}
+};
 
-waitForTable = table => {
+const waitForTable = table => {
     $(`[data-test=${table}]`).waitForDisplayed();
 };
 
-namespaceColumnsAreDisplayed = columns => {
+const namespaceColumnsAreDisplayed = columns => {
     for (const column of columns) {
         if (!$(`//span[text()='${column}']`).isDisplayed()) {
             return false;
@@ -21,11 +21,11 @@ namespaceColumnsAreDisplayed = columns => {
     return true;
 };
 
-namespaceColumnsAreNotDisplayed = columns => {
+const namespaceColumnsAreNotDisplayed = columns => {
     return !namespaceColumnsAreDisplayed(columns);
 };
 
-getRowByGene = (tableName, gene) => {
+const getRowByGene = (tableName, gene) => {
     const tableRows = $$(`[data-test="${tableName}"] tr`);
     return tableRows.find(r => r.$('td=' + gene).isExisting());
 };
