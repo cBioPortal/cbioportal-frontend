@@ -103,6 +103,24 @@ export type ClinicalAttributeCountFilter = {
         'sampleListId': string
 
 };
+export type ClinicalData = {
+    'clinicalAttribute': ClinicalAttribute
+
+        'clinicalAttributeId': string
+
+        'patientId': string
+
+        'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+        'value': string
+
+};
 export type ClinicalDataBin = {
     'attributeId': string
 
@@ -135,6 +153,12 @@ export type ClinicalDataBinFilter = {
         'end': number
 
         'start': number
+
+};
+export type ClinicalDataCollection = {
+    'patientClinicalData': Array < ClinicalData >
+
+        'sampleClinicalData': Array < ClinicalData >
 
 };
 export type ClinicalDataCount = {
@@ -1877,6 +1901,146 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchClinicalDataClinicalTableUsingPOSTURL(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'searchTerm' ? : string,
+        'sortBy' ? : "clinicalAttributeId" | "value",
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/clinical-data-table/fetch';
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['searchTerm'] !== undefined) {
+            queryParameters['searchTerm'] = parameters['searchTerm'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch clinical data for the Clinical Tab of Study View
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalDataClinicalTableUsingPOST
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} searchTerm - Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'searchTerm' ? : string,
+        'sortBy' ? : "clinicalAttributeId" | "value",
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/clinical-data-table/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['searchTerm'] !== undefined) {
+                queryParameters['searchTerm'] = parameters['searchTerm'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch clinical data for the Clinical Tab of Study View
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalDataClinicalTableUsingPOST
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} searchTerm - Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchClinicalDataClinicalTableUsingPOST(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'searchTerm' ? : string,
+        'sortBy' ? : "clinicalAttributeId" | "value",
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ClinicalDataCollection > {
+        return this.fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchClinicalDataViolinPlotsUsingPOSTURL(parameters: {
         'axisEnd' ? : number,
         'axisStart' ? : number,
