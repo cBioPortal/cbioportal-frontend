@@ -89,12 +89,18 @@ export function calcYMaxInput(
 
     if (input === undefined) {
         input = yAxisSameScale
-            ? getCommonYAxisMaxSliderValue(
-                  yMaxStep,
-                  countRange,
-                  oppositeCountRange
+            ? parseFloat(
+                  getCommonYAxisMaxSliderValue(
+                      yMaxStep,
+                      countRange,
+                      oppositeCountRange
+                  ).toFixed(Math.log10(yMaxStep) * -1)
               )
-            : getYAxisMaxSliderValue(yMaxStep, countRange);
+            : parseFloat(
+                  getYAxisMaxSliderValue(yMaxStep, countRange).toFixed(
+                      Math.log10(yMaxStep) * -1
+                  )
+              );
     }
 
     return input;
@@ -148,7 +154,9 @@ export function calcCountRange(
 
         for (const lollipop of lollipops) {
             max = Math.max(max, lollipop.count);
-            min = Math.min(min, lollipop.count);
+            min = Number.isInteger(lollipop.count)
+                ? Math.min(min, lollipop.count)
+                : Math.min(0.1, lollipop.count);
         }
 
         return [min, Math.max(min, max)];
