@@ -13,7 +13,7 @@ import {
     getSampleNumericalClinicalDataValue,
     OTHER_BIOMARKERS_CLINICAL_ATTR,
 } from 'shared/lib/StoreUtils';
-import { OtherBiomarkersQueryType } from 'react-mutation-mapper';
+import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 import { OtherBiomarkerAnnotation } from '../oncokb/OtherBiomarkerAnnotation';
 
 export type ISampleSummaryListProps = {

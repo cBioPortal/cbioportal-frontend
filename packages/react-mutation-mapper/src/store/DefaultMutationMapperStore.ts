@@ -68,7 +68,7 @@ import {
 import {
     defaultOncoKbIndicatorFilter,
     groupOncoKbIndicatorDataByMutations,
-} from '../util/OncoKbUtils';
+} from 'oncokb-frontend-commons';
 import { DefaultMutationMapperDataStore } from './DefaultMutationMapperDataStore';
 import { DefaultMutationMapperDataFetcher } from './DefaultMutationMapperDataFetcher';
 import { DefaultMutationMapperFilterApplier } from './DefaultMutationMapperFilterApplier';

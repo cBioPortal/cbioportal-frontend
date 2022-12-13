@@ -22,7 +22,7 @@ import {
     applyDefaultPositionFilter,
     applyDefaultProteinImpactTypeFilter,
 } from '../util/FilterUtils';
-import { defaultOncoKbFilter } from '../util/OncoKbUtils';
+import { defaultOncoKbFilter } from 'oncokb-frontend-commons';
 
 export class DefaultMutationMapperFilterApplier implements FilterApplier {
     protected get customFilterAppliers(): {

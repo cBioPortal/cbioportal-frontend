@@ -4,7 +4,6 @@ import localForage from 'localforage';
 import {
     fetchVariantAnnotationsByMutation as fetchDefaultVariantAnnotationsByMutation,
     fetchVariantAnnotationsIndexedByGenomicLocation as fetchDefaultVariantAnnotationsIndexedByGenomicLocation,
-    OtherBiomarkersQueryType,
 } from 'react-mutation-mapper';
 import {
     CancerStudy,
@@ -48,15 +47,17 @@ import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {
     EvidenceType,
-    generateAnnotateStructuralVariantQuery,
-    generateCopyNumberAlterationQuery,
-    generateIdToIndicatorMap,
-    generateProteinChangeQuery,
-    generateQueryVariantId,
     IHotspotIndex,
     IOncoKbData,
     isLinearClusterHotspot,
 } from 'cbioportal-utils';
+import {
+    generateQueryVariantId,
+    generateProteinChangeQuery,
+    generateIdToIndicatorMap,
+    generateCopyNumberAlterationQuery,
+    generateAnnotateStructuralVariantQuery,
+} from 'oncokb-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
 import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
@@ -106,6 +107,7 @@ import {
 import { ObservableMap } from 'mobx';
 import { chunkCalls } from 'cbioportal-utils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
+import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;

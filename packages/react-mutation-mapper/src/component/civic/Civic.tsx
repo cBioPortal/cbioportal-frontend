@@ -3,13 +3,12 @@ import { observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-
+import { errorIcon, loaderIcon } from '../StatusHelpers';
 import {
     CIVIC_NA_VALUE,
     ICivicEntry,
     ICivicVariantSummary,
 } from 'cbioportal-utils';
-import { errorIcon, loaderIcon } from '../StatusHelpers';
 import CivicCard from './CivicCard';
 
 import civicLogoSrc from '../../images/civic-logo.png';

@@ -8,17 +8,16 @@ import {
     DataFilterType,
     DefaultMutationMapperDataFetcher,
     groupDataByProteinImpactType,
-    groupOncoKbIndicatorDataByMutations,
     DefaultMutationMapperStore,
     ONCOKB_DEFAULT_INFO,
     ApplyFilterFn,
     DataFilter,
 } from 'react-mutation-mapper';
 import {
+    groupOncoKbIndicatorDataByMutations,
     defaultOncoKbIndicatorFilter,
-    IHotspotIndex,
-    getMutationsByTranscriptId,
-} from 'cbioportal-utils';
+} from 'oncokb-frontend-commons';
+import { IHotspotIndex, getMutationsByTranscriptId } from 'cbioportal-utils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {

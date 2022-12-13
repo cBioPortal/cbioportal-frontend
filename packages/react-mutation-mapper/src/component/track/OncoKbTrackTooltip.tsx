@@ -1,15 +1,15 @@
 import * as React from 'react';
 import _ from 'lodash';
 
-import { LEVELS, Mutation } from 'cbioportal-utils';
+import { Mutation } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
-import OncoKbSummaryTable from '../oncokb/OncoKbSummaryTable';
+import { OncoKbSummaryTable, LEVELS } from 'oncokb-frontend-commons';
 import { makeObservable } from 'mobx';
 import {
     getTumorTypeName,
     getTumorTypeNameWithExclusionInfo,
-} from '../../util/OncoKbUtils';
+} from 'oncokb-frontend-commons';
 
 type OncoKbTrackTooltipProps = {
     usingPublicOncoKbInstance: boolean;
