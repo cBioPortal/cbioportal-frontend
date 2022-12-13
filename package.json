@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend",
   "private": true,
-  "version": "3.3.203",
+  "version": "3.3.204",
   "workspaces": {
     "packages": [
       ".",
@@ -156,7 +156,7 @@
     "bundle-loader": "^0.5.4",
     "cbioportal-clinical-timeline": "^0.3.48",
     "cbioportal-frontend-commons": "^0.5.35",
-    "cbioportal-ts-api-client": "^0.9.45",
+    "cbioportal-ts-api-client": "^0.9.46",
     "cbioportal-utils": "^0.3.25",
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",
