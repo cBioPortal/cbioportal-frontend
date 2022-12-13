@@ -83,8 +83,14 @@ export default class PatientViewMutationsTab extends React.Component<
     }
 
     private vafChartWrapperStore = new VAFChartWrapperStore({
-        isOnlySequentialModePossible: () =>
-            this.props.patientViewPageStore.clinicalEvents.result.length === 0,
+        isOnlySequentialModeAvailable: () => {
+            const isOnlySequentialOrderingAvailable = this.props.sampleManager?.isOnlySequentialOrderingAvailable(
+                this.props.patientViewPageStore.clinicalEvents.result
+            );
+            return isOnlySequentialOrderingAvailable == undefined
+                ? false
+                : isOnlySequentialOrderingAvailable;
+        },
     });
     private dataStore = new PatientViewMutationsDataStore(
         () => this.mergedMutations,
