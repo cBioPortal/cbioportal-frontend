@@ -33,7 +33,7 @@ if(myResponse.ok):
     frontend_group_id = "com.github."+frontend_user
 
     pr_state = ""
-    if jData['mergeable_state'] == 'draft':
+    if jData['draft'] == 'true':
       pr_state = "draft"
 
     print(
