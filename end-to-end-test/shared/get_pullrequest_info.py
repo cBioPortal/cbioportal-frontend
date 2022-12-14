@@ -32,12 +32,15 @@ if(myResponse.ok):
 
     frontend_group_id = "com.github."+frontend_user
 
+
+
     pr_state = ""
     if jData['draft'] == 'true':
       pr_state = "draft"
 
     print(
-      "export PULL_REQUEST_STATE="+ pr_state +"\n"
+      "export TESTING="+ jData['draft']  +"\n"
+      "export PULL_REQUEST_STATE="+ jData['draft']  +"\n"
       "export FRONTEND_GROUPID="+ frontend_group_id +"\n"
       "export FRONTEND_BASE_BRANCH="+ frontend_base_branch_name +"\n"
       "export BACKEND_PROJECT_USERNAME="+ backend_user +"\n"
