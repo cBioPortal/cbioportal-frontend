@@ -35,12 +35,11 @@ if(myResponse.ok):
 
 
     pr_state = ""
-    if jData['draft'] == 'true':
+    if jData['draft'] == true:
       pr_state = "draft"
 
     print(
-      "export TESTING="+ jData['draft']  +"\n"
-      "export PULL_REQUEST_STATE="+ jData['draft']  +"\n"
+      "export PULL_REQUEST_STATE="+ pr_state +"\n"
       "export FRONTEND_GROUPID="+ frontend_group_id +"\n"
       "export FRONTEND_BASE_BRANCH="+ frontend_base_branch_name +"\n"
       "export BACKEND_PROJECT_USERNAME="+ backend_user +"\n"
