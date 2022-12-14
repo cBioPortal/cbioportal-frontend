@@ -922,7 +922,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this._structuralVariantCountBy = s;
             },
             get logScale() {
-                return this._logScale && logScalePossible(this);
+                //const horzAxisData = self.horzAxisDataPromise.result;
+                const axisData = vertical
+                    ? self.vertAxisDataPromise.result
+                    : self.horzAxisDataPromise.result;
+                return this._logScale && logScalePossible(this, axisData);
             },
             set logScale(v: boolean) {
                 this._logScale = v;
@@ -3556,7 +3560,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 </div>
                             </div>
                         )}
-                    {logScalePossible(axisSelection) && (
+                    {logScalePossible(
+                        axisSelection,
+                        axisDataPromise.result
+                    ) && (
                         <div className="checkbox">
                             <label>
                                 <input
@@ -3565,7 +3572,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     name={
                                         vertical
                                             ? 'vert_logScale'
-                                            : 'vert_logScale'
+                                            : 'horz_logScale'
                                     }
                                     value={
                                         vertical

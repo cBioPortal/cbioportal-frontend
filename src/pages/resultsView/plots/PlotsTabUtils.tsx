@@ -44,7 +44,11 @@ import {
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
 } from '../ResultsViewPageStore';
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+    CLINICAL_ATTRIBUTE_FIELD_ENUM,
+} from 'shared/constants';
 
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
@@ -2513,13 +2517,16 @@ export function logScalePossibleForProfile(profileId: string) {
     return !/zscore/i.test(profileId) && /rna_seq/i.test(profileId);
 }
 
-export function logScalePossible(axisSelection: AxisMenuSelection) {
-    if (axisSelection.dataType === CLIN_ATTR_DATA_TYPE) {
-        // clinical attribute
-        return (
-            axisSelection.dataSourceId ===
-            SpecialChartsUniqueKeyEnum.MUTATION_COUNT
-        );
+export function logScalePossible(
+    axisSelection: AxisMenuSelection,
+    axisData?: IAxisData
+) {
+    if (
+        axisData &&
+        isNumberData(axisData) &&
+        !axisHasNegativeNumbers(axisData)
+    ) {
+        return true;
     } else if (
         isGenericAssaySelected(axisSelection) &&
         axisSelection.genericAssayDataType === DataTypeConstants.LIMITVALUE
