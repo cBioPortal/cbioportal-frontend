@@ -35,7 +35,7 @@ if(myResponse.ok):
 
 
     pr_state = ""
-    if jData['draft'] == true:
+    if jData['draft'] == True:
       pr_state = "draft"
 
     print(
