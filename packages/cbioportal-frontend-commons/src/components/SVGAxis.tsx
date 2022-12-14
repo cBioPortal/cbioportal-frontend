@@ -146,6 +146,22 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                         : horizontalPadding);
                 transform = '';
             }
+            let wrappedLabel;
+            let symbolIndex = this.props.label.indexOf(' mutated') - 1;
+            if (symbolIndex !== -2) {
+                wrappedLabel = (
+                    <>
+                        <tspan x={x} dy="1em" fontWeight={'bold'}>
+                            {this.props.label.slice(0, symbolIndex - 1)}
+                        </tspan>
+                        <tspan x={x} dy="1em">
+                            {this.props.label.slice(symbolIndex)}
+                        </tspan>
+                    </>
+                );
+            } else {
+                wrappedLabel = <>{this.props.label}</>;
+            }
             return (
                 <text
                     textAnchor="middle"
@@ -157,9 +173,14 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                     fill="#2E3436"
                     x={x}
                     y={y}
-                    transform={transform}
+                    transform={
+                        symbolIndex !== -2
+                            ? transform + ' translate(0, -30)'
+                            : transform
+                    }
                 >
-                    {this.props.label}
+                    {wrappedLabel}
+                    {/* {this.props.label} */}
                 </text>
             );
         } else {
