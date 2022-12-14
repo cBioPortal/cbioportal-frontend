@@ -3,6 +3,7 @@ import $ from 'jquery';
 import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
 import { CustomDriverNumericGeneMolecularData } from 'pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
 import {
     getCaseViewElt,
@@ -12,8 +13,7 @@ import {
 } from 'shared/components/oncoprint/TooltipUtils';
 import { MolecularProfile, StructuralVariant } from 'cbioportal-ts-api-client';
 
-import { deriveStructuralVariantType } from 'cbioportal-utils';
-import { AlterationTypeConstants } from 'shared/constants';
+import { deriveStructuralVariantType } from 'oncokb-frontend-commons';
 
 const hotspotsImg = require('../../../rootImages/cancer-hotspots.svg');
 const oncokbImg = require('oncokb-styles/images/oncogenic.svg');

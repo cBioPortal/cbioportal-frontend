@@ -1,4 +1,5 @@
 var assert = require('assert');
+const { getElementByTestHandle } = require('../../../shared/specUtils');
 var expect = require('chai').expect;
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
@@ -12,13 +13,11 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('Patient View Genomic Evolution tab', function() {
     describe('mutation table', () => {
-        before(() => {
+        it('shows only highlighted, or all mutations, depending on setting', () => {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/patient/genomicEvolution?caseId=P04&studyId=lgg_ucsf_2014`
             );
             waitForNetworkQuiet(10000);
-        });
-        it('shows only highlighted, or all mutations, depending on setting', () => {
             // at first, showing all mutations
             $('input[data-test="TableShowOnlyHighlighted"]').waitForExist({
                 timeout: 3000,
@@ -99,6 +98,19 @@ describe('Patient View Genomic Evolution tab', function() {
                 },
                 2000,
                 'should show all mutations again, since none explicitly selected'
+            );
+        });
+
+        it('force sequential mode when samples have no equivalent clincal events', () => {
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/patient/genomicEvolution?studyId=nsclc_ctdx_msk_2022&caseId=P-0016223`
+            );
+
+            getElementByTestHandle('VAFChartControls').waitForExist();
+            assert.equal(
+                getElementByTestHandle('VAFSequentialMode').isExisting(),
+                false,
+                'SequentialModel Check Box should not exists if not possible.'
             );
         });
     });

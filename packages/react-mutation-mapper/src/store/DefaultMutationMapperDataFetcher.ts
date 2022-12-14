@@ -5,16 +5,18 @@ import Response = request.Response;
 import {
     AggregatedHotspots,
     EvidenceType,
-    generateProteinChangeQuery,
-    generateAnnotateStructuralVariantQuery,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     IOncoKbData,
     Mutation,
     UniprotFeature,
     UniprotFeatureList,
     uniqueGenomicLocations,
-    StructuralVariantType,
 } from 'cbioportal-utils';
+import {
+    generateProteinChangeQuery,
+    generateAnnotateStructuralVariantQuery,
+    StructuralVariantType,
+} from 'oncokb-frontend-commons';
 import {
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,

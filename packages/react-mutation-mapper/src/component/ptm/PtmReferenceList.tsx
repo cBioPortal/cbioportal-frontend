@@ -3,7 +3,8 @@ import { Cache } from 'cbioportal-utils';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import ReferenceList from '../oncokb/ReferenceList';
+import { ReferenceList } from 'oncokb-frontend-commons';
+import 'oncokb-frontend-commons/dist/styles.css';
 
 type PtmReferenceListProps = {
     pubmedIds: string[];
@@ -43,7 +44,6 @@ export default class PtmReferenceList extends React.Component<
                                     .map(id => extractNumericalPart(id))
                                     .filter(id => id !== undefined) as number[]
                             }
-                            pmidData={this.props.pmidData}
                             abstracts={[]}
                         />
                     </div>
