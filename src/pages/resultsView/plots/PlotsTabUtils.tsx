@@ -2521,7 +2521,11 @@ export function logScalePossible(
     axisSelection: AxisMenuSelection,
     axisData?: IAxisData
 ) {
-    if (axisData && isNumberData(axisData)) {
+    if (
+        axisData &&
+        isNumberData(axisData) &&
+        !axisHasNegativeNumbers(axisData)
+    ) {
         return true;
     } else if (
         isGenericAssaySelected(axisSelection) &&
