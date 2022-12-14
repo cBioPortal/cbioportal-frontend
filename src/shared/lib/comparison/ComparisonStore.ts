@@ -1175,12 +1175,12 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    @computed
-    get genesWithHighestMutationFrequency(): AlterationEnrichmentRow[] {
-        if (
-            this.mutationsEnrichmentData.isComplete &&
-            this.alterationsEnrichmentAnalysisGroups.isComplete
-        ) {
+    readonly genesWithHighestMutationFrequency = remoteData<string[]>({
+        await: () => [
+            this.mutationsEnrichmentData,
+            this.alterationsEnrichmentAnalysisGroups,
+        ],
+        invoke: async () => {
             const alterationRowData: AlterationEnrichmentRow[] = getAlterationRowData(
                 this.mutationsEnrichmentData.result!,
                 this.resultsViewStore
@@ -1189,10 +1189,9 @@ export default abstract class ComparisonStore extends AnalysisStore
                 this.alterationsEnrichmentAnalysisGroups.result!
             );
             alterationRowData.sort(compareByAlterationPercentage);
-            return alterationRowData;
-        }
-        return [];
-    }
+            return alterationRowData.map(a => a.hugoGeneSymbol);
+        },
+    });
 
     readonly mrnaEnrichmentAnalysisGroups = remoteData({
         await: () => [
