@@ -92,14 +92,14 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         }
         if (symbol === '%') {
             return (
-                `${label} ${symbol}` +
+                `**${label}**\n${symbol}` +
                 ' mutated of ' +
                 this.props.store.groupToProfiledPatients.result![groupName]
                     .length +
                 ' profiled pts'
             );
         } else {
-            return `${label} ${symbol} mutated`;
+            return `**${label}**\n${symbol} mutated`;
         }
     }
 
