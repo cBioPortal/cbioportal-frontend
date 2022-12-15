@@ -2298,6 +2298,64 @@
             "schema": {
               "$ref": "#/definitions/StructuralVariantFilter"
             }
+          },
+          {
+            "name": "structuralVariantQueries[0].gene1.containingOnlyOneIdentifierOrSpecialValue",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "structuralVariantQueries[0].gene1.entrezId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "structuralVariantQueries[0].gene1.hugoSymbol",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "structuralVariantQueries[0].gene1.specialValue",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ANY_GENE",
+              "NO_GENE"
+            ]
+          },
+          {
+            "name": "structuralVariantQueries[0].gene2.containingOnlyOneIdentifierOrSpecialValue",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "structuralVariantQueries[0].gene2.entrezId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "structuralVariantQueries[0].gene2.hugoSymbol",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "structuralVariantQueries[0].gene2.specialValue",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ANY_GENE",
+              "NO_GENE"
+            ]
           }
         ],
         "responses": {
@@ -5332,9 +5390,47 @@
           "items": {
             "$ref": "#/definitions/SampleMolecularIdentifier"
           }
+        },
+        "structuralVariantQueries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StructuralVariantQuery"
+          }
         }
       },
       "title": "StructuralVariantFilter"
+    },
+    "StructuralVariantGeneSubQuery": {
+      "type": "object",
+      "properties": {
+        "entrezId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "specialValue": {
+          "type": "string",
+          "enum": [
+            "ANY_GENE",
+            "NO_GENE"
+          ]
+        }
+      },
+      "title": "StructuralVariantGeneSubQuery"
+    },
+    "StructuralVariantQuery": {
+      "type": "object",
+      "properties": {
+        "gene1": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "gene2": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        }
+      },
+      "title": "StructuralVariantQuery"
     },
     "StudyViewFilter": {
       "type": "object",

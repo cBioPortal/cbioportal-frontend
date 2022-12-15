@@ -23,6 +23,7 @@ import {
     ExtendedAlteration,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
+    Gene,
     Mutation,
     NumericGeneMolecularData,
     StructuralVariant,
@@ -34,6 +35,10 @@ import AccessorsForOqlFilter, {
     SimplifiedMutationType,
 } from './AccessorsForOqlFilter';
 import ifNotDefined from '../ifNotDefined';
+import {
+    StructuralVariantGeneSubQuery,
+    StructuralVariantQuery,
+} from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export interface IAccessorsForOqlFilter<T> {
     // a null return for an attribute means that attribute
@@ -1181,6 +1186,37 @@ export function uniqueGenesInOQLQuery(oql_query: string): string[] {
 
 type OQLGene = '*' | string | undefined;
 
+export function createStructuralVariantQuery(
+    fusionQuery: SingleGeneQuery,
+    genes: Gene[]
+): StructuralVariantQuery {
+    const gene1 = createStructuralVariantGeneSubQuery(
+        getFirstGene(fusionQuery),
+        genes
+    );
+    const gene2 = createStructuralVariantGeneSubQuery(
+        getSecondGene(fusionQuery),
+        genes
+    );
+    return { gene1, gene2 };
+}
+
+function createStructuralVariantGeneSubQuery(
+    oqlGene: OQLGene,
+    genes: Gene[]
+): StructuralVariantGeneSubQuery {
+    const geneSubquery = {} as StructuralVariantGeneSubQuery;
+    if (oqlGene === undefined) {
+        geneSubquery.specialValue = 'NO_GENE';
+    } else if (oqlGene === '*') {
+        geneSubquery.specialValue = 'ANY_GENE';
+    } else if (_.isString(oqlGene) && oqlGene !== '*') {
+        const found = genes.find(g => g.hugoGeneSymbol === oqlGene);
+        geneSubquery.entrezId = found!.entrezGeneId;
+    }
+    return geneSubquery;
+}
+
 export const getFirstGene = (query: SingleGeneQuery) => {
     if (isDownstream(query)) {
         return query.gene;
@@ -1207,6 +1243,23 @@ function isDownstream(q: SingleGeneQuery) {
 const getGeneFromAlterations = (q: SingleGeneQuery) => {
     return (q.alterations as FUSIONCommandOrientationBase[])[0].gene;
 };
+
+export function fusionsInOQLQuery(oql_query: string): SingleGeneQuery[] {
+    const parse_result = parseOQLQuery(oql_query);
+    return parse_result.filter(isUpOrDownstreamFusion);
+}
+
+export function nonFusionsInOQLQuery(oql_query: string): string[] {
+    const parse_result = parseOQLQuery(oql_query);
+    const singleGeneQueries = parse_result.filter(isNonFusionQuery);
+    return _(singleGeneQueries)
+        .map(q_line => q_line.gene)
+        .filter((gene: string) => gene.toLowerCase() !== 'datatypes')
+        .map((gene: string) => gene.toUpperCase())
+        .value();
+}
+
+const isNonFusionQuery = (q: SingleGeneQuery) => !isUpOrDownstreamFusion(q);
 
 export const getGenesFromSingleGeneQuery = (q: SingleGeneQuery) => {
     const genes = [q.gene];

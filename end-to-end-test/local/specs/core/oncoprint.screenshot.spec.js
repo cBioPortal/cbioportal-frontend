@@ -217,6 +217,45 @@ describe('oncoprint', function() {
             expect(clinicallist).toEqual(expected);
         });
     });
+
+    describe('oql structural variant tracks', () => {
+        it('shows oql structural variant variations', function() {
+            const oql =
+                // Downstream KIAA1549 has one struct var events (0.1%):
+                'KIAA1549: FUSION::\n' +
+                // Downstream KIAA1549 (using NULL special value) has no struct vars events:
+                'KIAA1549: FUSION::-\n' +
+                // Downstream BRAF one struct var events (0.1%):
+                'BRAF: FUSION::\n' +
+                // Upstream BRAF has one 35 struct var events (4%):
+                'BRAF: ::FUSION';
+
+            const encodedOql = encodeURI(encodeURIComponent(oql));
+
+            const stuctVarUrl =
+                CBIOPORTAL_URL +
+                '/results/oncoprint' +
+                '?Action=Submit' +
+                '&RPPA_SCORE_THRESHOLD=2.0' +
+                '&Z_SCORE_THRESHOLD=2.0' +
+                '&cancer_study_list=study_es_0' +
+                '&case_set_id=study_es_0_all' +
+                '&data_priority=0' +
+                '&gene_list=' +
+                encodedOql +
+                '&geneset_list=%20' +
+                '&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic' +
+                '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations' +
+                '&profileFilter=0' +
+                '&tab_index=tab_visualize';
+
+            goToUrlAndSetLocalStorageWithProperty(stuctVarUrl, true, {});
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+            const res = checkOncoprintElement();
+            assertScreenShotMatch(res);
+        });
+    });
 });
 
 function createUrlWithSettingsQueryParam(config) {
