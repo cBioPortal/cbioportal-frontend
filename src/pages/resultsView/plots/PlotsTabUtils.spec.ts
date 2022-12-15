@@ -19,6 +19,7 @@ import {
     MUT_PROFILE_COUNT_DRIVER,
     MUT_PROFILE_COUNT_VUS,
     mutDriverVsVUSCategoryOrder,
+    logScalePossible,
 } from './PlotsTabUtils';
 import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
 import {
@@ -764,6 +765,20 @@ describe('PlotsTabUtils', () => {
             assert.equal(funcs!.fLogScale(0, 10), 1);
             assert.equal(funcs!.fLogScale(90, 10), 2);
             assert.equal(funcs!.fInvLogScale(11, 10), 10);
+        });
+    });
+
+    describe('logScalePossible', () => {
+        it('should return true when data is type number', () => {
+            const axisData = ({
+                datatype: 'number',
+                data: [{ value: 1 }, { value: -2 }],
+            } as any) as IAxisData;
+            const axisMenuSelection = ({
+                dataType: CLIN_ATTR_DATA_TYPE,
+                genericAssayDataType: DataTypeConstants.LIMITVALUE,
+            } as any) as AxisMenuSelection;
+            assert.isTrue(logScalePossible(axisMenuSelection, axisData));
         });
     });
 
