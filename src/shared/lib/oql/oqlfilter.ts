@@ -19,9 +19,12 @@ import oql_parser, {
 import { annotateAlterationTypes } from './annotateAlterationTypes';
 import { ExtendedAlteration } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
+    Gene,
     Mutation,
     NumericGeneMolecularData,
     StructuralVariant,
+    StructuralVariantGeneSubQuery,
+    StructuralVariantQuery,
 } from 'cbioportal-ts-api-client';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import AccessorsForOqlFilter, { Datum } from './AccessorsForOqlFilter';
@@ -83,6 +86,9 @@ export type OQLLineFilterOutput<T> = {
     oql_line: string;
     data: Readonly<T>[];
 };
+
+export const STRUCTVARAnyGeneStr = '*';
+export const STRUCTVARNullGeneStr = '-';
 
 export type MergedTrackLineFilterOutput<T> = {
     list: OQLLineFilterOutput<T>[];
@@ -291,7 +297,7 @@ function parsedOQLMutationModifierToSourceOQL(
             return `(${ifNotDefined(modifier.start, '')}-${ifNotDefined(
                 modifier.end,
                 ''
-            )}${modifier.completeOverlapOnly ? '*' : ''})`;
+            )}${modifier.completeOverlapOnly ? STRUCTVARAnyGeneStr : ''})`;
         default:
             return modifier.type;
     }
@@ -361,9 +367,8 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
         case 'downstream_fusion':
             const downstreamGene =
                 alteration.gene === undefined
-                    ? '-'
-                    : // TODO replace by STRUCTVARAnyGeneStr
-                    alteration.gene === '*'
+                    ? STRUCTVARNullGeneStr
+                    : alteration.gene === STRUCTVARAnyGeneStr
                     ? ''
                     : alteration.gene;
             return (
@@ -378,9 +383,8 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
         case 'upstream_fusion':
             const upstreamGene =
                 alteration.gene === undefined
-                    ? '-'
-                    : // TODO replace by STRUCTVARAnyGeneStr
-                    alteration.gene === '*'
+                    ? STRUCTVARNullGeneStr
+                    : alteration.gene === STRUCTVARAnyGeneStr
                     ? ''
                     : alteration.gene;
             return (
@@ -694,7 +698,7 @@ function matchGeneByHugoSymbolOrSpecialValues(
         if (hugoSymbol) {
             return false;
         }
-    } else if (_.isString(gene) && gene !== '*') {
+    } else if (_.isString(gene) && gene !== STRUCTVARAnyGeneStr) {
         // Hugo symbol must match:
         if (hugoSymbol !== gene) {
             return false;
@@ -1145,7 +1149,11 @@ export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(
 /**
  * See also: {@link StructVarSpecialValue}
  */
-export const structVarOQLSpecialValues = [undefined, '*'];
+export const structVarOQLSpecialValues = [
+    undefined,
+    STRUCTVARAnyGeneStr,
+    STRUCTVARNullGeneStr,
+];
 
 export function uniqueGenesInOQLQuery(oql_query: string): string[] {
     const parse_result: SingleGeneQuery[] = parseOQLQuery(oql_query);
@@ -1178,6 +1186,40 @@ export function uniqueGenesInOQLQuery(oql_query: string): string[] {
 
 type OQLGene = '*' | string | undefined;
 
+export function createStructuralVariantQuery(
+    fusionQuery: SingleGeneQuery,
+    genes: Gene[]
+): StructuralVariantQuery {
+    const gene1 = createStructuralVariantGeneSubQuery(
+        getFirstGene(fusionQuery),
+        genes
+    );
+    const gene2 = createStructuralVariantGeneSubQuery(
+        getSecondGene(fusionQuery),
+        genes
+    );
+    return { gene1, gene2 };
+}
+
+function createStructuralVariantGeneSubQuery(
+    oqlGene: OQLGene,
+    genes: Gene[]
+): StructuralVariantGeneSubQuery {
+    const geneSubquery = {} as StructuralVariantGeneSubQuery;
+    if (oqlGene === undefined) {
+        geneSubquery.specialValue = 'NO_GENE';
+    } else if (oqlGene === STRUCTVARAnyGeneStr) {
+        geneSubquery.specialValue = 'ANY_GENE';
+    } else if (_.isString(oqlGene)) {
+        let found = genes.find(g => g.hugoGeneSymbol === oqlGene);
+        if (!found) {
+            throw new Error('Could not find Entrez gene id for ' + oqlGene);
+        }
+        geneSubquery.entrezId = found!.entrezGeneId;
+    }
+    return geneSubquery;
+}
+
 export const getFirstGene = (query: SingleGeneQuery) => {
     if (isDownstream(query)) {
         return query.gene;
@@ -1202,8 +1244,32 @@ function isDownstream(q: SingleGeneQuery) {
 }
 
 const getGeneFromAlterations = (q: SingleGeneQuery) => {
-    return (q.alterations as FUSIONCommandOrientationBase[])[0].gene;
+    const geneSymbol = (q.alterations as FUSIONCommandOrientationBase[])[0]
+        .gene;
+    return structVarOQLSpecialValues.includes(geneSymbol!)
+        ? undefined
+        : geneSymbol;
 };
+
+export function structuralVariantsInOQLQuery(
+    oql_query: string
+): SingleGeneQuery[] {
+    return parseOQLQuery(oql_query).filter(isUpOrDownstreamFusion);
+}
+
+export function nonStructuralVariantsOQLQuery(oql_query: string): string[] {
+    const singleGeneQueries = parseOQLQuery(oql_query).filter(
+        isNonStructuralVariantQuery
+    );
+    return _(singleGeneQueries)
+        .map(q_line => q_line.gene)
+        .filter((gene: string) => gene.toLowerCase() !== 'datatypes')
+        .map((gene: string) => gene.toUpperCase())
+        .value();
+}
+
+const isNonStructuralVariantQuery = (q: SingleGeneQuery) =>
+    !isUpOrDownstreamFusion(q);
 
 export const getGenesFromSingleGeneQuery = (q: SingleGeneQuery) => {
     const genes = [q.gene];

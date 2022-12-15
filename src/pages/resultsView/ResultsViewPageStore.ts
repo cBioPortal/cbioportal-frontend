@@ -33,8 +33,6 @@ import {
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
-} from 'cbioportal-ts-api-client';
-import {
     StructuralVariant,
     StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
@@ -53,7 +51,6 @@ import {
     makeObservable,
     observable,
     reaction,
-    toJS,
 } from 'mobx';
 import {
     getProteinPositionFromProteinChange,
@@ -81,6 +78,7 @@ import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
+    buildProteinChange,
     cancerTypeForOncoKb,
     evaluateDiscreteCNAPutativeDriverInfo,
     evaluateMutationPutativeDriverInfo,
@@ -112,7 +110,6 @@ import {
     makeIsHotspotForOncoprint,
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
-    buildProteinChange,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -126,14 +123,20 @@ import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import AccessorsForOqlFilter from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
+    createStructuralVariantQuery,
     doesQueryContainMutationOQL,
     doesQueryContainOQL,
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
+    structuralVariantsInOQLQuery,
+    nonStructuralVariantsOQLQuery,
     OQLLineFilterOutput,
+    structVarOQLSpecialValues,
     UnflattenedOQLLineFilterOutput,
     uniqueGenesInOQLQuery,
+    getFirstGene,
+    getSecondGene,
 } from '../../shared/lib/oql/oqlfilter';
 import GeneMolecularDataCache from '../../shared/cache/GeneMolecularDataCache';
 import GenesetMolecularDataCache from '../../shared/cache/GenesetMolecularDataCache';
@@ -730,12 +733,61 @@ export class ResultsViewPageStore extends AnalysisStore
         this.setHideUnprofiledSamples(include);
     }
 
+    /**
+     * All genes found in all 'single' and 'fusion' queries
+     */
     @computed get hugoGeneSymbols() {
+        if (this.urlWrapper.query?.gene_list?.length) {
+            return uniqueGenesInOQLQuery(this.urlWrapper.query.gene_list);
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * Genes of 'single gene' queries
+     * (i.e. non-fusion queries, without an upstream or downstream gene)
+     */
+    @computed get singleHugoGeneSymbols() {
+        if (this.urlWrapper.query?.gene_list.length) {
+            return nonStructuralVariantsOQLQuery(
+                this.urlWrapper.query.gene_list
+            );
+        } else {
+            return [];
+        }
+    }
+
+    @computed get structVarQueries(): SingleGeneQuery[] {
+        if (this.urlWrapper.query?.gene_list.length) {
+            return structuralVariantsInOQLQuery(
+                this.urlWrapper.query.gene_list
+            );
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * All genes ($.gene and $.alterations.gene) of fusion queries
+     * (i.e. queries with an upstream or downstream gene or special value)
+     */
+    @computed get structVarHugoGeneSymbols(): string[] {
+        return _(this.structVarQueries)
+            .flatMap(query => [getFirstGene(query), getSecondGene(query)])
+            .compact()
+            .uniq()
+            .value();
+    }
+
+    @computed get structuralVariantIdentifiers() {
         if (
             this.urlWrapper.query.gene_list &&
             this.urlWrapper.query.gene_list.length > 0
         ) {
-            return uniqueGenesInOQLQuery(this.urlWrapper.query.gene_list);
+            return structuralVariantsInOQLQuery(
+                this.urlWrapper.query.gene_list
+            );
         } else {
             return [];
         }
@@ -3295,17 +3347,22 @@ export class ResultsViewPageStore extends AnalysisStore
             this.genes,
             this.samples,
             this.studyToStructuralVariantMolecularProfile,
+            this.entrezGeneIdToGene,
         ],
         invoke: async () => {
             if (
-                _.isEmpty(this.studyToStructuralVariantMolecularProfile.result)
+                _.isEmpty(
+                    this.studyToStructuralVariantMolecularProfile.result
+                ) ||
+                _.isEmpty(this.genes.result)
             ) {
                 return [];
             }
             const studyIdToProfileMap = this
                 .studyToStructuralVariantMolecularProfile.result;
+            const genes: Gene[] = this.genes.result!;
 
-            const filters = this.samples.result.reduce(
+            const sampleMolecularIdentifiers = this.samples.result.reduce(
                 (memo, sample: Sample) => {
                     if (sample.studyId in studyIdToProfileMap) {
                         memo.push({
@@ -3320,22 +3377,29 @@ export class ResultsViewPageStore extends AnalysisStore
                 [] as StructuralVariantFilter['sampleMolecularIdentifiers']
             );
 
-            // filters can be an empty list
-            // when all selected samples are coming from studies that don't have structural variant profile
-            // in this case, we should not fetch structural variants data
-            if (_.isEmpty(filters)) {
+            // Filters can be an empty list. When all selected samples are coming from studies that do not have
+            // structural variant profile in this case, we should not fetch structural variant data.
+            if (_.isEmpty(sampleMolecularIdentifiers)) {
                 return [];
             } else {
-                const data = {
-                    entrezGeneIds: _.map(
-                        this.genes.result,
-                        (gene: Gene) => gene.entrezGeneId
-                    ),
-                    sampleMolecularIdentifiers: filters,
-                } as StructuralVariantFilter;
+                // Set all SVs that are queried at the gene level.
+                // The gene1::gene2 orientation does not come into play here.
+                const entrezGeneIds = _.map(
+                    this.genes.result,
+                    (gene: Gene) => gene.entrezGeneId
+                );
+                // Set all SVs that are queried at the gene1::gene2 orientation level.
+                const structuralVariantQueries = this.structVarQueries.map(sv =>
+                    createStructuralVariantQuery(sv, this.genes.result!)
+                );
 
                 return await internalClient.fetchStructuralVariantsUsingPOST({
-                    structuralVariantFilter: data,
+                    structuralVariantFilter: {
+                        entrezGeneIds,
+                        structuralVariantQueries,
+                        sampleMolecularIdentifiers,
+                        molecularProfileIds: [],
+                    },
                 });
             }
         },
@@ -4572,8 +4636,12 @@ export class ResultsViewPageStore extends AnalysisStore
             // This ensures that all the genes in OQL are valid. If not, we throw an error.
             if (
                 _.isEqual(
-                    _.sortBy(this.hugoGeneSymbols),
-                    _.sortBy(genes.map(gene => gene.hugoGeneSymbol))
+                    _.uniq(
+                        this.hugoGeneSymbols
+                            .filter(h => !structVarOQLSpecialValues.includes(h))
+                            .sort()
+                    ),
+                    _.uniq(genes.map(gene => gene.hugoGeneSymbol).sort())
                 )
             ) {
                 return genes;
@@ -4589,6 +4657,11 @@ export class ResultsViewPageStore extends AnalysisStore
             throw err;
         },
     });
+
+    @computed
+    get hugoGeneSymbolToGene(): { [hugoGeneSymbol: string]: Gene } {
+        return _.keyBy(this.genes.result!, gene => gene.hugoGeneSymbol);
+    }
 
     readonly referenceGenes = remoteData<ReferenceGenomeGene[]>({
         await: () => [this.studies],
