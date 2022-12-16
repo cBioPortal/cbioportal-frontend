@@ -2,7 +2,9 @@ import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type AggregateSourceInfo = {
-    'genomeNexus': GenomeNexusInfo
+    'annotationSourcesInfo': Array < SourceVersionInfo >
+
+        'genomeNexus': GenomeNexusInfo
 
         'vep': VEPInfo
 
@@ -795,6 +797,20 @@ export type SignalPopulationStats = {
 };
 export type Snpeff = {
     'license': string
+
+};
+export type SourceVersionInfo = {
+    'description': string
+
+        'id': string
+
+        'name': string
+
+        'type': string
+
+        'url': string
+
+        'version': string
 
 };
 export type StatsByTumorType = {

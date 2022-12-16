@@ -1037,6 +1037,12 @@
     "AggregateSourceInfo": {
       "type": "object",
       "properties": {
+        "annotationSourcesInfo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SourceVersionInfo"
+          }
+        },
         "genomeNexus": {
           "$ref": "#/definitions/GenomeNexusInfo"
         },
@@ -3040,6 +3046,29 @@
         "license": {
           "type": "string",
           "description": "license"
+        }
+      }
+    },
+    "SourceVersionInfo": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
         }
       }
     },
