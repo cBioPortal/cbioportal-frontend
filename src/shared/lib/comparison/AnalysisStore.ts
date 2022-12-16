@@ -38,43 +38,17 @@ import {
 } from 'pages/resultsView/mutationCountHelpers';
 import ComplexKeyCounter from '../complexKeyDataStructures/ComplexKeyCounter';
 import GeneCache from 'shared/cache/GeneCache';
-import { compileMutations } from './AnalysisStoreUtils';
-import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export default abstract class AnalysisStore {
     @observable driverAnnotationSettings: DriverAnnotationSettings;
     constructor() {}
 
     abstract mutations: MobxPromise<Mutation[]>;
-    abstract sampleKeyToSample: MobxPromise<{
-        [uniqueSampleKey: string]: Sample;
-    }>;
     abstract get includeGermlineMutations(): boolean;
     abstract get studies(): MobxPromiseUnionTypeWithDefault<CancerStudy[]>;
     abstract genes: MobxPromise<Gene[]>;
-    abstract coverageInformation: MobxPromise<CoverageInformation>;
 
     // everything below taken from the results view page store in order to get the annotated mutations
-    readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
-        await: () => [
-            this._filteredAndAnnotatedMutationsReport,
-            this.sampleKeyToSample,
-        ],
-        invoke: () => {
-            const filteredMutations = compileMutations(
-                this._filteredAndAnnotatedMutationsReport.result!,
-                !this.driverAnnotationSettings.includeVUS,
-                !this.includeGermlineMutations
-            );
-            const filteredSampleKeyToSample = this.sampleKeyToSample.result!;
-            return Promise.resolve(
-                filteredMutations.filter(
-                    m => m.uniqueSampleKey in filteredSampleKeyToSample
-                )
-            );
-        },
-    });
-
     readonly _filteredAndAnnotatedMutationsReport = remoteData({
         await: () => [
             this.mutations,

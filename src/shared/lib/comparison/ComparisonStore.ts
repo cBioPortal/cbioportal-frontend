@@ -105,6 +105,8 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import AnalysisStore from './AnalysisStore';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { compileMutations } from './AnalysisStoreUtils';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -1726,6 +1728,26 @@ export default abstract class ComparisonStore extends AnalysisStore
                 {} as { [uniqueSampleKey: string]: Sample }
             );
             return Promise.resolve(sampleSet);
+        },
+    });
+
+    readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
+        await: () => [
+            this._filteredAndAnnotatedMutationsReport,
+            this.sampleKeyToSample,
+        ],
+        invoke: () => {
+            const filteredMutations = compileMutations(
+                this._filteredAndAnnotatedMutationsReport.result!,
+                !this.driverAnnotationSettings.includeVUS,
+                !this.includeGermlineMutations
+            );
+            const sampleKeyToSample = this.sampleKeyToSample.result!;
+            return Promise.resolve(
+                filteredMutations.filter(
+                    m => m.uniqueSampleKey in sampleKeyToSample
+                )
+            );
         },
     });
 

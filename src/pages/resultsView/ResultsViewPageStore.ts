@@ -4110,6 +4110,27 @@ export class ResultsViewPageStore extends AnalysisStore
             ),
     });
 
+    readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
+        await: () => [
+            this._filteredAndAnnotatedMutationsReport,
+            this.filteredSampleKeyToSample,
+        ],
+        invoke: () => {
+            const filteredMutations = compileMutations(
+                this._filteredAndAnnotatedMutationsReport.result!,
+                !this.driverAnnotationSettings.includeVUS,
+                !this.includeGermlineMutations
+            );
+            const filteredSampleKeyToSample = this.filteredSampleKeyToSample
+                .result!;
+            return Promise.resolve(
+                filteredMutations.filter(
+                    m => m.uniqueSampleKey in filteredSampleKeyToSample
+                )
+            );
+        },
+    });
+
     readonly filteredPatients = remoteData({
         await: () => [
             this.filteredSamples,
