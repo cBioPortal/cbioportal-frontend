@@ -80,7 +80,8 @@ export interface IMutationMapperProps {
     plotLollipopTooltipCountInfo?: (
         count: number,
         mutations?: Partial<Mutation>[],
-        axisMode?: AxisScale
+        axisMode?: AxisScale,
+        group?: string
     ) => JSX.Element;
     plotYAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
     axisMode?: AxisScale;
