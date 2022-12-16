@@ -134,6 +134,8 @@ import {
     structVarOQLSpecialValues,
     UnflattenedOQLLineFilterOutput,
     uniqueGenesInOQLQuery,
+    getFirstGene,
+    getSecondGene,
 } from '../../shared/lib/oql/oqlfilter';
 import GeneMolecularDataCache from '../../shared/cache/GeneMolecularDataCache';
 import GenesetMolecularDataCache from '../../shared/cache/GenesetMolecularDataCache';
@@ -771,6 +773,17 @@ export class ResultsViewPageStore
         } else {
             return [];
         }
+    }
+
+    @computed get structVarHugoGeneSymbols(): string[] {
+        return _(this.structVarQueries)
+            .flatMap(singleGeneQuery => [
+                getFirstGene(singleGeneQuery),
+                getSecondGene(singleGeneQuery),
+            ])
+            .compact()
+            .uniq()
+            .value();
     }
 
     @computed get structuralVariantIdentifiers() {
@@ -3336,6 +3349,7 @@ export class ResultsViewPageStore
     readonly structuralVariants = remoteData<StructuralVariant[]>({
         await: () => [
             this.genes,
+            this.structVarGenes,
             this.samples,
             this.studyToStructuralVariantMolecularProfile,
         ],
@@ -3370,17 +3384,24 @@ export class ResultsViewPageStore
             // filters can be an empty list
             // when all selected samples are coming from studies that don't have structural variant profile
             // in this case, we should not fetch structural variants data
+            // TODO Pim hier klopte de logica niet helemaal.
             if (_.isEmpty(sampleMolecularIdentifiers)) {
                 return [];
             } else {
                 const entrezGeneIds = genes
                     .filter(gene =>
-                        this.singleHugoGeneSymbols.includes(gene.hugoGeneSymbol)
+                        this.structVarHugoGeneSymbols.includes(
+                            gene.hugoGeneSymbol
+                        )
                     )
                     .map((gene: Gene) => gene.entrezGeneId);
 
                 const structuralVariantQueries = this.structVarQueries.map(sv =>
-                    createStructuralVariantQuery(sv, genes)
+                    createStructuralVariantQuery(
+                        sv,
+                        this.genes.result!,
+                        this.structVarGenes.result!
+                    )
                 );
                 const molecularProfileIds: string[] = [];
                 const data = {
@@ -4635,6 +4656,48 @@ export class ResultsViewPageStore
 
             // Check that the same genes are in the OQL query as in the API response (order doesnt matter).
             // This ensures that all the genes in OQL are valid. If not, we throw an error.
+            if (
+                _.isEqual(
+                    _.uniq(
+                        this.hugoGeneSymbols
+                            .filter(h => !structVarOQLSpecialValues.includes(h))
+                            .sort()
+                    ),
+                    _.uniq(genes.map(gene => gene.hugoGeneSymbol).sort())
+                )
+            ) {
+                return genes;
+            } else {
+                throw new Error(ErrorMessages.InvalidGenes);
+            }
+        },
+        onResult: (genes: Gene[]) => {
+            this.geneCache.addData(genes);
+        },
+        onError: err => {
+            // throwing this allows sentry to report it
+            throw err;
+        },
+    });
+
+    // TODO review with Bas
+    readonly structVarGenes = remoteData<Gene[]>({
+        invoke: async () => {
+            if (this.structVarHugoGeneSymbols.length === 0) {
+                return [];
+            }
+            const genes = await fetchGenes(this.structVarHugoGeneSymbols);
+
+            // Check that the same genes are in the OQL query as in the API response (order doesnt matter).
+            // This ensures that all the genes in OQL are valid. If not, we throw an error.
+            const svGenes = _.uniq(
+                this.hugoGeneSymbols
+                    .filter(h => !structVarOQLSpecialValues.includes(h))
+                    .sort()
+            );
+            const otherGenes = _.uniq(
+                genes.map(gene => gene.hugoGeneSymbol).sort()
+            );
             if (
                 _.isEqual(
                     _.uniq(
