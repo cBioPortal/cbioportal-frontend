@@ -1,6 +1,5 @@
 import {
     ComparisonGroup,
-    filterStudiesAttr,
     finalizeStudiesAttr,
     getNumPatients,
     getNumSamples,
@@ -10,7 +9,6 @@ import { Sample } from 'cbioportal-ts-api-client';
 import { IQueriedMergedTrackCaseData } from '../ResultsViewPageStore';
 import {
     isMergedTrackFilter,
-    parseOQLQuery,
     UnflattenedOQLLineFilterOutput,
 } from '../../../shared/lib/oql/oqlfilter';
 import ComplexKeyMap from '../../../shared/lib/complexKeyDataStructures/ComplexKeyMap';

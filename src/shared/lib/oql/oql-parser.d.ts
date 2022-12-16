@@ -104,7 +104,9 @@ export declare type SingleGeneQuery = {
 // 	= cmd:CNACommand { return cmd; }
 // 	/ cmd:EXPCommand { return cmd; }
 // 	/ cmd:PROTCommand { return cmd; }
-//         / cmd:FUSIONCommand { return cmd; }
+//  / cmd:FUSIONCommand { return cmd; }
+//  / cmd:FUSIONCommandDownstream { return cmd; }
+//  / cmd:FUSIONCommandUpstream { return cmd; }
 // // MUT has to go at the end because it matches an arbitrary string at the end as a type of mutation
 // 	/ cmd:MUTCommand { return cmd; }
 export declare type Alteration =
@@ -113,6 +115,8 @@ export declare type Alteration =
     | EXPCommand
     | PROTCommand
     | FUSIONCommand
+    | FUSIONCommandDownstream
+    | FUSIONCommandUpstream
     | MUTCommand<Mutation>;
 
 export declare type AnyTypeWithModifiersCommand = {
@@ -171,10 +175,25 @@ export declare type EXPCommand = {
 //
 // FUSIONCommand
 //         = "FUSION" { return {"alteration_type":"fusion"}; }
+
 export declare type FUSIONCommand = {
     alteration_type: 'fusion';
     modifiers: FusionModifier[];
 };
+
+export declare type FUSIONCommandOrientationBase = {
+    gene: string | undefined;
+    modifiers: FusionModifier[];
+};
+
+export declare type FUSIONCommandDownstream = FUSIONCommandOrientationBase & {
+    alteration_type: 'downstream_fusion';
+};
+
+export declare type FUSIONCommandUpstream = FUSIONCommandOrientationBase & {
+    alteration_type: 'upstream_fusion';
+};
+
 //
 // PROTCommand
 // 	= "PROT" msp op:ComparisonOp msp constrval:Number { return {"alteration_type":"prot", "constr_rel":op, "constr_val":parseFloat(constrval)}; }
@@ -216,18 +235,18 @@ export declare type MutationType =
     | 'PROMOTER';
 
 export declare type MutationModifier =
-    | { type: 'GERMLINE' }
-    | { type: 'SOMATIC' }
+    | StatusModifier
     | RangeModifier
     | DriverModifier;
 
 export declare type CNAModifier = DriverModifier;
 
-export declare type FusionModifier = DriverModifier;
+export declare type FusionModifier = StatusModifier | DriverModifier;
 
 export declare type AnyModifier = DriverModifier;
 
 export declare type DriverModifier = { type: 'DRIVER' };
+export declare type StatusModifier = { type: 'GERMLINE' } | { type: 'SOMATIC' };
 export declare type RangeModifier = {
     type: 'RANGE';
     completeOverlapOnly: boolean;

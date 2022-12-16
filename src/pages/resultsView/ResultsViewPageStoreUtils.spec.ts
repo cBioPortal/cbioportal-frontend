@@ -1259,7 +1259,7 @@ const defaultOqlAlterations = (oql_parser.parse(
 )![0] as SingleGeneQuery).alterations;
 
 describe('getSampleAlteredMap', () => {
-    const filteredAlterationData = [
+    const filteredAlterationData = ([
         {
             cases: {
                 samples: {},
@@ -1449,6 +1449,7 @@ describe('getSampleAlteredMap', () => {
         {
             cases: {
                 samples: {},
+                patients: {},
             },
             oql: {
                 gene: 'KRAS',
@@ -1469,7 +1470,7 @@ describe('getSampleAlteredMap', () => {
                 ],
             },
         },
-    ] as IQueriedMergedTrackCaseData[];
+    ] as unknown) as IQueriedMergedTrackCaseData[];
 
     var samples = ([
         {
