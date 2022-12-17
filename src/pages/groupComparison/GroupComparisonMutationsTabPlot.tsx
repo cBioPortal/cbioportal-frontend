@@ -24,37 +24,6 @@ interface IGroupComparisonMutationsTabPlotProps {
     filters?: any;
 }
 
-function plotYAxisLabelFormatter(symbol: string, groupName: string) {
-    // lowercase = 1 and uppercase = 1.3 (based on 'w' and 'W'), if groupName >= 22 (13 + 9 leniency), stop and + "..."
-    let length = 0;
-    let label = '';
-    for (let c of groupName!) {
-        let value = c === c.toLowerCase() ? 1 : 1.3;
-        if (length + value >= 22) {
-            label += '...';
-            break;
-        } else {
-            label += c;
-            length += value;
-        }
-    }
-    return `${symbol} ${label}`;
-}
-
-function plotLollipopTooltipCountInfo(
-    count: number,
-    mutations?: Mutation[],
-    axisMode?: AxisScale
-): JSX.Element {
-    return (
-        <LollipopTooltipCountInfo
-            count={count}
-            mutations={mutations}
-            axisMode={axisMode}
-        />
-    );
-}
-
 @observer
 export default class GroupComparisonMutationsTabPlot extends React.Component<
     IGroupComparisonMutationsTabPlotProps,
@@ -81,9 +50,57 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         return this.props.store.axisMode === AxisScale.COUNT
             ? countUniqueMutations(mutations)
             : (countUniqueMutations(mutations) /
-                  this.props.store.groupToProfiledSamples.result![group]
+                  this.props.store.groupToProfiledPatients.result![group]
                       .length) *
                   100;
+    }
+
+    @autobind
+    protected plotLollipopTooltipCountInfo(
+        count: number,
+        mutations: Mutation[],
+        axisMode: AxisScale,
+        group: string
+    ): JSX.Element {
+        return (
+            <LollipopTooltipCountInfo
+                count={count}
+                mutations={mutations}
+                axisMode={axisMode}
+                patientCount={
+                    this.props.store.groupToProfiledPatients.result![group]
+                        .length
+                }
+            />
+        );
+    }
+
+    @autobind
+    protected plotYAxisLabelFormatter(symbol: string, groupName: string) {
+        // lowercase = 1 and uppercase = 1.3 (based on 'w' and 'W'), if groupName >= 22 (13 + 9 leniency), stop and + "..."
+        let length = 0;
+        let label = '';
+        for (let c of groupName) {
+            let value = c === c.toLowerCase() ? 1 : 1.3;
+            if (length + value >= 22) {
+                label += '...';
+                break;
+            } else {
+                label += c;
+                length += value;
+            }
+        }
+        if (symbol === '%') {
+            return (
+                `**${label}**\n${symbol}` +
+                ' mutated of ' +
+                this.props.store.groupToProfiledPatients.result![groupName]
+                    .length +
+                ' profiled pts'
+            );
+        } else {
+            return `**${label}**\n${symbol} mutated`;
+        }
     }
 
     readonly plotUI = MakeMobxView({
@@ -92,7 +109,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             this.props.store.mutationsByGroup,
             this.mutationMapperToolStore.mutationMapperStores,
             this.props.store.coverageInformation,
-            this.props.store.groupToProfiledSamples,
+            this.props.store.groupToProfiledPatients,
         ],
         render: () => {
             if (
@@ -123,11 +140,13 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             store={mutationMapperStore}
                             showTranscriptDropDown={true}
                             plotLollipopTooltipCountInfo={
-                                plotLollipopTooltipCountInfo
+                                this.plotLollipopTooltipCountInfo
                             }
                             axisMode={this.props.store.axisMode}
                             onScaleToggle={this.props.onScaleToggle}
-                            plotYAxisLabelFormatter={plotYAxisLabelFormatter}
+                            plotYAxisLabelFormatter={
+                                this.plotYAxisLabelFormatter
+                            }
                         />
                     </>
                 );

@@ -322,7 +322,7 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    public readonly groupToProfiledSamples = remoteData({
+    public readonly groupToProfiledPatients = remoteData({
         await: () => [
             this._originalGroups,
             this.sampleMap,
@@ -333,7 +333,7 @@ export default class GroupComparisonStore extends ComparisonStore {
             const sampleSet = this.sampleMap.result!;
             const groups = this._originalGroups.result!;
             const ret: {
-                [groupUid: string]: Sample[];
+                [groupUid: string]: string[];
             } = {};
             for (const group of groups) {
                 for (const studyObject of group.studies) {
@@ -353,10 +353,11 @@ export default class GroupComparisonStore extends ComparisonStore {
                             )
                         ) {
                             ret[group.name] = ret[group.name] || [];
-                            ret[group.name].push(sample);
+                            ret[group.name].push(sample.patientId);
                         }
                     }
                 }
+                ret[group.name] = _.uniq(ret[group.name]);
             }
             return Promise.resolve(ret);
         },

@@ -100,7 +100,8 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     lollipopTooltipCountInfo?: (
         count: number,
         mutations?: Partial<T>[],
-        axisMode?: AxisScale
+        axisMode?: AxisScale,
+        group?: string
     ) => JSX.Element;
     yAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
     axisMode?: AxisScale;
@@ -160,7 +161,8 @@ export default class LollipopMutationPlot<
 
     private lollipopTooltip(
         mutationsAtPosition: T[],
-        countsByPosition: { [pos: number]: number }
+        countsByPosition: { [pos: number]: number },
+        group?: string
     ): JSX.Element {
         const codon = mutationsAtPosition[0].proteinPosStart;
         const count = countsByPosition[codon];
@@ -168,7 +170,8 @@ export default class LollipopMutationPlot<
             this.props.lollipopTooltipCountInfo(
                 count,
                 mutationsAtPosition,
-                this.props.axisMode
+                this.props.axisMode,
+                group
             )
         ) : (
             <strong>
@@ -307,7 +310,11 @@ export default class LollipopMutationPlot<
                 group,
                 placement,
                 count: mutationCount,
-                tooltip: this.lollipopTooltip(mutations, countsByPosition),
+                tooltip: this.lollipopTooltip(
+                    mutations,
+                    countsByPosition,
+                    group
+                ),
                 color: this.props.getLollipopColor
                     ? this.props.getLollipopColor(mutations)
                     : getColorForProteinImpactType(
