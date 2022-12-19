@@ -49,6 +49,66 @@ export default abstract class AnalysisStore {
     abstract genes: MobxPromise<Gene[]>;
 
     // everything below taken from the results view page store in order to get the annotated mutations
+    readonly oncoKbCancerGenes = remoteData(
+        {
+            invoke: () => {
+                if (getServerConfig().show_oncokb) {
+                    return fetchOncoKbCancerGenes();
+                } else {
+                    return Promise.resolve([]);
+                }
+            },
+        },
+        []
+    );
+
+    readonly oncoKbAnnotatedGenes = remoteData(
+        {
+            await: () => [this.oncoKbCancerGenes],
+            invoke: () => {
+                if (getServerConfig().show_oncokb) {
+                    return Promise.resolve(
+                        _.reduce(
+                            this.oncoKbCancerGenes.result,
+                            (
+                                map: { [entrezGeneId: number]: boolean },
+                                next: CancerGene
+                            ) => {
+                                if (next.oncokbAnnotated) {
+                                    map[next.entrezGeneId] = true;
+                                }
+                                return map;
+                            },
+                            {}
+                        )
+                    );
+                } else {
+                    return Promise.resolve({});
+                }
+            },
+        },
+        {}
+    );
+
+    @computed get referenceGenomeBuild() {
+        if (!this.studies.isComplete) {
+            throw new Error('Failed to get studies');
+        }
+        return getGenomeNexusUrl(this.studies.result);
+    }
+
+    @computed get genomeNexusInternalClient() {
+        return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
+    }
+
+    readonly entrezGeneIdToGene = remoteData<{ [entrezGeneId: number]: Gene }>({
+        await: () => [this.genes],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.genes.result!, gene => gene.entrezGeneId)
+            ),
+    });
+
     readonly _filteredAndAnnotatedMutationsReport = remoteData({
         await: () => [
             this.mutations,
@@ -138,14 +198,27 @@ export default abstract class AnalysisStore {
         },
     });
 
-    readonly oncoKbMutationAnnotationForOncoprint = remoteData<
-        Error | ((mutation: Mutation) => IndicatorQueryResp | undefined)
+    // Hotspots
+    readonly hotspotData = remoteData({
+        await: () => [this.mutations],
+        invoke: () => {
+            return fetchHotspotsData(
+                this.mutations,
+                undefined,
+                this.genomeNexusInternalClient
+            );
+        },
+    });
+
+    readonly indexedHotspotData = remoteData<IHotspotIndex | undefined>({
+        await: () => [this.hotspotData],
+        invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
+    });
+
+    public readonly isHotspotForOncoprint = remoteData<
+        ((m: Mutation) => boolean) | Error
     >({
-        await: () => [this.oncoKbDataForOncoprint],
-        invoke: () =>
-            makeGetOncoKbMutationAnnotationForOncoprint(
-                this.oncoKbDataForOncoprint
-            ),
+        invoke: () => makeIsHotspotForOncoprint(this.indexedHotspotData),
     });
 
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
@@ -165,91 +238,14 @@ export default abstract class AnalysisStore {
         ONCOKB_DEFAULT
     );
 
-    readonly oncoKbAnnotatedGenes = remoteData(
-        {
-            await: () => [this.oncoKbCancerGenes],
-            invoke: () => {
-                if (getServerConfig().show_oncokb) {
-                    return Promise.resolve(
-                        _.reduce(
-                            this.oncoKbCancerGenes.result,
-                            (
-                                map: { [entrezGeneId: number]: boolean },
-                                next: CancerGene
-                            ) => {
-                                if (next.oncokbAnnotated) {
-                                    map[next.entrezGeneId] = true;
-                                }
-                                return map;
-                            },
-                            {}
-                        )
-                    );
-                } else {
-                    return Promise.resolve({});
-                }
-            },
-        },
-        {}
-    );
-
-    readonly oncoKbCancerGenes = remoteData(
-        {
-            invoke: () => {
-                if (getServerConfig().show_oncokb) {
-                    return fetchOncoKbCancerGenes();
-                } else {
-                    return Promise.resolve([]);
-                }
-            },
-        },
-        []
-    );
-
-    public readonly isHotspotForOncoprint = remoteData<
-        ((m: Mutation) => boolean) | Error
+    readonly oncoKbMutationAnnotationForOncoprint = remoteData<
+        Error | ((mutation: Mutation) => IndicatorQueryResp | undefined)
     >({
-        invoke: () => makeIsHotspotForOncoprint(this.indexedHotspotData),
-    });
-
-    readonly indexedHotspotData = remoteData<IHotspotIndex | undefined>({
-        await: () => [this.hotspotData],
-        invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
-    });
-
-    // Hotspots
-    readonly hotspotData = remoteData({
-        await: () => [this.mutations],
-        invoke: () => {
-            return fetchHotspotsData(
-                this.mutations,
-                undefined,
-                this.genomeNexusInternalClient
-            );
-        },
-    });
-
-    @computed get genomeNexusInternalClient() {
-        return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
-    }
-
-    @computed get referenceGenomeBuild() {
-        if (!this.studies.isComplete) {
-            throw new Error('Failed to get studies');
-        }
-        return getGenomeNexusUrl(this.studies.result);
-    }
-
-    readonly getCBioportalCount: MobxPromise<
-        (mutation: Mutation) => number
-    > = remoteData({
-        await: () => [this.cbioportalMutationCountData],
-        invoke: () => {
-            return Promise.resolve((mutation: Mutation): number => {
-                const key = mutationCountByPositionKey(mutation);
-                return this.cbioportalMutationCountData.result![key] || -1;
-            });
-        },
+        await: () => [this.oncoKbDataForOncoprint],
+        invoke: () =>
+            makeGetOncoKbMutationAnnotationForOncoprint(
+                this.oncoKbDataForOncoprint
+            ),
     });
 
     readonly cbioportalMutationCountData = remoteData<{
@@ -278,27 +274,14 @@ export default abstract class AnalysisStore {
         },
     });
 
-    readonly getCosmicCount: MobxPromise<
+    readonly getCBioportalCount: MobxPromise<
         (mutation: Mutation) => number
     > = remoteData({
-        await: () => [this.cosmicCountsByKeywordAndStart],
+        await: () => [this.cbioportalMutationCountData],
         invoke: () => {
             return Promise.resolve((mutation: Mutation): number => {
-                const targetPosObj = getProteinPositionFromProteinChange(
-                    mutation.proteinChange
-                );
-                if (targetPosObj) {
-                    const keyword = mutation.keyword;
-                    const cosmicCount = this.cosmicCountsByKeywordAndStart.result!.get(
-                        {
-                            keyword,
-                            start: targetPosObj.start,
-                        }
-                    );
-                    return cosmicCount;
-                } else {
-                    return -1;
-                }
+                const key = mutationCountByPositionKey(mutation);
+                return this.cbioportalMutationCountData.result![key] || -1;
             });
         },
     });
@@ -344,12 +327,29 @@ export default abstract class AnalysisStore {
         },
     });
 
-    readonly entrezGeneIdToGene = remoteData<{ [entrezGeneId: number]: Gene }>({
-        await: () => [this.genes],
-        invoke: () =>
-            Promise.resolve(
-                _.keyBy(this.genes.result!, gene => gene.entrezGeneId)
-            ),
+    readonly getCosmicCount: MobxPromise<
+        (mutation: Mutation) => number
+    > = remoteData({
+        await: () => [this.cosmicCountsByKeywordAndStart],
+        invoke: () => {
+            return Promise.resolve((mutation: Mutation): number => {
+                const targetPosObj = getProteinPositionFromProteinChange(
+                    mutation.proteinChange
+                );
+                if (targetPosObj) {
+                    const keyword = mutation.keyword;
+                    const cosmicCount = this.cosmicCountsByKeywordAndStart.result!.get(
+                        {
+                            keyword,
+                            start: targetPosObj.start,
+                        }
+                    );
+                    return cosmicCount;
+                } else {
+                    return -1;
+                }
+            });
+        },
     });
 
     readonly geneCache = new GeneCache();
