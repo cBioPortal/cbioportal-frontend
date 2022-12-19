@@ -1175,7 +1175,7 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    readonly genesWithHighestMutationFrequency = remoteData<string[]>({
+    readonly genesSortedByMutationFrequency = remoteData<string[]>({
         await: () => [
             this.mutationsEnrichmentData,
             this.alterationsEnrichmentAnalysisGroups,

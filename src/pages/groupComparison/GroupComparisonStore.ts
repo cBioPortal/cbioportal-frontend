@@ -464,12 +464,11 @@ export default class GroupComparisonStore extends ComparisonStore {
     });
 
     readonly genesWithMutations = remoteData<Gene[]>({
-        await: () => [this.genesWithHighestMutationFrequency],
+        await: () => [this.genesSortedByMutationFrequency, this.genes],
         invoke: async () => {
-            const genes = await fetchGenes(
-                this.genesWithHighestMutationFrequency.result!
+            return this.genesSortedByMutationFrequency.result!.map(
+                gene => this.genes.result!.find(g => gene === g.hugoGeneSymbol)!
             );
-            return genes;
         },
     });
 
@@ -489,7 +488,7 @@ export default class GroupComparisonStore extends ComparisonStore {
             this.genes.result!.find(
                 g =>
                     g.hugoGeneSymbol ===
-                    this.genesWithHighestMutationFrequency.result![0]
+                    this.genesSortedByMutationFrequency.result![0]
             );
         return gene;
     }

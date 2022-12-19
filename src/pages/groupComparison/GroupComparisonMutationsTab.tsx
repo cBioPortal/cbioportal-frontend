@@ -41,14 +41,20 @@ export default class GroupComparisonMutationsTab extends React.Component<
     @action.bound
     protected handleGeneChange(id: string) {
         this.props.urlWrapper.updateURL({
-            selectedGene: id,
+            selectedGene: id ? id.replace('comp-tab-', '') : id,
         });
     }
 
     @computed get tabs() {
-        return this.props.store.genesWithHighestMutationFrequency
+        return this.props.store.genesSortedByMutationFrequency
             .result!.slice(0, 10)
-            .map(g => <MSKTab key={g} id={g} linkText={g} />);
+            .map(g => (
+                <MSKTab
+                    key={`comp-tab-${g}`}
+                    id={`comp-tab-${g}`}
+                    linkText={g}
+                />
+            ));
     }
 
     @computed get activeTabId(): string | undefined {
@@ -59,7 +65,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
             activeTabId = this.props.store.activeMutationMapperGene!
                 .hugoGeneSymbol;
         }
-        return activeTabId;
+        return `comp-tab-${activeTabId}`;
     }
 
     @action.bound
@@ -79,7 +85,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
         await: () => [
             this.props.store.genes,
             this.props.store.genesWithMutations,
-            this.props.store.genesWithHighestMutationFrequency,
+            this.props.store.genesSortedByMutationFrequency,
         ],
         render: () => {
             // We only want 2 groups for our mirrored lollipop plot. Display message if not 2 groups
