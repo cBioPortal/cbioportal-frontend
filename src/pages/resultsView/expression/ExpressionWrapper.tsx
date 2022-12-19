@@ -37,10 +37,7 @@ import {
     IAxisLogScaleParams,
     basicAppearance,
 } from '../plots/PlotsTabUtils';
-import {
-    AnnotatedMutation,
-    ResultsViewPageStore,
-} from '../ResultsViewPageStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
@@ -57,6 +54,7 @@ import {
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export interface ExpressionWrapperProps {
     store: ResultsViewPageStore;

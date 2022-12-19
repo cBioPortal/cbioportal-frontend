@@ -2,11 +2,9 @@ import AccessorsForOqlFilter from './AccessorsForOqlFilter';
 import { NumericGeneMolecularData } from 'cbioportal-ts-api-client';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 
-import {
-    AnnotatedMutation,
-    ExtendedAlteration,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { ExtendedAlteration } from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export function annotateAlterationTypes(
     datum: (AnnotatedMutation | NumericGeneMolecularData | StructuralVariant) &

@@ -40,7 +40,6 @@ import { BLACK, DEFAULT_GREY, LIGHT_GREY } from 'shared/lib/Colors';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
-    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
 } from '../ResultsViewPageStore';
@@ -85,6 +84,7 @@ import {
     MUT_COLOR_TRUNC_PASSENGER,
 } from 'cbioportal-frontend-commons';
 import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';

@@ -15,13 +15,15 @@ import { transition } from './DeltaUtils';
 import _ from 'lodash';
 import {
     CustomDriverNumericGeneMolecularData,
-    AnnotatedMutation,
     ExtendedAlteration,
-    AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import './styles.scss';
 import { ShapeParams } from 'oncoprintjs/dist/js/oncoprintshape';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+} from 'shared/model/AnnotatedMutation';
 
 export type CategoricalTrackDatum = {
     entity: string;
