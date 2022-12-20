@@ -17,6 +17,11 @@ import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 import { AxisScale } from 'react-mutation-mapper';
+import {
+    ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
+    createAnnotatedProteinImpactTypeFilter,
+} from 'shared/lib/MutationUtils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;
@@ -68,8 +73,14 @@ export default class GroupComparisonMutationsTab extends React.Component<
         });
     }
 
+    @computed get isPutativeDriver() {
+        return this.props.store.driverAnnotationSettings.driversAnnotated
+            ? (m: AnnotatedMutation) => m.putativeDriver
+            : undefined;
+    }
+
     readonly tabUI = MakeMobxView({
-        await: () => [this.props.store.availableGenes],
+        await: () => [this.props.store.genes],
         render: () => {
             // We only want 2 groups for our mirrored lollipop plot. Display message if not 2 groups
             if (this.props.store.activeGroups.result!.length < 2) {
@@ -114,7 +125,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
                     />
                     <LollipopGeneSelector
                         store={this.props.store}
-                        genes={this.props.store.availableGenes.result!}
+                        genes={this.props.store.genes.result!}
                         handleGeneChange={this.handleGeneChange}
                         key={
                             'comparisonLollipopGene' +
@@ -158,6 +169,9 @@ export default class GroupComparisonMutationsTab extends React.Component<
                             filterAppliersOverride: {
                                 GroupComparisonFilter: this.props.store
                                     .shouldApplySampleIdFilter,
+                                [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
+                                    this.isPutativeDriver
+                                ),
                             },
                         }}
                     />

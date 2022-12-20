@@ -184,6 +184,18 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         return this.resultsViewStore.studies;
     }
 
+    public get genes() {
+        return this.resultsViewStore.genes;
+    }
+
+    public get mutations() {
+        return this.resultsViewStore.mutations;
+    }
+
+    public get coverageInformation() {
+        return this.resultsViewStore.coverageInformation;
+    }
+
     // override parent method
     protected get isLeftTruncationFeatureFlagEnabled() {
         return this.appStore.featureFlagStore.has(

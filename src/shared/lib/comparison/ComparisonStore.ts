@@ -104,23 +104,22 @@ import {
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import AnalysisStore from './AnalysisStore';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { compileMutations } from './AnalysisStoreUtils';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
 }
 
-export default abstract class ComparisonStore
+export default abstract class ComparisonStore extends AnalysisStore
     implements IAnnotationFilterSettings {
     private tabHasBeenShown = observable.map<GroupComparisonTab, boolean>();
 
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
 
-    @observable
-    driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
-        () => false
-    );
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
@@ -132,7 +131,12 @@ export default abstract class ComparisonStore
         protected urlWrapper: IComparisonURLWrapper,
         protected resultsViewStore?: ResultsViewPageStore
     ) {
+        super();
         makeObservable(this);
+
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => false
+        );
 
         (window as any).compStore = this;
 
@@ -273,7 +277,6 @@ export default abstract class ComparisonStore
     abstract get overlapStrategy(): OverlapStrategy;
     abstract get usePatientLevelEnrichments(): boolean;
     abstract get samples(): MobxPromise<Sample[]>;
-    abstract get studies(): MobxPromise<CancerStudy[]>;
     // < / >
 
     public get isLoggedIn() {
@@ -1725,6 +1728,26 @@ export default abstract class ComparisonStore
                 {} as { [uniqueSampleKey: string]: Sample }
             );
             return Promise.resolve(sampleSet);
+        },
+    });
+
+    readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
+        await: () => [
+            this._filteredAndAnnotatedMutationsReport,
+            this.sampleKeyToSample,
+        ],
+        invoke: () => {
+            const filteredMutations = compileMutations(
+                this._filteredAndAnnotatedMutationsReport.result!,
+                !this.driverAnnotationSettings.includeVUS,
+                !this.includeGermlineMutations
+            );
+            const sampleKeyToSample = this.sampleKeyToSample.result!;
+            return Promise.resolve(
+                filteredMutations.filter(
+                    m => m.uniqueSampleKey in sampleKeyToSample
+                )
+            );
         },
     });
 

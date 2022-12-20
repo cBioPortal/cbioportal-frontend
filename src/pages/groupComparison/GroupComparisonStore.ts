@@ -16,6 +16,7 @@ import {
     Gene,
     GenePanelData,
     Sample,
+    MutationCountByPosition,
 } from 'cbioportal-ts-api-client';
 import { action, observable, makeObservable, computed } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
@@ -446,12 +447,19 @@ export default class GroupComparisonStore extends ComparisonStore {
         default: [],
     });
 
-    readonly availableGenes = remoteData<Gene[]>({
+    readonly genes = remoteData<Gene[]>({
         invoke: async () => {
             const genes = await getAllGenes();
             return genes.sort((a, b) =>
                 a.hugoGeneSymbol < b.hugoGeneSymbol ? -1 : 1
             );
+        },
+        onResult: (genes: Gene[]) => {
+            this.geneCache.addData(genes);
+        },
+        onError: err => {
+            // throwing this allows sentry to report it
+            throw err;
         },
     });
 
@@ -465,10 +473,10 @@ export default class GroupComparisonStore extends ComparisonStore {
 
     @computed get activeMutationMapperGene() {
         let gene =
-            this.availableGenes.result!.find(
+            this.genes.result!.find(
                 g => g.hugoGeneSymbol === this.userSelectedMutationMapperGene
             ) ||
-            this.availableGenes.result!.find(
+            this.genes.result!.find(
                 g =>
                     g.hugoGeneSymbol ===
                     this.genesWithMaxFrequency[0].hugoGeneSymbol

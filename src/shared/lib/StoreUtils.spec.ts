@@ -31,13 +31,13 @@ import {
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import {
-    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
 } from 'pages/resultsView/ResultsViewPageStore';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { observable } from 'mobx';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 describe('StoreUtils', () => {
     let emptyMutationData: MobxPromise<Mutation[]>;

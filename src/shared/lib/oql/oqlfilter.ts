@@ -13,21 +13,19 @@ import oql_parser, {
 } from './oql-parser';
 import { annotateAlterationTypes } from './annotateAlterationTypes';
 import { SingleGeneQuery, MergedGeneQuery } from './oql-parser';
-import {
-    AnnotatedMutation,
-    ExtendedAlteration,
-    AnnotatedStructuralVariant,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { ExtendedAlteration } from '../../../pages/resultsView/ResultsViewPageStore';
 import { NumericGeneMolecularData, Mutation } from 'cbioportal-ts-api-client';
 
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 import { Alteration } from 'shared/lib/oql/oql-parser';
-import AccessorsForOqlFilter, {
-    Datum,
-    SimplifiedMutationType,
-} from './AccessorsForOqlFilter';
+import AccessorsForOqlFilter, { Datum } from './AccessorsForOqlFilter';
 import ifNotDefined from '../ifNotDefined';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+    SimplifiedMutationType,
+} from 'shared/model/AnnotatedMutation';
 
 export interface IAccessorsForOqlFilter<T> {
     // a null return for an attribute means that attribute

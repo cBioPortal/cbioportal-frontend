@@ -17,12 +17,12 @@ import AccessorsForOqlFilter from './AccessorsForOqlFilter';
 import _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
+import { CustomDriverNumericGeneMolecularData } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
-    CustomDriverNumericGeneMolecularData,
     AnnotatedMutation,
     AnnotatedStructuralVariant,
-} from '../../../pages/resultsView/ResultsViewPageStore';
-import { AlterationTypeConstants } from 'shared/constants';
+} from 'shared/model/AnnotatedMutation';
 
 // This file uses type assertions to force functions that use overly specific
 // Swagger-generated types as parameters to accept mocked literals believed to

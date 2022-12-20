@@ -29,14 +29,12 @@ import { Alteration } from '../../shared/lib/oql/oql-parser';
 import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CaseAggregatedData,
     CustomDriverNumericGeneMolecularData,
     IQueriedCaseData,
     IQueriedMergedTrackCaseData,
     ResultsViewPageStore,
-    AnnotatedStructuralVariant,
 } from './ResultsViewPageStore';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
@@ -59,6 +57,10 @@ import {
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { AlterationTypeConstants } from 'shared/constants';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+} from 'shared/model/AnnotatedMutation';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -209,15 +211,6 @@ export function annotateMolecularDatum(
     ) as AnnotatedNumericGeneMolecularData;
 }
 
-export type FilteredAndAnnotatedMutationsReport<
-    T extends AnnotatedMutation = AnnotatedMutation
-> = {
-    data: T[];
-    vus: T[];
-    germline: T[];
-    vusAndGermline: T[];
-};
-
 export type FilteredAndAnnotatedDiscreteCNAReport<
     T extends CustomDriverNumericGeneMolecularData = CustomDriverNumericGeneMolecularData
 > = {
@@ -274,26 +267,6 @@ export function filterAndAnnotateStructuralVariants(
         germline,
         vusAndGermline,
     };
-}
-
-export function compileMutations<
-    T extends AnnotatedMutation = AnnotatedMutation
->(
-    report: FilteredAndAnnotatedMutationsReport<T>,
-    excludeVus: boolean,
-    excludeGermline: boolean
-) {
-    let mutations = report.data;
-    if (!excludeVus) {
-        mutations = mutations.concat(report.vus);
-    }
-    if (!excludeGermline) {
-        mutations = mutations.concat(report.germline);
-    }
-    if (!excludeVus && !excludeGermline) {
-        mutations = mutations.concat(report.vusAndGermline);
-    }
-    return mutations;
 }
 
 export function compileStructuralVariants<
