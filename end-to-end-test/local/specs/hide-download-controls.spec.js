@@ -554,6 +554,7 @@ describe('hide download controls feature', function() {
                 'Survival',
                 'Clinical',
                 'Genomic Alterations',
+                'Mutations Beta!',
                 'mRNA',
                 'DNA Methylation',
                 'Generic Assay Patient Test',
