@@ -646,7 +646,7 @@ describe('alteration filter menu', function() {
             });
         });
 
-        it('filters tables when checking Class 2 checkbox', () => {
+        it.skip('filters tables when checking Class 2 checkbox', () => {
             $('[data-test=ToggleAllDriverTiers]').click();
             $('[data-test=Class_2]').click();
             waitForUpdateResultsView();
@@ -656,7 +656,7 @@ describe('alteration filter menu', function() {
             $('[data-test=Class_2]').click();
         });
 
-        it('filters tables when checking unknown tier checkbox', () => {
+        it.skip('filters tables when checking unknown tier checkbox', () => {
             $('[data-test=ShowUnknownTier]').click();
             waitForUpdateResultsView();
             assert.deepStrictEqual(enrichmentTableCounts(), {
