@@ -28,6 +28,8 @@ export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
     setHitZone?: (
         hitRect: { x: number; y: number; width: number; height: number },
         tooltipContent?: JSX.Element,
+        mirrorHitRect?: { x: number; y: number; width: number; height: number },
+        mirrorTooltipContent?: JSX.Element,
         onMouseOver?: () => void,
         onClick?: () => void,
         onMouseOut?: () => void,
@@ -143,11 +145,26 @@ export default class LollipopPlotNoTooltip extends React.Component<
         if (lollipopIndex !== null) {
             const lollipopComponent = this.lollipopComponents[lollipopIndex];
             if (lollipopComponent) {
+                const mirrorLollipopComponent = _.find(
+                    this.lollipopComponents,
+                    l =>
+                        l.props.spec.codon ===
+                            lollipopComponent.props.spec.codon &&
+                        l !== lollipopComponent
+                );
+                // console.log(lollipopComponent);
+                // console.log(mirrorLollipopComponent)
                 lollipopComponent.isHovered = true;
                 if (this.props.setHitZone) {
                     this.props.setHitZone(
                         lollipopComponent.circleHitRect,
                         lollipopComponent.props.spec.tooltip,
+                        mirrorLollipopComponent
+                            ? mirrorLollipopComponent.circleHitRect
+                            : undefined,
+                        mirrorLollipopComponent
+                            ? mirrorLollipopComponent.props.spec.tooltip
+                            : undefined,
                         action(() => {
                             if (this.props.dataStore) {
                                 updatePositionHighlightFilters(
@@ -161,7 +178,13 @@ export default class LollipopPlotNoTooltip extends React.Component<
                             this.onLollipopClick(
                                 lollipopComponent.props.spec.codon
                             )
-                        )
+                        ),
+                        undefined,
+                        'pointer',
+                        lollipopComponent.circleHitRect.y >
+                            lollipopComponent.props.stickBaseY
+                            ? 'bottom'
+                            : 'top'
                     );
                 }
             }
@@ -176,6 +199,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
                     this.props.setHitZone(
                         domainComponent.hitRect,
                         domainComponent.props.spec.tooltip,
+                        undefined,
+                        undefined,
                         undefined,
                         undefined,
                         undefined,
@@ -196,6 +221,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
                         sequenceComponent.props.spec
                             ? sequenceComponent.props.spec.tooltip
                             : undefined,
+                        undefined,
+                        undefined,
                         undefined,
                         undefined,
                         undefined,

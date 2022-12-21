@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed, makeObservable } from 'mobx';
+import { observable, computed, makeObservable, action } from 'mobx';
 import {
     HitZoneConfig,
     defaultHitzoneConfig,
@@ -45,6 +45,7 @@ export default class LollipopPlot extends React.Component<
     {}
 > {
     @observable private hitZoneConfig: HitZoneConfig = defaultHitzoneConfig();
+    @observable private mirrorVisible: boolean = false;
 
     private plot: LollipopPlotNoTooltip | undefined;
     private handlers: any;
@@ -58,7 +59,7 @@ export default class LollipopPlot extends React.Component<
 
         makeObservable<
             LollipopPlot,
-            'hitZoneConfig' | 'tooltipVisible' | 'hitZone'
+            'hitZoneConfig' | 'tooltipVisible' | 'hitZone' | 'mirrorHitZone'
         >(this);
 
         this.handlers = {
@@ -73,6 +74,13 @@ export default class LollipopPlot extends React.Component<
                     height: number;
                 },
                 content?: JSX.Element,
+                mirrorHitRect?: {
+                    x: number;
+                    y: number;
+                    width: number;
+                    height: number;
+                },
+                mirrorContent?: JSX.Element,
                 onMouseOver?: () => void,
                 onClick?: () => void,
                 onMouseOut?: () => void,
@@ -82,6 +90,8 @@ export default class LollipopPlot extends React.Component<
                 this.hitZoneConfig = {
                     hitRect,
                     content,
+                    mirrorHitRect,
+                    mirrorContent,
                     onMouseOver,
                     onClick,
                     onMouseOut,
@@ -91,6 +101,7 @@ export default class LollipopPlot extends React.Component<
             },
             getOverlay: () => this.hitZoneConfig.content,
             getOverlayPlacement: () => this.hitZoneConfig.tooltipPlacement,
+            getMirrorOverlay: () => this.hitZoneConfig.mirrorContent,
             onMouseLeave: () => {
                 this.hitZoneConfig.onMouseOut &&
                     this.hitZoneConfig.onMouseOut();
@@ -108,6 +119,18 @@ export default class LollipopPlot extends React.Component<
 
     @computed private get hitZone() {
         return initHitZoneFromConfig(this.hitZoneConfig);
+    }
+
+    @computed private get mirrorHitZone() {
+        return initHitZoneFromConfig({
+            ...this.hitZoneConfig,
+            hitRect: { ...this.hitZoneConfig.mirrorHitRect! },
+        });
+    }
+
+    @action.bound
+    private onTooltipVisibleChange(visible: boolean) {
+        this.mirrorVisible = visible;
     }
 
     public toSVGDOMNode(): Element {
@@ -138,10 +161,27 @@ export default class LollipopPlot extends React.Component<
                 <DefaultTooltip
                     placement={this.handlers.getOverlayPlacement()}
                     overlay={this.handlers.getOverlay}
+                    visible={this.mirrorVisible}
+                    onVisibleChange={this.onTooltipVisibleChange}
                     {...tooltipVisibleProps}
                 >
                     {this.hitZone}
                 </DefaultTooltip>
+                {this.hitZoneConfig.mirrorHitRect && (
+                    <DefaultTooltip
+                        placement={
+                            this.handlers.getOverlayPlacement() === 'top'
+                                ? 'bottom'
+                                : 'top'
+                        }
+                        overlay={this.handlers.getMirrorOverlay}
+                        visible={this.mirrorVisible}
+                        onVisibleChange={this.onTooltipVisibleChange}
+                        {...tooltipVisibleProps}
+                    >
+                        {this.mirrorHitZone}
+                    </DefaultTooltip>
+                )}
                 <LollipopPlotNoTooltip
                     ref={this.handlers.ref}
                     setHitZone={this.handlers.setHitZone}

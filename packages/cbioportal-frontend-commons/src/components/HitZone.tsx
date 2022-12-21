@@ -17,6 +17,8 @@ type HitZoneProps = {
 export type HitZoneConfig = {
     hitRect: { x: number; y: number; width: number; height: number };
     content?: JSX.Element;
+    mirrorHitRect?: { x: number; y: number; width: number; height: number };
+    mirrorContent?: JSX.Element;
     tooltipPlacement?: string;
     cursor?: string;
     onMouseOver?: () => void;
@@ -33,6 +35,8 @@ export function defaultHitzoneConfig(): HitZoneConfig {
             height: 0,
         },
         content: <span />,
+        mirrorHitRect: undefined,
+        mirrorContent: undefined,
         tooltipPlacement: 'top',
         cursor: 'pointer',
         onMouseOver: () => 0,
