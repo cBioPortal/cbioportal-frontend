@@ -41,20 +41,14 @@ export default class GroupComparisonMutationsTab extends React.Component<
     @action.bound
     protected handleGeneChange(id: string) {
         this.props.urlWrapper.updateURL({
-            selectedGene: id ? id.replace('comp-tab-', '') : id,
+            selectedGene: id,
         });
     }
 
     @computed get tabs() {
         return this.props.store.genesSortedByMutationFrequency
             .result!.slice(0, 10)
-            .map(g => (
-                <MSKTab
-                    key={`comp-tab-${g}`}
-                    id={`comp-tab-${g}`}
-                    linkText={g}
-                />
-            ));
+            .map(g => <MSKTab key={`comp-tab-${g}`} id={g} linkText={g} />);
     }
 
     @computed get activeTabId(): string | undefined {
@@ -65,7 +59,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
             activeTabId = this.props.store.activeMutationMapperGene!
                 .hugoGeneSymbol;
         }
-        return `comp-tab-${activeTabId}`;
+        return activeTabId;
     }
 
     @action.bound
