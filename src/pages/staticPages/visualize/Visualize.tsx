@@ -47,12 +47,8 @@ export default class Visualize extends React.Component<{}, {}> {
                         on data sets are welcome.
                     </li>
                     <li>
-                        Private data will be accessible by you and your
-                        collaborators.
-                    </li>
-                    <li>
                         Please{' '}
-                        <a href="mailto:cbioportal@cbio.mskcc.org?subject=Uploading public data">
+                        <a href="mailto:cbioportal@googlegroups.com?subject=Uploading public data">
                             contact us
                         </a>{' '}
                         for details.
