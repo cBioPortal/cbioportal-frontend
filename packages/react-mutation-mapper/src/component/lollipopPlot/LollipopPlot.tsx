@@ -45,7 +45,7 @@ export default class LollipopPlot extends React.Component<
     {}
 > {
     @observable private hitZoneConfig: HitZoneConfig = defaultHitzoneConfig();
-    @observable private mirrorVisible: boolean = false;
+    @observable private mirrorVisible: boolean = false; // lollipop and mirror lollipop share tooltip visibility
 
     private plot: LollipopPlotNoTooltip | undefined;
     private handlers: any;
@@ -121,6 +121,8 @@ export default class LollipopPlot extends React.Component<
         return initHitZoneFromConfig(this.hitZoneConfig);
     }
 
+    // hit zone of mirror lollipop component initialized using config's mirrorHitRect (mirror lollipop location)
+    // used to determine where to apply the mirror lollipop tooltip
     @computed private get mirrorHitZone() {
         return initHitZoneFromConfig({
             ...this.hitZoneConfig,
@@ -128,6 +130,8 @@ export default class LollipopPlot extends React.Component<
         });
     }
 
+    // handles lollipop and mirror lollipop component simultaneous tooltip visibility
+    // if lollipop tooltip is visible, make mirror lollipop tooltip visible as well
     @action.bound
     private onTooltipVisibleChange(visible: boolean) {
         this.mirrorVisible = visible;

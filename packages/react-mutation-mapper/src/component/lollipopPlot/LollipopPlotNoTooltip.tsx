@@ -145,6 +145,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
         if (lollipopIndex !== null) {
             const lollipopComponent = this.lollipopComponents[lollipopIndex];
             if (lollipopComponent) {
+                // mirrorLollipopComponent refers to the lollipop component, if it exists, in the other group at the same lollipopIndex
+                // this is needed to show tooltips of both lollipop components at same index
                 const mirrorLollipopComponent = _.find(
                     this.lollipopComponents,
                     l =>
@@ -152,19 +154,13 @@ export default class LollipopPlotNoTooltip extends React.Component<
                             lollipopComponent.props.spec.codon &&
                         l !== lollipopComponent
                 );
-                // console.log(lollipopComponent);
-                // console.log(mirrorLollipopComponent)
                 lollipopComponent.isHovered = true;
                 if (this.props.setHitZone) {
                     this.props.setHitZone(
                         lollipopComponent.circleHitRect,
                         lollipopComponent.props.spec.tooltip,
-                        mirrorLollipopComponent
-                            ? mirrorLollipopComponent.circleHitRect
-                            : undefined,
-                        mirrorLollipopComponent
-                            ? mirrorLollipopComponent.props.spec.tooltip
-                            : undefined,
+                        mirrorLollipopComponent?.circleHitRect,
+                        mirrorLollipopComponent?.props.spec.tooltip,
                         action(() => {
                             if (this.props.dataStore) {
                                 updatePositionHighlightFilters(

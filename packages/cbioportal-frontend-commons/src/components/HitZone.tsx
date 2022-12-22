@@ -17,8 +17,8 @@ type HitZoneProps = {
 export type HitZoneConfig = {
     hitRect: { x: number; y: number; width: number; height: number };
     content?: JSX.Element;
-    mirrorHitRect?: { x: number; y: number; width: number; height: number };
-    mirrorContent?: JSX.Element;
+    mirrorHitRect?: { x: number; y: number; width: number; height: number }; // mirror lollipop component location and dimensions
+    mirrorContent?: JSX.Element; // mirror lollipop component tooltip contents
     tooltipPlacement?: string;
     cursor?: string;
     onMouseOver?: () => void;
