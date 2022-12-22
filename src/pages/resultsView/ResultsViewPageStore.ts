@@ -198,7 +198,7 @@ import {
 import { annotateAlterationTypes } from '../../shared/lib/oql/annotateAlterationTypes';
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
-import { AppStore, SiteError } from '../../AppStore';
+import { AppStore } from '../../AppStore';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
 import autobind from 'autobind-decorator';
 import {
@@ -309,6 +309,7 @@ import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
+import { SiteError } from 'shared/model/appMisc';
 
 type Optional<T> =
     | { isApplicable: true; value: T }

@@ -1,7 +1,7 @@
 import { OncoKbAPI } from 'oncokb-ts-api-client';
 import eventBus from 'shared/events/eventBus';
 import { ErrorMessages } from 'shared/errorMessages';
-import { SiteError } from '../../AppStore';
+import { SiteError } from 'shared/model/appMisc';
 
 const client = new OncoKbAPI();
 

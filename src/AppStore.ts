@@ -9,14 +9,7 @@ import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
 import { sendSentryMessage } from './shared/lib/tracking';
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';
-
-export class SiteError {
-    constructor(
-        public errorObj: any,
-        public displayType: 'alert' | 'site' = 'site',
-        public title?: string
-    ) {}
-}
+import { SiteError } from 'shared/model/appMisc';
 
 export class AppStore {
     constructor(

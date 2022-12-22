@@ -42,7 +42,7 @@ import {
 import ComplexKeyCounter from '../complexKeyDataStructures/ComplexKeyCounter';
 import GeneCache from 'shared/cache/GeneCache';
 import eventBus from 'shared/events/eventBus';
-import { SiteError } from 'AppStore';
+import { SiteError } from 'shared/model/appMisc';
 import { ErrorMessages } from 'shared/errorMessages';
 
 export default abstract class AnalysisStore {
@@ -129,14 +129,8 @@ export default abstract class AnalysisStore {
         const client = new GenomeNexusAPIInternal(this.referenceGenomeBuild);
 
         client.addErrorHandler(err => {
-            eventBus.emit(
-                'error',
-                null,
-                new SiteError(
-                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
-                    'alert'
-                )
-            );
+            console.log('AARON');
+            eventBus.emit('error', null, new SiteError('monkeys', 'alert'));
         });
 
         return client;
@@ -272,7 +266,7 @@ export default abstract class AnalysisStore {
         {
             await: () => [this.mutations, this.oncoKbAnnotatedGenes],
             invoke: async () => {
-                return await fetchOncoKbDataForOncoprint(
+                return fetchOncoKbDataForOncoprint(
                     this.oncoKbAnnotatedGenes,
                     this.mutations
                 );

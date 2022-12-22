@@ -25,7 +25,7 @@ import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import { initializeTracking, sendToLoggly } from 'shared/lib/tracking';
 import superagentCache from 'superagent-cache';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
-import { AppStore, SiteError } from './AppStore';
+import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
@@ -34,6 +34,7 @@ import { IServerConfig } from 'config/IAppConfig';
 import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';
 import eventBus from 'shared/events/eventBus';
+import { SiteError } from 'shared/model/appMisc';
 
 export interface ICBioWindow {
     globalStores: {
