@@ -109,9 +109,9 @@ import eventBus from 'shared/events/eventBus';
 
 import { ErrorMessages } from 'shared/errorMessages';
 import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
-import { SiteError } from '../../AppStore';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { FilteredAndAnnotatedMutationsReport } from './comparison/AnalysisStoreUtils';
+import { SiteError } from 'shared/model/appMisc';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;

@@ -54,8 +54,8 @@ import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
 import { getServerConfig } from 'config/config';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 import eventBus from 'shared/events/eventBus';
-import { SiteError } from 'AppStore';
 import { ErrorMessages } from 'shared/errorMessages';
+import { SiteError } from 'shared/model/appMisc';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
