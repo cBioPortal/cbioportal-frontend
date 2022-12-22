@@ -129,8 +129,14 @@ export default abstract class AnalysisStore {
         const client = new GenomeNexusAPIInternal(this.referenceGenomeBuild);
 
         client.addErrorHandler(err => {
-            console.log('AARON');
-            eventBus.emit('error', null, new SiteError('monkeys', 'alert'));
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(
+                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
+                    'alert'
+                )
+            );
         });
 
         return client;
