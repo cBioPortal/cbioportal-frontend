@@ -53,6 +53,9 @@ import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
 import { getServerConfig } from 'config/config';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
+import eventBus from 'shared/events/eventBus';
+import { ErrorMessages } from 'shared/errorMessages';
+import { SiteError } from 'shared/model/appMisc';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
@@ -104,15 +107,41 @@ export default class MutationMapperToolStore {
     }
 
     @computed get genomeNexusClient() {
-        return this.grch38GenomeNexusUrl
+        const client = this.grch38GenomeNexusUrl
             ? new GenomeNexusAPI(this.grch38GenomeNexusUrl)
             : defaultGenomeNexusClient;
+
+        client.addErrorHandler(err => {
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(
+                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
+                    'alert'
+                )
+            );
+        });
+
+        return client;
     }
 
     @computed get genomeNexusInternalClient() {
-        return this.grch38GenomeNexusUrl
+        const client = this.grch38GenomeNexusUrl
             ? new GenomeNexusAPIInternal(this.grch38GenomeNexusUrl)
             : defaultGenomeNexusInternalClient;
+
+        client.addErrorHandler(err => {
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(
+                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
+                    'alert'
+                )
+            );
+        });
+
+        return client;
     }
 
     readonly hugoGeneSymbols = remoteData(

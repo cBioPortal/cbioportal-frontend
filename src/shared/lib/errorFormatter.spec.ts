@@ -1,10 +1,10 @@
 import { assert } from 'chai';
-import { SiteError } from '../../AppStore';
 import {
     formatErrorLog,
     formatErrorTitle,
     formatErrorMessages,
 } from './errorFormatter';
+import { SiteError } from 'shared/model/appMisc';
 
 const RESPONSE_BODY_MESSAGE = 'RESPONSE_BODY_MESSAGE';
 const REQUEST_ERROR_MESSAGE = 'REQUEST_ERROR_MESSAGE';
@@ -20,18 +20,18 @@ const siteErrors: SiteError[] = [
                 },
             },
         } as any,
-        dismissed: false,
+        displayType: 'alert',
     },
     {
         errorObj: {
             message: REQUEST_ERROR_MESSAGE,
         } as any,
-        dismissed: false,
+        displayType: 'alert',
         title: EXAMPLE_TITLE_1,
     },
     {
         errorObj: { otherInformation: '' } as any,
-        dismissed: false,
+        displayType: 'alert',
         title: EXAMPLE_TITLE_2,
     },
 ];

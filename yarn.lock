@@ -14505,6 +14505,11 @@ js-combinatorics@^0.5.2:
   resolved "https://registry.yarnpkg.com/js-combinatorics/-/js-combinatorics-0.5.4.tgz#c92916b8f8171b64ecd7c4435b72cfabc803c756"
   integrity sha512-PCqUIKGqv/Kjao1G4GE/Yni6QkCP2nWW3KnxL+8IGWPlP18vQpT8ufGMf4XUAAY8JHEryUCJbf51zG8329ntMg==
 
+js-event-bus@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/js-event-bus/-/js-event-bus-1.1.1.tgz#7a7a92e2bb4a0bb8cfdbe3853904146e8819d788"
+  integrity sha512-clZBV/Bzxw3sPB1ugeBANkPWw1noQWwa7MJAtiEXBfw3CH4wptA6Nh7+b9rqi1/z0tjo6t7wILrGGg3IHRAOPw==
+
 js-levenshtein@^1.1.3:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/js-levenshtein/-/js-levenshtein-1.1.6.tgz#c6cee58eb3550372df8deb85fad5ce66ce01d59d"

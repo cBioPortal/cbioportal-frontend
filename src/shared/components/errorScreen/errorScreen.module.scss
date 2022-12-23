@@ -32,3 +32,25 @@
         margin: 0 auto;
     }
 }
+
+.errorAlert {
+    padding: 10px 30px 10px 10px;
+    background: $brand-danger;
+    color: #fff;
+    position: relative;
+
+    .dismissButton {
+        position: absolute;
+        right: 5px;
+        top: 10px;
+        cursor: pointer;
+
+        &:hover {
+            color: #eee;
+        }
+    }
+
+    p:last-of-type {
+        margin-bottom: 0 !important;
+    }
+}

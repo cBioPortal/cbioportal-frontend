@@ -53,7 +53,10 @@ export default class AnnotationColumnFormatter {
 
             let oncoKbGeneExist = false;
             let isOncoKbCancerGene = false;
-            if (oncoKbCancerGenes && !(oncoKbCancerGenes instanceof Error)) {
+            if (
+                oncoKbCancerGenes &&
+                !(oncoKbCancerGenes.result instanceof Error)
+            ) {
                 oncoKbGeneExist =
                     _.find(
                         oncoKbCancerGenes.result,
