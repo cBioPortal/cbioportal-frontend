@@ -17,6 +17,7 @@ import ErrorMessage from 'shared/components/ErrorMessage';
 import { AxisScale } from 'react-mutation-mapper';
 import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
@@ -30,9 +31,12 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
     IGroupComparisonMutationsTabPlotProps,
     {}
 > {
+    private userSelectionStore: MutationMapperUserSelectionStore;
+
     constructor(props: IGroupComparisonMutationsTabPlotProps) {
         super(props);
         makeObservable(this);
+        this.userSelectionStore = new MutationMapperUserSelectionStore();
     }
 
     @computed get mutationMapperToolStore() {
@@ -107,6 +111,11 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         }
     }
 
+    @action.bound
+    protected onClickSettingMenu(visible: boolean) {
+        this.props.store.isSettingsMenuVisible = visible;
+    }
+
     readonly plotUI = MakeMobxView({
         await: () => [
             this.props.store.mutations,
@@ -157,6 +166,10 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                                     .driversAnnotated
                                     ? (m: AnnotatedMutation) => m.putativeDriver
                                     : undefined
+                            }
+                            onClickSettingMenu={this.onClickSettingMenu}
+                            trackVisibility={
+                                this.userSelectionStore.trackVisibility
                             }
                         />
                     </>

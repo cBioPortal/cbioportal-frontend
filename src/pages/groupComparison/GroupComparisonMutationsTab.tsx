@@ -22,6 +22,7 @@ import {
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;
@@ -137,7 +138,11 @@ export default class GroupComparisonMutationsTab extends React.Component<
                                     .hugoGeneSymbol
                             }
                         />
-                        <div style={{ paddingRight: '5px' }}>
+                        <SettingsMenuButton
+                            store={this.props.store}
+                            comparisonView={true}
+                        />
+                        <div style={{ marginLeft: 5, paddingRight: '5px' }}>
                             Highest Frequency:
                         </div>
                         <div>

@@ -26,6 +26,7 @@ export interface DriverAnnotationControlsProps {
     state: IDriverAnnotationControlsState;
     handlers: IDriverAnnotationControlsHandlers;
     resultsView?: boolean;
+    comparisonView?: boolean;
 }
 
 @observer
@@ -93,7 +94,7 @@ export default class DriverAnnotationControls extends React.Component<
                     </label>
                 </div>
                 <div style={{ marginLeft: '20px' }}>
-                    {this.props.resultsView && (
+                    {(this.props.resultsView || this.props.comparisonView) && (
                         <span>
                             {!this.props.state
                                 .annotateDriversOncoKbDisabled && (

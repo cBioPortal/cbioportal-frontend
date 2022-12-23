@@ -13,6 +13,7 @@ export interface SettingsButtonProps {
         IExclusionSettings &
         ISettingsMenuButtonVisible;
     resultsView?: boolean;
+    comparisonView?: boolean;
     disabled?: boolean;
 }
 
@@ -54,6 +55,7 @@ export default class SettingsMenuButton extends React.Component<
             <SettingsMenu
                 store={this.props.store}
                 resultsView={this.props.resultsView}
+                comparisonView={this.props.comparisonView}
                 disabled={this.props.disabled}
             />
         );
