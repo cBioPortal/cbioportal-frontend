@@ -46,13 +46,9 @@ export default class GroupComparisonMutationsTab extends React.Component<
     }
 
     @computed get tabs() {
-        return this.props.store.genesWithMaxFrequency.map(g => (
-            <MSKTab
-                key={g.hugoGeneSymbol}
-                id={g.hugoGeneSymbol}
-                linkText={g.hugoGeneSymbol}
-            />
-        ));
+        return this.props.store.genesSortedByMutationFrequency
+            .result!.slice(0, 10)
+            .map(g => <MSKTab key={`comp-tab-${g}`} id={g} linkText={g} />);
     }
 
     @computed get activeTabId(): string | undefined {
@@ -80,7 +76,11 @@ export default class GroupComparisonMutationsTab extends React.Component<
     }
 
     readonly tabUI = MakeMobxView({
-        await: () => [this.props.store.genes],
+        await: () => [
+            this.props.store.genes,
+            this.props.store.genesWithMutations,
+            this.props.store.genesSortedByMutationFrequency,
+        ],
         render: () => {
             // We only want 2 groups for our mirrored lollipop plot. Display message if not 2 groups
             if (this.props.store.activeGroups.result!.length < 2) {
@@ -123,31 +123,36 @@ export default class GroupComparisonMutationsTab extends React.Component<
                         store={this.props.store}
                         only="sample"
                     />
-                    <LollipopGeneSelector
-                        store={this.props.store}
-                        genes={this.props.store.genes.result!}
-                        handleGeneChange={this.handleGeneChange}
-                        key={
-                            'comparisonLollipopGene' +
-                            this.props.store.activeMutationMapperGene!
-                                .hugoGeneSymbol
-                        }
-                    />
-                    <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <LollipopGeneSelector
+                            store={this.props.store}
+                            genes={this.props.store.genes.result!}
+                            genesWithMutations={
+                                this.props.store.genesWithMutations.result!
+                            }
+                            handleGeneChange={this.handleGeneChange}
+                            key={
+                                'comparisonLollipopGene' +
+                                this.props.store.activeMutationMapperGene!
+                                    .hugoGeneSymbol
+                            }
+                        />
                         <div style={{ paddingRight: '5px' }}>
                             Highest Frequency:
                         </div>
-                        <MSKTabs
-                            activeTabId={this.activeTabId}
-                            onTabClick={(id: string) =>
-                                this.handleGeneChange(id)
-                            }
-                            className="pillTabs comparisonMutationMapperTabs"
-                            tabButtonStyle="pills"
-                            defaultTabId={false}
-                        >
-                            {this.tabs}
-                        </MSKTabs>
+                        <div>
+                            <MSKTabs
+                                activeTabId={this.activeTabId}
+                                onTabClick={(id: string) =>
+                                    this.handleGeneChange(id)
+                                }
+                                className="pillTabs comparisonMutationMapperTabs"
+                                tabButtonStyle="pills"
+                                defaultTabId={false}
+                            >
+                                {this.tabs}
+                            </MSKTabs>
+                        </div>
                     </div>
                     <GroupComparisonMutationsTabPlot
                         store={this.props.store}

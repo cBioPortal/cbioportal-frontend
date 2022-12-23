@@ -41,7 +41,7 @@ import {
 import ComplexKeySet from 'shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
 import { AxisScale, DataFilter } from 'react-mutation-mapper';
-import { getAllGenes } from 'shared/lib/StoreUtils';
+import { fetchGenes, getAllGenes } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
     getCoverageInformation,
@@ -463,6 +463,15 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
+    readonly genesWithMutations = remoteData<Gene[]>({
+        await: () => [this.genesSortedByMutationFrequency, this.genes],
+        invoke: async () => {
+            return this.genesSortedByMutationFrequency.result!.map(
+                gene => this.genes.result!.find(g => gene === g.hugoGeneSymbol)!
+            );
+        },
+    });
+
     @computed get userSelectedMutationMapperGene() {
         return this.urlWrapper.query.selectedGene;
     }
@@ -479,7 +488,7 @@ export default class GroupComparisonStore extends ComparisonStore {
             this.genes.result!.find(
                 g =>
                     g.hugoGeneSymbol ===
-                    this.genesWithMaxFrequency[0].hugoGeneSymbol
+                    this.genesSortedByMutationFrequency.result![0]
             );
         return gene;
     }
