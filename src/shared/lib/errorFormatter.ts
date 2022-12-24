@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SiteError } from 'AppStore';
+import { SiteError } from 'shared/model/appMisc';
 
 export function formatErrorLog(errors: SiteError[]) {
     return errors

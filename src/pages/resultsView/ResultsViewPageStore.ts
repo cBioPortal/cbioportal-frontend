@@ -196,7 +196,6 @@ import {
     makeProfiledInClinicalAttributes,
 } from '../../shared/components/oncoprint/ResultsViewOncoprintUtils';
 import { annotateAlterationTypes } from '../../shared/lib/oql/annotateAlterationTypes';
-import { ErrorMessages } from '../../shared/enums/ErrorEnums';
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import { AppStore } from '../../AppStore';
@@ -299,6 +298,8 @@ import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
 import { PageUserSession } from 'shared/userSession/PageUserSession';
 import { PageType } from 'shared/userSession/PageType';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
+import eventBus from 'shared/events/eventBus';
+import { ErrorMessages } from 'shared/errorMessages';
 import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
 import {
     compileMutations,
@@ -308,6 +309,7 @@ import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
+import { SiteError } from 'shared/model/appMisc';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3962,6 +3964,9 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
                 return _.flatten(await Promise.all(promises));
             },
+            onError: e => {
+                eventBus.emit('error', null, new SiteError(e));
+            },
         },
         []
     );
@@ -4264,10 +4269,6 @@ export class ResultsViewPageStore extends AnalysisStore
             getServerConfig().genomenexus_url_grch38
             ? getServerConfig().ensembl_transcript_grch38_url
             : getServerConfig().ensembl_transcript_url;
-    }
-
-    @computed get genomeNexusClient() {
-        return new GenomeNexusAPI(this.referenceGenomeBuild);
     }
 
     //this is only required to show study name and description on the results page
@@ -4588,7 +4589,7 @@ export class ResultsViewPageStore extends AnalysisStore
             ) {
                 return genes;
             } else {
-                throw new Error(ErrorMessages.InvalidGenes);
+                throw new Error(ErrorMessages.INVALID_GENES);
             }
         },
         onResult: (genes: Gene[]) => {

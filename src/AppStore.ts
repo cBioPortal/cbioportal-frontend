@@ -9,12 +9,7 @@ import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
 import { sendSentryMessage } from './shared/lib/tracking';
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';
-
-export type SiteError = {
-    errorObj: any;
-    dismissed: boolean;
-    title?: string;
-};
+import { SiteError } from 'shared/model/appMisc';
 
 export class AppStore {
     constructor(
@@ -27,9 +22,9 @@ export class AppStore {
                 sendSentryMessage('ERRORHANDLER:' + error);
             } catch (ex) {}
 
-            if (error.status && /400|500|403/.test(error.status)) {
+            if (error.status && /400|500|5\d\d|403/.test(error.status)) {
                 sendSentryMessage('ERROR DIALOG SHOWN:' + error);
-                this.siteErrors.push({ errorObj: error, dismissed: false });
+                this.siteErrors.push(new SiteError(new Error(error)));
             }
         });
     }
@@ -44,7 +39,9 @@ export class AppStore {
 
     @observable private _appReady = false;
 
-    @observable siteErrors: SiteError[] = [];
+    siteErrors = observable.array<SiteError>();
+
+    alertErrors = observable.array<SiteError>();
 
     @observable.ref userName: string | undefined = undefined;
 
@@ -76,30 +73,29 @@ export class AppStore {
         }
     }
 
-    @computed get undismissedSiteErrors() {
-        return _.filter(this.siteErrors.slice(), err => !err.dismissed);
-    }
-
     @computed get isErrorCondition() {
-        return this.undismissedSiteErrors.length > 0;
+        return this.siteErrors.length > 0;
     }
 
     @action
     public dismissErrors() {
-        this.siteErrors = this.siteErrors.map(err => {
-            err.dismissed = true;
-            return err;
-        });
+        this.siteErrors.clear();
     }
 
-    @action public addError(err: String | SiteError) {
-        if (_.isString(err)) {
-            this.siteErrors.push({
-                errorObj: { message: err },
-                dismissed: false,
-            });
+    @action
+    public dismissError(err: SiteError) {
+        this.siteErrors.remove(err);
+    }
+
+    @action public addError(err: SiteError | string) {
+        if (typeof err === 'string') {
+            this.siteErrors.push(new SiteError(new Error(err)));
         } else {
-            this.siteErrors.push({ errorObj: err, dismissed: false });
+            if (err.displayType === 'alert') {
+                this.alertErrors.push(err);
+            } else {
+                this.siteErrors.push(err);
+            }
         }
     }
 

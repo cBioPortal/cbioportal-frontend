@@ -113,10 +113,9 @@ export function generateQueryVariantId(
 }
 
 export function defaultOncoKbIndicatorFilter(indicator: IndicatorQueryResp) {
-    return indicator.oncogenic
-        .toLowerCase()
-        .trim()
-        .includes('oncogenic');
+    const oncogenic = indicator.oncogenic.toLowerCase().trim();
+
+    return oncogenic.includes('oncogenic') || oncogenic.includes('resistance');
 }
 
 export function generateIdToIndicatorMap(
