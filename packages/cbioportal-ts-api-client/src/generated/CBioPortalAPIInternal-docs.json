@@ -1207,6 +1207,43 @@
         }
       }
     },
+    "/gene-panel-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch gene panel counts for each molecular profile suffix present in the study view filter",
+        "operationId": "fetchGenePanelCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenePanelCountItem"
+              }
+            }
+          }
+        }
+      }
+    },
     "/generic-assay-data-bin-counts/fetch": {
       "post": {
         "tags": [
@@ -4244,6 +4281,33 @@
       },
       "title": "GeneFilterQuery"
     },
+    "GenePanelCountItem": {
+      "type": "object",
+      "properties": {
+        "counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataCount"
+          }
+        },
+        "molecularProfileId": {
+          "type": "string"
+        }
+      },
+      "title": "GenePanelCountItem"
+    },
+    "GenePanelFilter": {
+      "type": "object",
+      "properties": {
+        "genePanelId": {
+          "type": "string"
+        },
+        "molecularProfileSuffix": {
+          "type": "string"
+        }
+      },
+      "title": "GenePanelFilter"
+    },
     "GenericAssayDataBin": {
       "type": "object",
       "properties": {
@@ -4821,6 +4885,9 @@
           "type": "string"
         },
         "molecularProfileId": {
+          "type": "string"
+        },
+        "studyStableId": {
           "type": "string"
         }
       },
@@ -5514,6 +5581,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/GeneFilter"
+          }
+        },
+        "genePanelFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenePanelFilter"
           }
         },
         "genericAssayDataFilters": {

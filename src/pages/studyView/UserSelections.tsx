@@ -10,6 +10,7 @@ import {
     GeneFilterQuery,
     PatientTreatmentFilter,
     SampleTreatmentFilter,
+    GenePanelFilter,
 } from 'cbioportal-ts-api-client';
 import {
     DataType,
@@ -487,6 +488,15 @@ export default class UserSelections extends React.Component<
             );
             components.push(f);
         }
+        if (
+            this.props.filter.genePanelFilters &&
+            this.props.filter.genePanelFilters.length > 0
+        ) {
+            components.push(
+                this.renderGenePanelFilter(this.props.filter.genePanelFilters)
+            );
+        }
+
         return components;
     }
 
@@ -619,6 +629,24 @@ export default class UserSelections extends React.Component<
                 group={false}
             />
         );
+    }
+
+    private renderGenePanelFilter(sampleIds: GenePanelFilter[]): JSX.Element {
+        const pills = sampleIds.map(gpFilter => {
+            return (
+                <PillTag
+                    content={gpFilter.genePanelId}
+                    backgroundColor={
+                        STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                    }
+                    onDelete={() => {
+                        this.props.store.removeGenePanel(gpFilter);
+                    }}
+                />
+            );
+        });
+
+        return <GroupLogic components={pills} operation={'or'} group={true} />;
     }
 
     private renderTreatmentFilter(

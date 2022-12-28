@@ -4,6 +4,7 @@ import _ from 'lodash';
 import FixedHeaderTable, { IFixedHeaderTableProps } from './FixedHeaderTable';
 import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
+import memoize from 'memoize-weak-decorator';
 import {
     Column,
     SortDirection,
@@ -19,7 +20,9 @@ import {
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr,
+    getGenePanelChartUniqueKey,
 } from 'pages/studyView/StudyViewUtils';
+import { ICON_ACTIVE } from 'shared/lib/Colors';
 import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
 import {
     getFreqColumnRender,
@@ -36,6 +39,7 @@ import {
     stringListToIndexSet,
     stringListToSet,
     EllipsisTextTooltip,
+    DefaultTooltip,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
@@ -84,6 +88,8 @@ export type MultiSelectionTableProps = {
     selectedRowsKeys: string[];
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
+    toggleGenePanelChartVisibility?: (profileId: string) => void;
+    visibleChartIds?: string[];
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
@@ -136,6 +142,10 @@ export class MultiSelectionTable extends React.Component<
         makeObservable(this);
         this.sortBy = this.props.defaultSortBy;
     }
+
+    toggleGenePanelChartVisibility = (data: MultiSelectionTableRow) => () => {
+        this.props.toggleGenePanelChartVisibility!(data.uniqueKey);
+    };
 
     getDefaultColumnDefinition = (
         columnKey: MultiSelectionTableColumnKey,
@@ -210,9 +220,37 @@ export class MultiSelectionTable extends React.Component<
                 render: (data: MultiSelectionTableRow) => {
                     return (
                         <div className={styles.labelContent}>
-                            <EllipsisTextTooltip
-                                text={data.label}
-                            ></EllipsisTextTooltip>
+                            <EllipsisTextTooltip text={data.label} />
+                            {this.props.toggleGenePanelChartVisibility &&
+                                this.props.visibleChartIds && (
+                                    <DefaultTooltip
+                                        overlay={
+                                            <span>
+                                                Toggle visibility of
+                                                corresponding gene panel chart
+                                            </span>
+                                        }
+                                        trigger={['hover']}
+                                    >
+                                        <i
+                                            className="fa fa-pie-chart"
+                                            onClick={this.toggleGenePanelChartVisibility(
+                                                data
+                                            )}
+                                            style={{
+                                                cursor: 'pointer',
+                                                marginLeft: 10,
+                                                color: this.props.visibleChartIds.includes(
+                                                    getGenePanelChartUniqueKey(
+                                                        data.uniqueKey
+                                                    )
+                                                )
+                                                    ? ICON_ACTIVE
+                                                    : undefined,
+                                            }}
+                                        />
+                                    </DefaultTooltip>
+                                )}
                         </div>
                     );
                 },
