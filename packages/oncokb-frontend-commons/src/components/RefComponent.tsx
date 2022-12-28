@@ -27,25 +27,17 @@ export default class RefComponent extends React.Component<{
             .split(/(?=http)/i);
         const isAbstract = !(abstractParts.length < 2);
 
-        let abstract = '';
-        let abstractLink = '';
         const ids = parts[1].match(/[0-9]+/g);
+
         let prefix: string | undefined;
-        let link: JSX.Element | undefined;
+        let linkComponent: JSX.Element | undefined;
+        let link: string | undefined;
+        let linkText: string | undefined;
 
         if (isAbstract) {
-            abstract = abstractParts[0].replace(/^[:\s]*/g, '').trim();
-            abstractLink = abstractParts[1].replace(/[\\)]*$/g, '').trim();
+            linkText = abstractParts[0].replace(/^[:\s]*/g, '').trim();
+            link = abstractParts[1].replace(/[\\)]*$/g, '').trim();
             prefix = 'Abstract: ';
-            link = (
-                <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={abstractLink}
-                >
-                    {`${prefix}${abstract}`}
-                </a>
-            );
         } else {
             if (!ids) {
                 return <span>{this.props.content}</span>;
@@ -57,26 +49,23 @@ export default class RefComponent extends React.Component<{
                 prefix = 'NCT';
             }
 
-            if (prefix) {
-                link = (
-                    <a
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        href={getNCBIlink(`/pubmed/${ids.join(',')}`)}
-                    >
-                        {`${prefix}${ids.join(', ')}`}
-                    </a>
-                );
-            }
+            linkText = ids.join(', ');
+            link = getNCBIlink(`/pubmed/${ids.join(',')}`);
+        }
+
+        if (prefix) {
+            linkComponent = (
+                <a target="_blank" rel="noopener noreferrer" href={link}>
+                    {`${prefix}${linkText}`}
+                </a>
+            );
         }
 
         if (this.props.componentType === 'tooltip') {
             const pmids = isAbstract
                 ? []
                 : ids!.map((id: string) => parseInt(id, 10));
-            const abstracts = isAbstract
-                ? [{ abstract, link: abstractLink }]
-                : [];
+            const abstracts = isAbstract ? [{ abstract: linkText, link }] : [];
             const tooltipContent = () => (
                 <div className={mainStyles['tooltip-refs']}>
                     <ReferenceList pmids={pmids} abstracts={abstracts} />
@@ -97,11 +86,11 @@ export default class RefComponent extends React.Component<{
                     {`)`}
                 </span>
             );
-        } else if (link) {
+        } else if (linkComponent) {
             return (
                 <span key={this.props.content}>
                     {parts[0]}
-                    {link}
+                    {linkComponent}
                     {`)`}
                 </span>
             );
