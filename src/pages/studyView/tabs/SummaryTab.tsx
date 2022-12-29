@@ -74,6 +74,16 @@ export class StudySummaryTab extends React.Component<
                     dataBins
                 );
             },
+            onCustomChartDataBinSelection: (
+                chartMeta: ChartMeta,
+                dataBins: DataBin[]
+            ) => {
+                this.store.updateCustomDataIntervalFilters(
+                    chartMeta.uniqueKey,
+                    dataBins
+                );
+            },
+
             onToggleLogScale: (chartMeta: ChartMeta) => {
                 this.store.toggleLogScale(chartMeta.uniqueKey);
             },
@@ -100,8 +110,14 @@ export class StudySummaryTab extends React.Component<
             isNewlyAdded: (uniqueKey: string) => {
                 return this.store.isNewlyAdded(uniqueKey);
             },
-            setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {
-                this.store.setCustomChartFilters(chartMeta.uniqueKey, values);
+            setCustomChartCategoricalFilters: (
+                chartMeta: ChartMeta,
+                values: string[]
+            ) => {
+                this.store.setCustomChartCategoricalFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
             },
             onLayoutChange: (layout: ReactGridLayout.Layout[]) => {
                 this.store.updateCurrentGridLayout(layout);
@@ -169,8 +185,8 @@ export class StudySummaryTab extends React.Component<
                             clinicalDataFilterValue =>
                                 clinicalDataFilterValue.value
                         );
-                    props.onValueSelection = this.handlers.setCustomChartFilters;
-                    props.onResetSelection = this.handlers.setCustomChartFilters;
+                    props.onValueSelection = this.handlers.setCustomChartCategoricalFilters;
+                    props.onResetSelection = this.handlers.setCustomChartCategoricalFilters;
                     props.promise = this.store.getCustomDataCount(chartMeta);
                 } else if (
                     this.store.isGenericAssayChart(chartMeta.uniqueKey)
@@ -237,11 +253,27 @@ export class StudySummaryTab extends React.Component<
                     props.getData = () =>
                         this.store.getChartDownloadableData(chartMeta);
                 } else {
-                    props.promise = this.store.getClinicalDataBin(chartMeta);
-                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(
-                        chartMeta.uniqueKey
-                    );
-                    props.onDataBinSelection = this.handlers.onDataBinSelection;
+                    if (
+                        this.store.isUserDefinedCustomDataChart(
+                            chartMeta.uniqueKey
+                        )
+                    ) {
+                        props.promise = this.store.getCustomDataNumerical(
+                            chartMeta
+                        );
+                        props.onDataBinSelection = this.handlers.onCustomChartDataBinSelection;
+                        props.filters = this.store.getCustomDataFiltersByUniqueKey(
+                            chartMeta.uniqueKey
+                        );
+                    } else {
+                        props.promise = this.store.getClinicalDataBin(
+                            chartMeta
+                        );
+                        props.onDataBinSelection = this.handlers.onDataBinSelection;
+                        props.filters = this.store.getClinicalDataFiltersByUniqueKey(
+                            chartMeta.uniqueKey
+                        );
+                    }
                     props.onResetSelection = this.handlers.onDataBinSelection;
                     props.getData = () =>
                         this.store.getChartDownloadableData(chartMeta);
@@ -274,8 +306,8 @@ export class StudySummaryTab extends React.Component<
                             clinicalDataFilterValue =>
                                 clinicalDataFilterValue.value
                         );
-                    props.onValueSelection = this.handlers.setCustomChartFilters;
-                    props.onResetSelection = this.handlers.setCustomChartFilters;
+                    props.onValueSelection = this.handlers.setCustomChartCategoricalFilters;
+                    props.onResetSelection = this.handlers.setCustomChartCategoricalFilters;
                     props.promise = this.store.getCustomDataCount(chartMeta);
                 } else if (
                     this.store.isGenericAssayChart(chartMeta.uniqueKey)

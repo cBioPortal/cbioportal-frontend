@@ -2476,6 +2476,97 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+
+    fetchCustomDataBinCountsUsingPOSTURL(parameters: {
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/custom-data-bin-counts/fetch';
+
+        if (parameters['dataBinMethod'] !== undefined) {
+            queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch custom data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCustomDataBinCountsUsingPOST
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
+     * @param {string} dataBinMethod - Method for data binning
+     */
+    fetchCustomDataBinCountsUsingPOSTWithHttpInfo(parameters: {
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/custom-data-bin-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['clinicalDataBinCountFilter'] !== undefined) {
+                body = parameters['clinicalDataBinCountFilter'];
+            }
+
+            if (parameters['clinicalDataBinCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataBinCountFilter'));
+                return;
+            }
+
+            if (parameters['dataBinMethod'] !== undefined) {
+                queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch custom data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCustomDataBinCountsUsingPOST
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
+     * @param {string} dataBinMethod - Method for data binning
+     */
+    fetchCustomDataBinCountsUsingPOST(parameters: {
+            'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+            'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalDataBin >
+        > {
+            return this.fetchCustomDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchCustomDataCountsUsingPOSTURL(parameters: {
         'clinicalDataCountFilter': ClinicalDataCountFilter,
         $queryParameters ? : any

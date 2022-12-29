@@ -87,7 +87,7 @@ export default class StudyPageHeader extends React.Component<
                                 .updateGenericAssayDataFiltersByValues
                         }
                         updateCustomChartFilter={
-                            this.props.store.setCustomChartFilters
+                            this.props.store.setCustomChartCategoricalFilters
                         }
                         removeGeneFilter={this.props.store.removeGeneFilter}
                         removeCustomSelectionFilter={
