@@ -6,11 +6,16 @@ import { SiteError } from 'shared/model/appMisc';
 const client = new OncoKbAPI();
 
 client.addErrorHandler(err => {
-    eventBus.emit(
-        'error',
-        null,
-        new SiteError(new Error(ErrorMessages.ONCOKB_LOAD_ERROR), 'alert')
+    const siteError = new SiteError(
+        new Error(ErrorMessages.ONCOKB_LOAD_ERROR),
+        'alert'
     );
+
+    siteError.meta = {
+        stacktrace: err?.response?.text,
+    };
+
+    eventBus.emit('error', null, siteError);
 });
 
 export default client;
