@@ -166,7 +166,10 @@ const stores = {
 browserWindow.globalStores = stores;
 
 eventBus.on('error', (err: SiteError) => {
-    sendToLoggly(err?.errorObj?.message);
+    sendToLoggly({
+        message: err?.errorObj?.message,
+        ...err.meta,
+    });
     stores.appStore.addError(err);
 });
 

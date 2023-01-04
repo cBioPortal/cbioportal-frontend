@@ -762,11 +762,6 @@ export async function fetchOncoKbCancerGenes(
     client: OncoKbAPI = oncokbClient
 ): Promise<CancerGene[]> {
     return await client.utilsCancerGeneListGetUsingGET_1({}).catch(d => {
-        eventBus.emit(
-            'error',
-            null,
-            new SiteError(new Error(ErrorMessages.ONCOKB_LOAD_ERROR), 'alert')
-        );
         return d;
     });
 }
@@ -775,11 +770,6 @@ export async function fetchOncoKbInfo(
     client: OncoKbAPI = oncokbClient
 ): Promise<OncoKBInfo> {
     return await client.infoGetUsingGET_1({}).catch(d => {
-        eventBus.emit(
-            'error',
-            null,
-            new SiteError(new Error(ErrorMessages.ONCOKB_LOAD_ERROR), 'alert')
-        );
         return d;
     });
 }
@@ -1644,7 +1634,6 @@ export async function fetchOncoKbDataForOncoprint(
             );
         } catch (e) {
             result = new Error(ErrorMessages.ONCOKB_LOAD_ERROR);
-            eventBus.emit('error', null, new SiteError(result, 'alert'));
         }
         return result;
     } else {
