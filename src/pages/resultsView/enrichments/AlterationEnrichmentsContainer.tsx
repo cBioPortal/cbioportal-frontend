@@ -12,7 +12,6 @@ import {
     AlterationEnrichmentWithQ,
     getAlterationEnrichmentColumns,
     getAlterationFrequencyScatterData,
-    getAlterationRowData,
     getAlterationScatterData,
     AlterationContainerType,
     getFilteredData,
@@ -115,11 +114,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
     }
 
     @computed get data(): AlterationEnrichmentRow[] {
-        return getAlterationRowData(
-            this.props.data,
-            this.props.store ? this.props.store.hugoGeneSymbols : [],
-            this.props.groups
-        );
+        return this.props.comparisonStore?.alterationEnrichmentRowData || [];
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
@@ -577,7 +572,6 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             onSelectionCleared={this.onSelectionCleared}
                         />
                     )}
-
                     <div style={{ maxWidth: this.genePlotMaxWidth }}>
                         <GeneBarPlot
                             data={this.data}
