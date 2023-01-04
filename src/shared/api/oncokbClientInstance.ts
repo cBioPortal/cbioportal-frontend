@@ -11,9 +11,15 @@ client.addErrorHandler(err => {
         'alert'
     );
 
-    siteError.meta = {
-        stacktrace: err?.response?.text,
-    };
+    try {
+        siteError.meta = {
+            stacktrace: err?.response?.body || 'n/a',
+            status: err?.status || err?.response?.status || 'n/a',
+            responseShape: Object.keys(err?.response || {}),
+        };
+    } catch (ex) {
+        // fail silent
+    }
 
     eventBus.emit('error', null, siteError);
 });
