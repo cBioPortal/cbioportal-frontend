@@ -62,6 +62,7 @@ export interface IMutationMapperProps {
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
     showPlotDownloadControls?: boolean;
+    showPlotPercentToggle?: boolean;
     mutationTable?: JSX.Element;
     pubMedCache?: PubMedCache;
     showTranscriptDropDown?: boolean;
@@ -85,6 +86,7 @@ export interface IMutationMapperProps {
     ) => JSX.Element;
     plotYAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
     axisMode?: AxisScale;
+    onScaleToggle?: (selectedScale: AxisScale) => void;
     compactStyle?: boolean;
     mergeOncoKbIcons?: boolean; // TODO add server config param for this as well?
 
@@ -563,6 +565,8 @@ export default class MutationMapper<
                 }
                 yAxisLabelFormatter={this.props.plotYAxisLabelFormatter}
                 axisMode={this.props.axisMode}
+                onScaleToggle={this.props.onScaleToggle}
+                showPercentToggle={this.props.showPlotPercentToggle}
             />
         );
     }

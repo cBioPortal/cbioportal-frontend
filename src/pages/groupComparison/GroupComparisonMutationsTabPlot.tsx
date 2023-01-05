@@ -86,12 +86,16 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
 
     @autobind
     protected plotYAxisLabelFormatter(symbol: string, groupName: string) {
-        // lowercase = 1 and uppercase = 1.3 (based on 'w' and 'W'), if groupName >= 22 (13 + 9 leniency), stop and + "..."
-        let length = 0;
-        let label = '';
+        // lowercase = 1 and uppercase = 1.3 (based on 'w' and 'W'), if label >= 22 (13 + 9 leniency), stop and + "..."
+        let length = 1;
+        let label = `(${
+            this.props.store.activeGroups.result!.find(
+                g => g.name === groupName
+            )!.ordinal
+        }) `;
         for (let c of groupName) {
             let value = c === c.toLowerCase() ? 1 : 1.3;
-            if (length + value >= 22) {
+            if (length + value >= 21) {
                 label += '...';
                 break;
             } else {
@@ -136,8 +140,8 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             {this.props.store.activeMutationMapperGene
                                 ?.hugoGeneSymbol +
                                 ' mutations: ' +
-                                _(this.props.store.mutationsByGroup.result!)
-                                    .keys()
+                                this.props.store.activeGroups
+                                    .result!.map(g => g.nameWithOrdinal)
                                     .join(' vs ')}
                         </h3>
                         <GroupComparisonMutationMapper
@@ -167,6 +171,8 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             trackVisibility={
                                 this.userSelectionStore.trackVisibility
                             }
+                            compactStyle={true}
+                            showPlotPercentToggle={true}
                         />
                     </>
                 );
