@@ -5,48 +5,43 @@ import * as React from 'react';
 import { ReferenceList } from './ReferenceList';
 
 import mainStyles from './main.module.scss';
+import { parseOncoKBAbstractReference } from '../util/OncoKbUtils';
 
 export default class RefComponent extends React.Component<{
     content: string;
     componentType: 'tooltip' | 'linkout';
 }> {
     render() {
+        const defaultRefComponent = <span>{this.props.content}</span>;
+
         const parts = this.props.content.split(/pmid|nct|abstract/i);
 
         if (parts.length < 2) {
-            return <span>{this.props.content}</span>;
+            return defaultRefComponent;
         }
 
-        // Slicing from index 1 to end to rejoin the abstract title and link
-        // when there's the case that they also contain the string 'Abstract'
-        // Example :
-        //     (Abstract: Fakih et al. Abstract# 3003, ASCO 2019. https://meetinglibrary.asco.org/record/12411/Abstract)
-        const abstractParts = parts
-            .slice(1)
-            .join('Abstract')
-            .split(/(?=http)/i);
-        const isAbstract = !(abstractParts.length < 2);
-
         const ids = parts[1].match(/[0-9]+/g);
-
         let prefix: string | undefined;
         let linkComponent: JSX.Element | undefined;
         let link: string | undefined;
         let linkText: string | undefined;
 
-        if (isAbstract) {
-            linkText = abstractParts[0].replace(/^[:\s]*/g, '').trim();
-            link = abstractParts[1].replace(/[\\)]*$/g, '').trim();
+        const parsedAbstract = parseOncoKBAbstractReference(this.props.content);
+        if (!!parsedAbstract) {
+            linkText = parsedAbstract.abstractTitle;
+            link = parsedAbstract.abstractLink;
             prefix = 'Abstract: ';
         } else {
             if (!ids) {
-                return <span>{this.props.content}</span>;
+                return defaultRefComponent;
             }
 
             if (this.props.content.toLowerCase().includes('pmid')) {
                 prefix = 'PMID: ';
             } else if (this.props.content.toLowerCase().includes('nct')) {
                 prefix = 'NCT';
+            } else {
+                return defaultRefComponent;
             }
 
             linkText = ids.join(', ');
@@ -62,10 +57,12 @@ export default class RefComponent extends React.Component<{
         }
 
         if (this.props.componentType === 'tooltip') {
-            const pmids = isAbstract
+            const pmids = !!parsedAbstract
                 ? []
                 : ids!.map((id: string) => parseInt(id, 10));
-            const abstracts = isAbstract ? [{ abstract: linkText, link }] : [];
+            const abstracts = !!parsedAbstract
+                ? [{ abstract: linkText, link }]
+                : [];
             const tooltipContent = () => (
                 <div className={mainStyles['tooltip-refs']}>
                     <ReferenceList pmids={pmids} abstracts={abstracts} />

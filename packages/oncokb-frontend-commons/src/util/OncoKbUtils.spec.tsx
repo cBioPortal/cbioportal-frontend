@@ -6,6 +6,7 @@ import {
     defaultOncoKbIndicatorFilter,
     getPositionalVariant,
     groupOncoKbIndicatorDataByMutations,
+    parseOncoKBAbstractReference,
 } from './OncoKbUtils';
 
 describe('OncoKbUtils', () => {
@@ -239,6 +240,59 @@ describe('OncoKbUtils', () => {
                 getPositionalVariant(missenseAlteration),
                 undefined,
                 'V600 should be returned'
+            );
+        });
+    });
+
+    describe('parseOncoKBAbstractReference', () => {
+        it('Valid abstract reference passed', () => {
+            const abstractReference =
+                '(Abstract: Hunger et al. ASH 2017. http://www.bloodjournal.org/content/130/Suppl_1/98)';
+            const expectedOutput = {
+                abstractTitle: 'Hunger et al. ASH 2017.',
+                abstractLink:
+                    'http://www.bloodjournal.org/content/130/Suppl_1/98',
+            };
+            assert.deepEqual(
+                parseOncoKBAbstractReference(abstractReference),
+                expectedOutput
+            );
+        });
+        it('Invalid abstract reference containing abstract string', () => {
+            const abstractReference =
+                '(Abstract: Fakih et al. Abstract# 3003, ASCO 2019. https://meetinglibrary.asco.org/record/12411/Abstract)';
+            const expectedOutput = {
+                abstractTitle: 'Fakih et al. Abstract# 3003, ASCO 2019.',
+                abstractLink:
+                    'https://meetinglibrary.asco.org/record/12411/Abstract',
+            };
+            assert.deepEqual(
+                parseOncoKBAbstractReference(abstractReference),
+                expectedOutput
+            );
+        });
+        it('Undefined returned for abstract with missing link', () => {
+            const abstractReference = '(Abstract: Hunger et al. ASH 2017.)';
+            assert.equal(
+                parseOncoKBAbstractReference(abstractReference),
+                undefined,
+                'undefined should be returned'
+            );
+        });
+        it('Undefined returned for non-abstract reference', () => {
+            const pmidReference = '(PMID: 11753428)';
+            assert.equal(
+                parseOncoKBAbstractReference(pmidReference),
+                undefined,
+                'undefined should be returned'
+            );
+        });
+        it('Undefined returned for empty string', () => {
+            const abstractReference = '';
+            assert.equal(
+                parseOncoKBAbstractReference(abstractReference),
+                undefined,
+                'undefined should be returned'
             );
         });
     });
