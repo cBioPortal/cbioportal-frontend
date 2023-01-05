@@ -1126,6 +1126,21 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
+    @computed get alterationEnrichmentRowData(): AlterationEnrichmentRow[] {
+        if (
+            this.alterationsEnrichmentData.isComplete &&
+            this.alterationsEnrichmentAnalysisGroups.isComplete
+        )
+            return getAlterationRowData(
+                this.alterationsEnrichmentData.result!,
+                this.resultsViewStore
+                    ? this.resultsViewStore.hugoGeneSymbols
+                    : [],
+                this.alterationsEnrichmentAnalysisGroups.result!
+            );
+        return [];
+    }
+
     public readonly mutationsEnrichmentData = makeEnrichmentDataPromise({
         await: () => [this.mutationsEnrichmentDataRequestGroups],
         resultsViewPageStore: this.resultsViewStore,

@@ -1085,31 +1085,7 @@ export function getGeneListOptions(
     }
 
     let dataSortedByAlteredPercentage = _.clone(dataWithOptionName).sort(
-        function(kv1, kv2) {
-            const t1 = _.reduce(
-                kv1.groupsSet,
-                (acc, next) => {
-                    acc =
-                        next.alteredPercentage > acc
-                            ? next.alteredPercentage
-                            : acc;
-                    return acc;
-                },
-                0
-            );
-            const t2 = _.reduce(
-                kv2.groupsSet,
-                (acc, next) => {
-                    acc =
-                        next.alteredPercentage > acc
-                            ? next.alteredPercentage
-                            : acc;
-                    return acc;
-                },
-                0
-            );
-            return t2 - t1;
-        }
+        compareByAlterationPercentage
     );
 
     let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(function(
