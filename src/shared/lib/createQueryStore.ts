@@ -53,14 +53,23 @@ export function createQueryStore(
             }
         }
 
+        const wrapper =
+            urlWrapper || new ResultsViewURLWrapper(win.routingStore);
+
+        // Default to OncoPrint Tab if tabId is undefined or not of type ResultsViewTab
+        const currentTab =
+            wrapper.tabId &&
+            Object.values(ResultsViewTab).includes(
+                wrapper.tabId as ResultsViewTab
+            )
+                ? wrapper.tabId
+                : ResultsViewTab.ONCOPRINT;
+
         const tab =
             queryStore.physicalStudyIdsInSelection.length > 1 &&
             queryStore.geneIds.length === 1
                 ? ResultsViewTab.CANCER_TYPES_SUMMARY
-                : ResultsViewTab.ONCOPRINT;
-
-        const wrapper =
-            urlWrapper || new ResultsViewURLWrapper(win.routingStore);
+                : currentTab;
 
         wrapper.updateURL(query, `results/${tab}`, clearUrl, false);
 
