@@ -22,6 +22,7 @@ import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/M
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
     onScaleToggle: (selectedScale: AxisScale) => void;
+    onClickSettingMenu: (visible: boolean) => void;
     mutations?: Mutation[];
     filters?: any;
 }
@@ -111,11 +112,6 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         }
     }
 
-    @action.bound
-    protected onClickSettingMenu(visible: boolean) {
-        this.props.store.isSettingsMenuVisible = visible;
-    }
-
     readonly plotUI = MakeMobxView({
         await: () => [
             this.props.store.mutations,
@@ -167,7 +163,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                                     ? (m: AnnotatedMutation) => m.putativeDriver
                                     : undefined
                             }
-                            onClickSettingMenu={this.onClickSettingMenu}
+                            onClickSettingMenu={this.props.onClickSettingMenu}
                             trackVisibility={
                                 this.userSelectionStore.trackVisibility
                             }

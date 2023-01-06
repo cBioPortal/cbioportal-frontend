@@ -2,18 +2,16 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
+import classNames from 'classnames';
+import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
 import {
-    IDriverAnnotationControlsHandlers,
+    IAnnotationFilterSettings,
     IDriverAnnotationControlsState,
+    IDriverAnnotationControlsHandlers,
     buildDriverAnnotationControlsState,
     buildDriverAnnotationControlsHandlers,
-    IAnnotationFilterSettings,
-} from '../../../shared/alterationFiltering/AnnotationFilteringSettings';
-import DriverAnnotationControls from '../../../shared/components/driverAnnotations/DriverAnnotationControls';
-import InfoIcon from '../../../shared/components/InfoIcon';
-import styles from '../../../shared/components/driverAnnotations/styles.module.scss';
-import classNames from 'classnames';
-import { BoldedSpanList } from 'pages/resultsView/ResultsViewPageHelpers';
+} from './AnnotationFilteringSettings';
+import styles from 'shared/components/driverAnnotations/styles.module.scss';
 
 enum EVENT_KEY {
     hidePutativePassengers = '0',
@@ -28,8 +26,10 @@ enum EVENT_KEY {
 
 export interface SettingsMenuProps {
     store: IAnnotationFilterSettings;
-    resultsView?: boolean;
-    comparisonView?: boolean;
+    annotationTitleComponent?: JSX.Element;
+    showOnckbAnnotationControls?: boolean;
+    showFilterControls?: boolean;
+    showExcludeUnprofiledSamplesControl?: boolean;
     disabled?: boolean;
 }
 
@@ -109,33 +109,17 @@ export default class SettingsMenu extends React.Component<
                 )}
                 style={{ padding: 5 }}
             >
-                <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                    Annotate Data
-                </h5>
-                {!this.props.comparisonView && (
-                    <InfoIcon
-                        divStyle={{ display: 'inline-block', marginLeft: 6 }}
-                        style={{ color: 'rgb(54, 134, 194)' }}
-                        tooltip={
-                            <span>
-                                Putative driver vs VUS setings apply to every
-                                tab except{' '}
-                                <BoldedSpanList
-                                    words={['Co-expression', 'CN Segments']}
-                                />
-                            </span>
-                        }
-                    />
-                )}
+                {this.props.annotationTitleComponent}
                 <div style={{ marginLeft: 10 }}>
                     <DriverAnnotationControls
                         state={this.driverSettingsState}
                         handlers={this.driverSettingsHandlers}
-                        resultsView={this.props.resultsView}
-                        comparisonView={this.props.comparisonView}
+                        showOnckbAnnotationControls={
+                            this.props.showOnckbAnnotationControls
+                        }
                     />
                 </div>
-                {!this.props.comparisonView && (
+                {this.props.showFilterControls && (
                     <>
                         <hr />
                         <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
@@ -179,7 +163,7 @@ export default class SettingsMenu extends React.Component<
                                     Exclude germline mutations
                                 </label>
                             </div>
-                            {this.props.resultsView && (
+                            {this.props.showExcludeUnprofiledSamplesControl && (
                                 <div>
                                     <div className="checkbox">
                                         <label>

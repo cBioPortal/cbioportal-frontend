@@ -1,5 +1,4 @@
 import { DefaultTooltip, setArrowLeft } from 'cbioportal-frontend-commons';
-import SettingsMenu from '../../../pages/resultsView/settings/SettingsMenu';
 import * as React from 'react';
 import {
     IDriverSettingsProps,
@@ -7,13 +6,18 @@ import {
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
+import InfoIcon from '../InfoIcon';
+import { BoldedSpanList } from 'pages/resultsView/ResultsViewPageHelpers';
+import SettingsMenu from 'shared/alterationFiltering/SettingsMenu';
 
 export interface SettingsButtonProps {
     store: IDriverSettingsProps &
         IExclusionSettings &
         ISettingsMenuButtonVisible;
-    resultsView?: boolean;
-    comparisonView?: boolean;
+    disableInfoIcon?: boolean;
+    showOnckbAnnotationControls?: boolean;
+    showFilterControls?: boolean;
+    showExcludeUnprofiledSamplesControl: boolean;
     disabled?: boolean;
 }
 
@@ -50,12 +54,43 @@ export default class SettingsMenuButton extends React.Component<
         }
     }
 
+    @computed get annotationTitleComponent() {
+        return (
+            <>
+                <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    Annotate Data
+                </h5>
+                {!this.props.disableInfoIcon && (
+                    <InfoIcon
+                        divStyle={{ display: 'inline-block', marginLeft: 6 }}
+                        style={{ color: 'rgb(54, 134, 194)' }}
+                        tooltip={
+                            <span>
+                                Putative driver vs VUS setings apply to every
+                                tab except{' '}
+                                <BoldedSpanList
+                                    words={['Co-expression', 'CN Segments']}
+                                />
+                            </span>
+                        }
+                    />
+                )}
+            </>
+        );
+    }
+
     @computed get overlay() {
         return (
             <SettingsMenu
                 store={this.props.store}
-                resultsView={this.props.resultsView}
-                comparisonView={this.props.comparisonView}
+                annotationTitleComponent={this.annotationTitleComponent}
+                showOnckbAnnotationControls={
+                    this.props.showOnckbAnnotationControls
+                }
+                showFilterControls={this.props.showFilterControls}
+                showExcludeUnprofiledSamplesControl={
+                    this.props.showExcludeUnprofiledSamplesControl
+                }
                 disabled={this.props.disabled}
             />
         );

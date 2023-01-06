@@ -76,6 +76,11 @@ export default class GroupComparisonMutationsTab extends React.Component<
             : undefined;
     }
 
+    @action.bound
+    protected onClickSettingMenu(visible: boolean) {
+        this.props.store.isSettingsMenuVisible = visible;
+    }
+
     readonly tabUI = MakeMobxView({
         await: () => [
             this.props.store.genes,
@@ -138,11 +143,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
                                     .hugoGeneSymbol
                             }
                         />
-                        <SettingsMenuButton
-                            store={this.props.store}
-                            comparisonView={true}
-                        />
-                        <div style={{ marginLeft: 5, paddingRight: '5px' }}>
+                        <div style={{ paddingRight: 5 }}>
                             Highest Frequency:
                         </div>
                         <div>
@@ -159,9 +160,19 @@ export default class GroupComparisonMutationsTab extends React.Component<
                             </MSKTabs>
                         </div>
                     </div>
+                    <div style={{ paddingTop: 10 }}>
+                        <SettingsMenuButton
+                            store={this.props.store}
+                            disableInfoIcon={true}
+                            showOnckbAnnotationControls={true}
+                            showFilterControls={false}
+                            showExcludeUnprofiledSamplesControl={false}
+                        />
+                    </div>
                     <GroupComparisonMutationsTabPlot
                         store={this.props.store}
                         onScaleToggle={this.onScaleToggle}
+                        onClickSettingMenu={this.onClickSettingMenu}
                         mutations={_(this.props.store.mutationsByGroup.result!)
                             .values()
                             .flatten()
