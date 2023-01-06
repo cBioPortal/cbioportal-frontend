@@ -13,7 +13,11 @@ client.addErrorHandler(err => {
 
     try {
         siteError.meta = {
-            stacktrace: err?.response?.body || 'n/a',
+            stacktrace:
+                err?.response?.body ||
+                err?.response?.text ||
+                err?.response?.responseText ||
+                'n/a',
             status: err?.status || err?.response?.status || 'n/a',
             responseShape: Object.keys(err?.response || {}),
         };
