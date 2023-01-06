@@ -99,7 +99,7 @@ export default class MiniScatterChart<
                 >
                     {this.tooltipTitle}
                     <br />
-                    Log Ratio: {formatLogOddsRatio(this.tooltipModel.logRatio)}
+                    Log2 Ratio: {formatLogOddsRatio(this.tooltipModel.logRatio)}
                     <br />
                     p-Value:{' '}
                     {toConditionalPrecision(this.tooltipModel.pValue, 3, 0.01)}
@@ -213,7 +213,7 @@ export default class MiniScatterChart<
                                 -this.props.xAxisDomain,
                                 this.props.xAxisDomain,
                             ]}
-                            label="Log Ratio"
+                            label={'Log2 Ratio'}
                             tickFormat={(t: any) =>
                                 t >= 1000 || t <= -1000 ? `${t / 1000}k` : t
                             }
