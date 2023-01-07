@@ -775,7 +775,7 @@ describe('EnrichmentsUtil', () => {
                     ),
                     datum => datum.name
                 ),
-                ['Log Ratio', 'Tendency', 'altered group', 'unaltered group']
+                ['Log2 Ratio', 'Tendency', 'altered group', 'unaltered group']
             );
             assert.deepEqual(
                 _.map(
@@ -785,7 +785,7 @@ describe('EnrichmentsUtil', () => {
                     ]),
                     datum => datum.name
                 ),
-                ['Log Ratio', 'Enriched in', 'group1', 'group2']
+                ['Log2 Ratio', 'Enriched in', 'group1', 'group2']
             );
             assert.deepEqual(
                 _.map(
