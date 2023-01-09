@@ -18,7 +18,8 @@ export function createQueryStore(
     const queryStore = new QueryStore(currentQuery);
 
     queryStore.singlePageAppSubmitRoutine = function(
-        query: CancerStudyQueryUrlParams
+        query: CancerStudyQueryUrlParams,
+        currentTab?: ResultsViewTab
     ) {
         // normalize this
         query.cancer_study_list =
@@ -53,23 +54,10 @@ export function createQueryStore(
             }
         }
 
+        const tab = currentTab ? currentTab : ResultsViewTab.ONCOPRINT;
+
         const wrapper =
             urlWrapper || new ResultsViewURLWrapper(win.routingStore);
-
-        // Default to OncoPrint Tab if tabId is undefined or not of type ResultsViewTab
-        const currentTab =
-            wrapper.tabId &&
-            Object.values(ResultsViewTab).includes(
-                wrapper.tabId as ResultsViewTab
-            )
-                ? wrapper.tabId
-                : ResultsViewTab.ONCOPRINT;
-
-        const tab =
-            queryStore.physicalStudyIdsInSelection.length > 1 &&
-            queryStore.geneIds.length === 1
-                ? ResultsViewTab.CANCER_TYPES_SUMMARY
-                : currentTab;
 
         wrapper.updateURL(query, `results/${tab}`, clearUrl, false);
 
