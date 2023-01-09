@@ -70,6 +70,7 @@ import { toQueryString } from 'shared/lib/query/textQueryUtils';
 import { SearchClause } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
 import { AppStore } from 'AppStore';
+import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -158,7 +159,8 @@ export class QueryStore {
     }
 
     public singlePageAppSubmitRoutine: (
-        query: CancerStudyQueryUrlParams
+        query: CancerStudyQueryUrlParams,
+        currentTab?: ResultsViewTab
     ) => void;
 
     @observable studiesHaveChangedSinceInitialization: boolean = false;
@@ -2250,7 +2252,7 @@ export class QueryStore {
         this.genesetQuery = genesetQuery;
     }
 
-    @action submit() {
+    @action submit(currentTab?: ResultsViewTab) {
         if (this.oql.error) {
             this.geneQueryErrorDisplayStatus = Focus.ShouldFocus;
             this.genesetQueryErrorDisplayStatus = Focus.ShouldFocus;
@@ -2270,7 +2272,7 @@ export class QueryStore {
                 'smart'
             );
         } else {
-            this.singlePageAppSubmitRoutine(urlParams.query);
+            this.singlePageAppSubmitRoutine(urlParams.query, currentTab);
         }
 
         return true;
