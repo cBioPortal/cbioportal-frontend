@@ -774,3 +774,40 @@ export function defaultArraySortMethod<U extends number | string>(
 
     return result;
 }
+
+/**
+ * Parses OncoKB abstract reference (ie. found in biological effect summaries) into an
+ * object containing the abstract's title and link.
+ * Example input: "(Abstract: Hunger et al. ASH 2017. http://www.bloodjournal.org/content/130/Suppl_1/98)"
+ * Example output: {abstractTitle: "Hunger et al. ASH 2017.", abstractLink: "http://www.bloodjournal.org/content/130/Suppl_1/98"}
+ */
+export function parseOncoKBAbstractReference(abstractRef: string) {
+    try {
+        const parts = abstractRef.split(/abstract/i);
+
+        if (parts.length < 2) {
+            return undefined;
+        }
+
+        // Slicing from index 1 to end to rejoin the abstract title and link
+        // when there's the case that they also contain the string 'Abstract'
+        // Example :
+        //     (Abstract: Fakih et al. Abstract# 3003, ASCO 2019. https://meetinglibrary.asco.org/record/12411/Abstract)
+        const abstractParts = parts
+            .slice(1)
+            .join('Abstract')
+            .split(/(?=http)/i);
+
+        if (abstractParts.length < 2) {
+            return undefined;
+        }
+
+        return {
+            abstractTitle: abstractParts[0].replace(/^[:\s]*/g, '').trim(),
+            abstractLink: abstractParts[1].replace(/[\\)]*$/g, '').trim(),
+        };
+    } catch (ex) {
+        // Encountered a parsing error
+        return undefined;
+    }
+}
