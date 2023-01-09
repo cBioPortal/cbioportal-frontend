@@ -9,10 +9,12 @@ import {
     AxisScale,
     DataFilterType,
     applyDataFilters,
+    groupDataByGroupFilters,
 } from 'react-mutation-mapper';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
 import { ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE } from 'shared/lib/MutationUtils';
 import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMapperDataStore';
+import _ from 'lodash';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -105,30 +107,19 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     protected mutationsGroupedByProteinImpactTypeForGroup(groupIndex: number) {
-        // there are two types of filters (with putative driver, without putative driver)
-        const filtersWithoutProteinImpactTypeFilter = this.store.dataStore.dataFilters.filter(
-            f =>
-                f.type !== DataFilterType.PROTEIN_IMPACT_TYPE &&
-                f.type !== ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
-        );
+        let sortedFilteredGroupedData = this
+            .sortedFilteredDataWithoutProteinImpactTypeFilter;
 
-        // apply filters excluding the protein impact type filters
-        // this prevents number of unchecked protein impact types from being counted as zero
-        let sortedFilteredGroupedData = applyDataFilters(
-            this.store.dataStore.sortedFilteredGroupedData[groupIndex].data,
-            filtersWithoutProteinImpactTypeFilter,
+        // group the filtered data by comparison group
+        sortedFilteredGroupedData = groupDataByGroupFilters(
+            this.store.dataStore.groupFilters,
+            sortedFilteredGroupedData,
             this.store.dataStore.applyFilter
         );
 
-        // also apply lazy mobx table search filter
-        sortedFilteredGroupedData = sortedFilteredGroupedData.filter(m =>
-            (this.store
-                .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
-                m
-            )
+        return this.groupDataByProteinImpactType(
+            sortedFilteredGroupedData[groupIndex].data
         );
-
-        return this.groupDataByProteinImpactType(sortedFilteredGroupedData);
     }
 
     protected mutationCountsByProteinImpactTypeForGroup(
@@ -138,14 +129,12 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     } {
         const map: { [proteinImpactType: string]: number } = {};
 
-        Object.keys(
-            this.mutationsGroupedByProteinImpactTypeForGroup(groupIndex)
-        ).forEach(proteinImpactType => {
-            const g = this.mutationsGroupedByProteinImpactTypeForGroup(
-                groupIndex
-            )[proteinImpactType];
-            map[g.group] = g.data.length;
-        });
+        _.forIn(
+            this.mutationsGroupedByProteinImpactTypeForGroup(groupIndex),
+            (v, k) => {
+                map[v.group] = v.data.length;
+            }
+        );
         return map;
     }
 }

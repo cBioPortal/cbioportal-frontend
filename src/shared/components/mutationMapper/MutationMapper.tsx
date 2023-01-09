@@ -465,7 +465,7 @@ export default class MutationMapper<
     }
 
     @computed
-    protected get mutationsGroupedByProteinImpactType() {
+    protected get sortedFilteredDataWithoutProteinImpactTypeFilter() {
         // there are two types of filters (with putative driver, without putative driver)
         const filtersWithoutProteinImpactTypeFilter = this.store.dataStore.dataFilters.filter(
             f =>
@@ -480,6 +480,14 @@ export default class MutationMapper<
             filtersWithoutProteinImpactTypeFilter,
             this.store.dataStore.applyFilter
         );
+
+        return sortedFilteredData;
+    }
+
+    @computed
+    protected get mutationsGroupedByProteinImpactType() {
+        let sortedFilteredData = this
+            .sortedFilteredDataWithoutProteinImpactTypeFilter;
 
         // also apply lazy mobx table search filter
         sortedFilteredData = sortedFilteredData.filter(m =>

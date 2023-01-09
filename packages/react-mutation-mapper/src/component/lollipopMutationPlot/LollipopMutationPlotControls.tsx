@@ -220,6 +220,7 @@ export default class LollipopMutationPlotControls extends React.Component<
         );
     }
 
+    @computed
     protected get percentToggle() {
         return (
             <PercentToggle
