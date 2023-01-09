@@ -9,7 +9,7 @@ const {
     selectColumn,
     namespaceColumnsAreDisplayed,
     getRowByGene,
-} = require('./namespace-columns-utils');
+} = require('./namespace-columns-utils.spec');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 

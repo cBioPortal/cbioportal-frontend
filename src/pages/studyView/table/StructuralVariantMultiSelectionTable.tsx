@@ -2,126 +2,107 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
 import FixedHeaderTable, { IFixedHeaderTableProps } from './FixedHeaderTable';
-import { action, computed, observable, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     Column,
     SortDirection,
 } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { StudyViewGenePanelModal } from './StudyViewGenePanelModal';
-import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import { GenePanel } from 'cbioportal-ts-api-client';
 import {
     correctColumnWidth,
     correctMargin,
-    getCNAByAlteration,
-    getCNAColorByAlteration,
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr,
 } from 'pages/studyView/StudyViewUtils';
-import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
+import { OncokbCancerStructVar } from 'pages/studyView/StudyViewPageStore';
 import {
+    FreqColumnTypeEnum,
+    getCancerGeneToggledOverlay,
     getFreqColumnRender,
     getTooltip,
-    FreqColumnTypeEnum,
     SelectionOperatorEnum,
-    getCancerGeneToggledOverlay,
 } from 'pages/studyView/TableUtils';
-import { GeneCell } from 'pages/studyView/table/GeneCell';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
-import MobxPromise from 'mobxpromise';
 import {
     stringListToIndexSet,
     stringListToSet,
-    EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
+import { StructVarCell } from 'pages/studyView/table/StructVarCell';
+import { BaseMultiSelectionTableProps } from 'pages/studyView/table/MultiSelectionTable';
+import MobxPromise from 'mobxpromise';
+import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
+import {
+    STRUCTVARAnyGeneStr,
+    STRUCTVARNullGeneStr,
+} from 'shared/lib/oql/oqlfilter';
 
-export type MultiSelectionTableRow = OncokbCancerGene & {
-    label: string;
+export type StructVarMultiSelectionTableRow = OncokbCancerStructVar & {
+    label1: string;
+    label2: string;
     matchingGenePanelIds: Array<string>;
     numberOfAlteredCases: number;
     numberOfProfiledCases: number;
-    qValue: number;
     totalCount: number;
     alteration?: number;
     cytoband?: string;
     uniqueKey: string;
 };
 
-export enum MultiSelectionTableColumnKey {
-    GENE = 'Gene',
-    MOLECULAR_PROFILE = 'Molecular Profile',
-    CASE_LIST = 'Name',
+export enum StructVarMultiSelectionTableColumnKey {
+    STRUCTVAR_SELECT = 'StructVarSelect',
+    GENE1 = 'Gene 1',
+    GENE2 = 'Gene 2',
     NUMBER_STRUCTURAL_VARIANTS = '# SV',
-    NUMBER_MUTATIONS = '# Mut',
-    CYTOBAND = 'Cytoband',
-    CNA = 'CNA',
     NUMBER = '#',
     FREQ = 'Freq',
 }
 
-export type MultiSelectionTableColumn = {
-    columnKey: MultiSelectionTableColumnKey;
+export type StructVarMultiSelectionTableColumn = {
+    columnKey: StructVarMultiSelectionTableColumnKey;
     columnWidthRatio?: number;
     columnTooltip?: JSX.Element;
 };
 
-export type BaseMultiSelectionTableProps = {
-    tableType: FreqColumnTypeEnum;
-    width: number;
-    height: number;
-    filters: string[][];
-    onSubmitSelection: (value: string[][]) => void;
-    onChangeSelectedRows: (rowsKeys: string[]) => void;
-    selectedRowsKeys: string[];
-    cancerGeneFilterEnabled?: boolean;
-    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
-    filterByCancerGenes: boolean;
-    onChangeCancerGeneFilter: (filtered: boolean) => void;
-    alterationFilterEnabled?: boolean;
-    filterAlterations?: boolean;
-    setOperationsButtonText: string;
-};
-
-export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
-    defaultSortBy: MultiSelectionTableColumnKey;
+export type StructVarMultiSelectionTableProps = BaseMultiSelectionTableProps & {
+    onStructuralVariantSelect: (
+        gene1HugoGeneSymbol: string | undefined,
+        gene2HugoGeneSymbol: string | undefined
+    ) => void;
+    selectedStructVars: StructVarGenePair[];
+    defaultSortBy: StructVarMultiSelectionTableColumnKey;
     extraButtons?: IFixedHeaderTableProps<
-        MultiSelectionTableRow
+        StructVarMultiSelectionTableRow
     >['extraButtons'];
-    selectedGenes: string[];
-    onGeneSelect: (hugoGeneSymbol: string) => void;
-    columns: MultiSelectionTableColumn[];
-    promise: MobxPromise<MultiSelectionTableRow[]>;
+    columns: StructVarMultiSelectionTableColumn[];
+    promise: MobxPromise<StructVarMultiSelectionTableRow[]>;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {
-    [key in MultiSelectionTableColumnKey]: number;
+    [key in StructVarMultiSelectionTableColumnKey]: number;
 } = {
-    [MultiSelectionTableColumnKey.GENE]: 0.35,
-    [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0.6,
-    [MultiSelectionTableColumnKey.CASE_LIST]: 0.6,
-    [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
-    [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.2,
-    [MultiSelectionTableColumnKey.NUMBER]: 0.25,
-    [MultiSelectionTableColumnKey.FREQ]: 0.15,
-    [MultiSelectionTableColumnKey.CYTOBAND]: 0.25,
-    [MultiSelectionTableColumnKey.CNA]: 0.14,
+    [StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT]: 0.07,
+    [StructVarMultiSelectionTableColumnKey.GENE1]: 0.3,
+    [StructVarMultiSelectionTableColumnKey.GENE2]: 0.3,
+    [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.08,
+    [StructVarMultiSelectionTableColumnKey.NUMBER]: 0.2,
+    [StructVarMultiSelectionTableColumnKey.FREQ]: 0.3,
 };
 
 class MultiSelectionTableComponent extends FixedHeaderTable<
-    MultiSelectionTableRow
+    StructVarMultiSelectionTableRow
 > {}
 
 @observer
-export class MultiSelectionTable extends React.Component<
-    MultiSelectionTableProps,
+export class StructuralVariantMultiSelectionTable extends React.Component<
+    StructVarMultiSelectionTableProps,
     {}
 > {
-    @observable protected sortBy: MultiSelectionTableColumnKey;
+    @observable protected sortBy: StructVarMultiSelectionTableColumnKey;
     @observable private sortDirection: SortDirection;
     @observable private modalSettings: {
         modalOpen: boolean;
@@ -131,33 +112,38 @@ export class MultiSelectionTable extends React.Component<
         modalPanelName: '',
     };
 
+    @observable private hoveredStructVarTableRowId:
+        | string
+        | undefined = undefined;
+
     public static defaultProps = {
         cancerGeneFilterEnabled: false,
     };
 
-    constructor(props: MultiSelectionTableProps, context: any) {
+    constructor(props: StructVarMultiSelectionTableProps, context: any) {
         super(props, context);
         makeObservable(this);
         this.sortBy = this.props.defaultSortBy;
     }
 
     getDefaultColumnDefinition = (
-        columnKey: MultiSelectionTableColumnKey,
+        columnKey: StructVarMultiSelectionTableColumnKey,
         columnWidth: number,
-        cellMargin: number
+        cellMargin: number,
+        hoveredStructVarTableRowId: string | undefined
     ) => {
         const defaults: {
-            [key in MultiSelectionTableColumnKey]: Column<
-                MultiSelectionTableRow
+            [key in StructVarMultiSelectionTableColumnKey]: Column<
+                StructVarMultiSelectionTableRow
             >;
         } = {
-            [MultiSelectionTableColumnKey.GENE]: {
+            [StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT]: {
                 name: columnKey,
                 headerRender: () => {
                     return (
                         <TableHeaderCellFilterIcon
                             cellMargin={cellMargin}
-                            dataTest="gene-column-header"
+                            dataTest="structvar-column-header"
                             className={styles.displayFlex}
                             showFilter={!!this.props.cancerGeneFilterEnabled!}
                             isFiltered={!!this.isFilteredByCancerGeneList}
@@ -166,105 +152,136 @@ export class MultiSelectionTable extends React.Component<
                                 !!this.isFilteredByCancerGeneList
                             )}
                         >
-                            <span>{columnKey}</span>
+                            <span />
                         </TableHeaderCellFilterIcon>
                     );
                 },
-                render: (data: MultiSelectionTableRow) => {
+                render: (data: StructVarMultiSelectionTableRow) => {
                     return (
-                        <GeneCell
+                        <StructVarCell
                             tableType={this.props.tableType}
-                            selectedGenes={this.props.selectedGenes}
-                            hugoGeneSymbol={data.label}
-                            qValue={data.qValue}
-                            isCancerGene={data.isCancerGene}
-                            oncokbAnnotated={data.oncokbAnnotated}
-                            isOncogene={data.isOncokbOncogene}
-                            isTumorSuppressorGene={
-                                data.isOncokbTumorSuppressorGene
+                            uniqueRowId={data.uniqueKey}
+                            selectedStructVars={this.props.selectedStructVars}
+                            gene1SymbolOrOql={
+                                data.label1 || STRUCTVARNullGeneStr
                             }
-                            onGeneSelect={this.props.onGeneSelect}
+                            gene2SymbolOrOql={
+                                data.label2 || STRUCTVARNullGeneStr
+                            }
+                            isCancerGene={false}
+                            oncokbAnnotated={false}
+                            isOncogene={false}
+                            isTumorSuppressorGene={false}
+                            onStructVarSelect={
+                                this.props.onStructuralVariantSelect
+                            }
+                            onGeneHovered={this.onStructVarHover}
+                            hoveredStructVarRowId={hoveredStructVarTableRowId}
                         />
                     );
                 },
-                sortBy: (data: MultiSelectionTableRow) => data.label,
+                sortBy: (data: StructVarMultiSelectionTableRow) => data.label1,
                 defaultSortDirection: 'asc' as 'asc',
                 filter: (
-                    data: MultiSelectionTableRow,
+                    data: StructVarMultiSelectionTableRow,
                     filterString: string,
                     filterStringUpper: string
                 ) => {
-                    return data.label.toUpperCase().includes(filterStringUpper);
+                    return data.uniqueKey
+                        .toUpperCase()
+                        .includes(filterStringUpper);
                 },
                 width: columnWidth,
             },
-            [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
+            [StructVarMultiSelectionTableColumnKey.GENE1]: {
                 name: columnKey,
                 headerRender: () => {
+                    return <span>{columnKey}</span>;
+                },
+                render: (data: StructVarMultiSelectionTableRow) => {
                     return (
-                        <div
-                            style={{ marginLeft: cellMargin }}
-                            className={styles.displayFlex}
-                            data-test="profile-column-header"
-                        >
-                            {columnKey}
-                        </div>
+                        <StructVarCell
+                            tableType={this.props.tableType}
+                            uniqueRowId={data.uniqueKey}
+                            selectedStructVars={this.props.selectedStructVars}
+                            label={data.label1}
+                            gene1SymbolOrOql={
+                                data.label1 || STRUCTVARNullGeneStr
+                            }
+                            gene2SymbolOrOql={STRUCTVARAnyGeneStr}
+                            isCancerGene={data.gene1IsCancerGene}
+                            oncokbAnnotated={data.gene1OncokbAnnotated}
+                            isOncogene={data.gene1IsOncokbOncogene}
+                            isTumorSuppressorGene={
+                                data.gene1IsOncokbTumorSuppressorGene
+                            }
+                            onStructVarSelect={
+                                this.props.onStructuralVariantSelect
+                            }
+                            onGeneHovered={this.onStructVarHover}
+                            hoveredStructVarRowId={hoveredStructVarTableRowId}
+                            hideCheckbox={!data.label1}
+                        />
                     );
                 },
-                render: (data: MultiSelectionTableRow) => {
-                    return (
-                        <div className={styles.labelContent}>
-                            <EllipsisTextTooltip
-                                text={data.label}
-                            ></EllipsisTextTooltip>
-                        </div>
-                    );
-                },
-                sortBy: (data: MultiSelectionTableRow) => data.label,
+                sortBy: (data: StructVarMultiSelectionTableRow) => data.label1,
                 defaultSortDirection: 'asc' as 'asc',
                 filter: (
-                    data: MultiSelectionTableRow,
+                    data: StructVarMultiSelectionTableRow,
                     filterString: string,
                     filterStringUpper: string
                 ) => {
-                    return data.label.toUpperCase().includes(filterStringUpper);
+                    return data.label1
+                        .toUpperCase()
+                        .includes(filterStringUpper);
                 },
                 width: columnWidth,
             },
-            [MultiSelectionTableColumnKey.CASE_LIST]: {
+            [StructVarMultiSelectionTableColumnKey.GENE2]: {
                 name: columnKey,
                 headerRender: () => {
+                    return <span>{columnKey}</span>;
+                },
+                render: (data: StructVarMultiSelectionTableRow) => {
                     return (
-                        <div
-                            style={{ marginLeft: cellMargin }}
-                            className={styles.displayFlex}
-                            data-test="profile-column-header"
-                        >
-                            {columnKey}
-                        </div>
+                        <StructVarCell
+                            tableType={this.props.tableType}
+                            uniqueRowId={data.uniqueKey}
+                            selectedStructVars={this.props.selectedStructVars}
+                            label={data.label2}
+                            gene1SymbolOrOql={STRUCTVARAnyGeneStr}
+                            gene2SymbolOrOql={
+                                data.label2 || STRUCTVARNullGeneStr
+                            }
+                            isCancerGene={data.gene2IsCancerGene}
+                            oncokbAnnotated={data.gene2OncokbAnnotated}
+                            isOncogene={data.gene2IsOncokbOncogene}
+                            isTumorSuppressorGene={
+                                data.gene2IsOncokbTumorSuppressorGene
+                            }
+                            onStructVarSelect={
+                                this.props.onStructuralVariantSelect
+                            }
+                            onGeneHovered={this.onStructVarHover}
+                            hoveredStructVarRowId={hoveredStructVarTableRowId}
+                            hideCheckbox={!data.label2}
+                        />
                     );
                 },
-                render: (data: MultiSelectionTableRow) => {
-                    return (
-                        <div className={styles.labelContent}>
-                            <EllipsisTextTooltip
-                                text={data.label}
-                            ></EllipsisTextTooltip>
-                        </div>
-                    );
-                },
-                sortBy: (data: MultiSelectionTableRow) => data.label,
+                sortBy: (data: StructVarMultiSelectionTableRow) => data.label2,
                 defaultSortDirection: 'asc' as 'asc',
                 filter: (
-                    data: MultiSelectionTableRow,
+                    data: StructVarMultiSelectionTableRow,
                     filterString: string,
                     filterStringUpper: string
                 ) => {
-                    return data.label.toUpperCase().includes(filterStringUpper);
+                    return data.label2
+                        .toUpperCase()
+                        .includes(filterStringUpper);
                 },
                 width: columnWidth,
             },
-            [MultiSelectionTableColumnKey.NUMBER]: {
+            [StructVarMultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
                 headerRender: () => {
@@ -272,7 +289,7 @@ export class MultiSelectionTable extends React.Component<
                         <TableHeaderCellFilterIcon
                             cellMargin={cellMargin}
                             dataTest="number-column-header"
-                            className={`${styles.displayFlex} ${styles.pullRight}`}
+                            className={styles.displayFlex}
                             showFilter={!!this.props.alterationFilterEnabled}
                             isFiltered={!!this.props.filterAlterations}
                         >
@@ -280,7 +297,7 @@ export class MultiSelectionTable extends React.Component<
                         </TableHeaderCellFilterIcon>
                     );
                 },
-                render: (data: MultiSelectionTableRow) => (
+                render: (data: StructVarMultiSelectionTableRow) => (
                     <LabeledCheckbox
                         checked={this.isChecked(data.uniqueKey)}
                         disabled={this.isDisabled(data.uniqueKey)}
@@ -302,11 +319,11 @@ export class MultiSelectionTable extends React.Component<
                         </span>
                     </LabeledCheckbox>
                 ),
-                sortBy: (data: MultiSelectionTableRow) =>
+                sortBy: (data: StructVarMultiSelectionTableRow) =>
                     data.numberOfAlteredCases,
                 defaultSortDirection: 'desc' as 'desc',
                 filter: (
-                    data: MultiSelectionTableRow,
+                    data: StructVarMultiSelectionTableRow,
                     filterString: string
                 ) => {
                     return _.toString(data.numberOfAlteredCases).includes(
@@ -315,31 +332,28 @@ export class MultiSelectionTable extends React.Component<
                 },
                 width: columnWidth,
             },
-            [MultiSelectionTableColumnKey.FREQ]: {
+            [StructVarMultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
-                render: (data: MultiSelectionTableRow) => {
+                render: (data: StructVarMultiSelectionTableRow) => {
                     return getFreqColumnRender(
                         this.props.tableType,
                         data.numberOfProfiledCases,
                         data.numberOfAlteredCases,
                         data.matchingGenePanelIds || [],
                         this.toggleModal,
-                        {
-                            marginLeft: cellMargin,
-                        },
-                        styles.pullRight
+                        { marginLeft: cellMargin }
                     );
                 },
-                sortBy: (data: MultiSelectionTableRow) =>
+                sortBy: (data: StructVarMultiSelectionTableRow) =>
                     (data.numberOfAlteredCases / data.numberOfProfiledCases) *
                     100,
                 defaultSortDirection: 'desc' as 'desc',
                 filter: (
-                    data: MultiSelectionTableRow,
+                    data: StructVarMultiSelectionTableRow,
                     filterString: string
                 ) => {
                     return _.toString(
@@ -351,122 +365,78 @@ export class MultiSelectionTable extends React.Component<
                 },
                 width: columnWidth,
             },
-            [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: {
+            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
                 tooltip: <span>Total number of mutations</span>,
                 headerRender: () => {
                     return (
                         <div style={{ marginLeft: cellMargin }}>
-                            {MultiSelectionTableColumnKey.NUMBER_MUTATIONS}
-                        </div>
-                    );
-                },
-                render: (data: MultiSelectionTableRow) => (
-                    <span
-                        data-test={'numberOfAlterations'}
-                        className={styles.pullRight}
-                        style={{
-                            marginRight: cellMargin,
-                        }}
-                    >
-                        {data.totalCount.toLocaleString()}
-                    </span>
-                ),
-                sortBy: (data: MultiSelectionTableRow) => data.totalCount,
-                defaultSortDirection: 'desc' as 'desc',
-                filter: (
-                    data: MultiSelectionTableRow,
-                    filterString: string
-                ) => {
-                    return _.toString(data.totalCount).includes(filterString);
-                },
-                width: columnWidth,
-            },
-            [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
-                name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
-                headerRender: () => {
-                    return (
-                        <div style={{ marginLeft: cellMargin }}>
                             {
-                                MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
+                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
                             }
                         </div>
                     );
                 },
-                render: (data: MultiSelectionTableRow) => (
+                render: (data: StructVarMultiSelectionTableRow) => (
                     <span
                         data-test={'numberOfAlterations'}
                         style={{
+                            flexDirection: 'row-reverse',
+                            display: 'flex',
                             marginRight: cellMargin,
                         }}
-                        className={`${styles.pullRight}`}
                     >
                         {data.totalCount.toLocaleString()}
                     </span>
                 ),
-                sortBy: (data: MultiSelectionTableRow) => data.totalCount,
+                sortBy: (data: StructVarMultiSelectionTableRow) =>
+                    data.totalCount,
                 defaultSortDirection: 'desc' as 'desc',
                 filter: (
-                    data: MultiSelectionTableRow,
+                    data: StructVarMultiSelectionTableRow,
                     filterString: string
                 ) => {
                     return _.toString(data.totalCount).includes(filterString);
                 },
                 width: columnWidth,
             },
-            [MultiSelectionTableColumnKey.CNA]: {
-                name: MultiSelectionTableColumnKey.CNA,
-                tooltip: (
-                    <span>
-                        Copy number alteration, only amplifications and deep
-                        deletions are shown
-                    </span>
-                ),
-                render: (data: MultiSelectionTableRow) => (
-                    <span
-                        data-test={'cnaCell'}
-                        style={{
-                            color: getCNAColorByAlteration(
-                                getCNAByAlteration(data.alteration!)
-                            ),
-                            fontWeight: 'bold',
-                        }}
-                    >
-                        {getCNAByAlteration(data.alteration!)}
-                    </span>
-                ),
-                sortBy: (data: MultiSelectionTableRow) => data.alteration!,
-                defaultSortDirection: 'asc' as 'asc',
-                filter: (
-                    data: MultiSelectionTableRow,
-                    filterString: string,
-                    filterStringUpper: string
-                ) => {
-                    return getCNAByAlteration(data.alteration!).includes(
-                        filterStringUpper
+            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
+                name: columnKey,
+                tooltip: <span>Total number of structural variants</span>,
+                headerRender: () => {
+                    return (
+                        <div
+                            style={{
+                                marginLeft: cellMargin - 18,
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {
+                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
+                            }
+                        </div>
                     );
                 },
-                width: columnWidth,
-            },
-            [MultiSelectionTableColumnKey.CYTOBAND]: {
-                name: MultiSelectionTableColumnKey.CYTOBAND,
-                tooltip: <span>Cytoband</span>,
-                render: (data: MultiSelectionTableRow) => (
-                    <span>{data.cytoband}</span>
+                render: (data: StructVarMultiSelectionTableRow) => (
+                    <span
+                        data-test={'numberOfAlterations'}
+                        style={{
+                            flexDirection: 'row-reverse',
+                            display: 'flex',
+                            marginRight: cellMargin,
+                        }}
+                    >
+                        {data.totalCount.toLocaleString()}
+                    </span>
                 ),
-                sortBy: (data: MultiSelectionTableRow) => data.cytoband!,
-                defaultSortDirection: 'asc' as 'asc',
+                sortBy: (data: StructVarMultiSelectionTableRow) =>
+                    data.totalCount,
+                defaultSortDirection: 'desc' as 'desc',
                 filter: (
-                    data: MultiSelectionTableRow,
-                    filterString: string,
-                    filterStringUpper: string
+                    data: StructVarMultiSelectionTableRow,
+                    filterString: string
                 ) => {
-                    return _.isUndefined(data.cytoband)
-                        ? false
-                        : data.cytoband
-                              .toUpperCase()
-                              .includes(filterStringUpper);
+                    return _.toString(data.totalCount).includes(filterString);
                 },
                 width: columnWidth,
             },
@@ -475,35 +445,31 @@ export class MultiSelectionTable extends React.Component<
     };
 
     getDefaultCellMargin = (
-        columnKey: MultiSelectionTableColumnKey,
+        columnKey: StructVarMultiSelectionTableColumnKey,
         columnWidth: number
     ) => {
-        const defaults: { [key in MultiSelectionTableColumnKey]: number } = {
-            [MultiSelectionTableColumnKey.GENE]: 0,
-            [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0,
-            [MultiSelectionTableColumnKey.CASE_LIST]: 0,
-            [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: correctMargin(
+        const defaults: {
+            [key in StructVarMultiSelectionTableColumnKey]: number;
+        } = {
+            [StructVarMultiSelectionTableColumnKey.GENE1]: 0,
+            [StructVarMultiSelectionTableColumnKey.GENE2]: 0,
+            [StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT]: 0,
+            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,
                     this.totalCountLocaleString
                 )
             ),
-            [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
-                )
-            ),
-            [MultiSelectionTableColumnKey.NUMBER]: correctMargin(
+            [StructVarMultiSelectionTableColumnKey.NUMBER]: correctMargin(
                 (columnWidth -
                     10 -
                     (getFixedHeaderTableMaxLengthStringPixel(
                         this.alteredCasesLocaleString
                     ) +
-                        20)) /
+                        30)) /
                     2
             ),
-            [MultiSelectionTableColumnKey.FREQ]: correctMargin(
+            [StructVarMultiSelectionTableColumnKey.FREQ]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,
                     getFrequencyStr(
@@ -518,20 +484,18 @@ export class MultiSelectionTable extends React.Component<
                     )
                 )
             ),
-            [MultiSelectionTableColumnKey.CYTOBAND]: 0,
-            [MultiSelectionTableColumnKey.CNA]: 0,
         };
         return defaults[columnKey];
     };
 
     @computed
     get maxNumberTotalCount() {
-        return _.max(this.tableData.map(item => item.totalCount));
+        return _.maxBy(this.tableData!, item => item.totalCount);
     }
 
     @computed
     get maxNumberAlteredCasesColumn() {
-        return _.max(this.tableData!.map(item => item.numberOfAlteredCases));
+        return _.maxBy(this.tableData!, item => item.numberOfAlteredCases);
     }
 
     @computed
@@ -561,7 +525,7 @@ export class MultiSelectionTable extends React.Component<
                 );
                 return acc;
             },
-            {} as { [key in MultiSelectionTableColumnKey]: number }
+            {} as { [key in StructVarMultiSelectionTableColumnKey]: number }
         );
     }
 
@@ -576,13 +540,16 @@ export class MultiSelectionTable extends React.Component<
                 );
                 return acc;
             },
-            {} as { [key in MultiSelectionTableColumnKey]: number }
+            {} as { [key in StructVarMultiSelectionTableColumnKey]: number }
         );
     }
 
     @computed get tableData() {
         return this.isFilteredByCancerGeneList
-            ? _.filter(this.props.promise.result, data => data.isCancerGene)
+            ? _.filter(
+                  this.props.promise.result,
+                  data => data.gene1IsCancerGene || data.gene2IsCancerGene
+              )
             : this.props.promise.result || [];
     }
 
@@ -608,7 +575,7 @@ export class MultiSelectionTable extends React.Component<
         const order = stringListToIndexSet(this.flattenedFilters);
         return _.chain(this.tableData)
             .filter(data => this.flattenedFilters.includes(data.uniqueKey))
-            .sortBy<MultiSelectionTableRow>(data =>
+            .sortBy<StructVarMultiSelectionTableRow>(data =>
                 ifNotDefined(order[data.uniqueKey], Number.POSITIVE_INFINITY)
             )
             .value();
@@ -625,7 +592,8 @@ export class MultiSelectionTable extends React.Component<
             const columnDefinition = this.getDefaultColumnDefinition(
                 column.columnKey,
                 this.columnsWidth[column.columnKey],
-                this.cellMargin[column.columnKey]
+                this.cellMargin[column.columnKey],
+                this.hoveredStructVarTableRowId
             );
             if (column.columnTooltip) {
                 columnDefinition.tooltip = column.columnTooltip;
@@ -676,6 +644,11 @@ export class MultiSelectionTable extends React.Component<
     @autobind
     isDisabled(uniqueKey: string) {
         return _.some(this.preSelectedRowsKeys, key => key === uniqueKey);
+    }
+
+    @action.bound
+    onStructVarHover(rowId: string, isHovered: boolean) {
+        this.hoveredStructVarTableRowId = isHovered ? rowId : undefined;
     }
 
     @action.bound
@@ -740,7 +713,7 @@ export class MultiSelectionTable extends React.Component<
     }
 
     @autobind
-    isSelectedRow(data: MultiSelectionTableRow) {
+    isSelectedRow(data: StructVarMultiSelectionTableRow) {
         return this.isChecked(data.uniqueKey);
     }
 
@@ -758,7 +731,7 @@ export class MultiSelectionTable extends React.Component<
     }
 
     @autobind
-    selectedRowClassName(data: MultiSelectionTableRow) {
+    selectedRowClassName(data: StructVarMultiSelectionTableRow) {
         const index = this.filterKeyToIndexSet[data.uniqueKey];
         if (index === undefined) {
             return this.props.filters.length % 2 === 0
@@ -772,7 +745,7 @@ export class MultiSelectionTable extends React.Component<
 
     @action.bound
     afterSorting(
-        sortBy: MultiSelectionTableColumnKey,
+        sortBy: StructVarMultiSelectionTableColumnKey,
         sortDirection: SortDirection
     ) {
         this.sortBy = sortBy;
@@ -785,9 +758,6 @@ export class MultiSelectionTable extends React.Component<
             <div data-test={tableId} key={tableId}>
                 {this.props.promise.isComplete && (
                     <MultiSelectionTableComponent
-                        key={`multiSelect-${tableId}-${this.preSelectedRowsKeys.join(
-                            ''
-                        )}`}
                         width={this.props.width}
                         height={this.props.height}
                         data={this.selectableTableData}
@@ -803,9 +773,6 @@ export class MultiSelectionTable extends React.Component<
                         fixedTopRowsData={this.preSelectedRows}
                         highlightedRowClassName={this.selectedRowClassName}
                         showSetOperationsButton={true}
-                        setOperationsButtonText={
-                            this.props.setOperationsButtonText
-                        }
                         numberOfSelectedRows={
                             this.props.selectedRowsKeys.length
                         }

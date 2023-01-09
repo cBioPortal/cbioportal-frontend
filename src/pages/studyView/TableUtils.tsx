@@ -96,6 +96,7 @@ export function getCancerGeneFilterToggleIcon(
 export enum FreqColumnTypeEnum {
     MUTATION = 'mutations',
     STRUCTURAL_VARIANT = 'structural variants',
+    STRUCTURAL_VARIANT_PAIR = 'structural variant pairs',
     CNA = 'copy number alterations',
     DATA = 'data',
 }
