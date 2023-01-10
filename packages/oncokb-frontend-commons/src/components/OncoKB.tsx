@@ -26,7 +26,7 @@ export interface IOncoKbProps {
     indicator?: IndicatorQueryResp;
     availableDataTypes?: OncoKbCardDataType[];
     mergeAnnotationIcons?: boolean;
-    usingPublicOncoKbInstance: boolean;
+    usingPublicOncoKbInstance?: boolean;
     isCancerGene: boolean;
     geneNotExist: boolean;
     hugoGeneSymbol: string;
@@ -176,7 +176,7 @@ function singleAnnotationIcon(
             <AnnotationIconWithTooltip
                 tooltipOverlay={tooltipContent(
                     findDefaultDataTypeForTooltip(
-                        props.usingPublicOncoKbInstance,
+                        props.usingPublicOncoKbInstance || false,
                         props.indicator,
                         props.availableDataTypes
                     ),
@@ -188,7 +188,7 @@ function singleAnnotationIcon(
                         indicator={props.indicator}
                         availableDataTypes={props.availableDataTypes}
                         usingPublicOncoKbInstance={
-                            props.usingPublicOncoKbInstance
+                            props.usingPublicOncoKbInstance || false
                         }
                     />
                 }
@@ -205,7 +205,7 @@ function tooltipContent(
     return (
         <OncoKbTooltip
             type={type}
-            usingPublicOncoKbInstance={props.usingPublicOncoKbInstance}
+            usingPublicOncoKbInstance={props.usingPublicOncoKbInstance || false}
             hugoSymbol={props.hugoGeneSymbol}
             geneNotExist={props.geneNotExist}
             isCancerGene={props.isCancerGene}
