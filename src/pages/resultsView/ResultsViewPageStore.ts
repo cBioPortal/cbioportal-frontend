@@ -5144,8 +5144,6 @@ export class ResultsViewPageStore extends AnalysisStore
             return Promise.resolve((structualVariant: StructuralVariant): {
                 oncoKb: string;
                 hotspots: boolean;
-                cbioportalCount: boolean;
-                cosmicCount: boolean;
                 customDriverBinary: boolean;
                 customDriverTier?: string;
             } => {
@@ -5173,8 +5171,6 @@ export class ResultsViewPageStore extends AnalysisStore
                 return {
                     oncoKb,
                     hotspots: false,
-                    cbioportalCount: false,
-                    cosmicCount: false,
                     customDriverBinary: false,
                     customDriverTier: undefined,
                 };

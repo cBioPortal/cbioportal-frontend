@@ -270,8 +270,6 @@ describe('oncoprint', function() {
         let resultsPageSettingsDropdown;
         let oncoKbCheckbox;
         let hotspotsCheckbox;
-        let cbioportalCheckbox;
-        let cosmicCheckbox;
 
         before(() => {
             goToUrlAndSetLocalStorage(
@@ -289,12 +287,6 @@ describe('oncoprint', function() {
             hotspotsCheckbox =
                 resultsPageSettingsDropdown +
                 ' input[data-test="annotateHotspots"]';
-            cbioportalCheckbox =
-                resultsPageSettingsDropdown +
-                ' input[data-test="annotateCBioPortalCount"]';
-            cosmicCheckbox =
-                resultsPageSettingsDropdown +
-                ' input[data-test="annotateCOSMICCount"]';
         });
     });
 

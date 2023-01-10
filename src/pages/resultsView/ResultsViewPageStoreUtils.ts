@@ -128,8 +128,6 @@ export function annotateMutationPutativeDriver(
     putativeDriverInfo: {
         oncoKb: string;
         hotspots: boolean;
-        cbioportalCount: boolean;
-        cosmicCount: boolean;
         customDriverBinary: boolean;
         customDriverTier?: string;
     }
@@ -137,11 +135,10 @@ export function annotateMutationPutativeDriver(
     const putativeDriver = !!(
         putativeDriverInfo.oncoKb ||
         putativeDriverInfo.hotspots ||
-        putativeDriverInfo.cbioportalCount ||
-        putativeDriverInfo.cosmicCount ||
         putativeDriverInfo.customDriverBinary ||
         putativeDriverInfo.customDriverTier
     );
+
     return Object.assign(
         {
             putativeDriver,
@@ -160,8 +157,6 @@ export function annotateStructuralVariantPutativeDriver(
     putativeDriverInfo: {
         oncoKb: string;
         hotspots: boolean;
-        cbioportalCount: boolean;
-        cosmicCount: boolean;
         customDriverBinary: boolean;
         customDriverTier?: string;
     }
@@ -169,8 +164,6 @@ export function annotateStructuralVariantPutativeDriver(
     const putativeDriver = !!(
         putativeDriverInfo.oncoKb ||
         putativeDriverInfo.hotspots ||
-        putativeDriverInfo.cbioportalCount ||
-        putativeDriverInfo.cosmicCount ||
         putativeDriverInfo.customDriverBinary ||
         putativeDriverInfo.customDriverTier
     );
@@ -234,8 +227,6 @@ export function filterAndAnnotateStructuralVariants(
     ) => {
         oncoKb: string;
         hotspots: boolean;
-        cbioportalCount: boolean;
-        cosmicCount: boolean;
         customDriverBinary: boolean;
         customDriverTier?: string;
     }
@@ -865,17 +856,11 @@ export function evaluateMutationPutativeDriverInfo(
     oncoKbDatum: IndicatorQueryResp | undefined | null | false,
     hotspotAnnotationsActive: boolean,
     hotspotDriver: boolean,
-    cbioportalCountActive: boolean,
-    cbioportalCountExceeded: boolean,
-    cosmicCountActive: boolean,
-    cosmicCountExceeded: boolean,
     customDriverAnnotationsActive: boolean,
     customDriverTierSelection: ObservableMap<string, boolean> | undefined
 ) {
     const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
     const hotspots = hotspotAnnotationsActive && hotspotDriver;
-    const cbioportalCount = cbioportalCountActive && cosmicCountExceeded;
-    const cosmicCount = cosmicCountActive && cosmicCountExceeded;
 
     // Set driverFilter to true when:
     // (1) custom drivers active in settings menu
@@ -898,8 +883,6 @@ export function evaluateMutationPutativeDriverInfo(
     return {
         oncoKb,
         hotspots,
-        cbioportalCount,
-        cosmicCount,
         customDriverBinary,
         customDriverTier,
     };

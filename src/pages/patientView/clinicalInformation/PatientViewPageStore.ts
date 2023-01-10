@@ -2482,8 +2482,6 @@ export class PatientViewPageStore {
             return Promise.resolve((mutation: Mutation): {
                 oncoKb: string;
                 hotspots: boolean;
-                cbioportalCount: boolean;
-                cosmicCount: boolean;
                 customDriverBinary: boolean;
                 customDriverTier?: string;
             } => {
@@ -2503,8 +2501,6 @@ export class PatientViewPageStore {
                 const isHotspotDriver =
                     !(this.isHotspotForOncoprint.result instanceof Error) &&
                     this.isHotspotForOncoprint.result!(mutation);
-                const cbioportalCountExceeded = false;
-                const cosmicCountExceeded = false;
 
                 // Note:
                 // - custom driver annotations are part of the incoming datum
@@ -2515,10 +2511,6 @@ export class PatientViewPageStore {
                     oncoKbDatum,
                     true,
                     isHotspotDriver,
-                    false,
-                    cbioportalCountExceeded,
-                    false,
-                    cosmicCountExceeded,
                     false,
                     undefined
                 );
