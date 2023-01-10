@@ -1,6 +1,6 @@
 {
   "name": "oncokb-frontend-commons",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "OncoKB Frontend Modules",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
