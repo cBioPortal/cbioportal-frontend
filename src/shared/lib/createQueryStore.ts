@@ -18,7 +18,8 @@ export function createQueryStore(
     const queryStore = new QueryStore(currentQuery);
 
     queryStore.singlePageAppSubmitRoutine = function(
-        query: CancerStudyQueryUrlParams
+        query: CancerStudyQueryUrlParams,
+        currentTab?: ResultsViewTab
     ) {
         // normalize this
         query.cancer_study_list =
@@ -53,11 +54,7 @@ export function createQueryStore(
             }
         }
 
-        const tab =
-            queryStore.physicalStudyIdsInSelection.length > 1 &&
-            queryStore.geneIds.length === 1
-                ? ResultsViewTab.CANCER_TYPES_SUMMARY
-                : ResultsViewTab.ONCOPRINT;
+        const tab = currentTab ? currentTab : ResultsViewTab.ONCOPRINT;
 
         const wrapper =
             urlWrapper || new ResultsViewURLWrapper(win.routingStore);
