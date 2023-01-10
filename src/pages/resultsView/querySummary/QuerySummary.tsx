@@ -314,7 +314,12 @@ export default class QuerySummary extends React.Component<
                                     </button>
                                     <SettingsMenuButton
                                         store={this.props.store}
-                                        resultsView={true}
+                                        disableInfoIcon={false}
+                                        showOnckbAnnotationControls={true}
+                                        showFilterControls={true}
+                                        showExcludeUnprofiledSamplesControl={
+                                            true
+                                        }
                                     />
                                 </div>
                             )}
