@@ -56,9 +56,11 @@ describe('alteration filter menu', function() {
                     ATM: '1',
                     TP53: '1',
                 });
-                assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
-                    SV_COUNTS
+                // somatic checkbox unchecked, filter structural variant table
+                assert.strictEqual(
+                    Object.keys(geneTableCounts('structural variants-table'))
+                        .length,
+                    0
                 );
                 // does not filter cna table
                 assert.deepStrictEqual(
@@ -100,6 +102,7 @@ describe('alteration filter menu', function() {
                     OR11H1: '1',
                     TMEM247: '1',
                 });
+                // does not filter structural variant table
                 assert.deepStrictEqual(
                     geneTableCounts('structural variants-table'),
                     SV_COUNTS
@@ -150,6 +153,7 @@ describe('alteration filter menu', function() {
                     OR11H1: '1',
                     TMEM247: '1',
                 });
+                // does not filter structural variant table
                 assert.deepStrictEqual(
                     geneTableCounts('structural variants-table'),
                     SV_COUNTS
