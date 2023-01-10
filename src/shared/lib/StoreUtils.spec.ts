@@ -1065,8 +1065,6 @@ describe('StoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: true,
-                        cbioportalCount: false,
-                        cosmicCount: true,
                         customDriverBinary: false,
                     }),
                     { 1: { hugoGeneSymbol: 'mygene' } as Gene }
@@ -1108,8 +1106,6 @@ describe('StoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: true,
-                        cbioportalCount: false,
-                        cosmicCount: true,
                         customDriverBinary: false,
                     }),
                     {
@@ -1166,8 +1162,6 @@ describe('StoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: false,
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     }),
                     {
@@ -1214,15 +1208,11 @@ describe('StoreUtils', () => {
                             ? {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: true,
                               }
                             : {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: false,
                               },
                     {
@@ -1286,8 +1276,6 @@ describe('StoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: false,
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     }),
                     {
@@ -1340,15 +1328,11 @@ describe('StoreUtils', () => {
                             ? {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: true,
                               }
                             : {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: false,
                               },
                     {

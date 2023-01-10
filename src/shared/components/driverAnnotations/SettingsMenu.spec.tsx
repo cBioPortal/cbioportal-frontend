@@ -117,10 +117,6 @@ describe('SettingsMenu', () => {
                 // -- props below are not relevant for SettingsMenu
                 hotspots: false,
                 oncoKb: false,
-                cbioportalCount: false,
-                cbioportalCountThreshold: 0,
-                cosmicCount: false,
-                cosmicCountThreshold: 0,
                 // --
             } as DriverAnnotationSettings,
             customDriverAnnotationReport: {

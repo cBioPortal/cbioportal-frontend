@@ -512,30 +512,11 @@ export default class ResultsViewOncoprint extends React.Component<
             get annotateDriversHotspotsError() {
                 return self.props.store.didHotspotFailInOncoprint;
             },
-            get annotateDriversCBioPortal() {
-                return self.props.store.driverAnnotationSettings
-                    .cbioportalCount;
-            },
-            get annotateDriversCOSMIC() {
-                return self.props.store.driverAnnotationSettings.cosmicCount;
-            },
             get hidePutativePassengers() {
                 return !self.props.store.driverAnnotationSettings.includeVUS;
             },
             get hideGermlineMutations() {
                 return !self.props.store.includeGermlineMutations;
-            },
-            get annotateCBioPortalInputValue() {
-                return (
-                    self.props.store.driverAnnotationSettings
-                        .cbioportalCountThreshold + ''
-                );
-            },
-            get annotateCOSMICInputValue() {
-                return (
-                    self.props.store.driverAnnotationSettings
-                        .cosmicCountThreshold + ''
-                );
             },
             get sortMode() {
                 return self.sortMode;
@@ -728,8 +709,6 @@ export default class ResultsViewOncoprint extends React.Component<
                 if (!s) {
                     this.props.store.driverAnnotationSettings.oncoKb = false;
                     this.props.store.driverAnnotationSettings.hotspots = false;
-                    this.props.store.driverAnnotationSettings.cbioportalCount = false;
-                    this.props.store.driverAnnotationSettings.cosmicCount = false;
                     this.props.store.driverAnnotationSettings.customBinary = false;
                     this.props.store.driverAnnotationSettings.driverTiers.forEach(
                         (value, key) => {
@@ -753,8 +732,6 @@ export default class ResultsViewOncoprint extends React.Component<
                     )
                         this.props.store.driverAnnotationSettings.hotspots = true;
 
-                    this.props.store.driverAnnotationSettings.cbioportalCount = true;
-                    this.props.store.driverAnnotationSettings.cosmicCount = true;
                     this.props.store.driverAnnotationSettings.customBinary = true;
                     this.props.store.driverAnnotationSettings.driverTiers.forEach(
                         (value, key) => {

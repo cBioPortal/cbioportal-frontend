@@ -136,22 +136,18 @@ export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is Oncop
 }*/
 
 export function initDriverAnnotationSettings(store: OncoprinterStore) {
-    let _oncoKb: boolean, _cbioportalCount: boolean, _customBinary: boolean;
+    let _oncoKb: boolean, _customBinary: boolean;
     if (store.existCustomDrivers) {
         // if custom drivers, start with only custom drivers annotated
         _oncoKb = false;
-        _cbioportalCount = false;
         _customBinary = true;
     } else {
         _oncoKb = true;
-        _cbioportalCount = false;
         _customBinary = false;
     }
 
     return observable({
-        cbioportalCountThreshold: 0,
         _oncoKb,
-        _cbioportalCount,
         _customBinary,
         _includeVUS: true,
         hotspots: false, // for now
@@ -161,13 +157,6 @@ export function initDriverAnnotationSettings(store: OncoprinterStore) {
         },
         set customBinary(val: boolean) {
             this._customBinary = val;
-            store.customDriverWarningHidden = true;
-        },
-        get cbioportalCount() {
-            return this._cbioportalCount;
-        },
-        set cbioportalCount(val: boolean) {
-            this._cbioportalCount = val;
             store.customDriverWarningHidden = true;
         },
         set oncoKb(val: boolean) {
@@ -190,7 +179,6 @@ export function initDriverAnnotationSettings(store: OncoprinterStore) {
         get driversAnnotated() {
             const anySelected =
                 this.oncoKb ||
-                this.cbioportalCount ||
                 this.hotspots ||
                 (store.existCustomDrivers && this.customBinary);
 
