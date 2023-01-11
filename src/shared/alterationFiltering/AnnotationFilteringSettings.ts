@@ -25,10 +25,6 @@ export interface DriverAnnotationSettings {
     includeDriver: boolean;
     includeVUS: boolean;
     includeUnknownOncogenicity: boolean;
-    cbioportalCount: boolean;
-    cbioportalCountThreshold: number;
-    cosmicCount: boolean;
-    cosmicCountThreshold: number;
     customBinary: boolean;
     customTiersDefault: boolean;
     driverTiers: ObservableMap<string, boolean>;
@@ -74,10 +70,6 @@ export function buildDriverAnnotationSettings(
     config = getServerConfig()
 ): DriverAnnotationSettings {
     return observable({
-        cbioportalCount: false,
-        cbioportalCountThreshold: 0,
-        cosmicCount: false,
-        cosmicCountThreshold: 0,
         driverTiers: observable.map<string, boolean>({}, { deep: true }),
 
         _hotspots: getServerConfig().oncoprint_hotspots_default,
@@ -131,8 +123,6 @@ export function buildDriverAnnotationSettings(
             const anySelected =
                 this.oncoKb ||
                 this.hotspots ||
-                this.cbioportalCount ||
-                this.cosmicCount ||
                 this.customBinary ||
                 _.some(this.driverTiers.entries(), entry => entry[1]);
             return anySelected;
@@ -165,8 +155,6 @@ export function buildDriverAnnotationControlsHandlers(
             if (!s) {
                 driverAnnotationSettings.oncoKb = false;
                 driverAnnotationSettings.hotspots = false;
-                driverAnnotationSettings.cbioportalCount = false;
-                driverAnnotationSettings.cosmicCount = false;
                 driverAnnotationSettings.customBinary = false;
                 driverAnnotationSettings.driverTiers.forEach((value, key) => {
                     driverAnnotationSettings.driverTiers.set(key, false);
@@ -187,8 +175,6 @@ export function buildDriverAnnotationControlsHandlers(
                 )
                     driverAnnotationSettings.hotspots = true;
 
-                driverAnnotationSettings.cbioportalCount = true;
-                driverAnnotationSettings.cosmicCount = true;
                 driverAnnotationSettings.customBinary = true;
                 driverAnnotationSettings.driverTiers.forEach((value, key) => {
                     driverAnnotationSettings.driverTiers.set(key, true);
@@ -262,12 +248,6 @@ export function buildDriverAnnotationControlsState(
         },
         get includePutativeUnknownOncogenicity() {
             return driverAnnotationSettings.includeUnknownOncogenicity;
-        },
-        get annotateCBioPortalInputValue() {
-            return driverAnnotationSettings.cbioportalCountThreshold + '';
-        },
-        get annotateCOSMICInputValue() {
-            return driverAnnotationSettings.cosmicCountThreshold + '';
         },
         get customDriverAnnotationBinaryMenuLabel() {
             if (customDriverAnnotationReport) {

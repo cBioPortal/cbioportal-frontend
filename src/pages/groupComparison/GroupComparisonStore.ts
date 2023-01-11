@@ -52,6 +52,7 @@ import { FeatureFlagEnum } from 'shared/featureFlags';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
+    @observable public isSettingsMenuVisible = false;
 
     constructor(
         sessionId: string,

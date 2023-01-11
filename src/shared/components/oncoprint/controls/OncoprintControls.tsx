@@ -745,7 +745,7 @@ export default class OncoprintControls extends React.Component<
                                 } as Partial<IDriverAnnotationControlsHandlers>,
                                 this.props.handlers
                             )}
-                            resultsView={true}
+                            showOnckbAnnotationControls={true}
                         />
                     </div>
 

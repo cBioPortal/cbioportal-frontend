@@ -176,20 +176,12 @@ export default abstract class AnalysisStore {
             if (this.driverAnnotationSettings.hotspots) {
                 toAwait.push(this.isHotspotForOncoprint);
             }
-            if (this.driverAnnotationSettings.cbioportalCount) {
-                toAwait.push(this.getCBioportalCount);
-            }
-            if (this.driverAnnotationSettings.cosmicCount) {
-                toAwait.push(this.getCosmicCount);
-            }
             return toAwait;
         },
         invoke: () => {
             return Promise.resolve((mutation: Mutation): {
                 oncoKb: string;
                 hotspots: boolean;
-                cbioportalCount: boolean;
-                cosmicCount: boolean;
                 customDriverBinary: boolean;
                 customDriverTier?: string;
             } => {
@@ -211,16 +203,6 @@ export default abstract class AnalysisStore {
                     this.driverAnnotationSettings.hotspots &&
                     !(this.isHotspotForOncoprint.result instanceof Error) &&
                     this.isHotspotForOncoprint.result!(mutation);
-                const cbioportalCountExceeded =
-                    this.driverAnnotationSettings.cbioportalCount &&
-                    this.getCBioportalCount.isComplete &&
-                    this.getCBioportalCount.result!(mutation) >=
-                        this.driverAnnotationSettings.cbioportalCountThreshold;
-                const cosmicCountExceeded =
-                    this.driverAnnotationSettings.cosmicCount &&
-                    this.getCosmicCount.isComplete &&
-                    this.getCosmicCount.result!(mutation) >=
-                        this.driverAnnotationSettings.cosmicCountThreshold;
 
                 // Note: custom driver annotations are part of the incoming datum
                 return evaluateMutationPutativeDriverInfo(
@@ -228,10 +210,6 @@ export default abstract class AnalysisStore {
                     oncoKbDatum,
                     this.driverAnnotationSettings.hotspots,
                     isHotspotDriver,
-                    this.driverAnnotationSettings.cbioportalCount,
-                    cbioportalCountExceeded,
-                    this.driverAnnotationSettings.cosmicCount,
-                    cosmicCountExceeded,
                     this.driverAnnotationSettings.customBinary,
                     this.driverAnnotationSettings.driverTiers
                 );
@@ -319,85 +297,6 @@ export default abstract class AnalysisStore {
                 return {};
             }
         },
-    });
-
-    readonly getCBioportalCount: MobxPromise<
-        (mutation: Mutation) => number
-    > = remoteData({
-        await: () => [this.cbioportalMutationCountData],
-        invoke: () => {
-            return Promise.resolve((mutation: Mutation): number => {
-                const key = mutationCountByPositionKey(mutation);
-                return this.cbioportalMutationCountData.result![key] || -1;
-            });
-        },
-    });
-
-    //COSMIC count
-    readonly cosmicCountsByKeywordAndStart = remoteData<ComplexKeyCounter>({
-        await: () => [this.mutations],
-        invoke: async () => {
-            const keywords = _.uniq(
-                this.mutations
-                    .result!.filter((m: Mutation) => {
-                        // keyword is what we use to query COSMIC count with, so we need
-                        //  the unique list of mutation keywords to query. If a mutation has
-                        //  no keyword, it cannot be queried for.
-                        return !!m.keyword;
-                    })
-                    .map((m: Mutation) => m.keyword)
-            );
-
-            if (keywords.length > 0) {
-                const data = await internalClient.fetchCosmicCountsUsingPOST({
-                    keywords,
-                });
-                const map = new ComplexKeyCounter();
-                for (const d of data) {
-                    const position = getProteinPositionFromProteinChange(
-                        d.proteinChange
-                    );
-                    if (position) {
-                        map.add(
-                            {
-                                keyword: d.keyword,
-                                start: position.start,
-                            },
-                            d.count
-                        );
-                    }
-                }
-                return map;
-            } else {
-                return new ComplexKeyCounter();
-            }
-        },
-    });
-
-    readonly getCosmicCount: MobxPromise<
-        (mutation: Mutation) => number
-    > = remoteData({
-        await: () => [this.cosmicCountsByKeywordAndStart],
-        invoke: () => {
-            return Promise.resolve((mutation: Mutation): number => {
-                const targetPosObj = getProteinPositionFromProteinChange(
-                    mutation.proteinChange
-                );
-                if (targetPosObj) {
-                    const keyword = mutation.keyword;
-                    const cosmicCount = this.cosmicCountsByKeywordAndStart.result!.get(
-                        {
-                            keyword,
-                            start: targetPosObj.start,
-                        }
-                    );
-                    return cosmicCount;
-                } else {
-                    return -1;
-                }
-            });
-        },
-        onError: () => {},
     });
 
     readonly geneCache = new GeneCache();

@@ -26,7 +26,6 @@ class Example extends React.Component {
       <OncoKB
             status={'pending'}
             mergeAnnotationIcons={true}
-            usingPublicOncoKbInstance={true}
             isCancerGene={true}
             geneNotExist={false}
             hugoGeneSymbol={"BRCA2"}
@@ -63,7 +62,6 @@ class Example extends React.Component {
   render () {
     return (
       <OncoKbSummaryTable
-          usingPublicOncoKbInstance={true}
           data={tableData}
       />
     );

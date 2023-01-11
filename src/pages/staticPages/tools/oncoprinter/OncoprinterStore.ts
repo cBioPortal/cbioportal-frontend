@@ -42,13 +42,7 @@ import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 export type OncoprinterDriverAnnotationSettings = Pick<
     DriverAnnotationSettings,
-    | 'includeVUS'
-    | 'customBinary'
-    | 'hotspots'
-    | 'cbioportalCount'
-    | 'cbioportalCountThreshold'
-    | 'oncoKb'
-    | 'driversAnnotated'
+    'includeVUS' | 'customBinary' | 'hotspots' | 'oncoKb' | 'driversAnnotated'
 >;
 
 /* Leaving commented only for reference, this will be replaced by unified input strategy
@@ -500,10 +494,6 @@ export default class OncoprinterStore {
         if (this.driverAnnotationSettings.driversAnnotated) {
             if (this.driverAnnotationSettings.oncoKb) {
                 promisesMap.oncoKb = this.oncoKbData;
-            }
-            if (this.driverAnnotationSettings.cbioportalCount) {
-                promisesMap.cbioportalCount = this.cbioportalCountData;
-                params.cbioportalCountThreshold = this.driverAnnotationSettings.cbioportalCountThreshold;
             }
         }
 

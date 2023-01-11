@@ -553,55 +553,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 } as any
             );
         });
-        it('annotates with cbioportal, cosmic', () => {
-            assert.deepEqual(
-                annotateMutationPutativeDriver(
-                    {
-                        mutationType: 'in_frame_ins',
-                    } as Mutation,
-                    {
-                        hotspots: false,
-                        oncoKb: '',
-                        cbioportalCount: true,
-                        cosmicCount: false,
-                    } as any
-                ),
-                {
-                    putativeDriver: true,
-                    isHotspot: false,
-                    oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'in_frame_ins'
-                    ),
-                    mutationType: 'in_frame_ins',
-                } as any,
-                'cbioportal count'
-            );
-
-            assert.deepEqual(
-                annotateMutationPutativeDriver(
-                    {
-                        mutationType: 'in_frame_ins',
-                    } as Mutation,
-                    {
-                        hotspots: false,
-                        oncoKb: '',
-                        cbioportalCount: false,
-                        cosmicCount: true,
-                    } as any
-                ),
-                {
-                    putativeDriver: true,
-                    isHotspot: false,
-                    oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'in_frame_ins'
-                    ),
-                    mutationType: 'in_frame_ins',
-                } as any,
-                'cosmic count'
-            );
-        });
         it('annotates with custom driver annotations', () => {
             assert.deepEqual(
                 annotateMutationPutativeDriver(
@@ -659,8 +610,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     {
                         hotspots: true,
                         oncoKb: 'oncogenic',
-                        cbioportalCount: true,
-                        cosmicCount: true,
                         customDriverBinary: true,
                         customDriverTier: 'hello',
                     } as any
@@ -685,8 +634,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     {
                         hotspots: false,
                         oncoKb: '',
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     } as any
                 ),
@@ -761,8 +708,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: true,
-                        cbioportalCount: false,
-                        cosmicCount: true,
                         customDriverBinary: false,
                     }),
                     { 1: { hugoGeneSymbol: 'mygene' } as Gene }
@@ -804,8 +749,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: true,
-                        cbioportalCount: false,
-                        cosmicCount: true,
                         customDriverBinary: false,
                     }),
                     {
@@ -862,8 +805,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: false,
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     }),
                     {
@@ -910,15 +851,11 @@ describe('ResultsViewPageStoreUtils', () => {
                             ? {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: true,
                               }
                             : {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: false,
                               },
                     {
@@ -982,8 +919,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: false,
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     }),
                     {
@@ -1036,15 +971,11 @@ describe('ResultsViewPageStoreUtils', () => {
                             ? {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: true,
                               }
                             : {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: false,
                               },
                     {
