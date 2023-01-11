@@ -13,10 +13,15 @@ import {
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
 import _ from 'lodash';
 import { ComparisonGroup } from './GroupComparisonUtils';
+import { IAnnotationFilterSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
+    axisMode?: AxisScale;
+    onScaleToggle?: (selectedScale: AxisScale) => void;
     groups: ComparisonGroup[];
+    annotationFilterSettings: IAnnotationFilterSettings;
 }
 
 @observer
@@ -91,6 +96,18 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     protected get mutationFilterPanel(): JSX.Element | null {
         return (
             <div>
+                <div>
+                    <SettingsMenuButton
+                        store={this.props.annotationFilterSettings}
+                        disableInfoIcon={true}
+                        showOnckbAnnotationControls={true}
+                        showFilterControls={false}
+                        showExcludeUnprofiledSamplesControl={false}
+                        inFilterPanel={true}
+                    />
+                    Annotation settings
+                </div>
+                <hr style={{ marginTop: 5, marginBottom: 5 }}></hr>
                 <div
                     style={
                         this.props.isPutativeDriver
