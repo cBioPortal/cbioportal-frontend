@@ -10,9 +10,9 @@ import {
     groupDataByGroupFilters,
     ProteinImpactTypeBadgeSelector,
 } from 'react-mutation-mapper';
-import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
 import _ from 'lodash';
 import { ComparisonGroup } from './GroupComparisonUtils';
+import DriverAnnotationProteinImpactTypeBadgeSelector from 'shared/components/mutationMapper/DriverAnnotationProteinImpactTypeBadgeSelector';
 import { IAnnotationFilterSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 
@@ -72,10 +72,10 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                             groupIndex
                         )}
                         onSelect={this.onProteinImpactTypeSelect}
-                        onClickSettingMenu={this.props.onClickSettingMenu}
                         annotatedProteinImpactTypeFilter={
                             this.annotatedProteinImpactTypeFilter
                         }
+                        disableAnnotationSettings={true}
                     />
                 ) : (
                     <ProteinImpactTypeBadgeSelector

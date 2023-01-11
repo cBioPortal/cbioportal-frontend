@@ -43,7 +43,7 @@ import WindowStore from '../window/WindowStore';
 
 import styles from './mutationMapper.module.scss';
 import { ProteinImpactType } from 'cbioportal-frontend-commons';
-import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
+import DriverAnnotationProteinImpactTypeBadgeSelector from './DriverAnnotationProteinImpactTypeBadgeSelector';
 import { Mutation, PtmSource } from 'cbioportal-utils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
