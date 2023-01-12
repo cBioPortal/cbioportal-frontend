@@ -66,7 +66,7 @@ const LeftTruncationCheckbox: React.FunctionComponent<LeftTruncationCheckboxProp
                                         This involves adjusting patients at risk
                                         at time t to date of sequencing rather
                                         than date of diagnosis. Note that some 
-                                        patients can be excluded because they
+                                        patients might be excluded because they
                                         passed away before their biopsies were
                                         sequenced.
                                     </div>
