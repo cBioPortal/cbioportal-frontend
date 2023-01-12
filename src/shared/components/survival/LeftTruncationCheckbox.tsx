@@ -58,23 +58,17 @@ const LeftTruncationCheckbox: React.FunctionComponent<LeftTruncationCheckboxProp
                                         years after the initial diagnosis. To
                                         mitigate the effects of left truncation
                                         one can enable the risk-set adjustment
-                                        method as described in To mitigate the
-                                        effects of left truncation one can
-                                        enable the risk-set adjustment method as
-                                        described in{' '}
+                                        method as described in{' '}
                                         <a href="https://pubmed.ncbi.nlm.nih.gov/34734967/">
                                             Brown et al (2022)
                                         </a>
                                         {'. '}
                                         This involves adjusting patients at risk
                                         at time t to date of sequencing rather
-                                        than date of diagnosis (xx patients are
-                                        excluded because they passed away before
-                                        their biopsies were sequenced). Please
-                                        note that not all Kaplan-Meier estimates
-                                        account for the lead time bias
-                                        introduced by the inclusion criteria for
-                                        the GENIE BPC Project.
+                                        than date of diagnosis. Note that some 
+                                        patients can be excluded because they
+                                        passed away before their biopsies were
+                                        sequenced.
                                     </div>
                                 }
                                 placement="bottom"
