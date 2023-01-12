@@ -486,15 +486,13 @@ export default class MutationMapper<
 
     @computed
     protected get mutationsGroupedByProteinImpactType() {
-        let sortedFilteredData = this
-            .sortedFilteredDataWithoutProteinImpactTypeFilter;
-
         // also apply lazy mobx table search filter
-        sortedFilteredData = sortedFilteredData.filter(m =>
-            (this.store
-                .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
-                m
-            )
+        const sortedFilteredData = this.sortedFilteredDataWithoutProteinImpactTypeFilter.filter(
+            m =>
+                (this.store
+                    .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
+                    m
+                )
         );
 
         return this.groupDataByProteinImpactType(sortedFilteredData);

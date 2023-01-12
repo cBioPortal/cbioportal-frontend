@@ -173,6 +173,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             }
                             compactStyle={true}
                             showPlotPercentToggle={true}
+                            groups={this.props.store.activeGroups.result!}
                         />
                     </>
                 );

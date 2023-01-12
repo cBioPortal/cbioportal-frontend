@@ -12,9 +12,11 @@ import {
 } from 'react-mutation-mapper';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
 import _ from 'lodash';
+import { ComparisonGroup } from './GroupComparisonUtils';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
+    groups: ComparisonGroup[];
 }
 
 @observer
@@ -51,18 +53,12 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 
     protected proteinImpactTypeBadgeSelectorForGroup(
         groupIndex: number,
-        groupOrdinal: string,
         driversAnnotated: boolean
     ): JSX.Element {
         return (
             <>
                 <div style={{ fontWeight: 'bold', paddingBottom: 3 }}>
-                    ({groupOrdinal}){' '}
-                    {
-                        this.store.dataStore.sortedFilteredGroupedData[
-                            groupIndex
-                        ].group
-                    }
+                    {this.props.groups[groupIndex].nameWithOrdinal}
                 </div>
                 {driversAnnotated ? (
                     <DriverAnnotationProteinImpactTypeBadgeSelector
@@ -110,13 +106,11 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 >
                     {this.proteinImpactTypeBadgeSelectorForGroup(
                         0,
-                        'A',
                         !!this.props.isPutativeDriver
                     )}
                     <hr style={{ marginTop: 10, marginBottom: 10 }}></hr>
                     {this.proteinImpactTypeBadgeSelectorForGroup(
                         1,
-                        'B',
                         !!this.props.isPutativeDriver
                     )}
                 </div>
