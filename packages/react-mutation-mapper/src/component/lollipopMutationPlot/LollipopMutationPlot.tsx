@@ -105,6 +105,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     ) => JSX.Element;
     yAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
     axisMode?: AxisScale;
+    onScaleToggle?: (selectedScale: AxisScale) => void;
     customControls?: JSX.Element;
     onXAxisOffset?: (offset: number) => void;
     geneWidth: number;
@@ -118,6 +119,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     showYMaxSlider?: boolean;
     showLegendToggle?: boolean;
     showDownloadControls?: boolean;
+    showPercentToggle?: boolean;
     filterResetPanel?: JSX.Element;
     legend?: JSX.Element;
     loadingIndicator?: JSX.Element;
@@ -880,6 +882,9 @@ export default class LollipopMutationPlot<
                         showTrackSelector={this.props.showTrackSelector}
                         onTrackVisibilityChange={this.onTrackVisibilityChange}
                         getSVG={this.getSVG}
+                        axisMode={this.props.axisMode}
+                        onScaleToggle={this.props.onScaleToggle}
+                        showPercentToggle={this.props.showPercentToggle}
                     />
                     <Collapse isOpened={this.controlsConfig.legendShown}>
                         {this.props.legend || <DefaultLollipopPlotLegend />}
