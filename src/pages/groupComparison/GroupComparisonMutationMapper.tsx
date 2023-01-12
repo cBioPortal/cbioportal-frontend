@@ -49,95 +49,77 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         return this.props.axisMode === AxisScale.PERCENT ? '%' : '';
     }
 
+    protected proteinImpactTypeBadgeSelectorForGroup(
+        groupIndex: number,
+        groupOrdinal: string,
+        driversAnnotated: boolean
+    ): JSX.Element {
+        return (
+            <>
+                <div style={{ fontWeight: 'bold', paddingBottom: 3 }}>
+                    ({groupOrdinal}){' '}
+                    {
+                        this.store.dataStore.sortedFilteredGroupedData[
+                            groupIndex
+                        ].group
+                    }
+                </div>
+                {driversAnnotated ? (
+                    <DriverAnnotationProteinImpactTypeBadgeSelector
+                        filter={this.proteinImpactTypeFilter}
+                        counts={this.mutationCountsByProteinImpactTypeForGroup(
+                            groupIndex
+                        )}
+                        onSelect={this.onProteinImpactTypeSelect}
+                        onClickSettingMenu={this.props.onClickSettingMenu}
+                        annotatedProteinImpactTypeFilter={
+                            this.annotatedProteinImpactTypeFilter
+                        }
+                    />
+                ) : (
+                    <ProteinImpactTypeBadgeSelector
+                        filter={this.proteinImpactTypeFilter}
+                        counts={this.mutationCountsByProteinImpactTypeForGroup(
+                            groupIndex
+                        )}
+                        onSelect={this.onProteinImpactTypeSelect}
+                    />
+                )}
+            </>
+        );
+    }
+
     /**
      * Overriding the parent method to have a customized filter panel.
      */
     protected get mutationFilterPanel(): JSX.Element | null {
         return (
             <div>
-                {this.props.isPutativeDriver ? (
-                    <div
-                        style={{
-                            paddingTop: 5,
-                            paddingBottom: 5,
-                        }}
-                    >
-                        <div style={{ fontWeight: 'bold', paddingBottom: 3 }}>
-                            (A){' '}
-                            {
-                                this.store.dataStore
-                                    .sortedFilteredGroupedData[0].group
-                            }
-                        </div>
-                        <DriverAnnotationProteinImpactTypeBadgeSelector
-                            filter={this.proteinImpactTypeFilter}
-                            counts={this.mutationCountsByProteinImpactTypeForGroup(
-                                0
-                            )}
-                            onSelect={this.onProteinImpactTypeSelect}
-                            onClickSettingMenu={this.props.onClickSettingMenu}
-                            annotatedProteinImpactTypeFilter={
-                                this.annotatedProteinImpactTypeFilter
-                            }
-                        />
-                        <hr style={{ marginTop: 10, marginBottom: 10 }}></hr>
-                        <div style={{ fontWeight: 'bold', paddingBottom: 3 }}>
-                            (B){' '}
-                            {
-                                this.store.dataStore
-                                    .sortedFilteredGroupedData[1].group
-                            }
-                        </div>
-                        <DriverAnnotationProteinImpactTypeBadgeSelector
-                            filter={this.proteinImpactTypeFilter}
-                            counts={this.mutationCountsByProteinImpactTypeForGroup(
-                                1
-                            )}
-                            onSelect={this.onProteinImpactTypeSelect}
-                            onClickSettingMenu={this.props.onClickSettingMenu}
-                            annotatedProteinImpactTypeFilter={
-                                this.annotatedProteinImpactTypeFilter
-                            }
-                        />
-                    </div>
-                ) : (
-                    <div
-                        style={{
-                            paddingBottom: 15,
-                            paddingTop: 15,
-                        }}
-                    >
-                        <div style={{ fontWeight: 'bold', paddingBottom: 3 }}>
-                            (A){' '}
-                            {
-                                this.store.dataStore
-                                    .sortedFilteredGroupedData[0].group
-                            }
-                        </div>
-                        <ProteinImpactTypeBadgeSelector
-                            filter={this.proteinImpactTypeFilter}
-                            counts={this.mutationCountsByProteinImpactTypeForGroup(
-                                0
-                            )}
-                            onSelect={this.onProteinImpactTypeSelect}
-                        />
-                        <hr style={{ marginTop: 10, marginBottom: 10 }}></hr>
-                        <div style={{ fontWeight: 'bold', paddingBottom: 3 }}>
-                            (B){' '}
-                            {
-                                this.store.dataStore
-                                    .sortedFilteredGroupedData[1].group
-                            }
-                        </div>
-                        <ProteinImpactTypeBadgeSelector
-                            filter={this.proteinImpactTypeFilter}
-                            counts={this.mutationCountsByProteinImpactTypeForGroup(
-                                1
-                            )}
-                            onSelect={this.onProteinImpactTypeSelect}
-                        />
-                    </div>
-                )}
+                <div
+                    style={
+                        this.props.isPutativeDriver
+                            ? {
+                                  paddingTop: 5,
+                                  paddingBottom: 5,
+                              }
+                            : {
+                                  paddingBottom: 15,
+                                  paddingTop: 15,
+                              }
+                    }
+                >
+                    {this.proteinImpactTypeBadgeSelectorForGroup(
+                        0,
+                        'A',
+                        !!this.props.isPutativeDriver
+                    )}
+                    <hr style={{ marginTop: 10, marginBottom: 10 }}></hr>
+                    {this.proteinImpactTypeBadgeSelectorForGroup(
+                        1,
+                        'B',
+                        !!this.props.isPutativeDriver
+                    )}
+                </div>
             </div>
         );
     }
