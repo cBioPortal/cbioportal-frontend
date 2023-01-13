@@ -16,6 +16,8 @@ import TrackSelector, {
 
 import 'react-rangeslider/lib/index.css';
 import styles from './lollipopMutationPlot.module.scss';
+import { AxisScale } from './AxisScaleSwitch';
+import { PercentToggle } from './PercentToggle';
 
 type LollipopMutationPlotControlsProps = {
     showControls: boolean;
@@ -48,6 +50,9 @@ type LollipopMutationPlotControlsProps = {
     showDownloadControls?: boolean;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
     getSVG: () => SVGElement;
+    axisMode?: AxisScale;
+    onScaleToggle?: (selectedScale: AxisScale) => void;
+    showPercentToggle?: boolean;
 };
 
 function formatInputValue(value: number, step: number = 1) {
@@ -71,7 +76,7 @@ export default class LollipopMutationPlotControls extends React.Component<
         showYMaxSlider: true,
         showLegendToggle: true,
         showDownloadControls: true,
-        yMaxSliderWidth: 100,
+        yMaxSliderWidth: 110,
     };
 
     @computed
@@ -107,7 +112,6 @@ export default class LollipopMutationPlotControls extends React.Component<
                     marginLeft: 10,
                 }}
             >
-                <span>{label}:</span>
                 <div
                     style={{
                         width: width,
@@ -115,6 +119,7 @@ export default class LollipopMutationPlotControls extends React.Component<
                         marginRight: 10,
                     }}
                 >
+                    <div style={{ textAlign: 'center' }}>{label}:</div>
                     <Slider
                         min={yMaxSliderStep}
                         max={calcYMaxInput(
@@ -168,7 +173,7 @@ export default class LollipopMutationPlotControls extends React.Component<
                 this.props.bottomYMaxInput!,
                 this.props.yAxisSameScale,
                 'Bottom Y-Axis Max',
-                100,
+                this.props.yMaxSliderWidth,
                 this.props.bottomYMaxSliderStep
             );
         } else {
@@ -215,6 +220,16 @@ export default class LollipopMutationPlotControls extends React.Component<
         );
     }
 
+    @computed
+    protected get percentToggle() {
+        return (
+            <PercentToggle
+                axisMode={this.props.axisMode}
+                onScaleToggle={this.props.onScaleToggle}
+            />
+        );
+    }
+
     public render() {
         return (
             <div
@@ -232,6 +247,7 @@ export default class LollipopMutationPlotControls extends React.Component<
                         this.trackSelector}
                     {this.props.showYMaxSlider && this.yMaxSlider}
                     {this.props.showYMaxSlider && this.bottomYMaxSlider}
+                    {this.props.showPercentToggle && this.percentToggle}
                     {this.props.filterResetPanel}
                     {this.props.customControls}
                     <div style={{ display: 'flex', marginLeft: 'auto' }}>

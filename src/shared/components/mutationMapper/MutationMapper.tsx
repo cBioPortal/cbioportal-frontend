@@ -62,6 +62,7 @@ export interface IMutationMapperProps {
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
     showPlotDownloadControls?: boolean;
+    showPlotPercentToggle?: boolean;
     mutationTable?: JSX.Element;
     pubMedCache?: PubMedCache;
     showTranscriptDropDown?: boolean;
@@ -85,6 +86,7 @@ export interface IMutationMapperProps {
     ) => JSX.Element;
     plotYAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
     axisMode?: AxisScale;
+    onScaleToggle?: (selectedScale: AxisScale) => void;
     compactStyle?: boolean;
     mergeOncoKbIcons?: boolean; // TODO add server config param for this as well?
 
@@ -463,7 +465,7 @@ export default class MutationMapper<
     }
 
     @computed
-    protected get mutationsGroupedByProteinImpactType() {
+    protected get sortedFilteredDataWithoutProteinImpactTypeFilter() {
         // there are two types of filters (with putative driver, without putative driver)
         const filtersWithoutProteinImpactTypeFilter = this.store.dataStore.dataFilters.filter(
             f =>
@@ -479,12 +481,18 @@ export default class MutationMapper<
             this.store.dataStore.applyFilter
         );
 
+        return sortedFilteredData;
+    }
+
+    @computed
+    protected get mutationsGroupedByProteinImpactType() {
         // also apply lazy mobx table search filter
-        sortedFilteredData = sortedFilteredData.filter(m =>
-            (this.store
-                .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
-                m
-            )
+        const sortedFilteredData = this.sortedFilteredDataWithoutProteinImpactTypeFilter.filter(
+            m =>
+                (this.store
+                    .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
+                    m
+                )
         );
 
         return this.groupDataByProteinImpactType(sortedFilteredData);
@@ -563,6 +571,8 @@ export default class MutationMapper<
                 }
                 yAxisLabelFormatter={this.props.plotYAxisLabelFormatter}
                 axisMode={this.props.axisMode}
+                onScaleToggle={this.props.onScaleToggle}
+                showPercentToggle={this.props.showPlotPercentToggle}
             />
         );
     }

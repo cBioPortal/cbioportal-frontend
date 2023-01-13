@@ -174,7 +174,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
         if (option.value === DriverVsVusType.DRIVER) {
             return (
-                <span>
+                <span data-test={'badge-driver'}>
                     {option.label || option.value}
                     <span className={styles['driver-annotation-setting']}>
                         <DefaultTooltip

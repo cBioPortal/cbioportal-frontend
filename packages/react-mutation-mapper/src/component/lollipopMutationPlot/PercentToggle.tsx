@@ -17,15 +17,24 @@ export class PercentToggle extends React.Component<IPercentToggleProps, {}> {
         return (
             <div
                 className="small"
-                style={{ display: 'flex', alignItems: 'center' }}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginLeft: 10,
+                }}
             >
-                <span style={{ marginLeft: 10, marginRight: 10 }}>
-                    Y-Axis:{' '}
-                </span>
-                <AxisScaleSwitch
-                    selectedScale={this.props.axisMode}
-                    onChange={this.props.onScaleToggle}
-                />
+                <div
+                    style={{
+                        marginLeft: 10,
+                        marginRight: 10,
+                    }}
+                >
+                    <div style={{ textAlign: 'center' }}>Y-Axis:</div>
+                    <AxisScaleSwitch
+                        selectedScale={this.props.axisMode}
+                        onChange={this.props.onScaleToggle}
+                    />
+                </div>
             </div>
         );
     }
