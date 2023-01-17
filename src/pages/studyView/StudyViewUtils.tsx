@@ -603,6 +603,24 @@ export function makeDensityScatterPlotTooltip(
     };
 }
 
+const GENE_PANEL_PREFIX = 'gene_panel_';
+
+export function getGenePanelChartUniqueKey(profileId: string) {
+    return GENE_PANEL_PREFIX + profileId;
+}
+
+export function isGenePanelChart(uniqueKey: string) {
+    return uniqueKey.startsWith(GENE_PANEL_PREFIX);
+}
+
+export function chartUniqueKeyToProfile(meta: ChartMeta | string) {
+    if (typeof meta === 'string') {
+        return meta.slice(GENE_PANEL_PREFIX.length);
+    } else {
+        return meta.uniqueKey.slice(GENE_PANEL_PREFIX.length);
+    }
+}
+
 export async function getSampleToClinicalData(
     samples: Sample[],
     attr: ClinicalAttribute
@@ -962,6 +980,7 @@ export function isFiltered(
             _.isEmpty(filter.genericAssayDataFilters) &&
             _.isEmpty(filter.caseLists) &&
             _.isEmpty(filter.customDataFilters) &&
+            _.isEmpty(filter.genePanelFilters) &&
             (!filter.patientTreatmentFilters ||
                 _.isEmpty(filter.patientTreatmentFilters.filters)) &&
             (!filter.sampleTreatmentFilters ||

@@ -103,7 +103,7 @@ export function getMutationCivicVariants(): ICivicVariantIndex {
     };
 }
 
-export function getCnaData(): Array<DiscreteCopyNumberData> {
+export function getCnaData(): Array<any> {
     return [
         {
             alteration: 2,

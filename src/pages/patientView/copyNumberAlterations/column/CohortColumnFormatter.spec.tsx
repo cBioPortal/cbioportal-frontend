@@ -13,7 +13,7 @@ import CopyNumberCountCache from '../../clinicalInformation/CopyNumberCountCache
 import { CacheData } from '../../clinicalInformation/SampleGeneCache';
 
 describe('CohortColumnFormatter', () => {
-    const copyNumberData: DiscreteCopyNumberData[] = [
+    const copyNumberData: any[] = [
         {
             alteration: -2,
             entrezGeneId: 0,

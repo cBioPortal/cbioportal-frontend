@@ -27,6 +27,7 @@ import {
     ChartType,
     ClinicalDataCountSummary,
     DataBin,
+    getGenePanelChartUniqueKey,
     getHeightByDimension,
     getRangeFromDataBins,
     getTableHeightByDimension,
@@ -778,6 +779,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        toggleGenePanelChartVisibility={(profileId: string) => {
+                            this.props.store.resetFilterAndToggleChartVisibility(
+                                getGenePanelChartUniqueKey(profileId)
+                            );
+                        }}
+                        visibleChartIds={this.props.store.visibleAttributes.map(
+                            chartMeta => chartMeta.uniqueKey
+                        )}
                         selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}

@@ -942,7 +942,7 @@ export default abstract class ComparisonStore extends AnalysisStore
             ) {
                 return Promise.resolve(
                     this.enrichmentAnalysisGroups.result!.reduce(
-                        (acc: MolecularProfileCasesGroupFilter[], group) => {
+                        (acc: any[], group) => {
                             let molecularProfileCaseIdentifiers: {
                                 caseId: string;
                                 molecularProfileId: string;
@@ -1286,7 +1286,7 @@ export default abstract class ComparisonStore extends AnalysisStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.mrnaEnrichmentDataRequestGroups.result!,
+                    groups: this.mrnaEnrichmentDataRequestGroups.result! as any,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1372,7 +1372,8 @@ export default abstract class ComparisonStore extends AnalysisStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.proteinEnrichmentDataRequestGroups.result!,
+                    groups: this.proteinEnrichmentDataRequestGroups
+                        .result! as any,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1457,7 +1458,8 @@ export default abstract class ComparisonStore extends AnalysisStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.methylationEnrichmentDataRequestGroups.result!,
+                    groups: this.methylationEnrichmentDataRequestGroups
+                        .result! as any,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1578,7 +1580,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                                     return internalClient.fetchGenericAssayEnrichmentsUsingPOST(
                                         {
                                             enrichmentType: 'SAMPLE',
-                                            groups: genericAssayEnrichmentDataRequestGroups,
+                                            groups: genericAssayEnrichmentDataRequestGroups as any,
                                         }
                                     );
                                 } else {

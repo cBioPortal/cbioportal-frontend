@@ -30,6 +30,7 @@ import {
     SpecialChartsUniqueKeyEnum,
     makeDensityScatterPlotTooltip,
     logScalePossible,
+    isGenePanelChart,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
@@ -157,8 +158,13 @@ export class StudySummaryTab extends React.Component<
 
         switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART: {
-                //if the chart is one of the custom charts then get the appropriate promise
-                if (
+                if (isGenePanelChart(chartMeta.uniqueKey)) {
+                    props.promise = this.store.getGenePanelDataCount(chartMeta);
+                    props.filters = this.store.getGenePanelFilters(chartMeta);
+                    props.onValueSelection = this.store.onGenePanelSelection;
+                    props.onResetSelection = this.store.onGenePanelSelection;
+                } else if (
+                    //if the chart is one of the custom charts then get the appropriate promise
                     this.store.isUserDefinedCustomDataChart(chartMeta.uniqueKey)
                 ) {
                     props.filters = this.store
