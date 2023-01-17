@@ -11,7 +11,7 @@ import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner'
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../../AppStore';
 
-import './mutations.scss';
+import '../../../shared/components/mutationMapper/mutations.scss';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import {
     getMutationAlignerUrlTemplate,
