@@ -51,6 +51,7 @@ export function getProteinImpactTypeBadgeLabel(
             )}
             badgeClassName={badgeClassName}
             badgeFirst={true}
+            value={option.value}
         />
     );
 }

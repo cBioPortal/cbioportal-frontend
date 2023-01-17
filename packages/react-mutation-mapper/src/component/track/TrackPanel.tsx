@@ -125,6 +125,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                     maxHeight: this.props.maxHeight,
                     position: 'relative',
                 }}
+                data-test="AnnotationTracks"
             >
                 {this.props
                     .tracks!.map(t => this.availableTracks[t])
