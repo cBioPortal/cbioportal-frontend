@@ -134,8 +134,11 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                     this.props.store.activeMutationMapperGene!.hugoGeneSymbol
                 );
                 return (
-                    <>
-                        <h3 data-test="LollipopPlotTitle">
+                    <div
+                        data-test="ComparisonPageMutationsTabPlot"
+                        style={{ marginTop: 20 }}
+                    >
+                        <h3>
                             {this.props.store.activeMutationMapperGene
                                 ?.hugoGeneSymbol +
                                 ' mutations: ' +
@@ -174,7 +177,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             groups={this.props.store.activeGroups.result!}
                             annotationFilterSettings={this.props.store}
                         />
-                    </>
+                    </div>
                 );
             } else {
                 if (
