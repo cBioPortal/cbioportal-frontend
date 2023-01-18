@@ -1,6 +1,7 @@
 const assert = require('assert');
 const {
     goToUrlAndSetLocalStorageWithProperty,
+    getElementByTestHandle,
 } = require('../../shared/specUtils');
 const { waitForTable } = require('./namespace-columns-utils');
 
@@ -42,20 +43,35 @@ describe('namespace columns in cna tables', function() {
 });
 
 defaultColumnsAreDisplayed = () => {
+    const patientCnaTable = 'patientview-copynumber-table';
     return (
-        $("//span[text() = '" + DEFAULT_COLS.GENE + "']").isDisplayed() &&
-        $("//span[text() = '" + DEFAULT_COLS.CNA + "']").isDisplayed() &&
-        $("//span[text() = '" + DEFAULT_COLS.ANNOTATION + "']").isDisplayed() &&
-        $("//span[text() = '" + DEFAULT_COLS.CYTOBAND + "']").isDisplayed() &&
-        $("//span[text() = '" + DEFAULT_COLS.COHORT + "']").isDisplayed() &&
-        !$("//span[text() = 'Gene panel']").isDisplayed()
+        getElementByTestHandle(patientCnaTable).$(
+            `span=${DEFAULT_COLS.GENE}`
+        ) &&
+        getElementByTestHandle(patientCnaTable).$(`span=${DEFAULT_COLS.CNA}`) &&
+        getElementByTestHandle(patientCnaTable).$(
+            `span=${DEFAULT_COLS.ANNOTATION}`
+        ) &&
+        getElementByTestHandle(patientCnaTable).$(
+            `span=${DEFAULT_COLS.CYTOBAND}`
+        ) &&
+        getElementByTestHandle(patientCnaTable).$(
+            `span=${DEFAULT_COLS.COHORT}`
+        ) &&
+        !$(`[data-test=${patientCnaTable}]`)
+            .$("//span[text() = 'Gene panel']")
+            .isDisplayed()
     );
 };
 
 function columnIsDisplayed(column) {
-    return $("//span[text() = '" + column + "']").isDisplayed();
+    return getElementByTestHandle('patientview-copynumber-table').$(
+        `span=${column}`
+    );
 }
 
 function columnIsNotDisplayed(column) {
-    return !$("//span[text() = '" + column + "']").isDisplayed();
+    return !$(`[data-test=${'patientview-copynumber-table'}]`)
+        .$("//span[text() = '" + column + "']")
+        .isDisplayed();
 }

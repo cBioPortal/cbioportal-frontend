@@ -1,6 +1,7 @@
 const assert = require('assert');
 const {
     goToUrlAndSetLocalStorageWithProperty,
+    getElementByTestHandle,
 } = require('../../shared/specUtils');
 const { waitForTable } = require('./namespace-columns-utils');
 
@@ -47,28 +48,43 @@ describe('namespace columns in structural variant tables', function() {
 });
 
 defaultColumnsAreDisplayed = () => {
+    const patientStructVarTable = 'patientview-structural-variant-table';
     return (
         $("//span[text() = '" + DEFAULT_COLS.GENE_1 + "']").waitForDisplayed({
             timeout: 10000,
         }) &&
-        $("//span[text() = '" + DEFAULT_COLS.GENE_2 + "']").isDisplayed() &&
-        $("//span[text() = '" + DEFAULT_COLS.STATUS + "']").isDisplayed() &&
-        $("//span[text() = '" + DEFAULT_COLS.ANNOTATION + "']").isDisplayed() &&
-        $(
-            "//span[text() = '" + DEFAULT_COLS.VARIANT_CLASS + "']"
-        ).isDisplayed() &&
-        $("//span[text() = '" + DEFAULT_COLS.EVENT_INFO + "']").isDisplayed() &&
-        $(
-            "//span[text() = '" + DEFAULT_COLS.CONNECTION_TYPE + "']"
-        ).isDisplayed() &&
-        !$("//span[text() = 'Breakpoint Type']").isDisplayed()
+        getElementByTestHandle(patientStructVarTable).$(
+            `span=${DEFAULT_COLS.GENE_2}`
+        ) &&
+        getElementByTestHandle(patientStructVarTable).$(
+            `span=${DEFAULT_COLS.STATUS}`
+        ) &&
+        getElementByTestHandle(patientStructVarTable).$(
+            `span=${DEFAULT_COLS.ANNOTATION}`
+        ) &&
+        getElementByTestHandle(patientStructVarTable).$(
+            `span=${DEFAULT_COLS.VARIANT_CLASS}`
+        ) &&
+        getElementByTestHandle(patientStructVarTable).$(
+            `span=${DEFAULT_COLS.EVENT_INFO}`
+        ) &&
+        getElementByTestHandle(patientStructVarTable).$(
+            `span=${DEFAULT_COLS.CONNECTION_TYPE}`
+        ) &&
+        getElementByTestHandle(patientStructVarTable).$(
+            `span='Breakpoint Type'`
+        )
     );
 };
 
 function columnIsDisplayed(column) {
-    return $("//span[text() = '" + column + "']").isDisplayed();
+    return getElementByTestHandle('patientview-structural-variant-table').$(
+        `span=${column}`
+    );
 }
 
 function columnIsNotDisplayed(column) {
-    return !$("//span[text() = '" + column + "']").isDisplayed();
+    return !$(`[data-test=${'patientview-structural-variant-table'}]`)
+        .$("//span[text() = '" + column + "']")
+        .isDisplayed();
 }
