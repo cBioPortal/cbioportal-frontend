@@ -22,7 +22,6 @@ import {
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
-import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 
 interface IGroupComparisonMutationsTabProps {
     store: GroupComparisonStore;
@@ -74,11 +73,6 @@ export default class GroupComparisonMutationsTab extends React.Component<
         return this.props.store.driverAnnotationSettings.driversAnnotated
             ? (m: AnnotatedMutation) => m.putativeDriver
             : undefined;
-    }
-
-    @action.bound
-    protected onClickSettingMenu(visible: boolean) {
-        this.props.store.isSettingsMenuVisible = visible;
     }
 
     readonly tabUI = MakeMobxView({
@@ -160,19 +154,9 @@ export default class GroupComparisonMutationsTab extends React.Component<
                             </MSKTabs>
                         </div>
                     </div>
-                    <div style={{ paddingTop: 10 }}>
-                        <SettingsMenuButton
-                            store={this.props.store}
-                            disableInfoIcon={true}
-                            showOnckbAnnotationControls={true}
-                            showFilterControls={false}
-                            showExcludeUnprofiledSamplesControl={false}
-                        />
-                    </div>
                     <GroupComparisonMutationsTabPlot
                         store={this.props.store}
                         onScaleToggle={this.onScaleToggle}
-                        onClickSettingMenu={this.onClickSettingMenu}
                         mutations={_(this.props.store.mutationsByGroup.result!)
                             .values()
                             .flatten()

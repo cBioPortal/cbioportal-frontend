@@ -19,6 +19,7 @@ export interface SettingsButtonProps {
     showFilterControls?: boolean;
     showExcludeUnprofiledSamplesControl: boolean;
     disabled?: boolean;
+    inFilterPanel?: boolean;
 }
 
 export interface ISettingsMenuButtonVisible {
@@ -105,28 +106,63 @@ export default class SettingsMenuButton extends React.Component<
     }
 
     render() {
-        return (
-            <DefaultTooltip
-                trigger={[this.trigger]}
-                placement="bottomRight"
-                overlay={this.overlay}
-                visible={this.visibilityState}
-                onVisibleChange={visible => {
-                    this.setVisibilityState(visible);
-                }}
-                onPopupAlign={tooltipEl => setArrowLeft(tooltipEl, '22px')}
-            >
-                <button
-                    data-test="GlobalSettingsButton"
-                    style={{
-                        marginRight: 0,
-                        marginLeft: 5,
+        if (this.props.inFilterPanel) {
+            return (
+                <DefaultTooltip
+                    trigger={'click'}
+                    placement="top"
+                    overlay={this.overlay}
+                    visible={this.visibilityState}
+                    onVisibleChange={visible => {
+                        this.setVisibilityState(visible);
                     }}
-                    className="btn btn-primary"
                 >
-                    <i className="fa fa-sliders fa-lg" />
-                </button>
-            </DefaultTooltip>
-        );
+                    <button
+                        data-test="GlobalSettingsButton"
+                        style={{
+                            marginLeft: 5,
+                            marginRight: 5,
+                            padding: '0px 4px 0px 4px',
+                            height: 18,
+                        }}
+                        className="btn btn-primary"
+                    >
+                        <i
+                            className="fa fa-sliders"
+                            style={{
+                                fontSize: 12,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        />
+                    </button>
+                </DefaultTooltip>
+            );
+        } else {
+            return (
+                <DefaultTooltip
+                    trigger={[this.trigger]}
+                    placement="bottomRight"
+                    overlay={this.overlay}
+                    visible={this.visibilityState}
+                    onVisibleChange={visible => {
+                        this.setVisibilityState(visible);
+                    }}
+                    onPopupAlign={tooltipEl => setArrowLeft(tooltipEl, '22px')}
+                >
+                    <button
+                        data-test="GlobalSettingsButton"
+                        style={{
+                            marginRight: 0,
+                            marginLeft: 5,
+                        }}
+                        className="btn btn-primary"
+                    >
+                        <i className="fa fa-sliders fa-lg" />
+                    </button>
+                </DefaultTooltip>
+            );
+        }
     }
 }
