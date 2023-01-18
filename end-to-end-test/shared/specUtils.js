@@ -103,7 +103,7 @@ function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
 }
 
 function getElementByTestHandle(handle) {
-    return $(`[data-test=${handle}]`);
+    return $(`[data-test="${handle}"]`);
 }
 
 function setOncoprintMutationsMenuOpen(open) {

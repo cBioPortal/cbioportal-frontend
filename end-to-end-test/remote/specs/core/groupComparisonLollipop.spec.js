@@ -1,8 +1,6 @@
 var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
 var setInputText = require('../../../shared/specUtils').setInputText;
 var setSettingsMenuOpen = require('../../../shared/specUtils')
     .setSettingsMenuOpen;
@@ -14,49 +12,31 @@ describe('group comparison mutations tab tests', function() {
     describe('lollipop alerts and plot display', function() {
         before(function() {
             goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/comparison?comparisonId=634006c24dd45f2bc4c3d4aa`
+                `${CBIOPORTAL_URL}/comparison/mutations?comparisonId=634006c24dd45f2bc4c3d4aa`
             );
-            $('div[data-test="ComparisonPageOverlapTabDiv"]').waitForExist();
+            $('a.tabAnchor_mutations').waitForDisplayed(20000);
         });
 
         it('too many groups alert displayed when more than 2 groups selected', function() {
-            $('a.tabAnchor_mutations').waitForExist();
-            $('a.tabAnchor_mutations').click();
-            browser.pause(1000);
-            assert.equal(
-                $('[data-test="TooManyGroupsAlert"]').isDisplayed(),
-                true
-            );
+            getElementByTestHandle('TooManyGroupsAlert').waitForDisplayed();
         });
 
         it('not enough groups alert displayed when less than 2 groups selected', function() {
-            $('a=Deselect all').waitForExist();
             $('a=Deselect all').click();
-            browser.pause(1000);
-            assert.equal(
-                $('[data-test="NotEnoughGroupsAlert"]').isDisplayed(),
-                true
-            );
-            $(
-                '[data-test="groupSelectorButtonColon Adenocarcinoma"]'
-            ).waitForExist();
-            $('[data-test="groupSelectorButtonColon Adenocarcinoma"]').click();
-            browser.pause(1000);
-            assert.equal(
-                $('[data-test="NotEnoughGroupsAlert"]').isDisplayed(),
-                true
-            );
+            getElementByTestHandle('NotEnoughGroupsAlert').waitForDisplayed();
+            getElementByTestHandle(
+                'groupSelectorButtonColon Adenocarcinoma'
+            ).click();
+            getElementByTestHandle('NotEnoughGroupsAlert').waitForDisplayed();
         });
 
         it('lollipop plot displayed when 2 groups selected', function() {
-            $(
-                '[data-test="groupSelectorButtonColorectal Adenocarcinoma"]'
-            ).waitForExist();
-            $(
-                '[data-test="groupSelectorButtonColorectal Adenocarcinoma"]'
+            getElementByTestHandle(
+                'groupSelectorButtonColorectal Adenocarcinoma'
             ).click();
-            $('[data-test="LollipopPlot"]').waitForExist({ timeout: 20000 });
-            assert.equal($('[data-test="LollipopPlot"]').isDisplayed(), true);
+            getElementByTestHandle(
+                'ComparisonPageMutationsTabPlot'
+            ).waitForDisplayed(20000);
         });
     });
 
@@ -64,28 +44,17 @@ describe('group comparison mutations tab tests', function() {
         it('displays double tooltip when lollipop is present in both plots at the same position', function() {
             $('.lollipop-0').waitForExist();
             $('.lollipop-0').moveTo();
-            $('[data-test="tooltip-1450-Colon Adenocarcinoma"]').waitForExist();
-            $(
-                '[data-test="tooltip-1450-Colorectal Adenocarcinoma"]'
-            ).waitForExist();
-            assert.equal(
-                $(
-                    '[data-test="tooltip-1450-Colon Adenocarcinoma"]'
-                ).isDisplayed(),
-                true
-            );
-            assert.equal(
-                $(
-                    '[data-test="tooltip-1450-Colorectal Adenocarcinoma"]'
-                ).isDisplayed(),
-                true
-            );
+            getElementByTestHandle(
+                'tooltip-1450-Colon Adenocarcinoma'
+            ).waitForDisplayed();
+            getElementByTestHandle(
+                'tooltip-1450-Colorectal Adenocarcinoma'
+            ).waitForDisplayed();
         });
         it("doesn't display % when axis scale # is toggled", function() {
-            $('[data-test="AxisScaleSwitch#"]').click();
+            getElementByTestHandle('AxisScaleSwitch#').click();
             $('.lollipop-6').waitForExist();
             $('.lollipop-6').moveTo();
-            $('[data-test="tooltip-1378-Colon Adenocarcinoma"]').waitForExist();
             assert.equal(
                 $('[data-test="tooltip-1378-Colon Adenocarcinoma"]')
                     .getText()
@@ -94,10 +63,9 @@ describe('group comparison mutations tab tests', function() {
             );
         });
         it('displays % when axis scale % is toggled', function() {
-            $('[data-test="AxisScaleSwitch%"]').click();
+            getElementByTestHandle('AxisScaleSwitch%').click();
             $('.lollipop-6').waitForExist();
             $('.lollipop-6').moveTo();
-            $('[data-test="tooltip-1378-Colon Adenocarcinoma"]').waitForExist();
             assert.equal(
                 $('[data-test="tooltip-1378-Colon Adenocarcinoma"]')
                     .getText()
@@ -110,14 +78,20 @@ describe('group comparison mutations tab tests', function() {
     describe('selecting gene with dropdown and tabs', function() {
         it('clicking on gene tab sets the selected gene', function() {
             $('a.tabAnchor_TP53').click();
-            waitForNetworkQuiet();
+            getElementByTestHandle('ComparisonPageMutationsTabPlot')
+                .$('h3')
+                .waitForExist();
             assert.equal(
-                $('[data-test="LollipopPlotTitle"]')
+                getElementByTestHandle('ComparisonPageMutationsTabPlot')
+                    .$('h3')
                     .getText()
                     .includes('TP53'),
                 true
             );
-            assert.equal($('[data-test="GeneSelector"]').getText(), 'TP53');
+            assert.equal(
+                getElementByTestHandle('GeneSelector').getText(),
+                'TP53'
+            );
         });
 
         it('selecting gene in gene selector sets the selected gene', function() {
@@ -126,9 +100,12 @@ describe('group comparison mutations tab tests', function() {
                 'KRAS'
             );
             browser.keys('Enter');
-            waitForNetworkQuiet();
+            getElementByTestHandle('ComparisonPageMutationsTabPlot')
+                .$('h3')
+                .waitForExist();
             assert.equal(
-                $('[data-test="LollipopPlotTitle"]')
+                getElementByTestHandle('ComparisonPageMutationsTabPlot')
+                    .$('h3')
                     .getText()
                     .includes('KRAS'),
                 true
@@ -145,15 +122,11 @@ describe('group comparison mutations tab tests', function() {
 
     describe('adding annotation tracks', function() {
         it('track visibility stays on gene change', function() {
-            $('div.css-dlmlqy-control').click();
-            $('[data-test="CancerHotspots"]').click();
-            waitForNetworkQuiet();
-            $('svg.css-tj5bde-Svg').click();
-            waitForNetworkQuiet();
-            assert.equal(
-                $('[data-test="AnnotationTracks"]').isDisplayed(),
-                true
-            );
+            $('div.annotation-track-selector').click();
+            getElementByTestHandle('CancerHotspots').click();
+            $('a.tabAnchor_APC').waitForDisplayed();
+            $('a.tabAnchor_APC').click();
+            getElementByTestHandle('AnnotationTracks').waitForDisplayed();
         });
     });
 
@@ -180,12 +153,7 @@ describe('group comparison mutations tab tests', function() {
                     '[data-test="badge-truncating_putative_driver"]'
                 )[1].getCSSProperty('color').parsed.hex
             );
-            assert.equal(
-                $(
-                    'div.mutationMapper-module__filterResetPanel__2aFDu'
-                ).isDisplayed(),
-                true
-            );
+            getElementByTestHandle('filter-reset-panel').waitForDisplayed();
 
             // undo filter
             $('strong=Truncating').click();
@@ -198,9 +166,7 @@ describe('group comparison mutations tab tests', function() {
                 )[1].getCSSProperty('color').parsed.hex
             );
             assert.equal(
-                $(
-                    'div.mutationMapper-module__filterResetPanel__2aFDu'
-                ).isDisplayed(),
+                getElementByTestHandle('filter-reset-panel').isDisplayed(),
                 false
             );
         });
