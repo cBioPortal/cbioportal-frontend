@@ -161,6 +161,8 @@ export interface IServerConfig {
     skin_mutation_table_namespace_column_show_by_default: boolean;
     skin_patient_view_mutation_table_columns_show_on_init: string;
     skin_results_view_mutation_table_columns_show_on_init: string;
+    skin_patient_view_copy_number_table_columns_show_on_init: string;
+    skin_patient_view_structural_variant_table_columns_show_on_init: string;
     comparison_categorical_na_values: string;
     oncoprint_clinical_tracks_config_json: string;
 }

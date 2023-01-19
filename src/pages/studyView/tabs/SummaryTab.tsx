@@ -7,7 +7,11 @@ import {
 } from 'pages/studyView/charts/ChartContainer';
 import { observable, toJS, makeObservable } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { DataFilterValue, GenomicDataBin } from 'cbioportal-ts-api-client';
+import {
+    DataFilterValue,
+    GenericAssayDataBin,
+    GenomicDataBin,
+} from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ReactGridLayout, { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -27,12 +31,10 @@ import {
     ChartType,
     RectangleBounds,
     DataBin,
-    SpecialChartsUniqueKeyEnum,
     makeDensityScatterPlotTooltip,
     logScalePossible,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
-import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';

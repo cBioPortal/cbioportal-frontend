@@ -1,10 +1,13 @@
 import _ from 'lodash';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
+    BinsGeneratorConfig,
     CancerStudy,
     ClinicalAttribute,
     ClinicalData,
+    ClinicalDataBin,
     ClinicalDataBinFilter,
+    ClinicalDataCollection,
     ClinicalDataCount,
     ClinicalDataMultiStudyFilter,
     DataFilterValue,
@@ -13,6 +16,7 @@ import {
     GeneFilterQuery,
     GenePanelData,
     GenericAssayData,
+    GenericAssayDataBin,
     GenericAssayDataMultipleStudyFilter,
     GenomicDataBin,
     GenomicDataCount,
@@ -68,11 +72,6 @@ import {
     CNAProfilesEnum,
     StructuralVariantProfilesEnum,
 } from 'shared/components/query/QueryStoreUtils';
-import {
-    ClinicalDataBin,
-    GenericAssayDataBin,
-    BinsGeneratorConfig,
-} from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ChartOption } from './addChartButton/AddChartButton';
 import { observer } from 'mobx-react';
 import {
@@ -2922,58 +2921,6 @@ export function getFilteredAndCompressedDataIntervalFilters(
     return { start, end } as any;
 }
 
-export async function getClinicalDataBySamples(samples: Sample[]) {
-    let clinicalData: {
-        [sampleId: string]: { [attributeId: string]: string };
-    } = {};
-
-    let sampleClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
-        clinicalDataType: 'SAMPLE',
-        clinicalDataMultiStudyFilter: {
-            identifiers: _.map(samples, sample => {
-                return {
-                    entityId: sample.sampleId,
-                    studyId: sample.studyId,
-                };
-            }),
-        } as ClinicalDataMultiStudyFilter,
-    });
-
-    _.forEach(sampleClinicalData, item => {
-        clinicalData[item.uniqueSampleKey] = {
-            ...(clinicalData[item.uniqueSampleKey] || {}),
-            [item.clinicalAttributeId]: item.value,
-        };
-    });
-
-    let patientClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
-        clinicalDataType: ClinicalDataTypeEnum.PATIENT,
-        clinicalDataMultiStudyFilter: {
-            identifiers: _.map(samples, sample => {
-                return {
-                    entityId: sample.patientId,
-                    studyId: sample.studyId,
-                };
-            }),
-        } as ClinicalDataMultiStudyFilter,
-    });
-
-    const patientSamplesMap = _.groupBy(
-        samples,
-        sample => sample.uniquePatientKey
-    );
-
-    _.forEach(patientClinicalData, item => {
-        (patientSamplesMap[item.uniquePatientKey] || []).forEach(sample => {
-            clinicalData[sample.uniqueSampleKey] = {
-                ...(clinicalData[sample.uniqueSampleKey] || {}),
-                [item.clinicalAttributeId]: item.value,
-            };
-        });
-    });
-    return clinicalData;
-}
-
 export function updateSavedUserPreferenceChartIds(
     chartSettings: ChartUserSetting[]
 ): ChartUserSetting[] {
@@ -3020,6 +2967,87 @@ export function updateSavedUserPreferenceChartIds(
         });
     }
     return chartSettings;
+}
+
+export async function getAllClinicalDataByStudyViewFilter(
+    studyViewFilter: StudyViewFilter
+): Promise<{ [sampleId: string]: { [attributeId: string]: string } }> {
+    const localClinicalDataCollection: ClinicalDataCollection = {
+        sampleClinicalData: [],
+        patientClinicalData: [],
+    };
+    let remoteClinicalDataCollection: ClinicalDataCollection = {
+        sampleClinicalData: [],
+        patientClinicalData: [],
+    };
+
+    const maxPageSize = 500000;
+    let pageNumber = 0;
+
+    do {
+        const remoteClinicalDataCollection = await internalClient.fetchClinicalDataClinicalTableUsingPOST(
+            {
+                studyViewFilter,
+                pageSize: maxPageSize,
+                pageNumber: pageNumber,
+                searchTerm: undefined,
+                sortBy: undefined,
+                direction: 'ASC',
+            }
+        );
+        localClinicalDataCollection.sampleClinicalData = localClinicalDataCollection.sampleClinicalData.concat(
+            remoteClinicalDataCollection.sampleClinicalData
+        );
+        localClinicalDataCollection.patientClinicalData = localClinicalDataCollection.patientClinicalData.concat(
+            remoteClinicalDataCollection.patientClinicalData
+        );
+        pageNumber++;
+    } while (remoteClinicalDataCollection.sampleClinicalData.length > 0);
+
+    return mergeClinicalDataCollection(localClinicalDataCollection);
+}
+
+export function mergeClinicalDataCollection(
+    clinicalDataCollection: ClinicalDataCollection
+): { [sampleId: string]: { [attributeId: string]: string } } {
+    const patientKeyedSampleData = _.groupBy(
+        clinicalDataCollection.sampleClinicalData,
+        d => d.uniquePatientKey
+    );
+    let patientKeyedSampleKeyedData = _.mapValues(
+        patientKeyedSampleData,
+        sampleData => _.groupBy(sampleData, d => d.uniqueSampleKey)
+    );
+    const patientKeyedPatientData = _.groupBy(
+        clinicalDataCollection.patientClinicalData,
+        d => d.uniquePatientKey
+    );
+    // Add patient level clinical data to sample clinical data.
+    patientKeyedSampleKeyedData = _.mapValues(
+        patientKeyedSampleKeyedData,
+        (sampleKeyedData, patientId) =>
+            _.mapValues(sampleKeyedData, (attrs, sampleId) =>
+                attrs.concat(patientKeyedPatientData[patientId] || [])
+            )
+    );
+    // Remove patient id levels (only keep sample id keys).
+    const sampleKeyedData = _.assign(
+        {},
+        ..._.values(patientKeyedSampleKeyedData)
+    );
+    // Put all clinical attributes in one object.
+    const sampleCollapsedAttributes = _.mapValues(
+        sampleKeyedData,
+        clinicalData => {
+            const data = _.map(clinicalData, (datum: ClinicalData) => {
+                const obj: { [attrId: string]: string } = {};
+                obj[datum.clinicalAttributeId] = datum.value;
+                return obj;
+            });
+            return _.assign({}, ...data);
+        }
+    );
+    return sampleCollapsedAttributes;
 }
 
 export function convertClinicalDataBinsToDataBins(

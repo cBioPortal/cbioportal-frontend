@@ -10,6 +10,7 @@ import {
     GeneFilterQuery,
     PatientTreatmentFilter,
     SampleTreatmentFilter,
+    ClinicalDataFilter,
 } from 'cbioportal-ts-api-client';
 import {
     DataType,
@@ -17,7 +18,6 @@ import {
     ChartType,
     getGenomicChartUniqueKey,
     getGenericAssayChartUniqueKey,
-    DataBin,
     updateCustomIntervalFilter,
 } from 'pages/studyView/StudyViewUtils';
 import {
@@ -45,7 +45,6 @@ import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
 } from 'cbioportal-ts-api-client';
-import { ClinicalDataFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPI';
 import {
     STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_MISSENSE,

@@ -3,6 +3,7 @@ import {
     ClinicalAttribute,
     ClinicalData,
     DiscreteCopyNumberData,
+    GenericAssayEnrichment,
     MolecularProfile,
     Mutation,
     NumericGeneMolecularData,
@@ -47,7 +48,6 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
-import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { Gene } from 'cbioportal-utils';

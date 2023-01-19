@@ -10,8 +10,10 @@ export { default as CBioPortalAPI } from './generated/CBioPortalAPI';
 // which causes TS errors
 export {
     AlterationEnrichment,
+    BinsGeneratorConfig,
     ClinicalDataBinFilter,
     ClinicalDataBinCountFilter,
+    ClinicalDataCollection,
     ClinicalDataCount,
     ClinicalDataCountFilter,
     ClinicalDataCountItem,
@@ -30,6 +32,11 @@ export {
     DensityPlotBin,
     GenomicEnrichment,
     GeneFilter,
+    GenericAssayDataBin,
+    GenericAssayDataBinFilter,
+    GenericAssayDataCountFilter,
+    GenericAssayDataCountItem,
+    GenericAssayEnrichment,
     Geneset,
     GenesetCorrelation,
     GenesetDataFilterCriteria,
