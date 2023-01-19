@@ -126,7 +126,7 @@ export interface IMutationTableProps {
     initialItemsPerPage?: number;
     itemsLabel?: string;
     itemsLabelPlural?: string;
-    userEmailAddress?: string;
+    userDisplayName?: string;
     initialSortColumn?: string;
     initialSortDirection?: SortDirection;
     paginationProps?: IPaginationControlsProps;
@@ -888,7 +888,7 @@ export default class MutationTable<
                         enableMyCancerGenome: this.props
                             .enableMyCancerGenome as boolean,
                         enableHotspot: this.props.enableHotspot as boolean,
-                        userEmailAddress: this.props.userEmailAddress,
+                        userDisplayName: this.props.userDisplayName,
                         resolveTumorType: this.resolveTumorType,
                     })}
                 </span>

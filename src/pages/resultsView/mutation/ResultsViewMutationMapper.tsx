@@ -50,7 +50,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     mutationCountCache?: MutationCountCache;
     clinicalAttributeCache?: ClinicalAttributeCache;
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
-    userEmailAddress: string;
+    userDisplayName: string;
     onClickSettingMenu?: (visible: boolean) => void;
 }
 
@@ -221,7 +221,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 onOncoKbIconToggle={this.props.onOncoKbIconToggle}
                 civicGenes={this.props.store.civicGenes}
                 civicVariants={this.props.store.civicVariants}
-                userEmailAddress={this.props.userEmailAddress}
+                userDisplayName={this.props.userDisplayName}
                 enableOncoKb={this.props.enableOncoKb}
                 enableFunctionalImpact={this.props.enableGenomeNexus}
                 enableHotspot={this.props.enableHotspot}
