@@ -137,7 +137,8 @@ export interface IServerConfig {
     query_sets_of_genes: string | null;
     skin_quick_select_buttons: string | null;
     base_url: string | null;
-    user_email_address: string;
+    user_email_address: string; //Property to be completely replaced by user_display_name when backend PR #9986 is merged
+    user_display_name: string;
     sessionServiceEnabled: boolean;
     session_url_length_threshold: string;
     mskWholeSlideViewerToken: string;

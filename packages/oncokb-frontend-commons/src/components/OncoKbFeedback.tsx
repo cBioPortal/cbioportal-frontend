@@ -5,7 +5,7 @@ interface IOncoKbFeedbackProps {
     showFeedback: boolean;
     hugoSymbol?: string;
     alteration?: string;
-    userEmailAddress?: string;
+    userDisplayName?: string;
     handleFeedbackClose: () => void;
 }
 
@@ -19,7 +19,7 @@ export default class OncoKbFeedback extends React.Component<
         const geneParam = `entry.1744186665=${this.props.hugoSymbol || ''}`;
         const alterationParam = `entry.1671960263=${this.props.alteration ||
             ''}`;
-        const userParam = `entry.1381123986=${this.props.userEmailAddress ||
+        const userParam = `entry.1381123986=${this.props.userDisplayName ||
             ''}`;
         const uriParam = `entry.1083850662=${encodeURIComponent(
             window.location.href
