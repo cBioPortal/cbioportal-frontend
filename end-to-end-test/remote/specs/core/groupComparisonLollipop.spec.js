@@ -14,7 +14,7 @@ describe('group comparison mutations tab tests', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison/mutations?comparisonId=634006c24dd45f2bc4c3d4aa`
             );
-            $('a.tabAnchor_mutations').waitForDisplayed(20000);
+            $('a.tabAnchor_mutations').waitForDisplayed({ timeout: 20000 });
         });
 
         it('too many groups alert displayed when more than 2 groups selected', function() {
@@ -36,7 +36,7 @@ describe('group comparison mutations tab tests', function() {
             ).click();
             getElementByTestHandle(
                 'ComparisonPageMutationsTabPlot'
-            ).waitForDisplayed(20000);
+            ).waitForDisplayed({ timeout: 25000 });
         });
     });
 
