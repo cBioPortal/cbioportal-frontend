@@ -38,12 +38,10 @@ import MutationMapperDataStore, {
 import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary';
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
-import {
-    getPatientSampleSummary,
-    submitToStudyViewPage,
-} from '../querySummary/QuerySummaryUtils';
+import { submitToStudyViewPage } from '../querySummary/QuerySummaryUtils';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
+import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -86,10 +84,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                         );
                     }}
                 >
-                    {getPatientSampleSummary(
-                        dataStore.tableDataSamples,
-                        dataStore.tableDataPatients
-                    )}
+                    <PatientSampleSummary
+                        samples={dataStore.tableDataSamples}
+                        patients={dataStore.tableDataPatients}
+                    />
                 </a>
             );
             filterInfo = (
