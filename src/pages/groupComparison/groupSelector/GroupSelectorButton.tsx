@@ -197,16 +197,15 @@ class GroupSelectorButton extends React.Component<
                                             overlap calculations.
                                         </div>
                                     )}
-                                    <div className="text-center">
-                                        <button
-                                            className="btn-link"
+                                    <div style={{ marginTop: 10 }}>
+                                        <a
                                             onClick={
                                                 this.onClickOpenStudyViewGroup
                                             }
                                         >
                                             Open in study view{' '}
-                                            <i className="fa fa-external-link"></i>
-                                        </button>
+                                            <i className="ci ci-pie-chart"></i>
+                                        </a>
                                     </div>
                                 </>
                             </Popover>
