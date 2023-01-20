@@ -29,7 +29,10 @@ export class FilterResetPanel extends React.Component<
 
     public render() {
         return (
-            <div className={this.props.className}>
+            <div
+                className={this.props.className}
+                data-test="filter-reset-panel"
+            >
                 <span style={{ verticalAlign: 'middle' }}>
                     {this.props.filterInfo}
                     <button

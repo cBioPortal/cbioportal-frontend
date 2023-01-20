@@ -7,6 +7,7 @@ export type BadgeLabelProps = {
     badgeStyleOverride?: CSSProperties;
     badgeClassName?: string;
     badgeFirst?: boolean;
+    value?: string;
 };
 
 export const DEFAULT_BADGE_STYLE = {
@@ -33,6 +34,7 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}> {
             >
                 <span
                     className={this.props.badgeClassName}
+                    data-test={`badge-${this.props.value}`}
                     style={{
                         ...DEFAULT_BADGE_STYLE,
                         ...this.props.badgeStyleOverride,

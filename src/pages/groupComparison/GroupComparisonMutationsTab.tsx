@@ -85,13 +85,19 @@ export default class GroupComparisonMutationsTab extends React.Component<
             // We only want 2 groups for our mirrored lollipop plot. Display message if not 2 groups
             if (this.props.store.activeGroups.result!.length < 2) {
                 return (
-                    <div className="alert alert-info">
+                    <div
+                        className="alert alert-info"
+                        data-test="NotEnoughGroupsAlert"
+                    >
                         {MUTATIONS_NOT_ENOUGH_GROUPS_MSG}
                     </div>
                 );
             } else if (this.props.store.activeGroups.result!.length > 2) {
                 return (
-                    <div className="alert alert-info">
+                    <div
+                        className="alert alert-info"
+                        data-test="TooManyGroupsAlert"
+                    >
                         {MUTATIONS_TOO_MANY_GROUPS_MSG}
                     </div>
                 );

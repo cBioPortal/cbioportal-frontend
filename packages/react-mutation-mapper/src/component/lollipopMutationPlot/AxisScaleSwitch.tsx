@@ -45,6 +45,7 @@ export class AxisScaleSwitch extends React.Component<
                     'btn-sm',
                     'btn-axis-switch'
                 )}
+                data-test={`AxisScaleSwitch${scale}`}
                 style={{
                     lineHeight: 1,
                     cursor:
