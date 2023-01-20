@@ -51,7 +51,7 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}> {
                         }}
                         className={'badgeControls'}
                     >
-                        <a href={'#'}>on</a> | <a href={'#'}>only</a>
+                        <a href={'#'}>off</a> | <a href={'#'}>only</a>
                     </span>
                     {this.props.badgeContent}
                 </span>
