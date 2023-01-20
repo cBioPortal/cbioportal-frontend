@@ -197,6 +197,19 @@ export default class MutationMapperDataStore
     }
 
     @computed
+    get dataSampleIdentifiers() {
+        return _.uniqBy(_.flatten(this.allData), m => m.sampleId).map(m => ({
+            sampleId: m.sampleId,
+            studyId: m.studyId,
+        }));
+    }
+
+    @computed
+    get dataPatientIds() {
+        return _.uniq(_.flatten(this.allData).map(m => m.patientId));
+    }
+
+    @computed
     get tableDataSamples() {
         return _.uniqBy(_.flatten(this.tableData), m => m.sampleId).map(m => ({
             sampleId: m.sampleId,
