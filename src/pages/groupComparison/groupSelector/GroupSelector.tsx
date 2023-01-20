@@ -13,6 +13,7 @@ import ComparisonStore, {
 import { action, computed, makeObservable, observable } from 'mobx';
 import { ComparisonGroup } from '../GroupComparisonUtils';
 import CollapsedGroupsButton from './CollapsedGroupsButton';
+import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
 
 export interface IGroupSelectorProps {
     store: ComparisonStore;
@@ -45,10 +46,32 @@ export default class GroupSelector extends React.Component<
 
     @autobind
     private onClick(groupName: string) {
+        const study = this.props.store.activeGroups.result;
+        const compareStore = this.props.store.activeGroups.result;
+
         if (!this.dragging) {
-            this.props.store.toggleGroupSelected(groupName);
+            console.log('TODO function:', compareStore);
+            const samples: String[] = [];
+            compareStore?.forEach(ele => {
+                console.log(ele.studies[0].samples);
+                samples.push(...ele.studies[0].samples);
+            });
+
+            console.log(samples);
+            console.log(study);
+            if (this.props.store.activeGroups.length > 1) {
+                // if there is more than one active group selected then we can compare them in the study view page
+                submitToStudyViewPage(study, samples, true);
+            }
         }
     }
+
+    // @autobind
+    // private onClick(groupName: string) {
+    //     if (!this.dragging) {
+    //         this.props.store.toggleGroupSelected(groupName);
+    //     }
+    // }
 
     @autobind
     private onClickDelete(groupName: string) {
