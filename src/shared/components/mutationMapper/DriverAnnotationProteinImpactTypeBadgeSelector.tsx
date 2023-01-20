@@ -55,6 +55,7 @@ export interface IDriverAnnotationProteinImpactTypeBadgeSelectorProps
     ) => void;
     onClickSettingMenu?: (visible: boolean) => void;
     annotatedProteinImpactTypeFilter?: DataFilter<string>;
+    disableAnnotationSettings?: boolean;
 }
 
 function findSelectedDriverVsVus(
@@ -149,14 +150,19 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
     @action.bound
     private getDriverVsVusOptionLabel(option: Option): JSX.Element {
+        const buttonStyle = {
+            marginLeft: 5,
+            marginRight: 5,
+            padding: '0px 4px 0px 4px',
+            height: 18,
+        };
         const driverAnnotationSettingIcon = (
             <button
-                style={{
-                    marginLeft: 5,
-                    marginRight: 5,
-                    padding: '0px 4px 0px 4px',
-                    height: 18,
-                }}
+                style={
+                    this.props.disableAnnotationSettings
+                        ? { ...buttonStyle, opacity: 0, pointerEvents: 'none' }
+                        : buttonStyle
+                }
                 className="btn btn-primary"
                 onClick={this.onSettingMenuClick}
             >

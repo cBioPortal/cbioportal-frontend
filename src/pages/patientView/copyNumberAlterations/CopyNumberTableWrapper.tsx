@@ -367,6 +367,16 @@ export default class CopyNumberTableWrapper extends React.Component<
             });
         }
 
+        //Adjust visibility based on instance configuration
+        const visibleColumnsProperty = getServerConfig()
+            .skin_patient_view_copy_number_table_columns_show_on_init;
+        if (visibleColumnsProperty) {
+            const visibleColumns = visibleColumnsProperty.split(',');
+            columns.forEach(column => {
+                column.visible = visibleColumns.includes(column.name);
+            });
+        }
+
         const orderedColumns = _.sortBy(
             columns,
             (c: CNATableColumn) => c.order

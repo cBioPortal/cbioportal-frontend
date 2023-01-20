@@ -22,7 +22,6 @@ import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/M
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
     onScaleToggle: (selectedScale: AxisScale) => void;
-    onClickSettingMenu: (visible: boolean) => void;
     mutations?: Mutation[];
     filters?: any;
 }
@@ -167,13 +166,13 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                                     ? (m: AnnotatedMutation) => m.putativeDriver
                                     : undefined
                             }
-                            onClickSettingMenu={this.props.onClickSettingMenu}
                             trackVisibility={
                                 this.userSelectionStore.trackVisibility
                             }
                             compactStyle={true}
                             showPlotPercentToggle={true}
                             groups={this.props.store.activeGroups.result!}
+                            annotationFilterSettings={this.props.store}
                         />
                     </>
                 );

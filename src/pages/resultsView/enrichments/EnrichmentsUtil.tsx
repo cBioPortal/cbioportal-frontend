@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
     AlterationEnrichment,
+    GenericAssayEnrichment,
     GenomicEnrichment,
     MolecularProfile,
 } from 'cbioportal-ts-api-client';
@@ -28,7 +29,6 @@ import {
     ExpressionEnrichmentTableColumnType,
 } from './ExpressionEnrichmentsTable';
 import { Datalabel } from 'shared/lib/DataUtils';
-import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import {
     GenericAssayEnrichmentTableColumn,
     GenericAssayEnrichmentTableColumnType,

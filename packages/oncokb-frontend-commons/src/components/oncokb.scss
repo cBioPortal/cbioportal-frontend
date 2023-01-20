@@ -19,10 +19,15 @@
         > li {
             > a {
                 padding: 7px 10px;
+                display: block;
             }
 
             a:focus {
                 outline-width: 0;
+            }
+
+            a:hover {
+                text-decoration: none;
             }
 
             &:not(.active) {
@@ -45,6 +50,12 @@
         padding: 10px 0;
         min-height: 50px;
         position: relative;
+
+        > .fade {
+            &.in {
+                opacity: 1;
+            }
+        }
     }
 
     // Default left align all react-table headers under oncokb-card-tabs
