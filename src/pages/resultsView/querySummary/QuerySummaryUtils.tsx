@@ -10,13 +10,13 @@ export function getPatientSampleSummary(samples: any[], patients: any[]) {
         const sampleUnits = samples.length === 1 ? 'sample' : 'samples';
         return (
             <span>
-                <strong>{patients.length}</strong> {patientUnits} /{' '}
-                <strong>{samples.length}</strong> {sampleUnits}
+                <strong>{samples.length}</strong> {sampleUnits} /{' '}
+                <strong>{patients.length}</strong> {patientUnits}
             </span>
         );
     } else {
         const units =
-            samples.length === 1 ? 'patient/sample' : 'patients/samples';
+            samples.length === 1 ? 'sample/patient' : 'samples/patients';
         return (
             <span>
                 <strong>{samples.length}</strong> {units}
