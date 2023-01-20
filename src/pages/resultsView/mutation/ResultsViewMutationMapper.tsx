@@ -92,29 +92,11 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     )}
                 </a>
             );
-            const linkToTotalStudyView = (
-                <a
-                    onClick={() => {
-                        submitToStudyViewPage(
-                            this.props.store.queriedStudies.result!,
-                            dataStore.dataSamples,
-                            true
-                        );
-                    }}
-                >
-                    {getPatientSampleSummary(
-                        dataStore.dataSamples,
-                        dataStore.dataPatients
-                    )}
-                    {'.'}
-                </a>
-            );
             filterInfo = (
                 <span>
-                    {`Showing ${dataStore.tableData.length} (`}
+                    {`Showing ${dataStore.tableData.length} mutations (`}
                     {linkToFilteredStudyView}
-                    {`) of  ${dataStore.allData.length} mutations in `}
-                    {linkToTotalStudyView}
+                    {')'}
                 </span>
             );
         }
