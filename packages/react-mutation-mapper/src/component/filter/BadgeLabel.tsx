@@ -24,8 +24,11 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}> {
     };
 
     protected get badge(): JSX.Element {
+        debugger;
+
         return (
             <span
+                className={'alterationBadge'}
                 style={
                     this.props.badgeFirst
                         ? { marginRight: 5 }
@@ -33,13 +36,23 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}> {
                 }
             >
                 <span
-                    className={this.props.badgeClassName}
+                    className={this.props.badgeClassName + ' posRelative'}
                     data-test={`badge-${this.props.value}`}
                     style={{
                         ...DEFAULT_BADGE_STYLE,
                         ...this.props.badgeStyleOverride,
                     }}
                 >
+                    <span
+                        style={{
+                            backgroundColor:
+                                this.props.badgeStyleOverride
+                                    ?.backgroundColor || 'black',
+                        }}
+                        className={'badgeControls'}
+                    >
+                        <a href={'#'}>on</a> | <a href={'#'}>only</a>
+                    </span>
                     {this.props.badgeContent}
                 </span>
             </span>

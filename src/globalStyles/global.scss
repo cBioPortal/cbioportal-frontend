@@ -757,3 +757,25 @@ h2.divider {
         }
     }
 }
+
+.alterationBadge {
+    &:hover {
+        .badgeControls {
+            display: block !important;
+        }
+    }
+}
+
+.badgeControls {
+    position: absolute;
+    background: #eee;
+    padding: 4px 5px;
+    border-radius: 10px;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, 0) !important;
+    display: none;
+    a {
+        color: #fff;
+    }
+}
