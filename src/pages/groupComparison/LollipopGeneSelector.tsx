@@ -38,7 +38,10 @@ export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = observ
         };
 
         return (
-            <div style={{ width: 200, paddingRight: 10 }}>
+            <div
+                data-test="GeneSelector"
+                style={{ width: 200, paddingRight: 10 }}
+            >
                 <AsyncSelect
                     name="Select gene"
                     onChange={(option: any | null) => {

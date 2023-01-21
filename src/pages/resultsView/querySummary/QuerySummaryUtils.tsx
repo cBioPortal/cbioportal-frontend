@@ -1,29 +1,14 @@
 import { getPercentage } from '../../../shared/lib/FormatUtils';
 import * as React from 'react';
-import { SampleList, Sample, CancerStudy } from 'cbioportal-ts-api-client';
+import {
+    SampleList,
+    Sample,
+    CancerStudy,
+    SampleIdentifier,
+    Patient,
+} from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
-
-export function getPatientSampleSummary(samples: any[], patients: any[]) {
-    if (samples.length !== patients.length) {
-        const patientUnits = patients.length === 1 ? 'patient' : 'patients';
-        const sampleUnits = samples.length === 1 ? 'sample' : 'samples';
-        return (
-            <span>
-                <strong>{patients.length}</strong> {patientUnits} /{' '}
-                <strong>{samples.length}</strong> {sampleUnits}
-            </span>
-        );
-    } else {
-        const units =
-            samples.length === 1 ? 'patient/sample' : 'patients/samples';
-        return (
-            <span>
-                <strong>{samples.length}</strong> {units}
-            </span>
-        );
-    }
-}
 
 export function getGeneSummary(hugoSymbols: string[]) {
     switch (hugoSymbols.length) {

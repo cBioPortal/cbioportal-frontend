@@ -183,7 +183,7 @@ export default class LollipopMutationPlot<
         const label = lollipopLabelText(mutationsAtPosition);
 
         return (
-            <div>
+            <div data-test={`tooltip-${codon}${group ? `-${group}` : ''}`}>
                 {countInfo}
                 <br />
                 <span>AA Change: {label}</span>
