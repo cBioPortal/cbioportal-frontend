@@ -114,7 +114,9 @@ export default class AlterationEnrichmentContainer extends React.Component<
     }
 
     @computed get data(): AlterationEnrichmentRow[] {
-        return this.props.comparisonStore?.alterationEnrichmentRowData || [];
+        return (
+            this.props.comparisonStore?.alterationEnrichmentRowData.result || []
+        );
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {

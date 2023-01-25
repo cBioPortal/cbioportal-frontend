@@ -265,6 +265,7 @@ export default class GroupComparisonPage extends React.Component<
                             <GroupComparisonPathwayMapper
                                 genomicData={
                                     this.store.alterationEnrichmentRowData
+                                        .result || []
                                 }
                                 activeGroups={this.store.activeGroups.result}
                                 store={this.store}
