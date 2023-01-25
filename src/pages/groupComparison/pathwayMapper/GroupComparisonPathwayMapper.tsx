@@ -54,7 +54,7 @@ export default class GroupComparisonPathwayMapper extends React.Component<
     @computed get activeGenes() {
         return (
             this._userSelectedGenes ||
-            this.props.store.genesSortedByMutationFrequency.result?.slice(
+            this.props.store.genesSortedByAlterationFrequency.result?.slice(
                 0,
                 10
             ) ||
@@ -63,7 +63,9 @@ export default class GroupComparisonPathwayMapper extends React.Component<
     }
 
     @computed get alterationEnrichmentRowData(): AlterationEnrichmentRow[] {
-        return this.props.store.alterationEnrichmentRowData.filter(gene => {
+        return (
+            this.props.store.alterationEnrichmentRowData.result || []
+        ).filter(gene => {
             return this.activeGenes.includes(gene.hugoGeneSymbol);
         });
     }
