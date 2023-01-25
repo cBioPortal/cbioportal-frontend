@@ -521,9 +521,12 @@ export default class ResultsViewPage extends React.Component<
 
     @action.bound
     handleQuickOQLSubmission() {
-        this.quickOQLQueryStore!.submit(
+        const targetTab = Object.values(ResultsViewTab).includes(
             this.urlWrapper.tabId as ResultsViewTab
-        );
+        )
+            ? this.urlWrapper.tabId
+            : '';
+        this.quickOQLQueryStore!.submit(targetTab as ResultsViewTab);
         this.showOQLEditor = false;
     }
 
