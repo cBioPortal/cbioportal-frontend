@@ -62,9 +62,6 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     ): JSX.Element {
         return (
             <>
-                <div style={{ fontWeight: 'bold', paddingBottom: 3 }}>
-                    {this.props.groups[groupIndex].nameWithOrdinal}
-                </div>
                 {driversAnnotated ? (
                     <DriverAnnotationProteinImpactTypeBadgeSelector
                         filter={this.proteinImpactTypeFilter}
@@ -95,7 +92,13 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
      */
     protected get mutationFilterPanel(): JSX.Element | null {
         return (
-            <div>
+            <div
+                style={
+                    this.props.isPutativeDriver
+                        ? { paddingTop: 5, paddingBottom: 5 }
+                        : { paddingTop: 5, paddingBottom: 15 }
+                }
+            >
                 <div>
                     <SettingsMenuButton
                         store={this.props.annotationFilterSettings}
@@ -107,17 +110,14 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                     />
                     Annotation settings
                 </div>
-                <hr style={{ marginTop: 5, marginBottom: 5 }}></hr>
                 <div
                     style={
                         this.props.isPutativeDriver
                             ? {
-                                  paddingTop: 5,
-                                  paddingBottom: 5,
+                                  paddingTop: 2,
                               }
                             : {
-                                  paddingBottom: 15,
-                                  paddingTop: 15,
+                                  paddingTop: 72,
                               }
                     }
                 >
@@ -125,7 +125,19 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                         0,
                         !!this.props.isPutativeDriver
                     )}
-                    <hr style={{ marginTop: 10, marginBottom: 10 }}></hr>
+                    <hr
+                        style={
+                            this.props.isPutativeDriver
+                                ? {
+                                      marginTop: 2,
+                                      marginBottom: 2,
+                                  }
+                                : {
+                                      marginTop: 15,
+                                      marginBottom: 15,
+                                  }
+                        }
+                    ></hr>
                     {this.proteinImpactTypeBadgeSelectorForGroup(
                         1,
                         !!this.props.isPutativeDriver

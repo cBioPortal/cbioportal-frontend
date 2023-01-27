@@ -31,6 +31,14 @@ export enum VusMutationType {
     FUSION_PUTATIVE_DRIVER = 'fusion_putative_driver',
 }
 
+export enum ProteinImpactWithoutVusMutationType {
+    MISSENSE = CanonicalMutationType.MISSENSE,
+    TRUNCATING = CanonicalMutationType.TRUNCATING,
+    INFRAME = CanonicalMutationType.INFRAME,
+    SPLICE = CanonicalMutationType.SPLICE_SITE,
+    FUSION = CanonicalMutationType.FUSION,
+}
+
 export enum ProteinImpactType {
     MISSENSE = CanonicalMutationType.MISSENSE,
     TRUNCATING = CanonicalMutationType.TRUNCATING,
