@@ -564,6 +564,8 @@ export type TranscriptConsequenceSummary = {
 
         'hugoGeneSymbol': string
 
+        'isVue': boolean
+
         'polyphenPrediction': string
 
         'polyphenScore': number
@@ -602,6 +604,8 @@ export type VariantAnnotationSummary = {
 
         'variantType': string
 
+        'vues': Vues
+
 };
 export type Vcf = {
     'alt': string
@@ -609,6 +613,30 @@ export type Vcf = {
         'position': string
 
         'ref': string
+
+};
+export type Vues = {
+    'comment': string
+
+        'defaultEffect': string
+
+        'genomicLocation': string
+
+        'genomicLocationDescription': string
+
+        'hugoGeneSymbol': string
+
+        'pubmedIds': Array < number >
+
+        'referenceText': string
+
+        'revisedProteinEffect': string
+
+        'transcriptId': string
+
+        'variant': string
+
+        'variantClassification': string
 
 };
 
