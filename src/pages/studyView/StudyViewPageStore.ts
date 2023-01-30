@@ -261,6 +261,7 @@ import {
 import { PageType } from 'shared/userSession/PageType';
 import client from 'shared/api/cbioportalClientInstance';
 import { FeatureFlagEnum } from 'shared/featureFlags';
+import intersect from 'fast_array_intersect';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -2270,7 +2271,7 @@ export class StudyViewPageStore
     private _chartSampleIdentifiersFilterSet = observable.map<
         ChartUniqueKey,
         SampleIdentifier[]
-    >();
+    >({}, { deep: false });
 
     public preDefinedCustomChartFilterSet = observable.map<
         ChartUniqueKey,
@@ -3566,13 +3567,15 @@ export class StudyViewPageStore
             this._chartSampleIdentifiersFilterSet.values()
         );
 
-        // nested array need to be spread for _.intersectionWith
-        let _sampleIdentifiers: SampleIdentifier[] = _.intersectionWith(
-            ...sampleIdentifiersFilterSets,
-            ((a: SampleIdentifier, b: SampleIdentifier) => {
-                return a.sampleId === b.sampleId && a.studyId === b.studyId;
-            }) as any
-        );
+        let _sampleIdentifiers: SampleIdentifier[] = intersect<
+            SampleIdentifier
+        >(sampleIdentifiersFilterSets, (s: any) => {
+            // must use any b/c library typings are broken
+            return (
+                (s as SampleIdentifier).sampleId +
+                (s as SampleIdentifier).studyId
+            );
+        });
 
         if (!_.isEmpty(sampleIdentifiersFilterSets)) {
             filters.sampleIdentifiers = _sampleIdentifiers;
