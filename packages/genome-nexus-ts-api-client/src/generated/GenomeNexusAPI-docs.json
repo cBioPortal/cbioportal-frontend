@@ -1037,6 +1037,12 @@
     "AggregateSourceInfo": {
       "type": "object",
       "properties": {
+        "annotationSourcesInfo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SourceVersionInfo"
+          }
+        },
         "genomeNexus": {
           "$ref": "#/definitions/GenomeNexusInfo"
         },
@@ -3043,6 +3049,29 @@
         }
       }
     },
+    "SourceVersionInfo": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
     "StatsByTumorType": {
       "type": "object",
       "properties": {
@@ -3248,6 +3277,9 @@
         "hugoGeneSymbol": {
           "type": "string",
           "description": "Hugo gene symbol"
+        },
+        "isVue": {
+          "type": "boolean"
         },
         "polyphenPrediction": {
           "type": "string",
@@ -3549,6 +3581,9 @@
         "variantType": {
           "type": "string",
           "description": "Variant type"
+        },
+        "vues": {
+          "$ref": "#/definitions/Vues"
         }
       }
     },
@@ -3576,6 +3611,48 @@
           "type": "boolean"
         },
         "version": {
+          "type": "string"
+        }
+      }
+    },
+    "Vues": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "defaultEffect": {
+          "type": "string"
+        },
+        "genomicLocation": {
+          "type": "string"
+        },
+        "genomicLocationDescription": {
+          "type": "string"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "pubmedIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "referenceText": {
+          "type": "string"
+        },
+        "revisedProteinEffect": {
+          "type": "string"
+        },
+        "transcriptId": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "variantClassification": {
           "type": "string"
         }
       }
