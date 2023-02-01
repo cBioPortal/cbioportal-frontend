@@ -18,25 +18,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-import {
-    CancerStudy,
-    Gene,
-    MolecularProfile,
-    SampleIdentifier,
-    StructuralVariant,
-} from '../../../shared/api/generated/CBioPortalAPI';
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
 import { computed } from 'mobx';
-import {
-    remoteData,
-    PfamDomain,
-    PfamDomainRange,
-    EnsemblTranscript,
-} from 'cbioportal-frontend-commons';
-import {
-    fetchEnsemblTranscriptsByEnsemblFilter,
-    fetchPfamDomainData,
-} from '../../../shared/lib/StoreUtils';
+import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import {
     EnsemblTranscriptExt,
@@ -44,6 +28,19 @@ import {
 } from '../../../shared/model/Fusion';
 import ResultViewFusionMapperDataStore from './ResultViewFusionMapperDataStore';
 import { ExonsChartStore } from '../../../shared/components/exonsCharts/ExonsChartStore';
+import { EnsemblTranscript, PfamDomainRange } from 'genome-nexus-ts-api-client';
+import {
+    CancerStudy,
+    MolecularProfile,
+    SampleIdentifier,
+    StructuralVariant,
+} from 'cbioportal-ts-api-client';
+import {
+    fetchEnsemblTranscriptsByEnsemblFilter,
+    fetchPfamDomainData,
+} from 'shared/lib/StoreUtils';
+import { PfamDomain } from 'genome-nexus-ts-api-client';
+import { Gene } from 'cbioportal-ts-api-client';
 
 export const FUS_GENE_COLORSCALE = [
     '#097AFF',
@@ -108,7 +105,7 @@ export class ResultViewFusionMapperStore {
         {
             invoke: async () => {
                 // Collect all transcript id's from the fusion data
-                const transcriptIds = new Set();
+                const transcriptIds = new Set<string>();
                 this.fusions.forEach((fusion: StructuralVariant) => {
                     transcriptIds.add(fusion.site1EnsemblTranscriptId);
                     transcriptIds.add(fusion.site2EnsemblTranscriptId);
@@ -177,11 +174,11 @@ export class ResultViewFusionMapperStore {
         }
     }
 
-    @cached
     get dataStore(): ResultViewFusionMapperDataStore {
         const fusionData = (
             this.fusions || []
         ).map((fusion: StructuralVariant) => [fusion]);
+
         return new ResultViewFusionMapperDataStore(fusionData);
     }
 }

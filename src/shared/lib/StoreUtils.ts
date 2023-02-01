@@ -112,6 +112,7 @@ import {
     HotSpotInfo,
 } from 'shared/model/CustomDriverAnnotationInfo';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { EnsemblFilter } from 'genome-nexus-ts-api-client/src';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
@@ -279,6 +280,33 @@ export async function fetchAllReferenceGenomeGenes(
             return [];
         }
     }
+}
+
+export async function fetchPfamDomainData(
+    pfamAccessions: string[],
+    client: GenomeNexusAPI = genomeNexusClient
+) {
+    return await client.fetchPfamDomainsByPfamAccessionPOST({
+        pfamAccessions: pfamAccessions,
+    });
+}
+
+export async function fetchEnsemblTranscriptsByEnsemblFilter(
+    ensemblFilter: Partial<EnsemblFilter>,
+    client: GenomeNexusAPI = genomeNexusClient
+) {
+    return await client.fetchEnsemblTranscriptsByEnsemblFilterPOST({
+        ensemblFilter: Object.assign(
+            // set default to empty array
+            {
+                geneIds: [],
+                hugoSymbols: [],
+                proteinIds: [],
+                transcriptIds: [],
+            },
+            ensemblFilter
+        ),
+    });
 }
 
 export async function fetchPdbAlignmentData(

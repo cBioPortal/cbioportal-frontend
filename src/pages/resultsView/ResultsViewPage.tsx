@@ -281,8 +281,10 @@ export default class ResultsViewPage extends React.Component<
                 id: ResultsViewTab.FUSION,
                 hide: () => {
                     return (
-                        !this.resultsViewPageStore.fusions.isComplete ||
-                        this.resultsViewPageStore.fusions.result.length === 0
+                        !this.resultsViewPageStore.structuralVariants
+                            .isComplete ||
+                        this.resultsViewPageStore.structuralVariants.result
+                            .length === 0
                     );
                 },
                 getTab: () => {
