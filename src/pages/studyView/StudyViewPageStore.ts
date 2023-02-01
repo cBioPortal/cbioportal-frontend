@@ -5,6 +5,7 @@ import client from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
     action,
+    comparer,
     computed,
     IReactionDisposer,
     makeObservable,
@@ -175,6 +176,7 @@ import {
 } from '../../shared/api/urls';
 import {
     DataType as DownloadDataType,
+    getBrowserWindow,
     onMobxPromise,
     pluralize,
     remoteData,
@@ -265,6 +267,9 @@ import {
 import { PageType } from 'shared/userSession/PageType';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
+import { PillStore } from 'shared/components/PillTag/PillTag';
+
+export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 import { Simulate } from 'react-dom/test-utils';
 import select = Simulate.select;
 
@@ -471,6 +476,35 @@ export class StudyViewPageStore
         This can be achieved by a better control mechanism: as for all our fetches, they should be invoked by reference in view layer.
         Here, we fire this in constructor of store, which is an anti-pattern in our app.
          */
+
+        // Include special charts into custom data list
+        SPECIAL_CHARTS.forEach(
+            (chartMeta: ChartMetaWithDimensionAndChartType) => {
+                const uniqueKey = chartMeta.uniqueKey;
+                if (!this.chartsType.has(uniqueKey)) {
+                    this.chartsType.set(uniqueKey, chartMeta.chartType);
+                }
+                const chartType = this.chartsType.get(uniqueKey);
+                if (chartType !== undefined) {
+                    this._customCharts.set(uniqueKey, {
+                        displayName: chartMeta.displayName,
+                        uniqueKey: uniqueKey,
+                        dataType: getChartMetaDataType(uniqueKey),
+                        patientAttribute: chartMeta.patientAttribute,
+                        description: chartMeta.description,
+                        renderWhenDataChange: false,
+                        priority:
+                            STUDY_VIEW_CONFIG.priority[uniqueKey] ||
+                            chartMeta.priority,
+                    });
+                    this.chartsType.set(uniqueKey, chartMeta.chartType);
+                    this.chartsDimension.set(uniqueKey, chartMeta.dimension);
+                }
+            }
+        );
+    }
+
+    initializeReaction() {
         this.reactionDisposers.push(
             reaction(
                 () => this.loadingInitialDataForSummaryTab,
@@ -479,6 +513,21 @@ export class StudyViewPageStore
                         this.updateChartStats();
                         this.loadUserChartSettings();
                     }
+                }
+            )
+        );
+
+        this.reactionDisposers.push(
+            reaction(
+                () => [this.filtersProxy, this.hesitateUpdate],
+                () => {
+                    if (!this.hesitateUpdate || this.filters === undefined) {
+                        this.submitFilters();
+                    }
+                },
+                {
+                    fireImmediately: true,
+                    equals: comparer.structural,
                 }
             )
         );
@@ -573,32 +622,24 @@ export class StudyViewPageStore
                 }
             )
         );
+    }
 
-        // Include special charts into custom data list
-        SPECIAL_CHARTS.forEach(
-            (chartMeta: ChartMetaWithDimensionAndChartType) => {
-                const uniqueKey = chartMeta.uniqueKey;
-                if (!this.chartsType.has(uniqueKey)) {
-                    this.chartsType.set(uniqueKey, chartMeta.chartType);
-                }
-                const chartType = this.chartsType.get(uniqueKey);
-                if (chartType !== undefined) {
-                    this._customCharts.set(uniqueKey, {
-                        displayName: chartMeta.displayName,
-                        uniqueKey: uniqueKey,
-                        dataType: getChartMetaDataType(uniqueKey),
-                        patientAttribute: chartMeta.patientAttribute,
-                        description: chartMeta.description,
-                        renderWhenDataChange: false,
-                        priority:
-                            STUDY_VIEW_CONFIG.priority[uniqueKey] ||
-                            chartMeta.priority,
-                    });
-                    this.chartsType.set(uniqueKey, chartMeta.chartType);
-                    this.chartsDimension.set(uniqueKey, chartMeta.dimension);
-                }
+    private submitFilters() {
+        this.filters = this.filtersProxy;
+    }
+
+    public submitQueuedFilterUpdates() {
+        _.forIn(this.hesitantPillStore, (value, key) => {
+            const onDeleteCallback = value.onDeleteCallback;
+            if (onDeleteCallback) {
+                onDeleteCallback();
+                delete this.submittedPillStore[key];
+            } else {
+                this.submittedPillStore[key] = value;
             }
-        );
+        });
+        this.hesitantPillStore = {};
+        this.filters = this.filtersProxy;
     }
 
     @computed get isLoggedIn() {
@@ -613,6 +654,24 @@ export class StudyViewPageStore
 
     //this is set on initial load
     private _loadUserSettingsInitially = this.isLoggedIn;
+
+    hesitateUpdate =
+        localStorage.getItem(STUDY_VIEW_FILTER_AUTOSUBMIT) === 'true' || false;
+
+    /**
+     * Keep track of submitted and 'hesitant' (i.e. queued or non-submitted)
+     * filters using a unique key. When a delete is queued, a hesitant store entry
+     * also contains an onDeleteCallback, which will be executed on submit.
+     *
+     * Filters can be of different shapes, and they are created
+     * in a number of different places, so we use these two global stores
+     * to keep track of hesitant (queued) filters and submitted filters.
+     *
+     * TODO: A better solution would be a uniform list of filters
+     *  but this would require some refactoring.
+     */
+    @observable hesitantPillStore = {} as PillStore;
+    @observable submittedPillStore = {} as PillStore;
 
     // make sure the reactions are disposed when the component which initialized store will unmount
     destroy(): void {
@@ -2608,6 +2667,11 @@ export class StudyViewPageStore
         this.clearSampleTreatmentFilters();
         this.clearSampleTreatmentGroupFilters();
         this.clearSampleTreatmentTargetFilters();
+        if (this.hesitateUpdate) {
+            this.filters = this.filtersProxy;
+        }
+        this.submittedPillStore = {};
+        this.hesitantPillStore = {};
         this.resetClinicalEventTypeFilter();
     }
 
@@ -3606,8 +3670,13 @@ export class StudyViewPageStore
         return Array.from(this._genericAssayDataFilterSet.values());
     }
 
+    @observable filters: StudyViewFilter;
+
+    /**
+     * Filters that are queued and not yet submitted
+     */
     @computed
-    get filters(): StudyViewFilter {
+    get filtersProxy(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
         const clinicalDataFilters = this.clinicalDataFilters;
@@ -3748,7 +3817,7 @@ export class StudyViewPageStore
         sampleIdentifiersSet: { [id: string]: SampleIdentifier[] };
     } {
         return {
-            ...this.filters,
+            ...this.filtersProxy,
             sampleIdentifiersSet: _.fromPairs(
                 this._chartSampleIdentifiersFilterSet.toJSON()
             ),
@@ -4606,7 +4675,9 @@ export class StudyViewPageStore
                                 {
                                     dataBinMethod,
                                     clinicalDataBinCountFilter: {
-                                        attributes: [attribute],
+                                        attributes: attribute
+                                            ? [attribute]
+                                            : [],
                                         studyViewFilter: this.filters,
                                     },
                                 }

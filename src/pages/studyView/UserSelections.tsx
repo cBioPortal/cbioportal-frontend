@@ -1,7 +1,7 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { computed, makeObservable } from 'mobx';
+import { computed, makeObservable, runInAction } from 'mobx';
 import styles from './styles.module.scss';
 import {
     DataFilterValue,
@@ -11,6 +11,7 @@ import {
     PatientTreatmentFilter,
     SampleTreatmentFilter,
     ClinicalDataFilter,
+    DataFilter,
 } from 'cbioportal-ts-api-client';
 import {
     DataType,
@@ -41,7 +42,7 @@ import {
     getSampleIdentifiers,
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getBrowserWindow } from 'cbioportal-frontend-commons';
 import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
@@ -51,6 +52,9 @@ import {
     MUT_COLOR_MISSENSE,
 } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import classNames from 'classnames';
+import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
+import { StudyViewContext } from 'pages/studyView/StudyViewContext';
 import { DataFilter } from 'cbioportal-ts-api-client';
 
 export interface IUserSelectionsProps {
@@ -101,10 +105,22 @@ export default class UserSelections extends React.Component<
         super(props);
         makeObservable(this);
     }
+
     @computed
     get showFilters() {
         //return isFiltered(this.props.filter)
         return this.allComponents.length > 0;
+    }
+
+    @computed
+    get showSubmitFiltersButton() {
+        // show the button when we're on summary tab and in hesitate mode and
+        // there are pending filters to submit
+        return (
+            this.context.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY &&
+            this.context.store.hesitateUpdate &&
+            Object.keys(this.context.store.hesitantPillStore).length > 0
+        );
     }
 
     @computed
@@ -138,6 +154,7 @@ export default class UserSelections extends React.Component<
                                 onDelete={() =>
                                     this.props.removeCustomSelectionFilter()
                                 }
+                                store={this.props.store}
                             />,
                         ]}
                         operation={':'}
@@ -173,6 +190,7 @@ export default class UserSelections extends React.Component<
                                 onDelete={() =>
                                     this.props.removeComparisonGroupSelectionFilter()
                                 }
+                                store={this.props.store}
                             />,
                         ]}
                         operation={':'}
@@ -282,26 +300,30 @@ export default class UserSelections extends React.Component<
                                             {chartMeta.displayName}
                                         </span>,
                                         <PillTag
-                                            content={intervalFiltersDisplayValue(
-                                                genericAssayDataFilter.values,
-                                                (newRange: {
-                                                    start?: number;
-                                                    end?: number;
-                                                }) => {
-                                                    updateCustomIntervalFilter(
-                                                        newRange,
-                                                        chartMeta,
-                                                        this.props.store
-                                                            .getGenericAssayChartDataBin,
-                                                        this.props.store
-                                                            .getGenericAssayDataFiltersByUniqueKey,
-                                                        this.props.store
-                                                            .updateCustomBins,
-                                                        this.props.store
-                                                            .updateGenericAssayDataFilters
-                                                    );
-                                                }
-                                            )}
+                                            content={{
+                                                uniqueChartKey:
+                                                    chartMeta.uniqueKey,
+                                                element: intervalFiltersDisplayValue(
+                                                    genericAssayDataFilter.values,
+                                                    (newRange: {
+                                                        start?: number;
+                                                        end?: number;
+                                                    }) => {
+                                                        updateCustomIntervalFilter(
+                                                            newRange,
+                                                            chartMeta,
+                                                            this.props.store
+                                                                .getGenericAssayChartDataBin,
+                                                            this.props.store
+                                                                .getGenericAssayDataFiltersByUniqueKey,
+                                                            this.props.store
+                                                                .updateCustomBins,
+                                                            this.props.store
+                                                                .updateGenericAssayDataFilters
+                                                        );
+                                                    }
+                                                ),
+                                            }}
                                             backgroundColor={
                                                 STUDY_VIEW_CONFIG.colors.theme
                                                     .clinicalFilterContent
@@ -312,6 +334,7 @@ export default class UserSelections extends React.Component<
                                                     []
                                                 )
                                             }
+                                            store={this.props.store}
                                         />,
                                     ]}
                                     operation={':'}
@@ -598,15 +621,19 @@ export default class UserSelections extends React.Component<
     ): JSX.Element {
         return (
             <PillTag
-                content={intervalFiltersDisplayValue(
-                    values,
-                    (update: { start?: number; end?: number }) =>
-                        onUpdate(chartMeta.uniqueKey, update)
-                )}
+                content={{
+                    uniqueChartKey: chartMeta.uniqueKey,
+                    element: intervalFiltersDisplayValue(
+                        values,
+                        (update: { start?: number; end?: number }) =>
+                            onUpdate(chartMeta.uniqueKey, update)
+                    ),
+                }}
                 backgroundColor={
                     STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
                 }
                 onDelete={() => onDelete(chartMeta.uniqueKey, [])}
+                store={this.props.store}
             />
         );
     }
@@ -639,6 +666,7 @@ export default class UserSelections extends React.Component<
                                         )
                                     )
                                 }
+                                store={this.props.store}
                             />
                         );
                     }
@@ -683,6 +711,7 @@ export default class UserSelections extends React.Component<
                                         metaKey
                                     );
                                 }}
+                                store={this.props.store}
                             />
                         );
                     }
@@ -733,6 +762,7 @@ export default class UserSelections extends React.Component<
                         onDelete={() => {
                             this.props.removeClinicalEventFilter(iFilter.value);
                         }}
+                        store={this.props.store}
                     />
                 );
             });
@@ -804,6 +834,7 @@ export default class UserSelections extends React.Component<
                             geneFilterQueryToOql(geneQuery)
                         )
                     }
+                    store={this.props.store}
                 />
             );
         });
@@ -822,6 +853,7 @@ export default class UserSelections extends React.Component<
                     onDelete={() =>
                         this.props.removeGenomicProfileFilter(profile)
                     }
+                    store={this.props.store}
                 />
             );
         });
@@ -836,9 +868,14 @@ export default class UserSelections extends React.Component<
                         STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
                     }
                     onDelete={() => this.props.removeCaseListsFilter(caseList)}
+                    store={this.props.store}
                 />
             );
         });
+    }
+
+    submitHesitantFilters() {
+        this.context.store.submitQueuedFilterUpdates();
     }
 
     render() {
@@ -862,6 +899,31 @@ export default class UserSelections extends React.Component<
                         Clear All Filters
                     </button>
 
+                    {this.showSubmitFiltersButton && (
+                        <div
+                            className={classNames(
+                                styles.studyFilterResult,
+                                styles.hesitateControls,
+                                'btn-group'
+                            )}
+                        >
+                            <button
+                                className={classNames(
+                                    'btn btn-sm btn-primary marching-ants',
+                                    styles.actionButtons
+                                )}
+                                onClick={() =>
+                                    runInAction(() =>
+                                        this.submitHesitantFilters()
+                                    )
+                                }
+                                data-test="submit-study-filters"
+                            >
+                                Submit ►
+                            </button>
+                        </div>
+                    )}
+
                     <DefaultTooltip
                         placement={'topLeft'}
                         overlay={<div>Get bookmark link for this filter</div>}
@@ -883,3 +945,5 @@ export default class UserSelections extends React.Component<
         }
     }
 }
+
+UserSelections.contextType = StudyViewContext;

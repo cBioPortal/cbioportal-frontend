@@ -2,7 +2,13 @@ import * as React from 'react';
 import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import { action, computed, observable, makeObservable } from 'mobx';
+import {
+    action,
+    computed,
+    makeObservable,
+    observable,
+    runInAction,
+} from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -18,6 +24,7 @@ import { ClinicalDataTab } from './tabs/ClinicalDataTab';
 import {
     DefaultTooltip,
     getBrowserWindow,
+    onMobxPromise,
     remoteData,
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -32,7 +39,6 @@ import { Else, If, Then } from 'react-if';
 import CustomCaseSelection from './addChartButton/customCaseSelection/CustomCaseSelection';
 import { AppStore } from '../../AppStore';
 import ActionButtons from './studyPageHeader/ActionButtons';
-import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
     GACustomFieldsEnum,
     serializeEvent,
@@ -43,10 +49,10 @@ import classNames from 'classnames';
 import { getServerConfig, ServerConfigHelpers } from '../../config/config';
 import {
     AlterationMenuHeader,
-    getButtonNameWithDownPointer,
     ChartMetaDataTypeEnum,
+    getButtonNameWithDownPointer,
 } from './StudyViewUtils';
-import { Alert, Modal } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import styles from './styles.module.scss';
@@ -67,8 +73,10 @@ import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
-import URL from 'url';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import { StudyViewContext } from 'pages/studyView/StudyViewContext';
+import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import { PillStore } from 'shared/components/PillTag/PillTag';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -191,6 +199,7 @@ export default class StudyViewPage extends React.Component<
         onMobxPromise(
             this.store.queriedPhysicalStudyIds,
             (strArr: string[]) => {
+                this.store.initializeReaction();
                 trackEvent({
                     category: 'studyPage',
                     action: 'studyPageLoad',
@@ -488,451 +497,484 @@ export default class StudyViewPage extends React.Component<
 
     content() {
         return (
-            <div className="studyView">
-                {this.showBookmarkModal && (
-                    <BookmarkModal
-                        onHide={this.toggleBookmarkModal}
-                        title={'Bookmark this filter'}
-                        urlPromise={this.getBookmarkUrl()}
-                    />
-                )}
-                {this.shareLinkModal && (
-                    <BookmarkModal
-                        onHide={this.toggleShareLinkModal}
-                        title={
-                            this.sharedGroups.length > 1
-                                ? `Share ${this.sharedGroups.length} Groups`
-                                : 'Share Group'
-                        }
-                        urlPromise={this.getShareBookmarkUrl}
-                        description={
-                            'Please send the following link to users with whom you want to share the selected group(s).'
-                        }
-                    />
-                )}
-                {this.shareCustomDataLinkModal && (
-                    <BookmarkModal
-                        onHide={this.toggleShareCustomDataLinkModal}
-                        title={'Share custom data'}
-                        urlPromise={this.getShareCustomChartBookmarkUrl}
-                        description={
-                            'Please send the following link to users with whom you want to share the selected custom data'
-                        }
-                    />
-                )}
+            <StudyViewContext.Provider value={{ store: this.store }}>
+                <div className="studyView">
+                    {this.showBookmarkModal && (
+                        <BookmarkModal
+                            onHide={this.toggleBookmarkModal}
+                            title={'Bookmark this filter'}
+                            urlPromise={this.getBookmarkUrl()}
+                        />
+                    )}
+                    {this.shareLinkModal && (
+                        <BookmarkModal
+                            onHide={this.toggleShareLinkModal}
+                            title={
+                                this.sharedGroups.length > 1
+                                    ? `Share ${this.sharedGroups.length} Groups`
+                                    : 'Share Group'
+                            }
+                            urlPromise={this.getShareBookmarkUrl}
+                            description={
+                                'Please send the following link to users with whom you want to share the selected group(s).'
+                            }
+                        />
+                    )}
+                    {this.shareCustomDataLinkModal && (
+                        <BookmarkModal
+                            onHide={this.toggleShareCustomDataLinkModal}
+                            title={'Share custom data'}
+                            urlPromise={this.getShareCustomChartBookmarkUrl}
+                            description={
+                                'Please send the following link to users with whom you want to share the selected custom data'
+                            }
+                        />
+                    )}
 
-                {this.store.comparisonConfirmationModal}
-                {this.store.queriedSampleIdentifiers.isComplete &&
-                    this.store.invalidSampleIds.isComplete &&
-                    this.store.unknownQueriedIds.isComplete &&
-                    this.store.displayedStudies.isComplete &&
-                    this.store.queriedPhysicalStudies.isComplete &&
-                    this.store.queriedPhysicalStudies.result.length > 0 && (
-                        <div>
-                            <StudyPageHeader
-                                store={this.store}
-                                onBookmarkClick={this.onBookmarkClick}
-                            />
+                    {this.store.comparisonConfirmationModal}
+                    {this.store.queriedSampleIdentifiers.isComplete &&
+                        this.store.invalidSampleIds.isComplete &&
+                        this.store.unknownQueriedIds.isComplete &&
+                        this.store.displayedStudies.isComplete &&
+                        this.store.queriedPhysicalStudies.isComplete &&
+                        this.store.queriedPhysicalStudies.result.length > 0 && (
+                            <div>
+                                <StudyPageHeader
+                                    store={this.store}
+                                    onBookmarkClick={this.onBookmarkClick}
+                                />
 
-                            <div className={styles.mainTabs}>
-                                <MSKTabs
-                                    id="studyViewTabs"
-                                    activeTabId={this.store.currentTab}
-                                    onTabClick={(id: string) =>
-                                        this.handleTabChange(id)
-                                    }
-                                    className="mainTabs"
-                                    unmountOnHide={false}
-                                    getPaginationWidth={() => {
-                                        return this.toolbarLeft;
-                                    }} // dont run into other study view UI
-                                    contentWindowExtra={
-                                        <HelpWidget
-                                            path={
-                                                this.props.routing.location
-                                                    .pathname
-                                            }
-                                        />
-                                    }
-                                    hrefRoot={buildCBioPortalPageUrl('study')}
-                                >
-                                    <MSKTab
-                                        key={0}
-                                        id={StudyViewPageTabKeyEnum.SUMMARY}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.SUMMARY
+                                <div className={styles.mainTabs}>
+                                    <MSKTabs
+                                        id="studyViewTabs"
+                                        activeTabId={this.store.currentTab}
+                                        onTabClick={(id: string) =>
+                                            this.handleTabChange(id)
                                         }
-                                    >
-                                        <StudySummaryTab
-                                            store={this.store}
-                                        ></StudySummaryTab>
-                                    </MSKTab>
-                                    <MSKTab
-                                        key={1}
-                                        id={
-                                            StudyViewPageTabKeyEnum.CLINICAL_DATA
-                                        }
-                                        linkText={
-                                            StudyViewPageTabDescriptions.CLINICAL_DATA
-                                        }
-                                        hide={
-                                            this.store.selectedSamples.result
-                                                .length === 0
-                                        }
-                                    >
-                                        <ClinicalDataTab store={this.store} />
-                                    </MSKTab>
-                                    <MSKTab
-                                        key={2}
-                                        id={StudyViewPageTabKeyEnum.HEATMAPS}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.HEATMAPS
-                                        }
-                                        hide={
-                                            this.store.MDACCHeatmapStudyMeta
-                                                .result.length === 0
-                                        }
-                                    >
-                                        <IFrameLoader
-                                            className="mdacc-heatmap-iframe"
-                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}
-                                        />
-                                    </MSKTab>
-                                    <MSKTab
-                                        key={3}
-                                        id={StudyViewPageTabKeyEnum.CN_SEGMENTS}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.CN_SEGMENTS
-                                        }
-                                        hide={
-                                            this.store.hasCNSegmentData
-                                                .isPending ||
-                                            !this.store.hasCNSegmentData.result
-                                        }
-                                    >
-                                        <CNSegments store={this.store} />
-                                    </MSKTab>
-                                    <MSKTab
-                                        key={4}
-                                        id={
-                                            StudyViewPageTabKeyEnum.FILES_AND_LINKS
-                                        }
-                                        linkText={RESOURCES_TAB_NAME}
-                                        hide={!this.shouldShowResources}
-                                    >
-                                        <div>
-                                            <ResourcesTab
-                                                store={this.store}
-                                                openResource={this.openResource}
+                                        className="mainTabs"
+                                        unmountOnHide={false}
+                                        getPaginationWidth={() => {
+                                            return this.toolbarLeft;
+                                        }} // dont run into other study view UI
+                                        contentWindowExtra={
+                                            <HelpWidget
+                                                path={
+                                                    this.props.routing.location
+                                                        .pathname
+                                                }
                                             />
-                                        </div>
-                                    </MSKTab>
-
-                                    {this.resourceTabs.component}
-                                </MSKTabs>
-
-                                <div
-                                    ref={this.toolbarRef}
-                                    className={styles.absolutePanel}
-                                >
-                                    <Observer>
-                                        {() => {
-                                            // create element here to get correct mobx subscriber list
-                                            const summary = (
-                                                <StudyResultsSummary
+                                        }
+                                        hrefRoot={buildCBioPortalPageUrl(
+                                            'study'
+                                        )}
+                                    >
+                                        <MSKTab
+                                            key={0}
+                                            id={StudyViewPageTabKeyEnum.SUMMARY}
+                                            linkText={
+                                                StudyViewPageTabDescriptions.SUMMARY
+                                            }
+                                        >
+                                            <StudySummaryTab
+                                                store={this.store}
+                                            ></StudySummaryTab>
+                                        </MSKTab>
+                                        <MSKTab
+                                            key={1}
+                                            id={
+                                                StudyViewPageTabKeyEnum.CLINICAL_DATA
+                                            }
+                                            linkText={
+                                                StudyViewPageTabDescriptions.CLINICAL_DATA
+                                            }
+                                            hide={
+                                                this.store.selectedSamples
+                                                    .result.length === 0
+                                            }
+                                        >
+                                            <ClinicalDataTab
+                                                store={this.store}
+                                            />
+                                        </MSKTab>
+                                        <MSKTab
+                                            key={2}
+                                            id={
+                                                StudyViewPageTabKeyEnum.HEATMAPS
+                                            }
+                                            linkText={
+                                                StudyViewPageTabDescriptions.HEATMAPS
+                                            }
+                                            hide={
+                                                this.store.MDACCHeatmapStudyMeta
+                                                    .result.length === 0
+                                            }
+                                        >
+                                            <IFrameLoader
+                                                className="mdacc-heatmap-iframe"
+                                                url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}
+                                            />
+                                        </MSKTab>
+                                        <MSKTab
+                                            key={3}
+                                            id={
+                                                StudyViewPageTabKeyEnum.CN_SEGMENTS
+                                            }
+                                            linkText={
+                                                StudyViewPageTabDescriptions.CN_SEGMENTS
+                                            }
+                                            hide={
+                                                this.store.hasCNSegmentData
+                                                    .isPending ||
+                                                !this.store.hasCNSegmentData
+                                                    .result
+                                            }
+                                        >
+                                            <CNSegments store={this.store} />
+                                        </MSKTab>
+                                        <MSKTab
+                                            key={4}
+                                            id={
+                                                StudyViewPageTabKeyEnum.FILES_AND_LINKS
+                                            }
+                                            linkText={RESOURCES_TAB_NAME}
+                                            hide={!this.shouldShowResources}
+                                        >
+                                            <div>
+                                                <ResourcesTab
                                                     store={this.store}
-                                                    appStore={
-                                                        this.props.appStore
-                                                    }
-                                                    loadingComplete={
-                                                        this.chartDataPromises
-                                                            .isComplete
+                                                    openResource={
+                                                        this.openResource
                                                     }
                                                 />
-                                            );
-                                            const buttons = (
-                                                <ActionButtons
-                                                    store={this.store}
-                                                    appStore={
-                                                        this.props.appStore
-                                                    }
-                                                    loadingComplete={
-                                                        this.chartDataPromises
-                                                            .isComplete
-                                                    }
-                                                />
-                                            );
-                                            return (
-                                                <div
-                                                    className={
-                                                        styles.studyFilterResult
-                                                    }
-                                                >
-                                                    <If
-                                                        condition={
-                                                            this.store
-                                                                .selectedSamples
+                                            </div>
+                                        </MSKTab>
+
+                                        {this.resourceTabs.component}
+                                    </MSKTabs>
+
+                                    <div
+                                        ref={this.toolbarRef}
+                                        className={styles.absolutePanel}
+                                    >
+                                        <Observer>
+                                            {() => {
+                                                // create element here to get correct mobx subscriber list
+                                                const summary = (
+                                                    <StudyResultsSummary
+                                                        store={this.store}
+                                                        appStore={
+                                                            this.props.appStore
+                                                        }
+                                                        loadingComplete={
+                                                            this
+                                                                .chartDataPromises
                                                                 .isComplete
                                                         }
+                                                    />
+                                                );
+                                                const buttons = (
+                                                    <ActionButtons
+                                                        store={this.store}
+                                                        appStore={
+                                                            this.props.appStore
+                                                        }
+                                                        loadingComplete={
+                                                            this
+                                                                .chartDataPromises
+                                                                .isComplete
+                                                        }
+                                                    />
+                                                );
+                                                return (
+                                                    <div
+                                                        className={
+                                                            styles.studyFilterResult
+                                                        }
                                                     >
-                                                        <Then>
-                                                            {summary}
-                                                            {buttons}
-                                                        </Then>
-                                                        <Else>
-                                                            <LoadingIndicator
-                                                                isLoading={true}
-                                                                size={'small'}
-                                                                className={
-                                                                    styles.selectedInfoLoadingIndicator
-                                                                }
-                                                            />
-                                                            {buttons}
-                                                        </Else>
-                                                    </If>
-                                                </div>
-                                            );
-                                        }}
-                                    </Observer>
-                                    <div
-                                        id="comparisonGroupManagerContainer"
-                                        style={{
-                                            display: 'flex',
-                                            position: 'relative',
-                                        }}
-                                    >
-                                        {this.enableCustomSelectionInTabs.includes(
-                                            this.store.currentTab
-                                        ) && (
-                                            <>
-                                                <DefaultTooltip
-                                                    visible={
-                                                        this
-                                                            .showCustomSelectTooltip
-                                                    }
-                                                    trigger={['click']}
-                                                    placement={'bottomLeft'}
-                                                    onVisibleChange={visible =>
-                                                        (this.showCustomSelectTooltip = !!visible)
-                                                    }
-                                                    destroyTooltipOnHide={true}
-                                                    overlay={() => (
-                                                        <div
-                                                            style={{
-                                                                width: '350px',
-                                                            }}
-                                                        >
-                                                            <CustomCaseSelection
-                                                                allSamples={
-                                                                    this.store
-                                                                        .samples
-                                                                        .result
-                                                                }
-                                                                selectedSamples={
-                                                                    this.store
-                                                                        .selectedSamples
-                                                                        .result
-                                                                }
-                                                                disableGrouping={
-                                                                    true
-                                                                }
-                                                                queriedStudies={
-                                                                    this.store
-                                                                        .queriedPhysicalStudyIds
-                                                                        .result
-                                                                }
-                                                                onSubmit={(
-                                                                    chart: CustomChartData
-                                                                ) => {
-                                                                    this.showCustomSelectTooltip = false;
-                                                                    this.store.updateCustomSelect(
-                                                                        chart
-                                                                    );
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                >
-                                                    <button
-                                                        className={classNames(
-                                                            'btn btn-primary btn-sm',
-                                                            {
-                                                                active: this
-                                                                    .showCustomSelectTooltip,
+                                                        <If
+                                                            condition={
+                                                                this.store
+                                                                    .selectedSamples
+                                                                    .isComplete
                                                             }
-                                                        )}
-                                                        aria-pressed={
+                                                        >
+                                                            <Then>
+                                                                {summary}
+                                                                {buttons}
+                                                            </Then>
+                                                            <Else>
+                                                                <LoadingIndicator
+                                                                    isLoading={
+                                                                        true
+                                                                    }
+                                                                    size={
+                                                                        'small'
+                                                                    }
+                                                                    className={
+                                                                        styles.selectedInfoLoadingIndicator
+                                                                    }
+                                                                />
+                                                                {buttons}
+                                                            </Else>
+                                                        </If>
+                                                    </div>
+                                                );
+                                            }}
+                                        </Observer>
+                                        <div
+                                            id="comparisonGroupManagerContainer"
+                                            style={{
+                                                display: 'flex',
+                                                position: 'relative',
+                                            }}
+                                        >
+                                            {this.enableCustomSelectionInTabs.includes(
+                                                this.store.currentTab
+                                            ) && (
+                                                <>
+                                                    <DefaultTooltip
+                                                        visible={
                                                             this
                                                                 .showCustomSelectTooltip
                                                         }
-                                                        data-test="custom-selection-button"
+                                                        trigger={['click']}
+                                                        placement={'bottomLeft'}
+                                                        onVisibleChange={visible =>
+                                                            (this.showCustomSelectTooltip = !!visible)
+                                                        }
+                                                        destroyTooltipOnHide={
+                                                            true
+                                                        }
+                                                        overlay={() => (
+                                                            <div
+                                                                style={{
+                                                                    width:
+                                                                        '350px',
+                                                                }}
+                                                            >
+                                                                <CustomCaseSelection
+                                                                    allSamples={
+                                                                        this
+                                                                            .store
+                                                                            .samples
+                                                                            .result
+                                                                    }
+                                                                    selectedSamples={
+                                                                        this
+                                                                            .store
+                                                                            .selectedSamples
+                                                                            .result
+                                                                    }
+                                                                    disableGrouping={
+                                                                        true
+                                                                    }
+                                                                    queriedStudies={
+                                                                        this
+                                                                            .store
+                                                                            .queriedPhysicalStudyIds
+                                                                            .result
+                                                                    }
+                                                                    onSubmit={(
+                                                                        chart: CustomChartData
+                                                                    ) => {
+                                                                        this.showCustomSelectTooltip = false;
+                                                                        this.store.updateCustomSelect(
+                                                                            chart
+                                                                        );
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    >
+                                                        <button
+                                                            className={classNames(
+                                                                'btn btn-primary btn-sm',
+                                                                {
+                                                                    active: this
+                                                                        .showCustomSelectTooltip,
+                                                                }
+                                                            )}
+                                                            aria-pressed={
+                                                                this
+                                                                    .showCustomSelectTooltip
+                                                            }
+                                                            data-test="custom-selection-button"
+                                                            style={{
+                                                                marginLeft:
+                                                                    '10px',
+                                                            }}
+                                                        >
+                                                            {getButtonNameWithDownPointer(
+                                                                'Custom Selection'
+                                                            )}
+                                                        </button>
+                                                    </DefaultTooltip>
+                                                </>
+                                            )}
+                                            {getServerConfig()
+                                                .skin_show_settings_menu && (
+                                                <DefaultTooltip
+                                                    trigger={['click']}
+                                                    placement={'bottomLeft'}
+                                                    overlay={
+                                                        <SettingsMenu
+                                                            store={this.store}
+                                                            infoElement={
+                                                                <AlterationMenuHeader
+                                                                    includeCnaTable={
+                                                                        this
+                                                                            .store
+                                                                            .hasCnaProfileData
+                                                                    }
+                                                                />
+                                                            }
+                                                            customDriverSourceName={
+                                                                getServerConfig()
+                                                                    .oncoprint_custom_driver_annotation_binary_menu_label!
+                                                            }
+                                                            showDriverAnnotationSection={
+                                                                this.store
+                                                                    .doShowDriverAnnotationSectionInGlobalMenu
+                                                            }
+                                                            showTierAnnotationSection={
+                                                                this.store
+                                                                    .doShowTierAnnotationSectionInGlobalMenu
+                                                            }
+                                                        />
+                                                    }
+                                                    visible={
+                                                        this
+                                                            .showAlterationFilterTooltip
+                                                    }
+                                                    onVisibleChange={visible => {
+                                                        this.showAlterationFilterTooltip = !!visible;
+                                                    }}
+                                                >
+                                                    <button
+                                                        data-test="AlterationFilterButton"
                                                         style={{
                                                             marginLeft: '10px',
                                                         }}
+                                                        className="btn btn-primary btn-sm"
                                                     >
                                                         {getButtonNameWithDownPointer(
-                                                            'Custom Selection'
+                                                            'Alteration Filter'
                                                         )}
                                                     </button>
                                                 </DefaultTooltip>
-                                            </>
-                                        )}
-                                        {getServerConfig()
-                                            .skin_show_settings_menu && (
-                                            <DefaultTooltip
-                                                trigger={['click']}
-                                                placement={'bottomLeft'}
-                                                overlay={
-                                                    <SettingsMenu
-                                                        store={this.store}
-                                                        infoElement={
-                                                            <AlterationMenuHeader
-                                                                includeCnaTable={
-                                                                    this.store
-                                                                        .hasCnaProfileData
-                                                                }
-                                                            />
-                                                        }
-                                                        customDriverSourceName={
-                                                            getServerConfig()
-                                                                .oncoprint_custom_driver_annotation_binary_menu_label!
-                                                        }
-                                                        showDriverAnnotationSection={
-                                                            this.store
-                                                                .doShowDriverAnnotationSectionInGlobalMenu
-                                                        }
-                                                        showTierAnnotationSection={
-                                                            this.store
-                                                                .doShowTierAnnotationSectionInGlobalMenu
-                                                        }
-                                                    />
-                                                }
-                                                visible={
+                                            )}
+                                            {this.enableAddChartInTabs.includes(
+                                                this.store.currentTab
+                                            ) && (
+                                                <AddChartButton
+                                                    buttonText={
+                                                        this.addChartButtonText
+                                                    }
+                                                    store={this.store}
+                                                    currentTab={
+                                                        this.store.currentTab
+                                                    }
+                                                    defaultActiveTab={
+                                                        this.store
+                                                            .showCustomDataSelectionUI
+                                                            ? ChartMetaDataTypeEnum.CUSTOM_DATA
+                                                            : ChartMetaDataTypeEnum.CLINICAL
+                                                    }
+                                                    addChartOverlayClassName="studyViewAddChartOverlay"
+                                                    disableCustomTab={
+                                                        this.store
+                                                            .currentTab ===
+                                                        StudyViewPageTabKeyEnum.CLINICAL_DATA
+                                                    }
+                                                    disableGeneSpecificTab={
+                                                        this.store
+                                                            .currentTab ===
+                                                        StudyViewPageTabKeyEnum.CLINICAL_DATA
+                                                    }
+                                                    disableGenericAssayTabs={
+                                                        this.store
+                                                            .currentTab ===
+                                                        StudyViewPageTabKeyEnum.CLINICAL_DATA
+                                                    }
+                                                    showResetPopup={() => {
+                                                        this.showReturnToDefaultChartListModal = true;
+                                                    }}
+                                                    openShareCustomDataUrlModal={
+                                                        this
+                                                            .openShareCustomDataUrlModal
+                                                    }
+                                                    isShareLinkModalVisible={
+                                                        this
+                                                            .shareCustomDataLinkModal
+                                                    }
+                                                />
+                                            )}
+
+                                            <Modal
+                                                bsSize={'small'}
+                                                show={
                                                     this
-                                                        .showAlterationFilterTooltip
+                                                        .showReturnToDefaultChartListModal
                                                 }
-                                                onVisibleChange={visible => {
-                                                    this.showAlterationFilterTooltip = !!visible;
+                                                onHide={() => {
+                                                    this.showReturnToDefaultChartListModal = false;
                                                 }}
+                                                keyboard
                                             >
-                                                <button
-                                                    data-test="AlterationFilterButton"
-                                                    style={{
-                                                        marginLeft: '10px',
-                                                    }}
-                                                    className="btn btn-primary btn-sm"
-                                                >
-                                                    {getButtonNameWithDownPointer(
-                                                        'Alteration Filter'
-                                                    )}
-                                                </button>
-                                            </DefaultTooltip>
-                                        )}
-                                        {this.enableAddChartInTabs.includes(
-                                            this.store.currentTab
-                                        ) && (
-                                            <AddChartButton
-                                                buttonText={
-                                                    this.addChartButtonText
-                                                }
-                                                store={this.store}
-                                                currentTab={
-                                                    this.store.currentTab
-                                                }
-                                                defaultActiveTab={
-                                                    this.store
-                                                        .showCustomDataSelectionUI
-                                                        ? ChartMetaDataTypeEnum.CUSTOM_DATA
-                                                        : ChartMetaDataTypeEnum.CLINICAL
-                                                }
-                                                addChartOverlayClassName="studyViewAddChartOverlay"
-                                                disableCustomTab={
-                                                    this.store.currentTab ===
-                                                    StudyViewPageTabKeyEnum.CLINICAL_DATA
-                                                }
-                                                disableGeneSpecificTab={
-                                                    this.store.currentTab ===
-                                                    StudyViewPageTabKeyEnum.CLINICAL_DATA
-                                                }
-                                                disableGenericAssayTabs={
-                                                    this.store.currentTab ===
-                                                    StudyViewPageTabKeyEnum.CLINICAL_DATA
-                                                }
-                                                showResetPopup={() => {
-                                                    this.showReturnToDefaultChartListModal = true;
-                                                }}
-                                                openShareCustomDataUrlModal={
-                                                    this
-                                                        .openShareCustomDataUrlModal
-                                                }
-                                                isShareLinkModalVisible={
-                                                    this
-                                                        .shareCustomDataLinkModal
-                                                }
-                                            />
-                                        )}
+                                                <Modal.Header closeButton>
+                                                    <Modal.Title>
+                                                        Reset charts
+                                                    </Modal.Title>
+                                                </Modal.Header>
+                                                <Modal.Body>
+                                                    <div>
+                                                        Please confirm that you
+                                                        would like to replace
+                                                        the current charts with
+                                                        the default list.
+                                                    </div>
+                                                </Modal.Body>
+                                                <Modal.Footer>
+                                                    <button
+                                                        className="btn btn-primary btn-sm"
+                                                        style={{
+                                                            marginTop: '10px',
+                                                            marginBottom: '0',
+                                                        }}
+                                                        onClick={() => {
+                                                            this.store.resetToDefaultChartSettings();
+                                                            this.showReturnToDefaultChartListModal = false;
+                                                        }}
+                                                    >
+                                                        Confirm
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-primary btn-sm"
+                                                        style={{
+                                                            marginTop: '10px',
+                                                            marginBottom: '0',
+                                                        }}
+                                                        onClick={() => {
+                                                            this.showReturnToDefaultChartListModal = false;
+                                                        }}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </Modal.Footer>
+                                            </Modal>
 
-                                        <Modal
-                                            bsSize={'small'}
-                                            show={
-                                                this
-                                                    .showReturnToDefaultChartListModal
-                                            }
-                                            onHide={() => {
-                                                this.showReturnToDefaultChartListModal = false;
-                                            }}
-                                            keyboard
-                                        >
-                                            <Modal.Header closeButton>
-                                                <Modal.Title>
-                                                    Reset charts
-                                                </Modal.Title>
-                                            </Modal.Header>
-                                            <Modal.Body>
-                                                <div>
-                                                    Please confirm that you
-                                                    would like to replace the
-                                                    current charts with the
-                                                    default list.
-                                                </div>
-                                            </Modal.Body>
-                                            <Modal.Footer>
-                                                <button
-                                                    className="btn btn-primary btn-sm"
-                                                    style={{
-                                                        marginTop: '10px',
-                                                        marginBottom: '0',
-                                                    }}
-                                                    onClick={() => {
-                                                        this.store.resetToDefaultChartSettings();
-                                                        this.showReturnToDefaultChartListModal = false;
-                                                    }}
-                                                >
-                                                    Confirm
-                                                </button>
-                                                <button
-                                                    className="btn btn-primary btn-sm"
-                                                    style={{
-                                                        marginTop: '10px',
-                                                        marginBottom: '0',
-                                                    }}
-                                                    onClick={() => {
-                                                        this.showReturnToDefaultChartListModal = false;
-                                                    }}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </Modal.Footer>
-                                        </Modal>
-
-                                        {ServerConfigHelpers.sessionServiceIsEnabled() &&
-                                            this.groupsButton}
+                                            {ServerConfigHelpers.sessionServiceIsEnabled() &&
+                                                this.groupsButton}
+                                        </div>
+                                        <StudyViewPageSettingsMenu
+                                            store={this.store}
+                                        />
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-            </div>
+                        )}
+                </div>
+            </StudyViewContext.Provider>
         );
     }
 

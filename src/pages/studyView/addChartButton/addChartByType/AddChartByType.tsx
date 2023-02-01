@@ -382,6 +382,7 @@ export default class AddChartByType extends React.Component<
                             data.isSharedChart ? styles.sharedChart : ''
                         }
                         extraButtons={this.extraButtons}
+                        setOperationsButtonText={''}
                     />
                 )}
                 {this.props.freqPromise?.isPending && (

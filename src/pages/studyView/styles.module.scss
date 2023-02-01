@@ -17,6 +17,18 @@
     margin-right: 10px;
 }
 
+.hesitateControls {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+}
+
+.hesitateControlsAlign {
+    padding: 0 !important;
+    margin: 0 !important;
+    vertical-align: text-top;
+}
+
 .selectedInfoCheckbox {
     margin: 2px 3px 0 0 !important;
 }
@@ -143,4 +155,19 @@ $regular: 5px;
     &:focus {
         outline: none;
     }
+}
+
+.studyViewPageGearMenu {
+    button {
+        margin-left: 10px;
+    }
+
+    h5 {
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+}
+
+.autosubmitToggle label:nth-child(2) {
+    margin-left: 10px;
 }

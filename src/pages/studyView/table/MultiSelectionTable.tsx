@@ -781,6 +781,9 @@ export class MultiSelectionTable extends React.Component<
             <div data-test={tableId} key={tableId}>
                 {this.props.promise.isComplete && (
                     <MultiSelectionTableComponent
+                        key={`multiSelect-${tableId}-${this.preSelectedRowsKeys.join(
+                            ''
+                        )}`}
                         width={this.props.width}
                         height={this.props.height}
                         data={this.selectableTableData}
