@@ -4,6 +4,7 @@ import defaultClient from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
     action,
+    comparer,
     computed,
     IReactionDisposer,
     makeObservable,
@@ -468,6 +469,21 @@ export class StudyViewPageStore
 
         this.reactionDisposers.push(
             reaction(
+                () => [this.filtersProx, this.hesitateUpdate],
+                () => {
+                    if (!this.hesitateUpdate) {
+                        console.log('setting filters', this.filtersProx);
+                        this.filters = this.filtersProx;
+                    }
+                },
+                {
+                    equals: comparer.structural,
+                }
+            )
+        );
+
+        this.reactionDisposers.push(
+            reaction(
                 () => [
                     this.visibleAttributes,
                     this.columns,
@@ -596,6 +612,8 @@ export class StudyViewPageStore
 
     //this is set on initial load
     private _loadUserSettingsInitially = this.isLoggedIn;
+
+    @observable hesitateUpdate = false;
 
     // make sure the reactions are disposed when the component which initialized store will unmount
     destroy(): void {
@@ -2559,6 +2577,13 @@ export class StudyViewPageStore
         this.clearSampleTreatmentFilters();
         this.clearSampleTreatmentGroupFilters();
         this.clearSampleTreatmentTargetFilters();
+        // TODO This is a addition to rescue reset of filters
+        // when hesitate mode is 'on' (no longer need to press
+        // the submit button).
+        // Disucuss better place with Bas and Aaron.
+        if (this.hesitateUpdate) {
+            this.filters = this.filtersProx;
+        }
     }
 
     @computed
@@ -3485,8 +3510,10 @@ export class StudyViewPageStore
         return Array.from(this._genericAssayDataFilterSet.values());
     }
 
+    @observable filters: StudyViewFilter;
+
     @computed
-    get filters(): StudyViewFilter {
+    get filtersProx(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
         const clinicalDataFilters = this.clinicalDataFilters;
@@ -3620,7 +3647,7 @@ export class StudyViewPageStore
         sampleIdentifiersSet: { [id: string]: SampleIdentifier[] };
     } {
         return {
-            ...this.filters,
+            ...this.filtersProx,
             sampleIdentifiersSet: _.fromPairs(
                 this._chartSampleIdentifiersFilterSet.toJSON()
             ),

@@ -17,6 +17,18 @@
     margin-right: 10px;
 }
 
+.hesitateControls {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.hesitateControlsAlign {
+    padding: 0 !important;
+    margin: 0 !important;
+    vertical-align: text-top;
+}
+
 .selectedInfoCheckbox {
     margin: 2px 3px 0 0 !important;
 }

@@ -26,6 +26,7 @@ import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyM
 import { SelectionOperatorEnum } from '../TableUtils';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import classNames from 'classnames';
+import { StudyViewContext } from 'pages/studyView/StudyViewContext';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[];
@@ -424,7 +425,9 @@ export default class FixedHeaderTable<T> extends React.Component<
                             className="btn btn-default btn-xs"
                             onClick={this.afterSelectingRows}
                         >
-                            Select Samples{' '}
+                            {this.context.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '}
                             <If condition={this.props.numberOfSelectedRows > 1}>
                                 <i
                                     style={{ marginTop: '-2px' }}
@@ -536,3 +539,5 @@ export default class FixedHeaderTable<T> extends React.Component<
         );
     }
 }
+
+FixedHeaderTable.contextType = StudyViewContext;
