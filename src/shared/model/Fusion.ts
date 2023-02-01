@@ -25,11 +25,9 @@ import {
     EnsemblTranscript,
     Exon,
     PfamDomainRange,
-} from 'cbioportal-frontend-commons';
-import {
-    SampleMolecularIdentifier,
-    StructuralVariant,
-} from '../api/generated/CBioPortalAPI';
+} from 'genome-nexus-ts-api-client/src';
+import { StructuralVariant } from 'cbioportal-ts-api-client/src';
+import { SampleMolecularIdentifier } from 'cbioportal-ts-api-client';
 
 export type ExonRangeExt = Exon & {
     fillColor?: string;

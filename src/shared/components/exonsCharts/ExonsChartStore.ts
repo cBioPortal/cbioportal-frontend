@@ -21,8 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-import { Gene } from '../../api/generated/CBioPortalAPI';
-import { remoteData, PfamDomain } from 'cbioportal-frontend-commons';
+import { remoteData } from 'cbioportal-frontend-commons';
 import {
     EnsemblTranscriptExt,
     ExonRangeExt,
@@ -33,6 +32,8 @@ import {
 import ResultViewFusionMapperDataStore from '../../../pages/resultsView/fusion/ResultViewFusionMapperDataStore';
 import MobxPromise from 'mobxpromise';
 import * as _ from 'lodash';
+import { PfamDomain } from 'genome-nexus-ts-api-client';
+import { Gene } from 'cbioportal-ts-api-client';
 
 export class ExonsChartStore {
     constructor(

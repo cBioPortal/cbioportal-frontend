@@ -33,8 +33,6 @@ import {
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
-} from 'cbioportal-ts-api-client';
-import {
     StructuralVariant,
     StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
@@ -310,6 +308,7 @@ import {
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
 import { SiteError } from 'shared/model/appMisc';
+import { ResultViewFusionMapperStore } from 'pages/resultsView/fusion/ResultViewFusionMapperStore';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3408,6 +3407,27 @@ export class ResultsViewPageStore extends AnalysisStore
         },
     });
 
+    readonly structuralVariantsByGene = remoteData({
+        await: () => [this.structuralVariants],
+        invoke: async () => {
+            const svByGene: Record<string, StructuralVariant[]> = {};
+            this.structuralVariants.result!.forEach(sv => {
+                if (sv.site1HugoSymbol?.length) {
+                    svByGene[sv.site1HugoSymbol] =
+                        svByGene[sv.site1HugoSymbol] || [];
+                    svByGene[sv.site1HugoSymbol].push(sv);
+                }
+
+                if (sv.site2HugoSymbol?.length) {
+                    svByGene[sv.site2HugoSymbol] =
+                        svByGene[sv.site2HugoSymbol] || [];
+                    svByGene[sv.site2HugoSymbol].push(sv);
+                }
+            });
+            return svByGene;
+        },
+    });
+
     readonly structuralVariantsReportByGene = remoteData<{
         [hugeGeneSymbol: string]: FilteredAndAnnotatedStructuralVariantsReport;
     }>({
@@ -5004,6 +5024,51 @@ export class ResultsViewPageStore extends AnalysisStore
             );
         },
     });
+
+    readonly fusionMapperStores = remoteData<{
+        [hugoGeneSymbol: string]: ResultViewFusionMapperStore;
+    }>(
+        {
+            await: () => [
+                this.genes,
+                this.structuralVariantsByGene,
+                this.studyIdToStudy,
+                this.molecularProfileIdToMolecularProfile,
+                this.samples,
+            ],
+            invoke: () => {
+                if (this.genes.result && this.structuralVariantsByGene.result) {
+                    return Promise.resolve(
+                        this.genes.result.reduce(
+                            (
+                                map: {
+                                    [hugoGeneSymbol: string]: ResultViewFusionMapperStore;
+                                },
+                                gene: Gene
+                            ) => {
+                                map[
+                                    gene.hugoGeneSymbol
+                                ] = new ResultViewFusionMapperStore(
+                                    gene,
+                                    this.studyIdToStudy,
+                                    this.molecularProfileIdToMolecularProfile,
+                                    this.samples,
+                                    this.structuralVariantsByGene.result![
+                                        gene.hugoGeneSymbol
+                                    ] || []
+                                );
+                                return map;
+                            },
+                            {}
+                        )
+                    );
+                } else {
+                    return Promise.resolve({});
+                }
+            },
+        },
+        {}
+    );
 
     readonly filteredAndAnnotatedStructuralVariants = remoteData<
         AnnotatedStructuralVariant[]

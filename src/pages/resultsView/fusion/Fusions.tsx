@@ -88,7 +88,6 @@ export default class Fusions extends React.Component<IFusionPageProps, {}> {
                     activeTabId={activeTabId}
                     onTabClick={(id: string) => this.handleTabChange(id)}
                     className="pillTabs resultsPageMutationsGeneTabs"
-                    enablePagination={true}
                     arrowStyle={{ 'line-height': 0.8 }}
                     tabButtonStyle="pills"
                     unmountOnHide={true}

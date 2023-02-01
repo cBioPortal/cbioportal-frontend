@@ -39,38 +39,36 @@ export default class ResultViewFusionMapper extends React.Component<
     {}
 > {
     private renderComponents() {
-        const {
-            dataStore,
-            fusionCounts,
-            exonsChartStore,
-            fusionMolecularProfile,
-            studyIdToStudy,
-            molecularProfileIdToMolecularProfile,
-        } = this.props.store;
-
-        const studyMap = new Map(Object.entries(studyIdToStudy.result || {}));
+        const studyMap = new Map(
+            Object.entries(this.props.store.studyIdToStudy.result || {})
+        );
         const molecularProfileMap = new Map(
-            Object.entries(molecularProfileIdToMolecularProfile.result || {})
+            Object.entries(
+                this.props.store.molecularProfileIdToMolecularProfile.result ||
+                    {}
+            )
         );
 
         return (
-            <React.Fragment>
+            <>
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     <ExonsChart store={this.props.store.exonsChartStore} />
                     <FusionPieChart
-                        store={dataStore}
-                        fusionCounts={fusionCounts}
+                        store={this.props.store.dataStore}
+                        fusionCounts={this.props.store.fusionCounts}
                     />
-                    <FusionPieChartLegend fusionCounts={fusionCounts} />
+                    <FusionPieChartLegend
+                        fusionCounts={this.props.store.fusionCounts}
+                    />
                 </div>
                 <hr style={{ marginTop: 20 }} />
-                <ResultsViewFusionTable
-                    dataStore={dataStore}
-                    studyIdToStudy={studyMap}
-                    molecularProfileIdToMolecularProfile={molecularProfileMap}
-                    fusionMolecularProfile={fusionMolecularProfile}
-                />
-            </React.Fragment>
+                {/*<ResultsViewFusionTable*/}
+                {/*    dataStore={this.props.store.dataStore}*/}
+                {/*    studyIdToStudy={studyMap}*/}
+                {/*    molecularProfileIdToMolecularProfile={molecularProfileMap}*/}
+                {/*    fusionMolecularProfile={this.props.store.fusionMolecularProfile}*/}
+                {/*/>*/}
+            </>
         );
     }
 
