@@ -92,6 +92,7 @@ export type MultiSelectionTableProps = {
     filterAlterations?: boolean;
     defaultSortBy: MultiSelectionTableColumnKey;
     columns: MultiSelectionTableColumn[];
+    setOperationsButtonText: string;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {
@@ -781,6 +782,9 @@ export class MultiSelectionTable extends React.Component<
             <div data-test={tableId} key={tableId}>
                 {this.props.promise.isComplete && (
                     <MultiSelectionTableComponent
+                        key={`multiSelect-${tableId}-${this.preSelectedRowsKeys.join(
+                            ''
+                        )}`}
                         width={this.props.width}
                         height={this.props.height}
                         data={this.selectableTableData}
@@ -796,6 +800,9 @@ export class MultiSelectionTable extends React.Component<
                         fixedTopRowsData={this.preSelectedRows}
                         highlightedRowClassName={this.selectedRowClassName}
                         showSetOperationsButton={true}
+                        setOperationsButtonText={
+                            this.props.setOperationsButtonText
+                        }
                         numberOfSelectedRows={
                             this.props.selectedRowsKeys.length
                         }
