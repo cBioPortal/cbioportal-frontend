@@ -27,17 +27,18 @@ import {
     Column,
     SortDirection,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import {
-    CancerStudy,
-    MolecularProfile,
-    StructuralVariant,
-} from '../../api/generated/CBioPortalAPI';
+
 import { getStudySummaryUrl } from '../../api/urls';
-import TruncatedText from '../TruncatedText';
 import { StructuralVariantExt } from '../../model/Fusion';
 import { ILazyMobXTableApplicationDataStore } from '../../lib/ILazyMobXTableApplicationDataStore';
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
+import { TruncatedText } from 'cbioportal-frontend-commons/src';
+import {
+    CancerStudy,
+    MolecularProfile,
+    StructuralVariant,
+} from 'cbioportal-ts-api-client/src';
 
 /**
  * Fusion table column types

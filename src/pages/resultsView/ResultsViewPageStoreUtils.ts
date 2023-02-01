@@ -61,6 +61,8 @@ import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
+import { StructuralVariantFilterExt } from 'shared/model/Fusion';
+import { StructuralVariantFilter } from 'cbioportal-ts-api-client/src';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -957,4 +959,49 @@ export function getGeneAndProfileChunksForRequest(
         geneChunks: _.chunk(genes, genesPerChunk),
         profileChunks: _.chunk(profileIds, profilesPerChunk),
     };
+}
+
+export function getStructuralVariantProfile(studyId: string) {
+    return studyId + '_structural_variants';
+}
+
+export function getParamsForStructuralVariants(
+    genes: Gene[],
+    selectedMolecularProfiles: MolecularProfile[] | undefined,
+    samples: Sample[] | undefined
+) {
+    const params: StructuralVariantFilterExt = { entrezGeneIds: [] };
+    if (genes) {
+        params.entrezGeneIds = _.chain(genes)
+            .map(gene => gene.entrezGeneId)
+            .compact()
+            .value();
+    }
+    // compose request parameters
+    if (samples) {
+        // get sample molecular identifiers
+        const sampleMolecularIds = samples.map(sample => {
+            return {
+                molecularProfileId: getStructuralVariantProfile(sample.studyId),
+                sampleId: sample.sampleId,
+            };
+        });
+        params.sampleMolecularIdentifiers = sampleMolecularIds;
+    } else {
+        // get molecular profile ids
+        if (selectedMolecularProfiles) {
+            const molecularProfiles = selectedMolecularProfiles
+                .filter(profile => {
+                    return (
+                        profile.molecularAlterationType ===
+                        AlterationTypeConstants.STRUCTURAL_VARIANT
+                    );
+                })
+                .map(profile => {
+                    return profile.molecularProfileId;
+                });
+            params.molecularProfileIds = molecularProfiles;
+        }
+    }
+    return params as StructuralVariantFilter;
 }

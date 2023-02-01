@@ -19,10 +19,10 @@
  **/
 
 import * as _ from 'lodash';
-import { StructuralVariant } from '../../../shared/api/generated/CBioPortalAPI';
 import { action, observable } from 'mobx';
 import Immutable from 'seamless-immutable';
 import { SimpleLazyMobXTableApplicationDataStore } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 type PositionAttr = { [position: string]: boolean };
 type ImmutablePositionAttr = PositionAttr &
