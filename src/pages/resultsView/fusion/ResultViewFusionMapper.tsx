@@ -62,12 +62,14 @@ export default class ResultViewFusionMapper extends React.Component<
                     />
                 </div>
                 <hr style={{ marginTop: 20 }} />
-                {/*<ResultsViewFusionTable*/}
-                {/*    dataStore={this.props.store.dataStore}*/}
-                {/*    studyIdToStudy={studyMap}*/}
-                {/*    molecularProfileIdToMolecularProfile={molecularProfileMap}*/}
-                {/*    fusionMolecularProfile={this.props.store.fusionMolecularProfile}*/}
-                {/*/>*/}
+                <ResultsViewFusionTable
+                    dataStore={this.props.store.dataStore}
+                    studyIdToStudy={studyMap}
+                    molecularProfileIdToMolecularProfile={molecularProfileMap}
+                    fusionMolecularProfile={
+                        this.props.store.fusionMolecularProfile
+                    }
+                />
             </>
         );
     }
