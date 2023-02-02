@@ -93,6 +93,7 @@ export default class DataSetsPageTable extends React.Component<
                     rppa: study.rppaSampleCount || '',
                     massSpectrometry: study.massSpectrometrySampleCount || '',
                     complete: study.completeSampleCount || '',
+                    treatmentCount: study.treatmentCount || '',
                 })
             );
             return (
@@ -203,6 +204,11 @@ export default class DataSetsPageTable extends React.Component<
                             {
                                 name: 'Complete',
                                 type: 'complete',
+                                visible: false,
+                            },
+                            {
+                                name: 'Treatment Count',
+                                type: 'treatmentCount',
                                 visible: false,
                             },
                         ].map((column: any) => ({
