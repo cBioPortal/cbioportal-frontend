@@ -19,7 +19,7 @@
  **/
 
 import * as _ from 'lodash';
-import { action, observable } from 'mobx';
+import { action, observable, makeObservable } from 'mobx';
 import Immutable from 'seamless-immutable';
 import { SimpleLazyMobXTableApplicationDataStore } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
@@ -36,6 +36,7 @@ export default class FusionMapperDataStore extends SimpleLazyMobXTableApplicatio
 
     constructor(data: StructuralVariant[][]) {
         super(data);
+        makeObservable(this);
         this.selectedPositions = Immutable.from<PositionAttr>({});
         this.highlightedPositions = Immutable.from<PositionAttr>({});
     }

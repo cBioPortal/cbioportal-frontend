@@ -20,6 +20,7 @@
 
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { makeObservable } from 'mobx';
 import FusionTable, {
     FusionTableColumnType,
     IFusionTableProps,
@@ -29,7 +30,6 @@ export interface IResultsViewFusionTableProps extends IFusionTableProps {
     // add results view specific props here if needed
 }
 
-@observer
 export default class ResultsViewFusionTable extends FusionTable<
     IResultsViewFusionTableProps
 > {

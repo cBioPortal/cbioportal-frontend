@@ -19,7 +19,7 @@
  **/
 
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import {
@@ -71,6 +71,7 @@ export class ResultViewFusionMapperStore {
         public samples: MobxPromise<SampleIdentifier[]>,
         public fusions: StructuralVariantExt[]
     ) {
+        makeObservable(this);
         labelMobxPromises(this);
     }
 
@@ -174,11 +175,11 @@ export class ResultViewFusionMapperStore {
         }
     }
 
+    @computed
     get dataStore(): ResultViewFusionMapperDataStore {
         const fusionData = (
             this.fusions || []
         ).map((fusion: StructuralVariant) => [fusion]);
-
         return new ResultViewFusionMapperDataStore(fusionData);
     }
 }

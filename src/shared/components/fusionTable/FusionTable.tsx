@@ -21,7 +21,7 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 import {
     default as LazyMobXTable,
     Column,
@@ -392,6 +392,7 @@ export default class FusionTable<
 
     constructor(props: P) {
         super(props);
+        makeObservable(this);
         this._columns = {};
         this.generateColumns();
     }
@@ -598,7 +599,7 @@ export default class FusionTable<
                 columns={this.columns}
                 dataStore={this.props.dataStore}
                 downloadDataFetcher={this.props.downloadDataFetcher}
-                initialItemsPerPage={this.props.initialItemsPerPage}
+                initialItemsPerPage={50}
                 initialSortColumn={this.props.initialSortColumn}
                 initialSortDirection={this.props.initialSortDirection}
                 itemsLabel={this.props.itemsLabel}
