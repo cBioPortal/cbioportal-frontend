@@ -103,15 +103,19 @@ export class ExonsChartStore {
     }
 
     addExtraFusionProps(fusion: StructuralVariantExt): StructuralVariantExt {
+        const m = fusion.monkey;
+        // AARON: PROBLEM IS THAT third argument is undefined
+        // it is used internally as "breakpoint" in order to filter exons
+        // for addition to the fusions
         const site1Exons = this.getExonsBySite(
             1,
             fusion.site1EnsemblTranscriptId,
-            fusion.site1Exon
+            fusion.site1RegionNumber
         );
         const site2Exons = this.getExonsBySite(
             2,
             fusion.site2EnsemblTranscriptId,
-            fusion.site2Exon
+            fusion.site2RegionNumber
         );
         const exons = site1Exons.concat(site2Exons);
         const totalWidth = ExonsChartStore.getTotalWidth(
@@ -300,6 +304,9 @@ export class ExonsChartStore {
         await: () => [this.transcripts],
         invoke: () => {
             const { result } = this.transcripts;
+
+            // each of the fusions in response should have their own exon collection
+            // but they are all empty
             const transcripts = (result || [])
                 .map(ExonsChartStore.addExonProps)
                 .filter(t => t.isReferenceGene) // get only reference gene transcripts

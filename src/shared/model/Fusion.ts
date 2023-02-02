@@ -24,6 +24,7 @@
 import {
     EnsemblTranscript,
     Exon,
+    PfamDomain,
     PfamDomainRange,
 } from 'genome-nexus-ts-api-client/src';
 import { StructuralVariant } from 'cbioportal-ts-api-client/src';
@@ -56,6 +57,7 @@ export type StructuralVariantExt = StructuralVariant & {
     deltaX?: number;
     exons?: ExonRangeExt[];
     label?: string;
+    //added AARON  (these are requested by code)
 };
 
 export type EnsemblTranscriptExt = EnsemblTranscript & {
