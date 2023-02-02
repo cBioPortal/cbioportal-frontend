@@ -125,6 +125,7 @@ export class ResultViewFusionMapperStore {
         []
     );
 
+    @computed
     get exonsChartStore(): ExonsChartStore {
         return new ExonsChartStore(
             this.gene,
@@ -156,7 +157,11 @@ export class ResultViewFusionMapperStore {
 
     @computed
     get fusionCounts(): { [fusionLabel: string]: number } {
-        return _.countBy(this.fusions, d => d.label);
+        return _.countBy(this.fusions, d => {
+            const dash = d.site1HugoSymbol && d.site2HugoSymbol ? '-' : '';
+            return `${d.site1HugoSymbol || ''}${dash}${d.site2HugoSymbol ||
+                ''}`;
+        });
     }
 
     @computed

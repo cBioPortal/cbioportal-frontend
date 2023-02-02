@@ -78,6 +78,8 @@ export default class ResultViewFusionMapper extends React.Component<
         await: () => [
             this.props.store.studyIdToStudy,
             this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.ensemblTranscripts,
+            this.props.store.pfamDomainData,
         ],
         render: () => {
             return this.renderComponents();
