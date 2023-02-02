@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { EnsemblTranscriptExt } from '../../model/Fusion';
 import {
     ExonRangeExt,
@@ -38,6 +38,7 @@ export default class ExonsBarPlotStore {
         public referenceGeneWidth?: number
     ) {
         this.divider = 0.1;
+        makeObservable(this);
     }
 
     @computed

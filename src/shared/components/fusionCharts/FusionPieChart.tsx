@@ -85,11 +85,13 @@ export default class FusionPieChart extends React.Component<
     }
 
     getFusionCounts() {
-        return this.props.fusionCounts
+        const ret = this.props.fusionCounts
             ? Object.keys(this.props.fusionCounts).map((d: string) => {
                   return { x: d, y: this.props.fusionCounts[d] };
               })
             : [];
+
+        return ret;
     }
 
     public render() {
