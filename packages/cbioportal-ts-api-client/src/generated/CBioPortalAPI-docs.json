@@ -4509,6 +4509,10 @@
         },
         "studyId": {
           "type": "string"
+        },
+        "treatmentCount": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "title": "CancerStudy"
