@@ -24452,11 +24452,6 @@ v8-to-istanbul@^8.0.0:
     convert-source-map "^1.6.0"
     source-map "^0.7.3"
 
-v8@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/v8/-/v8-0.1.0.tgz#86b9007e730da75186ad9a0ad1e38dd3af36c2bd"
-  integrity sha1-hrkAfnMNp1GGrZoK0eON0682wr0=
-
 v8flags@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/v8flags/-/v8flags-2.1.1.tgz#aab1a1fa30d45f88dd321148875ac02c0b55e5b4"
