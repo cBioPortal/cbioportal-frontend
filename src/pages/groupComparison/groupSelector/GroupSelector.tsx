@@ -14,6 +14,7 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { ComparisonGroup } from '../GroupComparisonUtils';
 import CollapsedGroupsButton from './CollapsedGroupsButton';
 import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
+import { group } from 'yargs';
 
 export interface IGroupSelectorProps {
     store: ComparisonStore;
@@ -52,21 +53,29 @@ export default class GroupSelector extends React.Component<
             this.props.store.toggleGroupSelected(groupName);
         }
 
-        original.forEach(ele => {
-            if (ele.name == groupName) {
-                console.log(ele.studies[0]);
-                submitToStudyViewPage(
-                    [{ studyId: ele.studies[0].id }],
-                    [
-                        {
-                            studyId: ele.studies[0].id,
-                            sampleId: ele.studies[0].samples[1],
-                        },
-                    ],
-                    true
-                );
-            }
+        /* 
+        use array.find instead of forEach
+
+        takes two args
+        both arrays
+        
+        1. map on studies to transform array of studies into array of studyIDs
+        ele.studies.map(() => {
+            
+        2. array w/ list of elements
+        iterate through studies, for each study, iterate through samples    
+            */
+
+        const matchingGroup = original.find(ele => ele.name == groupName)!;
+        const groupStudies = matchingGroup.studies.map(study => {
+            return study.id;
         });
+
+        const groupSamples = matchingGroup.studies.map(ele => {
+            return ele.samples;
+        });
+
+        submitToStudyViewPage(groupStudies, [groupStudies, groupSamples], true);
     }
 
     /* @autobind
