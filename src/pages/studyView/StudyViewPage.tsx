@@ -70,6 +70,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import Tooltip from 'rc-tooltip';
 import { StudyViewContext } from 'pages/studyView/StudyViewContext';
+import StudyViewPageGearMenu from 'pages/studyView/menu/StudyViewPageGearMenu';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -649,64 +650,31 @@ export default class StudyViewPage extends React.Component<
                                         ref={this.toolbarRef}
                                         className={styles.absolutePanel}
                                     >
-                                        <div
-                                            className={classNames(
-                                                styles.studyFilterResult,
-                                                styles.hesitateControls,
-                                                'btn-group'
-                                            )}
-                                        >
-                                            <button
+                                        {this.store.hesitateUpdate && (
+                                            <div
                                                 className={classNames(
-                                                    'btn btn-default btn-sm',
-                                                    styles.actionButtons
+                                                    styles.studyFilterResult,
+                                                    styles.hesitateControls,
+                                                    'btn-group'
                                                 )}
-                                                onClick={() =>
-                                                    (this.store.hesitateUpdate = !this
-                                                        .store.hesitateUpdate)
-                                                }
                                             >
-                                                <Tooltip
-                                                    placement="top"
-                                                    overlayStyle={{
-                                                        maxWidth: 400,
-                                                    }}
-                                                    overlay="Disabling autosubmit is a beta feature still under evaluation"
-                                                >
-                                                    <i
-                                                        className={classNames(
-                                                            'fa fa-info-circle',
-                                                            styles.hesitateControlsAlign
-                                                        )}
-                                                    />
-                                                </Tooltip>{' '}
-                                                Autosubmit{' '}
-                                                <input
-                                                    className={classNames(
-                                                        styles.hesitateControlsAlign
-                                                    )}
-                                                    type="checkbox"
-                                                    checked={
+                                                <button
+                                                    disabled={
                                                         !this.store
                                                             .hesitateUpdate
                                                     }
-                                                />
-                                            </button>
-                                            <button
-                                                disabled={
-                                                    !this.store.hesitateUpdate
-                                                }
-                                                className={classNames(
-                                                    'btn btn-sm btn-primary',
-                                                    styles.actionButtons
-                                                )}
-                                                onClick={() =>
-                                                    (this.store.filters = this.store.filtersProx)
-                                                }
-                                            >
-                                                Submit ►
-                                            </button>
-                                        </div>
+                                                    className={classNames(
+                                                        'btn btn-sm btn-primary',
+                                                        styles.actionButtons
+                                                    )}
+                                                    onClick={() =>
+                                                        (this.store.filters = this.store.filtersProx)
+                                                    }
+                                                >
+                                                    Submit ►
+                                                </button>
+                                            </div>
+                                        )}
                                         <Observer>
                                             {() => {
                                                 // create element here to get correct mobx subscriber list
@@ -1017,6 +985,9 @@ export default class StudyViewPage extends React.Component<
                                             {ServerConfigHelpers.sessionServiceIsEnabled() &&
                                                 this.groupsButton}
                                         </div>
+                                        <StudyViewPageGearMenu
+                                            store={this.store}
+                                        />
                                     </div>
                                 </div>
                             </div>

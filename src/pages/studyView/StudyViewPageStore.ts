@@ -472,7 +472,6 @@ export class StudyViewPageStore
                 () => [this.filtersProx, this.hesitateUpdate],
                 () => {
                     if (!this.hesitateUpdate) {
-                        console.log('setting filters', this.filtersProx);
                         this.filters = this.filtersProx;
                     }
                 },

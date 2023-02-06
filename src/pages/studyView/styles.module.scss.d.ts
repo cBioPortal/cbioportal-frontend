@@ -1,6 +1,7 @@
 declare const styles: {
   readonly "absolutePanel": string;
   readonly "actionButtons": string;
+  readonly "autosubmitToggle": string;
   readonly "bookmarkButton": string;
   readonly "content": string;
   readonly "description": string;
@@ -16,6 +17,7 @@ declare const styles: {
   readonly "studyFilterResult": string;
   readonly "studyViewAutoMargin": string;
   readonly "studyViewLoadingIndicator": string;
+  readonly "studyViewPageGearMenu": string;
   readonly "studyViewSurvivalPlot": string;
   readonly "studyViewSurvivalPlotBody": string;
   readonly "studyViewSurvivalPlotTitle": string;
