@@ -62,7 +62,10 @@ export default class StudyList extends QueryStoreComponent<
     }
 
     @computed get shouldShowRefGenome() {
-        return this.store.multipleReferenceGenomesPresentInAllStudies;
+        return (
+            getServerConfig().skin_home_page_show_reference_genome &&
+            this.store.multipleReferenceGenomesPresentInAllStudies
+        );
     }
 
     render() {
