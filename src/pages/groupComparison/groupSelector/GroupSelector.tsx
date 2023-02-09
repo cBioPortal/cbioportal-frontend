@@ -14,7 +14,7 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { ComparisonGroup } from '../GroupComparisonUtils';
 import CollapsedGroupsButton from './CollapsedGroupsButton';
 import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
-import { group } from 'yargs';
+import _ from 'lodash';
 
 export interface IGroupSelectorProps {
     store: ComparisonStore;
@@ -45,51 +45,72 @@ export default class GroupSelector extends React.Component<
         return !!this.props.store.isGroupSelected(groupName);
     }
 
+    // @autobind
+    // private onClick(groupName: string) {
+    //     const original = this.props.store._originalGroups.result!;
+
+    //     if (!this.dragging) {
+    //         this.props.store.toggleGroupSelected(groupName);
+    //     }
+
+    //     const matchingGroup = original.find(ele => ele.name === groupName)!
+
+    //     const groupStudies = matchingGroup.studies.map((study) => {
+    //         return {studyId: study.id}
+    //     });
+
+    //     const groupSamples = _(matchingGroup.studies).flatMap((study) => {
+    //         return study.samples.map((sample => {
+    //             return {
+    //                 studyId: study.id,
+    //                 sampleId: sample
+    //             }
+    //         }))
+    //     }).value()
+
+    //     submitToStudyViewPage(
+    //         groupStudies,
+    //         groupSamples,
+    //         true
+    //     );
+    // }
+
     @autobind
     private onClick(groupName: string) {
-        const original = this.props.store._originalGroups.result!;
-
         if (!this.dragging) {
             this.props.store.toggleGroupSelected(groupName);
         }
-
-        /* 
-        use array.find instead of forEach
-
-        takes two args
-        both arrays
-        
-        1. map on studies to transform array of studies into array of studyIDs
-        ele.studies.map(() => {
-            
-        2. array w/ list of elements
-        iterate through studies, for each study, iterate through samples    
-            */
-
-        const matchingGroup = original.find(ele => ele.name == groupName)!;
-        const groupStudies = matchingGroup.studies.map(study => {
-            return study.id;
-        });
-
-        const groupSamples = matchingGroup.studies.map(ele => {
-            return ele.samples;
-        });
-
-        submitToStudyViewPage(groupStudies, [groupStudies, groupSamples], true);
     }
-
-    /* @autobind
-    private onClick(groupName: string) {
-        if (!this.dragging) {
-            this.props.store.toggleGroupSelected(groupName);
-        }
-    } */
 
     @autobind
     private onClickDelete(groupName: string) {
         if (!this.dragging) {
             this.props.store.deleteGroup(groupName);
         }
+    }
+
+    @autobind
+    private onClickOpenStudyViewGroup(groupName: string) {
+        const original = this.props.store._originalGroups.result!;
+
+        const matchingGroup = original.find(ele => ele.name === groupName)!;
+
+        const groupStudies = matchingGroup.studies.map(study => {
+            return { studyId: study.id };
+        });
+
+        const groupSamples = _(matchingGroup.studies)
+            .flatMap(study => {
+                return study.samples.map(sample => {
+                    return {
+                        studyId: study.id,
+                        sampleId: sample,
+                    };
+                });
+            })
+            .value();
+
+        submitToStudyViewPage(groupStudies, groupSamples, true);
     }
 
     @autobind
@@ -119,6 +140,7 @@ export default class GroupSelector extends React.Component<
                 deletable={this.props.isGroupDeletable(group)}
                 onClick={this.onClick}
                 onClickDelete={this.onClickDelete}
+                onClickOpenStudyViewGroup={this.onClickOpenStudyViewGroup}
                 sampleSet={this.props.store.sampleMap.result!}
                 group={group}
                 index={index}
