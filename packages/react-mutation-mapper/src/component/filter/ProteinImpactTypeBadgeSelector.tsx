@@ -115,6 +115,7 @@ export class ProteinImpactTypeBadgeSelector<
                 options={this.options}
                 getOptionLabel={getProteinImpactTypeOptionLabel}
                 getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                useOnlyFeature={true}
                 {...this.props}
             />
         );

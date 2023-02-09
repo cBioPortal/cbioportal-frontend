@@ -38,6 +38,7 @@ type BadgeListSelectorProps = {
         onChange: (values: { value: string }[]) => void,
         onOnlyDriverVsVusChange: (values: { value: string }[]) => void
     ) => void;
+    useOnlyFeature?: boolean;
 };
 
 function generateTableRows(
@@ -61,7 +62,7 @@ export default class BadgeListSelector extends React.Component<
     }
     public static defaultProps: Partial<BadgeListSelectorProps> = {
         isDisabled: false,
-        numberOfColumnsPerRow: 2,
+        numberOfColumnsPerRow: 1,
         checkBoxType: CheckBoxType.HTML,
     };
 
@@ -95,23 +96,24 @@ export default class BadgeListSelector extends React.Component<
 
     @autobind
     protected getBadgeCell(option: Option): JSX.Element | null {
-        const onOnlyClick = option.value
-            ? (e: React.MouseEvent<any>) => {
-                  e.stopPropagation();
-                  if (
-                      this.props.onOnlySelect &&
-                      this.props.onOnlyDriverVsVusChange
-                  ) {
-                      this.props.onOnlySelect(
-                          option.value,
-                          this.props.onChange,
+        const onOnlyClick =
+            option.value && this.props.useOnlyFeature
+                ? (e: React.MouseEvent<any>) => {
+                      e.stopPropagation();
+                      if (
+                          this.props.onOnlySelect &&
                           this.props.onOnlyDriverVsVusChange
-                      );
-                  } else {
-                      this.props.onChange([{ value: option.value }]);
+                      ) {
+                          this.props.onOnlySelect(
+                              option.value,
+                              this.props.onChange,
+                              this.props.onOnlyDriverVsVusChange
+                          );
+                      } else {
+                          this.props.onChange([{ value: option.value }]);
+                      }
                   }
-              }
-            : undefined;
+                : undefined;
         return (
             <BadgeCell
                 option={option}

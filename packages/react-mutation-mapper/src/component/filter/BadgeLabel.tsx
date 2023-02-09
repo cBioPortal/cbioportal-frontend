@@ -68,7 +68,7 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}> {
                         ...DEFAULT_BADGE_STYLE,
                         ...this.props.badgeStyleOverride,
                         ...(this.props.isDriverAnnotated
-                            ? { marginRight: 0 }
+                            ? { marginRight: 0, width: 'auto' }
                             : {}),
                     }}
                 >

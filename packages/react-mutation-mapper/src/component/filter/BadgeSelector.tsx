@@ -85,6 +85,7 @@ export type BadgeSelectorProps = {
         value?: string,
         badge?: JSX.Element | null
     ) => JSX.Element;
+    useOnlyFeature?: boolean;
 };
 
 export const DEFAULT_BADGE_CHAR_WIDTH = 10;
@@ -324,6 +325,7 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
                 driverAnnotationIcon={this.props.driverAnnotationIcon}
                 onBadgeSelect={this.props.onBadgeSelect}
                 onOnlySelect={this.props.onOnlySelect}
+                useOnlyFeature={this.props.useOnlyFeature}
             />
         );
     }
