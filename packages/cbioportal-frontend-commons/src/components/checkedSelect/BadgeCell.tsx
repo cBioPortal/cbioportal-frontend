@@ -26,10 +26,12 @@ export const BadgeCell: React.FC<IBadgeCellProps> = observer(
 
         const onlyButton = (
             <span
+                className={styles['onlyButton']}
                 style={{
                     padding: '0px 4px 0px 4px',
                     fontSize: 10,
                 }}
+                data-test={`${option.value}_only`}
                 onClick={onOnlyClick}
             >
                 ONLY
@@ -40,10 +42,7 @@ export const BadgeCell: React.FC<IBadgeCellProps> = observer(
             return (
                 <div className={styles['badgeCell']} style={{ float: 'right' }}>
                     <div style={{ float: 'left' }}>{optionLabel}</div>
-                    <div
-                        className={styles['onlyButton']}
-                        style={{ float: 'left' }}
-                    >
+                    <div style={{ float: 'left' }}>
                         <div>
                             {option.value === 'VUS' ||
                             (option.value === 'driver' &&
@@ -61,7 +60,7 @@ export const BadgeCell: React.FC<IBadgeCellProps> = observer(
             return (
                 <div className={styles['badgeCell']}>
                     {optionLabel}
-                    <span className={styles['onlyButton']}>{onlyButton}</span>
+                    {onlyButton}
                 </div>
             );
         }

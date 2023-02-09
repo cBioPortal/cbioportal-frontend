@@ -528,6 +528,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                         onBadgeSelect={this.onProteinBadgeSelect}
                         onOnlySelect={this.onProteinOnlySelect}
                         badgeLabelFormat={badgeLabelFormat}
+                        useOnlyFeature={true}
                     />
                     <BadgeSelector
                         options={this.options}
@@ -539,6 +540,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                         onBadgeSelect={this.onProteinBadgeSelect}
                         onOnlySelect={this.onProteinOnlySelect}
                         badgeLabelFormat={badgeLabelFormat}
+                        useOnlyFeature={true}
                     />
                 </table>
             </div>
