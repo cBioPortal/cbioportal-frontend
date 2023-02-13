@@ -34,14 +34,13 @@ services:
     image: mysql:5.7
     container_name: kcdb
     restart: unless-stopped
-#    volumes:
-#    - $E2E_WORKSPACE/kc_db_data:/var/lib/mysql
+    volumes:
+    - $E2E_WORKSPACE/kc_db_data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root_password
       - MYSQL_USER=keycloak
       - MYSQL_PASSWORD=password
       - MYSQL_DATABASE=keycloak
-    command: --ssl=0
-    
+    command: --ssl=0 --lower_case_table_names=1
 networks:
   cbio-net: 
