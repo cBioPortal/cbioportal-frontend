@@ -38,7 +38,14 @@ export function getProteinImpactTypeBadgeLabel(
     option: BadgeSelectorOption,
     selectedValues: { [optionValue: string]: any },
     badgeClassName?: string,
-    badgeAlignmentStyle?: CSSProperties
+    badgeAlignmentStyle?: CSSProperties,
+    isDriverAnnotated?: boolean,
+    badgeLabelFormat?: (
+        label: JSX.Element | string,
+        badgeFirst?: boolean,
+        value?: string,
+        badge?: JSX.Element | null
+    ) => JSX.Element
 ): JSX.Element {
     return (
         <BadgeLabel
@@ -52,6 +59,8 @@ export function getProteinImpactTypeBadgeLabel(
             badgeClassName={badgeClassName}
             badgeFirst={true}
             value={option.value}
+            isDriverAnnotated={isDriverAnnotated}
+            badgeLabelFormat={badgeLabelFormat}
         />
     );
 }
@@ -67,7 +76,6 @@ export class ProteinImpactTypeBadgeSelector<
     public static defaultProps: Partial<ProteinImpactTypeBadgeSelectorProps> = {
         colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
         alignColumns: true,
-        unselectOthersWhenAllSelected: false,
         numberOfColumnsPerRow: 2,
     };
 
@@ -107,6 +115,7 @@ export class ProteinImpactTypeBadgeSelector<
                 options={this.options}
                 getOptionLabel={getProteinImpactTypeOptionLabel}
                 getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                useOnlyFeature={true}
                 {...this.props}
             />
         );

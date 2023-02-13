@@ -1,0 +1,11 @@
+.headerRow {
+    border-bottom: 1px solid #eeeeee;
+}
+
+.onlyButton {
+    visibility: hidden;
+}
+
+.badgeCell:hover .onlyButton {
+    visibility: visible;
+}
