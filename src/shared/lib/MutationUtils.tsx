@@ -35,14 +35,19 @@ import { normalizeMutations } from '../components/mutationMapper/MutationMapperU
 import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
 
 export const SELECTOR_VALUE_WITH_VUS = [
+    ProteinImpactType.MISSENSE,
     ProteinImpactType.MISSENSE_PUTATIVE_DRIVER,
     ProteinImpactType.MISSENSE_UNKNOWN_SIGNIFICANCE,
+    ProteinImpactType.TRUNCATING,
     ProteinImpactType.TRUNCATING_PUTATIVE_DRIVER,
     ProteinImpactType.TRUNCATING_UNKNOWN_SIGNIFICANCE,
+    ProteinImpactType.INFRAME,
     ProteinImpactType.INFRAME_PUTATIVE_DRIVER,
     ProteinImpactType.INFRAME_UNKNOWN_SIGNIFICANCE,
+    ProteinImpactType.SPLICE,
     ProteinImpactType.SPLICE_PUTATIVE_DRIVER,
     ProteinImpactType.SPLICE_UNKNOWN_SIGNIFICANCE,
+    ProteinImpactType.FUSION,
     ProteinImpactType.FUSION_PUTATIVE_DRIVER,
     ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE,
     ProteinImpactType.OTHER,
@@ -51,172 +56,45 @@ export const SELECTOR_VALUE_WITH_VUS = [
 export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColorMap: {
     [proteinImpactType: string]: string;
 }): { [proteinImpactType: string]: JSX.Element } {
-    return {
-        [ProteinImpactType.MISSENSE_PUTATIVE_DRIVER]: (
+    const types = [
+        ...SELECTOR_VALUE_WITH_VUS,
+        DriverVsVusType.DRIVER,
+        DriverVsVusType.VUS,
+    ];
+    return _(types)
+        .keyBy()
+        .mapValues(cur => (
             <strong
                 style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.MISSENSE_PUTATIVE_DRIVER
-                        ],
+                    color: proteinImpactTypeColorMap[cur],
                 }}
             >
-                Missense
+                {cur.split('_')[0].replace(/^./, s => s.toUpperCase())}
             </strong>
-        ),
-        [ProteinImpactType.MISSENSE_UNKNOWN_SIGNIFICANCE]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.MISSENSE_UNKNOWN_SIGNIFICANCE
-                        ],
-                }}
-            >
-                Missense
-            </strong>
-        ),
-        [ProteinImpactType.TRUNCATING_PUTATIVE_DRIVER]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.TRUNCATING_PUTATIVE_DRIVER
-                        ],
-                }}
-            >
-                Truncating
-            </strong>
-        ),
-        [ProteinImpactType.TRUNCATING_UNKNOWN_SIGNIFICANCE]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.TRUNCATING_UNKNOWN_SIGNIFICANCE
-                        ],
-                }}
-            >
-                Truncating
-            </strong>
-        ),
-        [ProteinImpactType.INFRAME_PUTATIVE_DRIVER]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.INFRAME_PUTATIVE_DRIVER
-                        ],
-                }}
-            >
-                Inframe
-            </strong>
-        ),
-        [ProteinImpactType.INFRAME_UNKNOWN_SIGNIFICANCE]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.INFRAME_UNKNOWN_SIGNIFICANCE
-                        ],
-                }}
-            >
-                Inframe
-            </strong>
-        ),
-        [ProteinImpactType.SPLICE_PUTATIVE_DRIVER]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.SPLICE_PUTATIVE_DRIVER
-                        ],
-                }}
-            >
-                Splice
-            </strong>
-        ),
-        [ProteinImpactType.SPLICE_UNKNOWN_SIGNIFICANCE]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.SPLICE_UNKNOWN_SIGNIFICANCE
-                        ],
-                }}
-            >
-                Splice
-            </strong>
-        ),
-        [ProteinImpactType.FUSION_PUTATIVE_DRIVER]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.FUSION_PUTATIVE_DRIVER
-                        ],
-                }}
-            >
-                SV/Fusion
-            </strong>
-        ),
-        [ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE]: (
-            <strong
-                style={{
-                    color:
-                        proteinImpactTypeColorMap[
-                            ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE
-                        ],
-                }}
-            >
-                SV/Fusion
-            </strong>
-        ),
-        [ProteinImpactType.OTHER]: (
-            <strong
-                style={{
-                    color: proteinImpactTypeColorMap[ProteinImpactType.OTHER],
-                }}
-            >
-                Other
-            </strong>
-        ),
-        [DriverVsVusType.DRIVER]: (
-            <strong
-                style={{
-                    color: proteinImpactTypeColorMap[DriverVsVusType.DRIVER],
-                }}
-            >
-                Driver
-            </strong>
-        ),
-        [DriverVsVusType.VUS]: (
-            <strong
-                style={{
-                    color: proteinImpactTypeColorMap[DriverVsVusType.VUS],
-                }}
-            >
-                VUS
-            </strong>
-        ),
-    };
+        ))
+        .value();
 }
 
 export function getProteinImpactTypeColorMap(
     colors: IProteinImpactTypeColors
 ): { [proteinImpactType: string]: string } {
     return {
+        [ProteinImpactType.MISSENSE]: colors.missenseColor,
         [ProteinImpactType.MISSENSE_PUTATIVE_DRIVER]: colors.missenseColor,
         [ProteinImpactType.MISSENSE_UNKNOWN_SIGNIFICANCE]:
             colors.missenseVusColor,
+        [ProteinImpactType.TRUNCATING]: colors.truncatingColor,
         [ProteinImpactType.TRUNCATING_PUTATIVE_DRIVER]: colors.truncatingColor,
         [ProteinImpactType.TRUNCATING_UNKNOWN_SIGNIFICANCE]:
             colors.truncatingVusColor,
+        [ProteinImpactType.INFRAME]: colors.inframeColor,
         [ProteinImpactType.INFRAME_PUTATIVE_DRIVER]: colors.inframeColor,
         [ProteinImpactType.INFRAME_UNKNOWN_SIGNIFICANCE]:
             colors.inframeVusColor,
+        [ProteinImpactType.SPLICE]: colors.spliceColor,
         [ProteinImpactType.SPLICE_PUTATIVE_DRIVER]: colors.spliceColor,
         [ProteinImpactType.SPLICE_UNKNOWN_SIGNIFICANCE]: colors.spliceVusColor,
+        [ProteinImpactType.FUSION]: colors.fusionColor,
         [ProteinImpactType.FUSION_PUTATIVE_DRIVER]: colors.fusionColor,
         [ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE]: colors.fusionVusColor,
         [ProteinImpactType.OTHER]: colors.otherColor,

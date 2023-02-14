@@ -2,7 +2,7 @@
 
 export { default as CheckedSelect } from './components/checkedSelect/CheckedSelect';
 export * from './components/checkedSelect/CheckedSelectUtils';
-export { default as Checklist } from './components/checkedSelect/Checklist';
+export { default as BadgeListSelector } from './components/checkedSelect/BadgeListSelector';
 export {
     default as DefaultTooltip,
     placeArrowBottomLeft,

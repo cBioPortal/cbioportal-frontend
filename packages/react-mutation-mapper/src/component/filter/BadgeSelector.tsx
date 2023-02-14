@@ -1,10 +1,4 @@
 import autobind from 'autobind-decorator';
-import {
-    CheckBoxType,
-    Checklist,
-    getSelectedValuesMap,
-    Option,
-} from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
@@ -18,6 +12,12 @@ import {
     handleOptionSelect,
 } from '../../util/SelectorUtils';
 import { BadgeLabel, DEFAULT_BADGE_STYLE } from './BadgeLabel';
+import {
+    CheckBoxType,
+    getSelectedValuesMap,
+    Option,
+    BadgeListSelector,
+} from 'cbioportal-frontend-commons';
 
 export type BadgeSelectorOption = {
     value: string;
@@ -31,7 +31,6 @@ export type BadgeSelectorProps = {
     name?: string;
     placeholder?: string;
     isDisabled?: boolean;
-    unselectOthersWhenAllSelected?: boolean;
     numberOfColumnsPerRow?: number;
     alignColumns?: boolean;
     uniformBadgeWidth?: boolean;
@@ -50,13 +49,43 @@ export type BadgeSelectorProps = {
         option: BadgeSelectorOption,
         selectedValues: { [optionValue: string]: any },
         badgeClassName?: string,
-        badgeAlignmentStyle?: CSSProperties
+        badgeAlignmentStyle?: CSSProperties,
+        isDriverAnnotated?: boolean,
+        badgeLabelFormat?: (
+            label: JSX.Element | string,
+            badgeFirst?: boolean,
+            value?: string,
+            badge?: JSX.Element | null
+        ) => JSX.Element
     ) => JSX.Element;
     filter?: DataFilter<string>;
     options?: BadgeSelectorOption[];
     badgeClassName?: string;
     badgeContentPadding?: number;
     badgeCharWidth?: number;
+    isDriverAnnotated?: boolean;
+    onOnlyDriverVsVusSelect?: (
+        selectedOption: string[],
+        allValuesSelected: boolean
+    ) => void;
+    driverAnnotationIcon?: JSX.Element;
+    onBadgeSelect?: (
+        value: string,
+        selectedValues: { value: string }[],
+        onChange: (values: { value: string }[]) => void
+    ) => void;
+    onOnlySelect?: (
+        value: string,
+        onChange: (values: { value: string }[]) => void,
+        onOnlyDriverVsVusChange: (values: { value: string }[]) => void
+    ) => void;
+    badgeLabelFormat?: (
+        label: JSX.Element | string,
+        badgeFirst?: boolean,
+        value?: string,
+        badge?: JSX.Element | null
+    ) => JSX.Element;
+    useOnlyFeature?: boolean;
 };
 
 export const DEFAULT_BADGE_CHAR_WIDTH = 10;
@@ -217,14 +246,23 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
         option: BadgeSelectorOption,
         selectedValues: { [optionValue: string]: any },
         badgeClassName?: string,
-        badgeAlignmentStyle?: CSSProperties
+        badgeAlignmentStyle?: CSSProperties,
+        isDriverAnnotated?: boolean,
+        badgeLabelFormat?: (
+            label: JSX.Element | string,
+            badgeFirst?: boolean,
+            value?: string,
+            badge?: JSX.Element | null
+        ) => JSX.Element
     ): JSX.Element {
         return this.props.getBadgeLabel ? (
             this.props.getBadgeLabel(
                 option,
                 selectedValues,
                 badgeClassName,
-                badgeAlignmentStyle
+                badgeAlignmentStyle,
+                isDriverAnnotated,
+                badgeLabelFormat
             )
         ) : (
             <BadgeLabel
@@ -236,6 +274,8 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
                     badgeAlignmentStyle
                 )}
                 badgeClassName={this.props.badgeClassName}
+                isDriverAnnotated={this.props.isDriverAnnotated}
+                badgeLabelFormat={this.props.badgeLabelFormat}
             />
         );
     }
@@ -263,7 +303,9 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
                 this.props.badgeClassName,
                 this.badgeAlignmentStyles && this.props.numberOfColumnsPerRow
                     ? this.badgeAlignmentStyles[index]
-                    : undefined
+                    : undefined,
+                this.props.isDriverAnnotated,
+                this.props.badgeLabelFormat
             ),
             value: option.value,
         }));
@@ -271,16 +313,19 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
 
     public render() {
         return (
-            <Checklist
+            <BadgeListSelector
                 onChange={this.onChange}
                 options={this.options}
                 getOptionLabel={this.props.getOptionLabel}
-                value={this.selectedValues}
+                selectedValue={this.selectedValues}
                 isDisabled={this.props.isDisabled}
                 numberOfColumnsPerRow={this.props.numberOfColumnsPerRow}
-                unselectOthersWhenAllSelected={
-                    this.props.unselectOthersWhenAllSelected
-                }
+                isDriverAnnotated={this.props.isDriverAnnotated}
+                onOnlyDriverVsVusChange={this.onOnlyDriverVsVusChange}
+                driverAnnotationIcon={this.props.driverAnnotationIcon}
+                onBadgeSelect={this.props.onBadgeSelect}
+                onOnlySelect={this.props.onOnlySelect}
+                useOnlyFeature={this.props.useOnlyFeature}
             />
         );
     }
@@ -288,6 +333,15 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
     @action.bound
     private onChange(values: Array<{ value: string }>) {
         handleOptionSelect(values, this.allValues, this.props.onSelect);
+    }
+
+    @action.bound
+    private onOnlyDriverVsVusChange(values: Array<{ value: string }>) {
+        handleOptionSelect(
+            values,
+            this.allValues,
+            this.props.onOnlyDriverVsVusSelect
+        );
     }
 }
 
