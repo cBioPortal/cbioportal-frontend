@@ -15,6 +15,7 @@ import { ComparisonGroup } from './GroupComparisonUtils';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'shared/components/mutationMapper/DriverAnnotationProteinImpactTypeBadgeSelector';
 import { IAnnotationFilterSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
+import { ProteinImpactType } from 'cbioportal-frontend-commons';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -73,6 +74,11 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                             this.annotatedProteinImpactTypeFilter
                         }
                         disableAnnotationSettings={true}
+                        excludedProteinTypes={[
+                            ProteinImpactType.FUSION,
+                            ProteinImpactType.FUSION_PUTATIVE_DRIVER,
+                            ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE,
+                        ]}
                     />
                 ) : (
                     <ProteinImpactTypeBadgeSelector
@@ -81,6 +87,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                             groupIndex
                         )}
                         onSelect={this.onProteinImpactTypeSelect}
+                        excludedProteinTypes={[ProteinImpactType.FUSION]}
                     />
                 )}
             </>
@@ -114,10 +121,10 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                     style={
                         this.props.isPutativeDriver
                             ? {
-                                  paddingTop: 2,
+                                  paddingTop: 22,
                               }
                             : {
-                                  paddingTop: 72,
+                                  paddingTop: 92,
                               }
                     }
                 >
