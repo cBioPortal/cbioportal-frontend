@@ -400,6 +400,42 @@ export class FilteredCancerTreeView {
         );
     }
 
+    @action toggleAllAuthorizedAndFiltered() {
+        const {
+            selectableSelectedStudyIds,
+            selectableSelectedStudies,
+            shownStudies,
+            shownAndSelectedStudies,
+        } = this.getSelectionReport();
+
+        let updatedSelectableSelectedStudyIds: string[] = [];
+        const shownAndAuthorizedStudies = shownStudies.filter(study => {
+            return study.readPermission;
+        });
+        if (
+            shownAndAuthorizedStudies.length === shownAndSelectedStudies.length
+        ) {
+            // deselect
+            updatedSelectableSelectedStudyIds = _.without(
+                this.store.selectableSelectedStudyIds,
+                ...shownAndAuthorizedStudies.map(
+                    (study: CancerStudy) => study.studyId
+                )
+            );
+        } else {
+            updatedSelectableSelectedStudyIds = _.union(
+                this.store.selectableSelectedStudyIds,
+                shownAndAuthorizedStudies.map(
+                    (study: CancerStudy) => study.studyId
+                )
+            );
+        }
+
+        this.store.selectableSelectedStudyIds = updatedSelectableSelectedStudyIds.filter(
+            id => !_.includes(this.store.deletedVirtualStudies, id)
+        );
+    }
+
     @action selectAllMatchingStudies(match: string | string[]) {
         const {
             selectableSelectedStudyIds,
