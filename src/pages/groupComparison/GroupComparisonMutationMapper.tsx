@@ -121,7 +121,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                     style={
                         this.props.isPutativeDriver
                             ? {
-                                  paddingTop: 22,
+                                  paddingTop: 20,
                               }
                             : {
                                   paddingTop: 92,
