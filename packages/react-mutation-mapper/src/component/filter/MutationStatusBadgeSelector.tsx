@@ -60,7 +60,11 @@ export class MutationStatusBadgeSelector extends React.Component<
     }
 
     public render() {
-        return <BadgeSelector options={this.options} {...this.props} />;
+        return (
+            <table>
+                <BadgeSelector options={this.options} {...this.props} />
+            </table>
+        );
     }
 }
 

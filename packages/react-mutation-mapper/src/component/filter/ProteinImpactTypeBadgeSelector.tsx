@@ -113,13 +113,15 @@ export class ProteinImpactTypeBadgeSelector<
 
     public render() {
         return (
-            <BadgeSelector
-                options={this.options}
-                getOptionLabel={getProteinImpactTypeOptionLabel}
-                getBadgeLabel={getProteinImpactTypeBadgeLabel}
-                useOnlyFeature={true}
-                {...this.props}
-            />
+            <table>
+                <BadgeSelector
+                    options={this.options}
+                    getOptionLabel={getProteinImpactTypeOptionLabel}
+                    getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                    useOnlyFeature={true}
+                    {...this.props}
+                />
+            </table>
         );
     }
 }
