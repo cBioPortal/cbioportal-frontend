@@ -53,6 +53,18 @@ export class QueryParser {
                     label: 'Reference genome',
                 },
             },
+            /**
+             * Show Authorized Studies
+             */
+            {
+                phrasePrefix: 'authorized',
+                nodeFields: ['readPermission'],
+                form: {
+                    input: FilterCheckbox,
+                    options: ["true","false"],
+                    label: 'Controlled access authorized',
+                },
+            },
         ];
     }
 
