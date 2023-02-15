@@ -127,7 +127,7 @@ export class ListPhrase implements Phrase {
         for (const fieldName of this.fields) {
             let anyPhraseMatch = false;
             const fieldValue = (study as any)[fieldName];
-            if (fieldValue) {
+            if (typeof fieldValue !=='undefined') {
                 for (const phrase of this._phraseList) {
                     anyPhraseMatch =
                         anyPhraseMatch || matchPhraseFull(phrase, fieldValue);
@@ -162,7 +162,8 @@ function matchPhrase(phrase: string, fullText: string) {
 
 /**
  * Full match using lowercase
+ * Need to convert boolean to string before applying lowercase
  */
-function matchPhraseFull(phrase: string, fullText: string) {
-    return fullText.toLowerCase() === phrase.toLowerCase();
+function matchPhraseFull(phrase: string, fullText: any) {
+    return fullText.toString().toLowerCase() === phrase.toLowerCase();
 }
