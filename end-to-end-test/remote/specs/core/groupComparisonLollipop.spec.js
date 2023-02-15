@@ -248,34 +248,34 @@ describe('group comparison mutations tab tests', function() {
             );
 
             // deselecting protein driver badge
-            getElementByTestHandle('badge-fusion_putative_driver').click();
+            getElementByTestHandle('badge-inframe_putative_driver').click();
             // selecting protein badge
-            $('strong=Fusion').click();
+            $('strong=Inframe').click();
 
             assert.equal(
-                $('[data-test="badge-fusion_putative_driver"]').getCSSProperty(
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
                     'color'
                 ).parsed.hex,
                 $$(
-                    '[data-test="badge-fusion_putative_driver"]'
+                    '[data-test="badge-inframe_putative_driver"]'
                 )[1].getCSSProperty('color').parsed.hex
             );
             assert.equal(
                 $(
-                    '[data-test="badge-fusion_unknown_significance"]'
+                    '[data-test="badge-inframe_unknown_significance"]'
                 ).getCSSProperty('color').parsed.hex,
                 $$(
-                    '[data-test="badge-fusion_unknown_significance"]'
+                    '[data-test="badge-inframe_unknown_significance"]'
                 )[1].getCSSProperty('color').parsed.hex
             );
 
             // both protein driver and vus badges are selected if one of them is deselected
             assert.equal(
-                $('[data-test="badge-fusion_putative_driver"]').getCSSProperty(
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
                     'color'
                 ).parsed.hex,
                 $(
-                    '[data-test="badge-fusion_unknown_significance"]'
+                    '[data-test="badge-inframe_unknown_significance"]'
                 ).getCSSProperty('color').parsed.hex
             );
         });

@@ -19,6 +19,7 @@ import {
 export type ProteinImpactTypeBadgeSelectorProps = BadgeSelectorProps & {
     colors: IProteinImpactTypeColors;
     counts?: { [proteinImpactType: string]: number };
+    excludedProteinTypes?: string[];
 };
 
 const VALUES = [
@@ -103,21 +104,24 @@ export class ProteinImpactTypeBadgeSelector<
         })).filter(
             type =>
                 !(
-                    type.value === ProteinImpactType.OTHER &&
-                    type.badgeContent === 0
+                    this.props.excludedProteinTypes?.includes(type.value) ||
+                    (type.value === ProteinImpactType.OTHER &&
+                        type.badgeContent === 0)
                 )
         );
     }
 
     public render() {
         return (
-            <BadgeSelector
-                options={this.options}
-                getOptionLabel={getProteinImpactTypeOptionLabel}
-                getBadgeLabel={getProteinImpactTypeBadgeLabel}
-                useOnlyFeature={true}
-                {...this.props}
-            />
+            <table>
+                <BadgeSelector
+                    options={this.options}
+                    getOptionLabel={getProteinImpactTypeOptionLabel}
+                    getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                    useOnlyFeature={true}
+                    {...this.props}
+                />
+            </table>
         );
     }
 }
