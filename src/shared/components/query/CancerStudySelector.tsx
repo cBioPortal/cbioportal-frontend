@@ -57,6 +57,9 @@ export default class CancerStudySelector extends React.Component<
         onCheckAllFiltered: () => {
             this.logic.mainView.toggleAllFiltered();
         },
+        onCheckAuthorizedFiltered: () => {
+            this.logic.mainView.toggleAllAuthorizedAndFiltered();
+        },
         onClearFilter: () => {
             this.store.setSearchText('');
         },
@@ -193,9 +196,16 @@ export default class CancerStudySelector extends React.Component<
             shownAndSelectedStudies,
         } = this.logic.mainView.getSelectionReport();
 
+        const shownAndAuthorizedStudies = shownStudies.filter(study => {
+            return study.readPermission;
+        });
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
             getServerConfig().skin_quick_select_buttons
         );
+        const shownStudiesLengthstring =
+            shownStudies.length < this.store.cancerStudies.result.length
+                ? 'matching filter'
+                : '';
 
         return (
             <FlexCol
@@ -307,45 +317,64 @@ export default class CancerStudySelector extends React.Component<
                                             </div>
                                         </Then>
                                         <Else>
-                                            <label>
-                                                <input
-                                                    type="checkbox"
-                                                    data-test="selectAllStudies"
-                                                    style={{ top: -2 }}
-                                                    onClick={
-                                                        this.handlers
-                                                            .onCheckAllFiltered
-                                                    }
-                                                    checked={
-                                                        shownAndSelectedStudies.length ===
-                                                        shownStudies.length
-                                                    }
-                                                />
-                                                <strong>
-                                                    {shownAndSelectedStudies.length ===
-                                                    shownStudies.length
-                                                        ? `Deselect all listed studies ${
-                                                              shownStudies.length <
-                                                              this.store
-                                                                  .cancerStudies
-                                                                  .result.length
-                                                                  ? 'matching filter'
-                                                                  : ''
-                                                          } (${
-                                                              shownStudies.length
-                                                          })`
-                                                        : `Select all listed studies ${
-                                                              shownStudies.length <
-                                                              this.store
-                                                                  .cancerStudies
-                                                                  .result.length
-                                                                  ? 'matching filter'
-                                                                  : ''
-                                                          }  (${
-                                                              shownStudies.length
-                                                          })`}
-                                                </strong>
-                                            </label>
+                                            <If
+                                                condition={
+                                                    getServerConfig()
+                                                        .skin_home_page_show_unauthorized_studies ===
+                                                    false
+                                                }
+                                            >
+                                                <Then>
+                                                    <label>
+                                                        <input
+                                                            type="checkbox"
+                                                            data-test="selectAllStudies"
+                                                            style={{ top: -2 }}
+                                                            onClick={
+                                                                this.handlers
+                                                                    .onCheckAllFiltered
+                                                            }
+                                                            checked={
+                                                                shownAndSelectedStudies.length ===
+                                                                shownStudies.length
+                                                            }
+                                                        />
+                                                        <strong>
+                                                            {shownAndSelectedStudies.length ===
+                                                            shownStudies.length
+                                                                ? `Deselect all listed studies ${shownStudiesLengthstring} (${shownStudies.length})`
+                                                                : `Select all listed studies ${shownStudiesLengthstring}  (${shownStudies.length})`}
+                                                        </strong>
+                                                    </label>
+                                                </Then>
+                                                <Else>
+                                                    <label>
+                                                        <input
+                                                            type="checkbox"
+                                                            data-test="selectAuthorizedStudies"
+                                                            style={{ top: -2 }}
+                                                            onClick={
+                                                                this.handlers
+                                                                    .onCheckAuthorizedFiltered
+                                                            }
+                                                            checked={
+                                                                shownAndSelectedStudies.length ===
+                                                                    shownAndAuthorizedStudies.length &&
+                                                                shownAndAuthorizedStudies.length >
+                                                                    0
+                                                            }
+                                                        />
+                                                        <strong>
+                                                            {shownAndSelectedStudies.length ===
+                                                                shownAndAuthorizedStudies.length &&
+                                                            shownAndAuthorizedStudies.length >
+                                                                0
+                                                                ? `Deselect all authorized studies ${shownStudiesLengthstring} (${shownAndAuthorizedStudies.length})`
+                                                                : `Select all authorized studies ${shownStudiesLengthstring}  (${shownAndAuthorizedStudies.length})`}
+                                                        </strong>
+                                                    </label>
+                                                </Else>
+                                            </If>
                                         </Else>
                                     </If>
                                 </If>
