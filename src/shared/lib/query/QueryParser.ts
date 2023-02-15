@@ -6,9 +6,9 @@ import {
 import {
     AndSearchClause,
     FILTER_SEPARATOR,
-    SearchClause,
     NOT_PREFIX,
     NotSearchClause,
+    SearchClause,
 } from 'shared/components/query/filteredSearch/SearchClause';
 import { FilterCheckbox } from 'shared/components/query/filteredSearch/field/CheckboxFilterField';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
@@ -18,6 +18,7 @@ import {
     ListPhrase,
     Phrase,
 } from 'shared/components/query/filteredSearch/Phrase';
+import { toFilterFieldOption } from 'shared/components/query/filteredSearch/field/FilterFieldOption';
 
 export class QueryParser {
     /**
@@ -25,7 +26,10 @@ export class QueryParser {
      */
     private readonly _searchFilters: CancerTreeSearchFilter[];
 
-    constructor(referenceGenomes: Set<string>) {
+    constructor(referenceGenomes: Set<string>, readPermissions: Set<string>) {
+        console.log('readPermissions');
+        console.log(readPermissions);
+        console.log(readPermissions.size);
         this._searchFilters = [
             /**
              * Example queries:
@@ -38,7 +42,7 @@ export class QueryParser {
                     input: FilterList,
                     options: ServerConfigHelpers.skin_example_study_queries(
                         getServerConfig()!.skin_example_study_queries || ''
-                    ),
+                    ).map(toFilterFieldOption),
                 },
             },
             /**
@@ -49,8 +53,23 @@ export class QueryParser {
                 nodeFields: ['referenceGenome'],
                 form: {
                     input: FilterCheckbox,
-                    options: [...referenceGenomes],
+                    options: [...referenceGenomes].map(toFilterFieldOption),
                     label: 'Reference genome',
+                },
+            },
+            /**
+             * Show Authorized Studies
+             */
+            {
+                phrasePrefix: 'authorized',
+                nodeFields: ['readPermission'],
+                form: {
+                    input: FilterCheckbox,
+                    options: readPermissions.size > 1 ? [
+                        { value: 'true', displayValue: 'Authorized' },
+                        { value: 'false', displayValue: 'Unauthorized' },
+                    ]:[],
+                    label: 'Controlled access',
                 },
             },
         ];

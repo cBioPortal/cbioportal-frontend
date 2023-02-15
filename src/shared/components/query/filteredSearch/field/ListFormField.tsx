@@ -5,22 +5,22 @@ import { SearchClause } from 'shared/components/query/filteredSearch/SearchClaus
 import { Phrase } from 'shared/components/query/filteredSearch/Phrase';
 import './ListFormField.scss';
 import { toQueryString } from 'shared/lib/query/textQueryUtils';
+import { FilterFieldOption } from 'shared/components/query/filteredSearch/field/FilterFieldOption';
 
 export type ListFilterField = {
     label: string;
     input: typeof FilterList;
-    options: string[];
+    options: FilterFieldOption[];
 };
 
 export const FilterList: FunctionComponent<FieldProps> = props => {
     const form = props.filter.form as ListFilterField;
     const allPhrases = toUniquePhrases(props.query);
-    const queryString = toQueryString(props.query);
     return (
         <div className="filter-list">
             <h5>{props.filter.form.label}</h5>
             {form.options.map(option => {
-                const update = props.parser.parseSearchQuery(option);
+                const update = props.parser.parseSearchQuery(option.value);
                 return (
                     <li className="dropdown-item">
                         <a
@@ -32,7 +32,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
                                 });
                             }}
                         >
-                            {option}
+                            {option.displayValue}
                         </a>
                     </li>
                 );
