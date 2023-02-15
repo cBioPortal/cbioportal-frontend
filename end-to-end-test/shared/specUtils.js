@@ -520,7 +520,9 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
 }
 
 function clickQueryByGeneButton() {
-    $('a=Query By Gene').waitForEnabled();
+    $('.disabled[data-test=queryByGeneButton]').waitForExist({
+        reverse: true,
+    });
     $('a=Query By Gene').click();
     $('body').scrollIntoView();
 }

@@ -8,7 +8,7 @@ interface ITrialMatchFeedbackProps {
     data?: ISelectedTrialFeedbackFormData;
     isTrialFeedback?: boolean;
     title: string;
-    userEmailAddress: string;
+    userDisplayName: string;
     onHide: () => void;
 }
 
@@ -26,7 +26,7 @@ export default class TrialMatchFeedback extends React.Component<
                 const url =
                     'https://docs.google.com/forms/d/e/1FAIpQLSfcoLRG0iWO_qUb4hfzWFQ1toP575EKCTwqPcXE9DmMzuS34w/viewform';
                 const userParam = `entry.1655318994=${this.props
-                    .userEmailAddress || ''}`;
+                    .userDisplayName || ''}`;
                 const uriParam = `entry.1782078941=${encodeURIComponent(
                     window.location.href
                 )}`;
@@ -42,7 +42,7 @@ export default class TrialMatchFeedback extends React.Component<
                 const url =
                     'https://docs.google.com/forms/d/e/1FAIpQLSes1WuMattmo_aT8-34LaPRTC47vVzvdWMgYZ5tSuw8EHoLZw/viewform';
                 const userParam = `entry.251841421=${this.props
-                    .userEmailAddress || ''}`;
+                    .userDisplayName || ''}`;
                 const uriParam = `entry.1295500928=${encodeURIComponent(
                     window.location.href
                 )}`;

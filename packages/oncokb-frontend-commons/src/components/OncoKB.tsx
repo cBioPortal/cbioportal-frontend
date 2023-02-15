@@ -30,7 +30,7 @@ export interface IOncoKbProps {
     isCancerGene: boolean;
     geneNotExist: boolean;
     hugoGeneSymbol: string;
-    userEmailAddress?: string;
+    userDisplayName?: string;
     disableFeedback?: boolean;
     contentPadding?: number;
 }
@@ -252,7 +252,7 @@ export const OncoKB: React.FunctionComponent<IOncoKbProps> = (
                 <span>
                     {oncoKbContent}
                     <OncoKbFeedback
-                        userEmailAddress={props.userEmailAddress}
+                        userDisplayName={props.userDisplayName}
                         hugoSymbol={props.hugoGeneSymbol}
                         alteration={
                             props.indicator
