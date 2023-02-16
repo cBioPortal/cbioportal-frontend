@@ -41,6 +41,19 @@ export default class ClinicalInformationPatientTable extends React.Component<
                 ret = data.value;
                 break;
         }
+        try {
+            const parsedFloat = parseFloat(data.value);
+
+            if (parsedFloat != parseInt(data.value)) {
+                // if it's a float, not an integer
+                const prevValue = data.value.split('.')[0];
+                const roundedValue = data.value.split('.')[1];
+                const addDecimal = prevValue.concat('.');
+                ret = addDecimal.concat(roundedValue.slice(0, 2));
+            } else {
+                throw 'Not a float';
+            }
+        } catch (err) {}
         return ret;
     }
 
