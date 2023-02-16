@@ -73,7 +73,7 @@ type IMutationTableWrapperProps = {
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
-    userEmailAddress?: string | undefined;
+    userDisplayName?: string | undefined;
     enableOncoKb?: boolean;
     enableCivic?: boolean;
     columnVisibility?: { [columnId: string]: boolean };
@@ -267,7 +267,7 @@ export default class MutationTableWrapper extends React.Component<
                                 }
                                 civicGenes={this.pageStore.civicGenes}
                                 civicVariants={this.pageStore.civicVariants}
-                                userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
+                                userDisplayName={ServerConfigHelpers.getUserDisplayName()}
                                 enableOncoKb={getServerConfig().show_oncokb}
                                 enableFunctionalImpact={
                                     getServerConfig().show_genomenexus

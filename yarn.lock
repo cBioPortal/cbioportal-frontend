@@ -10793,6 +10793,11 @@ fast-levenshtein@~2.0.4:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
 
+fast_array_intersect@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/fast_array_intersect/-/fast_array_intersect-1.1.0.tgz#8e8a83d95c515fd55bfb2b02da94da3d7f1c2b8b"
+  integrity sha512-/DCilZlUdz2XyNDF+ASs0PwY+RKG9Y4Silp/gbS72Cvbg4oibc778xcecg+pnNyiNHYgh/TApsiDTjpdniyShw==
+
 fastest-levenshtein@^1.0.12:
   version "1.0.12"
   resolved "https://registry.yarnpkg.com/fastest-levenshtein/-/fastest-levenshtein-1.0.12.tgz#9990f7d3a88cc5a9ffd1f1745745251700d497e2"
@@ -24446,11 +24451,6 @@ v8-to-istanbul@^8.0.0:
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^1.6.0"
     source-map "^0.7.3"
-
-v8@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/v8/-/v8-0.1.0.tgz#86b9007e730da75186ad9a0ad1e38dd3af36c2bd"
-  integrity sha1-hrkAfnMNp1GGrZoK0eON0682wr0=
 
 v8flags@^2.1.1:
   version "2.1.1"

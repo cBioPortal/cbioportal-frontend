@@ -261,7 +261,7 @@ describe('alteration filter menu', function() {
                 clickCheckBoxStudyView('Putative passengers');
             });
 
-            it.skip('filters tables when unchecking when unchecking unknown oncogenicity checkbox', () => {
+            it('filters tables when unchecking when unchecking unknown oncogenicity checkbox', () => {
                 $('[data-test=ShowUnknownOncogenicity]').click();
                 waitForStudyView();
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
@@ -274,12 +274,9 @@ describe('alteration filter menu', function() {
                     OR11H1: '1',
                     TMEM247: '1',
                 });
-                // NOTE: SEEMS ONCOGENICITY IS NOT INVOLVED IN FILTERING SVs anymore
-                // is that ok?
-                assert.strictEqual(
-                    Object.keys(geneTableCounts('structural variants-table'))
-                        .length,
-                    0
+                assert.deepStrictEqual(
+                    geneTableCounts('structural variants-table'),
+                    SV_COUNTS
                 );
                 assert.deepStrictEqual(
                     geneTableCounts('copy number alterations-table'),
@@ -292,6 +289,17 @@ describe('alteration filter menu', function() {
                     }
                 );
                 $('[data-test=ShowUnknownOncogenicity]').click();
+            });
+
+            it('filters structural variant tables when unchecking when unchecking somatic oncogenicity checkbox', () => {
+                $('[data-test=HideSomatic]').click();
+                waitForStudyView();
+                assert.strictEqual(
+                    Object.keys(geneTableCounts('structural variants-table'))
+                        .length,
+                    0
+                );
+                $('[data-test=HideSomatic]').click();
             });
 
             // -+=+ TIER ANNOTATIONS +=+-

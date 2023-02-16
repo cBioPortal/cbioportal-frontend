@@ -2254,6 +2254,9 @@
           "type": "string",
           "description": "Hugo gene symbol"
         },
+        "isVue": {
+          "type": "boolean"
+        },
         "polyphenPrediction": {
           "type": "string",
           "description": "Polyphen Prediction"
@@ -2344,6 +2347,9 @@
         "variantType": {
           "type": "string",
           "description": "Variant type"
+        },
+        "vues": {
+          "$ref": "#/definitions/Vues"
         }
       }
     },
@@ -2361,6 +2367,48 @@
         "ref": {
           "type": "string",
           "description": "ref"
+        }
+      }
+    },
+    "Vues": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "defaultEffect": {
+          "type": "string"
+        },
+        "genomicLocation": {
+          "type": "string"
+        },
+        "genomicLocationDescription": {
+          "type": "string"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "pubmedIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "referenceText": {
+          "type": "string"
+        },
+        "revisedProteinEffect": {
+          "type": "string"
+        },
+        "transcriptId": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "variantClassification": {
+          "type": "string"
         }
       }
     }

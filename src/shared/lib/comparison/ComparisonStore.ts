@@ -1126,11 +1126,14 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    @computed get alterationEnrichmentRowData(): AlterationEnrichmentRow[] {
-        if (
-            this.alterationsEnrichmentData.isComplete &&
-            this.alterationsEnrichmentAnalysisGroups.isComplete
-        )
+    public readonly alterationEnrichmentRowData = remoteData<
+        AlterationEnrichmentRow[]
+    >({
+        await: () => [
+            this.alterationsEnrichmentData,
+            this.alterationsEnrichmentAnalysisGroups,
+        ],
+        invoke: async () => {
             return getAlterationRowData(
                 this.alterationsEnrichmentData.result!,
                 this.resultsViewStore
@@ -1138,8 +1141,8 @@ export default abstract class ComparisonStore extends AnalysisStore
                     : [],
                 this.alterationsEnrichmentAnalysisGroups.result!
             );
-        return [];
-    }
+        },
+    });
 
     public readonly mutationsEnrichmentData = makeEnrichmentDataPromise({
         await: () => [this.mutationsEnrichmentDataRequestGroups],
@@ -1203,6 +1206,19 @@ export default abstract class ComparisonStore extends AnalysisStore
                     : [],
                 this.alterationsEnrichmentAnalysisGroups.result!
             );
+            alterationRowData.sort(compareByAlterationPercentage);
+            return alterationRowData.map(a => a.hugoGeneSymbol);
+        },
+    });
+
+    readonly genesSortedByAlterationFrequency = remoteData<string[]>({
+        await: () => [
+            this.alterationEnrichmentRowData,
+            this.alterationsEnrichmentAnalysisGroups,
+        ],
+        invoke: async () => {
+            const alterationRowData: AlterationEnrichmentRow[] = this
+                .alterationEnrichmentRowData.result!;
             alterationRowData.sort(compareByAlterationPercentage);
             return alterationRowData.map(a => a.hugoGeneSymbol);
         },

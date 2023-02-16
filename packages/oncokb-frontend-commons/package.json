@@ -1,6 +1,6 @@
 {
   "name": "oncokb-frontend-commons",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "description": "OncoKB Frontend Modules",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -35,7 +35,7 @@
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "dependencies": {
-    "cbioportal-utils": "^0.3.26",
+    "cbioportal-utils": "^0.3.27",
     "classnames": "^2.2.5",
     "lodash": "^4.17.15",
     "oncokb-styles": "~1.4.2",

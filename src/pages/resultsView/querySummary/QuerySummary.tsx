@@ -18,7 +18,6 @@ import { StudyLink } from '../../../shared/components/StudyLink/StudyLink';
 import {
     getAlterationSummary,
     getGeneSummary,
-    getPatientSampleSummary,
     submitToStudyViewPage,
 } from './QuerySummaryUtils';
 import { MakeMobxView } from '../../../shared/components/MobxView';
@@ -28,6 +27,7 @@ import { createQueryStore } from 'shared/lib/createQueryStore';
 import _ from 'lodash';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
 import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
+import { PatientSampleSummary } from './PatientSampleSummary';
 
 interface QuerySummaryProps {
     routingStore: ExtendedRouterStore;
@@ -79,10 +79,10 @@ export default class QuerySummary extends React.Component<
                     );
                 }}
             >
-                {getPatientSampleSummary(
-                    this.props.store.filteredSamples.result!,
-                    this.props.store.filteredPatients.result!
-                )}
+                <PatientSampleSummary
+                    samples={this.props.store.filteredSamples.result!}
+                    patients={this.props.store.filteredPatients.result!}
+                />
             </a>
         );
     }

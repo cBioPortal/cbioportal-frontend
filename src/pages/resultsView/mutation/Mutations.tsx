@@ -89,6 +89,10 @@ export default class Mutations extends React.Component<
     public render() {
         const activeTabId = this.selectedGeneSymbol;
 
+        // this is to trigger genome nexus variant annotation call as soon as the Mutations tab starts rendering
+        const triggerForAnEarlierGenomeNexusCall = this.props.store
+            .indexedVariantAnnotations.result;
+
         return (
             <div data-test="mutationsTabDiv">
                 {this.props.store.mutationsByGene.isComplete && (
@@ -250,7 +254,7 @@ export default class Mutations extends React.Component<
                             this.props.store.genomeNexusMutationAssessorCache
                         }
                         pdbHeaderCache={this.props.store.pdbHeaderCache}
-                        userEmailAddress={this.props.appStore.userName!}
+                        userDisplayName={this.props.appStore.userName!}
                         generateGenomeNexusHgvsgUrl={
                             this.props.store.generateGenomeNexusHgvsgUrl
                         }

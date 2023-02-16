@@ -95,10 +95,11 @@ export function getSpecimenCollectionDayMap(
         // TODO: SAMPLE_ACQUISITION is specific to genie_bpc_test study. We
         // should probably have some config to allow people to choose what
         // timeline tracks get labels
-        const specimenEvents = events.filter(
-            (e: ClinicalEvent) =>
-                e.eventType === 'SPECIMEN' || 'SAMPLE_ACQUISITION'
-        );
+        const specimenEvents = events.filter((e: ClinicalEvent) => {
+            return /SPECIMEN|Sample Acquisition|sample_acquisition'/i.test(
+                e.eventType
+            );
+        });
 
         specimenEvents.forEach((event: ClinicalEvent) => {
             const sampleIdAttr = _.find(
