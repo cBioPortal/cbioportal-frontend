@@ -22,7 +22,7 @@ export function openSocialAuthWindow(appStore: AppStore) {
                 _window.close();
 
                 fetchServerConfig().then((config: IServerConfig) => {
-                    appStore.userName = config.user_email_address;
+                    appStore.userName = config.user_display_name;
                     appStore.authMethod = config.authenticationMethod;
                 });
             }

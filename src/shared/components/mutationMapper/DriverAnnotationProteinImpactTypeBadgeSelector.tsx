@@ -134,9 +134,19 @@ function badgeLabelFormat(
 export default class DriverAnnotationProteinImpactTypeBadgeSelector extends ProteinImpactTypeBadgeSelector<
     IDriverAnnotationProteinImpactTypeBadgeSelectorProps
 > {
+    private putativeDriverTypes: ProteinImpactType[];
+    private unknownSignificanceTypes: ProteinImpactType[];
+
     constructor(props: IDriverAnnotationProteinImpactTypeBadgeSelectorProps) {
         super(props);
         makeObservable(this);
+
+        this.putativeDriverTypes = PUTATIVE_DRIVER_TYPE.filter(
+            t => !this.props.excludedProteinTypes?.includes(t)
+        );
+        this.unknownSignificanceTypes = UNKNOWN_SIGNIFICANCE_TYPE.filter(
+            t => !this.props.excludedProteinTypes?.includes(t)
+        );
     }
 
     @observable settingMenuVisible = false;
@@ -150,13 +160,13 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
     @computed get selectedDriverMutationTypeValues() {
         return this.selectedMutationTypeValues.filter(v =>
-            (PUTATIVE_DRIVER_TYPE as string[]).includes(v.value)
+            (this.putativeDriverTypes as string[]).includes(v.value)
         );
     }
 
     @computed get selectedVUSMutationTypeValues() {
         return this.selectedMutationTypeValues.filter(v =>
-            (UNKNOWN_SIGNIFICANCE_TYPE as string[]).includes(v.value)
+            (this.unknownSignificanceTypes as string[]).includes(v.value)
         );
     }
 
@@ -167,16 +177,16 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             if (
                 _.intersection(
                     this.props.annotatedProteinImpactTypeFilter.values,
-                    PUTATIVE_DRIVER_TYPE
-                ).length === PUTATIVE_DRIVER_TYPE.length
+                    this.putativeDriverTypes
+                ).length === this.putativeDriverTypes.length
             ) {
                 driverVsVusValues.push(DriverVsVusType.DRIVER);
             }
             if (
                 _.intersection(
                     this.props.annotatedProteinImpactTypeFilter.values,
-                    UNKNOWN_SIGNIFICANCE_TYPE
-                ).length === UNKNOWN_SIGNIFICANCE_TYPE.length
+                    this.unknownSignificanceTypes
+                ).length === this.unknownSignificanceTypes.length
             ) {
                 driverVsVusValues.push(DriverVsVusType.VUS);
             }
@@ -231,8 +241,9 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         })).filter(
             type =>
                 !(
-                    type.value === ProteinImpactType.OTHER &&
-                    type.badgeContent === 0
+                    this.props.excludedProteinTypes?.includes(type.value) ||
+                    (type.value === ProteinImpactType.OTHER &&
+                        type.badgeContent === 0)
                 )
         );
     }
@@ -292,7 +303,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                 label: this.optionDisplayValueMap[DriverVsVusType.DRIVER],
                 badgeContent: this.props.counts
                     ? _.reduce(
-                          PUTATIVE_DRIVER_TYPE,
+                          this.putativeDriverTypes,
                           (count, type) => (count += this.props.counts![type]),
                           0
                       )
@@ -308,7 +319,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                 label: this.optionDisplayValueMap[DriverVsVusType.VUS],
                 badgeContent: this.props.counts
                     ? _.reduce(
-                          UNKNOWN_SIGNIFICANCE_TYPE,
+                          this.unknownSignificanceTypes,
                           (count, type) => (count += this.props.counts![type]),
                           0
                       )
@@ -331,14 +342,14 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             DriverVsVusType.DRIVER,
             selectedOption,
             this.selectedDriverMutationTypeValues,
-            PUTATIVE_DRIVER_TYPE
+            this.putativeDriverTypes
         );
 
         let selectedVus = findSelectedDriverVsVus(
             DriverVsVusType.VUS,
             selectedOption,
             this.selectedVUSMutationTypeValues,
-            UNKNOWN_SIGNIFICANCE_TYPE
+            this.unknownSignificanceTypes
         );
 
         // if protein type driver/vus badges are both selected, add the corresponding protein type to selected
@@ -351,6 +362,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                           t.indexOf('_')
                       ) as ProteinImpactWithoutVusMutationType);
             if (
+                !this.props.excludedProteinTypes?.includes(prefix) &&
                 selectedDriver.includes(prefix + '_putative_driver') &&
                 selectedVus.includes(prefix + '_unknown_significance')
             ) {
@@ -378,7 +390,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                     DriverVsVusType.DRIVER,
                     selectedOption,
                     this.selectedDriverMutationTypeValues,
-                    PUTATIVE_DRIVER_TYPE
+                    this.putativeDriverTypes
                 );
                 break;
             case DriverVsVusType.VUS:
@@ -386,7 +398,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                     DriverVsVusType.VUS,
                     selectedOption,
                     this.selectedVUSMutationTypeValues,
-                    UNKNOWN_SIGNIFICANCE_TYPE
+                    this.unknownSignificanceTypes
                 );
                 break;
         }

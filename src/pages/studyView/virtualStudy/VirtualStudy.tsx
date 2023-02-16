@@ -208,7 +208,7 @@ export default class VirtualStudy extends React.Component<
     }
 
     @computed get showSaveButton() {
-        //default value of userEmailAddress is anonymousUser. see my-index.ejs
+        //default value of userDisplayName is anonymousUser. see my-index.ejs
         return !(
             _.isUndefined(this.props.user) ||
             _.isEmpty(this.props.user) ||
