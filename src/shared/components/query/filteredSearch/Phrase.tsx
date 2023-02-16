@@ -125,13 +125,14 @@ export class ListPhrase implements Phrase {
     public match(study: CancerTreeNode): boolean {
         let anyFieldMatch = false;
         for (const fieldName of this.fields) {
-            let anyPhraseMatch = false;
+            if (!_.has(study, fieldName)) {
+                continue;
+            }
             const fieldValue = (study as any)[fieldName];
-            if (typeof fieldValue !== 'undefined') {
-                for (const phrase of this._phraseList) {
-                    anyPhraseMatch =
-                        anyPhraseMatch || matchPhraseFull(phrase, fieldValue);
-                }
+            let anyPhraseMatch = false;
+            for (const phrase of this._phraseList) {
+                anyPhraseMatch =
+                    anyPhraseMatch || matchPhraseFull(phrase, fieldValue);
             }
             anyFieldMatch = anyFieldMatch || anyPhraseMatch;
         }
