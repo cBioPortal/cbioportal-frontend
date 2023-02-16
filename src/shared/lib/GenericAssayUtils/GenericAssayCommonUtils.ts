@@ -294,12 +294,19 @@ export function getCategoryOrderByGenericAssayType(genericAssayType: string) {
         : undefined;
 }
 
+export function constructGeneRegex(hugoGeneSymbol: string) {
+    // Match whole gene symbol text and case-insensitive, non-alphanumeric characters is allowed after gene symbol
+    // Sometimes, gene symbol might appear in description text
+    // If it shows in description text, we might want to find if it's before a blank space
+    return new RegExp(`^(${hugoGeneSymbol}|${hugoGeneSymbol}\\W+.*)$`, 'i');
+}
+
 export function filterGenericAssayEntitiesByGenes(
     genericAssayEntities: GenericAssayMeta[],
     hugoGeneSymbols: string[]
 ) {
     // filter logic is: stableId, name or description
-    // is any of them includes sepcific gene, then it's related, we should keep them and filter out others
+    // filter out others entities and only keep matching entities
     return _.filter(genericAssayEntities, meta => {
         const entityName = getGenericAssayMetaPropertyOrDefault(
             meta,
@@ -311,13 +318,14 @@ export function filterGenericAssayEntitiesByGenes(
             COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
             ''
         );
-        return _.some(
-            hugoGeneSymbols,
-            hugoGeneSymbol =>
-                RegExp(hugoGeneSymbol, 'i').test(meta.stableId) ||
-                RegExp(hugoGeneSymbol, 'i').test(entityName) ||
-                RegExp(hugoGeneSymbol, 'i').test(entityDescription)
-        );
+        return _.some(hugoGeneSymbols, hugoGeneSymbol => {
+            const regex = constructGeneRegex(hugoGeneSymbol);
+            return (
+                regex.test(meta.stableId) ||
+                regex.test(entityName) ||
+                regex.test(entityDescription)
+            );
+        });
     });
 }
 
@@ -326,9 +334,10 @@ export function filterGenericAssayOptionsByGenes(
     hugoGeneSymbols: string[]
 ) {
     return _.filter(options, option =>
-        _.some(hugoGeneSymbols, hugoGeneSymbol =>
-            doesOptionMatchSearchText(hugoGeneSymbol, option)
-        )
+        _.some(hugoGeneSymbols, hugoGeneSymbol => {
+            const regex = constructGeneRegex(hugoGeneSymbol);
+            return regex.test(option.label) || regex.test(option.value);
+        })
     );
 }
 

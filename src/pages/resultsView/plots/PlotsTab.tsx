@@ -1008,12 +1008,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     // select default if _selectedGenericAssayOption is undefined and there are generic assay options to choose from
                     // if there is a gene selected in the other axis, select the first related option in this axis
                     // this will not override the option recorded in the url
-                    const selectedGeneRelatedOptions = selectedHugoGeneSymbolInTheOtherAxis
-                        ? filterGenericAssayOptionsByGenes(
-                              genericAssayOptions,
-                              [selectedHugoGeneSymbolInTheOtherAxis]
-                          )
-                        : [];
+                    const genericAssayType = vertical
+                        ? self.vertSelection.dataType
+                        : self.horzSelection.dataType;
+                    const selectedGeneRelatedOptions =
+                        genericAssayType &&
+                        GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                            genericAssayType
+                        ]?.globalConfig?.geneRelatedGenericAssayType &&
+                        selectedHugoGeneSymbolInTheOtherAxis
+                            ? filterGenericAssayOptionsByGenes(
+                                  genericAssayOptions,
+                                  [selectedHugoGeneSymbolInTheOtherAxis]
+                              )
+                            : [];
                     return !_.isEmpty(selectedGeneRelatedOptions)
                         ? selectedGeneRelatedOptions[0]
                         : genericAssayOptions[0];
@@ -3417,7 +3425,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     selectedEntities,
                     this._vertGenericAssaySearchText,
                     this.props.store.hugoGeneSymbols,
-                    this.horzSelection.selectedGeneOption?.label
+                    this.horzSelection.selectedGeneOption?.label,
+                    GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                        axisSelection.dataType!
+                    ]?.globalConfig?.geneRelatedGenericAssayType
                 ) || [];
             // generate statistics for options
             genericAssayOptionsCount = this.vertGenericAssayOptions.result
@@ -3442,7 +3453,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     selectedEntities,
                     this._horzGenericAssaySearchText,
                     this.props.store.hugoGeneSymbols,
-                    this.vertSelection.selectedGeneOption?.label
+                    this.vertSelection.selectedGeneOption?.label,
+                    GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                        axisSelection.dataType!
+                    ]?.globalConfig?.geneRelatedGenericAssayType
                 ) || [];
             // generate statistics for options
             genericAssayOptionsCount = this.horzGenericAssayOptions.result
@@ -3912,7 +3926,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         selectedEntities: string[],
         serchText: string,
         queriedHugoGeneSymbols: string[],
-        selectedHugoGeneSymbolInTheOtherAxis?: string
+        selectedHugoGeneSymbolInTheOtherAxis?: string,
+        isGeneRelatedOptions?: boolean
     ) {
         if (alloptions) {
             const entities = alloptions.filter(option =>
@@ -3926,15 +3941,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // If there is a gene selected in the other axis, bring related options to that gene to first
             // Then bring all queried genes related options after those
             // Last, put all remaining options
-            const selectedGeneRelatedOptions = selectedHugoGeneSymbolInTheOtherAxis
-                ? filterGenericAssayOptionsByGenes(filteredOtherOptions, [
-                      selectedHugoGeneSymbolInTheOtherAxis,
-                  ])
+            const selectedGeneRelatedOptions =
+                isGeneRelatedOptions && selectedHugoGeneSymbolInTheOtherAxis
+                    ? filterGenericAssayOptionsByGenes(filteredOtherOptions, [
+                          selectedHugoGeneSymbolInTheOtherAxis,
+                      ])
+                    : [];
+            const queriedGeneRelatedOptions = isGeneRelatedOptions
+                ? filterGenericAssayOptionsByGenes(
+                      filteredOtherOptions,
+                      queriedHugoGeneSymbols
+                  )
                 : [];
-            const queriedGeneRelatedOptions = filterGenericAssayOptionsByGenes(
-                filteredOtherOptions,
-                queriedHugoGeneSymbols
-            );
             filteredOtherOptions = [
                 ...selectedGeneRelatedOptions,
                 ..._.difference(
