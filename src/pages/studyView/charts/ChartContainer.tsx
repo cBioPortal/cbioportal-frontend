@@ -65,6 +65,7 @@ import {
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import {
+    SURVIVAL_COMPACT_MODE_THRESHOLD,
     SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
     SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
@@ -436,6 +437,21 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed
     get borderWidth() {
         return this.highlightChart ? 2 : 1;
+    }
+
+    @computed
+    get showCompactSurvivalChart() {
+        // returns true when selected survivals are larger than the threshold
+        if (
+            !_.isEmpty(this.survivalChartData) &&
+            !_.isEmpty(this.survivalChartData!.sortedGroupedSurvivals)
+        ) {
+            return _.some(
+                this.survivalChartData!.sortedGroupedSurvivals!,
+                survivals => survivals.length > SURVIVAL_COMPACT_MODE_THRESHOLD
+            );
+        }
+        return false;
     }
 
     @computed get comparisonButtonForTables() {
@@ -964,6 +980,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             // scatter the tick to avoid text overlaping on study view survival plots
                             yAxisTickCount={2}
                             xAxisTickCount={4}
+                            compactMode={this.showCompactSurvivalChart}
                         />
                     );
                 } else {
@@ -1279,6 +1296,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     openComparisonPage={this.openComparisonPage}
                     placement={this.placement}
                     description={this.props.description}
+                    isCompactSurvivalChart={this.showCompactSurvivalChart}
                 />
                 <div className={styles.chartInnerWrapper}>
                     {this.props.promise.isPending && (

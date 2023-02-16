@@ -456,6 +456,7 @@ export const COLORS = [
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
 export const MutationCountVsCnaYBinsMin = 52; // calibrated so that the dots are right up against each other. needs to correspond with the width and height of the chart
+export const SURVIVAL_PLOT_ID_SUFFIX = 'SURVIVAL';
 
 const OPERATOR_MAP: { [op: string]: string } = {
     '<=': '≤',
@@ -467,7 +468,8 @@ const OPERATOR_MAP: { [op: string]: string } = {
 export function getClinicalAttributeOverlay(
     displayName: string,
     description: string,
-    clinicalAttributeId?: string
+    clinicalAttributeId?: string,
+    isCompactSurvivalChart?: boolean
 ): JSX.Element {
     const comparisonDisplayName = displayName.toLowerCase().trim();
     let comparisonDescription = description
@@ -487,6 +489,14 @@ export function getClinicalAttributeOverlay(
             {comparisonDescription !== comparisonDisplayName && (
                 <div>{description}</div>
             )}
+            <br />
+            {isCompactSurvivalChart && (
+                <div>All events were floored to the nearest month</div>
+            )}
+            {!!clinicalAttributeId &&
+                new RegExp(`${SURVIVAL_PLOT_ID_SUFFIX}$`).test(
+                    clinicalAttributeId
+                ) && <div>x axis unit: months</div>}
         </div>
     );
 }
