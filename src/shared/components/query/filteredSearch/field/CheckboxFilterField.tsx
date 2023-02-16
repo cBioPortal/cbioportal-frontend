@@ -13,11 +13,15 @@ import {
 } from 'shared/lib/query/textQueryUtils';
 import { FieldProps } from 'shared/components/query/filteredSearch/field/FilterFormField';
 import { ListPhrase } from 'shared/components/query/filteredSearch/Phrase';
+import {
+    FilterFieldOption,
+    toFilterFieldValue,
+} from 'shared/components/query/filteredSearch/field/FilterFieldOption';
 
 export type CheckboxFilterField = {
     input: typeof FilterCheckbox;
     label: string;
-    options: string[];
+    options: FilterFieldOption[];
 };
 
 export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
@@ -43,9 +47,9 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
     });
 
     for (const option of options) {
-        const isChecked = isOptionChecked(option, relevantClauses);
+        const isChecked = isOptionChecked(option.value, relevantClauses);
         if (isChecked) {
-            checkedOptions.push(option);
+            checkedOptions.push(option.value);
         }
     }
 
@@ -53,9 +57,9 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
         <div className="filter-checkbox">
             <h5>{props.filter.form.label}</h5>
             <div>
-                {options.map((option: string) => {
+                {options.map((option: FilterFieldOption) => {
                     const id = `input-${option}`;
-                    let isChecked = checkedOptions.includes(option);
+                    let isChecked = checkedOptions.includes(option.value);
                     return (
                         <div
                             style={{
@@ -66,11 +70,11 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                             <input
                                 type="checkbox"
                                 id={id}
-                                value={option}
+                                value={option.displayValue}
                                 checked={isChecked}
                                 onClick={() => {
                                     isChecked = !isChecked;
-                                    updatePhrases(option, isChecked);
+                                    updatePhrases(option.value, isChecked);
                                     const update = createQueryUpdate(
                                         toRemove,
                                         checkedOptions,
@@ -89,7 +93,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                     padding: '0 0 0 0.2em',
                                 }}
                             >
-                                {option}
+                                {option.displayValue}
                             </label>
                         </div>
                     );
@@ -159,7 +163,8 @@ export function createQueryUpdate(
         toAdd = [];
     } else if (onlyNot || moreAnd) {
         const phrase = options
-            .filter(o => !optionsToAdd.includes(o))
+            .filter(o => !optionsToAdd.includes(o.value))
+            .map(toFilterFieldValue)
             .join(FILTER_VALUE_SEPARATOR);
         toAdd = [new NotSearchClause(createListPhrase(prefix, phrase, fields))];
     } else {
