@@ -2346,42 +2346,9 @@
         ],
         "parameters": [
           {
-            "name": "entrezGeneIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "molecularProfileIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "sampleMolecularIdentifiers[0].molecularProfileId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "sampleMolecularIdentifiers[0].sampleId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "structuralVariantFilter",
-            "description": "List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers",
+            "description": "List of entrezGeneIds, structural variant queries and molecularProfileIds or sampleMolecularIdentifiers",
             "required": true,
             "schema": {
               "$ref": "#/definitions/StructuralVariantFilter"
@@ -5479,9 +5446,47 @@
           "items": {
             "$ref": "#/definitions/SampleMolecularIdentifier"
           }
+        },
+        "structuralVariantQueries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StructuralVariantQuery"
+          }
         }
       },
       "title": "StructuralVariantFilter"
+    },
+    "StructuralVariantGeneSubQuery": {
+      "type": "object",
+      "properties": {
+        "entrezId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "specialValue": {
+          "type": "string",
+          "enum": [
+            "ANY_GENE",
+            "NO_GENE"
+          ]
+        }
+      },
+      "title": "StructuralVariantGeneSubQuery"
+    },
+    "StructuralVariantQuery": {
+      "type": "object",
+      "properties": {
+        "gene1": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "gene2": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        }
+      },
+      "title": "StructuralVariantQuery"
     },
     "StudyViewFilter": {
       "type": "object",
