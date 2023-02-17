@@ -63,10 +63,10 @@ export class QueryParser {
                 form: {
                     input: FilterCheckbox,
                     options: [
-                        { value: 'true', displayValue: 'authorized' },
-                        { value: 'false', displayValue: 'not authorized' },
+                        { value: 'true', displayValue: 'Authorized' },
+                        { value: 'false', displayValue: 'Unauthorized' },
                     ],
-                    label: 'Controlled access authorized',
+                    label: 'Controlled access',
                 },
             },
         ];
