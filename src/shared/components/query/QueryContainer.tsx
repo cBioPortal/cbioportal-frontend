@@ -277,12 +277,13 @@ export default class QueryContainer extends React.Component<
 
                             <If condition={this.showQueryControls}>
                                 <>
-                                    {this.store.physicalStudyIdsInSelection
-                                        .length > 1 ? (
-                                        <DataTypePrioritySelector />
-                                    ) : (
-                                        <MolecularProfileSelector />
-                                    )}
+                                    {/*{this.store.physicalStudyIdsInSelection*/}
+                                    {/*    .length > 1 ? (*/}
+                                    {/*    <DataTypePrioritySelector />*/}
+                                    {/*) : (*/}
+                                    {/*    */}
+                                    {/*)}*/}
+                                    <MolecularProfileSelector />
 
                                     {this.store.selectableSelectedStudyIds
                                         .length > 0 && (
