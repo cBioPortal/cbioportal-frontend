@@ -175,6 +175,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     query_product_limit: 1000000,
 
+    enable_cross_study_expression: undefined,
+
     clinical_attribute_product_limit: 6500000,
 
     skin_show_gsva: false,

@@ -51,6 +51,7 @@ export default class QueryContainer extends React.Component<
                 this.store.initiallySelected.profileIds &&
                 this.store.cancerTypes.isComplete &&
                 this.store.cancerStudies.isComplete &&
+                this.store.selectedPhysicalStudies.isComplete &&
                 this.store.profiledSamplesCount.isComplete)
         );
     }
@@ -242,219 +243,200 @@ export default class QueryContainer extends React.Component<
                     </div>
                 )}
 
-                {!this.store.forDownloadTab && (
-                    <If
-                        condition={
-                            this.store.defaultSelectedIds.size === 0 ||
-                            this.studiesDataReady
-                        }
-                    >
-                        <Then>
-                            <If
-                                condition={
-                                    this.props.forkedMode &&
-                                    this.showQueryControls
-                                }
-                            >
-                                <FlexRow className={styles.StudySelection}>
-                                    <SectionHeader className={'sectionLabel'}>
-                                        Selected Studies:{' '}
-                                        <button
-                                            data-test="modifyStudySelectionButton"
-                                            className={'btn btn-default btn-xs'}
-                                            onClick={this.toggleQueryControls}
-                                        >
-                                            Modify
-                                        </button>
-                                    </SectionHeader>
-                                    <div style={{ marginLeft: 8 }}>
-                                        {this.selectedStudySummary}
-                                    </div>
+                {(this.store.defaultSelectedIds.size === 0 ||
+                    this.studiesDataReady) && (
+                    <>
+                        <If
+                            condition={
+                                this.props.forkedMode && this.showQueryControls
+                            }
+                        >
+                            <FlexRow className={styles.StudySelection}>
+                                <SectionHeader className={'sectionLabel'}>
+                                    Selected Studies:{' '}
+                                    <button
+                                        data-test="modifyStudySelectionButton"
+                                        className={'btn btn-default btn-xs'}
+                                        onClick={this.toggleQueryControls}
+                                    >
+                                        Modify
+                                    </button>
+                                </SectionHeader>
+                                <div style={{ marginLeft: 8 }}>
+                                    {this.selectedStudySummary}
+                                </div>
+                            </FlexRow>
+                        </If>
+
+                        {this.getWrappedCancerStudySelector}
+
+                        <If condition={this.showQueryControls}>
+                            <>
+                                {/*{this.store.physicalStudyIdsInSelection*/}
+                                {/*    .length > 1 ? (*/}
+                                {/*    <DataTypePrioritySelector />*/}
+                                {/*) : (*/}
+                                {/*    */}
+                                {/*)}*/}
+                                {this.store.selectedPhysicalStudies
+                                    .isComplete && <MolecularProfileSelector />}
+
+                                {this.store.selectableSelectedStudyIds.length >
+                                    0 && (
+                                    <CaseSetSelector
+                                        modifyQueryParams={
+                                            this.props.modifyQueryParams
+                                        }
+                                    />
+                                )}
+
+                                <GeneSetSelector />
+
+                                {!!this.store.isGenesetProfileSelected && (
+                                    <GenesetsSelector />
+                                )}
+
+                                {!!this.store.forDownloadTab && (
+                                    <span
+                                        className={
+                                            styles.downloadSubmitExplanation
+                                        }
+                                    >
+                                        Clicking submit will generate a
+                                        tab-delimited file containing your
+                                        requested data.
+                                    </span>
+                                )}
+
+                                {!!this.store.forDownloadTab && (
+                                    <LabeledCheckbox
+                                        labelProps={{
+                                            className:
+                                                styles.transposeDataMatrix,
+                                        }}
+                                        checked={this.store.transposeDataMatrix}
+                                        onChange={event =>
+                                            (this.store.transposeDataMatrix =
+                                                event.currentTarget.checked)
+                                        }
+                                    >
+                                        Transpose data matrix
+                                    </LabeledCheckbox>
+                                )}
+                                <FlexRow
+                                    overflow={true}
+                                    padded
+                                    className={classNames(
+                                        styles.submitRow,
+                                        'posRelative'
+                                    )}
+                                >
+                                    <button
+                                        style={{
+                                            paddingLeft: 50,
+                                            paddingRight: 50,
+                                            marginRight: 50,
+                                        }}
+                                        disabled={!this.store.submitEnabled}
+                                        className="btn btn-primary btn-lg"
+                                        onClick={() => this.handleSubmit()}
+                                        data-test="queryButton"
+                                    >
+                                        {!this.store.forDownloadTab
+                                            ? 'Submit Query'
+                                            : 'Download'}
+                                    </button>
                                 </FlexRow>
-                            </If>
-
-                            {this.getWrappedCancerStudySelector}
-
-                            <If condition={this.showQueryControls}>
-                                <>
-                                    {this.store.physicalStudyIdsInSelection
-                                        .length > 1 ? (
-                                        <DataTypePrioritySelector />
-                                    ) : (
-                                        <MolecularProfileSelector />
-                                    )}
-
-                                    {this.store.selectableSelectedStudyIds
-                                        .length > 0 && (
-                                        <CaseSetSelector
-                                            modifyQueryParams={
-                                                this.props.modifyQueryParams
-                                            }
-                                        />
-                                    )}
-
-                                    <GeneSetSelector />
-
-                                    {!!this.store.isGenesetProfileSelected && (
-                                        <GenesetsSelector />
-                                    )}
-
-                                    {!!this.store.forDownloadTab && (
-                                        <span
-                                            className={
-                                                styles.downloadSubmitExplanation
-                                            }
-                                        >
-                                            Clicking submit will generate a
-                                            tab-delimited file containing your
-                                            requested data.
-                                        </span>
-                                    )}
-
-                                    {!!this.store.forDownloadTab && (
-                                        <LabeledCheckbox
-                                            labelProps={{
-                                                className:
-                                                    styles.transposeDataMatrix,
-                                            }}
-                                            checked={
-                                                this.store.transposeDataMatrix
-                                            }
-                                            onChange={event =>
-                                                (this.store.transposeDataMatrix =
-                                                    event.currentTarget.checked)
-                                            }
-                                        >
-                                            Transpose data matrix
-                                        </LabeledCheckbox>
-                                    )}
-                                    <FlexRow
-                                        overflow={true}
-                                        padded
+                            </>
+                        </If>
+                        <If condition={!this.showQueryControls}>
+                            <FlexRow className={styles.forkedButtons}>
+                                <div
+                                    style={{
+                                        width: 330,
+                                        textAlign: 'right',
+                                        marginRight: 20,
+                                    }}
+                                >
+                                    <StudySelectorStats store={this.store} />
+                                </div>
+                                <DefaultTooltip
+                                    placement={'top'}
+                                    trigger={['hover']}
+                                    destroyTooltipOnHide={true}
+                                    mouseEnterDelay={0}
+                                    mouseLeaveDelay={0}
+                                    disabled={
+                                        this.store.selectableSelectedStudies
+                                            .length > 0
+                                    }
+                                    overlay={this.queryByGeneTooltipMessage}
+                                >
+                                    <a
+                                        data-test="queryByGeneButton"
+                                        onClick={() =>
+                                            this.store.hasSelectedStudies &&
+                                            this.toggleQueryControls()
+                                        }
+                                        data-event={serializeEvent({
+                                            action: 'clickQueryByGeneButton',
+                                            label: '',
+                                            category: 'homePage',
+                                        })}
                                         className={classNames(
-                                            styles.submitRow,
-                                            'posRelative'
+                                            'btn btn-primary btn-lg',
+                                            {
+                                                disabled: !this.store
+                                                    .hasSelectedStudies,
+                                            }
                                         )}
                                     >
-                                        <button
-                                            style={{
-                                                paddingLeft: 50,
-                                                paddingRight: 50,
-                                                marginRight: 50,
-                                            }}
-                                            disabled={!this.store.submitEnabled}
-                                            className="btn btn-primary btn-lg"
-                                            onClick={() => this.handleSubmit()}
-                                            data-test="queryButton"
-                                        >
-                                            {!this.store.forDownloadTab
-                                                ? 'Submit Query'
-                                                : 'Download'}
-                                        </button>
-                                    </FlexRow>
-                                </>
-                            </If>
-                            <If condition={!this.showQueryControls}>
-                                <FlexRow className={styles.forkedButtons}>
-                                    <div
-                                        style={{
-                                            width: 330,
-                                            textAlign: 'right',
-                                            marginRight: 20,
-                                        }}
-                                    >
-                                        <StudySelectorStats
-                                            store={this.store}
-                                        />
-                                    </div>
-                                    <DefaultTooltip
-                                        placement={'top'}
-                                        trigger={['hover']}
-                                        destroyTooltipOnHide={true}
-                                        mouseEnterDelay={0}
-                                        mouseLeaveDelay={0}
-                                        disabled={
-                                            this.store.selectableSelectedStudies
-                                                .length > 0
+                                        Query By Gene
+                                    </a>
+                                </DefaultTooltip>
+                                OR
+                                <DefaultTooltip
+                                    placement={'top'}
+                                    trigger={['hover']}
+                                    destroyTooltipOnHide={true}
+                                    mouseEnterDelay={0}
+                                    mouseLeaveDelay={0}
+                                    disabled={
+                                        !this.exploreCohortsButtonDisabled
+                                    }
+                                    overlay={
+                                        this.exploreCohortsButtonTooltipMessage
+                                    }
+                                >
+                                    <a
+                                        onClick={() =>
+                                            !this
+                                                .exploreCohortsButtonDisabled &&
+                                            this.store.openSummary()
                                         }
-                                        overlay={this.queryByGeneTooltipMessage}
-                                    >
-                                        <a
-                                            data-test="queryByGeneButton"
-                                            onClick={() =>
-                                                this.store.hasSelectedStudies &&
-                                                this.toggleQueryControls()
+                                        data-event={serializeEvent({
+                                            action: 'clickExploreStudiesButton',
+                                            label: '',
+                                            category: 'homePage',
+                                        })}
+                                        className={classNames(
+                                            'btn btn-primary btn-lg',
+                                            {
+                                                disabled: this
+                                                    .exploreCohortsButtonDisabled,
                                             }
-                                            data-event={serializeEvent({
-                                                action:
-                                                    'clickQueryByGeneButton',
-                                                label: '',
-                                                category: 'homePage',
-                                            })}
-                                            className={classNames(
-                                                'btn btn-primary btn-lg',
-                                                {
-                                                    disabled: !this.store
-                                                        .hasSelectedStudies,
-                                                }
-                                            )}
-                                        >
-                                            Query By Gene
-                                        </a>
-                                    </DefaultTooltip>
-                                    OR
-                                    <DefaultTooltip
-                                        placement={'top'}
-                                        trigger={['hover']}
-                                        destroyTooltipOnHide={true}
-                                        mouseEnterDelay={0}
-                                        mouseLeaveDelay={0}
-                                        disabled={
-                                            !this.exploreCohortsButtonDisabled
-                                        }
-                                        overlay={
-                                            this
-                                                .exploreCohortsButtonTooltipMessage
-                                        }
+                                        )}
                                     >
-                                        <a
-                                            onClick={() =>
-                                                !this
-                                                    .exploreCohortsButtonDisabled &&
-                                                this.store.openSummary()
-                                            }
-                                            data-event={serializeEvent({
-                                                action:
-                                                    'clickExploreStudiesButton',
-                                                label: '',
-                                                category: 'homePage',
-                                            })}
-                                            className={classNames(
-                                                'btn btn-primary btn-lg',
-                                                {
-                                                    disabled: this
-                                                        .exploreCohortsButtonDisabled,
-                                                }
-                                            )}
-                                        >
-                                            <i
-                                                style={{ marginTop: 5 }}
-                                                className="ci ci-pie-chart"
-                                            ></i>{' '}
-                                            Explore Selected Studies
-                                        </a>
-                                    </DefaultTooltip>
-                                </FlexRow>
-                            </If>
-                        </Then>
-                        <Else>
-                            <LoadingIndicator
-                                isLoading={true}
-                                center={true}
-                                size={'big'}
-                            />
-                        </Else>
-                    </If>
+                                        <i
+                                            style={{ marginTop: 5 }}
+                                            className="ci ci-pie-chart"
+                                        ></i>{' '}
+                                        Explore Selected Studies
+                                    </a>
+                                </DefaultTooltip>
+                            </FlexRow>
+                        </If>
+                    </>
                 )}
             </FlexCol>
         );

@@ -12,6 +12,7 @@ var {
     waitForOncoprint,
     setDropdownOpen,
     jq,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -261,10 +262,9 @@ describe('case set selection in front page query form', function() {
 
         clickQueryByGeneButton();
 
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Mutations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
+        getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
+            timeout: 10000,
+        });
 
         $(selectedCaseSet_sel).waitForExist();
         browser.waitUntil(
@@ -328,14 +328,14 @@ describe('case set selection in front page query form', function() {
 
         clickQueryByGeneButton();
 
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Mutations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Copy number alterations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
+        getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
+            timeout: 10000,
+        });
+
+        getElementByTestHandle('COPY_NUMBER_ALTERATION').waitForExist({
+            timeout: 10000,
+        });
+
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         browser.waitUntil(
             () => /All \(\d+\)/.test($(selectedCaseSet_sel).getText()),
@@ -362,14 +362,14 @@ describe('case set selection in front page query form', function() {
 
         clickQueryByGeneButton();
 
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Mutations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Copy number alterations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
+        getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
+            timeout: 10000,
+        });
+
+        getElementByTestHandle('COPY_NUMBER_ALTERATION').waitForExist({
+            timeout: 10000,
+        });
+
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         browser.waitUntil(
             () => $(selectedCaseSet_sel).getText() === 'All (252)',
@@ -454,27 +454,20 @@ describe('genetic profile selection in front page query form', () => {
 
         clickQueryByGeneButton();
 
-        // wait for data type priority selector to load
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Mutations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Copy number alterations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
+        getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
+            timeout: 10000,
+        });
+
+        getElementByTestHandle('COPY_NUMBER_ALTERATION').waitForExist({
+            timeout: 10000,
+        });
+
         assert(
-            $('[data-test="dataTypePrioritySelector"]')
-                .$('label*=Mutations')
-                .$('input[type="checkbox"]')
-                .isSelected(),
+            getElementByTestHandle('MUTATION_EXTENDED').isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            $('[data-test="dataTypePrioritySelector"]')
-                .$('label*=Copy number alterations')
-                .$('input[type="checkbox"]')
-                .isSelected(),
+            getElementByTestHandle('COPY_NUMBER_ALTERATION'),
             "'Copy number alterations' should be selected"
         );
 
@@ -522,26 +515,21 @@ describe('genetic profile selection in front page query form', () => {
         clickQueryByGeneButton();
 
         // wait for data type priority selector to load
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Mutations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
-        $('[data-test="dataTypePrioritySelector"]')
-            .$('label*=Copy number alterations')
-            .$('input[type="checkbox"]')
-            .waitForExist({ timeout: 10000 });
+        getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
+            timeout: 10000,
+        });
+
+        getElementByTestHandle('COPY_NUMBER_ALTERATION').waitForExist({
+            timeout: 10000,
+        });
         assert(
-            $('[data-test="dataTypePrioritySelector"]')
-                .$('label*=Mutations')
-                .$('input[type="checkbox"]')
-                .isSelected(),
+            getElementByTestHandle('MUTATION_EXTENDED').isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            $('[data-test="dataTypePrioritySelector"]')
-                .$('label*=Copy number alterations')
-                .$('input[type="checkbox"]')
-                .isSelected(),
+            getElementByTestHandle('COPY_NUMBER_ALTERATION').waitForExist({
+                timeout: 10000,
+            }),
             "'Copy number alterations' should be selected"
         );
 

@@ -310,6 +310,7 @@ import {
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
 import { SiteError } from 'shared/model/appMisc';
+import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -411,24 +412,6 @@ export type GeneticEntity = {
     cytoband: string; //will be "" for "geneset"
     geneticEntityData: Gene | Geneset;
 };
-
-// this can be adapted to consume new profile membership data
-export function allowExpressionProfiles(studies: CancerStudy[]) {
-    if (
-        /\.cbioportal\.org$|\.mskcc\.org$/.test(
-            getBrowserWindow().location.hostname
-        )
-    ) {
-        // if there is only one study
-        // or ALL studies are part of pan_can_atlas and thus have normalized data across expression profiles
-        return (
-            studies.length === 1 ||
-            _.every(studies, s => /pan_can_atlas/i.test(s.studyId))
-        );
-    } else {
-        return true;
-    }
-}
 
 export function buildDefaultOQLProfile(
     profilesTypes: string[],
@@ -4312,7 +4295,13 @@ export class ResultsViewPageStore extends AnalysisStore
 
                 // expression profiles are not allowed
                 // under some circumstances
-                if (allowExpressionProfiles(this.studies.result)) {
+                if (
+                    allowExpressionCrossStudy(
+                        this.studies.result,
+                        getServerConfig().enable_cross_study_expression,
+                        false
+                    )
+                ) {
                     return profiles;
                 } else {
                     return profiles.filter(

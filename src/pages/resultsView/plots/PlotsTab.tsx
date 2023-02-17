@@ -9,10 +9,7 @@ import {
 } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
-import {
-    allowExpressionProfiles,
-    ResultsViewPageStore,
-} from '../ResultsViewPageStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { Button, FormControl } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
@@ -132,6 +129,8 @@ import {
 } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import { getServerConfig } from 'config/config';
 
 enum EventKey {
     horz_logScale,
@@ -5510,8 +5509,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         tabReflectsOql={false}
                     />
 
-                    {!allowExpressionProfiles(
-                        this.props.store.studies.result
+                    {// we have always allowed expression data to be compared
+                    // across study in the plots tab
+                    // in portals other than our own.
+                    // only in our own portals have we imposed the rule
+                    // that all studies must be pan_can
+                    // so default to true
+                    !allowExpressionCrossStudy(
+                        this.props.store.studies.result,
+                        getServerConfig().enable_cross_study_expression,
+                        false
                     ) && (
                         <div className={'alert alert-info'}>
                             Expression data cannot be compared across the

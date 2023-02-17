@@ -29,7 +29,7 @@ const chromeArgs = [
     '--allow-insecure-localhost',
 ].concat(
     (function() {
-        return process.env.HEADLESS_CHROME
+        return process.env.HEADLESS_CHROME === 'true'
             ? [
                   '--headless',
                   '--no-sandbox',
@@ -57,7 +57,7 @@ console.log(`diff dir: ${diffDir}`);
 console.log(`ref dir: ${refDir}`);
 console.log(`screen dir: ${screenDir}`);
 
-var defaultMaxInstances = TEST_TYPE === 'remote' ? 4 : 1;
+var defaultMaxInstances = TEST_TYPE === 'remote' ? 3 : 1;
 
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
