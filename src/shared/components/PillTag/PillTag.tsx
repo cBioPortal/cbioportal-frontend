@@ -10,19 +10,12 @@ import { observer } from 'mobx-react';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 
 export interface IPillTagProps {
-    content: { uniqueChartKey: string; element: JSX.Element } | string;
+    content: string | { uniqueChartKey: string; element: JSX.Element };
     backgroundColor: string;
     infoSection?: JSX.Element | null;
     onDelete?: () => void;
     store: StudyViewPageStore;
 }
-
-/**
- * Contains:
- * {id: "<pill text>"}
- * Wrinkles:
- * - when bookmarking, and in hesitation mode: are filters saved?
- */
 
 type hesitantPillStoreEntry = {
     key: string;
@@ -42,9 +35,8 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
     constructor(props: IPillTagProps) {
         super(props);
         makeObservable(this);
-        console.log('this.props.content', this.props.content);
         if (this.hesitateUpdate) {
-            this.registerHesitantPill();
+            this.putHesitantPill();
         }
     }
 
@@ -76,7 +68,7 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
         if (this.hesitateUpdate && !this.hesitantPillStoreEntry) {
             // Postpone deleting of submitted filters in hesitate mode:
             this.isDeleted = true;
-            this.registerHesitantPill();
+            this.putHesitantPill();
         }
     }
 
@@ -89,7 +81,7 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
     /**
      * Add or update pill in hesitantPillStore
      */
-    private registerHesitantPill() {
+    private putHesitantPill() {
         const onDeleteCallback = this.isDeleted
             ? () => {
                   if (this.props.onDelete) {
@@ -108,6 +100,25 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
         return getBrowserWindow().hesitantPillStore;
     }
 
+    /**
+     * Only pills of queued filters have an entry in this store
+     */
+    private get hesitantPillStoreEntry() {
+        const key = this.hesitantPillStoreKey;
+        return (this.hesitantPillStore as any)[key];
+    }
+
+    private get hesitantPillStoreKey() {
+        return _.isString(this.props.content)
+            ? this.props.content
+            : this.props.content.uniqueChartKey;
+    }
+    private get contentToRender() {
+        return _.isString(this.props.content)
+            ? this.props.content
+            : this.props.content.element;
+    }
+
     render() {
         const isPending = !!this.hesitantPillStoreEntry;
 
@@ -116,7 +127,7 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
                 className={classnames({
                     [styles.main]: true,
                     [styles.pending]: isPending,
-                    [styles.deleted]: this.isDeleted,
+                    [styles.pendingDelete]: this.isDeleted,
                 })}
                 style={{
                     background: this.props.backgroundColor,
@@ -146,24 +157,5 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
                 </If>
             </div>
         );
-    }
-
-    /**
-     * Only pills of queued filters have an entry in this store
-     */
-    private get hesitantPillStoreEntry() {
-        const key = this.hesitantPillStoreKey;
-        return (this.hesitantPillStore as any)[key];
-    }
-
-    private get hesitantPillStoreKey() {
-        return _.isString(this.props.content)
-            ? this.props.content
-            : this.props.content.uniqueChartKey;
-    }
-    private get contentToRender() {
-        return _.isString(this.props.content)
-            ? this.props.content
-            : this.props.content.element;
     }
 }
