@@ -2,7 +2,13 @@ import * as React from 'react';
 import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import { action, computed, observable, makeObservable } from 'mobx';
+import {
+    action,
+    computed,
+    observable,
+    makeObservable,
+    runInAction,
+} from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -71,6 +77,7 @@ import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import Tooltip from 'rc-tooltip';
 import { StudyViewContext } from 'pages/studyView/StudyViewContext';
 import StudyViewPageGearMenu from 'pages/studyView/menu/StudyViewPageGearMenu';
+import { QueuedFilterPillStore } from 'shared/components/PillTag/PillTag';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -667,9 +674,26 @@ export default class StudyViewPage extends React.Component<
                                                         'btn btn-sm btn-primary',
                                                         styles.actionButtons
                                                     )}
-                                                    onClick={() =>
-                                                        (this.store.filters = this.store.filtersProx)
-                                                    }
+                                                    onClick={() => {
+                                                        runInAction(() => {
+                                                            let hesitantPillStore = getBrowserWindow()
+                                                                .hesitantPillStore as QueuedFilterPillStore;
+                                                            _.forIn(
+                                                                hesitantPillStore,
+                                                                value => {
+                                                                    const onDeleteCallback =
+                                                                        value.onDeleteCallback;
+                                                                    if (
+                                                                        onDeleteCallback
+                                                                    ) {
+                                                                        onDeleteCallback();
+                                                                    }
+                                                                }
+                                                            );
+                                                            getBrowserWindow().hesitantPillStore = {};
+                                                            this.store.filters = this.store.filtersProx;
+                                                        });
+                                                    }}
                                                 >
                                                     Submit ►
                                                 </button>

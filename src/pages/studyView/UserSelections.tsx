@@ -135,6 +135,7 @@ export default class UserSelections extends React.Component<
                                 onDelete={() =>
                                     this.props.removeCustomSelectionFilter()
                                 }
+                                store={this.props.store}
                             />,
                         ]}
                         operation={':'}
@@ -170,6 +171,7 @@ export default class UserSelections extends React.Component<
                                 onDelete={() =>
                                     this.props.removeComparisonGroupSelectionFilter()
                                 }
+                                store={this.props.store}
                             />,
                         ]}
                         operation={':'}
@@ -279,26 +281,30 @@ export default class UserSelections extends React.Component<
                                             {chartMeta.displayName}
                                         </span>,
                                         <PillTag
-                                            content={intervalFiltersDisplayValue(
-                                                genericAssayDataFilter.values,
-                                                (newRange: {
-                                                    start?: number;
-                                                    end?: number;
-                                                }) => {
-                                                    updateCustomIntervalFilter(
-                                                        newRange,
-                                                        chartMeta,
-                                                        this.props.store
-                                                            .getGenericAssayChartDataBin,
-                                                        this.props.store
-                                                            .getGenericAssayDataFiltersByUniqueKey,
-                                                        this.props.store
-                                                            .updateCustomBins,
-                                                        this.props.store
-                                                            .updateGenericAssayDataFilters
-                                                    );
-                                                }
-                                            )}
+                                            content={{
+                                                uniqueChartKey:
+                                                    chartMeta.uniqueKey,
+                                                element: intervalFiltersDisplayValue(
+                                                    genericAssayDataFilter.values,
+                                                    (newRange: {
+                                                        start?: number;
+                                                        end?: number;
+                                                    }) => {
+                                                        updateCustomIntervalFilter(
+                                                            newRange,
+                                                            chartMeta,
+                                                            this.props.store
+                                                                .getGenericAssayChartDataBin,
+                                                            this.props.store
+                                                                .getGenericAssayDataFiltersByUniqueKey,
+                                                            this.props.store
+                                                                .updateCustomBins,
+                                                            this.props.store
+                                                                .updateGenericAssayDataFilters
+                                                        );
+                                                    }
+                                                ),
+                                            }}
                                             backgroundColor={
                                                 STUDY_VIEW_CONFIG.colors.theme
                                                     .clinicalFilterContent
@@ -309,6 +315,7 @@ export default class UserSelections extends React.Component<
                                                     []
                                                 )
                                             }
+                                            store={this.props.store}
                                         />,
                                     ]}
                                     operation={':'}
@@ -582,15 +589,19 @@ export default class UserSelections extends React.Component<
     ): JSX.Element {
         return (
             <PillTag
-                content={intervalFiltersDisplayValue(
-                    values,
-                    (update: { start?: number; end?: number }) =>
-                        onUpdate(chartMeta.uniqueKey, update)
-                )}
+                content={{
+                    uniqueChartKey: chartMeta.uniqueKey,
+                    element: intervalFiltersDisplayValue(
+                        values,
+                        (update: { start?: number; end?: number }) =>
+                            onUpdate(chartMeta.uniqueKey, update)
+                    ),
+                }}
                 backgroundColor={
                     STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
                 }
                 onDelete={() => onDelete(chartMeta.uniqueKey, [])}
+                store={this.props.store}
             />
         );
     }
@@ -623,6 +634,7 @@ export default class UserSelections extends React.Component<
                                         )
                                     )
                                 }
+                                store={this.props.store}
                             />
                         );
                     }
@@ -667,6 +679,7 @@ export default class UserSelections extends React.Component<
                                         metaKey
                                     );
                                 }}
+                                store={this.props.store}
                             />
                         );
                     }
@@ -744,6 +757,7 @@ export default class UserSelections extends React.Component<
                             geneFilterQueryToOql(geneQuery)
                         )
                     }
+                    store={this.props.store}
                 />
             );
         });
@@ -762,6 +776,7 @@ export default class UserSelections extends React.Component<
                     onDelete={() =>
                         this.props.removeGenomicProfileFilter(profile)
                     }
+                    store={this.props.store}
                 />
             );
         });
@@ -776,6 +791,7 @@ export default class UserSelections extends React.Component<
                         STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
                     }
                     onDelete={() => this.props.removeCaseListsFilter(caseList)}
+                    store={this.props.store}
                 />
             );
         });

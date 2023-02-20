@@ -23,3 +23,11 @@ $regular: 5px;
     border-left: 1px dashed white;
     cursor: pointer;
 }
+.pending {
+    background: purple !important;
+    border: 3px solid yellow;
+}
+.deleted {
+    background: pink !important;
+    border: 3px solid brown;
+}
