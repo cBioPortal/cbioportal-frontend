@@ -975,6 +975,22 @@ export type StructuralVariantFilter = {
 
         'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
+        'structuralVariantQueries': Array < StructuralVariantQuery >
+
+};
+export type StructuralVariantGeneSubQuery = {
+    'entrezId': number
+
+        'hugoSymbol': string
+
+        'specialValue': "ANY_GENE" | "NO_GENE"
+
+};
+export type StructuralVariantQuery = {
+    'gene1': StructuralVariantGeneSubQuery
+
+        'gene2': StructuralVariantGeneSubQuery
+
 };
 export type StudyViewFilter = {
     'alterationFilter': AlterationFilter
@@ -5532,30 +5548,11 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchStructuralVariantsUsingPOSTURL(parameters: {
-        'entrezGeneIds' ? : Array < number > ,
-            'molecularProfileIds' ? : Array < string > ,
-            'sampleMolecularIdentifiers0MolecularProfileId' ? : string,
-            'sampleMolecularIdentifiers0SampleId' ? : string,
-            'structuralVariantFilter': StructuralVariantFilter,
-            $queryParameters ? : any
+        'structuralVariantFilter': StructuralVariantFilter,
+        $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/structural-variant/fetch';
-        if (parameters['entrezGeneIds'] !== undefined) {
-            queryParameters['entrezGeneIds'] = parameters['entrezGeneIds'];
-        }
-
-        if (parameters['molecularProfileIds'] !== undefined) {
-            queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
-        }
-
-        if (parameters['sampleMolecularIdentifiers0MolecularProfileId'] !== undefined) {
-            queryParameters['sampleMolecularIdentifiers[0].molecularProfileId'] = parameters['sampleMolecularIdentifiers0MolecularProfileId'];
-        }
-
-        if (parameters['sampleMolecularIdentifiers0SampleId'] !== undefined) {
-            queryParameters['sampleMolecularIdentifiers[0].sampleId'] = parameters['sampleMolecularIdentifiers0SampleId'];
-        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -5571,20 +5568,12 @@ export default class CBioPortalAPIInternal {
      * Fetch structural variants for entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
      * @method
      * @name CBioPortalAPIInternal#fetchStructuralVariantsUsingPOST
-     * @param {array} entrezGeneIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
-     * @param {array} molecularProfileIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
-     * @param {string} sampleMolecularIdentifiers0MolecularProfileId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
-     * @param {string} sampleMolecularIdentifiers0SampleId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
-     * @param {} structuralVariantFilter - List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
+     * @param {} structuralVariantFilter - List of entrezGeneIds, structural variant queries and molecularProfileIds or sampleMolecularIdentifiers
      */
     fetchStructuralVariantsUsingPOSTWithHttpInfo(parameters: {
-        'entrezGeneIds' ? : Array < number > ,
-            'molecularProfileIds' ? : Array < string > ,
-            'sampleMolecularIdentifiers0MolecularProfileId' ? : string,
-            'sampleMolecularIdentifiers0SampleId' ? : string,
-            'structuralVariantFilter': StructuralVariantFilter,
-            $queryParameters ? : any,
-            $domain ? : string
+        'structuralVariantFilter': StructuralVariantFilter,
+        $queryParameters ? : any,
+        $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -5597,22 +5586,6 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
-
-            if (parameters['entrezGeneIds'] !== undefined) {
-                queryParameters['entrezGeneIds'] = parameters['entrezGeneIds'];
-            }
-
-            if (parameters['molecularProfileIds'] !== undefined) {
-                queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
-            }
-
-            if (parameters['sampleMolecularIdentifiers0MolecularProfileId'] !== undefined) {
-                queryParameters['sampleMolecularIdentifiers[0].molecularProfileId'] = parameters['sampleMolecularIdentifiers0MolecularProfileId'];
-            }
-
-            if (parameters['sampleMolecularIdentifiers0SampleId'] !== undefined) {
-                queryParameters['sampleMolecularIdentifiers[0].sampleId'] = parameters['sampleMolecularIdentifiers0SampleId'];
-            }
 
             if (parameters['structuralVariantFilter'] !== undefined) {
                 body = parameters['structuralVariantFilter'];
@@ -5639,20 +5612,12 @@ export default class CBioPortalAPIInternal {
      * Fetch structural variants for entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
      * @method
      * @name CBioPortalAPIInternal#fetchStructuralVariantsUsingPOST
-     * @param {array} entrezGeneIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
-     * @param {array} molecularProfileIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
-     * @param {string} sampleMolecularIdentifiers0MolecularProfileId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
-     * @param {string} sampleMolecularIdentifiers0SampleId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
-     * @param {} structuralVariantFilter - List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
+     * @param {} structuralVariantFilter - List of entrezGeneIds, structural variant queries and molecularProfileIds or sampleMolecularIdentifiers
      */
     fetchStructuralVariantsUsingPOST(parameters: {
-            'entrezGeneIds' ? : Array < number > ,
-                'molecularProfileIds' ? : Array < string > ,
-                'sampleMolecularIdentifiers0MolecularProfileId' ? : string,
-                'sampleMolecularIdentifiers0SampleId' ? : string,
-                'structuralVariantFilter': StructuralVariantFilter,
-                $queryParameters ? : any,
-                $domain ? : string
+            'structuralVariantFilter': StructuralVariantFilter,
+            $queryParameters ? : any,
+            $domain ? : string
         }): Promise < Array < StructuralVariant >
         > {
             return this.fetchStructuralVariantsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
