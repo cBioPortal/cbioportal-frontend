@@ -7,6 +7,7 @@ import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControl
 import { sortByClinicalAttributePriorityThenName } from '../../../shared/lib/SortUtils';
 import { isUrl } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
+import { formatPercentValue } from 'cbioportal-utils';
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -33,6 +34,7 @@ export default class ClinicalInformationPatientTable extends React.Component<
         value: string;
     }): string {
         let ret: string;
+
         switch (data.attribute) {
             case 'Overall Survival (Months)':
                 ret = parseInt(data.value, 10).toFixed(0);
@@ -41,19 +43,12 @@ export default class ClinicalInformationPatientTable extends React.Component<
                 ret = data.value;
                 break;
         }
-        try {
-            const parsedFloat = parseFloat(data.value);
+        const parsedFloat = parseFloat(data.value);
 
-            if (parsedFloat != parseInt(data.value)) {
-                // if it's a float, not an integer
-                const prevValue = data.value.split('.')[0];
-                const roundedValue = data.value.split('.')[1];
-                const addDecimal = prevValue.concat('.');
-                ret = addDecimal.concat(roundedValue.slice(0, 2));
-            } else {
-                throw 'Not a float';
-            }
-        } catch (err) {}
+        // ensures data.value is not an integer value originally so that we don't modify the wrong value
+        if (parsedFloat != parseInt(data.value)) {
+            ret = formatPercentValue(parsedFloat);
+        }
         return ret;
     }
 
