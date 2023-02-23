@@ -7,6 +7,7 @@ import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControl
 import { sortByClinicalAttributePriorityThenName } from '../../../shared/lib/SortUtils';
 import { isUrl } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
+import { formatPercentValue } from 'cbioportal-utils';
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -33,14 +34,14 @@ export default class ClinicalInformationPatientTable extends React.Component<
         value: string;
     }): string {
         let ret: string;
-        switch (data.attribute) {
-            case 'Overall Survival (Months)':
-                ret = parseInt(data.value, 10).toFixed(0);
-                break;
-            default:
-                ret = data.value;
-                break;
+        const parsedFloat = parseFloat(data.value);
+
+        if (parsedFloat != parseInt(data.value)) {
+            ret = formatPercentValue(parsedFloat);
+        } else {
+            ret = data.value;
         }
+
         return ret;
     }
 
