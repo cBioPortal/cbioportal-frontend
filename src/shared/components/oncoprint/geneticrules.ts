@@ -21,6 +21,7 @@ import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_OTHER,
+    MUT_COLOR_OTHER_PASSENGER,
     MUT_COLOR_PROMOTER,
     MUT_COLOR_SPLICE,
     MUT_COLOR_SPLICE_PASSENGER,
@@ -65,7 +66,8 @@ enum ShapeId {
 
     missenseMutationDriverRectangle = 'missenseMutationDriverRectangle',
     missenseMutationVUSRectangle = 'missenseMutationVUSRectangle',
-    otherMutationRectangle = 'otherMutationRectangle',
+    otherMutationDriverRectangle = 'otherMutationRectangle',
+    otherMutationVUSRectangle = 'otherMutationVUSRectangle',
     promoterMutationRectangle = 'promoterMutationRectangle',
     truncatingMutationDriverRectangle = 'truncatingMutationDriverRectangle',
     truncatingMutationVUSRectangle = 'truncatingMutationVUSRectangle',
@@ -220,9 +222,18 @@ const shapeBank = {
         height: 33.33,
         z: 6,
     },
-    [ShapeId.otherMutationRectangle]: {
+    [ShapeId.otherMutationDriverRectangle]: {
         type: 'rectangle',
         fill: hexToRGBA(MUT_COLOR_OTHER),
+        x: 0,
+        y: 33.33,
+        width: 100,
+        height: 33.33,
+        z: 6,
+    },
+    [ShapeId.otherMutationVUSRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(MUT_COLOR_OTHER_PASSENGER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -464,7 +475,9 @@ export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlteration
                 {
                     disp_mut: {
                         'other,other_rec': {
-                            shapes: [shapeBank[ShapeId.otherMutationRectangle]],
+                            shapes: [
+                                shapeBank[ShapeId.otherMutationDriverRectangle],
+                            ],
                             legend_label: 'Other Mutation',
                             legend_order: MUTATION_LEGEND_ORDER,
                         },
@@ -530,9 +543,19 @@ export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRul
                 structuralVariant_rule_params_recurrence,
                 {
                     disp_mut: {
-                        'other,other_rec': {
-                            shapes: [shapeBank[ShapeId.otherMutationRectangle]],
-                            legend_label: 'Other Mutation',
+                        other_rec: {
+                            shapes: [
+                                shapeBank[ShapeId.otherMutationDriverRectangle],
+                            ],
+                            legend_label: 'Other Mutation (putative driver)',
+                            legend_order: MUTATION_LEGEND_ORDER,
+                        },
+                        other: {
+                            shapes: [
+                                shapeBank[ShapeId.otherMutationVUSRectangle],
+                            ],
+                            legend_label:
+                                'Other Mutation (unknown significance)',
                             legend_order: MUTATION_LEGEND_ORDER,
                         },
                         'promoter,promoter_rec': {

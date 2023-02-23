@@ -11,6 +11,7 @@ export const STRUCTURAL_VARIANT_COLOR = '#8B00C9';
 export const STRUCTURAL_VARIANT_PASSENGER_COLOR = '#ce92e8';
 export const MUT_COLOR_PROMOTER = '#00B7CE';
 export const MUT_COLOR_OTHER = '#cf58bc'; //'#cfb537';
+export const MUT_COLOR_OTHER_PASSENGER = '#f96ae3';
 export const MUT_DRIVER = '#000000';
 export const MUT_VUS = '#696969';
 export const MRNA_COLOR_HIGH = '#ff9999';

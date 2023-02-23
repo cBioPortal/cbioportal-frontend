@@ -24,6 +24,7 @@ import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { getProteinImpactType } from 'cbioportal-frontend-commons';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -230,7 +231,11 @@ export default class Mutations extends React.Component<
                         isPutativeDriver={
                             this.props.store.driverAnnotationSettings
                                 .driversAnnotated
-                                ? (m: AnnotatedMutation) => m.putativeDriver
+                                ? (m: AnnotatedMutation) =>
+                                      m.putativeDriver ||
+                                      (getProteinImpactType(m.mutationType) ===
+                                          'other' &&
+                                          !!m.oncoKbOncogenic)
                                 : undefined
                         }
                         trackVisibility={

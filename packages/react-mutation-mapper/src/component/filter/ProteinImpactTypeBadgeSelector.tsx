@@ -20,6 +20,8 @@ export type ProteinImpactTypeBadgeSelectorProps = BadgeSelectorProps & {
     colors: IProteinImpactTypeColors;
     counts?: { [proteinImpactType: string]: number };
     excludedProteinTypes?: string[];
+    groupIndex?: number;
+    groupNameWithOrdinal?: string;
 };
 
 const VALUES = [
@@ -46,7 +48,8 @@ export function getProteinImpactTypeBadgeLabel(
         badgeFirst?: boolean,
         value?: string,
         badge?: JSX.Element | null
-    ) => JSX.Element
+    ) => JSX.Element,
+    badgeFirst?: boolean
 ): JSX.Element {
     return (
         <BadgeLabel
@@ -58,7 +61,7 @@ export function getProteinImpactTypeBadgeLabel(
                 badgeAlignmentStyle
             )}
             badgeClassName={badgeClassName}
-            badgeFirst={true}
+            badgeFirst={badgeFirst}
             value={option.value}
             isDriverAnnotated={isDriverAnnotated}
             badgeLabelFormat={badgeLabelFormat}
@@ -113,15 +116,33 @@ export class ProteinImpactTypeBadgeSelector<
 
     public render() {
         return (
-            <table>
-                <BadgeSelector
-                    options={this.options}
-                    getOptionLabel={getProteinImpactTypeOptionLabel}
-                    getBadgeLabel={getProteinImpactTypeBadgeLabel}
-                    useOnlyFeature={true}
-                    {...this.props}
-                />
-            </table>
+            <div style={{ display: 'inline-flex' }}>
+                <div>
+                    <table style={{ height: 109 }}>
+                        <BadgeSelector
+                            options={this.options}
+                            getOptionLabel={getProteinImpactTypeOptionLabel}
+                            getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                            useOnlyFeature={true}
+                            badgeFirst={true}
+                            {...this.props}
+                        />
+                    </table>
+                </div>
+                {this.props.groupNameWithOrdinal && (
+                    <div
+                        style={{
+                            fontSize: 12,
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            writingMode: 'vertical-lr',
+                            transform: 'rotate(180deg)',
+                        }}
+                    >
+                        {this.props.groupNameWithOrdinal}
+                    </div>
+                )}
+            </div>
         );
     }
 }

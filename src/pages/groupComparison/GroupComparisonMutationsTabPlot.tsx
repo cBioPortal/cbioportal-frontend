@@ -18,6 +18,8 @@ import { AxisScale } from 'react-mutation-mapper';
 import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
+import { getProteinImpactType } from 'cbioportal-frontend-commons';
+import styles from './styles.module.scss';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
@@ -166,7 +168,12 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             isPutativeDriver={
                                 this.props.store.driverAnnotationSettings
                                     .driversAnnotated
-                                    ? (m: AnnotatedMutation) => m.putativeDriver
+                                    ? (m: AnnotatedMutation) =>
+                                          m.putativeDriver ||
+                                          (getProteinImpactType(
+                                              m.mutationType
+                                          ) === 'other' &&
+                                              !!m.oncoKbOncogenic)
                                     : undefined
                             }
                             trackVisibility={
@@ -186,13 +193,13 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                     ).some(s => !_.isEmpty(s.allGenes) || !_.isEmpty(s.byGene))
                 ) {
                     return (
-                        <div style={{ marginTop: '20px' }}>
+                        <div className={styles['noMutationsMessage']}>
                             Selected gene has no mutations for profiled samples.
                         </div>
                     );
                 } else {
                     return (
-                        <div style={{ marginTop: '20px' }}>
+                        <div className={styles['noMutationsMessage']}>
                             Selected gene has no mutations due to no profiled
                             samples.
                         </div>

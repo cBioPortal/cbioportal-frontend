@@ -16,6 +16,7 @@ export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
 export const MUT_COLOR_FUSION = '#8B00C9';
 export const MUT_COLOR_PROMOTER = '#00B7CE';
 export const MUT_COLOR_OTHER = '#cf58bc'; //'#cfb537';
+export const MUT_COLOR_OTHER_PASSENGER = '#f96ae3';
 
 export const MRNA_COLOR_HIGH = '#ff9999';
 export const MRNA_COLOR_LOW = '#6699cc';
@@ -63,7 +64,8 @@ enum ShapeId {
 
     missenseMutationDriverRectangle = 'missenseMutationDriverRectangle',
     missenseMutationVUSRectangle = 'missenseMutationVUSRectangle',
-    otherMutationRectangle = 'otherMutationRectangle',
+    otherMutationDriverRectangle = 'otherMutationDriverRectangle',
+    otherMutationVUSRectangle = 'otherMutationVUSRectangle',
     promoterMutationRectangle = 'promoterMutationRectangle',
     truncatingMutationDriverRectangle = 'truncatingMutationDriverRectangle',
     truncatingMutationVUSRectangle = 'truncatingMutationVUSRectangle',
@@ -189,9 +191,18 @@ const shapeBank = {
         height: 33.33,
         z: 6,
     },
-    [ShapeId.otherMutationRectangle]: {
+    [ShapeId.otherMutationDriverRectangle]: {
         type: 'rectangle',
         fill: MUT_COLOR_OTHER,
+        x: 0,
+        y: 33.33,
+        width: 100,
+        height: 33.33,
+        z: 6,
+    },
+    [ShapeId.otherMutationVUSRectangle]: {
+        type: 'rectangle',
+        fill: MUT_COLOR_OTHER_PASSENGER,
         x: 0,
         y: 33.33,
         width: 100,

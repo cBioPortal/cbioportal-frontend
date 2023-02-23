@@ -263,8 +263,27 @@ export default class MutationMapper<
                         >
                             Other Mutations
                         </strong>
+                        {this.props.isPutativeDriver !== undefined && (
+                            <span>(putative driver)</span>
+                        )}
                         : All other types of mutations
                     </li>
+                    {this.props.isPutativeDriver !== undefined && (
+                        <li>
+                            <strong
+                                style={{
+                                    color:
+                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherVusColor,
+                                }}
+                            >
+                                Other Mutations
+                            </strong>
+                            {this.props.isPutativeDriver !== undefined && (
+                                <span>(unknown significance)</span>
+                            )}
+                            : All other types of mutations
+                        </li>
+                    )}
                 </ul>
             </div>
         </div>
@@ -672,11 +691,11 @@ export default class MutationMapper<
                 />
                 {!this.isLoading && (
                     <div>
-                        <div style={{ display: 'flex' }}>
-                            <div
-                                className="borderedChart"
-                                style={{ marginRight: 10 }}
-                            >
+                        <div
+                            className="borderedChart"
+                            style={{ display: 'flex' }}
+                        >
+                            <div style={{ marginRight: 10 }}>
                                 {this.mutationPlot}
                                 {this.proteinChainPanel}
                             </div>

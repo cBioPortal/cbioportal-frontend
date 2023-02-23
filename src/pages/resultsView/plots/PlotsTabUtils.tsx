@@ -77,6 +77,7 @@ import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_OTHER,
+    MUT_COLOR_OTHER_PASSENGER,
     MUT_COLOR_PROMOTER,
     MUT_COLOR_SPLICE,
     MUT_COLOR_SPLICE_PASSENGER,
@@ -1740,7 +1741,14 @@ export const oncoprintMutationTypeToAppearanceDrivers: {
         fill: MUT_COLOR_OTHER,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Other',
+        legendLabel: 'Other (Driver)',
+    },
+    'other.driver': {
+        symbol: 'circle',
+        fill: MUT_COLOR_OTHER_PASSENGER,
+        stroke: '#000000',
+        strokeOpacity: NON_CNA_STROKE_OPACITY,
+        legendLabel: 'Other (VUS)',
     },
 };
 

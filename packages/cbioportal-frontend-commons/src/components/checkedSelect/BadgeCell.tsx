@@ -27,10 +27,6 @@ export const BadgeCell: React.FC<IBadgeCellProps> = observer(
         const onlyButton = (
             <span
                 className={styles['onlyButton']}
-                style={{
-                    padding: '0px 4px 0px 4px',
-                    fontSize: 10,
-                }}
                 data-test={`${option.value}_only`}
                 onClick={onOnlyClick}
             >
