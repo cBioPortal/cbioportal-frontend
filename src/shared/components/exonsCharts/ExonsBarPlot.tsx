@@ -73,7 +73,7 @@ export default class ExonBarPlot extends React.Component<
                         x={e.x}
                         y={0}
                         width={e.width * this.props.store.divider}
-                        height={20}
+                        height={10}
                         style={{ fill: e.fillColor }}
                     />
                 </DefaultTooltip>
@@ -164,7 +164,7 @@ export default class ExonBarPlot extends React.Component<
                     <div style={{ border: 1 }}>
                         <svg
                             width={totalWidth}
-                            height={20}
+                            height={10}
                             style={{ backgroundColor: 'white' }}
                         >
                             <g stroke="#222" strokeWidth=".5">
