@@ -34,21 +34,14 @@ export default class ClinicalInformationPatientTable extends React.Component<
         value: string;
     }): string {
         let ret: string;
-
-        switch (data.attribute) {
-            case 'Overall Survival (Months)':
-                ret = parseInt(data.value, 10).toFixed(0);
-                break;
-            default:
-                ret = data.value;
-                break;
-        }
         const parsedFloat = parseFloat(data.value);
 
-        // ensures data.value is not an integer value originally so that we don't modify the wrong value
         if (parsedFloat != parseInt(data.value)) {
             ret = formatPercentValue(parsedFloat);
+        } else {
+            ret = data.value;
         }
+
         return ret;
     }
 
