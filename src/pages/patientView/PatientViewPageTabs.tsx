@@ -597,6 +597,8 @@ export function tabs(
         );
 
     pageComponent.patientViewPageStore.hasMutationalSignatureData.result &&
+        pageComponent.patientViewPageStore.initialMutationalSignatureVersion
+            .isComplete &&
         tabs.push(
             <MSKTab
                 key={8}
@@ -605,6 +607,8 @@ export function tabs(
                 hide={
                     pageComponent.patientViewPageStore
                         .mutationalSignatureMolecularProfiles.isPending ||
+                    pageComponent.patientViewPageStore
+                        .initialMutationalSignatureVersion.isPending ||
                     _.isEmpty(
                         pageComponent.patientViewPageStore
                             .mutationalSignatureDataGroupByVersion.result
