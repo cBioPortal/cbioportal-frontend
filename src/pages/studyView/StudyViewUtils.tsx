@@ -82,6 +82,7 @@ import {
 import { getServerConfig } from 'config/config';
 import joinJsx from 'shared/lib/joinJsx';
 import { BoundType, NumberRange } from 'range-ts';
+import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -118,6 +119,7 @@ export enum SpecialChartsUniqueKeyEnum {
     SAMPLE_TREATMENTS = 'SAMPLE_TREATMENTS',
     SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
     SAMPLE_TREATMENT_TARGET = 'SAMPLE_TREATMENT_TARGET',
+    CLINICAL_EVENT_TYPE_COUNTS = 'CLINICAL_EVENT_TYPE_COUNTS',
 }
 
 export type AnalysisGroup = {
@@ -779,6 +781,24 @@ export function getUniqueKeyFromMolecularProfileIds(
     return _.sortBy(molecularProfileIds).join(UNIQUE_KEY_SEPARATOR);
 }
 
+export function calculateSampleCountForClinicalEventTypeCountTable(
+    selectedPatientCnt: number,
+    selectedSampleCnt: number,
+    clinicalEventTypeCounts?: ClinicalEventTypeCount[]
+): number {
+    let sampleCount = 0;
+    if (!_.isEmpty(clinicalEventTypeCounts) && selectedPatientCnt > 0) {
+        const maxClinicalEventTypeCount = _.maxBy(
+            clinicalEventTypeCounts,
+            c => c.count
+        );
+        const freqOfPatients =
+            maxClinicalEventTypeCount!.count / selectedPatientCnt;
+        sampleCount = selectedSampleCnt * freqOfPatients;
+    }
+    return sampleCount;
+}
+
 export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
     return uniqueKey.split(UNIQUE_KEY_SEPARATOR);
 }
@@ -972,7 +992,8 @@ export function isFiltered(
             (!filter.patientTreatmentTargetFilters ||
                 _.isEmpty(filter.patientTreatmentTargetFilters.filters)) &&
             (!filter.sampleTreatmentTargetFilters ||
-                _.isEmpty(filter.sampleTreatmentTargetFilters.filters)))
+                _.isEmpty(filter.sampleTreatmentTargetFilters.filters)) &&
+            _.isEmpty(filter.clinicalEventFilters))
     );
 
     if (filter.sampleIdentifiersSet) {
