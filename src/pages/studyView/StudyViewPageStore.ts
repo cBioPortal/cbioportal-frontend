@@ -172,6 +172,7 @@ import {
 } from '../../shared/api/urls';
 import {
     DataType as DownloadDataType,
+    getBrowserWindow,
     onMobxPromise,
     pluralize,
     remoteData,
@@ -263,6 +264,7 @@ import { PageType } from 'shared/userSession/PageType';
 import client from 'shared/api/cbioportalClientInstance';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
+import { PillStore } from 'shared/components/PillTag/PillTag';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -403,6 +405,16 @@ export class StudyViewPageStore
     @observable chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
+    @observable filterSubmitTime: number = performance.now();
+
+    /**
+     * Force remount of filters when filters are submitted of submit mode changes
+     */
+    @computed
+    public get filtersRemountKey() {
+        return `${this.hesitateUpdate}${this.filterSubmitTime}`;
+    }
+
     private getDataBinFilterSet(uniqueKey: string) {
         if (this.isGenericAssayChart(uniqueKey)) {
             return this._genericAssayDataBinFilterSet;
@@ -463,6 +475,32 @@ export class StudyViewPageStore
                         this.updateChartStats();
                         this.loadUserChartSettings();
                     }
+                }
+            )
+        );
+
+        /**
+         * Submit filters when submit mode changes
+         * or when user clicks submit button
+         */
+        this.reactionDisposers.push(
+            reaction(
+                () => [this.hesitateUpdate, this.filterSubmitTime],
+                () => {
+                    const browserWindow = getBrowserWindow();
+                    const hesitantPillStore = browserWindow.hesitantPillStore as PillStore;
+                    const submittedPillStore = browserWindow.submittedPillStore as PillStore;
+                    _.forIn(hesitantPillStore, (value, key) => {
+                        const onDeleteCallback = value.onDeleteCallback;
+                        if (onDeleteCallback) {
+                            onDeleteCallback();
+                            delete submittedPillStore[key];
+                        } else {
+                            submittedPillStore[key] = value;
+                        }
+                    });
+                    browserWindow.hesitantPillStore = {};
+                    this.filters = this.filtersProx;
                 }
             )
         );

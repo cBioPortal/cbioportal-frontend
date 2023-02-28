@@ -5,8 +5,8 @@ import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import {
     action,
     computed,
-    observable,
     makeObservable,
+    observable,
     runInAction,
 } from 'mobx';
 import {
@@ -24,6 +24,7 @@ import { ClinicalDataTab } from './tabs/ClinicalDataTab';
 import {
     DefaultTooltip,
     getBrowserWindow,
+    onMobxPromise,
     remoteData,
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -38,7 +39,6 @@ import { Else, If, Then } from 'react-if';
 import CustomCaseSelection from './addChartButton/customCaseSelection/CustomCaseSelection';
 import { AppStore } from '../../AppStore';
 import ActionButtons from './studyPageHeader/ActionButtons';
-import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
     GACustomFieldsEnum,
     serializeEvent,
@@ -49,10 +49,10 @@ import classNames from 'classnames';
 import { getServerConfig, ServerConfigHelpers } from '../../config/config';
 import {
     AlterationMenuHeader,
-    getButtonNameWithDownPointer,
     ChartMetaDataTypeEnum,
+    getButtonNameWithDownPointer,
 } from './StudyViewUtils';
-import { Alert, Modal } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import styles from './styles.module.scss';
@@ -74,10 +74,9 @@ import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import Tooltip from 'rc-tooltip';
 import { StudyViewContext } from 'pages/studyView/StudyViewContext';
-import StudyViewPageGearMenu from 'pages/studyView/menu/StudyViewPageGearMenu';
-import { QueuedFilterPillStore } from 'shared/components/PillTag/PillTag';
+import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import { PillStore } from 'shared/components/PillTag/PillTag';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -674,26 +673,11 @@ export default class StudyViewPage extends React.Component<
                                                         'btn btn-sm btn-primary',
                                                         styles.actionButtons
                                                     )}
-                                                    onClick={() => {
-                                                        runInAction(() => {
-                                                            let hesitantPillStore = getBrowserWindow()
-                                                                .hesitantPillStore as QueuedFilterPillStore;
-                                                            _.forIn(
-                                                                hesitantPillStore,
-                                                                value => {
-                                                                    const onDeleteCallback =
-                                                                        value.onDeleteCallback;
-                                                                    if (
-                                                                        onDeleteCallback
-                                                                    ) {
-                                                                        onDeleteCallback();
-                                                                    }
-                                                                }
-                                                            );
-                                                            getBrowserWindow().hesitantPillStore = {};
-                                                            this.store.filters = this.store.filtersProx;
-                                                        });
-                                                    }}
+                                                    onClick={() =>
+                                                        runInAction(() =>
+                                                            this.submitHesitantFilters()
+                                                        )
+                                                    }
                                                 >
                                                     Submit ►
                                                 </button>
@@ -1009,7 +993,7 @@ export default class StudyViewPage extends React.Component<
                                             {ServerConfigHelpers.sessionServiceIsEnabled() &&
                                                 this.groupsButton}
                                         </div>
-                                        <StudyViewPageGearMenu
+                                        <StudyViewPageSettingsMenu
                                             store={this.store}
                                         />
                                     </div>
@@ -1019,6 +1003,10 @@ export default class StudyViewPage extends React.Component<
                 </div>
             </StudyViewContext.Provider>
         );
+    }
+
+    submitHesitantFilters() {
+        this.store.filterSubmitTime = performance.now();
     }
 
     private readonly body = MakeMobxView({

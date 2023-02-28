@@ -41,7 +41,7 @@ import {
     getSampleIdentifiers,
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getBrowserWindow } from 'cbioportal-frontend-commons';
 import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
@@ -98,6 +98,7 @@ export default class UserSelections extends React.Component<
         super(props);
         makeObservable(this);
     }
+
     @computed
     get showFilters() {
         //return isFiltered(this.props.filter)

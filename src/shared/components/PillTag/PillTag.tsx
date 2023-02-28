@@ -17,16 +17,36 @@ export interface IPillTagProps {
     store: StudyViewPageStore;
 }
 
-type hesitantPillStoreEntry = {
+export type PillStoreEntry = {
+    /**
+     * Unique filter key
+     */
     key: string;
+
+    /**
+     * Called in hesitate mode, when filter updates are submitted
+     */
     onDeleteCallback?: () => void;
 };
 
-export type QueuedFilterPillStore = {
-    [content: string]: hesitantPillStoreEntry;
+export type PillStore = {
+    [content: string]: PillStoreEntry;
 };
 
-getBrowserWindow().hesitantPillStore = {} as QueuedFilterPillStore;
+/**
+ * Keep track of submitted and 'hesitant' (i.e. queued or non-submitted)
+ * filters using a unique key. When a delete is queued, a hesitant store entry
+ * also contains an onDeleteCallback, which will be executed on submit.
+ *
+ * Filters can be of different shapes, and they are created
+ * in a number of different places, so we use these two global stores
+ * to keep track of hesitant (queued) filters and submitted filters.
+ *
+ * TODO: A better solution would be a uniform list of filters
+ *  but this would require some refactoring.
+ */
+getBrowserWindow().hesitantPillStore = {} as PillStore;
+getBrowserWindow().submittedPillStore = {} as PillStore;
 
 @observer
 export class PillTag extends React.Component<IPillTagProps, {}> {
@@ -35,8 +55,13 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
     constructor(props: IPillTagProps) {
         super(props);
         makeObservable(this);
-        if (this.hesitateUpdate) {
-            this.putHesitantPill();
+        // TODO: when switching to autocommit: trigger submit
+        if (this.hesitateUpdate && !this.submittedPillStoreEntry) {
+            this.addPillToHesitateStore();
+        } else {
+            // We always need to keep track of submitted filters,
+            // in case user switches from auto to hesitate mode:
+            this.addPillToSubmittedStore();
         }
     }
 
@@ -55,33 +80,36 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
     }
 
     private handleDelete() {
+        this.isDeleted = true;
         if (!this.hesitateUpdate) {
             // Delete all filters immediately in autocommit mode:
             this.deleteNow();
             return;
         }
-        if (this.hesitateUpdate && this.hesitantPillStoreEntry) {
+        if (
+            this.hesitateUpdate &&
+            this.hesitantPillStoreEntry &&
+            !this.hesitantPillStoreEntry.onDeleteCallback
+        ) {
             // Delete non-submitted filters immediately in hesitate mode:
             this.deleteNow();
             return;
         }
         if (this.hesitateUpdate && !this.hesitantPillStoreEntry) {
             // Postpone deleting of submitted filters in hesitate mode:
-            this.isDeleted = true;
-            this.putHesitantPill();
+            this.addPillToHesitateStore();
         }
     }
 
     private deleteNow() {
+        const key = this.pillStoreKey;
+        delete this.submittedPillStore[key];
         if (this.props.onDelete) {
             this.props.onDelete();
         }
     }
 
-    /**
-     * Add or update pill in hesitantPillStore
-     */
-    private putHesitantPill() {
+    private addPillToHesitateStore() {
         const onDeleteCallback = this.isDeleted
             ? () => {
                   if (this.props.onDelete) {
@@ -89,30 +117,42 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
                   }
               }
             : undefined;
-        const key = this.hesitantPillStoreKey;
+        const key = this.pillStoreKey;
         this.hesitantPillStore[key] = {
             key,
             onDeleteCallback,
         };
     }
 
-    private get hesitantPillStore(): QueuedFilterPillStore {
+    private addPillToSubmittedStore() {
+        const key = this.pillStoreKey;
+        this.submittedPillStore[key] = { key };
+    }
+
+    private get hesitantPillStore(): PillStore {
         return getBrowserWindow().hesitantPillStore;
     }
 
-    /**
-     * Only pills of queued filters have an entry in this store
-     */
+    private get submittedPillStore(): PillStore {
+        return getBrowserWindow().submittedPillStore;
+    }
+
     private get hesitantPillStoreEntry() {
-        const key = this.hesitantPillStoreKey;
+        const key = this.pillStoreKey;
         return (this.hesitantPillStore as any)[key];
     }
 
-    private get hesitantPillStoreKey() {
+    private get submittedPillStoreEntry() {
+        const key = this.pillStoreKey;
+        return (this.submittedPillStore as any)[key];
+    }
+
+    private get pillStoreKey() {
         return _.isString(this.props.content)
             ? this.props.content
             : this.props.content.uniqueChartKey;
     }
+
     private get contentToRender() {
         return _.isString(this.props.content)
             ? this.props.content
