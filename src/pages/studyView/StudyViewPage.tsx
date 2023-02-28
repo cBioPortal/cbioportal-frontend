@@ -656,33 +656,35 @@ export default class StudyViewPage extends React.Component<
                                         ref={this.toolbarRef}
                                         className={styles.absolutePanel}
                                     >
-                                        {this.store.hesitateUpdate && (
-                                            <div
-                                                className={classNames(
-                                                    styles.studyFilterResult,
-                                                    styles.hesitateControls,
-                                                    'btn-group'
-                                                )}
-                                            >
-                                                <button
-                                                    disabled={
-                                                        !this.store
-                                                            .hesitateUpdate
-                                                    }
+                                        {this.store.hesitateUpdate &&
+                                            this.store.currentTab ===
+                                                StudyViewPageTabKeyEnum.SUMMARY && (
+                                                <div
                                                     className={classNames(
-                                                        'btn btn-sm btn-primary',
-                                                        styles.actionButtons
+                                                        styles.studyFilterResult,
+                                                        styles.hesitateControls,
+                                                        'btn-group'
                                                     )}
-                                                    onClick={() =>
-                                                        runInAction(() =>
-                                                            this.submitHesitantFilters()
-                                                        )
-                                                    }
                                                 >
-                                                    Submit ►
-                                                </button>
-                                            </div>
-                                        )}
+                                                    <button
+                                                        disabled={
+                                                            !this.store
+                                                                .hesitateUpdate
+                                                        }
+                                                        className={classNames(
+                                                            'btn btn-sm btn-primary',
+                                                            styles.actionButtons
+                                                        )}
+                                                        onClick={() =>
+                                                            runInAction(() =>
+                                                                this.submitHesitantFilters()
+                                                            )
+                                                        }
+                                                    >
+                                                        Submit ►
+                                                    </button>
+                                                </div>
+                                            )}
                                         <Observer>
                                             {() => {
                                                 // create element here to get correct mobx subscriber list
