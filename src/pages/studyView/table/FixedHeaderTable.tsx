@@ -425,7 +425,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                             className="btn btn-default btn-xs"
                             onClick={this.afterSelectingRows}
                         >
-                            {this.context.hesitateUpdate
+                            {this.context.store.hesitateUpdate
                                 ? 'Add Filters '
                                 : 'Select Samples '}
                             <If condition={this.props.numberOfSelectedRows > 1}>

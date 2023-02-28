@@ -8,6 +8,11 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import classnames from 'classnames';
 import { observer } from 'mobx-react';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import {
+    IStudyViewContext,
+    StudyViewContext,
+} from 'pages/studyView/StudyViewContext';
+import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
 
 export interface IPillTagProps {
     content: string | { uniqueChartKey: string; element: JSX.Element };
@@ -33,24 +38,9 @@ export type PillStore = {
     [content: string]: PillStoreEntry;
 };
 
-/**
- * Keep track of submitted and 'hesitant' (i.e. queued or non-submitted)
- * filters using a unique key. When a delete is queued, a hesitant store entry
- * also contains an onDeleteCallback, which will be executed on submit.
- *
- * Filters can be of different shapes, and they are created
- * in a number of different places, so we use these two global stores
- * to keep track of hesitant (queued) filters and submitted filters.
- *
- * TODO: A better solution would be a uniform list of filters
- *  but this would require some refactoring.
- */
-getBrowserWindow().hesitantPillStore = {} as PillStore;
-getBrowserWindow().submittedPillStore = {} as PillStore;
-
 export class PillTag extends React.Component<IPillTagProps, {}> {
-    constructor(props: IPillTagProps) {
-        super(props);
+    constructor(props: IPillTagProps, context: IStudyViewContext) {
+        super(props, context);
         makeObservable(this);
         // TODO: when switching to autocommit: trigger submit
         if (this.hesitateUpdate && !this.submittedPillStoreEntry) {
@@ -128,11 +118,11 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
     }
 
     private get hesitantPillStore(): PillStore {
-        return getBrowserWindow().hesitantPillStore;
+        return this.context.store.hesitantPillStore;
     }
 
     private get submittedPillStore(): PillStore {
-        return getBrowserWindow().submittedPillStore;
+        return this.context.store.submittedPillStore;
     }
 
     private get hesitantPillStoreEntry() {
@@ -201,3 +191,5 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
         );
     }
 }
+
+PillTag.contextType = StudyViewContext;

@@ -495,9 +495,7 @@ export default class StudyViewPage extends React.Component<
 
     content() {
         return (
-            <StudyViewContext.Provider
-                value={{ hesitateUpdate: this.store.hesitateUpdate }}
-            >
+            <StudyViewContext.Provider value={{ store: this.store }}>
                 <div className="studyView">
                     {this.showBookmarkModal && (
                         <BookmarkModal

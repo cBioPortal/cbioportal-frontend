@@ -503,19 +503,16 @@ export class StudyViewPageStore
             reaction(
                 () => [this.hesitateUpdate, this.filterSubmitTime],
                 () => {
-                    const browserWindow = getBrowserWindow();
-                    const hesitantPillStore = browserWindow.hesitantPillStore as PillStore;
-                    const submittedPillStore = browserWindow.submittedPillStore as PillStore;
-                    _.forIn(hesitantPillStore, (value, key) => {
+                    _.forIn(this.hesitantPillStore, (value, key) => {
                         const onDeleteCallback = value.onDeleteCallback;
                         if (onDeleteCallback) {
                             onDeleteCallback();
-                            delete submittedPillStore[key];
+                            delete this.submittedPillStore[key];
                         } else {
-                            submittedPillStore[key] = value;
+                            this.submittedPillStore[key] = value;
                         }
                     });
-                    browserWindow.hesitantPillStore = {};
+                    this.hesitantPillStore = {};
                     this.filters = this.filtersProx;
                 }
             )
@@ -653,6 +650,21 @@ export class StudyViewPageStore
     private _loadUserSettingsInitially = this.isLoggedIn;
 
     @observable hesitateUpdate = false;
+
+    /**
+     * Keep track of submitted and 'hesitant' (i.e. queued or non-submitted)
+     * filters using a unique key. When a delete is queued, a hesitant store entry
+     * also contains an onDeleteCallback, which will be executed on submit.
+     *
+     * Filters can be of different shapes, and they are created
+     * in a number of different places, so we use these two global stores
+     * to keep track of hesitant (queued) filters and submitted filters.
+     *
+     * TODO: A better solution would be a uniform list of filters
+     *  but this would require some refactoring.
+     */
+    @observable hesitantPillStore = {} as PillStore;
+    @observable submittedPillStore = {} as PillStore;
 
     // make sure the reactions are disposed when the component which initialized store will unmount
     destroy(): void {

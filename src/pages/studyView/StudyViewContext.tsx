@@ -1,9 +1,10 @@
 import React, { Context } from 'react';
+import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 export interface IStudyViewContext {
-    hesitateUpdate: boolean;
+    store: StudyViewPageStore;
 }
 export const StudyViewContext: Context<IStudyViewContext> = React.createContext<
     IStudyViewContext
 >({
-    hesitateUpdate: false,
+    store: {} as StudyViewPageStore,
 });
