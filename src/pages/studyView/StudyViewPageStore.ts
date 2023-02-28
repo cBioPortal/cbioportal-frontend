@@ -406,13 +406,14 @@ export class StudyViewPageStore
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
     @observable filterSubmitTime: number = performance.now();
+    @observable filterUpdateTime: number = performance.now();
 
     /**
      * Force remount of filters when filters are submitted of submit mode changes
      */
     @computed
     public get filtersRemountKey() {
-        return `${this.hesitateUpdate}${this.filterSubmitTime}`;
+        return `${this.hesitateUpdate}${this.filterSubmitTime}${this.filterUpdateTime}`;
     }
 
     private getDataBinFilterSet(uniqueKey: string) {
@@ -479,6 +480,21 @@ export class StudyViewPageStore
             )
         );
 
+        this.reactionDisposers.push(
+            reaction(
+                () => [this.filtersProx, this.hesitateUpdate],
+                () => {
+                    if (!this.hesitateUpdate) {
+                        this.filters = this.filtersProx;
+                    }
+                    this.filterUpdateTime = performance.now();
+                },
+                {
+                    equals: comparer.structural,
+                }
+            )
+        );
+
         /**
          * Submit filters when submit mode changes
          * or when user clicks submit button
@@ -501,20 +517,6 @@ export class StudyViewPageStore
                     });
                     browserWindow.hesitantPillStore = {};
                     this.filters = this.filtersProx;
-                }
-            )
-        );
-
-        this.reactionDisposers.push(
-            reaction(
-                () => [this.filtersProx, this.hesitateUpdate],
-                () => {
-                    if (!this.hesitateUpdate) {
-                        this.filters = this.filtersProx;
-                    }
-                },
-                {
-                    equals: comparer.structural,
                 }
             )
         );

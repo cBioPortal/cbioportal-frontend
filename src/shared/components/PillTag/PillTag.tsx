@@ -48,10 +48,7 @@ export type PillStore = {
 getBrowserWindow().hesitantPillStore = {} as PillStore;
 getBrowserWindow().submittedPillStore = {} as PillStore;
 
-@observer
 export class PillTag extends React.Component<IPillTagProps, {}> {
-    @observable isDeleted = false;
-
     constructor(props: IPillTagProps) {
         super(props);
         makeObservable(this);
@@ -80,7 +77,6 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
     }
 
     private handleDelete() {
-        this.isDeleted = true;
         if (!this.hesitateUpdate) {
             // Delete all filters immediately in autocommit mode:
             this.deleteNow();
@@ -97,8 +93,10 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
         }
         if (this.hesitateUpdate && !this.hesitantPillStoreEntry) {
             // Postpone deleting of submitted filters in hesitate mode:
-            this.addPillToHesitateStore();
+            const isDeleted = true;
+            this.addPillToHesitateStore(isDeleted);
         }
+        this.forceUpdate();
     }
 
     private deleteNow() {
@@ -109,8 +107,8 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
         }
     }
 
-    private addPillToHesitateStore() {
-        const onDeleteCallback = this.isDeleted
+    private addPillToHesitateStore(isDeleted = false) {
+        const onDeleteCallback = isDeleted
             ? () => {
                   if (this.props.onDelete) {
                       this.props.onDelete();
@@ -159,6 +157,10 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
             : this.props.content.element;
     }
 
+    private isDeleted() {
+        return !!this.hesitantPillStoreEntry?.onDeleteCallback;
+    }
+
     render() {
         const isPending = !!this.hesitantPillStoreEntry;
 
@@ -167,7 +169,7 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
                 className={classnames({
                     [styles.main]: true,
                     [styles.pending]: isPending,
-                    [styles.pendingDelete]: this.isDeleted,
+                    [styles.pendingDelete]: this.isDeleted(),
                 })}
                 style={{
                     background: this.props.backgroundColor,
