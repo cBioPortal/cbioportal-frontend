@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _, { result } from 'lodash';
 import {
     CBioPortalAPIInternal,
     ClinicalData,
@@ -189,6 +189,7 @@ import {
     MutationalSignaturesVersion,
     MutationalSignatureStableIdKeyWord,
     validateMutationalSignatureRawData,
+    retrieveMutationalSignatureVersionFromData,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
 import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
@@ -724,12 +725,26 @@ export class PatientViewPageStore {
             );
         },
     });
+    @observable _selectedMutationalSignatureVersion: string;
 
-    // set version 2 of the mutational signature as default
-    @observable _selectedMutationalSignatureVersion: string =
-        MutationalSignaturesVersion.V2;
+    readonly initialMutationalSignatureVersion = remoteData({
+        await: () => [],
+        invoke: () => {
+            return Promise.resolve(
+                retrieveMutationalSignatureVersionFromData(
+                    this.fetchAllMutationalSignatureData.result.map(
+                        profile => profile.molecularProfileId
+                    )
+                )
+            );
+        },
+    });
+
     @computed get selectedMutationalSignatureVersion() {
-        return this._selectedMutationalSignatureVersion;
+        return (
+            this._selectedMutationalSignatureVersion ||
+            this.initialMutationalSignatureVersion.result!
+        );
     }
     @action
     setMutationalSignaturesVersion(version: string) {
