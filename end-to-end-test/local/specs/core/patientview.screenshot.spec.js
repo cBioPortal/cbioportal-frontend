@@ -117,6 +117,10 @@ describe('patient view page', function() {
         it('show stacked bar chart for patient who has significant v2 significant signatures', () => {
             selectMutationalSignaturesVersion2();
             $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
+
+            // bar chart does an animation we have to wait for
+            browser.pause(5000);
+
             var res = browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
