@@ -1,13 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import {
-    CancerStudy,
-    DiscreteCopyNumberData,
-    ResourceData,
-} from 'cbioportal-ts-api-client';
-import { Else, If, Then } from 'react-if';
-import SampleManager from './SampleManager';
-import PatientHeader from './patientHeader/PatientHeader';
+import { DiscreteCopyNumberData, ResourceData } from 'cbioportal-ts-api-client';
 import { PaginationControls } from '../../shared/components/paginationControls/PaginationControls';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
@@ -19,7 +12,6 @@ import { inject, observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
 import { default as PatientViewMutationTable } from './mutation/PatientViewMutationTable';
 import { MSKTab } from '../../shared/components/MSKTabs/MSKTabs';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ValidationAlert from 'shared/components/ValidationAlert';
 import PatientViewMutationsDataStore from './mutation/PatientViewMutationsDataStore';
 import PatientViewCnaDataStore from './copyNumberAlterations/PatientViewCnaDataStore';
@@ -37,8 +29,6 @@ import { QueryParams } from 'url';
 import { AppStore } from '../../AppStore';
 import request from 'superagent';
 import { remoteData, getBrowserWindow } from 'cbioportal-frontend-commons';
-
-import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
 import PatientViewUrlWrapper from './PatientViewUrlWrapper';
@@ -55,7 +45,6 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
-import SampleSummaryList from './sampleHeader/SampleSummaryList';
 import {
     getOncoKbIconStyle,
     updateOncoKbIconStyle,
@@ -65,11 +54,17 @@ import { extractColumnNames } from 'shared/components/mutationMapper/MutationMap
 import { prepareCustomTabConfigurations } from 'shared/lib/customTabs/customTabHelpers';
 import setWindowVariable from 'shared/lib/setWindowVariable';
 import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
+import PatientViewPageHeader from 'pages/patientView/PatientViewPageHeader';
 
 export interface IPatientViewPageProps {
     routing: any;
     appStore: AppStore;
     cohortIds?: string[];
+}
+
+export interface IGenePanelModal {
+    genePanelId: string;
+    isOpen: boolean;
 }
 
 export interface PatientViewUrlParams extends QueryParams {
@@ -131,7 +126,10 @@ export class PatientViewPageInner extends React.Component<
     @observable cnaTableColumnVisibility:
         | { [columnId: string]: boolean }
         | undefined;
-    @observable genePanelModal = { genePanelId: '', isOpen: false };
+    @observable genePanelModal: IGenePanelModal = {
+        genePanelId: '',
+        isOpen: false,
+    };
     @observable mergeMutationTableOncoKbIcons;
     // use this wrapper rather than interacting with the url directly
     @observable
@@ -161,7 +159,7 @@ export class PatientViewPageInner extends React.Component<
         // this is not a good pattern. awaits should be explicit
         this.patientViewMutationDataStore = new PatientViewMutationsDataStore(
             () => {
-                return this.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
+                return this.pageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
                     mutationArray => {
                         return !isFusion(mutationArray[0]);
                     }
@@ -171,11 +169,10 @@ export class PatientViewPageInner extends React.Component<
         );
 
         this.patientViewCnaDataStore = new PatientViewCnaDataStore(() => {
-            return this.patientViewPageStore
-                .mergedDiscreteCNADataFilteredByGene;
+            return this.pageStore.mergedDiscreteCNADataFilteredByGene;
         }, this.urlWrapper);
 
-        getBrowserWindow().patientViewPageStore = this.patientViewPageStore;
+        getBrowserWindow().patientViewPageStore = this.pageStore;
 
         this.setOpenResourceTabs();
 
@@ -187,7 +184,7 @@ export class PatientViewPageInner extends React.Component<
             this.urlWrapper.activeTabId &&
             extractResourceIdFromTabId(this.urlWrapper.activeTabId);
         if (openResourceId) {
-            this.patientViewPageStore.setResourceTabOpen(openResourceId, true);
+            this.pageStore.setResourceTabOpen(openResourceId, true);
         }
     }
 
@@ -206,8 +203,8 @@ export class PatientViewPageInner extends React.Component<
 
     @action.bound
     public handleLocusChange(locus: string) {
-        if (this.patientViewPageStore.activeLocus !== locus) {
-            this.patientViewPageStore.activeLocus = locus;
+        if (this.pageStore.activeLocus !== locus) {
+            this.pageStore.activeLocus = locus;
         }
     }
 
@@ -231,25 +228,12 @@ export class PatientViewPageInner extends React.Component<
         updateOncoKbIconStyle({ mergeIcons });
     }
 
-    @computed get isSampleSummaryListLoading() {
-        return (
-            this.patientViewPageStore.studyMetaData.isPending ||
-            this.patientViewPageStore.hasMutationalSignatureData.isPending ||
-            this.patientViewPageStore.mutationalSignatureDataGroupByVersion
-                .isPending ||
-            this.patientViewPageStore.allSamplesForPatient.isPending
-        );
-    }
-
     @computed get showWholeSlideViewerTab() {
         return (
-            this.patientViewPageStore.clinicalDataForSamples.isComplete &&
-            _.some(
-                this.patientViewPageStore.clinicalDataForSamples.result,
-                s => {
-                    return s.clinicalAttributeId === 'MSK_SLIDE_ID';
-                }
-            )
+            this.pageStore.clinicalDataForSamples.isComplete &&
+            _.some(this.pageStore.clinicalDataForSamples.result, s => {
+                return s.clinicalAttributeId === 'MSK_SLIDE_ID';
+            })
         );
     }
 
@@ -279,9 +263,9 @@ export class PatientViewPageInner extends React.Component<
 
     @computed
     get shouldShowResources(): boolean {
-        if (this.patientViewPageStore.resourceIdToResourceData.isComplete) {
+        if (this.pageStore.resourceIdToResourceData.isComplete) {
             return _.some(
-                this.patientViewPageStore.resourceIdToResourceData.result,
+                this.pageStore.resourceIdToResourceData.result,
                 data => data.length > 0
             );
         } else {
@@ -292,18 +276,18 @@ export class PatientViewPageInner extends React.Component<
     @computed
     get shouldShowPathologyReport(): boolean {
         return (
-            this.patientViewPageStore.pathologyReport.isComplete &&
-            this.patientViewPageStore.pathologyReport.result.length > 0
+            this.pageStore.pathologyReport.isComplete &&
+            this.pageStore.pathologyReport.result.length > 0
         );
     }
 
     @computed
     get hideTissueImageTab() {
         return (
-            this.patientViewPageStore.hasTissueImageIFrameUrl.isPending ||
-            this.patientViewPageStore.hasTissueImageIFrameUrl.isError ||
-            (this.patientViewPageStore.hasTissueImageIFrameUrl.isComplete &&
-                !this.patientViewPageStore.hasTissueImageIFrameUrl.result)
+            this.pageStore.hasTissueImageIFrameUrl.isPending ||
+            this.pageStore.hasTissueImageIFrameUrl.isError ||
+            (this.pageStore.hasTissueImageIFrameUrl.isComplete &&
+                !this.pageStore.hasTissueImageIFrameUrl.result)
         );
     }
 
@@ -311,31 +295,22 @@ export class PatientViewPageInner extends React.Component<
     public get shouldShowTrialMatch(): boolean {
         return (
             getBrowserWindow().localStorage.trialmatch === 'true' &&
-            this.patientViewPageStore.detailedTrialMatches.isComplete &&
-            this.patientViewPageStore.detailedTrialMatches.result.length > 0
+            this.pageStore.detailedTrialMatches.isComplete &&
+            this.pageStore.detailedTrialMatches.result.length > 0
         );
     }
 
     @autobind
     customTabMountCallback(div: HTMLDivElement, tab: any) {
-        showCustomTab(
-            div,
-            tab,
-            this.props.routing.location,
-            this.patientViewPageStore
-        );
+        showCustomTab(div, tab, this.props.routing.location, this.pageStore);
     }
 
     wholeSlideViewerUrl = remoteData<string | undefined>({
-        await: () => [this.patientViewPageStore.getWholeSlideViewerIds],
+        await: () => [this.pageStore.getWholeSlideViewerIds],
         invoke: async () => {
-            if (
-                !_.isEmpty(
-                    this.patientViewPageStore.getWholeSlideViewerIds.result
-                )
-            ) {
+            if (!_.isEmpty(this.pageStore.getWholeSlideViewerIds.result)) {
                 const url = getWholeSlideViewerUrl(
-                    this.patientViewPageStore.getWholeSlideViewerIds.result!,
+                    this.pageStore.getWholeSlideViewerIds.result!,
                     this.props.appStore.userName!
                 );
                 //if request succeeds then we return the url because we know request works.
@@ -353,18 +328,18 @@ export class PatientViewPageInner extends React.Component<
 
     @autobind
     onFilterGenesMutationTable(option: GeneFilterOption): void {
-        this.patientViewPageStore.mutationTableGeneFilterOption = option;
+        this.pageStore.mutationTableGeneFilterOption = option;
     }
 
     @autobind
     onFilterGenesCopyNumberTable(option: GeneFilterOption): void {
-        this.patientViewPageStore.copyNumberTableGeneFilterOption = option;
+        this.pageStore.copyNumberTableGeneFilterOption = option;
     }
 
     mutationTableShowGeneFilterMenu(sampleIds: string[]): boolean {
         const entrezGeneIds: number[] = _.uniq(
             _.map(
-                this.patientViewPageStore.mergedMutationDataIncludingUncalled,
+                this.pageStore.mergedMutationDataIncludingUncalled,
                 mutations => mutations[0].entrezGeneId
             )
         );
@@ -373,8 +348,8 @@ export class PatientViewPageInner extends React.Component<
             checkNonProfiledGenesExist(
                 sampleIds,
                 entrezGeneIds,
-                this.patientViewPageStore.sampleToMutationGenePanelId.result,
-                this.patientViewPageStore.genePanelIdToEntrezGeneIds.result
+                this.pageStore.sampleToMutationGenePanelId.result,
+                this.pageStore.genePanelIdToEntrezGeneIds.result
             )
         );
     }
@@ -382,7 +357,7 @@ export class PatientViewPageInner extends React.Component<
     cnaTableShowGeneFilterMenu(sampleIds: string[]): boolean {
         const entrezGeneIds: number[] = _.uniq(
             _.map(
-                this.patientViewPageStore.mergedDiscreteCNAData,
+                this.pageStore.mergedDiscreteCNAData,
                 alterations => alterations[0].entrezGeneId
             )
         );
@@ -391,8 +366,8 @@ export class PatientViewPageInner extends React.Component<
             checkNonProfiledGenesExist(
                 sampleIds,
                 entrezGeneIds,
-                this.patientViewPageStore.sampleToDiscreteGenePanelId.result,
-                this.patientViewPageStore.genePanelIdToEntrezGeneIds.result
+                this.pageStore.sampleToDiscreteGenePanelId.result,
+                this.pageStore.genePanelIdToEntrezGeneIds.result
             )
         );
     }
@@ -406,7 +381,7 @@ export class PatientViewPageInner extends React.Component<
     }
 
     @computed get modalSelectedGenePanel() {
-        return this.patientViewPageStore.genePanelIdToPanel.result[
+        return this.pageStore.genePanelIdToPanel.result[
             this.genePanelModal.genePanelId
         ];
     }
@@ -471,16 +446,16 @@ export class PatientViewPageInner extends React.Component<
 
     readonly resourceTabs = MakeMobxView({
         await: () => [
-            this.patientViewPageStore.resourceDefinitions,
-            this.patientViewPageStore.resourceIdToResourceData,
+            this.pageStore.resourceDefinitions,
+            this.pageStore.resourceIdToResourceData,
         ],
         render: () => {
-            const openDefinitions = this.patientViewPageStore.resourceDefinitions.result!.filter(
-                d => this.patientViewPageStore.isResourceTabOpen(d.resourceId)
+            const openDefinitions = this.pageStore.resourceDefinitions.result!.filter(
+                d => this.pageStore.isResourceTabOpen(d.resourceId)
             );
             const sorted = _.sortBy(openDefinitions, d => d.priority);
-            const resourceDataById = this.patientViewPageStore
-                .resourceIdToResourceData.result!;
+            const resourceDataById = this.pageStore.resourceIdToResourceData
+                .result!;
 
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
@@ -508,7 +483,7 @@ export class PatientViewPageInner extends React.Component<
     @action.bound
     openResource(resource: ResourceData) {
         // first we make the resource tab visible
-        this.patientViewPageStore.setResourceTabOpen(resource.resourceId, true);
+        this.pageStore.setResourceTabOpen(resource.resourceId, true);
         // next, navigate to that tab
         this.urlWrapper.setActiveTab(
             getPatientViewResourceTabId(resource.resourceId)
@@ -522,7 +497,7 @@ export class PatientViewPageInner extends React.Component<
         const resourceId = extractResourceIdFromTabId(tabId);
         if (resourceId) {
             // hide the resource tab
-            this.patientViewPageStore.setResourceTabOpen(resourceId, false);
+            this.pageStore.setResourceTabOpen(resourceId, false);
 
             // then, if we were currently on that tab..
             if (
@@ -537,7 +512,7 @@ export class PatientViewPageInner extends React.Component<
 
     @action.bound
     onMutationalSignatureVersionChange(version: string) {
-        this.patientViewPageStore.setMutationalSignaturesVersion(version);
+        this.pageStore.setMutationalSignaturesVersion(version);
     }
 
     @computed get columns(): ExtendedMutationTableColumnType[] {
@@ -561,101 +536,66 @@ export class PatientViewPageInner extends React.Component<
         );
     }
 
-    public render() {
-        let sampleManager: SampleManager | null = null;
-        if (this.patientViewPageStore.sampleManager.isComplete) {
-            sampleManager = this.patientViewPageStore.sampleManager.result!;
-        }
-        let cohortNav: JSX.Element | null = null;
-        let studyName: JSX.Element | null = null;
+    public get pageStore() {
+        return this.patientViewPageStore;
+    }
 
-        (window as any).sampleManager = sampleManager;
-
-        if (this.patientViewPageStore.urlValidationError) {
-            return (
-                <ValidationAlert
-                    urlValidationError={
-                        this.patientViewPageStore.urlValidationError
-                    }
-                />
-            );
-        }
-
-        if (this.patientViewPageStore.studyMetaData.isComplete) {
-            let study: CancerStudy = this.patientViewPageStore.studyMetaData
-                .result;
-            studyName = (
-                <StudyLink className={'nowrap'} studyId={study.studyId}>
-                    {study.name}
-                </StudyLink>
-            );
-        }
-
+    @computed
+    public get cohortNav() {
         if (
-            this.patientViewPageStore.patientIdsInCohort &&
-            this.patientViewPageStore.patientIdsInCohort.length > 0
+            this.pageStore.patientIdsInCohort &&
+            this.pageStore.patientIdsInCohort.length > 0
         ) {
-            const indexInCohort = this.patientViewPageStore.patientIdsInCohort.indexOf(
-                this.patientViewPageStore.studyId +
-                    ':' +
-                    this.patientViewPageStore.patientId
+            const indexInCohort = this.pageStore.patientIdsInCohort.indexOf(
+                this.pageStore.studyId + ':' + this.pageStore.patientId
             );
-            cohortNav = (
+            return (
                 <PaginationControls
                     currentPage={indexInCohort + 1}
                     showMoreButton={false}
                     showItemsPerPageSelector={false}
                     showFirstPage={true}
                     showLastPage={true}
-                    textBetweenButtons={` of ${this.patientViewPageStore.patientIdsInCohort.length} patients`}
+                    textBetweenButtons={` of ${this.pageStore.patientIdsInCohort.length} patients`}
                     firstPageDisabled={indexInCohort === 0}
                     previousPageDisabled={indexInCohort === 0}
                     nextPageDisabled={
                         indexInCohort ===
-                        this.patientViewPageStore.patientIdsInCohort.length - 1
+                        this.pageStore.patientIdsInCohort.length - 1
                     }
                     lastPageDisabled={
                         indexInCohort ===
-                        this.patientViewPageStore.patientIdsInCohort.length - 1
+                        this.pageStore.patientIdsInCohort.length - 1
                     }
                     onFirstPageClick={() =>
                         this.handlePatientClick(
-                            this.patientViewPageStore.patientIdsInCohort[0]
+                            this.pageStore.patientIdsInCohort[0]
                         )
                     }
                     onPreviousPageClick={() =>
                         this.handlePatientClick(
-                            this.patientViewPageStore.patientIdsInCohort[
-                                indexInCohort - 1
-                            ]
+                            this.pageStore.patientIdsInCohort[indexInCohort - 1]
                         )
                     }
                     onNextPageClick={() =>
                         this.handlePatientClick(
-                            this.patientViewPageStore.patientIdsInCohort[
-                                indexInCohort + 1
-                            ]
+                            this.pageStore.patientIdsInCohort[indexInCohort + 1]
                         )
                     }
                     onLastPageClick={() =>
                         this.handlePatientClick(
-                            this.patientViewPageStore.patientIdsInCohort[
-                                this.patientViewPageStore.patientIdsInCohort
-                                    .length - 1
+                            this.pageStore.patientIdsInCohort[
+                                this.pageStore.patientIdsInCohort.length - 1
                             ]
                         )
                     }
                     onChangeCurrentPage={newPage => {
                         if (
                             newPage > 0 &&
-                            newPage <=
-                                this.patientViewPageStore.patientIdsInCohort
-                                    .length
+                            newPage <= this.pageStore.patientIdsInCohort.length
                         ) {
                             this.handlePatientClick(
-                                this.patientViewPageStore.patientIdsInCohort[
-                                    newPage - 1
-                                ]
+                                this.pageStore.patientIdsInCohort[newPage - 1]
                             );
                         }
                     }}
@@ -664,18 +604,29 @@ export class PatientViewPageInner extends React.Component<
                 />
             );
         }
+    }
+
+    public render() {
+        if (this.pageStore.urlValidationError) {
+            return (
+                <ValidationAlert
+                    urlValidationError={this.pageStore.urlValidationError}
+                />
+            );
+        }
 
         return (
             <PageLayout noMargin={true} hideFooter={true}>
-                {this.patientViewPageStore.patientViewData.isComplete && (
-                    <Helmet>
-                        <title>{this.patientViewPageStore.pageTitle}</title>
-                        <meta
-                            name="description"
-                            content={this.patientViewPageStore.metaDescription}
-                        />
-                    </Helmet>
-                )}
+                {this.pageStore.patientViewData.isComplete &&
+                    this.pageStore.studyMetaData.isComplete && (
+                        <Helmet>
+                            <title>{this.pageStore.pageTitle}</title>
+                            <meta
+                                name="description"
+                                content={this.pageStore.metaDescription}
+                            />
+                        </Helmet>
+                    )}
                 <div className="patientViewPage">
                     {this.genePanelModal.isOpen && (
                         <PatientViewGenePanelModal
@@ -685,123 +636,56 @@ export class PatientViewPageInner extends React.Component<
                             columns={3}
                         />
                     )}
-                    <div className="headBlock">
-                        {this.patientViewPageStore.patientViewData
-                            .isComplete && (
-                            <div className="patientPageHeader">
-                                <i
-                                    className="fa fa-user-circle-o patientIcon"
-                                    aria-hidden="true"
-                                ></i>
-                                <div className="patientDataTable">
-                                    <table>
-                                        <tr>
-                                            <td>Patient:</td>
-                                            <td>
-                                                <PatientHeader
-                                                    handlePatientClick={(
-                                                        id: string
-                                                    ) =>
-                                                        this.handlePatientClick(
-                                                            id
-                                                        )
-                                                    }
-                                                    patient={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .patientViewData
-                                                            .result.patient
-                                                    }
-                                                    studyId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .studyId
-                                                    }
-                                                    darwinUrl={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .darwinUrl.result
-                                                    }
-                                                    sampleManager={
-                                                        sampleManager
-                                                    }
-                                                />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Samples:</td>
-                                            <td>
-                                                <div className="patientSamples">
-                                                    {sampleManager !== null && (
-                                                        <If
-                                                            condition={
-                                                                this
-                                                                    .isSampleSummaryListLoading
-                                                            }
-                                                        >
-                                                            <Then>
-                                                                <LoadingIndicator
-                                                                    isLoading={
-                                                                        true
-                                                                    }
-                                                                />
-                                                            </Then>
-                                                            <Else>
-                                                                <SampleSummaryList
-                                                                    sampleManager={
-                                                                        sampleManager
-                                                                    }
-                                                                    patientViewPageStore={
-                                                                        this
-                                                                            .patientViewPageStore
-                                                                    }
-                                                                    handleSampleClick={
-                                                                        this
-                                                                            .handleSampleClick
-                                                                    }
-                                                                    toggleGenePanelModal={
-                                                                        this
-                                                                            .toggleGenePanelModal
-                                                                    }
-                                                                    genePanelModal={
-                                                                        this
-                                                                            .genePanelModal
-                                                                    }
-                                                                    handlePatientClick={
-                                                                        this
-                                                                            .handlePatientClick
-                                                                    }
-                                                                />
-                                                            </Else>
-                                                        </If>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <div className="studyMetaBar">
-                                    {studyName}{' '}
-                                    <If condition={cohortNav != null}>
-                                        {cohortNav}
-                                    </If>
-                                </div>
-                            </div>
-                        )}
-                    </div>
 
-                    <LoadingIndicator
-                        isLoading={
-                            this.patientViewPageStore.patientViewData.isPending
-                        }
-                        center={true}
-                        size={'big'}
-                    />
-
-                    {this.patientViewPageStore.patientViewData.isComplete &&
-                        patientViewTabs(this, this.urlWrapper, sampleManager)}
+                    {this.pageContent.component}
                 </div>
             </PageLayout>
         );
     }
+
+    readonly pageContent = MakeMobxView({
+        await: () => [
+            this.pageStore.patientViewData,
+            this.pageStore.sampleManager,
+            this.pageStore.studyMetaData,
+        ],
+        render: () => {
+            return (
+                <>
+                    <div className="headBlock">
+                        <div className="patientPageHeader">
+                            <i
+                                className="fa fa-user-circle-o patientIcon"
+                                aria-hidden="true"
+                            ></i>
+                            <PatientViewPageHeader
+                                pageStore={this.pageStore}
+                                handleSampleClick={this.handleSampleClick}
+                                handlePatientClick={this.handlePatientClick}
+                                toggleGenePanelModal={this.toggleGenePanelModal}
+                                genePanelModal={this.genePanelModal}
+                            />
+                            <div className="studyMetaBar">
+                                <StudyLink
+                                    className={'nowrap'}
+                                    studyId={
+                                        this.pageStore.studyMetaData.result!
+                                            .studyId
+                                    }
+                                >
+                                    {this.pageStore.studyMetaData.result!.name}
+                                </StudyLink>{' '}
+                                {this.cohortNav && this.cohortNav}
+                            </div>
+                        </div>
+                    </div>
+                    {patientViewTabs(
+                        this,
+                        this.urlWrapper,
+                        this.pageStore.sampleManager.result!
+                    )}
+                </>
+            );
+        },
+    });
 }
