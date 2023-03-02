@@ -79,6 +79,7 @@ import {
     MUT_COLOR_OTHER,
     MUT_COLOR_OTHER_PASSENGER,
     MUT_COLOR_PROMOTER,
+    MUT_COLOR_PROMOTER_PASSENGER,
     MUT_COLOR_SPLICE,
     MUT_COLOR_SPLICE_PASSENGER,
     MUT_COLOR_TRUNC,
@@ -1731,24 +1732,31 @@ export const oncoprintMutationTypeToAppearanceDrivers: {
     },
     promoter: {
         symbol: 'circle',
+        fill: MUT_COLOR_PROMOTER_PASSENGER,
+        stroke: '#000000',
+        strokeOpacity: NON_CNA_STROKE_OPACITY,
+        legendLabel: 'Promoter (VUS)',
+    },
+    'promoter.driver': {
+        symbol: 'circle',
         fill: MUT_COLOR_PROMOTER,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Promoter',
+        legendLabel: 'Promoter (Driver)',
     },
     other: {
-        symbol: 'circle',
-        fill: MUT_COLOR_OTHER,
-        stroke: '#000000',
-        strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Other (Driver)',
-    },
-    'other.driver': {
         symbol: 'circle',
         fill: MUT_COLOR_OTHER_PASSENGER,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
         legendLabel: 'Other (VUS)',
+    },
+    'other.driver': {
+        symbol: 'circle',
+        fill: MUT_COLOR_OTHER,
+        stroke: '#000000',
+        strokeOpacity: NON_CNA_STROKE_OPACITY,
+        legendLabel: 'Other (Driver)',
     },
 };
 
@@ -1834,6 +1842,7 @@ export const mutationLegendOrder = [
     'inframe',
     'missense.driver',
     'missense',
+    'other.driver',
     'other',
 ];
 export const mutationRenderPriority = stringListToIndexSet([
@@ -1843,6 +1852,7 @@ export const mutationRenderPriority = stringListToIndexSet([
     'trunc.driver',
     'inframe.driver',
     'missense.driver',
+    'other.driver',
     'promoter',
     'splice',
     'trunc',

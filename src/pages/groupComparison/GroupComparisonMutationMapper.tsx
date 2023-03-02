@@ -7,7 +7,6 @@ import {
 } from 'shared/components/mutationMapper/MutationMapper';
 import {
     AxisScale,
-    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
     groupDataByGroupFilters,
     ProteinImpactTypeBadgeSelector,
 } from 'react-mutation-mapper';
@@ -18,6 +17,7 @@ import { IAnnotationFilterSettings } from 'shared/alterationFiltering/Annotation
 import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 import { ProteinImpactWithoutVusMutationType } from 'cbioportal-frontend-commons';
 import styles from './styles.module.scss';
+import { LegendColorCodes } from 'shared/components/mutationMapper/LegendColorCodes';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -36,169 +36,10 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     protected legendColorCodes = (
-        <div style={{ maxWidth: 700, marginTop: 5 }}>
-            <strong style={{ color: '#2153AA' }}>Color Codes</strong>
-            <p>
-                Mutation diagram circles are colored with respect to the
-                corresponding mutation types. In case of different mutation
-                types at a single position, color of the circle is determined
-                with respect to the most frequent mutation type.
-            </p>
-            <br />
-            <div>
-                Mutation types and corresponding color codes are as follows:
-                <ul>
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor,
-                            }}
-                        >
-                            Missense Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseVusColor,
-                                }}
-                            >
-                                Missense Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                        </li>
-                    )}
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingColor,
-                            }}
-                        >
-                            Truncating Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                        : Nonsense, Nonstop, Frameshift deletion, Frameshift
-                        insertion, Splice site
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingVusColor,
-                                }}
-                            >
-                                Truncating Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                            : Nonsense, Nonstop, Frameshift deletion, Frameshift
-                            insertion, Splice site
-                        </li>
-                    )}
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeColor,
-                            }}
-                        >
-                            Inframe Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                        : Inframe deletion, Inframe insertion
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeVusColor,
-                                }}
-                            >
-                                Inframe Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                            : Inframe deletion, Inframe insertion
-                        </li>
-                    )}
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceColor,
-                            }}
-                        >
-                            Splice Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceVusColor,
-                                }}
-                            >
-                                Splice Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                        </li>
-                    )}
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherColor,
-                            }}
-                        >
-                            Other Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                        : All other types of mutations
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherVusColor,
-                                }}
-                            >
-                                Other Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                            : All other types of mutations
-                        </li>
-                    )}
-                </ul>
-            </div>
-        </div>
+        <LegendColorCodes
+            isPutativeDriver={this.props.isPutativeDriver}
+            hideFusions={true}
+        />
     );
 
     protected get view3dButton(): JSX.Element | null {
@@ -253,6 +94,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                         groupNameWithOrdinal={
                             this.props.groups[groupIndex].nameWithOrdinal
                         }
+                        height={149}
                     />
                 ) : (
                     <ProteinImpactTypeBadgeSelector
@@ -268,6 +110,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                         groupNameWithOrdinal={
                             this.props.groups[groupIndex].nameWithOrdinal
                         }
+                        height={109}
                     />
                 )}
             </>

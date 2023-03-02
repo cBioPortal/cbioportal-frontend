@@ -22,6 +22,7 @@ export type ProteinImpactTypeBadgeSelectorProps = BadgeSelectorProps & {
     excludedProteinTypes?: string[];
     groupIndex?: number;
     groupNameWithOrdinal?: string;
+    height?: number;
 };
 
 const VALUES = [
@@ -118,7 +119,7 @@ export class ProteinImpactTypeBadgeSelector<
         return (
             <div style={{ display: 'inline-flex' }}>
                 <div>
-                    <table style={{ height: 109 }}>
+                    <table style={{ height: this.props.height }}>
                         <BadgeSelector
                             options={this.options}
                             getOptionLabel={getProteinImpactTypeOptionLabel}

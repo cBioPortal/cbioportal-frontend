@@ -23,6 +23,7 @@ import {
     MUT_COLOR_OTHER,
     MUT_COLOR_OTHER_PASSENGER,
     MUT_COLOR_PROMOTER,
+    MUT_COLOR_PROMOTER_PASSENGER,
     MUT_COLOR_SPLICE,
     MUT_COLOR_SPLICE_PASSENGER,
     MUT_COLOR_TRUNC,
@@ -66,9 +67,10 @@ enum ShapeId {
 
     missenseMutationDriverRectangle = 'missenseMutationDriverRectangle',
     missenseMutationVUSRectangle = 'missenseMutationVUSRectangle',
-    otherMutationDriverRectangle = 'otherMutationRectangle',
+    otherMutationDriverRectangle = 'otherMutationDriverRectangle',
     otherMutationVUSRectangle = 'otherMutationVUSRectangle',
-    promoterMutationRectangle = 'promoterMutationRectangle',
+    promoterMutationDriverRectangle = 'promoterMutationDriverRectangle',
+    promoterMutationVUSRectangle = 'promoterMutationVUSRectangle',
     truncatingMutationDriverRectangle = 'truncatingMutationDriverRectangle',
     truncatingMutationVUSRectangle = 'truncatingMutationVUSRectangle',
     inframeMutationDriverRectangle = 'inframeMutationDriverRectangle',
@@ -240,9 +242,18 @@ const shapeBank = {
         height: 33.33,
         z: 6,
     },
-    [ShapeId.promoterMutationRectangle]: {
+    [ShapeId.promoterMutationDriverRectangle]: {
         type: 'rectangle',
         fill: hexToRGBA(MUT_COLOR_PROMOTER),
+        x: 0,
+        y: 33.33,
+        width: 100,
+        height: 33.33,
+        z: 6,
+    },
+    [ShapeId.promoterMutationVUSRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(MUT_COLOR_PROMOTER_PASSENGER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -483,7 +494,9 @@ export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlteration
                         },
                         'promoter,promoter_rec': {
                             shapes: [
-                                shapeBank[ShapeId.promoterMutationRectangle],
+                                shapeBank[
+                                    ShapeId.promoterMutationDriverRectangle
+                                ],
                             ],
                             legend_label: 'Promoter Mutation',
                             legend_order: MUTATION_LEGEND_ORDER,
@@ -558,11 +571,21 @@ export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRul
                                 'Other Mutation (unknown significance)',
                             legend_order: MUTATION_LEGEND_ORDER,
                         },
-                        'promoter,promoter_rec': {
+                        promoter_rec: {
                             shapes: [
-                                shapeBank[ShapeId.promoterMutationRectangle],
+                                shapeBank[
+                                    ShapeId.promoterMutationDriverRectangle
+                                ],
                             ],
-                            legend_label: 'Promoter Mutation',
+                            legend_label: 'Promoter Mutation (putative driver)',
+                            legend_order: MUTATION_LEGEND_ORDER,
+                        },
+                        promoter: {
+                            shapes: [
+                                shapeBank[ShapeId.promoterMutationVUSRectangle],
+                            ],
+                            legend_label:
+                                'Promoter Mutation (unknown significance)',
                             legend_order: MUTATION_LEGEND_ORDER,
                         },
                         splice_rec: {
