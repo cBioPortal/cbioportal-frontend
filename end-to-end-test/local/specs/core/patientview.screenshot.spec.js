@@ -13,7 +13,7 @@ const ascnPatientViewUrl =
     CBIOPORTAL_URL + '/patient?studyId=ascn_test_study&caseId=FAKE_P001';
 const genericAssayPatientViewUrl =
     CBIOPORTAL_URL +
-    '/patient?studyId=lgg_ucsf_2014_test_generic_assay&sampleId=P01_Pri';
+    '/patient/mutationalSignatures?studyId=lgg_ucsf_2014_test_generic_assay&sampleId=P01_Pri';
 
 describe('patient view page', function() {
     describe('mutation table for study with ASCN data', () => {
@@ -82,7 +82,7 @@ describe('patient view page', function() {
     describe('patient view mutational signatures', () => {
         beforeEach(() => {
             goToUrlAndSetLocalStorage(genericAssayPatientViewUrl, true);
-            waitForPatientView();
+            //waitForPatientView();
             $('a.tabAnchor_mutationalSignatures').waitForDisplayed({
                 timeout: 20000,
             });
@@ -94,34 +94,39 @@ describe('patient view page', function() {
             });
         });
 
-        it('show stacked bar chart for patient who has significant v2 significant signatures', () => {
-            $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
-            var res = browser.checkElement('div.patientSamples');
-            assertScreenShotMatch(res);
-        });
-
-        it('show tooltip for patient who has significant v2 significant signatures', () => {
-            $('div.progress').waitForDisplayed({ timeout: 20000 });
-            $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });
-            assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
-        });
-
-        it('show mutational signatures table for patient who has significant v2 significant signatures', () => {
-            var res = browser.checkElement(
-                'div[data-test="MutationalSignaturesContainer"]'
-            );
-            assertScreenShotMatch(res);
-        });
-
         it('show stacked bar chart for patient who has significant v3 significant signatures', () => {
-            selectMutationalSignaturesVersion3();
             $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
             var res = browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
 
         it('show tooltip for patient who has significant v3 significant signatures', () => {
-            selectMutationalSignaturesVersion3();
+            $('div.progress').waitForDisplayed({ timeout: 20000 });
+            $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });
+            assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
+        });
+
+        it('show mutational signatures table for patient who has significant v2 significant signatures', () => {
+            selectMutationalSignaturesVersion2();
+            var res = browser.checkElement(
+                'div[data-test="MutationalSignaturesContainer"]'
+            );
+            assertScreenShotMatch(res);
+        });
+
+        it('show stacked bar chart for patient who has significant v2 significant signatures', () => {
+            selectMutationalSignaturesVersion2();
+            $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
+
+            // bar chart does an animation we have to wait for
+            browser.pause(5000);
+
+            var res = browser.checkElement('div.patientSamples');
+            assertScreenShotMatch(res);
+        });
+
+        it('show tooltip for patient who has significant v2 significant signatures', () => {
+            selectMutationalSignaturesVersion2();
             $('div.progress').waitForDisplayed({ timeout: 20000 });
             $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });
 
@@ -132,8 +137,8 @@ describe('patient view page', function() {
             assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
         });
 
-        it('show mutational signatures table for patient who has significant v3 significant signatures', () => {
-            selectMutationalSignaturesVersion3();
+        it('show mutational signatures table for patient who has significant v2 significant signatures', () => {
+            selectMutationalSignaturesVersion2();
             var res = browser.checkElement(
                 'div[data-test="MutationalSignaturesContainer"]'
             );
@@ -172,11 +177,11 @@ const doVafPlotScreenshotTest = () => {
     assertScreenShotMatch(res);
 };
 
-const selectMutationalSignaturesVersion3 = () => {
+const selectMutationalSignaturesVersion2 = () => {
     $('div.mutationalSignaturesVersionSelector__indicators').waitForDisplayed({
         timeout: 10000,
     });
     $('div.mutationalSignaturesVersionSelector__indicators').click();
-    $('div=Mutational Signature V3').waitForDisplayed({ timeout: 10000 });
-    $('div=Mutational Signature V3').click();
+    $('div=Mutational Signature V2').waitForDisplayed({ timeout: 10000 });
+    $('div=Mutational Signature V2').click();
 };

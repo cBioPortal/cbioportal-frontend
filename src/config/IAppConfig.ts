@@ -158,6 +158,7 @@ export interface IServerConfig {
     enable_treatment_groups: boolean;
     referenceGenomeVersion: string;
     skin_home_page_show_unauthorized_studies: boolean;
+    skin_home_page_show_reference_genome: string;
     skin_home_page_unauthorized_studies_global_message: string;
     skin_mutation_table_namespace_column_show_by_default: boolean;
     skin_patient_view_mutation_table_columns_show_on_init: string;

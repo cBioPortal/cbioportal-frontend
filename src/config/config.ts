@@ -241,7 +241,7 @@ function registerRequestBodyCompression(apiClient: any, domain: string): void {
         resolve: any,
         errorHandlers: any[]
     ) => {
-        if (method === 'POST') {
+        if (method === 'POST' && body !== undefined) {
             var bodyString = JSON.stringify(body);
             if (bodyString.length > REQ_BODY_SIZE_CHAR_LIMIT) {
                 headers['Content-Encoding'] = 'gzip';
