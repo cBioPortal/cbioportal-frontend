@@ -34,9 +34,11 @@ export function formatNumberValueInSignificantDigits(
         return null;
     } else if (significantDigits) {
         return Number(
-            value.toLocaleString(undefined, {
-                maximumSignificantDigits: significantDigits,
-            })
+            value
+                .toLocaleString('en-US', {
+                    maximumSignificantDigits: significantDigits,
+                })
+                .replace(/,/g, '')
         );
     } else {
         return value;

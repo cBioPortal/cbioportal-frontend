@@ -1,5 +1,6 @@
 import * as React from 'react';
 import SampleManager from '../SampleManager';
+import { observer } from 'mobx-react';
 import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { getSpanElementsFromCleanData } from '../clinicalInformation/lib/clinicalAttributesUtil';
@@ -15,6 +16,7 @@ import {
 } from 'shared/lib/StoreUtils';
 import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 import { OtherBiomarkerAnnotation } from '../oncokb/OtherBiomarkerAnnotation';
+import { IGenePanelModal } from 'pages/patientView/PatientViewPage';
 
 export type ISampleSummaryListProps = {
     sampleManager: SampleManager;
@@ -24,9 +26,11 @@ export type ISampleSummaryListProps = {
         e: React.MouseEvent<HTMLAnchorElement>
     ) => void;
     toggleGenePanelModal: (genePanelId?: string) => void;
-    genePanelModal: any;
+    genePanelModal: IGenePanelModal;
     handlePatientClick: (id: string) => void;
 };
+
+@observer
 export default class SampleSummaryList extends React.Component<
     ISampleSummaryListProps,
     {}
