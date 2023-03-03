@@ -55,6 +55,19 @@ echo "$TEST_HOME"
 cat <<< $($TEST_HOME/runtime-config/setup_environment.sh)
 $($TEST_HOME/runtime-config/setup_environment.sh)
 
+if [[ "$(uname -s)" == "Darwin" ]] && [[ "$(sysctl -n machdep.cpu.brand_string)" =~ M.* ]]; then
+  # if Macos and M-series chip, use images for ARM architecture
+  export DOCKER_IMAGE_MYSQL=biarms/mysql:5.7
+  export PLATFORM_KEYCLOAK=linux/arm64
+  export DOCKER_IMAGE_KEYCLOAK=alemairebe/keycloak:11.0.3
+  export DOCKER_IMAGE_SESSION_SERVICE=fuzhaoyuan/session-service:0.5.0
+else
+  # else use images for x86_64 architecture
+  export DOCKER_IMAGE_MYSQL=mysql:5.7
+  export PLATFORM_KEYCLOAK=linux/amd64
+  export DOCKER_IMAGE_KEYCLOAK=jboss/keycloak:11.0.3
+fi
+
 if [ "$SPIN_UP" = "true" ]
 then
   #cleanup
