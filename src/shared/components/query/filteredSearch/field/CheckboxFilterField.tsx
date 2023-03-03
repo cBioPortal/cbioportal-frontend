@@ -58,7 +58,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
             <h5>{props.filter.form.label}</h5>
             <div>
                 {options.map((option: FilterFieldOption) => {
-                    const id = `input-${option}`;
+                    const id = `input-${option.displayValue}`;
                     let isChecked = checkedOptions.includes(option.value);
                     return (
                         <div
