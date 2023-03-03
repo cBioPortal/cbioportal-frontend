@@ -23,6 +23,7 @@
 *module.scss.d.ts
 **/generated/**
 src/shared/lib/oql/oql-parser.js
+jupyterlite/**
 packages/**/dist/**
 yarn.lock
 LICENSE

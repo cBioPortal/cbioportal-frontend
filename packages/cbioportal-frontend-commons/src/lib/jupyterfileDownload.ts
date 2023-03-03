@@ -8,10 +8,10 @@ export default function fileDownloadToJupyter(data: any, fileName: string) {
     const nada = win.jupyter;
 
     if (!win.jupyter || !win.jupyter.window) {
-        win.jupyter = window.open('/jupyterlite/lab/index.html');
+        win.jupyter = window.open('/reactapp/jupyter/lab/index.html');
     }
 
-    let attempts = 10;
+    let attempts = 20;
     const interval = setInterval(() => {
         if (win.jupyter.jupyterapp) {
             console.log('sending data to jupyter window', fileName);
@@ -27,11 +27,12 @@ export default function fileDownloadToJupyter(data: any, fileName: string) {
             );
             clearInterval(interval);
         } else {
+            console.log('no jupyter window available');
             if (attempts < 1) {
                 clearInterval(interval);
             } else {
                 attempts--;
             }
         }
-    }, 100);
+    }, 1000);
 }

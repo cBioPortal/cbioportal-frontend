@@ -64,7 +64,14 @@ export interface IOncoprintControlsHandlers
     onClickSortAlphabetical?: () => void;
     onClickSortCaseListOrder?: () => void;
     onClickDownload?: (
-        type: 'pdf' | 'png' | 'svg' | 'order' | 'tabular' | 'oncoprinter'
+        type:
+            | 'pdf'
+            | 'png'
+            | 'svg'
+            | 'order'
+            | 'tabular'
+            | 'oncoprinter'
+            | 'jupyter'
     ) => void;
     onChangeSelectedClinicalTracks?: (
         trackConfigs: ClinicalTrackConfig[]
@@ -174,6 +181,7 @@ const EVENT_KEY = {
     downloadOncoprinter: '29.1',
     horzZoomSlider: '30',
     viewNGCHM: '31',
+    openJupyter: '32',
 };
 
 @observer
@@ -407,6 +415,10 @@ export default class OncoprintControls extends React.Component<
             case EVENT_KEY.downloadTabular:
                 this.props.handlers.onClickDownload &&
                     this.props.handlers.onClickDownload('tabular');
+                break;
+            case EVENT_KEY.openJupyter:
+                this.props.handlers.onClickDownload &&
+                    this.props.handlers.onClickDownload('jupyter');
                 break;
             case EVENT_KEY.downloadOncoprinter:
                 this.props.handlers.onClickDownload &&
@@ -1085,6 +1097,15 @@ export default class OncoprintControls extends React.Component<
                         'Sample'}{' '}
                     order
                 </button>
+
+                <button
+                    className="btn btn-sm btn-default"
+                    name={EVENT_KEY.openJupyter}
+                    onClick={this.onButtonClick}
+                >
+                    Jupyterlite Notebook
+                </button>
+
                 {!this.props.oncoprinterMode && (
                     <button
                         className="btn btn-sm btn-default"
