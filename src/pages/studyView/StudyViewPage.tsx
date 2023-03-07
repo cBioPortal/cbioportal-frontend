@@ -678,6 +678,7 @@ export default class StudyViewPage extends React.Component<
                                                                 this.submitHesitantFilters()
                                                             )
                                                         }
+                                                        data-test="submit-study-filters"
                                                     >
                                                         Submit ►
                                                     </button>

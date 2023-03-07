@@ -47,6 +47,7 @@ export default class StudyViewPageSettingsMenu extends React.Component<
                         className={classNames('btn', 'btn-sm', 'btn-primary', {
                             active: this.visible,
                         })}
+                        data-test="study-view-settings-menu"
                     >
                         <i className="fa fa-cog" />
                     </button>

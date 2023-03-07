@@ -161,6 +161,7 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
                     [styles.pending]: isPending,
                     [styles.pendingDelete]: this.isDeleted(),
                 })}
+                data-test="pill-tag"
                 style={{
                     background: this.props.backgroundColor,
                     color: this.contentColor,
