@@ -636,11 +636,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         show={this.showGeneralFeedback}
                         onHide={() => (this.showGeneralFeedback = false)}
                         title="OncoKB Matched Trials General Feedback"
-                        userDisplayName={
-                            getServerConfig().user_display_name
-                                ? getServerConfig().user_display_name
-                                : getServerConfig().user_email_address
-                        }
+                        userDisplayName={getServerConfig().user_display_name}
                     />
                 )}
                 {this.selectedTrialFeedbackFormData && (
@@ -650,11 +646,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         onHide={() => this.openCloseFeedbackForm()}
                         isTrialFeedback={true}
                         title="OncoKB Matched Trial Feedback"
-                        userDisplayName={
-                            getServerConfig().user_display_name
-                                ? getServerConfig().user_display_name
-                                : getServerConfig().user_email_address
-                        }
+                        userDisplayName={getServerConfig().user_display_name}
                     />
                 )}
                 <TrialMatchTableComponent

@@ -132,17 +132,10 @@ export class ServerConfigHelpers {
     }
 
     static getUserDisplayName(): string | undefined {
-        if (getServerConfig().user_email_address) {
-            return getServerConfig().user_email_address &&
-                getServerConfig().user_email_address !== 'anonymousUser'
-                ? getServerConfig().user_email_address
-                : undefined;
-        } else {
-            return getServerConfig().user_display_name &&
-                getServerConfig().user_display_name !== 'anonymousUser'
-                ? getServerConfig().user_display_name
-                : undefined;
-        }
+        return getServerConfig().user_display_name &&
+            getServerConfig().user_display_name !== 'anonymousUser'
+            ? getServerConfig().user_display_name
+            : undefined;
     }
 }
 
@@ -376,7 +369,5 @@ export function fetchServerConfig() {
 
 export function initializeAppStore(appStore: AppStore) {
     appStore.authMethod = getServerConfig().authenticationMethod;
-    appStore.userName = getServerConfig().user_display_name
-        ? getServerConfig().user_display_name
-        : getServerConfig().user_email_address;
+    appStore.userName = getServerConfig().user_display_name;
 }
