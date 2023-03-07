@@ -409,18 +409,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
                 const href = this.getTabHref(tab.props.id);
 
-                const linkContent = tab.props.linkTooltip ? (
-                    <DefaultTooltip
-                        overlay={tab.props.linkTooltip}
-                        mouseEnterDelay={0}
-                        placement="top"
-                    >
-                        <span>{tab.props.linkText}</span>
-                    </DefaultTooltip>
-                ) : (
-                    tab.props.linkText
-                );
-
                 pages[currentPage - 1].push(
                     <li
                         key={tab.props.id}
@@ -428,19 +416,26 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                         ref={this.tabRefHandler.bind(this, tab.props.id)}
                         className={activeClass}
                     >
-                        <a
-                            className={classnames(
-                                'tabAnchor',
-                                `tabAnchor_${tab.props.id}`,
-                                tab.props.anchorClassName
-                            )}
-                            onClick={this.tabClickHandlers(tab.props)}
-                            href={href}
-                            style={tab.props.anchorStyle}
+                        <DefaultTooltip
+                            overlay={tab.props.linkTooltip}
+                            mouseEnterDelay={0}
+                            placement="top"
+                            visible={tab.props.linkTooltip ? undefined : false}
                         >
-                            {linkContent}
-                            {closeButton}
-                        </a>
+                            <a
+                                className={classnames(
+                                    'tabAnchor',
+                                    `tabAnchor_${tab.props.id}`,
+                                    tab.props.anchorClassName
+                                )}
+                                onClick={this.tabClickHandlers(tab.props)}
+                                href={href}
+                                style={tab.props.anchorStyle}
+                            >
+                                {tab.props.linkText}
+                                {closeButton}
+                            </a>
+                        </DefaultTooltip>
                     </li>
                 );
             }
