@@ -21,7 +21,7 @@ describe.only('Toggling of study view filters autosubmit', function() {
     it('autocommits filters by default', () => {
         goToUrlAndSetLocalStorage(studyViewUrl, true);
 
-        selectNthMutationProfile(0);
+        selectMutationProfile(0);
         selectSamples();
 
         const filterInHeader = $(STUDY_VIEW_HEADER).$(PUTATIVE_PROFILE);
@@ -40,7 +40,7 @@ describe.only('Toggling of study view filters autosubmit', function() {
     });
 
     it('queues new filters when autosubmit disabled', () => {
-        selectNthMutationProfile(1);
+        selectMutationProfile(1);
         queueFilter();
 
         const queuedFilterInHeader = $(STUDY_VIEW_HEADER).$(LOG2_PROFILE);
@@ -87,13 +87,10 @@ describe.only('Toggling of study view filters autosubmit', function() {
     });
 });
 
-/**
- * N starts at 0
- */
-function selectNthMutationProfile(nthProfile = 1) {
+function selectMutationProfile(index = 0) {
     $(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)
         .$$('input')
-        [nthProfile].click();
+        [index].click();
 }
 
 function queueFilter() {
