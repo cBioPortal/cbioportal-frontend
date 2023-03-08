@@ -8,6 +8,7 @@ const {
     setDropdownOpen,
     jsApiHover,
     getElementByTestHandle,
+    jq,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -25,7 +26,9 @@ const CANCER_GENE_FILTER_ICON = "[data-test='header-filter-icon']";
 const ADD_CUSTOM_CHART_TAB = '.addChartTabs a.tabAnchor.tabAnchor_Custom_Data';
 
 describe('study view generic assay categorical/binary features', function() {
-    it('generic assay pie chart should be added in the summary tab', () => {
+    it('generic assay pie chart should be added in the summary tab', function() {
+        this.retries(0);
+
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
         goToUrlAndSetLocalStorage(url, true);
 
@@ -38,6 +41,7 @@ describe('study view generic assay categorical/binary features', function() {
         $(ADD_CHART_GENERIC_ASSAY_TAB).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
+        //browser.debug();
         $(ADD_CHART_GENERIC_ASSAY_TAB).click();
 
         // Select category mutational signature profile
@@ -57,10 +61,11 @@ describe('study view generic assay categorical/binary features', function() {
 
         // wait for generic assay data loading complete
         // and select a option
-        $('div[data-test="GenericAssaySelection"]').waitForExist();
-        $('div[data-test="GenericAssaySelection"] input').setValue(
+        $('div[data-test="GenericAssayEntitySelection"]').waitForExist();
+        $('div[data-test="GenericAssayEntitySelection"] input').setValue(
             'mutational_signature_category_10'
         );
+
         $('div=Select all filtered options (1)').waitForExist();
         $('div=Select all filtered options (1)').click();
         // close the dropdown
@@ -69,13 +74,26 @@ describe('study view generic assay categorical/binary features', function() {
         var selectedOptions = $$('div[class$="multiValue"]');
         assert.equal(selectedOptions.length, 1);
 
+        // this needs to be done twice for some reason on circleci
         $('button=Add Chart').click();
+        $('button=Add Chart').click();
+        //$('button=Add Chart').click();
         // Wait for chart to be added
         waitForNetworkQuiet();
 
-        const res = checkElementWithMouseDisabled(
-            'div[data-test="chart-container-mutational_signature_category_10_mutational_signature_category_v2"]'
+        // allow time to render
+        browser.pause(1000);
+
+        const el = jq(
+            "[data-test*='chart-container-mutational_signature_category_10_mutational']"
         );
+        const att = $(el[0]).getAttribute('data-test');
+
+        console.log('AARON');
+        console.log(att);
+
+        const res = checkElementWithMouseDisabled(`[data-test='${att}']`);
+
         assertScreenShotMatch(res);
     });
 });
