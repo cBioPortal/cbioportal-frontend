@@ -141,11 +141,19 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
     private tabClickHandlers = MemoizedHandlerFactory(
         (
-            e: React.MouseEvent<any>,
+            e: React.MouseEvent<HTMLAnchorElement>,
             tabProps: Pick<IMSKTabProps, 'id' | 'datum'>
         ) => {
-            e.preventDefault();
-            this.setActiveTab(tabProps.id, tabProps.datum);
+            // only fire when we know that click came from the tab element itself
+            // or descendant
+            // (and not from an element in tooltip e.g.)
+            if (
+                e.target === e.currentTarget ||
+                e.currentTarget.contains(e.target as HTMLElement)
+            ) {
+                e.preventDefault();
+                this.setActiveTab(tabProps.id, tabProps.datum);
+            }
         }
     );
 
