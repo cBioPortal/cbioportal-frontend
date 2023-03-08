@@ -1,3 +1,5 @@
+@import '../../../globalStyles/mixins';
+
 $wide: 10px;
 $regular: 5px;
 
@@ -24,7 +26,8 @@ $regular: 5px;
     cursor: pointer;
 }
 .pending {
-    opacity: 0.6;
+    opacity: 0.4;
+    @include marching-ants();
 }
 .pendingDelete {
     text-decoration: line-through;

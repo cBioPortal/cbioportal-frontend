@@ -394,6 +394,17 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed
+    get showSubmitFiltersButton() {
+        // show the button when we're on summary tab and in hesitate mode and
+        // there are pending filters to submit
+        return (
+            this.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY &&
+            this.store.hesitateUpdate &&
+            Object.keys(this.store.hesitantPillStore).length > 0
+        );
+    }
+
+    @computed
     get groupsButton() {
         return (
             <>
@@ -654,36 +665,30 @@ export default class StudyViewPage extends React.Component<
                                         ref={this.toolbarRef}
                                         className={styles.absolutePanel}
                                     >
-                                        {this.store.hesitateUpdate &&
-                                            this.store.currentTab ===
-                                                StudyViewPageTabKeyEnum.SUMMARY && (
-                                                <div
+                                        {this.showSubmitFiltersButton && (
+                                            <div
+                                                className={classNames(
+                                                    styles.studyFilterResult,
+                                                    styles.hesitateControls,
+                                                    'btn-group'
+                                                )}
+                                            >
+                                                <button
                                                     className={classNames(
-                                                        styles.studyFilterResult,
-                                                        styles.hesitateControls,
-                                                        'btn-group'
+                                                        'btn btn-sm btn-primary',
+                                                        styles.actionButtons
                                                     )}
+                                                    onClick={() =>
+                                                        runInAction(() =>
+                                                            this.submitHesitantFilters()
+                                                        )
+                                                    }
+                                                    data-test="submit-study-filters"
                                                 >
-                                                    <button
-                                                        disabled={
-                                                            !this.store
-                                                                .hesitateUpdate
-                                                        }
-                                                        className={classNames(
-                                                            'btn btn-sm btn-primary',
-                                                            styles.actionButtons
-                                                        )}
-                                                        onClick={() =>
-                                                            runInAction(() =>
-                                                                this.submitHesitantFilters()
-                                                            )
-                                                        }
-                                                        data-test="submit-study-filters"
-                                                    >
-                                                        Submit ►
-                                                    </button>
-                                                </div>
-                                            )}
+                                                    Submit ►
+                                                </button>
+                                            </div>
+                                        )}
                                         <Observer>
                                             {() => {
                                                 // create element here to get correct mobx subscriber list
