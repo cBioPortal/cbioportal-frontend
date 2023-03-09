@@ -4729,6 +4729,18 @@
       },
       "title": "CopyNumberSeg"
     },
+    "DataFilter": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          }
+        }
+      },
+      "title": "DataFilter"
+    },
     "DataFilterValue": {
       "type": "object",
       "properties": {
@@ -5920,6 +5932,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ClinicalDataFilter"
+          }
+        },
+        "clinicalEventFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilter"
           }
         },
         "customDataFilters": {
