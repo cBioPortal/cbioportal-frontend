@@ -199,6 +199,10 @@ export type CopyNumberSeg = {
         'uniqueSampleKey': string
 
 };
+export type DataFilter = {
+    'values': Array < DataFilterValue >
+
+};
 export type DataFilterValue = {
     'end': number
 
@@ -713,6 +717,8 @@ export type StudyViewFilter = {
         >
 
         'clinicalDataFilters': Array < ClinicalDataFilter >
+
+        'clinicalEventFilters': Array < DataFilter >
 
         'customDataFilters': Array < ClinicalDataFilter >
 

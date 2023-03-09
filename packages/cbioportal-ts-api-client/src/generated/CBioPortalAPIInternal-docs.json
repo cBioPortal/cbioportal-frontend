@@ -699,6 +699,43 @@
         }
       }
     },
+    "/clinical-event-type-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Get Counts of Clinical Event Types by Study View Filter",
+        "operationId": "getClinicalEventTypeCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalEventTypeCount"
+              }
+            }
+          }
+        }
+      }
+    },
     "/cna-genes/fetch": {
       "post": {
         "tags": [
@@ -3757,6 +3794,19 @@
       },
       "title": "ClinicalEventData"
     },
+    "ClinicalEventTypeCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "eventType": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalEventTypeCount"
+    },
     "ClinicalViolinPlotBoxData": {
       "type": "object",
       "properties": {
@@ -4069,6 +4119,18 @@
         }
       },
       "title": "DataAccessToken"
+    },
+    "DataFilter": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          }
+        }
+      },
+      "title": "DataFilter"
     },
     "DataFilterValue": {
       "type": "object",
@@ -5507,6 +5569,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ClinicalDataFilter"
+          }
+        },
+        "clinicalEventFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilter"
           }
         },
         "customDataFilters": {
