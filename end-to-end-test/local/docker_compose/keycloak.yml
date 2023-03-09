@@ -11,7 +11,7 @@ services:
     networks:
     - cbio-net
     container_name: keycloak
-    image: jboss/keycloak:11.0.3
+    image: ${DOCKER_IMAGE_KEYCLOAK}
     restart: unless-stopped
     depends_on:
     - kcdb
@@ -31,7 +31,7 @@ services:
   kcdb:
     networks:
     - cbio-net
-    image: mysql:5.7
+    image: ${DOCKER_IMAGE_MYSQL}
     container_name: kcdb
     restart: unless-stopped
     volumes:
