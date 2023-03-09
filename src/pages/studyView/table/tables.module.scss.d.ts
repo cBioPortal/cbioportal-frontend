@@ -25,6 +25,7 @@ declare const styles: {
   readonly "labelContentSVG": string;
   readonly "mutsig": string;
   readonly "oddRow": string;
+  readonly "pullRight": string;
   readonly "row": string;
   readonly "studyViewTablesTable": string;
   readonly "tableSearchInput": string;
