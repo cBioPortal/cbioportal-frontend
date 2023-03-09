@@ -35,7 +35,9 @@ export default class ClinicalInformationPatientTable extends React.Component<
     }): string {
         let ret: string;
 
-        if (!isNaN(data.value as any)) {
+        if (isNaN(data.value as any)) {
+            ret = data.value;
+        } else {
             const parsedFloat = parseFloat(data.value);
             if (parsedFloat != parseInt(data.value)) {
                 // the values formatted are not percentages in this case however the function cleanly rounds any float to 1 decimal place
@@ -43,8 +45,6 @@ export default class ClinicalInformationPatientTable extends React.Component<
             } else {
                 ret = data.value;
             }
-        } else {
-            ret = data.value;
         }
         return ret!;
     }
