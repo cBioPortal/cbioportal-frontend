@@ -33,20 +33,17 @@ export default class ClinicalInformationPatientTable extends React.Component<
         attribute: string;
         value: string;
     }): string {
-        let ret: string;
-
         if (isNaN(data.value as any)) {
-            ret = data.value;
+            return data.value;
         } else {
             const parsedFloat = parseFloat(data.value);
             if (parsedFloat != parseInt(data.value)) {
                 // the values formatted are not percentages in this case however the function cleanly rounds any float to 1 decimal place
-                ret = formatPercentValue(parsedFloat);
+                return formatPercentValue(parsedFloat);
             } else {
-                ret = data.value;
+                return data.value;
             }
         }
-        return ret!;
     }
 
     @autobind handleClick(name: string) {
