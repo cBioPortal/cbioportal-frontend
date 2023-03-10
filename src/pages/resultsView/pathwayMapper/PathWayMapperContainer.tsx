@@ -114,7 +114,10 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                                     </li>
                                     <li>
                                         686 from{' '}
-                                        <a href="https://www.wikipathways.org/">
+                                        <a
+                                            href="https://www.wikipathways.org/"
+                                            target="_blank"
+                                        >
                                             WikiPathways
                                         </a>
                                     </li>

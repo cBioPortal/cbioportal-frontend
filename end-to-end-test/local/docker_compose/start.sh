@@ -9,6 +9,14 @@ DIR=$PWD
 
 cd $E2E_WORKSPACE/cbioportal-docker-compose
 
+if [[ "$(uname -s)" == "Darwin" ]] && [[ "$(sysctl -n machdep.cpu.brand_string)" =~ M.* ]]; then
+  # if macOS and M-series chip, use images for ARM architecture
+  export DOCKER_IMAGE_KEYCLOAK=alemairebe/keycloak:11.0.3
+else
+  # else use images for x86_64 architecture
+  export DOCKER_IMAGE_KEYCLOAK=jboss/keycloak:11.0.3
+fi
+
 compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml -f $TEST_HOME/docker_compose/keycloak.yml"
 if [ $CUSTOM_BACKEND -eq 1 ]; then
   compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
