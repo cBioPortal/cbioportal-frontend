@@ -116,7 +116,7 @@ export default class PortalFooter extends React.Component<
                                             target="_blank"
                                             href="https://groups.google.com/forum/#!forum/cbioportal"
                                         >
-                                            User Group
+                                            Community
                                         </a>
                                     </li>
                                 </ul>

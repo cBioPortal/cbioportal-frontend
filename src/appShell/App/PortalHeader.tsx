@@ -19,7 +19,7 @@ export default class PortalHeader extends React.Component<
         return [
             {
                 id: 'datasets',
-                text: 'Data Sets',
+                text: 'Datasets',
                 address: '/datasets',
                 internal: true,
                 hide: () => getServerConfig().skin_show_data_tab === false,
@@ -27,7 +27,7 @@ export default class PortalHeader extends React.Component<
 
             {
                 id: 'webAPI',
-                text: 'Web API',
+                text: 'API',
                 address: 'https://docs.cbioportal.org/web-api-and-clients/',
                 internal: false,
                 hide: () => getServerConfig().skin_show_web_api_tab === false,
@@ -43,7 +43,7 @@ export default class PortalHeader extends React.Component<
 
             {
                 id: 'tutorials',
-                text: 'Tutorials/Webinars',
+                text: 'Tutorials',
                 address: 'https://docs.cbioportal.org/user-guide/overview/',
                 internal: false,
                 hide: () => getServerConfig().skin_show_tutorials_tab === false,
@@ -67,7 +67,7 @@ export default class PortalHeader extends React.Component<
 
             {
                 id: 'visualize',
-                text: 'Visualize Your Data',
+                text: 'Data Visualization',
                 address: '/visualize',
                 internal: true,
                 hide: () => getServerConfig().skin_show_tools_tab === false,
