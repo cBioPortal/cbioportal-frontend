@@ -15,7 +15,7 @@ import {
     makeObservable,
     observable,
 } from 'mobx';
-import { ReactChild } from 'react';
+import { CSSProperties, ReactChild } from 'react';
 import { observer } from 'mobx-react';
 import MemoizedHandlerFactory from '../../lib/MemoizedHandlerFactory';
 import URL from 'url';
@@ -27,7 +27,8 @@ export interface IMSKTabProps {
     linkText: string | JSX.Element;
     linkTooltip?: string | JSX.Element;
     activeId?: string;
-    className?: string;
+    containerClassName?: string;
+    containerStyle?: CSSProperties;
     hide?: boolean | (() => boolean);
     datum?: any;
     anchorStyle?: { [k: string]: string | number | boolean };
@@ -94,8 +95,9 @@ export class MSKTab extends React.Component<IMSKTabProps, {}> {
                         'msk-tab': true,
                         hiddenByPosition: !!this.props.inactive,
                     },
-                    this.props.className
+                    this.props.containerClassName
                 )}
+                style={this.props.containerStyle}
             >
                 {this.props.children}
             </div>

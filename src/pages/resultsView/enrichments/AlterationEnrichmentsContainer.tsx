@@ -38,6 +38,7 @@ import {
     MutationEnrichmentEventType,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 import { getServerConfig } from 'config/config';
+import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -526,9 +527,23 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         // is shown 'in-line'.
                     }
                     {useInlineTypeSelectorMenu && (
-                        <div
-                            className={
-                                styles.inlineAlterationTypeSelectorMenuDash
+                        <AlterationEnrichmentTypeSelector
+                            classNames={styles.inlineAlterationTypeSelectorMenu}
+                            store={this.props.comparisonStore!}
+                            updateSelectedEnrichmentEventTypes={
+                                this.props.comparisonStore!
+                                    .updateSelectedEnrichmentEventTypes
+                            }
+                            showMutations={
+                                this.props.comparisonStore!
+                                    .hasMutationEnrichmentData
+                            }
+                            showCnas={
+                                this.props.comparisonStore!.hasCnaEnrichmentData
+                            }
+                            showStructuralVariants={
+                                this.props.comparisonStore!
+                                    .hasStructuralVariantData
                             }
                         />
                     )}

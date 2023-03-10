@@ -191,33 +191,6 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            {(getServerConfig().skin_show_settings_menu && (
-                                <AlterationFilterMenuSection
-                                    store={this.store}
-                                    updateSelectedEnrichmentEventTypes={
-                                        this.store
-                                            .updateSelectedEnrichmentEventTypes
-                                    }
-                                />
-                            )) || (
-                                <AlterationEnrichmentTypeSelector
-                                    classNames={
-                                        styles.inlineAlterationTypeSelectorMenu
-                                    }
-                                    store={this.store}
-                                    updateSelectedEnrichmentEventTypes={
-                                        this.store
-                                            .updateSelectedEnrichmentEventTypes
-                                    }
-                                    showMutations={
-                                        this.store.hasMutationEnrichmentData
-                                    }
-                                    showCnas={this.store.hasCnaEnrichmentData}
-                                    showStructuralVariants={
-                                        this.store.hasStructuralVariantData
-                                    }
-                                />
-                            )}
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}
