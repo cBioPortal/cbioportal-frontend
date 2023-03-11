@@ -23,6 +23,7 @@ import {
 } from 'shared/components/GeneSelectionBox/GeneSelectionBoxUtils';
 import autobind from 'autobind-decorator';
 import GeneSymbolValidatorMessage from 'shared/components/GeneSelectionBox/GeneSymbolValidatorMessage';
+import { getGenesFromSingleGeneQuery } from 'shared/lib/oql/oqlfilter';
 
 export interface IGeneSymbolValidatorProps {
     deferOqlError?: boolean;
@@ -154,8 +155,16 @@ export default class GeneSymbolValidator extends React.Component<
     @computed get oql() {
         return getOQL(this.props.geneQuery);
     }
+
     @computed private get geneIds(): string[] {
-        return this.oql.error ? [] : this.oql.query.map(line => line.gene);
+        return this.oql.error
+            ? []
+            : _(this.oql.query)
+                  .flatMap(singleGeneQuery =>
+                      getGenesFromSingleGeneQuery(singleGeneQuery)
+                  )
+                  .uniq()
+                  .value();
     }
 
     @computed
