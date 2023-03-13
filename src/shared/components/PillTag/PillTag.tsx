@@ -68,25 +68,40 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
 
     private handleDelete() {
         if (!this.hesitateUpdate) {
-            // Delete all filters immediately in autocommit mode:
             this.deleteNow();
             return;
         }
-        if (
-            this.hesitateUpdate &&
-            this.hesitantPillStoreEntry &&
-            !this.hesitantPillStoreEntry.onDeleteCallback
-        ) {
-            // Delete non-submitted filters immediately in hesitate mode:
+        if (this.isDeleteOfQueuedFilter()) {
             this.deleteNow();
             return;
         }
-        if (this.hesitateUpdate && !this.hesitantPillStoreEntry) {
-            // Postpone deleting of submitted filters in hesitate mode:
+        if (this.isDeleteOfSubmittedFilter()) {
             const isDeleted = true;
             this.addPillToHesitateStore(isDeleted);
+            this.forceUpdate();
+            return;
         }
-        this.forceUpdate();
+        if (this.isDeleteOfQueuedDelete()) {
+            this.removePillFromHesitateStore();
+            this.forceUpdate();
+            return;
+        }
+    }
+
+    private isDeleteOfSubmittedFilter() {
+        return this.hesitateUpdate && !this.hesitantPillStoreEntry;
+    }
+
+    private isDeleteOfQueuedFilter() {
+        return this.isQueued() && !this.hesitantPillStoreEntry.onDeleteCallback;
+    }
+
+    private isDeleteOfQueuedDelete() {
+        return this.isQueued() && this.hesitantPillStoreEntry.onDeleteCallback;
+    }
+
+    private isQueued() {
+        return this.hesitateUpdate && this.hesitantPillStoreEntry;
     }
 
     private deleteNow() {
@@ -110,6 +125,11 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
             key,
             onDeleteCallback,
         };
+    }
+
+    private removePillFromHesitateStore() {
+        const key = this.pillStoreKey;
+        delete this.hesitantPillStore[key];
     }
 
     private addPillToSubmittedStore() {
