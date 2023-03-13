@@ -265,6 +265,7 @@ import client from 'shared/api/cbioportalClientInstance';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
+import { STUDY_VIEW_FILTER_AUTOSUBMIT } from 'pages/studyView/menu/AutosubmitToggle';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -497,6 +498,27 @@ export class StudyViewPageStore
             )
         );
 
+        /**
+         * Initialize this.filters only when this.filtersProxy is properly initialized
+         */
+        this.reactionDisposers.push(
+            reaction(
+                () => [this.filtersProxy, this.filters],
+                () => {
+                    const isFiltersInitialized = this.filters;
+                    const isFiltersProxyInitialized = _.keys(
+                        this.filtersProxy.alterationFilter.tiersBooleanMap
+                    ).length;
+                    if (!isFiltersInitialized && isFiltersProxyInitialized) {
+                        this.submitFilters();
+                    }
+                },
+                {
+                    equals: comparer.structural,
+                }
+            )
+        );
+
         this.reactionDisposers.push(
             reaction(
                 () => [this.hesitateUpdate, this.filterSubmitTime],
@@ -655,7 +677,8 @@ export class StudyViewPageStore
     //this is set on initial load
     private _loadUserSettingsInitially = this.isLoggedIn;
 
-    @observable hesitateUpdate = false;
+    @observable hesitateUpdate =
+        localStorage.getItem(STUDY_VIEW_FILTER_AUTOSUBMIT) === 'true' || false;
 
     /**
      * Keep track of submitted and 'hesitant' (i.e. queued or non-submitted)
@@ -4412,7 +4435,9 @@ export class StudyViewPageStore
                                 {
                                     dataBinMethod,
                                     clinicalDataBinCountFilter: {
-                                        attributes: [attribute],
+                                        attributes: attribute
+                                            ? [attribute]
+                                            : [],
                                         studyViewFilter: this.filters,
                                     },
                                 }

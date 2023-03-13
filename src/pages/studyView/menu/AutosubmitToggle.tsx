@@ -5,15 +5,23 @@ import styles from 'pages/studyView/styles.module.scss';
 import Tooltip from 'rc-tooltip';
 
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { StudyViewContext } from 'pages/studyView/StudyViewContext';
 export type IAutosubmitToggleProps = {
     store: StudyViewPageStore;
 };
+
+export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
 @observer
 export class AutosubmitToggle extends React.Component<
     IAutosubmitToggleProps,
     {}
 > {
+    private updateHesitateMode(hesitateMode: boolean) {
+        localStorage.setItem(STUDY_VIEW_FILTER_AUTOSUBMIT, '' + hesitateMode);
+        this.context.store.hesitateUpdate = hesitateMode;
+    }
+
     render() {
         return (
             <div className={classNames(styles.autosubmitToggle)}>
@@ -37,9 +45,7 @@ export class AutosubmitToggle extends React.Component<
                 <div className="btn-group">
                     <label>
                         <input
-                            onClick={() =>
-                                (this.props.store.hesitateUpdate = false)
-                            }
+                            onClick={() => this.updateHesitateMode(false)}
                             checked={!this.props.store.hesitateUpdate}
                             type="radio"
                         />{' '}
@@ -47,9 +53,7 @@ export class AutosubmitToggle extends React.Component<
                     </label>
                     <label>
                         <input
-                            onClick={() =>
-                                (this.props.store.hesitateUpdate = true)
-                            }
+                            onClick={() => this.updateHesitateMode(true)}
                             checked={this.props.store.hesitateUpdate}
                             type="radio"
                         />{' '}
@@ -60,3 +64,5 @@ export class AutosubmitToggle extends React.Component<
         );
     }
 }
+
+AutosubmitToggle.contextType = StudyViewContext;
