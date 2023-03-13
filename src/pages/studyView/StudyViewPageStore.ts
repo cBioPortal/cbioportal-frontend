@@ -409,10 +409,12 @@ export class StudyViewPageStore
     @observable filterUpdateTime: number = performance.now();
 
     /**
-     * Force remount of filters when filters are submitted of submit mode changes
+     * Force remount of filters when:
+     * - the submit mode changes;
+     * - filters are updated or submitted.
      */
     @computed
-    public get filtersRemountKey() {
+    public get filtersRerenderKey() {
         return `${this.hesitateUpdate}${this.filterSubmitTime}${this.filterUpdateTime}`;
     }
 
@@ -482,10 +484,10 @@ export class StudyViewPageStore
 
         this.reactionDisposers.push(
             reaction(
-                () => [this.filtersProx, this.hesitateUpdate],
+                () => [this.filtersProxy, this.hesitateUpdate],
                 () => {
                     if (!this.hesitateUpdate) {
-                        this.filters = this.filtersProx;
+                        this.submitFilters();
                     }
                     this.filterUpdateTime = performance.now();
                 },
@@ -495,25 +497,11 @@ export class StudyViewPageStore
             )
         );
 
-        /**
-         * Submit filters when submit mode changes
-         * or when user clicks submit button
-         */
         this.reactionDisposers.push(
             reaction(
                 () => [this.hesitateUpdate, this.filterSubmitTime],
                 () => {
-                    _.forIn(this.hesitantPillStore, (value, key) => {
-                        const onDeleteCallback = value.onDeleteCallback;
-                        if (onDeleteCallback) {
-                            onDeleteCallback();
-                            delete this.submittedPillStore[key];
-                        } else {
-                            this.submittedPillStore[key] = value;
-                        }
-                    });
-                    this.hesitantPillStore = {};
-                    this.filters = this.filtersProx;
+                    this.submitQueuedFilterUpdates();
                 }
             )
         );
@@ -634,6 +622,24 @@ export class StudyViewPageStore
                 }
             }
         );
+    }
+
+    private submitFilters() {
+        this.filters = this.filtersProxy;
+    }
+
+    private submitQueuedFilterUpdates() {
+        _.forIn(this.hesitantPillStore, (value, key) => {
+            const onDeleteCallback = value.onDeleteCallback;
+            if (onDeleteCallback) {
+                onDeleteCallback();
+                delete this.submittedPillStore[key];
+            } else {
+                this.submittedPillStore[key] = value;
+            }
+        });
+        this.hesitantPillStore = {};
+        this.filters = this.filtersProxy;
     }
 
     @computed get isLoggedIn() {
@@ -2628,13 +2634,11 @@ export class StudyViewPageStore
         this.clearSampleTreatmentFilters();
         this.clearSampleTreatmentGroupFilters();
         this.clearSampleTreatmentTargetFilters();
-        // TODO This is a addition to rescue reset of filters
-        // when hesitate mode is 'on' (no longer need to press
-        // the submit button).
-        // Disucuss better place with Bas and Aaron.
         if (this.hesitateUpdate) {
-            this.filters = this.filtersProx;
+            this.filters = this.filtersProxy;
         }
+        this.submittedPillStore = {};
+        this.hesitantPillStore = {};
     }
 
     @computed
@@ -3563,8 +3567,11 @@ export class StudyViewPageStore
 
     @observable filters: StudyViewFilter;
 
+    /**
+     * Filters that are queued and not yet submitted
+     */
     @computed
-    get filtersProx(): StudyViewFilter {
+    get filtersProxy(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
         const clinicalDataFilters = this.clinicalDataFilters;
@@ -3698,7 +3705,7 @@ export class StudyViewPageStore
         sampleIdentifiersSet: { [id: string]: SampleIdentifier[] };
     } {
         return {
-            ...this.filtersProx,
+            ...this.filtersProxy,
             sampleIdentifiersSet: _.fromPairs(
                 this._chartSampleIdentifiersFilterSet.toJSON()
             ),

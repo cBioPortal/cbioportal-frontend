@@ -56,7 +56,7 @@ export default class StudyPageHeader extends React.Component<
 
                 {this.props.store.clinicalAttributeIdToDataType.isComplete && (
                     <UserSelections
-                        key={this.props.store.filtersRemountKey}
+                        key={this.props.store.filtersRerenderKey}
                         store={this.props.store}
                         filter={this.props.store.userSelections}
                         comparisonGroupSelection={
