@@ -1,7 +1,7 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { computed, makeObservable } from 'mobx';
+import { computed, makeObservable, runInAction } from 'mobx';
 import styles from './styles.module.scss';
 import {
     DataFilterValue,
@@ -51,6 +51,9 @@ import {
     MUT_COLOR_MISSENSE,
 } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import classNames from 'classnames';
+import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
+import { StudyViewContext } from 'pages/studyView/StudyViewContext';
 
 export interface IUserSelectionsProps {
     store: StudyViewPageStore;
@@ -103,6 +106,17 @@ export default class UserSelections extends React.Component<
     get showFilters() {
         //return isFiltered(this.props.filter)
         return this.allComponents.length > 0;
+    }
+
+    @computed
+    get showSubmitFiltersButton() {
+        // show the button when we're on summary tab and in hesitate mode and
+        // there are pending filters to submit
+        return (
+            this.context.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY &&
+            this.context.store.hesitateUpdate &&
+            Object.keys(this.context.store.hesitantPillStore).length > 0
+        );
     }
 
     @computed
@@ -798,6 +812,10 @@ export default class UserSelections extends React.Component<
         });
     }
 
+    submitHesitantFilters() {
+        this.context.store.filterSubmitTime = performance.now();
+    }
+
     render() {
         if (this.showFilters) {
             return (
@@ -818,6 +836,31 @@ export default class UserSelections extends React.Component<
                     >
                         Clear All Filters
                     </button>
+
+                    {this.showSubmitFiltersButton && (
+                        <div
+                            className={classNames(
+                                styles.studyFilterResult,
+                                styles.hesitateControls,
+                                'btn-group'
+                            )}
+                        >
+                            <button
+                                className={classNames(
+                                    'btn btn-sm btn-primary',
+                                    styles.actionButtons
+                                )}
+                                onClick={() =>
+                                    runInAction(() =>
+                                        this.submitHesitantFilters()
+                                    )
+                                }
+                                data-test="submit-study-filters"
+                            >
+                                Submit ►
+                            </button>
+                        </div>
+                    )}
 
                     <DefaultTooltip
                         placement={'topLeft'}
@@ -840,3 +883,5 @@ export default class UserSelections extends React.Component<
         }
     }
 }
+
+UserSelections.contextType = StudyViewContext;
