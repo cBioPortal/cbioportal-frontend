@@ -407,7 +407,7 @@ export class StudyViewPageStore
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
     @observable filterSubmitTime: number = performance.now();
-    @observable filterUpdateTime: number = performance.now();
+    @observable filterUpdateTime: number = 0;
 
     /**
      * Force remount of filters when:
@@ -487,7 +487,7 @@ export class StudyViewPageStore
             reaction(
                 () => [this.filtersProxy, this.hesitateUpdate],
                 () => {
-                    if (!this.hesitateUpdate) {
+                    if (!this.hesitateUpdate || this.filterUpdateTime === 0) {
                         this.submitFilters();
                     }
                     this.filterUpdateTime = performance.now();
@@ -677,7 +677,7 @@ export class StudyViewPageStore
     //this is set on initial load
     private _loadUserSettingsInitially = this.isLoggedIn;
 
-    @observable hesitateUpdate =
+    hesitateUpdate =
         localStorage.getItem(STUDY_VIEW_FILTER_AUTOSUBMIT) === 'true' || false;
 
     /**
