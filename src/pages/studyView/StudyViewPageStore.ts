@@ -651,7 +651,7 @@ export class StudyViewPageStore
         this.filters = this.filtersProxy;
     }
 
-    private submitQueuedFilterUpdates() {
+    public submitQueuedFilterUpdates() {
         _.forIn(this.hesitantPillStore, (value, key) => {
             const onDeleteCallback = value.onDeleteCallback;
             if (onDeleteCallback) {

@@ -3,7 +3,8 @@ import {
     StudyViewPageStore,
 } from 'pages/studyView/StudyViewPageStore';
 import * as React from 'react';
-import { computed, makeObservable, observable } from 'mobx';
+import _ from 'lodash';
+import { computed, makeObservable, observable, runInAction } from 'mobx';
 import classNames from 'classnames';
 import styles from 'pages/studyView/styles.module.scss';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -31,11 +32,20 @@ export default class StudyViewPageSettingsMenu extends React.Component<
             <div>
                 <AutosubmitToggle
                     onChange={isManualModeOn => {
-                        localStorage.setItem(
-                            STUDY_VIEW_FILTER_AUTOSUBMIT,
-                            '' + isManualModeOn
-                        );
-                        this.props.store.hesitateUpdate = isManualModeOn;
+                        runInAction(() => {
+                            localStorage.setItem(
+                                STUDY_VIEW_FILTER_AUTOSUBMIT,
+                                '' + isManualModeOn
+                            );
+
+                            if (
+                                !isManualModeOn &&
+                                !_.isEmpty(this.props.store.hesitantPillStore)
+                            ) {
+                                this.props.store.submitQueuedFilterUpdates();
+                            }
+                            this.props.store.hesitateUpdate = isManualModeOn;
+                        });
                     }}
                     hesitateModeOn={this.props.store.hesitateUpdate}
                 />
