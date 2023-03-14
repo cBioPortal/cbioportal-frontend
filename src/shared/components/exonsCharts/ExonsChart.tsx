@@ -41,9 +41,14 @@ export default class ExonsChart extends React.Component<IExonsChartProps, {}> {
         fusions: StructuralVariantExt[] | undefined,
         referenceGeneWidth: number
     ) {
-        return (fusions || []).map(fusion => {
+        const sortedFusions = this.sortFusionsBySymbol(fusions);
+        let lastLabel = '';
+        return (sortedFusions || []).map(fusion => {
+            let label = fusion.site1HugoSymbol + '-' + fusion.site2HugoSymbol;
+            if (label === lastLabel) label = '';
+            else lastLabel = label;
             let leftLabel = {
-                label: fusion.site1HugoSymbol + '-' + fusion.site2HugoSymbol,
+                label: label,
                 isReference: false,
             };
             let _barPlotStore = new ExonsBarPlotStore(
@@ -55,39 +60,20 @@ export default class ExonsChart extends React.Component<IExonsChartProps, {}> {
         });
     }
 
-    sortFusions(fusions: StructuralVariantExt[] | undefined) {
-        if (fusions) {
-            fusions.sort((a, b) => {
-                a.site1HugoSymbol = a.site1HugoSymbol || 'undefined';
-                b.site1HugoSymbol = b.site1HugoSymbol || 'undefined';
-                if (a.site1HugoSymbol > b.site1HugoSymbol) return 1;
-                else if (a.site1HugoSymbol < b.site1HugoSymbol) return -1;
-                else {
-                    a.site2HugoSymbol = a.site2HugoSymbol || 'undefined';
-                    b.site2HugoSymbol = b.site2HugoSymbol || 'undefined';
-                    return a.site2HugoSymbol > b.site2HugoSymbol ? 1 : -1;
-                }
-            });
-            return fusions;
-        }
-    }
-
-    groupFusions(fusions: StructuralVariantExt[] | undefined) {
-        if (fusions) {
-            let currentLabel = '';
-            for (let i = 0; i < fusions.length; i++) {
-                const label =
-                    fusions[i].site1HugoSymbol +
-                    '-' +
-                    fusions[i].site2HugoSymbol;
-                if (currentLabel !== label) currentLabel = label;
-                else {
-                    fusions[i].site1HugoSymbol = '';
-                    fusions[i].site2HugoSymbol = '';
-                }
+    sortFusionsBySymbol(fusions: StructuralVariantExt[] | undefined) {
+        return fusions?.sort((a, b) => {
+            const aSite1HugoSymbol = a.site1HugoSymbol || 'undefined';
+            const bSite1HugoSymbol = b.site1HugoSymbol || 'undefined';
+            const aSite2HugoSymbol = a.site2HugoSymbol || 'undefined';
+            const bSite2HugoSymbol = b.site2HugoSymbol || 'undefined';
+            if (aSite1HugoSymbol > bSite1HugoSymbol) {
+                return 1;
+            } else if (aSite1HugoSymbol < bSite1HugoSymbol) {
+                return -1;
+            } else {
+                return aSite2HugoSymbol > bSite2HugoSymbol ? 1 : -1;
             }
-        }
-        return fusions;
+        });
     }
 
     render() {
@@ -101,7 +87,7 @@ export default class ExonsChart extends React.Component<IExonsChartProps, {}> {
                 };
                 const refExonStore = new ExonsBarPlotStore(leftLabel, t);
                 const refTotalWidth = t.totalWidth ? t.totalWidth : 0;
-                const fusions = this.groupFusions(this.sortFusions(t.fusions));
+                const fusions = this.sortFusionsBySymbol(t.fusions);
                 return (
                     <div style={containerStyle} className="borderedChart">
                         {/* Draw reference transcript exons */}
