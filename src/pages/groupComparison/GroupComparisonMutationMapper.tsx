@@ -124,7 +124,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         return (
             <>
                 <div
-                    className={styles['settingsMenuButton']}
+                    className={styles.settingsMenuButton}
                     style={
                         this.props.isPutativeDriver
                             ? { position: 'absolute' }

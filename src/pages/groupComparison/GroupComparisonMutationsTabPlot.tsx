@@ -117,6 +117,15 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         }
     }
 
+    @autobind
+    protected isPutativeDriver(m: AnnotatedMutation) {
+        return (
+            m.putativeDriver ||
+            (getProteinImpactType(m.mutationType) === 'other' &&
+                !!m.oncoKbOncogenic)
+        );
+    }
+
     readonly plotUI = MakeMobxView({
         await: () => [
             this.props.store.mutations,
@@ -168,12 +177,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             isPutativeDriver={
                                 this.props.store.driverAnnotationSettings
                                     .driversAnnotated
-                                    ? (m: AnnotatedMutation) =>
-                                          m.putativeDriver ||
-                                          (getProteinImpactType(
-                                              m.mutationType
-                                          ) === 'other' &&
-                                              !!m.oncoKbOncogenic)
+                                    ? this.isPutativeDriver
                                     : undefined
                             }
                             trackVisibility={
@@ -193,13 +197,13 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                     ).some(s => !_.isEmpty(s.allGenes) || !_.isEmpty(s.byGene))
                 ) {
                     return (
-                        <div className={styles['noMutationsMessage']}>
+                        <div className={styles.noMutationsMessage}>
                             Selected gene has no mutations for profiled samples.
                         </div>
                     );
                 } else {
                     return (
-                        <div className={styles['noMutationsMessage']}>
+                        <div className={styles.noMutationsMessage}>
                             Selected gene has no mutations due to no profiled
                             samples.
                         </div>

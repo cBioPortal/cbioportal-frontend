@@ -114,19 +114,19 @@ function badgeLabelFormat(
 ) {
     if (isDriverVusBadge(value!)) {
         return badgeFirst ? (
-            <div className={styles['driverVusBadgeLabel']}>
+            <div className={styles.driverVusBadgeLabel}>
                 {badge}
-                <div className={styles['driverVusLabel']}>{label}</div>
+                <div className={styles.driverVusLabel}>{label}</div>
             </div>
         ) : (
-            <div className={styles['driverVusBadgeLabel']}>
-                <div className={styles['driverVusLabel']}>{label}</div>
+            <div className={styles.driverVusBadgeLabel}>
+                <div className={styles.driverVusLabel}>{label}</div>
                 {badge}
             </div>
         );
     } else if (value) {
         return (
-            <div className={styles['proteinBadgeLabel']}>
+            <div className={styles.proteinBadgeLabel}>
                 {isNotDriverVusProteinBadge(value) ? label : badge}
             </div>
         );
@@ -248,7 +248,15 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                 ]);
             }
         }
-        return SELECTOR_VALUE_WITH_VUS.map(value => ({
+        return SELECTOR_VALUE_WITH_VUS.filter(
+            type =>
+                !(
+                    excludedProteinTypes.includes(type) ||
+                    excludedProteinTypes.includes(
+                        type.slice(0, type.indexOf('_'))
+                    )
+                )
+        ).map(value => ({
             value,
             label: this.optionDisplayValueMap[value],
             badgeContent: this.props.counts
@@ -257,29 +265,21 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             badgeStyleOverride: {
                 backgroundColor: this.proteinImpactTypeColors[value],
             },
-        })).filter(
-            type =>
-                !(
-                    excludedProteinTypes.includes(type.value) ||
-                    excludedProteinTypes.includes(
-                        type.value.slice(0, type.value.indexOf('_'))
-                    )
-                )
-        );
+        }));
     }
 
     protected get driverAnnotationIcon(): JSX.Element | undefined {
         const driverAnnotationSettingIcon = (
             <button
                 className={classnames(
-                    styles['driverAnnotationSettingsButton'],
+                    styles.driverAnnotationSettingsButton,
                     'btn btn-primary'
                 )}
                 onClick={this.onSettingMenuClick}
             >
                 <i
                     className={classnames(
-                        styles['driverAnnotationSettingsIcon'],
+                        styles.driverAnnotationSettingsIcon,
                         'fa fa-sliders'
                     )}
                 />
@@ -287,7 +287,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         );
         if (!this.props.disableAnnotationSettings) {
             return (
-                <span className={styles['driver-annotation-setting']}>
+                <span className={styles.driverAnnotationSetting}>
                     <DefaultTooltip
                         placement="top"
                         overlay={
@@ -536,7 +536,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     public render() {
         return (
             <div style={{ display: 'inline-flex' }}>
-                <div className={styles['legend-panel']}>
+                <div className={styles.legendPanel}>
                     <table style={{ height: 149 }}>
                         <BadgeSelector
                             options={this.driverVsVusOptions}

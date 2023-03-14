@@ -167,6 +167,15 @@ export default class Mutations extends React.Component<
         updateOncoKbIconStyle({ mergeIcons });
     }
 
+    @autobind
+    protected isPutativeDriver(m: AnnotatedMutation) {
+        return (
+            m.putativeDriver ||
+            (getProteinImpactType(m.mutationType) === 'other' &&
+                !!m.oncoKbOncogenic)
+        );
+    }
+
     @computed get geneTabContent() {
         if (
             this.selectedGene &&
@@ -231,11 +240,7 @@ export default class Mutations extends React.Component<
                         isPutativeDriver={
                             this.props.store.driverAnnotationSettings
                                 .driversAnnotated
-                                ? (m: AnnotatedMutation) =>
-                                      m.putativeDriver ||
-                                      (getProteinImpactType(m.mutationType) ===
-                                          'other' &&
-                                          !!m.oncoKbOncogenic)
+                                ? this.isPutativeDriver
                                 : undefined
                         }
                         trackVisibility={

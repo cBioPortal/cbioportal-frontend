@@ -34,7 +34,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                 Missense Mutations
                             </strong>
                             {isPutativeDriver !== undefined && (
-                                <span>(putative driver)</span>
+                                <span> (putative driver)</span>
                             )}
                         </li>
                         {isPutativeDriver !== undefined && (
@@ -48,7 +48,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                     Missense Mutations
                                 </strong>
                                 {isPutativeDriver !== undefined && (
-                                    <span>(unknown significance)</span>
+                                    <span> (unknown significance)</span>
                                 )}
                             </li>
                         )}
@@ -62,7 +62,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                 Truncating Mutations
                             </strong>
                             {isPutativeDriver !== undefined && (
-                                <span>(putative driver)</span>
+                                <span> (putative driver)</span>
                             )}
                             : Nonsense, Nonstop, Frameshift deletion, Frameshift
                             insertion, Splice site
@@ -78,7 +78,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                     Truncating Mutations
                                 </strong>
                                 {isPutativeDriver !== undefined && (
-                                    <span>(unknown significance)</span>
+                                    <span> (unknown significance)</span>
                                 )}
                                 : Nonsense, Nonstop, Frameshift deletion,
                                 Frameshift insertion, Splice site
@@ -94,7 +94,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                 Inframe Mutations
                             </strong>
                             {isPutativeDriver !== undefined && (
-                                <span>(putative driver)</span>
+                                <span> (putative driver)</span>
                             )}
                             : Inframe deletion, Inframe insertion
                         </li>
@@ -109,7 +109,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                     Inframe Mutations
                                 </strong>
                                 {isPutativeDriver !== undefined && (
-                                    <span>(unknown significance)</span>
+                                    <span> (unknown significance)</span>
                                 )}
                                 : Inframe deletion, Inframe insertion
                             </li>
@@ -124,7 +124,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                 Splice Mutations
                             </strong>
                             {isPutativeDriver !== undefined && (
-                                <span>(putative driver)</span>
+                                <span> (putative driver)</span>
                             )}
                         </li>
                         {isPutativeDriver !== undefined && (
@@ -138,7 +138,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                     Splice Mutations
                                 </strong>
                                 {isPutativeDriver !== undefined && (
-                                    <span>(unknown significance)</span>
+                                    <span> (unknown significance)</span>
                                 )}
                             </li>
                         )}
@@ -164,7 +164,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                 Other Mutations
                             </strong>
                             {isPutativeDriver !== undefined && (
-                                <span>(putative driver)</span>
+                                <span> (putative driver)</span>
                             )}
                             : All other types of mutations
                         </li>
@@ -179,7 +179,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                                     Other Mutations
                                 </strong>
                                 {isPutativeDriver !== undefined && (
-                                    <span>(unknown significance)</span>
+                                    <span> (unknown significance)</span>
                                 )}
                                 : All other types of mutations
                             </li>

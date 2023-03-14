@@ -26,7 +26,7 @@ export const BadgeCell: React.FC<IBadgeCellProps> = observer(
 
         const onlyButton = (
             <span
-                className={styles['onlyButton']}
+                className={styles.onlyButton}
                 data-test={`${option.value}_only`}
                 onClick={onOnlyClick}
             >
@@ -36,7 +36,7 @@ export const BadgeCell: React.FC<IBadgeCellProps> = observer(
 
         if (isDriverAnnotated) {
             return (
-                <div className={styles['badgeCell']} style={{ float: 'right' }}>
+                <div className={styles.badgeCell} style={{ float: 'right' }}>
                     <div style={{ float: 'left' }}>{optionLabel}</div>
                     <div style={{ float: 'left' }}>
                         <div>
@@ -54,7 +54,7 @@ export const BadgeCell: React.FC<IBadgeCellProps> = observer(
             );
         } else {
             return (
-                <div className={styles['badgeCell']}>
+                <div className={styles.badgeCell}>
                     {optionLabel}
                     {onlyButton}
                 </div>
