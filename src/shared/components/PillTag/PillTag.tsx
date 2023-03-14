@@ -4,15 +4,12 @@ import styles from './styles.module.scss';
 import { If } from 'react-if';
 import contrast from 'contrast';
 import { computed, makeObservable, observable } from 'mobx';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import classnames from 'classnames';
-import { observer } from 'mobx-react';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import {
     IStudyViewContext,
     StudyViewContext,
 } from 'pages/studyView/StudyViewContext';
-import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
 
 export interface IPillTagProps {
     content: string | { uniqueChartKey: string; element: JSX.Element };

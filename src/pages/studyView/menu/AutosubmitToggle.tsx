@@ -4,22 +4,21 @@ import classNames from 'classnames';
 import styles from 'pages/studyView/styles.module.scss';
 import Tooltip from 'rc-tooltip';
 
-import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { StudyViewContext } from 'pages/studyView/StudyViewContext';
+import autobind from 'autobind-decorator';
 export type IAutosubmitToggleProps = {
-    store: StudyViewPageStore;
+    hesitateModeOn: boolean;
+    onChange: (manual: boolean) => void;
 };
-
-export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
 @observer
 export class AutosubmitToggle extends React.Component<
     IAutosubmitToggleProps,
     {}
 > {
-    private updateHesitateMode(hesitateMode: boolean) {
-        localStorage.setItem(STUDY_VIEW_FILTER_AUTOSUBMIT, '' + hesitateMode);
-        this.context.store.hesitateUpdate = hesitateMode;
+    @autobind
+    public handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const hesitateMode = e.target.value === 'manual';
+        this.props.onChange(hesitateMode);
     }
 
     render() {
@@ -45,17 +44,21 @@ export class AutosubmitToggle extends React.Component<
                 <div className="btn-group">
                     <label>
                         <input
-                            onClick={() => this.updateHesitateMode(false)}
-                            checked={!this.props.store.hesitateUpdate}
+                            onChange={this.handleChange}
+                            defaultChecked={!this.props.hesitateModeOn}
                             type="radio"
+                            value={'auto'}
+                            name={'hesitateMode'}
                         />{' '}
                         Autosubmit
                     </label>
                     <label>
                         <input
-                            onClick={() => this.updateHesitateMode(true)}
-                            checked={this.props.store.hesitateUpdate}
+                            onChange={this.handleChange}
+                            defaultChecked={this.props.hesitateModeOn}
                             type="radio"
+                            value={'manual'}
+                            name={'hesitateMode'}
                         />{' '}
                         Manually submit
                     </label>
@@ -64,5 +67,3 @@ export class AutosubmitToggle extends React.Component<
         );
     }
 }
-
-AutosubmitToggle.contextType = StudyViewContext;

@@ -1,4 +1,7 @@
-import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import {
+    STUDY_VIEW_FILTER_AUTOSUBMIT,
+    StudyViewPageStore,
+} from 'pages/studyView/StudyViewPageStore';
 import * as React from 'react';
 import { computed, makeObservable, observable } from 'mobx';
 import classNames from 'classnames';
@@ -26,7 +29,16 @@ export default class StudyViewPageSettingsMenu extends React.Component<
     @computed get menu() {
         return (
             <div>
-                <AutosubmitToggle store={this.props.store} />
+                <AutosubmitToggle
+                    onChange={isManualModeOn => {
+                        localStorage.setItem(
+                            STUDY_VIEW_FILTER_AUTOSUBMIT,
+                            '' + isManualModeOn
+                        );
+                        this.props.store.hesitateUpdate = isManualModeOn;
+                    }}
+                    hesitateModeOn={this.props.store.hesitateUpdate}
+                />
             </div>
         );
     }
