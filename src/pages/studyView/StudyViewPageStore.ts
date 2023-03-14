@@ -265,7 +265,8 @@ import client from 'shared/api/cbioportalClientInstance';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
-import { STUDY_VIEW_FILTER_AUTOSUBMIT } from 'pages/studyView/menu/AutosubmitToggle';
+
+export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
