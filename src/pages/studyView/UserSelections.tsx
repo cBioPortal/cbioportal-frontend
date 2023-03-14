@@ -847,7 +847,7 @@ export default class UserSelections extends React.Component<
                         >
                             <button
                                 className={classNames(
-                                    'btn btn-sm btn-primary',
+                                    'btn btn-sm btn-primary marching-ants',
                                     styles.actionButtons
                                 )}
                                 onClick={() =>

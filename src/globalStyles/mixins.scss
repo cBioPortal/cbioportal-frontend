@@ -74,7 +74,7 @@
 }
 
 @mixin marching-ants() {
-    @include marching-ants-v2-init(20px, 1px, 1s, 1);
+    @include marching-ants-v2-init(20px, 1px, 2s, 1);
     @include marching-ants-v2-color(#eee, #333);
 }
 
