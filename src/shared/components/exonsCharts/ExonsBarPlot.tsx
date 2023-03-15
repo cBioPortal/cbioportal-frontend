@@ -128,39 +128,47 @@ export default class ExonBarPlot extends React.Component<
         const pFamX =
             this.props.store.deltaXPos > 0 ? this.props.store.deltaXPos : '';
         return (
-            <div style={{ display: 'flex', width: '100%' }} className="fade-in">
+            <div
+                style={{
+                    display: 'flex',
+                    width: '100%',
+                    height: 12,
+                    alignItems: 'center',
+                }}
+                className="fade-in"
+            >
                 <div
                     style={{
                         display: 'flex',
-                        alignItems: 'center',
+                        // alignItems: 'center',
                         justifyContent: 'flex-end',
                         textAlign: 'right',
                         minWidth: '90px',
                         fontSize: '.7em',
-                        paddingRight: '.7em',
+                        // paddingRight: '.7em',
                         fontWeight: isRefGene ? 'bold' : 'normal',
                     }}
                 >
                     {this.props.store.leftLabel.label}
                 </div>
-                <div style={isRefGene ? { marginBottom: '1em' } : {}}>
-                    {!isRefGene ? (
-                        ''
-                    ) : (
-                        <div style={{ width: totalWidth, fontSize: '.7em' }}>
-                            {this.renderPFams(totalWidth)}
-                            <div
-                                style={{
-                                    float: 'left',
-                                    width: pFamX,
-                                    textAlign: 'right',
-                                }}
-                            >
-                                5'
-                            </div>
-                            <div style={{ float: 'right' }}>3'</div>
-                        </div>
-                    )}
+                <div>
+                    {/*{!isRefGene ? (*/}
+                    {/*    ''*/}
+                    {/*) : (*/}
+                    {/*    <div style={{ width: totalWidth, fontSize: '.7em' }}>*/}
+                    {/*        {this.renderPFams(totalWidth)}*/}
+                    {/*        <div*/}
+                    {/*            style={{*/}
+                    {/*                float: 'left',*/}
+                    {/*                width: pFamX,*/}
+                    {/*                textAlign: 'right',*/}
+                    {/*            }}*/}
+                    {/*        >*/}
+                    {/*            5'*/}
+                    {/*        </div>*/}
+                    {/*        <div style={{ float: 'right' }}>3'</div>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
                     <div style={{ border: 1 }}>
                         <svg
                             width={totalWidth}
@@ -172,24 +180,24 @@ export default class ExonBarPlot extends React.Component<
                             </g>
                         </svg>
                     </div>
-                    {isRefGene ? (
-                        <div style={{ width: totalWidth, fontSize: '.8em' }}>
-                            <div
-                                style={{
-                                    float: 'left',
-                                    width: pFamX,
-                                    textAlign: 'right',
-                                }}
-                            >
-                                0 bp
-                            </div>
-                            <div style={{ float: 'right' }}>
-                                {this.props.store.transcript.totalWidth} bp
-                            </div>
-                        </div>
-                    ) : (
-                        ''
-                    )}
+                    {/*{isRefGene ? (*/}
+                    {/*    <div style={{ width: totalWidth, fontSize: '.8em' }}>*/}
+                    {/*        <div*/}
+                    {/*            style={{*/}
+                    {/*                float: 'left',*/}
+                    {/*                width: pFamX,*/}
+                    {/*                textAlign: 'right',*/}
+                    {/*            }}*/}
+                    {/*        >*/}
+                    {/*            0 bp*/}
+                    {/*        </div>*/}
+                    {/*        <div style={{ float: 'right' }}>*/}
+                    {/*            {this.props.store.transcript.totalWidth} bp*/}
+                    {/*        </div>*/}
+                    {/*    </div>*/}
+                    {/*) : (*/}
+                    {/*    ''*/}
+                    {/*)}*/}
                 </div>
             </div>
         );

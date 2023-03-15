@@ -45,7 +45,8 @@ export default class ExonsChart extends React.Component<IExonsChartProps, {}> {
         let lastLabel = '';
         return (sortedFusions || []).map(fusion => {
             let label = fusion.site1HugoSymbol + '-' + fusion.site2HugoSymbol;
-            if (label === lastLabel) label = '';
+            let isSameGroup = label === lastLabel;
+            if (isSameGroup) label = '';
             else lastLabel = label;
             let leftLabel = {
                 label: label,
@@ -56,7 +57,12 @@ export default class ExonsChart extends React.Component<IExonsChartProps, {}> {
                 fusion,
                 referenceGeneWidth
             );
-            return <ExonBarPlot store={_barPlotStore} />;
+            return (
+                <>
+                    {isSameGroup ? <></> : <div style={{ height: 10 }}></div>}
+                    <ExonBarPlot store={_barPlotStore} />
+                </>
+            );
         });
     }
 
