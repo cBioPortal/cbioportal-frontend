@@ -33,6 +33,7 @@ import {
 import { toSampleUuid } from './UuidUtils';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export const SELECTOR_VALUE_WITH_VUS = [
     ProteinImpactType.MISSENSE,
@@ -529,4 +530,12 @@ export function createCategoricalFilter(getData: (d: Mutation) => string) {
         );
     };
     return filter;
+}
+
+export function isPutativeDriver(m: AnnotatedMutation) {
+    return (
+        m.putativeDriver ||
+        (getProteinImpactType(m.mutationType) === 'other' &&
+            !!m.oncoKbOncogenic)
+    );
 }

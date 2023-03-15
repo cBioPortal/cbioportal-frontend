@@ -25,6 +25,7 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { getProteinImpactType } from 'cbioportal-frontend-commons';
+import { isPutativeDriver } from 'shared/lib/MutationUtils';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -167,15 +168,6 @@ export default class Mutations extends React.Component<
         updateOncoKbIconStyle({ mergeIcons });
     }
 
-    @autobind
-    protected isPutativeDriver(m: AnnotatedMutation) {
-        return (
-            m.putativeDriver ||
-            (getProteinImpactType(m.mutationType) === 'other' &&
-                !!m.oncoKbOncogenic)
-        );
-    }
-
     @computed get geneTabContent() {
         if (
             this.selectedGene &&
@@ -240,7 +232,7 @@ export default class Mutations extends React.Component<
                         isPutativeDriver={
                             this.props.store.driverAnnotationSettings
                                 .driversAnnotated
-                                ? this.isPutativeDriver
+                                ? isPutativeDriver
                                 : undefined
                         }
                         trackVisibility={

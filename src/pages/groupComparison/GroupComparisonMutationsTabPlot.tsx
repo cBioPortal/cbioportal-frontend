@@ -12,7 +12,10 @@ import MutationMapperToolStore from 'pages/staticPages/tools/mutationMapper/Muta
 import GroupComparisonStore from './GroupComparisonStore';
 import _ from 'lodash';
 import { MakeMobxView } from 'shared/components/MobxView';
-import { countUniqueMutations } from 'shared/lib/MutationUtils';
+import {
+    countUniqueMutations,
+    isPutativeDriver,
+} from 'shared/lib/MutationUtils';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { AxisScale } from 'react-mutation-mapper';
 import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
@@ -117,15 +120,6 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         }
     }
 
-    @autobind
-    protected isPutativeDriver(m: AnnotatedMutation) {
-        return (
-            m.putativeDriver ||
-            (getProteinImpactType(m.mutationType) === 'other' &&
-                !!m.oncoKbOncogenic)
-        );
-    }
-
     readonly plotUI = MakeMobxView({
         await: () => [
             this.props.store.mutations,
@@ -177,7 +171,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                             isPutativeDriver={
                                 this.props.store.driverAnnotationSettings
                                     .driversAnnotated
-                                    ? this.isPutativeDriver
+                                    ? isPutativeDriver
                                     : undefined
                             }
                             trackVisibility={

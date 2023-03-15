@@ -235,18 +235,17 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     protected get options() {
         // get options, hide "Other" if it's 0
         let excludedProteinTypes = this.props.excludedProteinTypes || [];
-        if (this.props.counts) {
-            if (
-                this.props.counts[ProteinImpactType.OTHER_PUTATIVE_DRIVER] +
-                    this.props.counts[
-                        ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE
-                    ] ===
+        if (
+            this.props.counts &&
+            this.props.counts[ProteinImpactType.OTHER_PUTATIVE_DRIVER] +
+                this.props.counts[
+                    ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE
+                ] ===
                 0
-            ) {
-                excludedProteinTypes = excludedProteinTypes.concat([
-                    ProteinImpactWithoutVusMutationType.OTHER,
-                ]);
-            }
+        ) {
+            excludedProteinTypes = excludedProteinTypes.concat([
+                ProteinImpactWithoutVusMutationType.OTHER,
+            ]);
         }
         return SELECTOR_VALUE_WITH_VUS.filter(
             type =>
