@@ -1,7 +1,3 @@
-import {
-    CanonicalMutationType,
-    DriverVsVusType,
-} from 'cbioportal-frontend-commons';
 import * as React from 'react';
 import { CSSProperties } from 'react';
 
@@ -33,22 +29,6 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}> {
         badgeClassName: 'badge',
         badgeFirst: false,
     };
-
-    protected isDriverVusBadge(value: string) {
-        return (
-            !!value &&
-            Object.values(DriverVsVusType).includes(value as DriverVsVusType)
-        );
-    }
-
-    protected isNotDriverVusProteinBadge(value: string) {
-        return (
-            !!value &&
-            Object.values(CanonicalMutationType).includes(
-                value as CanonicalMutationType
-            )
-        );
-    }
 
     protected get badge(): JSX.Element | null {
         return (

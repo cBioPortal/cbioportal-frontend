@@ -29,6 +29,8 @@ export enum VusMutationType {
     SPLICE_PUTATIVE_DRIVER = 'splice_putative_driver',
     FUSION_UNKNOWN_SIGNIFICANCE = 'fusion_unknown_significance',
     FUSION_PUTATIVE_DRIVER = 'fusion_putative_driver',
+    OTHER_UNKNOWN_SIGNIFICANCE = 'other_unknown_significance',
+    OTHER_PUTATIVE_DRIVER = 'other_putative_driver',
 }
 
 export enum ProteinImpactWithoutVusMutationType {
@@ -37,6 +39,7 @@ export enum ProteinImpactWithoutVusMutationType {
     INFRAME = CanonicalMutationType.INFRAME,
     SPLICE = CanonicalMutationType.SPLICE_SITE,
     FUSION = CanonicalMutationType.FUSION,
+    OTHER = CanonicalMutationType.OTHER,
 }
 
 export enum ProteinImpactType {
@@ -56,6 +59,8 @@ export enum ProteinImpactType {
     SPLICE_PUTATIVE_DRIVER = VusMutationType.SPLICE_PUTATIVE_DRIVER,
     FUSION_UNKNOWN_SIGNIFICANCE = VusMutationType.FUSION_UNKNOWN_SIGNIFICANCE,
     FUSION_PUTATIVE_DRIVER = VusMutationType.FUSION_PUTATIVE_DRIVER,
+    OTHER_UNKNOWN_SIGNIFICANCE = VusMutationType.OTHER_UNKNOWN_SIGNIFICANCE,
+    OTHER_PUTATIVE_DRIVER = VusMutationType.OTHER_PUTATIVE_DRIVER,
 }
 export enum DriverVsVusType {
     DRIVER = 'driver',

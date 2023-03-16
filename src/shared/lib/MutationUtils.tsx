@@ -33,6 +33,7 @@ import {
 import { toSampleUuid } from './UuidUtils';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export const SELECTOR_VALUE_WITH_VUS = [
     ProteinImpactType.MISSENSE,
@@ -51,6 +52,8 @@ export const SELECTOR_VALUE_WITH_VUS = [
     ProteinImpactType.FUSION_PUTATIVE_DRIVER,
     ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE,
     ProteinImpactType.OTHER,
+    ProteinImpactType.OTHER_PUTATIVE_DRIVER,
+    ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE,
 ];
 
 export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColorMap: {
@@ -98,6 +101,8 @@ export function getProteinImpactTypeColorMap(
         [ProteinImpactType.FUSION_PUTATIVE_DRIVER]: colors.fusionColor,
         [ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE]: colors.fusionVusColor,
         [ProteinImpactType.OTHER]: colors.otherColor,
+        [ProteinImpactType.OTHER_PUTATIVE_DRIVER]: colors.otherColor,
+        [ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE]: colors.otherVusColor,
         [DriverVsVusType.DRIVER]: MUT_DRIVER,
         [DriverVsVusType.VUS]: MUT_VUS,
     };
@@ -430,6 +435,10 @@ export function getAnnotatedProteinImpactType(
             return isPutativeDriver
                 ? ProteinImpactType.SPLICE_PUTATIVE_DRIVER
                 : ProteinImpactType.SPLICE_UNKNOWN_SIGNIFICANCE;
+        case ProteinImpactType.OTHER:
+            return isPutativeDriver
+                ? ProteinImpactType.OTHER_PUTATIVE_DRIVER
+                : ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE;
         default:
             return ProteinImpactType.OTHER;
     }
@@ -521,4 +530,12 @@ export function createCategoricalFilter(getData: (d: Mutation) => string) {
         );
     };
     return filter;
+}
+
+export function isPutativeDriver(m: AnnotatedMutation) {
+    return (
+        m.putativeDriver ||
+        (getProteinImpactType(m.mutationType) === 'other' &&
+            !!m.oncoKbOncogenic)
+    );
 }

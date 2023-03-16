@@ -28,6 +28,7 @@ import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import './mutations.scss';
 import styles from './badgeSelector.module.scss';
+import classnames from 'classnames';
 
 const PUTATIVE_DRIVER_TYPE = [
     ProteinImpactType.MISSENSE_PUTATIVE_DRIVER,
@@ -35,6 +36,7 @@ const PUTATIVE_DRIVER_TYPE = [
     ProteinImpactType.INFRAME_PUTATIVE_DRIVER,
     ProteinImpactType.SPLICE_PUTATIVE_DRIVER,
     ProteinImpactType.FUSION_PUTATIVE_DRIVER,
+    ProteinImpactType.OTHER_PUTATIVE_DRIVER,
 ];
 
 const UNKNOWN_SIGNIFICANCE_TYPE = [
@@ -43,6 +45,7 @@ const UNKNOWN_SIGNIFICANCE_TYPE = [
     ProteinImpactType.INFRAME_UNKNOWN_SIGNIFICANCE,
     ProteinImpactType.SPLICE_UNKNOWN_SIGNIFICANCE,
     ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE,
+    ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE,
 ];
 
 export interface IDriverAnnotationProteinImpactTypeBadgeSelectorProps
@@ -58,6 +61,8 @@ export interface IDriverAnnotationProteinImpactTypeBadgeSelectorProps
     onClickSettingMenu?: (visible: boolean) => void;
     annotatedProteinImpactTypeFilter?: DataFilter<string>;
     disableAnnotationSettings?: boolean;
+    groupIndex?: number;
+    groupNameWithOrdinal?: string;
 }
 
 function findSelectedDriverVsVus(
@@ -109,19 +114,19 @@ function badgeLabelFormat(
 ) {
     if (isDriverVusBadge(value!)) {
         return badgeFirst ? (
-            <div style={{ float: 'right', textAlign: 'end' }}>
-                <div style={{ textAlign: 'center' }}>{label}</div>
+            <div className={styles.driverVusBadgeLabel}>
                 {badge}
+                <div className={styles.driverVusLabel}>{label}</div>
             </div>
         ) : (
-            <div style={{ float: 'right', textAlign: 'center' }}>
-                {this.badge}
-                <div>{this.props.label}</div>
+            <div className={styles.driverVusBadgeLabel}>
+                <div className={styles.driverVusLabel}>{label}</div>
+                {badge}
             </div>
         );
     } else if (value) {
         return (
-            <div style={{ float: 'right', textAlign: 'center' }}>
+            <div className={styles.proteinBadgeLabel}>
                 {isNotDriverVusProteinBadge(value) ? label : badge}
             </div>
         );
@@ -229,7 +234,28 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
     protected get options() {
         // get options, hide "Other" if it's 0
-        return SELECTOR_VALUE_WITH_VUS.map(value => ({
+        let excludedProteinTypes = this.props.excludedProteinTypes || [];
+        if (
+            this.props.counts &&
+            this.props.counts[ProteinImpactType.OTHER_PUTATIVE_DRIVER] +
+                this.props.counts[
+                    ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE
+                ] ===
+                0
+        ) {
+            excludedProteinTypes = excludedProteinTypes.concat([
+                ProteinImpactWithoutVusMutationType.OTHER,
+            ]);
+        }
+        return SELECTOR_VALUE_WITH_VUS.filter(
+            type =>
+                !(
+                    excludedProteinTypes.includes(type) ||
+                    excludedProteinTypes.includes(
+                        type.slice(0, type.indexOf('_'))
+                    )
+                )
+        ).map(value => ({
             value,
             label: this.optionDisplayValueMap[value],
             badgeContent: this.props.counts
@@ -238,42 +264,29 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             badgeStyleOverride: {
                 backgroundColor: this.proteinImpactTypeColors[value],
             },
-        })).filter(
-            type =>
-                !(
-                    this.props.excludedProteinTypes?.includes(type.value) ||
-                    (type.value === ProteinImpactType.OTHER &&
-                        type.badgeContent === 0)
-                )
-        );
+        }));
     }
 
     protected get driverAnnotationIcon(): JSX.Element | undefined {
         const driverAnnotationSettingIcon = (
             <button
-                style={{
-                    marginLeft: 5,
-                    marginRight: 5,
-                    padding: '0px 4px 0px 4px',
-                    height: 18,
-                }}
-                className="btn btn-primary"
+                className={classnames(
+                    styles.driverAnnotationSettingsButton,
+                    'btn btn-primary'
+                )}
                 onClick={this.onSettingMenuClick}
             >
                 <i
-                    className="fa fa-sliders"
-                    style={{
-                        fontSize: 12,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
+                    className={classnames(
+                        styles.driverAnnotationSettingsIcon,
+                        'fa fa-sliders'
+                    )}
                 />
             </button>
         );
         if (!this.props.disableAnnotationSettings) {
             return (
-                <span className={styles['driver-annotation-setting']}>
+                <span className={styles.driverAnnotationSetting}>
                     <DefaultTooltip
                         placement="top"
                         overlay={
@@ -521,40 +534,55 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
     public render() {
         return (
-            <div className={styles['legend-panel']}>
-                <table>
-                    <BadgeSelector
-                        options={this.driverVsVusOptions}
-                        getOptionLabel={this.getDriverVsVusOptionLabel}
-                        getBadgeLabel={getProteinImpactTypeBadgeLabel}
-                        selectedValues={this.selectedDriverVsVusValues.map(
-                            v => {
-                                return { value: v };
+            <div style={{ display: 'inline-flex' }}>
+                <div className={styles.legendPanel}>
+                    <table style={{ height: 149 }}>
+                        <BadgeSelector
+                            options={this.driverVsVusOptions}
+                            getOptionLabel={this.getDriverVsVusOptionLabel}
+                            getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                            selectedValues={this.selectedDriverVsVusValues.map(
+                                v => {
+                                    return { value: v };
+                                }
+                            )}
+                            {...this.props}
+                            onSelect={this.onDriverVsVusSelect}
+                            onOnlyDriverVsVusSelect={
+                                this.onOnlyDriverVsVusSelect
                             }
-                        )}
-                        {...this.props}
-                        onSelect={this.onDriverVsVusSelect}
-                        onOnlyDriverVsVusSelect={this.onOnlyDriverVsVusSelect}
-                        isDriverAnnotated={true}
-                        driverAnnotationIcon={this.driverAnnotationIcon}
-                        onBadgeSelect={this.onProteinBadgeSelect}
-                        onOnlySelect={this.onProteinOnlySelect}
-                        badgeLabelFormat={badgeLabelFormat}
-                        useOnlyFeature={true}
-                    />
-                    <BadgeSelector
-                        options={this.options}
-                        getOptionLabel={getProteinImpactTypeOptionLabel}
-                        getBadgeLabel={getProteinImpactTypeBadgeLabel}
-                        {...this.props}
-                        onSelect={this.props.onSelect}
-                        isDriverAnnotated={true}
-                        onBadgeSelect={this.onProteinBadgeSelect}
-                        onOnlySelect={this.onProteinOnlySelect}
-                        badgeLabelFormat={badgeLabelFormat}
-                        useOnlyFeature={true}
-                    />
-                </table>
+                            isDriverAnnotated={true}
+                            driverAnnotationIcon={this.driverAnnotationIcon}
+                            onBadgeSelect={this.onProteinBadgeSelect}
+                            onOnlySelect={this.onProteinOnlySelect}
+                            badgeLabelFormat={badgeLabelFormat}
+                            useOnlyFeature={true}
+                        />
+                        <BadgeSelector
+                            options={this.options}
+                            getOptionLabel={getProteinImpactTypeOptionLabel}
+                            getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                            {...this.props}
+                            onSelect={this.props.onSelect}
+                            isDriverAnnotated={true}
+                            onBadgeSelect={this.onProteinBadgeSelect}
+                            onOnlySelect={this.onProteinOnlySelect}
+                            badgeLabelFormat={badgeLabelFormat}
+                            useOnlyFeature={true}
+                        />
+                    </table>
+                </div>
+                <div
+                    style={{
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        writingMode: 'vertical-lr',
+                        transform: 'rotate(180deg)',
+                    }}
+                >
+                    {this.props.groupNameWithOrdinal}
+                </div>
             </div>
         );
     }

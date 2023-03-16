@@ -21,7 +21,9 @@ import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_OTHER,
+    MUT_COLOR_OTHER_PASSENGER,
     MUT_COLOR_PROMOTER,
+    MUT_COLOR_PROMOTER_PASSENGER,
     MUT_COLOR_SPLICE,
     MUT_COLOR_SPLICE_PASSENGER,
     MUT_COLOR_TRUNC,
@@ -65,8 +67,10 @@ enum ShapeId {
 
     missenseMutationDriverRectangle = 'missenseMutationDriverRectangle',
     missenseMutationVUSRectangle = 'missenseMutationVUSRectangle',
-    otherMutationRectangle = 'otherMutationRectangle',
-    promoterMutationRectangle = 'promoterMutationRectangle',
+    otherMutationDriverRectangle = 'otherMutationDriverRectangle',
+    otherMutationVUSRectangle = 'otherMutationVUSRectangle',
+    promoterMutationDriverRectangle = 'promoterMutationDriverRectangle',
+    promoterMutationVUSRectangle = 'promoterMutationVUSRectangle',
     truncatingMutationDriverRectangle = 'truncatingMutationDriverRectangle',
     truncatingMutationVUSRectangle = 'truncatingMutationVUSRectangle',
     inframeMutationDriverRectangle = 'inframeMutationDriverRectangle',
@@ -220,7 +224,7 @@ const shapeBank = {
         height: 33.33,
         z: 6,
     },
-    [ShapeId.otherMutationRectangle]: {
+    [ShapeId.otherMutationDriverRectangle]: {
         type: 'rectangle',
         fill: hexToRGBA(MUT_COLOR_OTHER),
         x: 0,
@@ -229,9 +233,27 @@ const shapeBank = {
         height: 33.33,
         z: 6,
     },
-    [ShapeId.promoterMutationRectangle]: {
+    [ShapeId.otherMutationVUSRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(MUT_COLOR_OTHER_PASSENGER),
+        x: 0,
+        y: 33.33,
+        width: 100,
+        height: 33.33,
+        z: 6,
+    },
+    [ShapeId.promoterMutationDriverRectangle]: {
         type: 'rectangle',
         fill: hexToRGBA(MUT_COLOR_PROMOTER),
+        x: 0,
+        y: 33.33,
+        width: 100,
+        height: 33.33,
+        z: 6,
+    },
+    [ShapeId.promoterMutationVUSRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(MUT_COLOR_PROMOTER_PASSENGER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -464,13 +486,17 @@ export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlteration
                 {
                     disp_mut: {
                         'other,other_rec': {
-                            shapes: [shapeBank[ShapeId.otherMutationRectangle]],
+                            shapes: [
+                                shapeBank[ShapeId.otherMutationDriverRectangle],
+                            ],
                             legend_label: 'Other Mutation',
                             legend_order: MUTATION_LEGEND_ORDER,
                         },
                         'promoter,promoter_rec': {
                             shapes: [
-                                shapeBank[ShapeId.promoterMutationRectangle],
+                                shapeBank[
+                                    ShapeId.promoterMutationDriverRectangle
+                                ],
                             ],
                             legend_label: 'Promoter Mutation',
                             legend_order: MUTATION_LEGEND_ORDER,
@@ -530,16 +556,36 @@ export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRul
                 structuralVariant_rule_params_recurrence,
                 {
                     disp_mut: {
-                        'other,other_rec': {
-                            shapes: [shapeBank[ShapeId.otherMutationRectangle]],
-                            legend_label: 'Other Mutation',
+                        other_rec: {
+                            shapes: [
+                                shapeBank[ShapeId.otherMutationDriverRectangle],
+                            ],
+                            legend_label: 'Other Mutation (putative driver)',
                             legend_order: MUTATION_LEGEND_ORDER,
                         },
-                        'promoter,promoter_rec': {
+                        other: {
                             shapes: [
-                                shapeBank[ShapeId.promoterMutationRectangle],
+                                shapeBank[ShapeId.otherMutationVUSRectangle],
                             ],
-                            legend_label: 'Promoter Mutation',
+                            legend_label:
+                                'Other Mutation (unknown significance)',
+                            legend_order: MUTATION_LEGEND_ORDER,
+                        },
+                        promoter_rec: {
+                            shapes: [
+                                shapeBank[
+                                    ShapeId.promoterMutationDriverRectangle
+                                ],
+                            ],
+                            legend_label: 'Promoter Mutation (putative driver)',
+                            legend_order: MUTATION_LEGEND_ORDER,
+                        },
+                        promoter: {
+                            shapes: [
+                                shapeBank[ShapeId.promoterMutationVUSRectangle],
+                            ],
+                            legend_label:
+                                'Promoter Mutation (unknown significance)',
                             legend_order: MUTATION_LEGEND_ORDER,
                         },
                         splice_rec: {

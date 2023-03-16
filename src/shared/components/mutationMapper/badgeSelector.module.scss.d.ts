@@ -1,6 +1,11 @@
 declare const styles: {
-  readonly "driver-annotation-setting": string;
-  readonly "legend-panel": string;
+  readonly "driverAnnotationSetting": string;
+  readonly "driverAnnotationSettingsButton": string;
+  readonly "driverAnnotationSettingsIcon": string;
+  readonly "driverVusBadgeLabel": string;
+  readonly "driverVusLabel": string;
+  readonly "legendPanel": string;
+  readonly "proteinBadgeLabel": string;
 };
 export = styles;
 
