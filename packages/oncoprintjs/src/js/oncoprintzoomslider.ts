@@ -60,6 +60,7 @@ export default class OncoprintZoomSlider {
     private initialize(params: OncoprintZoomSliderParams) {
         var $ctr = this.$div;
         var icon_size = Math.round(params.btn_size * 0.7);
+        var icon_div_border_size = 1;
         var icon_padding = Math.round((params.btn_size - icon_size) / 2);
         var $slider_bar = $('<div>')
             .css({
@@ -84,7 +85,7 @@ export default class OncoprintZoomSlider {
                 'min-height': params.btn_size,
                 'min-width': params.btn_size,
                 'background-color': '#ffffff',
-                border: 'solid 1px black',
+                border: `solid ${icon_div_border_size}px black`,
                 'border-radius': '3px',
                 cursor: 'pointer',
             })
@@ -93,8 +94,8 @@ export default class OncoprintZoomSlider {
             .addClass('icon fa fa-plus')
             .css({
                 position: 'absolute',
-                top: icon_padding,
-                left: icon_padding,
+                top: icon_padding - icon_div_border_size,
+                left: icon_padding - icon_div_border_size,
                 'min-width': icon_size,
                 'min-height': icon_size,
             })
@@ -105,7 +106,7 @@ export default class OncoprintZoomSlider {
                 'min-height': params.btn_size,
                 'min-width': params.btn_size,
                 'background-color': '#ffffff',
-                border: 'solid 1px black',
+                border: `solid ${icon_div_border_size}px black`,
                 'border-radius': '3px',
                 cursor: 'pointer',
             })
@@ -114,8 +115,8 @@ export default class OncoprintZoomSlider {
             .addClass('icon fa fa-minus')
             .css({
                 position: 'absolute',
-                top: icon_padding,
-                left: icon_padding,
+                top: icon_padding - icon_div_border_size,
+                left: icon_padding - icon_div_border_size,
                 'min-width': icon_size,
                 'min-height': icon_size,
             })
