@@ -10,6 +10,7 @@ import {
     MUT_COLOR_SPLICE,
     STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_OTHER,
+    MUT_COLOR_OTHER_PASSENGER,
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_INFRAME_PASSENGER,
     MUT_COLOR_TRUNC_PASSENGER,
@@ -33,6 +34,7 @@ export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     fusionColor: STRUCTURAL_VARIANT_COLOR,
     fusionVusColor: STRUCTURAL_VARIANT_PASSENGER_COLOR,
     otherColor: MUT_COLOR_OTHER,
+    otherVusColor: MUT_COLOR_OTHER_PASSENGER,
 };
 
 export const MUTATION_TYPE_PRIORITY: {
@@ -134,6 +136,10 @@ export function getColorForProteinImpactType<T extends Mutation>(
                 return chosenMutation.isPutativeDriver
                     ? colors.spliceColor
                     : colors.spliceVusColor;
+            case ProteinImpactType.OTHER:
+                return chosenMutation.isPutativeDriver
+                    ? colors.otherColor
+                    : colors.otherVusColor;
             default:
                 return colors.otherColor;
         }
