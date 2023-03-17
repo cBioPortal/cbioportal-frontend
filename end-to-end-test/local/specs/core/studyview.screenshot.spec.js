@@ -7,6 +7,7 @@ const {
     waitForNetworkQuiet,
     setDropdownOpen,
     jsApiHover,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -26,14 +27,11 @@ describe('study view generic assay categorical/binary features', function() {
     it('generic assay pie chart should be added in the summary tab', () => {
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
         goToUrlAndSetLocalStorage(url, true);
-        waitForNetworkQuiet();
 
         $(ADD_CHART_BUTTON).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         $(ADD_CHART_BUTTON).click();
-
-        waitForNetworkQuiet();
 
         // Change to GENERIC ASSAY tab
         $(ADD_CHART_GENERIC_ASSAY_TAB).waitForDisplayed({
@@ -88,7 +86,6 @@ describe('study view x vs y charts', () => {
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
         goToUrlAndSetLocalStorage(url, true);
-        waitForNetworkQuiet();
 
         // remove mutation count vs diagnosis age chart if it exists
         if ($(X_VS_Y_CHART).isExisting()) {
@@ -109,8 +106,6 @@ describe('study view x vs y charts', () => {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         $(ADD_CHART_BUTTON).click();
-
-        waitForNetworkQuiet();
 
         // Change to X vs Y tab
         $(ADD_CHART_X_VS_Y_TAB).waitForDisplayed({
@@ -222,16 +217,10 @@ describe('study view editable breadcrumbs', () => {
 });
 
 describe('cancer gene filter', () => {
-    before(() => {
-        const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
-        goToUrlAndSetLocalStorage(url, true);
-        waitForNetworkQuiet();
-    });
     it('cancer gene filter should by default be disabled', () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
         // set up the page without filters
         goToUrlAndSetLocalStorage(url, true);
-        waitForNetworkQuiet();
         $(
             `${MUTATIONS_GENES_TABLE} [data-test='gene-column-header']`
         ).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
@@ -263,7 +252,27 @@ describe('cancer gene filter', () => {
     });
 
     it('reset charts button should revert and disable cancer gene filter', () => {
-        setDropdownOpen(true, ADD_CHART_BUTTON, 'button=Reset charts');
+        $(ADD_CHART_BUTTON).waitForDisplayed({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+
+        browser.waitUntil(
+            () => {
+                const isOpen = $('button=Reset charts').isExisting()
+                    ? $('button=Reset charts').isDisplayedInViewport()
+                    : false;
+                if (isOpen) {
+                    return true;
+                } else {
+                    $(ADD_CHART_BUTTON).click();
+                }
+            },
+            {
+                timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+                interval: 10000,
+            }
+        );
+
         $('button=Reset charts').click();
         $('.modal-content')
             .$('button=Confirm')
