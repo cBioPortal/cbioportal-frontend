@@ -66,7 +66,7 @@ export default class ExonsChart extends React.Component<IExonsChartProps, {}> {
         });
     }
 
-    sortFusionsBySymbol(fusions: StructuralVariantExt[] | undefined) {
+    sortFusionsBySymbol = (fusions: StructuralVariantExt[] | undefined) => {
         return fusions?.sort((a, b) => {
             const aSite1HugoSymbol = a.site1HugoSymbol || 'undefined';
             const bSite1HugoSymbol = b.site1HugoSymbol || 'undefined';
@@ -80,7 +80,7 @@ export default class ExonsChart extends React.Component<IExonsChartProps, {}> {
                 return aSite2HugoSymbol > bSite2HugoSymbol ? 1 : -1;
             }
         });
-    }
+    };
 
     render() {
         const { computedTranscripts } = this.props.store;
@@ -93,7 +93,7 @@ export default class ExonsChart extends React.Component<IExonsChartProps, {}> {
                 };
                 const refExonStore = new ExonsBarPlotStore(leftLabel, t);
                 const refTotalWidth = t.totalWidth ? t.totalWidth : 0;
-                const fusions = this.sortFusionsBySymbol(t.fusions);
+                const fusions = t.fusions;
                 return (
                     <div style={containerStyle} className="borderedChart">
                         {/* Draw reference transcript exons */}
