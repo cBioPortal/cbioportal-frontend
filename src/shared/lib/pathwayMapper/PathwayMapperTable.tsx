@@ -82,12 +82,18 @@ export default class PathwayMapperTable extends React.Component<
     };
     @observable.ref selectedPathway: string;
 
+    private dataStore: SimpleGetterLazyMobXTableApplicationDataStore<
+        IPathwayMapperTable
+    >;
+
     constructor(props: IPathwayMapperTableProps) {
         super(props);
         makeObservable(this);
         this._columns = {};
         this.generateColumns();
-        makeObservable(this);
+        this.dataStore = new SimpleGetterLazyMobXTableApplicationDataStore(
+            () => this.props.data
+        );
     }
 
     generateColumns() {
@@ -188,10 +194,6 @@ export default class PathwayMapperTable extends React.Component<
             ...this.props.columnsOverride![IPathwayMapperTableColumnType.GENES],
         };
     }
-
-    private dataStore = new SimpleGetterLazyMobXTableApplicationDataStore(
-        () => this.props.data
-    );
 
     componentWillUpdate(nextProps: Readonly<IPathwayMapperTableProps>): void {
         // we need to know on which page the selected pathway will fall after Ranking option is updated.

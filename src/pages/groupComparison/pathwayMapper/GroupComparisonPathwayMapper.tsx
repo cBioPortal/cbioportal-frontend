@@ -19,18 +19,20 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import GroupComparisonStore from '../GroupComparisonStore';
 import { GeneOptionLabel } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import GroupComparisonPathwayMapperUserSelectionStore from './GroupComparisonPathwayMapperUserSelectionStore';
 
 interface IGroupComparisonPathwayMapperProps {
     activeGroups: ComparisonGroup[] | undefined;
     genomicData: AlterationEnrichmentRow[];
-    store: GroupComparisonStore;
+    groupComparisonStore: GroupComparisonStore;
+    userSelectionStore?: GroupComparisonPathwayMapperUserSelectionStore;
 }
 
 @observer
 export default class GroupComparisonPathwayMapper extends React.Component<
     IGroupComparisonPathwayMapperProps
 > {
-    clearMessage: (() => void) | undefined;
+    private userSelectionStore: GroupComparisonPathwayMapperUserSelectionStore;
 
     constructor(props: IGroupComparisonPathwayMapperProps) {
         super(props);
@@ -43,18 +45,20 @@ export default class GroupComparisonPathwayMapper extends React.Component<
                     .default as PathwayMapper;
             }
         );
+        this.userSelectionStore =
+            this.props.userSelectionStore ||
+            new GroupComparisonPathwayMapperUserSelectionStore();
     }
 
     @observable.ref PathwayMapperComponent:
         | PathwayMapper
         | undefined = undefined;
     @observable isGeneSelectionPopupVisible: boolean = false;
-    @observable private _userSelectedGenes: string[] | undefined = undefined;
 
     @computed get activeGenes() {
         return (
-            this._userSelectedGenes ||
-            this.props.store.genesSortedByAlterationFrequency.result?.slice(
+            this.userSelectionStore.selectedGenes ||
+            this.props.groupComparisonStore.genesSortedByAlterationFrequency.result?.slice(
                 0,
                 10
             ) ||
@@ -64,7 +68,8 @@ export default class GroupComparisonPathwayMapper extends React.Component<
 
     @computed get alterationEnrichmentRowData(): AlterationEnrichmentRow[] {
         return (
-            this.props.store.alterationEnrichmentRowData.result || []
+            this.props.groupComparisonStore.alterationEnrichmentRowData
+                .result || []
         ).filter(gene => {
             return this.activeGenes.includes(gene.hugoGeneSymbol);
         });
@@ -75,7 +80,7 @@ export default class GroupComparisonPathwayMapper extends React.Component<
         genes: SingleGeneQuery[],
         label: GeneOptionLabel
     ) {
-        this._userSelectedGenes = genes.map(g => g.gene);
+        this.userSelectionStore.selectedGenes = genes.map(g => g.gene);
         this.isGeneSelectionPopupVisible = false;
     }
 
@@ -83,7 +88,6 @@ export default class GroupComparisonPathwayMapper extends React.Component<
         if (!this.PathwayMapperComponent) {
             return null;
         }
-
         return (
             <div>
                 <div className="alert alert-info">
@@ -140,6 +144,15 @@ export default class GroupComparisonPathwayMapper extends React.Component<
                                 patientView={false}
                                 groupComparisonView={true}
                                 activeGroups={this.props.activeGroups as any}
+                                currentPathway={
+                                    this.userSelectionStore.currentPathway
+                                }
+                                rankingChoices={
+                                    this.userSelectionStore.rankingChoices
+                                }
+                                updateRankingChoices={
+                                    this.userSelectionStore.updateRankingChoices
+                                }
                             />
                         </Row>
                     </div>
@@ -159,7 +172,6 @@ export default class GroupComparisonPathwayMapper extends React.Component<
                 data={data}
                 selectedPathway={selectedPathway}
                 changePathway={onPathwaySelect}
-                onSelectedPathwayChange={this.clearMessage}
             />
         );
     }
