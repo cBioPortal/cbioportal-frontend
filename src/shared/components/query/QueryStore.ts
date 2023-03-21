@@ -689,7 +689,7 @@ export class QueryStore {
         default: {},
     });
 
-    private readonly physicalStudiesSet = remoteData<{
+    public readonly physicalStudiesSet = remoteData<{
         [studyId: string]: CancerStudy;
     }>({
         await: () => [this.cancerStudies],
@@ -703,6 +703,15 @@ export class QueryStore {
             );
         },
         default: {},
+    });
+
+    public readonly selectedPhysicalStudies = remoteData({
+        await: () => [this.physicalStudiesSet],
+        invoke: async () => {
+            return this.physicalStudyIdsInSelection.map(
+                studyId => this.physicalStudiesSet.result[studyId]
+            );
+        },
     });
 
     readonly userVirtualStudies = remoteData(async () => {
@@ -1556,7 +1565,7 @@ export class QueryStore {
     getFilteredProfiles(
         molecularAlterationType: MolecularProfile['molecularAlterationType']
     ) {
-        return this.molecularProfilesInSelectedStudies.result.filter(
+        const ret = this.molecularProfilesInSelectedStudies.result.filter(
             profile => {
                 if (profile.molecularAlterationType != molecularAlterationType)
                     return false;
@@ -1564,6 +1573,8 @@ export class QueryStore {
                 return profile.showProfileInAnalysisTab || this.forDownloadTab;
             }
         );
+
+        return ret;
     }
 
     isProfileTypeSelected(profileType: string) {
