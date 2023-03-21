@@ -58,7 +58,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
             <h5>{props.filter.form.label}</h5>
             <div>
                 {options.map((option: FilterFieldOption) => {
-                    const id = `input-${option.displayValue}`;
+                    const id = `input-${option.displayValue}-${option.value}`;
                     let isChecked = checkedOptions.includes(option.value);
                     return (
                         <div
@@ -67,25 +67,6 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                 padding: '0 1em 0 0',
                             }}
                         >
-                            <input
-                                type="checkbox"
-                                id={id}
-                                value={option.displayValue}
-                                checked={isChecked}
-                                onClick={() => {
-                                    isChecked = !isChecked;
-                                    updatePhrases(option.value, isChecked);
-                                    const update = createQueryUpdate(
-                                        toRemove,
-                                        checkedOptions,
-                                        props.filter
-                                    );
-                                    props.onChange(update);
-                                }}
-                                style={{
-                                    display: 'inline-block',
-                                }}
-                            />
                             <label
                                 htmlFor={id}
                                 style={{
@@ -93,6 +74,25 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
                                     padding: '0 0 0 0.2em',
                                 }}
                             >
+                                <input
+                                    type="checkbox"
+                                    id={id}
+                                    value={option.displayValue}
+                                    checked={isChecked}
+                                    onClick={() => {
+                                        isChecked = !isChecked;
+                                        updatePhrases(option.value, isChecked);
+                                        const update = createQueryUpdate(
+                                            toRemove,
+                                            checkedOptions,
+                                            props.filter
+                                        );
+                                        props.onChange(update);
+                                    }}
+                                    style={{
+                                        display: 'inline-block',
+                                    }}
+                                />{' '}
                                 {option.displayValue}
                             </label>
                         </div>
