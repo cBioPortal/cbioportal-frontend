@@ -145,6 +145,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
             SAMPLE_TREATMENTS_TABLE: 75,
             SAMPLE_TREATMENT_GROUPS_TABLE: 75,
             SAMPLE_TREATMENT_TARGET_TABLE: 75,
+            CLINICAL_EVENT_TYPE_COUNTS_TABLE: 75,
             CANCER_STUDIES: 70,
             SEQUENCED: 60,
             HAS_CNA_DATA: 50,

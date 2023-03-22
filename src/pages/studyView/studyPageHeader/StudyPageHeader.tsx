@@ -115,6 +115,9 @@ export default class StudyPageHeader extends React.Component<
                         removeTreatmentsFilter={
                             this.props.store.removeTreatmentsFilter
                         }
+                        removeClinicalEventFilter={
+                            this.props.store.removeClinicalEventTypeFilter
+                        }
                     />
                 )}
             </div>

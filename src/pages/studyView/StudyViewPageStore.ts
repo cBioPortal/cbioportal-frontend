@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
+import client from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
     action,
@@ -29,6 +30,7 @@ import {
     ClinicalDataMultiStudyFilter,
     ClinicalViolinPlotData,
     CopyNumberSeg,
+    DataFilter,
     DataFilterValue,
     DensityPlotBin,
     GeneFilter,
@@ -73,6 +75,7 @@ import {
     annotationFilterActive,
     buildSelectedDriverTiersMap,
     calculateLayout,
+    calculateSampleCountForClinicalEventTypeCountTable,
     ChartDataCountSet,
     ChartMeta,
     ChartMetaDataTypeEnum,
@@ -94,6 +97,7 @@ import {
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateXvsYScatterPlotDownloadData,
+    getAllClinicalDataByStudyViewFilter,
     getBinBounds,
     getCategoricalFilterValues,
     getChartMetaDataType,
@@ -143,9 +147,8 @@ import {
     StudyWithSamples,
     submitToPage,
     updateCustomIntervalFilter,
-    getAllClinicalDataByStudyViewFilter,
 } from './StudyViewUtils';
-import MobxPromise, { MobxPromiseUnionTypeWithDefault } from 'mobxpromise';
+import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import {
@@ -259,7 +262,6 @@ import {
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { PageType } from 'shared/userSession/PageType';
-import client from 'shared/api/cbioportalClientInstance';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 
@@ -1992,6 +1994,10 @@ export class StudyViewPageStore
 
         this.setTreatmentFilters(filters);
 
+        if (filters.clinicalEventFilters !== undefined) {
+            this.setClinicalEventTypeFilter(filters.clinicalEventFilters);
+        }
+
         if (filters.caseLists !== undefined) {
             this.setCaseListsFilter(filters.caseLists);
         }
@@ -2559,6 +2565,7 @@ export class StudyViewPageStore
         this.clearSampleTreatmentFilters();
         this.clearSampleTreatmentGroupFilters();
         this.clearSampleTreatmentTargetFilters();
+        this.resetClinicalEventTypeFilter();
     }
 
     @computed
@@ -3169,6 +3176,9 @@ export class StudyViewPageStore
                 case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
                     this.setPatientTreatmentFilters({ filters: [] });
                     break;
+                case ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE:
+                    this.setClinicalEventTypeFilter([]);
+                    break;
                 default:
                     this._clinicalDataFilterSet.delete(chartUniqueKey);
                     this._chartSampleIdentifiersFilterSet.delete(
@@ -3235,6 +3245,8 @@ export class StudyViewPageStore
                 return !_.isEmpty(this._sampleTreatmentsFilters.filters);
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
                 return !_.isEmpty(this._patientTreatmentsFilter.filters);
+            case ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE:
+                return !_.isEmpty(this._clinicalEventFilters);
             default:
                 return false;
         }
@@ -3561,6 +3573,13 @@ export class StudyViewPageStore
             this.patientTreatmentTargetFilters.filters.length > 0
         ) {
             filters.patientTreatmentTargetFilters = this.patientTreatmentTargetFilters;
+        }
+
+        if (
+            this._clinicalEventFilters &&
+            this._clinicalEventFilters.length > 0
+        ) {
+            filters.clinicalEventFilters = this._clinicalEventFilters;
         }
 
         let sampleIdentifiersFilterSets = Array.from(
@@ -5638,6 +5657,7 @@ export class StudyViewPageStore
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
+        // Only add Mobx Promises that are not dependent on StudyViewFilter will force re-render
         let _chartMetaSet = _.fromPairs(this._customCharts.toJSON());
         if (_.isEmpty(this.molecularProfiles.result)) {
             delete _chartMetaSet[
@@ -5693,7 +5713,20 @@ export class StudyViewPageStore
             },
             _chartMetaSet
         );
-
+        if (this.shouldDisplayClinicalEventTypeCounts.result) {
+            _chartMetaSet['CLINICAL_EVENT_TYPE_COUNTS'] = {
+                uniqueKey: 'CLINICAL_EVENT_TYPE_COUNTS',
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: false,
+                displayName: 'Timeline Events Availability',
+                priority: getDefaultPriorityByUniqueKey(
+                    ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE
+                ),
+                renderWhenDataChange: false,
+                description:
+                    'Distinct Counts of Patients with Clinical Event Types',
+            };
+        }
         if (this.shouldDisplaySampleTreatments.result) {
             _chartMetaSet['SAMPLE_TREATMENTS'] = {
                 uniqueKey: 'SAMPLE_TREATMENTS',
@@ -5918,6 +5951,7 @@ export class StudyViewPageStore
 
     @computed
     get loadingInitialDataForSummaryTab(): boolean {
+        // Only add Mobx Promises that are not dependent on StudyViewFilter will force re-render
         if (
             !this.queriedPhysicalStudyIds.isComplete ||
             this.queriedPhysicalStudyIds.result.length === 0
@@ -5935,8 +5969,8 @@ export class StudyViewPageStore
             this.survivalPlots.isPending ||
             this.survivalEntryMonths.isPending ||
             this.shouldDisplayPatientTreatments.isPending ||
-            this.sharedCustomData.isPending;
-
+            this.sharedCustomData.isPending ||
+            this.shouldDisplayClinicalEventTypeCounts.isPending;
         if (
             this.clinicalAttributes.isComplete &&
             !_.isEmpty(this.clinicalAttributes.result)
@@ -5965,8 +5999,6 @@ export class StudyViewPageStore
 
         if (!pending && this.isInitiallLoad) {
             pending = pending || this.selectedSamples.result.length === 0;
-        }
-        if (!pending && this.isInitiallLoad) {
             this.isInitiallLoad = false;
         }
         return pending;
@@ -6554,6 +6586,7 @@ export class StudyViewPageStore
             );
         }
 
+        this.initializeClinicalEventTypeCountChart();
         this.initializeClinicalDataCountCharts();
         this.initializeClinicalDataBinCountCharts();
         this.initializeGeneSpecificCharts();
@@ -6686,6 +6719,12 @@ export class StudyViewPageStore
             ]
         );
 
+        this.chartsDimension.set(
+            SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS,
+            STUDY_VIEW_CONFIG.layout.dimensions[
+                ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE
+            ]
+        );
         if (this.queriedPhysicalStudyIds.result.length > 1) {
             this.showAsPieChart(
                 SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
@@ -6852,6 +6891,20 @@ export class StudyViewPageStore
         onError: () => {},
         default: [],
     });
+
+    @action
+    initializeClinicalEventTypeCountChart(): void {
+        if (this.shouldDisplayClinicalEventTypeCounts.result) {
+            this.changeChartVisibility(
+                SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS,
+                true
+            );
+            this.chartsType.set(
+                SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS,
+                ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE
+            );
+        }
+    }
 
     @action
     initializeClinicalDataCountCharts(): void {
@@ -8606,6 +8659,7 @@ export class StudyViewPageStore
             this.patientTreatmentGroups,
             this.sampleTreatmentTarget,
             this.patientTreatmentTarget,
+            this.clinicalEventTypeCounts,
         ],
         invoke: async () => {
             if (!_.isEmpty(this.chartMetaSet)) {
@@ -8683,7 +8737,6 @@ export class StudyViewPageStore
                             return allSamples;
                         }, new Set<String>()).size;
                 };
-
                 if (!_.isEmpty(this.sampleTreatments.result)) {
                     ret['SAMPLE_TREATMENTS'] = calculateSampleCount(
                         this.sampleTreatments.result
@@ -8841,6 +8894,14 @@ export class StudyViewPageStore
                         ret
                     );
                 }
+
+                ret[
+                    'CLINICAL_EVENT_TYPE_COUNTS'
+                ] = calculateSampleCountForClinicalEventTypeCountTable(
+                    this.selectedPatientKeys.result.length,
+                    this.selectedSamples.result.length,
+                    this.clinicalEventTypeCounts.result
+                );
 
                 return _.reduce(
                     this.chartMetaSet,
@@ -9219,6 +9280,89 @@ export class StudyViewPageStore
         }
     }
 
+    @observable.ref
+    private _clinicalEventFilters: DataFilter[] = [];
+
+    @action
+    public setClinicalEventTypeFilter(filters: DataFilter[]) {
+        this._clinicalEventFilters = filters;
+    }
+
+    @action
+    public resetClinicalEventTypeFilter() {
+        this._clinicalEventFilters = [];
+    }
+
+    @computed get clinicalEventTypeFiltersRawStrings(): string[][] {
+        return this._clinicalEventFilters.map(filterList =>
+            filterList.values.map(filters => filters.value)
+        );
+    }
+    public readonly clinicalEventTypeCounts = remoteData({
+        invoke: async () => {
+            return internalClient.getClinicalEventTypeCountsUsingPOST({
+                studyViewFilter: this.filters,
+            });
+        },
+    });
+
+    // Poll ClinicalEventTypeCounts API  with no filter to determine if table should be added to StudyView Page
+    public readonly shouldDisplayClinicalEventTypeCounts = remoteData({
+        await: () => [this.queriedPhysicalStudyIds],
+        invoke: async () => {
+            const filters: Partial<StudyViewFilter> = {};
+            filters.studyIds = this.queriedPhysicalStudyIds.result;
+            return Promise.resolve(
+                (
+                    await internalClient.getClinicalEventTypeCountsUsingPOST({
+                        studyViewFilter: filters as StudyViewFilter,
+                    })
+                ).length > 0
+            );
+        },
+    });
+
+    @action.bound
+    removeClinicalEventTypeFilter(eventTypeFilterToRemove: string): void {
+        const updatedClinicalEventTypeFilters = this._clinicalEventFilters
+            .map(eventTypeFilter => {
+                let updatedEventTypeFilter: DataFilter = {
+                    values: eventTypeFilter.values.filter(
+                        dataFilterValue =>
+                            dataFilterValue.value !== eventTypeFilterToRemove
+                    ),
+                };
+                return updatedEventTypeFilter;
+            })
+            .filter(eventTypeFilter => !_.isEmpty(eventTypeFilter.values));
+
+        this.setClinicalEventTypeFilter(updatedClinicalEventTypeFilters);
+    }
+
+    @action.bound
+    addClinicalEventTypeFilter(
+        chartMeta: ChartMeta,
+        eventTypeFilters: string[][]
+    ): void {
+        let filtersToAdd = eventTypeFilters.map(filters => {
+            let eventTypeFilter: DataFilter = {
+                values: filters.map(f => {
+                    let eventTypeFilterLists: DataFilterValue = {
+                        value: f,
+                        end: 0,
+                        start: 0,
+                    };
+                    return eventTypeFilterLists;
+                }),
+            };
+            return eventTypeFilter;
+        });
+
+        this.setClinicalEventTypeFilter(
+            this._clinicalEventFilters.concat(filtersToAdd)
+        );
+    }
+
     @observable
     private _patientTreatmentsFilter: AndedPatientTreatmentFilters = {
         filters: [],
@@ -9492,7 +9636,6 @@ export class StudyViewPageStore
             filters
         );
     }
-
     // a row represents a list of patients that either have or have not recieved
     // a specific treatment
     public readonly sampleTreatments = remoteData({
