@@ -166,4 +166,5 @@ export interface IServerConfig {
     skin_patient_view_structural_variant_table_columns_show_on_init: string;
     comparison_categorical_na_values: string;
     oncoprint_clinical_tracks_config_json: string;
+    enable_cross_study_expression: string;
 }

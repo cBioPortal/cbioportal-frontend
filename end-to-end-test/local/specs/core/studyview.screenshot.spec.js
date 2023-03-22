@@ -217,6 +217,8 @@ describe('study view editable breadcrumbs', () => {
 });
 
 describe('cancer gene filter', () => {
+    this.retries(0);
+
     it('cancer gene filter should by default be disabled', () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
         // set up the page without filters

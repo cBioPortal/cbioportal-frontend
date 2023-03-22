@@ -372,7 +372,10 @@ function getNumberOfStudyViewCharts() {
 function setInputText(selector, text) {
     // backspace to delete current contents - webdriver is supposed to clear it but it doesnt always work
     $(selector).click();
-    browser.keys('\uE003'.repeat($(selector).getValue().length));
+    //browser.keys('\uE003'.repeat($(selector).getValue().length));
+
+    $(selector).clearValue();
+    //browser.pause(1000);
 
     $(selector).setValue(text);
 }
