@@ -6,7 +6,7 @@ import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import MobxPromise from 'mobxpromise';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import styles from 'pages/studyView/table/tables.module.scss';
 import {
     toNumericValue,
@@ -25,16 +25,26 @@ import {
 import autobind from 'autobind-decorator';
 import { SelectionOperatorEnum } from 'pages/studyView/TableUtils';
 import { MultiSelectionTableRow } from 'pages/studyView/table/MultiSelectionTable';
-import { getFrequencyStr } from 'pages/studyView/StudyViewUtils';
+import {
+    correctMargin,
+    getFixedHeaderNumberCellMargin,
+    getFrequencyStr,
+} from 'pages/studyView/StudyViewUtils';
 
 export interface IClinicalEventTypeDataColumnCellProp {
     data: string;
+    style?: CSSProperties;
+    className?: string;
 }
 
 function ClinicalEventTypeColumnCell(
     props: IClinicalEventTypeDataColumnCellProp
 ) {
-    return <div>{props.data}</div>;
+    return (
+        <div className={props.className} style={props.style}>
+            {props.data}
+        </div>
+    );
 }
 
 export function filterClinicalEventTypeCountCell(
@@ -194,6 +204,8 @@ export default class ClinicalEventTypeCountTable extends React.Component<
                 ),
                 render: (data: ClinicalEventTypeCount) => (
                     <ClinicalEventTypeColumnCell
+                        className={styles.pullRight}
+                        style={{ marginLeft: cellMargin }}
                         data={this.calculateClinicalEventTypeFreqString(
                             data,
                             this.selectedPatientCount
@@ -241,7 +253,20 @@ export default class ClinicalEventTypeCountTable extends React.Component<
         return {
             [ClinicalEventTypeCountColumnKey.CLINICAL_EVENT_TYPE]: 0,
             [ClinicalEventTypeCountColumnKey.COUNT]: 0,
-            [ClinicalEventTypeCountColumnKey.FREQ]: 0,
+            [ClinicalEventTypeCountColumnKey.FREQ]: correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    this.columnsWidth[ClinicalEventTypeCountColumnKey.FREQ],
+                    getFrequencyStr(
+                        _.max(
+                            this.tableData.map(
+                                item =>
+                                    (item.count! / this.selectedPatientCount!) *
+                                    100
+                            )
+                        )!
+                    )
+                )
+            ),
         };
     }
 
