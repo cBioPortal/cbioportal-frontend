@@ -1076,9 +1076,9 @@ export default abstract class ComparisonStore extends AnalysisStore
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             if (
-                (this.alterationsEnrichmentDataRequestGroups.result &&
-                    this.alterationsEnrichmentDataRequestGroups.result.length >
-                        1 &&
+                (!_.isEmpty(
+                    this.alterationsEnrichmentDataRequestGroups.result
+                ) &&
                     (_(this.selectedMutationEnrichmentEventTypes)
                         .values()
                         .some() ||
