@@ -36,14 +36,14 @@ describe('gsva feature', function() {
 
     describe('query page', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true);
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
             showGsva();
             waitForStudyQueryPage();
         });
 
         it('shows GSVA-profile option when selecting study_es_0', () => {
             // somehow reloading the page is needed to turn on the GSVA feature for the first test
-            goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true);
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
             waitForStudyQueryPage();
             checkTestStudy();
 
@@ -82,7 +82,7 @@ describe('gsva feature', function() {
 
     describe('GenesetsHierarchySelector', () => {
         before(() => {
-            goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true);
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
             showGsva();
             waitForStudyQueryPage();
             checkTestStudy();
@@ -208,7 +208,7 @@ describe('gsva feature', function() {
                 assert(gsvaEntriesShown);
             });
             it('expands tree on init when property not defined', () => {
-                goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true);
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
                 showGsva();
                 waitForStudyQueryPage();
                 checkTestStudy();
@@ -222,7 +222,7 @@ describe('gsva feature', function() {
 
     describe('GenesetVolcanoPlotSelector', () => {
         before(() => {
-            goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true);
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
             showGsva();
             waitForStudyQueryPage();
             checkTestStudy();
