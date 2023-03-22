@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { FunctionComponent, useEffect } from 'react';
 import { Route, Redirect, Switch } from 'react-router-dom';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
@@ -61,26 +61,12 @@ const OncoprinterTool = SuspenseWrapper(
         import('./pages/staticPages/tools/oncoprinter/OncoprinterTool')
     )
 );
-const WebAPIPage = SuspenseWrapper(
-    // @ts-ignore
-    React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
-);
-const RMATLAB = SuspenseWrapper(
-    // @ts-ignore
-    React.lazy(() => import('./pages/staticPages/rmatlab/RMatLAB'))
-);
-const Tutorials = SuspenseWrapper(
-    // @ts-ignore
-    React.lazy(() => import('./pages/staticPages/tutorials/Tutorials'))
-);
+
 const Visualize = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/staticPages/visualize/Visualize'))
 );
-const AboutUs = SuspenseWrapper(
-    // @ts-ignore
-    React.lazy(() => import('./pages/staticPages/aboutus/AboutUs'))
-);
+
 const InstallationMap = SuspenseWrapper(
     React.lazy(() =>
         // @ts-ignore
@@ -91,18 +77,7 @@ const Software = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/staticPages/software/Software'))
 );
-const News = SuspenseWrapper(
-    // @ts-ignore
-    React.lazy(() => import('./pages/staticPages/news/News'))
-);
-const FAQ = SuspenseWrapper(
-    // @ts-ignore
-    React.lazy(() => import('./pages/staticPages/faq/FAQ'))
-);
-const OQL = SuspenseWrapper(
-    // @ts-ignore
-    React.lazy(() => import('./pages/staticPages/oql/OQL'))
-);
+
 const GroupComparisonPage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/groupComparison/GroupComparisonPage'))
@@ -110,6 +85,11 @@ const GroupComparisonPage = SuspenseWrapper(
 const ErrorPage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/resultsView/ErrorPage'))
+);
+
+const WebAPIPage = SuspenseWrapper(
+    // @ts-ignore
+    React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
 );
 
 import $ from 'jquery';
@@ -129,13 +109,10 @@ import {
     PatientViewPageTabs,
     PatientViewResourceTabPrefix,
 } from 'pages/patientView/PatientViewPageTabs';
-import {
-    GroupComparisonTab,
-    LegacyGroupComparisonTab,
-} from 'pages/groupComparison/GroupComparisonTabs';
+import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
     cnaGroup,
     mutationGroup,
@@ -209,6 +186,18 @@ function ResultsViewQueryParamsAdjuster(oldParams: ResultsViewURLQuery) {
         ]);
         changeMade = true;
     }
+
+    // we used to call the structural variant alteration class "fusions"
+    // we have generalized it to structural variants
+    const profileRegex = /fusion/;
+    if (profileRegex.test(oldParams.profileFilter)) {
+        newParams.profileFilter = oldParams.profileFilter.replace(
+            profileRegex,
+            'structural_variants'
+        );
+        changeMade = true;
+    }
+
     if (changeMade) {
         return newParams;
     } else {
@@ -289,6 +278,19 @@ let getBlankPage = function(onLoad: any) {
     };
 };
 
+let redirectToNews: FunctionComponent<any> = function() {
+    getBrowserWindow().location = 'https://docs.cbioportal.org/news';
+    return null;
+};
+
+const externalRedirect = function(url: string) {
+    let redirectComp: FunctionComponent<{}> = function() {
+        getBrowserWindow().location = url;
+        return null;
+    };
+    return redirectComp;
+};
+
 /* when route changes, we want to:
 1. in spa, deep links from url (#) don't work because content is loading and thus doesn't exist to link to
    at time url changes.  seekHash is a somewhat dirty way of solving this issue
@@ -332,7 +334,6 @@ export const makeRoutes = () => {
                     path="/loading/comparison"
                     component={ScrollToTop(GroupComparisonLoading)}
                 />
-
                 {/* Redirect legacy survival route directly to survival tab in comparison */}
                 <Route
                     path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
@@ -343,7 +344,6 @@ export const makeRoutes = () => {
                         );
                     })}
                 />
-
                 {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
                 <Route
                     path={`/results/${ResultsViewTab.EXPRESSION_REDIRECT}`}
@@ -366,7 +366,6 @@ export const makeRoutes = () => {
                         );
                     })}
                 />
-
                 {/* Redirect legacy enrichments route directly to mutations tab in comparison */}
                 <Route
                     path="/results/enrichments"
@@ -403,33 +402,6 @@ export const makeRoutes = () => {
                         )
                     )}
                 />
-
-                <Route
-                    path={`/comparison/${LegacyGroupComparisonTab.MUTATIONS}`}
-                    component={getBlankPage(() => {
-                        redirectTo(
-                            {
-                                selectedEnrichmentEventTypes: JSON.stringify([
-                                    ...mutationGroup,
-                                ]),
-                            },
-                            `/comparison/${GroupComparisonTab.ALTERATIONS}`
-                        );
-                    })}
-                />
-                <Route
-                    path={`/comparison/${LegacyGroupComparisonTab.CNA}`}
-                    component={getBlankPage(() => {
-                        redirectTo(
-                            {
-                                selectedEnrichmentEventTypes: JSON.stringify([
-                                    ...cnaGroup,
-                                ]),
-                            },
-                            `/comparison/${GroupComparisonTab.ALTERATIONS}`
-                        );
-                    })}
-                />
                 <Route
                     path="/comparison/:tab?"
                     component={ScrollToTop(
@@ -439,20 +411,50 @@ export const makeRoutes = () => {
                         )
                     )}
                 />
-
+                <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
                 <Route path="/mutation_mapper" component={MutationMapperTool} />
                 <Route path="/oncoprinter" component={OncoprinterTool} />
-                <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
-                <Route path="/rmatlab" component={ScrollToTop(RMATLAB)} />
                 <Route path="/datasets" component={ScrollToTop(DatasetPage)} />
-                <Route path="/tutorials" component={GoToHashLink(Tutorials)} />
                 <Route path="/installations" component={InstallationMap} />
                 <Route path="/visualize" component={ScrollToTop(Visualize)} />
-                <Route path="/about" component={ScrollToTop(AboutUs)} />
                 <Route path="/software" component={ScrollToTop(Software)} />
-                <Route path="/news" component={GoToHashLink(News)} />
-                <Route path="/faq" component={GoToHashLink(FAQ)} />
-                <Route path="/oql" component={GoToHashLink(OQL)} />
+                // legacy pages redirect to docs site
+                <Route
+                    path="/tutorials"
+                    component={externalRedirect(
+                        'https://docs.cbioportal.org/user-guide/overview/#tutorial-slides'
+                    )}
+                />
+                <Route
+                    path="/rmatlab"
+                    component={externalRedirect(
+                        'https://docs.cbioportal.org/web-api-and-clients/#r-client'
+                    )}
+                />
+                <Route
+                    path="/about"
+                    component={externalRedirect(
+                        'https://docs.cbioportal.org/about-us/'
+                    )}
+                />
+                <Route
+                    path="/news"
+                    component={externalRedirect(
+                        'https://docs.cbioportal.org/news'
+                    )}
+                />
+                <Route
+                    path="/faq"
+                    component={externalRedirect(
+                        'https://docs.cbioportal.org/user-guide/faq/'
+                    )}
+                />
+                <Route
+                    path="/oql"
+                    component={externalRedirect(
+                        'https://docs.cbioportal.org/user-guide/by-page/#oql'
+                    )}
+                />
                 <Route
                     path="/testimonials"
                     component={ScrollToTop(TestimonialsPage)}
@@ -466,7 +468,6 @@ export const makeRoutes = () => {
                     path="/study.do"
                     component={getBlankPage(handleStudyDO)}
                 />
-
                 <Route path="/ln" component={getBlankPage(handleLinkOut)} />
                 <Route
                     path="/link.do"
@@ -476,7 +477,6 @@ export const makeRoutes = () => {
                     path="/encodedRedirect"
                     component={getBlankPage(handleEncodedRedirect)}
                 />
-
                 <Redirect
                     path={'/mutation_mapper.jsp'}
                     to={'/mutation_mapper'}
@@ -488,7 +488,6 @@ export const makeRoutes = () => {
                 <Redirect path={'/tutorials.jsp'} to={'/tutorials'} />
                 <Redirect path={'/tutorial.jsp'} to={'/tutorials'} />
                 <Redirect path={'/cgds_r.jsp'} to={'/rmatlab'} />
-
                 <Route
                     path="*"
                     component={ScrollToTop(() => (

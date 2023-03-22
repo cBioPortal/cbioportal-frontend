@@ -6,6 +6,7 @@ import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
+import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { AppStore } from 'AppStore';
 import { useLocalObservable } from 'mobx-react-lite';
 import { runInAction } from 'mobx';
@@ -13,12 +14,19 @@ import { runInAction } from 'mobx';
 interface IPathwayMapperContainerProps {
     resultsViewPageStore: ResultsViewPageStore;
     appStore: AppStore;
+    urlWrapper: ResultsViewURLWrapper;
 }
 
 const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerProps> = observer(
-    function({ resultsViewPageStore, appStore }: IPathwayMapperContainerProps) {
+    function({
+        resultsViewPageStore,
+        appStore,
+        urlWrapper,
+    }: IPathwayMapperContainerProps) {
         const store = useLocalObservable(() => ({
-            activeTab: ResultsViewPathwaysSubTab.PATHWAY_MAPPER,
+            activeTab:
+                urlWrapper.query.pathways_source ||
+                ResultsViewPathwaysSubTab.PATHWAY_MAPPER,
         }));
 
         return (
@@ -35,7 +43,12 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                     id="pathwaysPageTabs"
                     activeTabId={store.activeTab}
                     onTabClick={(id: ResultsViewPathwaysSubTab) => {
-                        runInAction(() => (store.activeTab = id));
+                        runInAction(() => {
+                            store.activeTab = id;
+                            urlWrapper.updateURL({
+                                pathways_source: id,
+                            });
+                        });
                     }}
                     className="pillTabs resultsPagePathwaysTabs"
                     arrowStyle={{ 'line-height': 0.8 }}
@@ -101,7 +114,10 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                                     </li>
                                     <li>
                                         686 from{' '}
-                                        <a href="https://www.wikipathways.org/">
+                                        <a
+                                            href="https://www.wikipathways.org/"
+                                            target="_blank"
+                                        >
                                             WikiPathways
                                         </a>
                                     </li>

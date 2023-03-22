@@ -1,6 +1,14 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type AggregateSourceInfo = {
+    'annotationSourcesInfo': Array < SourceVersionInfo >
+
+        'genomeNexus': GenomeNexusInfo
+
+        'vep': VEPInfo
+
+};
 export type AlleleCount = {
     'ac': number
 
@@ -299,6 +307,12 @@ export type GeneralPopulationStats = {
     'counts': SignalPopulationStats
 
         'frequencies': SignalPopulationStats
+
+};
+export type GenomeNexusInfo = {
+    'database': Version
+
+        'server': Version
 
 };
 export type GenomicLocation = {
@@ -785,6 +799,20 @@ export type Snpeff = {
     'license': string
 
 };
+export type SourceVersionInfo = {
+    'description': string
+
+        'id': string
+
+        'name': string
+
+        'type': string
+
+        'url': string
+
+        'version': string
+
+};
 export type StatsByTumorType = {
     'ageAtDx': number
 
@@ -876,6 +904,8 @@ export type TranscriptConsequenceSummary = {
 
         'hugoGeneSymbol': string
 
+        'isVue': boolean
+
         'polyphenPrediction': string
 
         'polyphenScore': number
@@ -925,6 +955,14 @@ export type UntranslatedRegion = {
         'end': number
 
         'strand': number
+
+};
+export type VEPInfo = {
+    'cache': Version
+
+        'comment': string
+
+        'server': Version
 
 };
 export type VariantAnnotation = {
@@ -998,6 +1036,8 @@ export type VariantAnnotationSummary = {
 
         'variantType': string
 
+        'vues': Vues
+
 };
 export type Vcf = {
     'alt': string
@@ -1008,7 +1048,33 @@ export type Vcf = {
 
 };
 export type Version = {
-    'version': string
+    'static': boolean
+
+        'version': string
+
+};
+export type Vues = {
+    'comment': string
+
+        'defaultEffect': string
+
+        'genomicLocation': string
+
+        'genomicLocationDescription': string
+
+        'hugoGeneSymbol': string
+
+        'pubmedIds': Array < number >
+
+        'referenceText': string
+
+        'revisedProteinEffect': string
+
+        'transcriptId': string
+
+        'variant': string
+
+        'variantClassification': string
 
 };
 
@@ -3093,7 +3159,7 @@ export default class GenomeNexusAPI {
     fetchVersionGET(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < Version > {
+    }): Promise < AggregateSourceInfo > {
         return this.fetchVersionGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });

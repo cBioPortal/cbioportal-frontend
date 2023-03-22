@@ -131,6 +131,6 @@ export default {
     ),
     // Exclude not profiled gene panel ids for download
     download: (props: PanelColumnFormatterProps) =>
-        getGenePanelIds(props, true),
+        getGenePanelIds(props, true).join(','),
     getGenePanelIds,
 };

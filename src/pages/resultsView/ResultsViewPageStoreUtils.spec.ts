@@ -27,7 +27,6 @@ import {
 } from './ResultsViewPageStoreUtils';
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     CustomDriverNumericGeneMolecularData,
     IQueriedMergedTrackCaseData,
 } from './ResultsViewPageStore';
@@ -55,6 +54,7 @@ import {
     VirtualStudyData,
 } from 'shared/api/session-service/sessionServiceModels';
 import $ from 'jquery';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 describe('ResultsViewPageStoreUtils', () => {
     describe('computeCustomDriverAnnotationReport', () => {
@@ -553,55 +553,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 } as any
             );
         });
-        it('annotates with cbioportal, cosmic', () => {
-            assert.deepEqual(
-                annotateMutationPutativeDriver(
-                    {
-                        mutationType: 'in_frame_ins',
-                    } as Mutation,
-                    {
-                        hotspots: false,
-                        oncoKb: '',
-                        cbioportalCount: true,
-                        cosmicCount: false,
-                    } as any
-                ),
-                {
-                    putativeDriver: true,
-                    isHotspot: false,
-                    oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'in_frame_ins'
-                    ),
-                    mutationType: 'in_frame_ins',
-                } as any,
-                'cbioportal count'
-            );
-
-            assert.deepEqual(
-                annotateMutationPutativeDriver(
-                    {
-                        mutationType: 'in_frame_ins',
-                    } as Mutation,
-                    {
-                        hotspots: false,
-                        oncoKb: '',
-                        cbioportalCount: false,
-                        cosmicCount: true,
-                    } as any
-                ),
-                {
-                    putativeDriver: true,
-                    isHotspot: false,
-                    oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'in_frame_ins'
-                    ),
-                    mutationType: 'in_frame_ins',
-                } as any,
-                'cosmic count'
-            );
-        });
         it('annotates with custom driver annotations', () => {
             assert.deepEqual(
                 annotateMutationPutativeDriver(
@@ -659,8 +610,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     {
                         hotspots: true,
                         oncoKb: 'oncogenic',
-                        cbioportalCount: true,
-                        cosmicCount: true,
                         customDriverBinary: true,
                         customDriverTier: 'hello',
                     } as any
@@ -685,8 +634,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     {
                         hotspots: false,
                         oncoKb: '',
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     } as any
                 ),
@@ -761,8 +708,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: true,
-                        cbioportalCount: false,
-                        cosmicCount: true,
                         customDriverBinary: false,
                     }),
                     { 1: { hugoGeneSymbol: 'mygene' } as Gene }
@@ -804,8 +749,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: true,
-                        cbioportalCount: false,
-                        cosmicCount: true,
                         customDriverBinary: false,
                     }),
                     {
@@ -862,8 +805,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: false,
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     }),
                     {
@@ -910,15 +851,11 @@ describe('ResultsViewPageStoreUtils', () => {
                             ? {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: true,
                               }
                             : {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: false,
                               },
                     {
@@ -982,8 +919,6 @@ describe('ResultsViewPageStoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: false,
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     }),
                     {
@@ -1036,15 +971,11 @@ describe('ResultsViewPageStoreUtils', () => {
                             ? {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: true,
                               }
                             : {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: false,
                               },
                     {
@@ -1328,7 +1259,7 @@ const defaultOqlAlterations = (oql_parser.parse(
 )![0] as SingleGeneQuery).alterations;
 
 describe('getSampleAlteredMap', () => {
-    const filteredAlterationData = [
+    const filteredAlterationData = ([
         {
             cases: {
                 samples: {},
@@ -1518,6 +1449,7 @@ describe('getSampleAlteredMap', () => {
         {
             cases: {
                 samples: {},
+                patients: {},
             },
             oql: {
                 gene: 'KRAS',
@@ -1538,9 +1470,9 @@ describe('getSampleAlteredMap', () => {
                 ],
             },
         },
-    ] as IQueriedMergedTrackCaseData[];
+    ] as unknown) as IQueriedMergedTrackCaseData[];
 
-    var samples = [
+    var samples = ([
         {
             uniqueSampleKey: 'QjA4NTpjaG9sX251c18yMDEy',
             uniquePatientKey: 'QjA4NTpjaG9sX251c18yMDEy',
@@ -1621,7 +1553,7 @@ describe('getSampleAlteredMap', () => {
             patientId: 'W040',
             studyId: 'chol_nus_2012',
         },
-    ] as Sample[];
+    ] as unknown) as Sample[];
 
     const oqlQuery = '["RAS" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS';
 

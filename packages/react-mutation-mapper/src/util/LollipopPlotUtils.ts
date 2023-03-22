@@ -4,6 +4,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { countMutationsByProteinChange, Mutation } from 'cbioportal-utils';
 import { PfamDomainRange } from 'genome-nexus-ts-api-client';
+import numeral from 'numeral';
 
 import { LollipopSpec } from '../model/LollipopSpec';
 
@@ -89,12 +90,20 @@ export function calcYMaxInput(
 
     if (input === undefined) {
         input = yAxisSameScale
-            ? getCommonYAxisMaxSliderValue(
-                  yMaxStep,
-                  countRange,
-                  oppositeCountRange
-              )
-            : getYAxisMaxSliderValue(yMaxStep, countRange);
+            ? numeral(
+                  numeral(
+                      getCommonYAxisMaxSliderValue(
+                          yMaxStep,
+                          countRange,
+                          oppositeCountRange
+                      )
+                  ).format(String(yMaxStep))
+              ).value()
+            : numeral(
+                  numeral(getYAxisMaxSliderValue(yMaxStep, countRange)).format(
+                      String(yMaxStep)
+                  )
+              ).value();
     }
 
     return input;
@@ -148,7 +157,9 @@ export function calcCountRange(
 
         for (const lollipop of lollipops) {
             max = Math.max(max, lollipop.count);
-            min = Math.min(min, lollipop.count);
+            min = Number.isInteger(lollipop.count)
+                ? Math.min(min, lollipop.count)
+                : Math.min(0.1, lollipop.count);
         }
 
         return [min, Math.max(min, max)];

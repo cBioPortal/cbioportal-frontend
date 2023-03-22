@@ -10,6 +10,7 @@ import {
     GeneFilterQuery,
     PatientTreatmentFilter,
     SampleTreatmentFilter,
+    ClinicalDataFilter,
 } from 'cbioportal-ts-api-client';
 import {
     DataType,
@@ -17,8 +18,8 @@ import {
     ChartType,
     getGenomicChartUniqueKey,
     getGenericAssayChartUniqueKey,
-    DataBin,
     updateCustomIntervalFilter,
+    SpecialChartsUniqueKeyEnum,
 } from 'pages/studyView/StudyViewUtils';
 import {
     ChartMeta,
@@ -45,7 +46,6 @@ import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
 } from 'cbioportal-ts-api-client';
-import { ClinicalDataFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPI';
 import {
     STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_MISSENSE,
@@ -426,9 +426,13 @@ export default class UserSelections extends React.Component<
             this.props.filter.sampleTreatmentFilters &&
             this.props.filter.sampleTreatmentFilters.filters.length > 0
         ) {
+            const metaData = this.props.attributesMetaSet[
+                SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS
+            ];
             const f = this.renderTreatmentFilter(
                 this.props.filter.sampleTreatmentFilters,
-                'SAMPLE_TREATMENTS'
+                metaData.uniqueKey,
+                metaData.displayName
             );
             components.push(f);
         }
@@ -437,9 +441,13 @@ export default class UserSelections extends React.Component<
             this.props.filter.patientTreatmentFilters &&
             this.props.filter.patientTreatmentFilters.filters.length > 0
         ) {
+            const metaData = this.props.attributesMetaSet[
+                SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS
+            ];
             const f = this.renderTreatmentFilter(
                 this.props.filter.patientTreatmentFilters,
-                'PATIENT_TREATMENTS'
+                metaData.uniqueKey,
+                metaData.displayName
             );
             components.push(f);
         }
@@ -450,7 +458,8 @@ export default class UserSelections extends React.Component<
         ) {
             const f = this.renderTreatmentFilter(
                 this.props.filter.sampleTreatmentGroupFilters,
-                'SAMPLE_TREATMENT_GROUPS'
+                'SAMPLE_TREATMENT_GROUPS',
+                'Group Treatement per Sample'
             );
             components.push(f);
         }
@@ -461,7 +470,8 @@ export default class UserSelections extends React.Component<
         ) {
             const f = this.renderTreatmentFilter(
                 this.props.filter.patientTreatmentGroupFilters,
-                'PATIENT_TREATMENT_GROUPS'
+                'PATIENT_TREATMENT_GROUPS',
+                'Group Treatment per Patient'
             );
             components.push(f);
         }
@@ -472,7 +482,8 @@ export default class UserSelections extends React.Component<
         ) {
             const f = this.renderTreatmentFilter(
                 this.props.filter.sampleTreatmentTargetFilters,
-                'SAMPLE_TREATMENT_TARGET'
+                'SAMPLE_TREATMENT_TARGET',
+                'Target Treatment per Sample'
             );
             components.push(f);
         }
@@ -483,7 +494,8 @@ export default class UserSelections extends React.Component<
         ) {
             const f = this.renderTreatmentFilter(
                 this.props.filter.patientTreatmentTargetFilters,
-                'PATIENT_TREATMENT_TARGET'
+                'PATIENT_TREATMENT_TARGET',
+                'Target Treatment per Patient'
             );
             components.push(f);
         }
@@ -623,7 +635,8 @@ export default class UserSelections extends React.Component<
 
     private renderTreatmentFilter(
         f: AndedPatientTreatmentFilters | AndedSampleTreatmentFilters,
-        metaKey: string
+        metaKey: string,
+        displayName: string
     ): JSX.Element {
         type OuterFilter =
             | OredPatientTreatmentFilters
@@ -670,7 +683,22 @@ export default class UserSelections extends React.Component<
         );
 
         return (
-            <GroupLogic components={filters} operation={'and'} group={false} />
+            <div className={styles.parentGroupLogic}>
+                <GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>
+                            {displayName}
+                        </span>,
+                        <GroupLogic
+                            components={filters}
+                            operation={'and'}
+                            group={false}
+                        />,
+                    ]}
+                    operation={':'}
+                    group={false}
+                />
+            </div>
         );
     }
 

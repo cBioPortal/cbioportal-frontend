@@ -1,12 +1,9 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
-import {
-    AnnotatedMutation,
-    ResultsViewPageStore,
-} from '../ResultsViewPageStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
-import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
+import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperServerConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { computed, action, makeObservable } from 'mobx';
 import { getServerConfig } from 'config/config';
@@ -14,7 +11,7 @@ import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner'
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../../AppStore';
 
-import './mutations.scss';
+import '../../../shared/components/mutationMapper/mutations.scss';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import {
     getMutationAlignerUrlTemplate,
@@ -26,6 +23,7 @@ import _ from 'lodash';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -90,6 +88,10 @@ export default class Mutations extends React.Component<
 
     public render() {
         const activeTabId = this.selectedGeneSymbol;
+
+        // this is to trigger genome nexus variant annotation call as soon as the Mutations tab starts rendering
+        const triggerForAnEarlierGenomeNexusCall = this.props.store
+            .indexedVariantAnnotations.result;
 
         return (
             <div data-test="mutationsTabDiv">
@@ -172,6 +174,7 @@ export default class Mutations extends React.Component<
             const mutationMapperStore = this.props.store.getMutationMapperStore(
                 this.selectedGene
             )!;
+
             return (
                 <div>
                     <div className={'tabMessageContainer'}>
@@ -251,7 +254,7 @@ export default class Mutations extends React.Component<
                             this.props.store.genomeNexusMutationAssessorCache
                         }
                         pdbHeaderCache={this.props.store.pdbHeaderCache}
-                        userEmailAddress={this.props.appStore.userName!}
+                        userDisplayName={this.props.appStore.userName!}
                         generateGenomeNexusHgvsgUrl={
                             this.props.store.generateGenomeNexusHgvsgUrl
                         }

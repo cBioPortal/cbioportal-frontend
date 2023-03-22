@@ -313,9 +313,14 @@ describe('Patient Cohort View Custom Tab Tests', () => {
             hide: false,
             hideAsync: `()=>{
                            return new Promise((resolve)=>{
-                                setTimeout(()=>{
-                                    resolve(true);
-                                }, 10000);
+                                const int = setInterval(()=>{
+                                    if ( $(".tabAnchor_customTab1").length ) {
+                                      clearInterval(int)
+                                       setTimeout(()=>{
+                                            resolve(true);
+                                        }, 10000);
+                                    }
+                                },500);
                            });
                     }`,
         },
@@ -326,13 +331,13 @@ describe('Patient Cohort View Custom Tab Tests', () => {
 
         goToUrlWithCustomTabConfig(patientUrl, conf);
 
-        $('=Summary').waitForDisplayed();
+        $('a=Summary').waitForDisplayed();
 
-        assert.equal(
-            $('=Async Tab').isDisplayed(),
-            false,
-            'Async tab is not displayed'
-        );
+        const asyncExists = $('a=Async Tab').isExisting();
+
+        if (asyncExists) {
+            assert.fail("Async exists when it shouldn't!");
+        }
 
         $('=Sync Tab').click();
 
@@ -366,13 +371,11 @@ describe('Patient Cohort View Custom Tab Tests', () => {
             'We see next patient'
         );
 
+        $('.prevPageBtn').waitForDisplayed();
+
         $('.prevPageBtn').click();
 
-        assert.equal(
-            $('div=tab for patient TCGA-AP-A053').isDisplayed(),
-            true,
-            'We see first patient'
-        );
+        $('div=tab for patient TCGA-AP-A053').waitForDisplayed();
     });
 });
 

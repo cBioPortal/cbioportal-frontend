@@ -58,9 +58,11 @@ export default class WebAPIPage extends React.Component<{}, {}> {
                     <button
                         className="btn btn-primary btn-sm"
                         onClick={() => this.downloadDataAccessTokenFile()}
+                        style={{ marginBottom: 15 }}
                     >
                         Download Token
                     </button>
+
                     <p>
                         There are instructions for making requests to the Web
                         API using Data Access Tokens&nbsp;
@@ -84,11 +86,15 @@ export default class WebAPIPage extends React.Component<{}, {}> {
 
                 <p>
                     API documentation is now at{' '}
-                    <a href="https://docs.cbioportal.org/6.-web-api-and-clients/api-and-api-clients">
+                    <a
+                        target={'_blank'}
+                        href="https://docs.cbioportal.org/web-api-and-clients/"
+                    >
                         docs.cbioportal.org
                     </a>
                 </p>
                 {this.renderDataAccessTokensDiv()}
+
                 <h2 id="linking-to-us">Linking to Us</h2>
                 <p>
                     Once you have a cancer_study_id, it is very easy to create

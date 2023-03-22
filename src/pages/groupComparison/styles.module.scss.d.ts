@@ -12,6 +12,7 @@ declare const styles: {
   readonly "inlineAlterationTypeSelectorMenu": string;
   readonly "markedForDeletion": string;
   readonly "noGroupsMessage": string;
+  readonly "noPaddingLeftTruncationCheckbox": string;
   readonly "sharedGroup": string;
   readonly "survivalPlotHeader": string;
   readonly "survivalPlotHeaderContainer": string;

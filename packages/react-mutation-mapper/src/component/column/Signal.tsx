@@ -18,8 +18,8 @@ import {
     DefaultTooltip,
     FREQUENCY_COLUMNS_DEFINITION,
 } from 'cbioportal-frontend-commons';
-import { observer } from 'mobx-react';
 import { errorIcon, loaderIcon } from '../StatusHelpers';
+import { observer } from 'mobx-react';
 type SignalProps = {
     mutation: Mutation;
     indexedVariantAnnotations?: RemoteData<

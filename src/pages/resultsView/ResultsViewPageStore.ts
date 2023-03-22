@@ -42,17 +42,29 @@ import {
 import client from 'shared/api/cbioportalClientInstance';
 import {
     CanonicalMutationType,
+    getBrowserWindow,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import {
-    generateQueryStructuralVariantId,
+    action,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+    reaction,
+    toJS,
+} from 'mobx';
+import {
     getProteinPositionFromProteinChange,
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
 } from 'cbioportal-utils';
+import {
+    deriveStructuralVariantType,
+    generateQueryStructuralVariantId,
+} from 'oncokb-frontend-commons';
 import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
@@ -88,10 +100,10 @@ import {
     generateDataQueryFilter,
     generateUniqueSampleKeyToTumorTypeMap,
     getAllGenes,
+    getGenomeBuildFromStudies,
     getGenomeNexusUrl,
     getOncoKbOncogenic,
     getSurvivalClinicalAttributesPrefix,
-    getGenomeBuildFromStudies,
     groupBy,
     groupBySampleId,
     IDataQueryFilter,
@@ -100,6 +112,7 @@ import {
     makeIsHotspotForOncoprint,
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
+    buildProteinChange,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -107,13 +120,11 @@ import {
 } from 'shared/lib/GenePanelUtils';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
-import { getServerConfig } from 'config/config';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import _ from 'lodash';
 import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
-import AccessorsForOqlFilter, {
-    SimplifiedMutationType,
-} from '../../shared/lib/oql/AccessorsForOqlFilter';
+import AccessorsForOqlFilter from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     doesQueryContainMutationOQL,
     doesQueryContainOQL,
@@ -139,7 +150,6 @@ import {
 } from './mutationCountHelpers';
 import { CancerStudyQueryUrlParams } from 'shared/components/query/QueryStore';
 import {
-    compileMutations,
     compileStructuralVariants,
     computeCustomDriverAnnotationReport,
     createDiscreteCopyNumberDataKey,
@@ -149,7 +159,6 @@ import {
     fetchPatients,
     fetchQueriedStudies,
     filterAndAnnotateStructuralVariants,
-    FilteredAndAnnotatedMutationsReport,
     FilteredAndAnnotatedStructuralVariantsReport,
     filterSubQueryData,
     getExtendsClinicalAttributesFromCustomData,
@@ -187,7 +196,6 @@ import {
     makeProfiledInClinicalAttributes,
 } from '../../shared/components/oncoprint/ResultsViewOncoprintUtils';
 import { annotateAlterationTypes } from '../../shared/lib/oql/annotateAlterationTypes';
-import { ErrorMessages } from '../../shared/enums/ErrorEnums';
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import { AppStore } from '../../AppStore';
@@ -231,8 +239,10 @@ import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import {
+    AlterationTypeConstants,
     CLINICAL_ATTRIBUTE_FIELD_ENUM,
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    DataTypeConstants,
     GENETIC_PROFILE_FIELD_ENUM,
     GENOME_NEXUS_ARG_FIELD_ENUM,
     REQUEST_ARG_ENUM,
@@ -252,14 +262,14 @@ import oql_parser, {
 import {
     ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
     createAnnotatedProteinImpactTypeFilter,
-    createNumericalFilter,
     createCategoricalFilter,
+    createNumericalFilter,
 } from 'shared/lib/MutationUtils';
 import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
 import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
 import {
-    MutationTableColumnType,
     getTextForDataField,
+    MutationTableColumnType,
 } from 'shared/components/mutationTable/MutationTable';
 import { getClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getCancerCellFractionValue } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
@@ -277,13 +287,29 @@ import HgvsgColumnFormatter from 'shared/components/mutationTable/column/HgvsgCo
 import ClinvarColumnFormatter from 'shared/components/mutationTable/column/ClinvarColumnFormatter';
 import SignalColumnFormatter from 'shared/components/mutationTable/column/SignalColumnFormatter';
 import {
-    Group,
     ComparisonSession,
+    Group,
+    ResultPageSettings,
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { ICBioData } from 'pathway-mapper';
 import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
+import { PageUserSession } from 'shared/userSession/PageUserSession';
+import { PageType } from 'shared/userSession/PageType';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
+import eventBus from 'shared/events/eventBus';
+import { ErrorMessages } from 'shared/errorMessages';
+import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
+import {
+    compileMutations,
+    FilteredAndAnnotatedMutationsReport,
+} from 'shared/lib/comparison/AnalysisStoreUtils';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+} from 'shared/model/AnnotatedMutation';
+import { SiteError } from 'shared/model/appMisc';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -291,40 +317,6 @@ type Optional<T> =
 
 const DEFAULT_RPPA_THRESHOLD = 2;
 const DEFAULT_Z_SCORE_THRESHOLD = 2;
-
-export const AlterationTypeConstants = {
-    MUTATION_EXTENDED: 'MUTATION_EXTENDED',
-    COPY_NUMBER_ALTERATION: 'COPY_NUMBER_ALTERATION',
-    MRNA_EXPRESSION: 'MRNA_EXPRESSION',
-    PROTEIN_LEVEL: 'PROTEIN_LEVEL',
-    FUSION: 'FUSION',
-    GENESET_SCORE: 'GENESET_SCORE',
-    METHYLATION: 'METHYLATION',
-    GENERIC_ASSAY: 'GENERIC_ASSAY',
-    STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT',
-    MUTATION_UNCALLED: 'MUTATION_UNCALLED',
-};
-
-export const AlterationTypeDisplayConstants = {
-    COPY_NUMBER_ALTERATION: 'CNA',
-    MRNA_EXPRESSION: 'EXP',
-    PROTEIN_LEVEL: 'PROT',
-    MUTATION_EXTENDED: ['MUT', 'FUSION'],
-};
-
-export const DataTypeConstants = {
-    DISCRETE: 'DISCRETE',
-    CONTINUOUS: 'CONTINUOUS',
-    ZSCORE: 'Z-SCORE',
-    MAF: 'MAF',
-    LOGVALUE: 'LOG-VALUE',
-    LOG2VALUE: 'LOG2-VALUE',
-    FUSION: 'FUSION',
-    SV: 'SV',
-    LIMITVALUE: 'LIMIT-VALUE',
-    BINARY: 'BINARY',
-    CATEGORICAL: 'CATEGORICAL',
-};
 
 export enum SampleListCategoryType {
     'w_mut' = 'w_mut',
@@ -359,22 +351,6 @@ export interface ExtendedAlteration
     // alterationType?
     alterationType: string;
     alterationSubType: string;
-}
-
-export interface AnnotatedMutation extends Mutation {
-    hugoGeneSymbol: string;
-    putativeDriver: boolean;
-    oncoKbOncogenic: string;
-    isHotspot: boolean;
-    simplifiedMutationType: SimplifiedMutationType;
-}
-
-export interface AnnotatedStructuralVariant extends StructuralVariant {
-    putativeDriver: boolean;
-    oncoKbOncogenic: string;
-    isHotspot: boolean;
-    entrezGeneId: number;
-    hugoGeneSymbol: string;
 }
 
 export interface CustomDriverNumericGeneMolecularData
@@ -435,6 +411,24 @@ export type GeneticEntity = {
     cytoband: string; //will be "" for "geneset"
     geneticEntityData: Gene | Geneset;
 };
+
+// this can be adapted to consume new profile membership data
+export function allowExpressionProfiles(studies: CancerStudy[]) {
+    if (
+        /\.cbioportal\.org$|\.mskcc\.org$/.test(
+            getBrowserWindow().location.hostname
+        )
+    ) {
+        // if there is only one study
+        // or ALL studies are part of pan_can_atlas and thus have normalized data across expression profiles
+        return (
+            studies.length === 1 ||
+            _.every(studies, s => /pan_can_atlas/i.test(s.studyId))
+        );
+    } else {
+        return true;
+    }
+}
 
 export function buildDefaultOQLProfile(
     profilesTypes: string[],
@@ -538,22 +532,21 @@ interface IResultsViewExclusionSettings {
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
-export class ResultsViewPageStore
+export class ResultsViewPageStore extends AnalysisStore
     implements
         IAnnotationFilterSettings,
         IResultsViewExclusionSettings,
         ISettingsMenuButtonVisible {
-    @observable driverAnnotationSettings: DriverAnnotationSettings;
+    private reactionDisposers: IReactionDisposer[] = [];
 
-    constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
+    public pageUserSession: PageUserSession<ResultPageSettings>;
+
+    constructor(
+        protected appStore: AppStore,
+        public urlWrapper: ResultsViewURLWrapper
+    ) {
+        super();
         makeObservable(this);
-        //labelMobxPromises(this);
-
-        this.urlWrapper = urlWrapper;
-
-        // addErrorHandler((error: any) => {
-        //     this.ajaxErrors.push(error);
-        // });
         this.getURL();
 
         const store = this;
@@ -561,30 +554,51 @@ export class ResultsViewPageStore
         this.driverAnnotationSettings = buildDriverAnnotationSettings(
             () => store.didHotspotFailInOncoprint
         );
-        this.driverAnnotationsReactionDisposer = reaction(
-            () => this.urlWrapper.query.cancer_study_list,
-            () => {
-                this.driverAnnotationSettings = buildDriverAnnotationSettings(
-                    () => store.didHotspotFailInOncoprint
-                );
-            },
-            { fireImmediately: true }
+
+        this.pageUserSession = new PageUserSession<ResultPageSettings>(
+            appStore,
+            ServerConfigHelpers.sessionServiceIsEnabled()
+        );
+
+        this.pageUserSession.id = {
+            page: PageType.RESULTS_VIEW,
+            origin: this.cancerStudyIds,
+        };
+
+        this.reactionDisposers.push(
+            reaction(
+                () => this.urlWrapper.query.cancer_study_list,
+                () => {
+                    this.driverAnnotationSettings = buildDriverAnnotationSettings(
+                        () => store.didHotspotFailInOncoprint
+                    );
+                },
+                { fireImmediately: true }
+            )
+        );
+
+        this.reactionDisposers.push(
+            reaction(
+                () => [this.cancerStudyIds],
+                () => {
+                    this.pageUserSession.id = {
+                        page: PageType.RESULTS_VIEW,
+                        origin: this.cancerStudyIds,
+                    };
+                }
+            )
         );
     }
 
     destroy() {
-        this.driverAnnotationsReactionDisposer();
+        this.reactionDisposers.forEach(disposer => disposer());
     }
 
-    public urlWrapper: ResultsViewURLWrapper;
-
-    public driverAnnotationsReactionDisposer: any;
-
     // Use gene + driver as key, e.g. TP53_DRIVER or TP53_NO_DRIVER
+
     private mutationMapperStoreByGeneWithDriverKey: {
         [hugoGeneSymbolWithDriver: string]: ResultsViewMutationMapperStore;
     } = {};
-
     @computed get oqlText() {
         return this.urlWrapper.query.gene_list;
     }
@@ -896,26 +910,29 @@ export class ResultsViewPageStore
         },
     });
 
+    /**
+     * The oncoprint can have tracks which indicate comparison group membership per sample.
+     *  We want to know which comparison groups are referenced in these tracks, if any
+     *  are currently visible.
+     */
     @computed.struct get comparisonGroupsReferencedInURL() {
-        // The oncoprint can have tracks which indicate comparison group membership per sample.
-        //  We want to know which comparison groups are referenced in these tracks, if any
-        //  are currently visible.
-
-        // Start by getting all the selected clinical attribute tracks
-        const groupIds = this.urlWrapper.oncoprintSelectedClinicalTracks
-            .filter((clinicalAttributeId: string) =>
+        // Get selected clinical attribute tracks:
+        const tracks = this.pageUserSession.userSettings?.clinicallist;
+        const inComparisonGroupTracks =
+            tracks &&
+            tracks.filter((track: ClinicalTrackConfig) =>
                 clinicalAttributeIsINCOMPARISONGROUP({
-                    clinicalAttributeId,
+                    clinicalAttributeId: track.stableId,
                 })
-            ) // filter for comparison group tracks
+            );
 
-            .map((clinicalAttributeId: string) =>
-                convertComparisonGroupClinicalAttribute(
-                    clinicalAttributeId,
-                    false
-                )
-            ); // convert track ids to group ids
-        return groupIds;
+        if (inComparisonGroupTracks) {
+            return inComparisonGroupTracks.map((track: ClinicalTrackConfig) =>
+                convertComparisonGroupClinicalAttribute(track.stableId, false)
+            );
+        } else {
+            return [];
+        }
     }
 
     readonly savedComparisonGroupsForStudies = remoteData<Group[]>({
@@ -924,11 +941,13 @@ export class ResultsViewPageStore
             let ret: Group[] = [];
             if (this.appStore.isLoggedIn) {
                 try {
-                    ret = ret.concat(
-                        await comparisonClient.getGroupsForStudies(
-                            this.queriedStudies.result!.map(x => x.studyId)
-                        )
+                    const queriedStudyIds = this.queriedStudies.result!.map(
+                        x => x.studyId
                     );
+                    const groups = await comparisonClient.getGroupsForStudies(
+                        queriedStudyIds
+                    );
+                    ret = ret.concat(groups);
                 } catch (e) {
                     // fail silently
                 }
@@ -1833,8 +1852,25 @@ export class ResultsViewPageStore
                         d,
                         accessors
                     );
-                    extendedD.hugoGeneSymbol =
-                        entrezGeneIdToGene[d.entrezGeneId].hugoGeneSymbol;
+
+                    // we are folding structural variants into the alterations collect
+                    // and thus need to provide them with hugoGeneGeneSymbol
+                    // this is a problem with intermingling SVs (which have two genes)
+                    // with all other alterations, which have only one
+                    if (
+                        extendedD.molecularProfileAlterationType ===
+                        'STRUCTURAL_VARIANT'
+                    ) {
+                        extendedD.hugoGeneSymbol =
+                            entrezGeneIdToGene[extendedD.site1EntrezGeneId]
+                                ?.hugoGeneSymbol ||
+                            entrezGeneIdToGene[extendedD.site2EntrezGeneId]
+                                ?.hugoGeneSymbol;
+                    } else {
+                        extendedD.hugoGeneSymbol =
+                            entrezGeneIdToGene[d.entrezGeneId].hugoGeneSymbol;
+                    }
+
                     extendedD.molecularProfileAlterationType = accessors.molecularAlterationType(
                         d.molecularProfileId
                     );
@@ -2347,10 +2383,36 @@ export class ResultsViewPageStore
         await: () => [this.genes, this.oqlFilteredAlterations],
         invoke: () => {
             // first group them by gene symbol
-            const groupedGenesMap = _.groupBy(
-                this.oqlFilteredAlterations.result!,
-                alteration => alteration.hugoGeneSymbol
+            const groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
+                (
+                    agg: { [getHugoGeneSymbol: string]: ExtendedAlteration[] },
+                    alt
+                ) => {
+                    // a structural variant can apply to two genes, so we have account for the alteration twice
+                    if (
+                        alt.alterationType ===
+                        AlterationTypeConstants.STRUCTURAL_VARIANT
+                    ) {
+                        if (alt.site1HugoSymbol) {
+                            agg[alt.site1HugoSymbol]
+                                ? agg[alt.site1HugoSymbol].push(alt)
+                                : (agg[alt.site1HugoSymbol] = [alt]);
+                        }
+                        if (alt.site1HugoSymbol) {
+                            agg[alt.site2HugoSymbol]
+                                ? agg[alt.site2HugoSymbol].push(alt)
+                                : (agg[alt.site2HugoSymbol] = [alt]);
+                        }
+                    } else {
+                        agg[alt.hugoGeneSymbol]
+                            ? agg[alt.hugoGeneSymbol].push(alt)
+                            : (agg[alt.hugoGeneSymbol] = [alt]);
+                    }
+                    return agg;
+                },
+                {}
             );
+
             // kind of ugly but this fixes a bug where sort order of genes not respected
             // yes we are relying on add order of js map. in theory not guaranteed, in practice guaranteed
             const ret = this.genes.result!.reduce(
@@ -3367,23 +3429,37 @@ export class ResultsViewPageStore
                     vusAndGermline: [],
                 };
             }
+            // we need to add structural variante to gene collection for BOTH site1 and site2 genes
+            // so that features will see the structural variant in either gene context (e.g mutations tab gene pages)
             for (const structuralVariant of structuralVariantsGroups.data) {
-                ret[structuralVariant.site1HugoSymbol].data.push(
+                ret[structuralVariant.site1HugoSymbol]?.data.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.data.push(
                     structuralVariant
                 );
             }
             for (const structuralVariant of structuralVariantsGroups.vus) {
-                ret[structuralVariant.site1HugoSymbol].vus.push(
+                ret[structuralVariant.site1HugoSymbol]?.vus.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.vus.push(
                     structuralVariant
                 );
             }
             for (const structuralVariant of structuralVariantsGroups.germline) {
-                ret[structuralVariant.site1HugoSymbol].germline.push(
+                ret[structuralVariant.site1HugoSymbol]?.germline.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.germline.push(
                     structuralVariant
                 );
             }
             for (const structuralVariant of structuralVariantsGroups.vusAndGermline) {
-                ret[structuralVariant.site1HugoSymbol].vusAndGermline.push(
+                ret[structuralVariant.site1HugoSymbol]?.vusAndGermline.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.vusAndGermline.push(
                     structuralVariant
                 );
             }
@@ -3472,6 +3548,7 @@ export class ResultsViewPageStore
                                 )
                         );
                     }
+
                     let filteredStructuralVariants = compileStructuralVariants(
                         structuralVariantsGroups,
                         this.mutationsTabFilteringSettings.excludeVus,
@@ -3488,7 +3565,7 @@ export class ResultsViewPageStore
 
                     filteredStructuralVariants.forEach(structuralVariant => {
                         const mutation = {
-                            center: structuralVariant.center,
+                            center: 'N/A',
                             chr: structuralVariant.site1Chromosome,
                             entrezGeneId: structuralVariant.site1EntrezGeneId,
                             keyword: structuralVariant.comments,
@@ -3497,7 +3574,9 @@ export class ResultsViewPageStore
                             mutationType: CanonicalMutationType.FUSION,
                             ncbiBuild: structuralVariant.ncbiBuild,
                             patientId: structuralVariant.patientId,
-                            proteinChange: structuralVariant.eventInfo,
+                            proteinChange: buildProteinChange(
+                                structuralVariant
+                            ),
                             sampleId: structuralVariant.sampleId,
                             startPosition: structuralVariant.site1Position,
                             studyId: structuralVariant.studyId,
@@ -3505,6 +3584,7 @@ export class ResultsViewPageStore
                                 structuralVariant.uniquePatientKey,
                             uniqueSampleKey: structuralVariant.uniqueSampleKey,
                             variantType: structuralVariant.variantClass,
+                            mutationStatus: structuralVariant.svStatus,
                             gene: {
                                 entrezGeneId:
                                     structuralVariant.site1EntrezGeneId,
@@ -3517,6 +3597,7 @@ export class ResultsViewPageStore
                             isHotspot: structuralVariant.isHotspot,
                             simplifiedMutationType:
                                 CanonicalMutationType.FUSION,
+                            structuralVariant,
                         } as AnnotatedMutation;
 
                         mutationsByGene[hugoGeneSymbol].push(mutation);
@@ -3703,47 +3784,6 @@ export class ResultsViewPageStore
         }`;
     }
 
-    readonly oncoKbCancerGenes = remoteData(
-        {
-            invoke: () => {
-                if (getServerConfig().show_oncokb) {
-                    return fetchOncoKbCancerGenes();
-                } else {
-                    return Promise.resolve([]);
-                }
-            },
-        },
-        []
-    );
-
-    readonly oncoKbAnnotatedGenes = remoteData(
-        {
-            await: () => [this.oncoKbCancerGenes],
-            invoke: () => {
-                if (getServerConfig().show_oncokb) {
-                    return Promise.resolve(
-                        _.reduce(
-                            this.oncoKbCancerGenes.result,
-                            (
-                                map: { [entrezGeneId: number]: boolean },
-                                next: CancerGene
-                            ) => {
-                                if (next.oncokbAnnotated) {
-                                    map[next.entrezGeneId] = true;
-                                }
-                                return map;
-                            },
-                            {}
-                        )
-                    );
-                } else {
-                    return Promise.resolve({});
-                }
-            },
-        },
-        {}
-    );
-
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>(
         {
             await: () => [this.studies, this.samples],
@@ -3924,6 +3964,9 @@ export class ResultsViewPageStore
                 }
                 return _.flatten(await Promise.all(promises));
             },
+            onError: e => {
+                eventBus.emit('error', null, new SiteError(e));
+            },
         },
         []
     );
@@ -4072,6 +4115,27 @@ export class ResultsViewPageStore
             ),
     });
 
+    readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
+        await: () => [
+            this._filteredAndAnnotatedMutationsReport,
+            this.filteredSampleKeyToSample,
+        ],
+        invoke: () => {
+            const filteredMutations = compileMutations(
+                this._filteredAndAnnotatedMutationsReport.result!,
+                !this.driverAnnotationSettings.includeVUS,
+                !this.includeGermlineMutations
+            );
+            const filteredSampleKeyToSample = this.filteredSampleKeyToSample
+                .result!;
+            return Promise.resolve(
+                filteredMutations.filter(
+                    m => m.uniqueSampleKey in filteredSampleKeyToSample
+                )
+            );
+        },
+    });
+
     readonly filteredPatients = remoteData({
         await: () => [
             this.filteredSamples,
@@ -4195,13 +4259,6 @@ export class ResultsViewPageStore
         return getGenomeBuildFromStudies(this.studies.result);
     }
 
-    @computed get referenceGenomeBuild() {
-        if (!this.studies.isComplete) {
-            throw new Error('Failed to get studies');
-        }
-        return getGenomeNexusUrl(this.studies.result);
-    }
-
     @autobind
     generateGenomeNexusHgvsgUrl(hgvsg: string) {
         return getGenomeNexusHgvsgUrl(hgvsg, this.referenceGenomeBuild);
@@ -4212,14 +4269,6 @@ export class ResultsViewPageStore
             getServerConfig().genomenexus_url_grch38
             ? getServerConfig().ensembl_transcript_grch38_url
             : getServerConfig().ensembl_transcript_url;
-    }
-
-    @computed get genomeNexusClient() {
-        return new GenomeNexusAPI(this.referenceGenomeBuild);
-    }
-
-    @computed get genomeNexusInternalClient() {
-        return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
     }
 
     //this is only required to show study name and description on the results page
@@ -4255,11 +4304,28 @@ export class ResultsViewPageStore
         {
             await: () => [this.studyIds],
             invoke: async () => {
-                return client.fetchMolecularProfilesUsingPOST({
+                let profiles = await client.fetchMolecularProfilesUsingPOST({
                     molecularProfileFilter: {
                         studyIds: this.studyIds.result!,
                     } as MolecularProfileFilter,
                 });
+
+                // expression profiles are not allowed
+                // under some circumstances
+                if (allowExpressionProfiles(this.studies.result)) {
+                    return profiles;
+                } else {
+                    return profiles.filter(
+                        p =>
+                            ![
+                                AlterationTypeConstants.MRNA_EXPRESSION,
+                                AlterationTypeConstants.MICRO_RNA_EXPRESSION,
+                                AlterationTypeConstants.PROTEIN_LEVEL,
+                                AlterationTypeConstants.RNA_EXPRESSION,
+                                AlterationTypeConstants.MICRO_RNA_EXPRESSION,
+                            ].includes(p.molecularAlterationType)
+                    );
+                }
             },
         },
         []
@@ -4523,7 +4589,7 @@ export class ResultsViewPageStore
             ) {
                 return genes;
             } else {
-                throw new Error(ErrorMessages.InvalidGenes);
+                throw new Error(ErrorMessages.INVALID_GENES);
             }
         },
         onResult: (genes: Gene[]) => {
@@ -4713,14 +4779,6 @@ export class ResultsViewPageStore
                 )
             );
         },
-    });
-
-    readonly entrezGeneIdToGene = remoteData<{ [entrezGeneId: number]: Gene }>({
-        await: () => [this.genes],
-        invoke: () =>
-            Promise.resolve(
-                _.keyBy(this.genes.result!, gene => gene.entrezGeneId)
-            ),
     });
 
     readonly genesetLinkMap = remoteData<{ [genesetId: string]: string }>({
@@ -4932,23 +4990,6 @@ export class ResultsViewPageStore
         }
     );
 
-    readonly _filteredAndAnnotatedMutationsReport = remoteData({
-        await: () => [
-            this.mutations,
-            this.getMutationPutativeDriverInfo,
-            this.entrezGeneIdToGene,
-        ],
-        invoke: () => {
-            return Promise.resolve(
-                filterAndAnnotateMutations(
-                    this.mutations.result!,
-                    this.getMutationPutativeDriverInfo.result!,
-                    this.entrezGeneIdToGene.result!
-                )
-            );
-        },
-    });
-
     readonly _filteredAndAnnotatedStructuralVariantsReport = remoteData({
         await: () => [
             this.structuralVariants,
@@ -4959,27 +5000,6 @@ export class ResultsViewPageStore
                 filterAndAnnotateStructuralVariants(
                     this.structuralVariants.result!,
                     this.getStructuralVariantPutativeDriverInfo.result!
-                )
-            );
-        },
-    });
-
-    readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
-        await: () => [
-            this._filteredAndAnnotatedMutationsReport,
-            this.filteredSampleKeyToSample,
-        ],
-        invoke: () => {
-            const filteredMutations = compileMutations(
-                this._filteredAndAnnotatedMutationsReport.result!,
-                !this.driverAnnotationSettings.includeVUS,
-                !this.includeGermlineMutations
-            );
-            const filteredSampleKeyToSample = this.filteredSampleKeyToSample
-                .result!;
-            return Promise.resolve(
-                filteredMutations.filter(
-                    m => m.uniqueSampleKey in filteredSampleKeyToSample
                 )
             );
         },
@@ -5110,78 +5130,6 @@ export class ResultsViewPageStore
         },
     }));
 
-    readonly getMutationPutativeDriverInfo = remoteData({
-        await: () => {
-            const toAwait = [];
-            if (this.driverAnnotationSettings.oncoKb) {
-                toAwait.push(this.oncoKbMutationAnnotationForOncoprint);
-            }
-            if (this.driverAnnotationSettings.hotspots) {
-                toAwait.push(this.isHotspotForOncoprint);
-            }
-            if (this.driverAnnotationSettings.cbioportalCount) {
-                toAwait.push(this.getCBioportalCount);
-            }
-            if (this.driverAnnotationSettings.cosmicCount) {
-                toAwait.push(this.getCosmicCount);
-            }
-            return toAwait;
-        },
-        invoke: () => {
-            return Promise.resolve((mutation: Mutation): {
-                oncoKb: string;
-                hotspots: boolean;
-                cbioportalCount: boolean;
-                cosmicCount: boolean;
-                customDriverBinary: boolean;
-                customDriverTier?: string;
-            } => {
-                const getOncoKbMutationAnnotationForOncoprint = this
-                    .oncoKbMutationAnnotationForOncoprint.result!;
-                const oncoKbDatum:
-                    | IndicatorQueryResp
-                    | undefined
-                    | null
-                    | false =
-                    this.driverAnnotationSettings.oncoKb &&
-                    getOncoKbMutationAnnotationForOncoprint &&
-                    !(
-                        getOncoKbMutationAnnotationForOncoprint instanceof Error
-                    ) &&
-                    getOncoKbMutationAnnotationForOncoprint(mutation);
-
-                const isHotspotDriver =
-                    this.driverAnnotationSettings.hotspots &&
-                    !(this.isHotspotForOncoprint.result instanceof Error) &&
-                    this.isHotspotForOncoprint.result!(mutation);
-                const cbioportalCountExceeded =
-                    this.driverAnnotationSettings.cbioportalCount &&
-                    this.getCBioportalCount.isComplete &&
-                    this.getCBioportalCount.result!(mutation) >=
-                        this.driverAnnotationSettings.cbioportalCountThreshold;
-                const cosmicCountExceeded =
-                    this.driverAnnotationSettings.cosmicCount &&
-                    this.getCosmicCount.isComplete &&
-                    this.getCosmicCount.result!(mutation) >=
-                        this.driverAnnotationSettings.cosmicCountThreshold;
-
-                // Note: custom driver annotations are part of the incoming datum
-                return evaluateMutationPutativeDriverInfo(
-                    mutation,
-                    oncoKbDatum,
-                    this.driverAnnotationSettings.hotspots,
-                    isHotspotDriver,
-                    this.driverAnnotationSettings.cbioportalCount,
-                    cbioportalCountExceeded,
-                    this.driverAnnotationSettings.cosmicCount,
-                    cosmicCountExceeded,
-                    this.driverAnnotationSettings.customBinary,
-                    this.driverAnnotationSettings.driverTiers
-                );
-            });
-        },
-    });
-
     readonly getStructuralVariantPutativeDriverInfo = remoteData({
         await: () => {
             const toAwait = [];
@@ -5196,8 +5144,6 @@ export class ResultsViewPageStore
             return Promise.resolve((structualVariant: StructuralVariant): {
                 oncoKb: string;
                 hotspots: boolean;
-                cbioportalCount: boolean;
-                cosmicCount: boolean;
                 customDriverBinary: boolean;
                 customDriverTier?: string;
             } => {
@@ -5225,8 +5171,6 @@ export class ResultsViewPageStore
                 return {
                     oncoKb,
                     hotspots: false,
-                    cbioportalCount: false,
-                    cosmicCount: false,
                     customDriverBinary: false,
                     customDriverTier: undefined,
                 };
@@ -5295,7 +5239,7 @@ export class ResultsViewPageStore
                                   ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                                   : '',
                           ].filter(f => f),
-                          getServerConfig().isoformOverrideSource,
+                          getServerConfig().genomenexus_isoform_override_source,
                           this.genomeNexusClient
                       )
                     : undefined,
@@ -5306,28 +5250,6 @@ export class ResultsViewPageStore
         undefined
     );
 
-    // Hotspots
-    readonly hotspotData = remoteData({
-        await: () => [this.mutations],
-        invoke: () => {
-            return fetchHotspotsData(
-                this.mutations,
-                undefined,
-                this.genomeNexusInternalClient
-            );
-        },
-    });
-
-    readonly indexedHotspotData = remoteData<IHotspotIndex | undefined>({
-        await: () => [this.hotspotData],
-        invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
-    });
-
-    public readonly isHotspotForOncoprint = remoteData<
-        ((m: Mutation) => boolean) | Error
-    >({
-        invoke: () => makeIsHotspotForOncoprint(this.indexedHotspotData),
-    });
     //OncoKb
     readonly uniqueSampleKeyToTumorType = remoteData<{
         [uniqueSampleKey: string]: string;
@@ -5347,23 +5269,6 @@ export class ResultsViewPageStore
             );
         },
     });
-
-    //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
-    //mutations tab the opposite
-    readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
-        {
-            await: () => [this.mutations, this.oncoKbAnnotatedGenes],
-            invoke: async () =>
-                fetchOncoKbDataForOncoprint(
-                    this.oncoKbAnnotatedGenes,
-                    this.mutations
-                ),
-            onError: (err: Error) => {
-                // fail silently, leave the error handling responsibility to the data consumer
-            },
-        },
-        ONCOKB_DEFAULT
-    );
 
     readonly structuralVariantOncoKbDataForOncoprint = remoteData<
         IOncoKbData | Error
@@ -5428,16 +5333,6 @@ export class ResultsViewPageStore
         );
     }
 
-    readonly oncoKbMutationAnnotationForOncoprint = remoteData<
-        Error | ((mutation: Mutation) => IndicatorQueryResp | undefined)
-    >({
-        await: () => [this.oncoKbDataForOncoprint],
-        invoke: () =>
-            makeGetOncoKbMutationAnnotationForOncoprint(
-                this.oncoKbDataForOncoprint
-            ),
-    });
-
     readonly oncoKbStructuralVariantAnnotationForOncoprint = remoteData<
         | Error
         | ((
@@ -5460,7 +5355,7 @@ export class ResultsViewPageStore
                                 structuralVariant.uniqueSampleKey,
                                 {}
                             ),
-                            structuralVariant.variantClass.toUpperCase() as any
+                            deriveStructuralVariantType(structuralVariant)
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
                             id
@@ -5481,109 +5376,6 @@ export class ResultsViewPageStore
                 this.cnaOncoKbDataForOncoprint,
                 this.driverAnnotationSettings.oncoKb
             ),
-    });
-
-    readonly cbioportalMutationCountData = remoteData<{
-        [mutationCountByPositionKey: string]: number;
-    }>({
-        await: () => [this.mutations],
-        invoke: async () => {
-            const mutationPositionIdentifiers = _.values(
-                countMutations(this.mutations.result!)
-            );
-
-            if (mutationPositionIdentifiers.length > 0) {
-                const data = await internalClient.fetchMutationCountsByPositionUsingPOST(
-                    {
-                        mutationPositionIdentifiers,
-                    }
-                );
-                return _.mapValues(
-                    _.groupBy(data, mutationCountByPositionKey),
-                    (counts: MutationCountByPosition[]) =>
-                        _.sumBy(counts, c => c.count)
-                );
-            } else {
-                return {};
-            }
-        },
-    });
-
-    readonly getCBioportalCount: MobxPromise<
-        (mutation: Mutation) => number
-    > = remoteData({
-        await: () => [this.cbioportalMutationCountData],
-        invoke: () => {
-            return Promise.resolve((mutation: Mutation): number => {
-                const key = mutationCountByPositionKey(mutation);
-                return this.cbioportalMutationCountData.result![key] || -1;
-            });
-        },
-    });
-    //COSMIC count
-    readonly cosmicCountsByKeywordAndStart = remoteData<ComplexKeyCounter>({
-        await: () => [this.mutations],
-        invoke: async () => {
-            const keywords = _.uniq(
-                this.mutations
-                    .result!.filter((m: Mutation) => {
-                        // keyword is what we use to query COSMIC count with, so we need
-                        //  the unique list of mutation keywords to query. If a mutation has
-                        //  no keyword, it cannot be queried for.
-                        return !!m.keyword;
-                    })
-                    .map((m: Mutation) => m.keyword)
-            );
-
-            if (keywords.length > 0) {
-                const data = await internalClient.fetchCosmicCountsUsingPOST({
-                    keywords,
-                });
-                const map = new ComplexKeyCounter();
-                for (const d of data) {
-                    const position = getProteinPositionFromProteinChange(
-                        d.proteinChange
-                    );
-                    if (position) {
-                        map.add(
-                            {
-                                keyword: d.keyword,
-                                start: position.start,
-                            },
-                            d.count
-                        );
-                    }
-                }
-                return map;
-            } else {
-                return new ComplexKeyCounter();
-            }
-        },
-    });
-
-    readonly getCosmicCount: MobxPromise<
-        (mutation: Mutation) => number
-    > = remoteData({
-        await: () => [this.cosmicCountsByKeywordAndStart],
-        invoke: () => {
-            return Promise.resolve((mutation: Mutation): number => {
-                const targetPosObj = getProteinPositionFromProteinChange(
-                    mutation.proteinChange
-                );
-                if (targetPosObj) {
-                    const keyword = mutation.keyword;
-                    const cosmicCount = this.cosmicCountsByKeywordAndStart.result!.get(
-                        {
-                            keyword,
-                            start: targetPosObj.start,
-                        }
-                    );
-                    return cosmicCount;
-                } else {
-                    return -1;
-                }
-            });
-        },
     });
 
     readonly molecularProfileIdToProfiledFilteredSamples = remoteData({
@@ -5762,7 +5554,6 @@ export class ResultsViewPageStore
             ),
     });
 
-    readonly geneCache = new GeneCache();
     readonly genesetCache = new GenesetCache();
 
     private _numericGeneMolecularDataCache = new MobxPromiseCache<

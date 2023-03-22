@@ -70,18 +70,20 @@ export function serializeEvent(gaEvent: GAEvent) {
     } catch (ex) {}
 }
 
-function sendToLoggly(message: string) {
+export function sendToLoggly(payload: Record<string, string | number>) {
     try {
-        if (window.location.hostname === 'www.cbioportal.org') {
+        if (/cbioportal\.org$/.test(window.location.hostname)) {
             const LOGGLY_TOKEN = 'b7a422a1-9878-49a2-8a30-2a8d5d33518f';
+
+            const data = {
+                location: window.location.href.replace(/#.*$/, ''),
+                ...payload,
+                e2e: isWebdriver() ? 'true' : 'false',
+            };
 
             $.ajax({
                 url: `//logs-01.loggly.com/inputs/${LOGGLY_TOKEN}.gif`,
-                data: {
-                    location: window.location.href.replace(/#.*$/, ''),
-                    message: message,
-                    e2e: isWebdriver() ? 'true' : 'false',
-                },
+                data,
             });
         }
     } catch (ex) {
@@ -108,7 +110,7 @@ export function embedGoogleAnalytics(ga_code: string) {
 
         ga('require', 'urlChangeTracker', {
             hitFilter: function(model: any) {
-                sendToLoggly('PAGE_VIEW');
+                sendToLoggly({ message: 'PAGE_VIEW' });
             },
         });
 
@@ -117,7 +119,7 @@ export function embedGoogleAnalytics(ga_code: string) {
             trailingSlash: 'remove',
         });
         ga('send', 'pageview');
-        sendToLoggly('PAGE_VIEW');
+        sendToLoggly({ message: 'PAGE_VIEW' });
     });
 }
 

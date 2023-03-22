@@ -1,5 +1,9 @@
 import TumorColumnFormatter from './mutation/column/TumorColumnFormatter';
 import _ from 'lodash';
+import {
+    IGenePanelDataByProfileIdAndSample,
+    isSampleProfiledInProfile,
+} from 'shared/lib/isSampleProfiled';
 
 export function checkNonProfiledGenesExist(
     sampleIds: string[],
@@ -16,4 +20,34 @@ export function checkNonProfiledGenesExist(
         );
         return _.values(profiledSamples).includes(false);
     });
+}
+
+export function getSamplesProfiledStatus(
+    sampleIds: string[],
+    genePanelData: IGenePanelDataByProfileIdAndSample,
+    profileId: string | undefined
+) {
+    const notProfiledIds: string[] = sampleIds.reduce(
+        (aggr: string[], sampleId: string) => {
+            const isProfiled = isSampleProfiledInProfile(
+                genePanelData,
+                profileId,
+                sampleId
+            );
+            if (!isProfiled) {
+                aggr.push(sampleId);
+            }
+            return aggr;
+        },
+        []
+    );
+
+    const noneProfiled = notProfiledIds.length === sampleIds.length;
+    const someProfiled = notProfiledIds.length < sampleIds.length;
+
+    return {
+        noneProfiled,
+        someProfiled,
+        notProfiledIds,
+    };
 }

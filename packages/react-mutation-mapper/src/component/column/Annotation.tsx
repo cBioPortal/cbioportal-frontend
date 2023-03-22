@@ -1,5 +1,4 @@
 import {
-    calculateOncoKbAvailableDataType,
     getCivicEntry,
     getMyCancerGenomeLinks,
     getRemoteDataGroupStatus,
@@ -21,13 +20,19 @@ import _ from 'lodash';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import { getIndicatorData } from '../../util/OncoKbUtils';
+import {
+    getIndicatorData,
+    calculateOncoKbAvailableDataType,
+} from 'oncokb-frontend-commons';
 import { defaultArraySortMethod } from 'cbioportal-utils';
 import Civic, { sortValue as civicSortValue } from '../civic/Civic';
 import MyCancerGenome, {
     sortValue as myCancerGenomeSortValue,
 } from '../myCancerGenome/MyCancerGenome';
-import OncoKB, { sortValue as oncoKbSortValue } from '../oncokb/OncoKB';
+import {
+    OncoKB,
+    oncoKbAnnotationSortValue as oncoKbSortValue,
+} from 'oncokb-frontend-commons';
 import HotspotAnnotation, {
     sortValue as hotspotSortValue,
 } from './HotspotAnnotation';
@@ -52,7 +57,7 @@ export type AnnotationProps = {
     myCancerGenomeData?: IMyCancerGenomeData;
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
-    userEmailAddress?: string;
+    userDisplayName?: string;
 };
 
 export type GenericAnnotationProps = {
@@ -64,7 +69,7 @@ export type GenericAnnotationProps = {
     mergeOncoKbIcons?: boolean;
     oncoKbContentPadding?: number;
     pubMedCache?: MobxCache;
-    userEmailAddress?: string;
+    userDisplayName?: string;
 };
 
 export interface IAnnotation {
@@ -104,7 +109,7 @@ function getDefaultEntrezGeneId(mutation: Mutation): number {
 }
 
 function getDefaultTumorType(): string {
-    return 'Unknown';
+    return '';
 }
 
 const memoized: Map<string, IAnnotation> = new Map();
@@ -303,7 +308,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
         enableMyCancerGenome,
         enableOncoKb,
         pubMedCache,
-        userEmailAddress,
+        userDisplayName,
         mergeOncoKbIcons,
         oncoKbContentPadding,
     } = props;
@@ -322,8 +327,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     indicator={annotation.oncoKbIndicator}
                     availableDataTypes={annotation.oncoKbAvailableDataTypes}
                     mergeAnnotationIcons={mergeOncoKbIcons}
-                    pubMedCache={pubMedCache}
-                    userEmailAddress={userEmailAddress}
+                    userDisplayName={userDisplayName}
                     contentPadding={oncoKbContentPadding}
                 />
             )}

@@ -36,6 +36,7 @@ export default class MutationalSignaturesContainer extends React.Component<
         // use uniq function to get all unique versions
         return _.chain(this.props.profiles)
             .map(profile => _.last(profile.molecularProfileId.split('_'))!)
+            .filter(item => item in this.props.data)
             .uniq()
             .value();
     }

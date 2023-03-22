@@ -34,8 +34,6 @@ export * from './mutation/ProteinChangeUtils';
 
 export * from './myCancerGenome/MyCancerGenomeUtils';
 
-export * from './oncokb/OncoKbUtils';
-
 export * from './promise/PromiseUtils';
 
 export * from './ptm/PtmUtils';

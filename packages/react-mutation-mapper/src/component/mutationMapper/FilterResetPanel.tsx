@@ -18,7 +18,7 @@ export class FilterResetPanel extends React.Component<
     {}
 > {
     public static defaultProps: Partial<FilterResetPanelProps> = {
-        buttonText: 'Show all',
+        buttonText: 'Remove filter',
         buttonClass: classNames('btn', 'btn-secondary', 'btn-sm'),
         className: classNames(
             'alert',
@@ -29,7 +29,10 @@ export class FilterResetPanel extends React.Component<
 
     public render() {
         return (
-            <div className={this.props.className}>
+            <div
+                className={this.props.className}
+                data-test="filter-reset-panel"
+            >
                 <span style={{ verticalAlign: 'middle' }}>
                     {this.props.filterInfo}
                     <button

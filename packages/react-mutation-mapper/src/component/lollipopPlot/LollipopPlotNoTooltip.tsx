@@ -28,6 +28,8 @@ export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
     setHitZone?: (
         hitRect: { x: number; y: number; width: number; height: number },
         tooltipContent?: JSX.Element,
+        mirrorHitRect?: { x: number; y: number; width: number; height: number },
+        mirrorTooltipContent?: JSX.Element,
         onMouseOver?: () => void,
         onClick?: () => void,
         onMouseOut?: () => void,
@@ -143,11 +145,22 @@ export default class LollipopPlotNoTooltip extends React.Component<
         if (lollipopIndex !== null) {
             const lollipopComponent = this.lollipopComponents[lollipopIndex];
             if (lollipopComponent) {
+                // mirrorLollipopComponent refers to the lollipop component, if it exists, in the other group at the same lollipopIndex
+                // this is needed to show tooltips of both lollipop components at same index
+                const mirrorLollipopComponent = _.find(
+                    this.lollipopComponents,
+                    l =>
+                        l.props.spec.codon ===
+                            lollipopComponent.props.spec.codon &&
+                        l !== lollipopComponent
+                );
                 lollipopComponent.isHovered = true;
                 if (this.props.setHitZone) {
                     this.props.setHitZone(
                         lollipopComponent.circleHitRect,
                         lollipopComponent.props.spec.tooltip,
+                        mirrorLollipopComponent?.circleHitRect,
+                        mirrorLollipopComponent?.props.spec.tooltip,
                         action(() => {
                             if (this.props.dataStore) {
                                 updatePositionHighlightFilters(
@@ -161,7 +174,13 @@ export default class LollipopPlotNoTooltip extends React.Component<
                             this.onLollipopClick(
                                 lollipopComponent.props.spec.codon
                             )
-                        )
+                        ),
+                        undefined,
+                        'pointer',
+                        lollipopComponent.circleHitRect.y >
+                            lollipopComponent.props.stickBaseY
+                            ? 'bottom'
+                            : 'top'
                     );
                 }
             }
@@ -176,6 +195,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
                     this.props.setHitZone(
                         domainComponent.hitRect,
                         domainComponent.props.spec.tooltip,
+                        undefined,
+                        undefined,
                         undefined,
                         undefined,
                         undefined,
@@ -196,6 +217,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
                         sequenceComponent.props.spec
                             ? sequenceComponent.props.spec.tooltip
                             : undefined,
+                        undefined,
+                        undefined,
                         undefined,
                         undefined,
                         undefined,
@@ -689,11 +712,15 @@ export default class LollipopPlotNoTooltip extends React.Component<
         groupName?: string,
         symbol: string = '#'
     ) {
-        const label = groupName
-            ? `${symbol} ${this.props.hugoGeneSymbol ||
-                  ''} ${groupName} Mutations`
-            : `${symbol} ${this.props.hugoGeneSymbol || ''} Mutations`;
-
+        let label;
+        if (this.props.yAxisLabelFormatter) {
+            label = this.props.yAxisLabelFormatter(symbol, groupName);
+        } else {
+            label = groupName
+                ? `${symbol} ${this.props.hugoGeneSymbol ||
+                      ''} ${groupName} Mutations`
+                : `${symbol} ${this.props.hugoGeneSymbol || ''} Mutations`;
+        }
         const placeOnBottom = placement === LollipopPlacement.BOTTOM;
 
         return (

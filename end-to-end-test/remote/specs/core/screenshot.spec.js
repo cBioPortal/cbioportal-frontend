@@ -366,6 +366,29 @@ describe('results page tabs while excluding unprofiled samples', function() {
         mrnaEnrichmentsRowSelector: 'b=DSC1',
     });
 });
+
+describe('results page pathways tab with unprofiled genes', function() {
+    before(() => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/pathways?cancer_study_list=msk_impact_2017&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cfusion%2Ccna&case_set_id=msk_impact_2017_cnaseq&gene_list=EGFR%2520ERBB2%2520PDGFRA%2520MET%2520KRAS%2520NRAS%2520HRAS%2520NF1%2520SPRY2%2520FOXO1%2520FOXO3%2520AKT1%2520AKT2%2520AKT3%2520PIK3R1%2520PIK3CA%2520PTEN&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
+        );
+    });
+
+    it(`results page pathwaymapper tab with unprofiled genes`, function() {
+        $('#cy').waitForDisplayed({ timeout: 30000 });
+
+        waitForNetworkQuiet(15000);
+
+        const res = browser.checkElement(
+            '[data-test="pathwayMapperTabDiv"]',
+            '',
+            { hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'] }
+        );
+
+        assertScreenShotMatch(res);
+    });
+});
+
 //
 // describe('error messaging for 400 error', function() {
 //     before(function() {

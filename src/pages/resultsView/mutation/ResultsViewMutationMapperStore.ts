@@ -44,13 +44,13 @@ import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/Ca
 import HgvscColumnFormatter from 'shared/components/mutationTable/column/HgvscColumnFormatter';
 import ClinicalAttributeColumnFormatter from 'shared/components/mutationTable/column/ClinicalAttributeColumnFormatter';
 import _ from 'lodash';
-import { createNamespaceColumnName } from 'shared/components/mutationMapper/MutationMapperUtils';
-import NumericNamespaceColumnFormatter from 'shared/components/mutationTable/column/NumericNamespaceColumnFormatter';
-import CategoricalNamespaceColumnFormatter from 'shared/components/mutationTable/column/CategoricalNamespaceColumnFormatter';
+import NumericNamespaceColumnFormatter from 'shared/components/namespaceColumns/NumericNamespaceColumnFormatter';
+import CategoricalNamespaceColumnFormatter from 'shared/components/namespaceColumns/CategoricalNamespaceColumnFormatter';
+import { createNamespaceColumnName } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
-        protected mutationMapperConfig: IServerConfig,
+        protected mutationMapperServerConfig: IServerConfig,
         protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
         public gene: Gene,
         public samples: MobxPromise<SampleIdentifier[]>,
@@ -101,7 +101,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         public getTranscriptId?: () => string
     ) {
         super(
-            mutationMapperConfig,
+            mutationMapperServerConfig,
             (() => {
                 mutationMapperStoreConfig['filterAppliersOverride']![
                     MutationTableColumnType.GNOMAD

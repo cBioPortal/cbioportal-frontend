@@ -15,6 +15,7 @@ import {
     AlterationFilter,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
+    BinsGeneratorConfig,
     CancerStudy,
     ClinicalAttribute,
     ClinicalAttributeCount,
@@ -26,6 +27,7 @@ import {
     ClinicalDataCountItem,
     ClinicalDataFilter,
     ClinicalDataMultiStudyFilter,
+    ClinicalViolinPlotData,
     CopyNumberSeg,
     DataFilterValue,
     DensityPlotBin,
@@ -33,6 +35,10 @@ import {
     GeneFilterQuery,
     GenePanel,
     GenericAssayData,
+    GenericAssayDataBin,
+    GenericAssayDataBinFilter,
+    GenericAssayDataCountFilter,
+    GenericAssayDataCountItem,
     GenericAssayDataFilter,
     GenericAssayDataMultipleStudyFilter,
     GenericAssayMeta,
@@ -82,18 +88,16 @@ import {
     DataType,
     driverTierFilterActive,
     ensureBackwardCompatibilityOfFilters,
-    excludeFiltersForAttribute,
     FGA_PLOT_DOMAIN,
     FGA_VS_MUTATION_COUNT_KEY,
+    findInvalidMolecularProfileIds,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
-    generateScatterPlotDownloadData,
     generateXvsYScatterPlotDownloadData,
     getBinBounds,
     getCategoricalFilterValues,
     getChartMetaDataType,
     getChartSettingsMap,
-    getClinicalDataBySamples,
     getClinicalDataCountWithColorByClinicalDataCount,
     getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
@@ -139,12 +143,15 @@ import {
     StudyWithSamples,
     submitToPage,
     updateCustomIntervalFilter,
+    getAllClinicalDataByStudyViewFilter,
 } from './StudyViewUtils';
-import MobxPromise from 'mobxpromise';
+import MobxPromise, { MobxPromiseUnionTypeWithDefault } from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
-import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
-import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
+import {
+    isQueriedStudyAuthorized,
+    updateGeneQuery,
+} from 'pages/studyView/StudyViewUtils';
 import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
 import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
@@ -162,7 +169,14 @@ import {
     getStudyDownloadListUrl,
     redirectToComparisonPage,
 } from '../../shared/api/urls';
-import { onMobxPromise, toPromise } from 'cbioportal-frontend-commons';
+import {
+    DataType as DownloadDataType,
+    onMobxPromise,
+    pluralize,
+    remoteData,
+    stringListToSet,
+    toPromise,
+} from 'cbioportal-frontend-commons';
 import request from 'superagent';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
@@ -177,12 +191,6 @@ import { LoadingPhase } from '../groupComparison/GroupComparisonLoading';
 import { sleepUntil } from '../../shared/lib/TimeUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import {
-    DataType as DownloadDataType,
-    pluralize,
-    remoteData,
-    stringListToSet,
-} from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 
 import { AppStore } from 'AppStore';
@@ -194,10 +202,7 @@ import {
 } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
-import {
-    AlterationTypeConstants,
-    DataTypeConstants,
-} from 'pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import {
     createSurvivalAttributeIdsDict,
     generateStudyViewSurvivalPlotTitle,
@@ -227,13 +232,6 @@ import {
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
-    BinsGeneratorConfig,
-    GenericAssayDataBin,
-    GenericAssayDataBinFilter,
-    GenericAssayDataCountFilter,
-    GenericAssayDataCountItem,
-} from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
     fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
@@ -260,7 +258,10 @@ import {
     StudyPageSettings,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
-import { ClinicalViolinPlotData } from 'cbioportal-ts-api-client';
+import { PageType } from 'shared/userSession/PageType';
+import client from 'shared/api/cbioportalClientInstance';
+import { FeatureFlagEnum } from 'shared/featureFlags';
+import intersect from 'fast_array_intersect';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -290,7 +291,13 @@ export type SurvivalType = {
     associatedAttrs: string[];
     survivalStatusAttribute: ClinicalAttribute;
     filter: (s: string) => boolean;
+    isLeftTruncationAvailable: boolean;
+};
+
+export type SurvivalData = {
+    id: string;
     survivalData: PatientSurvival[];
+    survivalDataWithoutLeftTruncation: PatientSurvival[];
 };
 
 export type StudyViewURLQuery = {
@@ -1909,6 +1916,11 @@ export class StudyViewPageStore
     }
 
     @action
+    handleTabChange(id: string) {
+        this.urlWrapper.setTab(id);
+    }
+
+    @action
     updateStoreByFilters(filters: Partial<StudyViewFilter>): void {
         // fixes filters in place to ensure backward compatiblity
         // as filter specification changes
@@ -2259,7 +2271,7 @@ export class StudyViewPageStore
     private _chartSampleIdentifiersFilterSet = observable.map<
         ChartUniqueKey,
         SampleIdentifier[]
-    >();
+    >({}, { deep: false });
 
     public preDefinedCustomChartFilterSet = observable.map<
         ChartUniqueKey,
@@ -3273,6 +3285,18 @@ export class StudyViewPageStore
         }
     }
 
+    @action
+    toggleSurvivalPlotLeftTruncation(uniqueKey: string): void {
+        if (this.survivalPlotLeftTruncationToggleMap?.has(uniqueKey)) {
+            this.updateSurvivalPlotLeftTruncationToggleMap(
+                uniqueKey,
+                !this.survivalPlotLeftTruncationToggleMap.get(uniqueKey)
+            );
+        } else {
+            this.updateSurvivalPlotLeftTruncationToggleMap(uniqueKey, true);
+        }
+    }
+
     public isLogScaleToggleVisible(
         uniqueKey: string,
         dataBins?: DataBin[]
@@ -3543,13 +3567,15 @@ export class StudyViewPageStore
             this._chartSampleIdentifiersFilterSet.values()
         );
 
-        // nested array need to be spread for _.intersectionWith
-        let _sampleIdentifiers: SampleIdentifier[] = _.intersectionWith(
-            ...sampleIdentifiersFilterSets,
-            ((a: SampleIdentifier, b: SampleIdentifier) => {
-                return a.sampleId === b.sampleId && a.studyId === b.studyId;
-            }) as any
-        );
+        let _sampleIdentifiers: SampleIdentifier[] = intersect<
+            SampleIdentifier
+        >(sampleIdentifiersFilterSets, (s: any) => {
+            // must use any b/c library typings are broken
+            return (
+                (s as SampleIdentifier).sampleId +
+                (s as SampleIdentifier).studyId
+            );
+        });
 
         if (!_.isEmpty(sampleIdentifiersFilterSets)) {
             filters.sampleIdentifiers = _sampleIdentifiers;
@@ -5907,6 +5933,7 @@ export class StudyViewPageStore
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
             this.survivalPlots.isPending ||
+            this.survivalEntryMonths.isPending ||
             this.shouldDisplayPatientTreatments.isPending ||
             this.sharedCustomData.isPending;
 
@@ -5947,6 +5974,7 @@ export class StudyViewPageStore
 
     public updateUserSettings() {
         sessionServiceClient.updateUserSettings({
+            page: PageType.STUDY_VIEW,
             origin: toJS(this.studyIds),
             chartSettings: _.values(this.currentChartSettingsMap),
             groupColors: toJS(this.userGroupColors),
@@ -5962,6 +5990,7 @@ export class StudyViewPageStore
             this.previousSettings = this.currentChartSettingsMap;
             if (!_.isEmpty(this.currentChartSettingsMap)) {
                 sessionServiceClient.updateUserSettings({
+                    page: PageType.STUDY_VIEW,
                     origin: toJS(this.studyIds),
                     chartSettings: _.values(this.currentChartSettingsMap),
                     groupColors: toJS(this.userGroupColors),
@@ -6001,7 +6030,7 @@ export class StudyViewPageStore
                 this.isSavingUserPreferencePossible &&
                 this.studyIds.length > 0
             ) {
-                return sessionServiceClient.fetchUserSettings(
+                return sessionServiceClient.fetchStudyPageSettings(
                     toJS(this.studyIds)
                 );
             }
@@ -6592,6 +6621,17 @@ export class StudyViewPageStore
             ) {
                 this.changeChartVisibility(key, true);
             }
+            // Currently, left truncation is only appliable for Overall Survival data
+            if (
+                new RegExp('OS_SURVIVAL').test(key) &&
+                this.isLeftTruncationAvailable.result
+            ) {
+                this.updateSurvivalPlotLeftTruncationToggleMap(key, true);
+                this.chartsDimension.set(key, {
+                    w: 2,
+                    h: 2,
+                });
+            }
         });
 
         if (
@@ -7090,12 +7130,26 @@ export class StudyViewPageStore
     @observable blockLoading = false;
 
     readonly selectedSamples = remoteData<Sample[]>({
-        await: () => [this.samples],
+        await: () => [this.samples, this.molecularProfiles],
         invoke: () => {
             //fetch samples when there are only filters applied
             if (this.chartsAreFiltered) {
                 if (!this.hasSampleIdentifiersInFilter) {
                     return Promise.resolve([] as Sample[]);
+                }
+                // here we are validating only the molecular profile ids,
+                // but ideally we should validate the entire filters object
+                const invalidMolecularProfiles = findInvalidMolecularProfileIds(
+                    this.filters,
+                    this.molecularProfiles.result
+                );
+
+                if (invalidMolecularProfiles.length > 0) {
+                    this.appStore.addError(
+                        `Invalid molecular profile id(s): ${invalidMolecularProfiles.join(
+                            ', '
+                        )}`
+                    );
                 }
 
                 return internalClient.fetchFilteredSamplesUsingPOST({
@@ -7598,6 +7652,7 @@ export class StudyViewPageStore
             this.survivalClinicalAttributesPrefix,
             this.clinicalAttributeIdToClinicalAttribute,
             this.survivalDescriptions,
+            this.isLeftTruncationAvailable,
         ],
         invoke: async () => {
             let survivalTypes: SurvivalType[] = this.survivalClinicalAttributesPrefix.result.map(
@@ -7627,7 +7682,10 @@ export class StudyViewPageStore
                             `${prefix}_MONTHS`,
                         ],
                         filter: s => getSurvivalStatusBoolean(s, prefix),
-                        survivalData: [],
+                        // Currently, left truncation is only appliable for Overall Survival data
+                        isLeftTruncationAvailable:
+                            !!this.isLeftTruncationAvailable.result &&
+                            new RegExp('OS').test(prefix),
                     };
                 }
             );
@@ -8093,26 +8151,82 @@ export class StudyViewPageStore
         } else return '';
     }
 
-    readonly survivalPlotData = remoteData<SurvivalType[]>({
+    readonly survivalEntryMonths = remoteData<
+        { [uniquePatientKey: string]: number } | undefined
+    >({
+        invoke: async () => {
+            const studyIds = this.studyIds;
+            // Please note:
+            // The left truncation adjustment is only available for one study: heme_onc_nsclc_genie_bpc at this time
+            // clinical attributeId still need to be decided in the future
+            if (
+                this.isGeniebpcStudy &&
+                this.isLeftTruncationFeatureFlagEnabled
+            ) {
+                const data = await client.getAllClinicalDataInStudyUsingGET({
+                    attributeId: 'TT_CPT_REPORT_MOS',
+                    clinicalDataType: 'PATIENT',
+                    studyId: studyIds[0],
+                });
+                return data.reduce(
+                    (map: { [patientKey: string]: number }, next) => {
+                        map[next.uniquePatientKey] = parseFloat(next.value);
+                        return map;
+                    },
+                    {}
+                );
+            } else {
+                return undefined;
+            }
+        },
+    });
+
+    readonly isLeftTruncationAvailable = remoteData<boolean>({
+        await: () => [this.survivalEntryMonths],
+        invoke: async () => {
+            return !_.isEmpty(this.survivalEntryMonths.result);
+        },
+    });
+
+    readonly survivalPlotDataById = remoteData<{ [id: string]: SurvivalData }>({
         await: () => [
             this.survivalData,
             this.selectedPatientKeys,
             this.survivalPlots,
+            this.survivalEntryMonths,
         ],
         invoke: async () => {
-            return this.survivalPlots.result.map(obj => {
-                obj.survivalData = getPatientSurvivals(
-                    this.survivalData.result,
-                    this.selectedPatientKeys.result!,
-                    obj.associatedAttrs[0],
-                    obj.associatedAttrs[1],
-                    obj.filter
-                );
-                return obj;
-            });
+            return _.chain(this.survivalPlots.result)
+                .map(plot => {
+                    return {
+                        id: plot.id,
+                        survivalData: getPatientSurvivals(
+                            this.survivalData.result,
+                            this.selectedPatientKeys.result!,
+                            plot.associatedAttrs[0],
+                            plot.associatedAttrs[1],
+                            plot.filter,
+                            this.survivalPlotLeftTruncationToggleMap.get(
+                                plot.id
+                            ) && plot.id === 'OS_SURVIVAL'
+                                ? this.survivalEntryMonths.result
+                                : undefined
+                        ),
+                        survivalDataWithoutLeftTruncation: getPatientSurvivals(
+                            this.survivalData.result,
+                            this.selectedPatientKeys.result!,
+                            plot.associatedAttrs[0],
+                            plot.associatedAttrs[1],
+                            plot.filter,
+                            undefined
+                        ),
+                    };
+                })
+                .keyBy(plot => plot.id)
+                .value();
         },
         onError: () => {},
-        default: [],
+        default: {},
     });
 
     readonly survivalData = remoteData<{ [id: string]: ClinicalData[] }>({
@@ -8235,32 +8349,58 @@ export class StudyViewPageStore
     });
 
     readonly getDataForClinicalDataTab = remoteData({
-        await: () => [this.clinicalAttributes, this.selectedSamples],
+        await: () => [
+            this.clinicalAttributes,
+            this.selectedSamples,
+            this.sampleSetByKey,
+        ],
         onError: () => {},
         invoke: async () => {
             if (this.selectedSamples.result.length === 0) {
                 return Promise.resolve([]);
             }
-            let sampleClinicalDataMap: {
-                [attributeId: string]: { [attributeId: string]: string };
-            } = await getClinicalDataBySamples(this.selectedSamples.result);
-            return _.reduce(
-                this.selectedSamples.result,
-                (acc, next) => {
-                    let sampleData: { [attributeId: string]: string } = {
-                        studyId: next.studyId,
-                        patientId: next.patientId,
-                        sampleId: next.sampleId,
-                        ...(sampleClinicalDataMap[next.uniqueSampleKey] || {}),
-                    };
-
-                    acc.push(sampleData);
-                    return acc;
-                },
-                [] as { [id: string]: string }[]
+            let sampleClinicalDataMap = await getAllClinicalDataByStudyViewFilter(
+                this.filters
             );
+
+            const sampleClinicalDataArray = _.mapValues(
+                sampleClinicalDataMap,
+                (attrs, uniqueSampleId) => {
+                    const sample = this.sampleSetByKey.result![uniqueSampleId];
+                    return {
+                        studyId: sample.studyId,
+                        patientId: sample.patientId,
+                        sampleId: sample.sampleId,
+                        ...attrs,
+                    };
+                }
+            );
+
+            return _.values(sampleClinicalDataArray);
         },
         default: [],
+    });
+
+    readonly clinicalAttributeProduct = remoteData({
+        await: () => [this.clinicalAttributes, this.selectedSamples],
+        invoke: async () => {
+            return (
+                this.clinicalAttributes.result.length *
+                this.selectedSamples.result.length
+            );
+        },
+        default: 0,
+    });
+
+    readonly maxSamplesForClinicalTab = remoteData({
+        await: () => [this.clinicalAttributes],
+        invoke: async () => {
+            return Math.floor(
+                getServerConfig().clinical_attribute_product_limit /
+                    this.clinicalAttributes.result.length
+            );
+        },
+        default: 0,
     });
 
     readonly molecularProfileForGeneCharts = remoteData({
@@ -8487,11 +8627,14 @@ export class StudyViewPageStore
                     {}
                 );
 
-                _.each(this.survivalPlotData.result, survivalPlot => {
-                    if (survivalPlot.id in this.chartMetaSet) {
-                        ret[survivalPlot.id] = survivalPlot.survivalData.length;
+                _.each(
+                    this.survivalPlotDataById.result,
+                    (survivalPlotData, id) => {
+                        if (id in this.chartMetaSet) {
+                            ret[id] = survivalPlotData.survivalData.length;
+                        }
                     }
-                });
+                );
 
                 if (
                     SpecialChartsUniqueKeyEnum.CANCER_STUDIES in
@@ -8728,8 +8871,11 @@ export class StudyViewPageStore
 
     @autobind
     public async getDownloadDataPromise(): Promise<string> {
-        let sampleClinicalDataMap = await getClinicalDataBySamples(
-            this.selectedSamples.result
+        if (this.selectedSamples.result.length === 0) {
+            return Promise.resolve('');
+        }
+        let sampleClinicalDataMap = await getAllClinicalDataByStudyViewFilter(
+            this.filters
         );
 
         let clinicalAttributesNameSet = _.reduce(
@@ -9621,6 +9767,37 @@ export class StudyViewPageStore
                 .oncoprint_custom_driver_annotation_binary_menu_label &&
             getServerConfig()
                 .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
+    }
+
+    private _survivalPlotLeftTruncationToggleMap = observable.map<
+        ChartUniqueKey,
+        boolean
+    >({}, { deep: false });
+
+    @computed
+    public get survivalPlotLeftTruncationToggleMap(): Map<string, boolean> {
+        return this._survivalPlotLeftTruncationToggleMap;
+    }
+
+    @action
+    public updateSurvivalPlotLeftTruncationToggleMap(
+        uniqueChartKey: string,
+        value: boolean
+    ) {
+        this._survivalPlotLeftTruncationToggleMap.set(uniqueChartKey, value);
+    }
+
+    public get isLeftTruncationFeatureFlagEnabled() {
+        return this.appStore.featureFlagStore.has(
+            FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
+        );
+    }
+
+    @computed get isGeniebpcStudy() {
+        return (
+            this.studyIds.length === 1 &&
+            this.studyIds[0] === 'heme_onc_nsclc_genie_bpc'
         );
     }
 }

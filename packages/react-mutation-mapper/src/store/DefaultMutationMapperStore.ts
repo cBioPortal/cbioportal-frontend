@@ -68,7 +68,7 @@ import {
 import {
     defaultOncoKbIndicatorFilter,
     groupOncoKbIndicatorDataByMutations,
-} from '../util/OncoKbUtils';
+} from 'oncokb-frontend-commons';
 import { DefaultMutationMapperDataStore } from './DefaultMutationMapperDataStore';
 import { DefaultMutationMapperDataFetcher } from './DefaultMutationMapperDataFetcher';
 import { DefaultMutationMapperFilterApplier } from './DefaultMutationMapperFilterApplier';
@@ -184,7 +184,7 @@ class DefaultMutationMapperStore<T extends Mutation>
 
     @computed
     public get isoformOverrideSource(): string {
-        return this.config.isoformOverrideSource || 'uniprot';
+        return this.config.isoformOverrideSource || 'mskcc';
     }
 
     @computed
@@ -378,7 +378,8 @@ class DefaultMutationMapperStore<T extends Mutation>
         return this.groupedMutationsByPosition.map(groupedMutations => ({
             group: groupedMutations.group,
             counts: this.countUniqueMutationsByPosition(
-                groupedMutations.mutations
+                groupedMutations.mutations,
+                groupedMutations.group
             ),
         }));
     }
@@ -393,9 +394,12 @@ class DefaultMutationMapperStore<T extends Mutation>
         );
     }
 
-    public countUniqueMutationsByPosition(mutationsByPosition: {
-        [pos: number]: T[];
-    }): { [pos: number]: number } {
+    public countUniqueMutationsByPosition(
+        mutationsByPosition: {
+            [pos: number]: T[];
+        },
+        group?: string
+    ): { [pos: number]: number } {
         const map: { [pos: number]: number } = {};
 
         Object.keys(mutationsByPosition).forEach(pos => {
@@ -403,14 +407,14 @@ class DefaultMutationMapperStore<T extends Mutation>
             // for each position multiple mutations for the same patient is counted only once
             const mutations = mutationsByPosition[position];
             if (mutations) {
-                map[position] = this.countUniqueMutations(mutations);
+                map[position] = this.countUniqueMutations(mutations, group);
             }
         });
 
         return map;
     }
 
-    public countUniqueMutations(mutations: T[]): number {
+    public countUniqueMutations(mutations: T[], group?: string): number {
         // assume by default all mutations are unique
         // child classes need to override this method to have a custom way of counting unique mutations
         return this.config.getMutationCount
@@ -531,6 +535,9 @@ class DefaultMutationMapperStore<T extends Mutation>
                 } else {
                     return undefined;
                 }
+            },
+            onError: () => {
+                // allow client level handler to work
             },
         },
         undefined
@@ -971,7 +978,7 @@ class DefaultMutationMapperStore<T extends Mutation>
                             map: { [entrezGeneId: number]: boolean },
                             next: CancerGene
                         ) => {
-                            if (next.oncokbAnnotated) {
+                            if (next && next.oncokbAnnotated) {
                                 map[next.entrezGeneId] = true;
                             }
                             return map;
@@ -1105,7 +1112,7 @@ class DefaultMutationMapperStore<T extends Mutation>
     protected getDefaultTumorType(mutation: T): string {
         return this.config.getTumorType
             ? this.config.getTumorType(mutation)
-            : 'Unknown';
+            : '';
     }
 
     @autobind

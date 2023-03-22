@@ -38,7 +38,9 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
-import MutationMapperStore from 'shared/components/mutationMapper/MutationMapperStore';
+import MutationMapperStore, {
+    IMutationMapperStoreConfig,
+} from 'shared/components/mutationMapper/MutationMapperStore';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import {
     normalizeMutations,
@@ -51,6 +53,9 @@ import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
 import { getServerConfig } from 'config/config';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
+import eventBus from 'shared/events/eventBus';
+import { ErrorMessages } from 'shared/errorMessages';
+import { SiteError } from 'shared/model/appMisc';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
@@ -89,24 +94,54 @@ export default class MutationMapperToolStore {
         undefined
     );
 
-    constructor() {
+    constructor(
+        mutationData?: Partial<MutationInput>[],
+        private mutationMapperStoreConfigOverride?: IMutationMapperStoreConfig
+    ) {
         makeObservable(this);
+        this.mutationData = mutationData;
     }
 
     @computed get isoformOverrideSource(): string {
-        return getServerConfig().isoformOverrideSource;
+        return getServerConfig().genomenexus_isoform_override_source;
     }
 
     @computed get genomeNexusClient() {
-        return this.grch38GenomeNexusUrl
+        const client = this.grch38GenomeNexusUrl
             ? new GenomeNexusAPI(this.grch38GenomeNexusUrl)
             : defaultGenomeNexusClient;
+
+        client.addErrorHandler(err => {
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(
+                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
+                    'alert'
+                )
+            );
+        });
+
+        return client;
     }
 
     @computed get genomeNexusInternalClient() {
-        return this.grch38GenomeNexusUrl
+        const client = this.grch38GenomeNexusUrl
             ? new GenomeNexusAPIInternal(this.grch38GenomeNexusUrl)
             : defaultGenomeNexusInternalClient;
+
+        client.addErrorHandler(err => {
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(
+                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
+                    'alert'
+                )
+            );
+        });
+
+        return client;
     }
 
     readonly hugoGeneSymbols = remoteData(
@@ -228,7 +263,7 @@ export default class MutationMapperToolStore {
                             ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                             : '',
                     ].filter(f => f),
-                    getServerConfig().isoformOverrideSource,
+                    getServerConfig().genomenexus_isoform_override_source,
                     this.genomeNexusClient
                 ),
             onError: (err: Error) => {
@@ -246,7 +281,7 @@ export default class MutationMapperToolStore {
                 const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
                     this.rawMutations,
                     ['my_variant_info'],
-                    getServerConfig().isoformOverrideSource,
+                    getServerConfig().genomenexus_isoform_override_source,
                     this.genomeNexusClient
                 );
 
@@ -317,6 +352,8 @@ export default class MutationMapperToolStore {
                                         genomeBuild: this.grch38GenomeNexusUrl
                                             ? REFERENCE_GENOME.grch38.UCSC
                                             : REFERENCE_GENOME.grch37.UCSC,
+                                        ...this
+                                            .mutationMapperStoreConfigOverride,
                                     },
                                     gene,
                                     getMutations,

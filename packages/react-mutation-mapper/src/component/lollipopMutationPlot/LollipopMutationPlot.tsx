@@ -47,6 +47,7 @@ import TrackPanel from '../track/TrackPanel';
 
 import './lollipopMutationPlot.scss';
 import DomainTooltip from '../lollipopPlot/DomainTooltip';
+import { AxisScale } from './AxisScaleSwitch';
 
 const DEFAULT_PROTEIN_LENGTH = 10;
 
@@ -98,8 +99,13 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     yAxisLabelPadding?: number;
     lollipopTooltipCountInfo?: (
         count: number,
-        mutations?: Partial<T>[]
+        mutations?: Partial<T>[],
+        axisMode?: AxisScale,
+        group?: string
     ) => JSX.Element;
+    yAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
+    axisMode?: AxisScale;
+    onScaleToggle?: (selectedScale: AxisScale) => void;
     customControls?: JSX.Element;
     onXAxisOffset?: (offset: number) => void;
     geneWidth: number;
@@ -113,6 +119,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     showYMaxSlider?: boolean;
     showLegendToggle?: boolean;
     showDownloadControls?: boolean;
+    showPercentToggle?: boolean;
     filterResetPanel?: JSX.Element;
     legend?: JSX.Element;
     loadingIndicator?: JSX.Element;
@@ -156,12 +163,18 @@ export default class LollipopMutationPlot<
 
     private lollipopTooltip(
         mutationsAtPosition: T[],
-        countsByPosition: { [pos: number]: number }
+        countsByPosition: { [pos: number]: number },
+        group?: string
     ): JSX.Element {
         const codon = mutationsAtPosition[0].proteinPosStart;
         const count = countsByPosition[codon];
         const countInfo = this.props.lollipopTooltipCountInfo ? (
-            this.props.lollipopTooltipCountInfo(count, mutationsAtPosition)
+            this.props.lollipopTooltipCountInfo(
+                count,
+                mutationsAtPosition,
+                this.props.axisMode,
+                group
+            )
         ) : (
             <strong>
                 {count} mutation{`${count !== 1 ? 's' : ''}`}
@@ -170,7 +183,7 @@ export default class LollipopMutationPlot<
         const label = lollipopLabelText(mutationsAtPosition);
 
         return (
-            <div>
+            <div data-test={`tooltip-${codon}${group ? `-${group}` : ''}`}>
                 {countInfo}
                 <br />
                 <span>AA Change: {label}</span>
@@ -299,7 +312,11 @@ export default class LollipopMutationPlot<
                 group,
                 placement,
                 count: mutationCount,
-                tooltip: this.lollipopTooltip(mutations, countsByPosition),
+                tooltip: this.lollipopTooltip(
+                    mutations,
+                    countsByPosition,
+                    group
+                ),
                 color: this.props.getLollipopColor
                     ? this.props.getLollipopColor(mutations)
                     : getColorForProteinImpactType(
@@ -567,7 +584,7 @@ export default class LollipopMutationPlot<
         return (
             <div style={{ maxWidth: 200 }}>
                 <a
-                    href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                    href={`https://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
                     target="_blank"
                 >
                     {this.props.store.uniprotId.result}
@@ -865,6 +882,9 @@ export default class LollipopMutationPlot<
                         showTrackSelector={this.props.showTrackSelector}
                         onTrackVisibilityChange={this.onTrackVisibilityChange}
                         getSVG={this.getSVG}
+                        axisMode={this.props.axisMode}
+                        onScaleToggle={this.props.onScaleToggle}
+                        showPercentToggle={this.props.showPercentToggle}
                     />
                     <Collapse isOpened={this.controlsConfig.legendShown}>
                         {this.props.legend || <DefaultLollipopPlotLegend />}
@@ -892,6 +912,7 @@ export default class LollipopMutationPlot<
                         topYAxisSymbol={this.props.topYAxisSymbol}
                         bottomYAxisSymbol={this.props.bottomYAxisSymbol}
                         groups={this.groups}
+                        yAxisLabelFormatter={this.props.yAxisLabelFormatter}
                     />
                     <TrackPanel
                         store={this.props.store}

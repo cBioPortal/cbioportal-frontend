@@ -13,7 +13,6 @@ import {
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import { observable, computed, makeObservable } from 'mobx';
-import { Row } from 'react-bootstrap';
 
 import { getGeneticTrackRuleSetParams } from 'shared/components/oncoprint/OncoprintUtils';
 import PathwayMapper, { ICBioData } from 'pathway-mapper';
@@ -21,6 +20,9 @@ import PathwayMapper, { ICBioData } from 'pathway-mapper';
 import 'pathway-mapper/dist/base.css';
 import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
 import 'cytoscape-navigator/cytoscape.js-navigator.css';
+import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
+import _ from 'lodash';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 interface IPatientViewPathwayMapperProps {
     store: PatientViewPageStore;
@@ -120,7 +122,9 @@ export default class PatientViewPathwayMapper extends React.Component<
 
     public render() {
         if (!this.PathwayMapperComponent) {
-            return null;
+            return (
+                <LoadingIndicator isLoading={true} center={true} size={'big'} />
+            );
         }
 
         return (
@@ -130,19 +134,29 @@ export default class PatientViewPathwayMapper extends React.Component<
                     className="cBioMode"
                     style={{ width: '99%' }}
                 >
-                    <Row>
-                        {/*
-                              // @ts-ignore */}
-                        <this.PathwayMapperComponent
-                            isCBioPortal={true}
-                            isCollaborative={false}
-                            genes={this.queryGenes}
-                            cBioAlterationData={this.alterationFrequencyData}
-                            sampleIconData={this.sampleIconData}
-                            tableComponent={this.renderTable}
-                            patientView={true}
-                        />
-                    </Row>
+                    <SampleNotProfiledAlert
+                        sampleManager={this.props.sampleManager!}
+                        genePanelDataByMolecularProfileIdAndSampleId={
+                            this.props.store
+                                .genePanelDataByMolecularProfileIdAndSampleId
+                                .result
+                        }
+                        molecularProfiles={_.compact([
+                            this.props.store.mutationMolecularProfile?.result!,
+                            this.props.store.discreteMolecularProfile?.result!,
+                        ])}
+                    />
+
+                    {/*@ts-ignore */}
+                    <this.PathwayMapperComponent
+                        isCBioPortal={true}
+                        isCollaborative={false}
+                        genes={this.queryGenes}
+                        cBioAlterationData={this.alterationFrequencyData}
+                        sampleIconData={this.sampleIconData}
+                        tableComponent={this.renderTable}
+                        patientView={true}
+                    />
                 </div>
             </div>
         );

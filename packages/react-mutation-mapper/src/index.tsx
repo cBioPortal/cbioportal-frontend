@@ -47,7 +47,7 @@ export {
 } from './component/column/Hgvsc';
 export { default as Hgvsg } from './component/column/Hgvsg';
 export * from './component/column/HgvsHelper';
-export { default as MutationStatus } from './component/column/MutationStatus';
+export { MutationStatus } from './component/column/MutationStatus';
 export {
     default as ProteinChange,
     proteinChangeSortMethod,
@@ -92,24 +92,9 @@ export {
     GnomadFrequencyValue,
 } from './component/gnomad/GnomadFrequency';
 export { default as GnomadFrequencyTable } from './component/gnomad/GnomadFrequencyTable';
-export {
-    default as OncoKB,
-    sortValue as oncoKbAnnotationSortValue,
-    download as oncoKbAnnotationDownload,
-    IOncoKbProps,
-} from './component/oncokb/OncoKB';
-export { default as OncoKbHelper } from './component/oncokb/OncoKbHelper';
-export { default as OncoKBSuggestAnnotationLinkout } from './component/oncokb/OncoKBSuggestAnnotationLinkout';
-export { default as OncoKbTreatmentTable } from './component/oncokb/OncoKbTreatmentTable';
-export { default as OncoKbFeedback } from './component/oncokb/OncoKbFeedback';
-export { default as OncoKbTooltip } from './component/oncokb/OncoKbTooltip';
-export { default as ReferenceList } from './component/oncokb/ReferenceList';
-export { default as RefComponent } from './component/oncokb/RefComponent';
-export { default as SummaryWithRefs } from './component/oncokb/SummaryWithRefs';
 
 export * from './component/dataTable/ColumnSelector';
 export * from './component/mutationMapper/FilterResetPanel';
-export * from './component/StatusHelpers';
 
 export {
     default as DataTable,
@@ -122,6 +107,9 @@ export { default as Domain } from './component/lollipopPlot/Domain';
 export { HotspotInfo } from './component/hotspot/HotspotInfo';
 export { default as Lollipop } from './component/lollipopPlot/Lollipop';
 export { default as LollipopMutationPlot } from './component/lollipopMutationPlot/LollipopMutationPlot';
+export * from './component/lollipopMutationPlot/PercentToggle';
+export * from './component/lollipopMutationPlot/AxisScaleSwitch';
+export * from './component/lollipopMutationPlot/LollipopTooltipCountInfo';
 export { default as LollipopPlot } from './component/lollipopPlot/LollipopPlot';
 export { default as LollipopPlotNoTooltip } from './component/lollipopPlot/LollipopPlotNoTooltip';
 export { default as Sequence } from './component/lollipopPlot/LollipopPlot';
@@ -174,13 +162,6 @@ export {
     getColorForProteinImpactType,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
 } from './util/MutationTypeUtils';
-export {
-    defaultOncoKbFilter,
-    groupOncoKbIndicatorDataByMutations,
-    oncogenicityIconClassNames,
-    normalizeLevel,
-    levelIconClassNames,
-} from './util/OncoKbUtils';
 export * from './util/SelectorUtils';
 export * from './util/TrackUtils';
 
@@ -188,4 +169,3 @@ export { default as DefaultMutationMapperDataFetcher } from './store/DefaultMuta
 export { default as DefaultMutationMapperDataStore } from './store/DefaultMutationMapperDataStore';
 export { default as DefaultMutationMapperFilterApplier } from './store/DefaultMutationMapperFilterApplier';
 export { default as DefaultMutationMapperStore } from './store/DefaultMutationMapperStore';
-export * from './component/oncokb/constants';

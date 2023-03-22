@@ -38,12 +38,10 @@ import MutationMapperDataStore, {
 import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary';
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
-import {
-    getPatientSampleSummary,
-    submitToStudyViewPage,
-} from '../querySummary/QuerySummaryUtils';
+import { submitToStudyViewPage } from '../querySummary/QuerySummaryUtils';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
+import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -52,7 +50,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     mutationCountCache?: MutationCountCache;
     clinicalAttributeCache?: ClinicalAttributeCache;
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
-    userEmailAddress: string;
+    userDisplayName: string;
     onClickSettingMenu?: (visible: boolean) => void;
 }
 
@@ -86,17 +84,17 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                         );
                     }}
                 >
-                    {getPatientSampleSummary(
-                        dataStore.tableDataSamples,
-                        dataStore.tableDataPatients
-                    )}
+                    <PatientSampleSummary
+                        samples={dataStore.tableDataSamples}
+                        patients={dataStore.tableDataPatients}
+                    />
                 </a>
             );
             filterInfo = (
                 <span>
-                    {`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations in `}
+                    {`Showing ${dataStore.tableData.length} mutations (`}
                     {linkToFilteredStudyView}
-                    {'.'}
+                    {')'}
                 </span>
             );
         }
@@ -223,7 +221,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 onOncoKbIconToggle={this.props.onOncoKbIconToggle}
                 civicGenes={this.props.store.civicGenes}
                 civicVariants={this.props.store.civicVariants}
-                userEmailAddress={this.props.userEmailAddress}
+                userDisplayName={this.props.userDisplayName}
                 enableOncoKb={this.props.enableOncoKb}
                 enableFunctionalImpact={this.props.enableGenomeNexus}
                 enableHotspot={this.props.enableHotspot}

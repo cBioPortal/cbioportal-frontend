@@ -19,6 +19,7 @@ import {
 export type ProteinImpactTypeBadgeSelectorProps = BadgeSelectorProps & {
     colors: IProteinImpactTypeColors;
     counts?: { [proteinImpactType: string]: number };
+    excludedProteinTypes?: string[];
 };
 
 const VALUES = [
@@ -38,7 +39,14 @@ export function getProteinImpactTypeBadgeLabel(
     option: BadgeSelectorOption,
     selectedValues: { [optionValue: string]: any },
     badgeClassName?: string,
-    badgeAlignmentStyle?: CSSProperties
+    badgeAlignmentStyle?: CSSProperties,
+    isDriverAnnotated?: boolean,
+    badgeLabelFormat?: (
+        label: JSX.Element | string,
+        badgeFirst?: boolean,
+        value?: string,
+        badge?: JSX.Element | null
+    ) => JSX.Element
 ): JSX.Element {
     return (
         <BadgeLabel
@@ -51,6 +59,9 @@ export function getProteinImpactTypeBadgeLabel(
             )}
             badgeClassName={badgeClassName}
             badgeFirst={true}
+            value={option.value}
+            isDriverAnnotated={isDriverAnnotated}
+            badgeLabelFormat={badgeLabelFormat}
         />
     );
 }
@@ -66,7 +77,6 @@ export class ProteinImpactTypeBadgeSelector<
     public static defaultProps: Partial<ProteinImpactTypeBadgeSelectorProps> = {
         colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
         alignColumns: true,
-        unselectOthersWhenAllSelected: false,
         numberOfColumnsPerRow: 2,
     };
 
@@ -94,20 +104,24 @@ export class ProteinImpactTypeBadgeSelector<
         })).filter(
             type =>
                 !(
-                    type.value === ProteinImpactType.OTHER &&
-                    type.badgeContent === 0
+                    this.props.excludedProteinTypes?.includes(type.value) ||
+                    (type.value === ProteinImpactType.OTHER &&
+                        type.badgeContent === 0)
                 )
         );
     }
 
     public render() {
         return (
-            <BadgeSelector
-                options={this.options}
-                getOptionLabel={getProteinImpactTypeOptionLabel}
-                getBadgeLabel={getProteinImpactTypeBadgeLabel}
-                {...this.props}
-            />
+            <table>
+                <BadgeSelector
+                    options={this.options}
+                    getOptionLabel={getProteinImpactTypeOptionLabel}
+                    getBadgeLabel={getProteinImpactTypeBadgeLabel}
+                    useOnlyFeature={true}
+                    {...this.props}
+                />
+            </table>
         );
     }
 }

@@ -15,6 +15,7 @@ import {
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 import { getServerConfig } from 'config/config';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
+import { AxisScale } from 'react-mutation-mapper';
 
 export type GroupComparisonURLQuery = {
     comparisonId: string;
@@ -23,6 +24,8 @@ export type GroupComparisonURLQuery = {
     overlapStrategy?: OverlapStrategy;
     patientEnrichments?: string;
     selectedEnrichmentEventTypes: string;
+    selectedGene?: string;
+    axisMode?: AxisScale;
 };
 
 export default class GroupComparisonURLWrapper
@@ -38,6 +41,8 @@ export default class GroupComparisonURLWrapper
                 overlapStrategy: { isSessionProp: false },
                 patientEnrichments: { isSessionProp: false },
                 selectedEnrichmentEventTypes: { isSessionProp: true },
+                selectedGene: { isSessionProp: false },
+                axisMode: { isSessionProp: false },
             },
             true,
             getServerConfig().session_url_length_threshold

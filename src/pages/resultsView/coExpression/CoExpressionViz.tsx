@@ -27,10 +27,8 @@ import { Button } from 'react-bootstrap';
 import { CoExpressionCache } from './CoExpressionTab';
 import { bind } from 'bind-decorator';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
-import {
-    AlterationTypeConstants,
-    GeneticEntityType,
-} from '../ResultsViewPageStore';
+import { GeneticEntityType } from '../ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import _ from 'lodash';
 import { calculateQValues } from '../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';

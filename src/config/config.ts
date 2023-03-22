@@ -42,6 +42,7 @@ import {
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';
 import pako from 'pako';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 
 const win = window as any;
 
@@ -130,10 +131,10 @@ export class ServerConfigHelpers {
         return getServerConfig().sessionServiceEnabled;
     }
 
-    static getUserEmailAddress(): string | undefined {
-        return getServerConfig().user_email_address &&
-            getServerConfig().user_email_address !== 'anonymousUser'
-            ? getServerConfig().user_email_address
+    static getUserDisplayName(): string | undefined {
+        return getServerConfig().user_display_name &&
+            getServerConfig().user_display_name !== 'anonymousUser'
+            ? getServerConfig().user_display_name
             : undefined;
     }
 }
@@ -233,7 +234,7 @@ function registerRequestBodyCompression(apiClient: any, domain: string): void {
         resolve: any,
         errorHandlers: any[]
     ) => {
-        if (method === 'POST') {
+        if (method === 'POST' && body !== undefined) {
             var bodyString = JSON.stringify(body);
             if (bodyString.length > REQ_BODY_SIZE_CHAR_LIMIT) {
                 headers['Content-Encoding'] = 'gzip';
@@ -384,7 +385,21 @@ export function initializeServerConfiguration(rawConfiguration: any) {
         localStorageOverride.serverConfig
     );
 
+    // apply custom corrections for deprecated
+    // configurations
+    applyCorrections(mergedConfig);
+
     setServerConfig(mergedConfig);
+}
+
+function applyCorrections(config: IServerConfig) {
+    // we no longer support markdown files (7/30/2022)
+    // we only support hyper links to externally hosted pages
+    // if we detect a custom configured MD file, correct it to use default new link
+    // otherwise, string will be used as link href
+    if (/\.md$/i.test(config.skin_documentation_news || '')) {
+        config.skin_documentation_news = ServerConfigDefaults.skin_documentation_news!;
+    }
 }
 
 export function setLoadConfig(obj: Partial<ILoadConfig>) {
@@ -401,5 +416,5 @@ export function fetchServerConfig() {
 
 export function initializeAppStore(appStore: AppStore) {
     appStore.authMethod = getServerConfig().authenticationMethod;
-    appStore.userName = getServerConfig().user_email_address;
+    appStore.userName = getServerConfig().user_display_name;
 }

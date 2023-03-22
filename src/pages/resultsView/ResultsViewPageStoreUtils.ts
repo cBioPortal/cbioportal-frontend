@@ -3,6 +3,7 @@ import {
     ClinicalAttribute,
     ClinicalData,
     DiscreteCopyNumberData,
+    GenericAssayEnrichment,
     MolecularProfile,
     Mutation,
     NumericGeneMolecularData,
@@ -28,16 +29,13 @@ import {
 import { Alteration } from '../../shared/lib/oql/oql-parser';
 import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
 import {
-    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CaseAggregatedData,
     CustomDriverNumericGeneMolecularData,
     IQueriedCaseData,
     IQueriedMergedTrackCaseData,
     ResultsViewPageStore,
-    AnnotatedStructuralVariant,
 } from './ResultsViewPageStore';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
@@ -50,7 +48,6 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
-import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { Gene } from 'cbioportal-utils';
@@ -59,6 +56,11 @@ import {
     Group,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import { AlterationTypeConstants } from 'shared/constants';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+} from 'shared/model/AnnotatedMutation';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -126,8 +128,6 @@ export function annotateMutationPutativeDriver(
     putativeDriverInfo: {
         oncoKb: string;
         hotspots: boolean;
-        cbioportalCount: boolean;
-        cosmicCount: boolean;
         customDriverBinary: boolean;
         customDriverTier?: string;
     }
@@ -135,11 +135,10 @@ export function annotateMutationPutativeDriver(
     const putativeDriver = !!(
         putativeDriverInfo.oncoKb ||
         putativeDriverInfo.hotspots ||
-        putativeDriverInfo.cbioportalCount ||
-        putativeDriverInfo.cosmicCount ||
         putativeDriverInfo.customDriverBinary ||
         putativeDriverInfo.customDriverTier
     );
+
     return Object.assign(
         {
             putativeDriver,
@@ -158,8 +157,6 @@ export function annotateStructuralVariantPutativeDriver(
     putativeDriverInfo: {
         oncoKb: string;
         hotspots: boolean;
-        cbioportalCount: boolean;
-        cosmicCount: boolean;
         customDriverBinary: boolean;
         customDriverTier?: string;
     }
@@ -167,8 +164,6 @@ export function annotateStructuralVariantPutativeDriver(
     const putativeDriver = !!(
         putativeDriverInfo.oncoKb ||
         putativeDriverInfo.hotspots ||
-        putativeDriverInfo.cbioportalCount ||
-        putativeDriverInfo.cosmicCount ||
         putativeDriverInfo.customDriverBinary ||
         putativeDriverInfo.customDriverTier
     );
@@ -209,15 +204,6 @@ export function annotateMolecularDatum(
     ) as AnnotatedNumericGeneMolecularData;
 }
 
-export type FilteredAndAnnotatedMutationsReport<
-    T extends AnnotatedMutation = AnnotatedMutation
-> = {
-    data: T[];
-    vus: T[];
-    germline: T[];
-    vusAndGermline: T[];
-};
-
 export type FilteredAndAnnotatedDiscreteCNAReport<
     T extends CustomDriverNumericGeneMolecularData = CustomDriverNumericGeneMolecularData
 > = {
@@ -241,8 +227,6 @@ export function filterAndAnnotateStructuralVariants(
     ) => {
         oncoKb: string;
         hotspots: boolean;
-        cbioportalCount: boolean;
-        cosmicCount: boolean;
         customDriverBinary: boolean;
         customDriverTier?: string;
     }
@@ -256,10 +240,6 @@ export function filterAndAnnotateStructuralVariants(
             structuralVariant,
             getPutativeDriverInfo(structuralVariant)
         ); // annotate
-        annotatedStructuralVariant.entrezGeneId =
-            structuralVariant.site1EntrezGeneId;
-        annotatedStructuralVariant.hugoGeneSymbol =
-            structuralVariant.site1HugoSymbol;
         const isGermline = false;
         const isVus = !annotatedStructuralVariant.putativeDriver;
         if (isGermline && isVus) {
@@ -278,26 +258,6 @@ export function filterAndAnnotateStructuralVariants(
         germline,
         vusAndGermline,
     };
-}
-
-export function compileMutations<
-    T extends AnnotatedMutation = AnnotatedMutation
->(
-    report: FilteredAndAnnotatedMutationsReport<T>,
-    excludeVus: boolean,
-    excludeGermline: boolean
-) {
-    let mutations = report.data;
-    if (!excludeVus) {
-        mutations = mutations.concat(report.vus);
-    }
-    if (!excludeGermline) {
-        mutations = mutations.concat(report.germline);
-    }
-    if (!excludeVus && !excludeGermline) {
-        mutations = mutations.concat(report.vusAndGermline);
-    }
-    return mutations;
 }
 
 export function compileStructuralVariants<
@@ -896,17 +856,11 @@ export function evaluateMutationPutativeDriverInfo(
     oncoKbDatum: IndicatorQueryResp | undefined | null | false,
     hotspotAnnotationsActive: boolean,
     hotspotDriver: boolean,
-    cbioportalCountActive: boolean,
-    cbioportalCountExceeded: boolean,
-    cosmicCountActive: boolean,
-    cosmicCountExceeded: boolean,
     customDriverAnnotationsActive: boolean,
     customDriverTierSelection: ObservableMap<string, boolean> | undefined
 ) {
     const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
     const hotspots = hotspotAnnotationsActive && hotspotDriver;
-    const cbioportalCount = cbioportalCountActive && cosmicCountExceeded;
-    const cosmicCount = cosmicCountActive && cosmicCountExceeded;
 
     // Set driverFilter to true when:
     // (1) custom drivers active in settings menu
@@ -929,8 +883,6 @@ export function evaluateMutationPutativeDriverInfo(
     return {
         oncoKb,
         hotspots,
-        cbioportalCount,
-        cosmicCount,
         customDriverBinary,
         customDriverTier,
     };

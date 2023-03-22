@@ -2,8 +2,6 @@ import * as React from 'react';
 import _ from 'lodash';
 import {
     buildCivicEntry,
-    calculateOncoKbAvailableDataType,
-    generateQueryVariantId,
     ICivicEntry,
     ICivicGeneIndex,
     ICivicGeneSummary,
@@ -14,13 +12,17 @@ import {
     RemoteData,
 } from 'cbioportal-utils';
 import {
+    generateQueryVariantId,
+    calculateOncoKbAvailableDataType,
+} from 'oncokb-frontend-commons';
+import {
     civicSortValue,
     DEFAULT_ANNOTATION_DATA,
     GenericAnnotation,
     IAnnotation,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
-    oncoKbAnnotationSortValue,
 } from 'react-mutation-mapper';
+import { oncoKbAnnotationSortValue } from 'oncokb-frontend-commons';
 import { CancerStudy, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
@@ -51,7 +53,10 @@ export default class AnnotationColumnFormatter {
 
             let oncoKbGeneExist = false;
             let isOncoKbCancerGene = false;
-            if (oncoKbCancerGenes && !(oncoKbCancerGenes instanceof Error)) {
+            if (
+                oncoKbCancerGenes &&
+                !(oncoKbCancerGenes.result instanceof Error)
+            ) {
                 oncoKbGeneExist =
                     _.find(
                         oncoKbCancerGenes.result,

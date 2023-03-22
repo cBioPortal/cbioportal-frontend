@@ -8,16 +8,16 @@ import {
     DataFilterType,
     DefaultMutationMapperDataFetcher,
     groupDataByProteinImpactType,
-    groupOncoKbIndicatorDataByMutations,
     DefaultMutationMapperStore,
     ONCOKB_DEFAULT_INFO,
     ApplyFilterFn,
+    DataFilter,
 } from 'react-mutation-mapper';
 import {
+    groupOncoKbIndicatorDataByMutations,
     defaultOncoKbIndicatorFilter,
-    IHotspotIndex,
-    getMutationsByTranscriptId,
-} from 'cbioportal-utils';
+} from 'oncokb-frontend-commons';
+import { IHotspotIndex, getMutationsByTranscriptId } from 'cbioportal-utils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
@@ -49,25 +49,28 @@ import {
 } from 'shared/lib/MutationUtils';
 import PdbChainDataStore from './PdbChainDataStore';
 import MutationMapperDataStore from './MutationMapperDataStore';
-import { IMutationMapperConfig } from './MutationMapperConfig';
-import {
-    buildNamespaceColumnConfig,
-    normalizeMutations,
-} from './MutationMapperUtils';
+import { IMutationMapperServerConfig } from './MutationMapperServerConfig';
+import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
-import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
     filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
     genomeBuild?: string;
+    groupFilters?: {
+        group: string;
+        filter: DataFilter<any>;
+    }[];
+    countUniqueMutations?: (mutations: Mutation[], group?: string) => number;
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
     Mutation
 > {
     constructor(
-        protected mutationMapperConfig: IMutationMapperConfig,
+        protected mutationMapperServerConfig: IMutationMapperServerConfig,
         protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
         public gene: Gene,
         protected getMutations: () => Mutation[],
@@ -88,15 +91,16 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
             gene,
             {
                 isoformOverrideSource:
-                    mutationMapperConfig.isoformOverrideSource,
-                ptmSources: mutationMapperConfig.ptmSources,
+                    mutationMapperServerConfig.genomenexus_isoform_override_source,
+                ptmSources: mutationMapperServerConfig.ptmSources,
                 filterMutationsBySelectedTranscript:
                     mutationMapperStoreConfig.filterMutationsBySelectedTranscript,
-                enableCivic: mutationMapperConfig.show_civic,
-                enableOncoKb: mutationMapperConfig.show_oncokb,
+                enableCivic: mutationMapperServerConfig.show_civic,
+                enableOncoKb: mutationMapperServerConfig.show_oncokb,
                 filterAppliersOverride:
                     mutationMapperStoreConfig.filterAppliersOverride,
                 genomeBuild: mutationMapperStoreConfig.genomeBuild,
+                groupFilters: mutationMapperStoreConfig.groupFilters,
             },
             getMutations,
             getTranscriptId
@@ -114,11 +118,13 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         return new DefaultMutationMapperDataFetcher(
             {
                 myGeneUrlTemplate:
-                    this.mutationMapperConfig.mygene_info_url || undefined,
+                    this.mutationMapperServerConfig.mygene_info_url ||
+                    undefined,
                 uniprotIdUrlTemplate:
-                    this.mutationMapperConfig.uniprot_id_url || undefined,
+                    this.mutationMapperServerConfig.uniprot_id_url || undefined,
                 genomeNexusUrl:
-                    this.mutationMapperConfig.genomenexus_url || undefined,
+                    this.mutationMapperServerConfig.genomenexus_url ||
+                    undefined,
                 oncoKbUrl: getOncoKbApiUrl() || undefined,
             },
             this.genomenexusClient || defaultGenomeNexusClient,
@@ -200,8 +206,13 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         return buildNamespaceColumnConfig(this.mutationData.result);
     }
 
-    public countUniqueMutations(mutations: Mutation[]): number {
-        return countUniqueMutations(mutations);
+    public countUniqueMutations(mutations: Mutation[], group?: string): number {
+        return this.mutationMapperStoreConfig.countUniqueMutations
+            ? this.mutationMapperStoreConfig.countUniqueMutations(
+                  mutations,
+                  group
+              )
+            : countUniqueMutations(mutations);
     }
 
     @autobind

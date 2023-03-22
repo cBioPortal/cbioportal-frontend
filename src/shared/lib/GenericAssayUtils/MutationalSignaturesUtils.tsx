@@ -8,6 +8,9 @@ import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericA
 export enum MutationalSignaturesVersion {
     V2 = 'v2',
     V3 = 'v3',
+    SBS = 'SBS',
+    DBS = 'DBS',
+    ID = 'ID',
 }
 
 export enum MutationalSignatureStableIdKeyWord {
@@ -162,4 +165,21 @@ export function validateMutationalSignatureRawData(
 
     // we are expecting contribution and pvalue profiles are in pairs
     return _.every(profileIdsGroupByVersion, ids => ids.length === 2);
+}
+
+export function retrieveMutationalSignatureVersionFromData(
+    signatureProfiles: string[]
+): string {
+    const uniqueProfileVersion = _.uniq(
+        signatureProfiles.map(function(obj) {
+            return _.last(obj.split('_'));
+        })
+    );
+    if (uniqueProfileVersion !== undefined) {
+        return uniqueProfileVersion.includes('v3') &&
+            uniqueProfileVersion.includes('v2')
+            ? 'v3'
+            : uniqueProfileVersion[0]!;
+    }
+    return 'v2';
 }

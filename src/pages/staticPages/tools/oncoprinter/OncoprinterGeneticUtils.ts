@@ -7,10 +7,7 @@ import {
     GeneticTrackDatum_Data,
 } from '../../../../shared/components/oncoprint/Oncoprint';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
-import {
-    AlterationTypeConstants,
-    AnnotatedExtendedAlteration,
-} from '../../../resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     fillGeneticTrackDatum,
@@ -23,12 +20,14 @@ import {
     NumericGeneMolecularData,
 } from 'cbioportal-ts-api-client';
 import {
-    generateCopyNumberAlterationQuery,
-    generateQueryVariantId,
     getProteinPositionFromProteinChange,
     EvidenceType,
     IOncoKbData,
 } from 'cbioportal-utils';
+import {
+    generateQueryVariantId,
+    generateCopyNumberAlterationQuery,
+} from 'oncokb-frontend-commons';
 import {
     AnnotateCopyNumberAlterationQuery,
     OncoKbAPI,
@@ -137,22 +136,18 @@ export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is Oncop
 }*/
 
 export function initDriverAnnotationSettings(store: OncoprinterStore) {
-    let _oncoKb: boolean, _cbioportalCount: boolean, _customBinary: boolean;
+    let _oncoKb: boolean, _customBinary: boolean;
     if (store.existCustomDrivers) {
         // if custom drivers, start with only custom drivers annotated
         _oncoKb = false;
-        _cbioportalCount = false;
         _customBinary = true;
     } else {
         _oncoKb = true;
-        _cbioportalCount = false;
         _customBinary = false;
     }
 
     return observable({
-        cbioportalCountThreshold: 0,
         _oncoKb,
-        _cbioportalCount,
         _customBinary,
         _includeVUS: true,
         hotspots: false, // for now
@@ -162,13 +157,6 @@ export function initDriverAnnotationSettings(store: OncoprinterStore) {
         },
         set customBinary(val: boolean) {
             this._customBinary = val;
-            store.customDriverWarningHidden = true;
-        },
-        get cbioportalCount() {
-            return this._cbioportalCount;
-        },
-        set cbioportalCount(val: boolean) {
-            this._cbioportalCount = val;
             store.customDriverWarningHidden = true;
         },
         set oncoKb(val: boolean) {
@@ -191,7 +179,6 @@ export function initDriverAnnotationSettings(store: OncoprinterStore) {
         get driversAnnotated() {
             const anySelected =
                 this.oncoKb ||
-                this.cbioportalCount ||
                 this.hotspots ||
                 (store.existCustomDrivers && this.customBinary);
 
@@ -227,6 +214,9 @@ export async function fetchOncoKbDataForMutations(
         return new Error();
     }
 
+    // TODO: structural variant data does not satisy this condition
+    // and thus doesn't get annotated in oncoprinter
+    // we need to decide whether to adapt or perhaps just scrap oncoprinter?
     const mutationsToQuery = _.chain(data)
         .filter(m => !!annotatedGenes[m.entrezGeneId])
         .filter(
@@ -732,6 +722,9 @@ export function annotateGeneticTrackData(
                         d.oncoKbOncogenic = getOncoKbCnaAnnotation(d);
                         break;
                     case AlterationTypeConstants.MUTATION_EXTENDED:
+                        d.oncoKbOncogenic = getOncoKbAnnotation(d);
+                        break;
+                    case AlterationTypeConstants.STRUCTURAL_VARIANT:
                         d.oncoKbOncogenic = getOncoKbAnnotation(d);
                         break;
                 }

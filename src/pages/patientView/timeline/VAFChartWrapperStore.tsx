@@ -53,13 +53,13 @@ export default class VAFChartWrapperStore {
     @computed get isOnlySequentialModePossible() {
         return !!(
             this.options &&
-            this.options.isOnlySequentialModePossible &&
-            this.options.isOnlySequentialModePossible()
+            this.options.isOnlySequentialModeAvailable &&
+            this.options.isOnlySequentialModeAvailable()
         );
     }
 
     constructor(
-        private options?: { isOnlySequentialModePossible?: () => boolean }
+        private options?: { isOnlySequentialModeAvailable?: () => boolean }
     ) {
         makeObservable(this);
     }

@@ -1,6 +1,6 @@
 import URLWrapper, { PropertiesMap } from '../../shared/lib/URLWrapper';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
-import { computed, makeObservable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     LegacyResultsViewComparisonSubTab,
@@ -20,6 +20,11 @@ import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 import _ from 'lodash';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
+import { ResultPageSettings } from 'shared/api/session-service/sessionServiceModels';
+import { parse } from 'query-string';
+
+export const USER_SETTINGS_QUERY_PARAM = 'userSettingsJson';
 
 export type PlotsSelectionParam = {
     selectedGeneOption?: string;
@@ -102,6 +107,8 @@ export enum ResultsViewURLQueryEnum {
 
     mutations_gene = 'mutations_gene',
     mutations_transcript_id = 'mutations_transcript_id',
+
+    pathways_source = 'pathways_source',
 }
 
 type StringValuedParams = Exclude<
@@ -144,6 +151,9 @@ const shouldForceRemount: { [prop in keyof ResultsViewURLQuery]: boolean } = {
     // mutations
     mutations_gene: false,
     mutations_transcript_id: false,
+
+    // pathways
+    pathways_source: false,
 
     // session props here
     gene_list: true,
@@ -210,6 +220,11 @@ const propertiesMap = _.mapValues(
             isSessionProp: false,
         },
         mutations_transcript_id: {
+            isSessionProp: false,
+        },
+
+        // pathways
+        pathways_source: {
             isSessionProp: false,
         },
 
@@ -286,6 +301,8 @@ function backwardsCompatibilityMapping(oldParams: any) {
     return newParams;
 }
 
+const ALL_TRACKS_DELETED = 'null';
+
 export default class ResultsViewURLWrapper
     extends URLWrapper<ResultsViewURLQuery>
     implements IComparisonURLWrapper {
@@ -299,8 +316,13 @@ export default class ResultsViewURLWrapper
                 : undefined,
             backwardsCompatibilityMapping
         );
+        this.extractBookmarkUserSettings(routing);
         makeObservable(this);
     }
+
+    // The URL parameter for user settings that is passed in via the 'bookmark'
+    // functionality
+    @observable userSettingsParam: ResultPageSettings = {};
 
     pathContext = '/results';
 
@@ -314,33 +336,54 @@ export default class ResultsViewURLWrapper
         }
     }
 
-    public getOncoprintClinicalTrackParams(clinicalTracks: string[]) {
-        let clinicallist: string;
-        if (clinicalTracks.length > 0) {
-            clinicallist = clinicalTracks.join(',');
-        } else {
-            // ideally, we would like to simply give an empty string.
-            //   The problem is that, in order to know whether to show
-            //   some clinical tracks by default (such as "profiled-in",
-            //   "samples per patient", etc), we need to know whether
-            //  the clinical tracks have been updated by the user. If we
-            //  pass an empty string, the router just deletes that parameter
-            //  from the URL completely, making it indistinguishable from
-            //  the initialization state. So we have to use "null" here to
-            //  distinguish the state of user having deleted all clinical tracks,
-            //  because the alternative is to make a breaking change to the router library.
-
-            clinicallist = 'null';
+    /**
+     * Retrieve user settings as stored in hash query param
+     * and remove query param from hash afterwards
+     */
+    private extractBookmarkUserSettings(routing: ExtendedRouterStore) {
+        let hash = routing.location.hash;
+        if (!hash) {
+            return;
         }
-        return { clinicallist };
+
+        routing.location.hash = '';
+
+        const params = parse(hash);
+
+        let userSettingsJson = params[USER_SETTINGS_QUERY_PARAM];
+        if (userSettingsJson) {
+            this.userSettingsParam = JSON.parse(userSettingsJson as string);
+        }
     }
 
-    @computed public get oncoprintSelectedClinicalTracks(): string[] {
-        if (!this.query.clinicallist || this.query.clinicallist === 'null') {
-            return [];
-        } else {
-            return this.query.clinicallist.split(',');
+    /**
+     * Clinical tracks as configured in:
+     * - user settings query param (created by bookmark)
+     * - clinicallist query param (legacy)
+     */
+    @computed
+    public get oncoprintSelectedClinicalTracks(): ClinicalTrackConfig[] | null {
+        if (this.userSettingsParam?.clinicallist) {
+            return this.userSettingsParam.clinicallist;
         }
+        if (
+            this.query.clinicallist &&
+            this.query.clinicallist !== ALL_TRACKS_DELETED
+        ) {
+            return this.query.clinicallist
+                .split(',')
+                .map(id => new ClinicalTrackConfig(id));
+        }
+        return null;
+    }
+
+    @computed public get oncoprintSelectedClinicalTrackIds(): string[] {
+        if (!this.oncoprintSelectedClinicalTracks) {
+            return [];
+        }
+        return this.oncoprintSelectedClinicalTracks.map(track =>
+            _.isString(track) ? track : track.stableId
+        );
     }
 
     @computed public get comparisonSubTabId() {

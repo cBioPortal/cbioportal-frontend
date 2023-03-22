@@ -32,6 +32,7 @@ import {
     getDataIntervalFilterValues,
     getDefaultChartTypeByClinicalAttribute,
     getExponent,
+    getFilteredMolecularProfilesByAlterationType,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
@@ -54,6 +55,7 @@ import {
     isLogScaleByValues,
     isOccupied,
     makePatientToClinicalAnalysisGroup,
+    mergeClinicalDataCollection,
     needAdditionShiftForLogScaleBarChart,
     pickClinicalDataColors,
     shouldShowChart,
@@ -68,6 +70,7 @@ import {
 import {
     CancerStudy,
     ClinicalAttribute,
+    ClinicalDataCollection,
     DataFilterValue,
     Sample,
     StudyViewFilter,
@@ -91,6 +94,8 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import { remoteData, toPromise } from 'cbioportal-frontend-commons';
 import { autorun, observable, runInAction } from 'mobx';
+
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -2649,6 +2654,86 @@ describe('StudyViewUtils', () => {
         });
     });
 
+    describe('mergeClinicalDataCollection', () => {
+        it('handles merge when patient key defined in sample data', () => {
+            const input = ({
+                sampleClinicalData: [
+                    {
+                        sampleId: 's1',
+                        patientId: 'p1',
+                        studyId: 'study1',
+                        uniqueSampleKey: 's1key',
+                        uniquePatientKey: 'p1key',
+                        clinicalAttributeId: 'attr1',
+                        value: 'value1',
+                    },
+                ],
+                patientClinicalData: [
+                    {
+                        sampleId: undefined,
+                        patientId: 'p1',
+                        studyId: 'study1',
+                        uniqueSampleKey: undefined,
+                        uniquePatientKey: 'p1key',
+                        clinicalAttributeId: 'attr2',
+                        value: 'value2',
+                    },
+                ],
+            } as unknown) as ClinicalDataCollection;
+            const expected = {
+                s1key: {
+                    attr1: 'value1',
+                    attr2: 'value2',
+                },
+            };
+            assert.deepEqual(
+                expected,
+                mergeClinicalDataCollection(
+                    (input as unknown) as ClinicalDataCollection
+                )
+            );
+        });
+
+        it('handles merge when patient key absent in sample data', () => {
+            const input = ({
+                sampleClinicalData: [
+                    {
+                        sampleId: 's1',
+                        patientId: 'p1',
+                        studyId: 'study1',
+                        uniqueSampleKey: 's1key',
+                        uniquePatientKey: 'p1key',
+                        clinicalAttributeId: 'attr1',
+                        value: 'value1',
+                    },
+                ],
+                patientClinicalData: [
+                    {
+                        sampleId: undefined,
+                        patientId: 'p2',
+                        studyId: 'study1',
+                        uniqueSampleKey: undefined,
+                        // note the patient key that does not line-up with the sample
+                        uniquePatientKey: 'p2key',
+                        clinicalAttributeId: 'attr2',
+                        value: 'value2',
+                    },
+                ],
+            } as unknown) as ClinicalDataCollection;
+            const expected = {
+                s1key: {
+                    attr1: 'value1',
+                },
+            };
+            assert.deepEqual(
+                expected,
+                mergeClinicalDataCollection(
+                    (input as unknown) as ClinicalDataCollection
+                )
+            );
+        });
+    });
+
     describe('toFixedDigit', () => {
         const negativeValues = [
             -666.666,
@@ -4821,6 +4906,88 @@ describe('StudyViewUtils', () => {
             ];
 
             assert.deepEqual(actual.sort(), expected.sort());
+        });
+    });
+
+    describe('getFilteredMolecularProfilesByAlterationType', () => {
+        const studyIdToMolecularProfiles: any = {
+            study_1: [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_1_cna',
+                    studyId: 'study_1',
+                },
+            ],
+            study_2: [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_2_cna',
+                    studyId: 'study_2',
+                },
+            ],
+            study_3: [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'LOG2-VALUE',
+                    molecularProfileId: 'study_3_log2_cna',
+                    studyId: 'study_3',
+                },
+            ],
+        };
+        it('filter profiles by alteration type', () => {
+            const result = [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_1_cna',
+                    studyId: 'study_1',
+                },
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_2_cna',
+                    studyId: 'study_2',
+                },
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'LOG2-VALUE',
+                    molecularProfileId: 'study_3_log2_cna',
+                    studyId: 'study_3',
+                },
+            ];
+            assert.deepEqual(
+                getFilteredMolecularProfilesByAlterationType(
+                    studyIdToMolecularProfiles,
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                ),
+                result
+            );
+        });
+        it('filter profiles by alteration type, also filte by allowed data types', () => {
+            const result = [
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_1_cna',
+                    studyId: 'study_1',
+                },
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                    molecularProfileId: 'study_2_cna',
+                    studyId: 'study_2',
+                },
+            ];
+            assert.deepEqual(
+                getFilteredMolecularProfilesByAlterationType(
+                    studyIdToMolecularProfiles,
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    [DataTypeConstants.DISCRETE]
+                ),
+                result
+            );
         });
     });
 });

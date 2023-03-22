@@ -1,7 +1,8 @@
 import * as React from 'react';
+import _ from 'lodash';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
-import './errorScreen.scss';
+import styles from './errorScreen.module.scss';
 import { getServerConfig } from 'config/config';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { computed, makeObservable } from 'mobx';
@@ -37,12 +38,16 @@ export default class ErrorScreen extends React.Component<
     }
 
     @computed get errorLog() {
-        const errorLog: any = this.props.errorLog
-            ? JSON.parse(this.props.errorLog)
-            : undefined;
-
-        // add the current url to error log
-        if (errorLog) errorLog.url = window.location.href;
+        let errorLog: any;
+        try {
+            errorLog = this.props.errorLog
+                ? JSON.parse(this.props.errorLog)
+                : undefined;
+            // add the current url to error log
+            if (errorLog) errorLog.url = window.location.href;
+        } catch (ex) {
+            errorLog = this.props.errorLog;
+        }
 
         return errorLog;
     }
@@ -52,8 +57,11 @@ export default class ErrorScreen extends React.Component<
         const subject = 'cBioPortal user reported error';
 
         return (
-            <div className={'errorScreen'}>
-                <a className={'errorLogo'} href={buildCBioPortalPageUrl('/')}>
+            <div className={styles.errorScreen}>
+                <a
+                    className={styles.errorLogo}
+                    href={buildCBioPortalPageUrl('/')}
+                >
                     <img
                         src={require('../../../globalStyles/images/cbioportal_logo.png')}
                         alt="cBioPortal Logo"

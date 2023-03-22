@@ -36,7 +36,7 @@ describe('Quick Search', () => {
     });
 
     it('should give results for genes', () => {
-        $('strong=444 more genes (click to load 20 more)').click();
+        $('strong=448 more genes (click to load 20 more)').click();
         $('strong=ADAM12').waitForExist();
         $('strong=ADAM15').click();
         $('a=ADAM15').waitForExist({ timeout: 60000 });

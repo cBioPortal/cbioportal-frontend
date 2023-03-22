@@ -55,7 +55,7 @@ describe('single study query', function() {
         it('should show somatic and germline mutation rate', function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
 
-            var input = $('.autosuggest input[type=text]');
+            var input = $('[data-test=study-search] input[type=text]');
 
             input.waitForExist({ timeout: 10000 });
 
@@ -215,7 +215,7 @@ describe('case set selection in modify query form', function() {
         );
 
         // Select a different study
-        var input = $('.autosuggest input[type=text]');
+        var input = $('div[data-test=study-search] input[type=text]');
         input.waitForExist({ timeout: 10000 });
         input.setValue('adrenocortical carcinoma tcga firehose legacy');
         waitForNumberOfStudyCheckboxes(1);
@@ -262,7 +262,7 @@ describe('case set selection in modify query form', function() {
         );
 
         // Select all impact studies
-        var input = $('.autosuggest input[type=text]');
+        var input = $('div[data-test=study-search] input[type=text]');
         input.waitForExist({ timeout: 10000 });
         input.setValue('glioblastoma');
         browser.pause(500);
@@ -343,7 +343,7 @@ describe('genetic profile selection in modify query form', function() {
         );
 
         // select another study
-        var input = $('.autosuggest input[type=text]');
+        var input = $('div[data-test=study-search] input[type=text]');
         input.waitForExist({ timeout: 10000 });
         input.setValue('ampullary baylor');
         waitForNumberOfStudyCheckboxes(1);
@@ -444,7 +444,7 @@ describe('genetic profile selection in modify query form', function() {
         );
 
         // select all TCGA non-firehose studies
-        var input = $('.autosuggest input[type=text]');
+        var input = $('div[data-test=study-search] input[type=text]');
         input.waitForExist({ timeout: 10000 });
         input.setValue('tcga -firehose');
         browser.pause(500);

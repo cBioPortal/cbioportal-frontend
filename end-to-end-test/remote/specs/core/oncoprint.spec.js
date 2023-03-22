@@ -270,8 +270,6 @@ describe('oncoprint', function() {
         let resultsPageSettingsDropdown;
         let oncoKbCheckbox;
         let hotspotsCheckbox;
-        let cbioportalCheckbox;
-        let cosmicCheckbox;
 
         before(() => {
             goToUrlAndSetLocalStorage(
@@ -289,12 +287,6 @@ describe('oncoprint', function() {
             hotspotsCheckbox =
                 resultsPageSettingsDropdown +
                 ' input[data-test="annotateHotspots"]';
-            cbioportalCheckbox =
-                resultsPageSettingsDropdown +
-                ' input[data-test="annotateCBioPortalCount"]';
-            cosmicCheckbox =
-                resultsPageSettingsDropdown +
-                ' input[data-test="annotateCOSMICCount"]';
         });
     });
 
@@ -302,7 +294,8 @@ describe('oncoprint', function() {
         it('should sort germline mutation in study ov_tcga_pub', () => {
             // search for study with germline mutation (ov_tcga_pub)
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-            var inputSelector = '.autosuggest input[type="text"]';
+            var inputSelector =
+                'div[data-test=study-search] input[type="text"]';
             $(inputSelector).waitForExist({ timeout: 10000 });
             $(inputSelector).setValue(
                 'ovarian serous cystadenocarcinoma tcga nature 2011'
@@ -502,7 +495,8 @@ describe('oncoprint', function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
-            var inputSelector = '.autosuggest input[type="text"]';
+            var inputSelector =
+                'div[data-test=study-search] input[type="text"]';
             $(inputSelector).waitForExist({ timeout: 10000 });
             $(inputSelector).setValue('colorectal tcga nature');
             waitForNumberOfStudyCheckboxes(1);

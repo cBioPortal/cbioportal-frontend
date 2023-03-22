@@ -80,12 +80,6 @@ export default class MutationAssessor extends React.Component<
     private tooltipContent() {
         if (this.props.mutationAssessor) {
             const maData = this.props.mutationAssessor;
-            const xVarLink = MutationAssessor.maLink(
-                `http://mutationassessor.org/r3/?cm=var&p=${maData.uniprotId}&var=${maData.variant}`
-            );
-            const msaLink = MutationAssessor.maLink(maData.msaLink);
-            const pdbLink = MutationAssessor.maLink(maData.pdbLink);
-
             const impact = maData.functionalImpact ? (
                 <div>
                     <table className={tooltipStyles['ma-tooltip-table']}>
@@ -128,74 +122,7 @@ export default class MutationAssessor extends React.Component<
                 </div>
             ) : null;
 
-            const xVar = xVarLink ? (
-                <div className={tooltipStyles['mutation-assessor-link']}>
-                    <a href={xVarLink} target="_blank">
-                        <img
-                            height="15"
-                            width="19"
-                            src={require('./../../mutationTable/column/mutationAssessor.png')}
-                            className={
-                                tooltipStyles['mutation-assessor-main-img']
-                            }
-                            alt="Mutation Assessor"
-                        />
-                        Go to Mutation Assessor
-                    </a>
-                </div>
-            ) : null;
-
-            const msa = msaLink ? (
-                <div className={tooltipStyles['mutation-assessor-link']}>
-                    <a href={msaLink} target="_blank">
-                        <span
-                            className={`${tooltipStyles['ma-icon']} ${tooltipStyles['ma-msa-icon']}`}
-                        >
-                            msa
-                        </span>
-                        Multiple Sequence Alignment
-                    </a>
-                </div>
-            ) : null;
-
-            const pdb = pdbLink ? (
-                <div className={tooltipStyles['mutation-assessor-link']}>
-                    <a href={pdbLink} target="_blank">
-                        <span
-                            className={`${tooltipStyles['ma-icon']} ${tooltipStyles['ma-3d-icon']}`}
-                        >
-                            3D
-                        </span>
-                        Mutation Assessor 3D View
-                    </a>
-                </div>
-            ) : null;
-
-            return (
-                <span>
-                    {impact}
-                    {msa}
-                    {pdb}
-                    {xVar}
-                </span>
-            );
+            return impact;
         }
-    }
-    // This is mostly to make the legacy MA links work
-    public static maLink(link: string | undefined) {
-        let url = null;
-
-        // ignore invalid links ("", "NA", "Not Available")
-        if (link) {
-            // getma.org is the legacy link, need to replace it with the actual value
-            url = link.replace('getma.org', 'mutationassessor.org/r3');
-
-            // prepend "http://" if needed
-            if (url.indexOf('http://') !== 0) {
-                url = `http://${url}`;
-            }
-        }
-
-        return url;
     }
 }

@@ -8,13 +8,18 @@ interface FrameLoaderProps {
     url: string;
     className?: string;
     iframeId?: string;
-    height?: number;
+    height?: number | string;
+    width?: number | string;
 }
 @observer
 export default class IFrameLoader extends React.Component<
     FrameLoaderProps,
     {}
 > {
+    public static defaultProps = {
+        width: '',
+    };
+
     @observable iframeLoaded = false;
 
     constructor(props: FrameLoaderProps) {
@@ -30,7 +35,7 @@ export default class IFrameLoader extends React.Component<
     //NOTE: we need zindex to be higher than that of global loader
     render() {
         return (
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', width: this.props.width }}>
                 <LoadingIndicator
                     center={true}
                     size={'big'}

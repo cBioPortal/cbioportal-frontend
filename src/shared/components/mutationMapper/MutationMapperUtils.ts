@@ -3,7 +3,8 @@ import { GenomeNexusAPI, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { fetchVariantAnnotationsByMutation } from 'react-mutation-mapper';
 import { getServerConfig } from 'config/config';
 import _ from 'lodash';
-import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { createNamespaceColumnName } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 
 export function normalizeMutation<T extends Pick<Mutation, 'chr'>>(
     mutation: T
@@ -26,48 +27,13 @@ export function createVariantAnnotationsByMutationFetcher(
             return fetchVariantAnnotationsByMutation(
                 queries,
                 fields,
-                getServerConfig().isoformOverrideSource,
+                getServerConfig().genomenexus_isoform_override_source,
                 client
             );
         } else {
             return Promise.resolve([]);
         }
     };
-}
-
-export function buildNamespaceColumnConfig(
-    mutations: Mutation[]
-): NamespaceColumnConfig {
-    if (!mutations) {
-        return {};
-    }
-    const columnTypes: any = {};
-    mutations.forEach(m => {
-        _.forIn(m.namespaceColumns, (columns, namespace) => {
-            _.forIn(columns, (value, columnName) => {
-                if (columnTypes[namespace] === undefined) {
-                    columnTypes[namespace] = {};
-                }
-                if (columnTypes[namespace][columnName] === undefined) {
-                    columnTypes[namespace][columnName] = 'number';
-                }
-                if (
-                    _.isString(value) &&
-                    columnTypes[namespace][columnName] === 'number'
-                ) {
-                    columnTypes[namespace][columnName] = 'string';
-                }
-            });
-        });
-    });
-    return columnTypes;
-}
-
-export function createNamespaceColumnName(
-    namespaceName: string,
-    namespaceColumnName: string
-) {
-    return namespaceName + ' ' + _.capitalize(namespaceColumnName);
 }
 
 export function extractColumnNames(config: NamespaceColumnConfig): string[] {

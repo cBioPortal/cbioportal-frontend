@@ -9,6 +9,14 @@ DIR=$PWD
 
 cd $E2E_WORKSPACE/cbioportal-docker-compose
 
+if [[ "$(uname -s)" == "Darwin" ]] && [[ "$(sysctl -n machdep.cpu.brand_string)" =~ M.* ]]; then
+  # if macOS and M-series chip, use images for ARM architecture
+  export DOCKER_IMAGE_KEYCLOAK=alemairebe/keycloak:11.0.3
+else
+  # else use images for x86_64 architecture
+  export DOCKER_IMAGE_KEYCLOAK=jboss/keycloak:11.0.3
+fi
+
 compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml -f $TEST_HOME/docker_compose/keycloak.yml"
 if [ $CUSTOM_BACKEND -eq 1 ]; then
   compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
@@ -23,7 +31,7 @@ docker-compose $compose_extensions up -d keycloak
 healthy=
 for i in {1..30}; do
     [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8081) == 200 ]] && { healthy=1; break; } || echo "Waiting for Keycloak service                    ..."
-    sleep 10s
+    sleep 10
 done
 [ -z "$healthy" ] && { echo "Error starting Keycloak service."; exit 1; } || echo "Waiting for Keycloak service                    ... done"
 
@@ -36,7 +44,7 @@ docker-compose $compose_extensions up -d
 healthy=
 for i in {1..30}; do
     [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8080/api/health) == 200 ]] && { healthy=1; break; } || echo "Waiting for cBioPortal services                 ..."
-    sleep 30s
+    sleep 30
 done
 [ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Waiting for cBioPortal services                 ... done"
 

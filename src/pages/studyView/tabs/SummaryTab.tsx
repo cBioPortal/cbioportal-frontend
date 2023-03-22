@@ -7,7 +7,11 @@ import {
 } from 'pages/studyView/charts/ChartContainer';
 import { observable, toJS, makeObservable } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { DataFilterValue, GenomicDataBin } from 'cbioportal-ts-api-client';
+import {
+    DataFilterValue,
+    GenericAssayDataBin,
+    GenomicDataBin,
+} from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ReactGridLayout, { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -27,12 +31,10 @@ import {
     ChartType,
     RectangleBounds,
     DataBin,
-    SpecialChartsUniqueKeyEnum,
     makeDensityScatterPlotTooltip,
     logScalePossible,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
-import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';
@@ -74,6 +76,11 @@ export class StudySummaryTab extends React.Component<
             },
             onToggleLogScale: (chartMeta: ChartMeta) => {
                 this.store.toggleLogScale(chartMeta.uniqueKey);
+            },
+            onToggleSurvivalPlotLeftTruncation: (chartMeta: ChartMeta) => {
+                this.store.toggleSurvivalPlotLeftTruncation(
+                    chartMeta.uniqueKey
+                );
             },
             onToggleNAValue: (chartMeta: ChartMeta) => {
                 this.store.toggleNAValue(chartMeta.uniqueKey);
@@ -392,7 +399,7 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.SURVIVAL: {
-                props.promise = this.store.survivalPlotData;
+                props.promise = this.store.survivalPlots;
                 props.getData = () =>
                     this.store.getSurvivalDownloadData(chartMeta);
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
@@ -405,6 +412,22 @@ export class StudySummaryTab extends React.Component<
                           )
                       ][0]
                     : undefined;
+                props.onToggleSurvivalPlotLeftTruncation = this.handlers.onToggleSurvivalPlotLeftTruncation;
+                props.survivalPlotLeftTruncationChecked = this.store.survivalPlotLeftTruncationToggleMap?.get(
+                    chartMeta!.uniqueKey
+                );
+                /* start of left truncation adjustment related settings */
+                // Currently, left truncation is only appliable for Overall Survival data
+                if (
+                    this.store.isLeftTruncationAvailable.result &&
+                    new RegExp('OS_SURVIVAL').test(chartMeta.uniqueKey)
+                ) {
+                    props.isLeftTruncationAvailable = true;
+                    props.patientSurvivalsWithoutLeftTruncation = this.store.survivalPlotDataById.result[
+                        'OS_SURVIVAL'
+                    ]?.survivalDataWithoutLeftTruncation;
+                }
+                /* end of left truncation adjustment related settings */
                 break;
             }
             case ChartTypeEnum.VIOLIN_PLOT_TABLE:

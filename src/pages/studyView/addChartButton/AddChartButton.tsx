@@ -40,7 +40,7 @@ import {
     deriveDisplayTextFromGenericAssayType,
     makeGenericAssayOption,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
-import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+
 import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
 import classnames from 'classnames';
 import styles from './styles.module.scss';
@@ -48,6 +48,7 @@ import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import ReactSelect from 'react-select';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
+import { DataTypeConstants } from 'shared/constants';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -796,7 +797,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     unmountOnHide={false}
                     activeTabId={this.activeId}
                     onTabClick={this.updateActiveId}
-                    className="addChartTabs mainTabs"
+                    className="addChartTabs menuTabs"
                 >
                     <MSKTab
                         key={0}
@@ -1058,8 +1059,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     <button
                         style={{
                             position: 'absolute',
-                            top: 14,
-                            right: 18,
+                            top: 10,
+                            right: 10,
                             zIndex: 2,
                         }}
                         className="btn btn-primary btn-xs"

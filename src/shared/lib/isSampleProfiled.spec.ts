@@ -1,5 +1,9 @@
 import { assert } from 'chai';
-import { isSampleProfiled } from './isSampleProfiled';
+import {
+    isSampleProfiled,
+    isSampleProfiledInProfile,
+} from './isSampleProfiled';
+import { GenePanelData } from 'cbioportal-ts-api-client';
 
 describe('isSampleProfiled', () => {
     it('(mis)matches by allGenes as appropriate', () => {
@@ -198,6 +202,38 @@ describe('isSampleProfiled', () => {
                 coverageInformation
             ),
             "non matching if GENE doesn't exist in result"
+        );
+    });
+});
+
+describe('isSampleProfiledInProfile', () => {
+    it('returns true if sample exists in profile data and is true, false otherwise', () => {
+        const data = {
+            someProfile1: {
+                someSample1: {
+                    profiled: true,
+                } as GenePanelData,
+            },
+        };
+
+        assert.isTrue(
+            isSampleProfiledInProfile(data, 'someProfile1', 'someSample1')
+        );
+
+        assert.isFalse(
+            isSampleProfiledInProfile(data, 'someProfile2', 'someSample1')
+        );
+
+        assert.isFalse(
+            isSampleProfiledInProfile(data, undefined, 'someSample1')
+        );
+
+        assert.isFalse(
+            isSampleProfiledInProfile(data, 'someProfile1', 'someSample2')
+        );
+
+        assert.isFalse(
+            isSampleProfiledInProfile(data, 'someProfile1', undefined)
         );
     });
 });

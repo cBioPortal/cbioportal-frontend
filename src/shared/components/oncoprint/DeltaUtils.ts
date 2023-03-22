@@ -29,17 +29,18 @@ import {
     getGeneticTrackSortComparator,
     heatmapTrackSortComparator,
     categoricalTrackSortComparator,
+    getClinicalTrackSortDirection,
 } from './SortUtils';
 import {
     linebreakGenesetId,
     makeCategoricalTrackTooltip,
     makeClinicalTrackTooltip,
-    makeGeneticTrackTooltip,
     makeHeatmapTrackTooltip,
 } from './TooltipUtils';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import ifNotDefined from '../../lib/ifNotDefined';
+import { makeGeneticTrackTooltip } from 'shared/components/oncoprint/makeGeneticTrackTooltip';
 
 // This file implements functions that call imperative OncoprintJS library
 //  methods in order to keep the oncoprint in a state consistent with the
@@ -1250,6 +1251,7 @@ function transitionClinicalTrack(
         rule_set_params.legend_label = nextSpec.label;
         rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
         rule_set_params.na_legend_label = nextSpec.na_legend_label;
+
         const clinicalTrackParams: UserTrackSpec<any> = {
             rule_set_params,
             data: nextSpec.data,
@@ -1276,11 +1278,13 @@ function transitionClinicalTrack(
             important_ids: nextSpec.altered_uids, // only show clinical track legends for altered cases. e.g. if only altered cases are female for the SEX clinical track, then only show 'female' in the SEX legend
             //track_info: "\u23f3",
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
-            init_sort_direction: 0 as 0,
+            init_sort_direction: getClinicalTrackSortDirection(nextSpec),
             target_group: CLINICAL_TRACK_GROUP_INDEX,
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
+            onGapChange: nextProps.onTrackGapChange,
             custom_track_options: nextSpec.custom_options,
             track_can_show_gaps: nextSpec.datatype === 'string',
+            show_gaps_on_init: nextSpec.gapOn,
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([
             clinicalTrackParams,

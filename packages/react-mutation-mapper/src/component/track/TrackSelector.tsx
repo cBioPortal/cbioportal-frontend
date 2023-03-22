@@ -65,7 +65,7 @@ export default class TrackSelector extends React.Component<
         return {
             [TrackName.CancerHotspots]: {
                 label: (
-                    <span>
+                    <span data-test="CancerHotspots">
                         Cancer Hotspots
                         {this.isPending(TrackName.CancerHotspots) &&
                             this.loaderIcon()}

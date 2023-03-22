@@ -1,6 +1,6 @@
 import { IServerConfig } from './IAppConfig';
 
-const ServerConfigDefaults: Partial<IServerConfig> = {
+export const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',
     api_cache_limit: 450,
     dat_method: 'none',
@@ -8,6 +8,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     genomenexus_url: 'https://v1.genomenexus.org',
     genomenexus_url_grch38: 'https://grch38.genomenexus.org',
     genomenexus_website_url: 'https://www.genomenexus.org',
+    genomenexus_isoform_override_source: 'mskcc',
     g2s_url: 'https://g2s.genomenexus.org',
     mycancergenome_show: false,
 
@@ -39,7 +40,6 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     pubmed_url: 'https://www.ncbi.nlm.nih.gov/pubmed/<%=pmid%>',
 
-    isoformOverrideSource: 'uniprot',
     show_hotspot: true,
     show_oncokb: true,
     show_civic: false,
@@ -64,11 +64,11 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'https://raw.githubusercontent.com/cBioPortal/cbioportal/master/docs/',
     skin_documentation_markdown: true,
     skin_email_contact: 'cbioportal at googlegroups dot com',
-    skin_documentation_faq: 'FAQ.md',
+    skin_documentation_faq: 'user-guide/faq.md',
     skin_footer_show_dev: false,
     skin_login_saml_registration_html: 'Sign in with MSK',
-    skin_documentation_news: 'News.md',
-    skin_documentation_oql: 'Onco-Query-Language.md',
+    skin_documentation_news: 'https://docs.cbioportal.org/news/',
+    skin_documentation_oql: 'user-guide/oql.md',
     skin_query_max_tree_depth: '3',
     skin_right_nav_show_data_sets: true,
     skin_right_nav_show_examples: true,
@@ -165,7 +165,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     },
 
     uniprot_id_url:
-        'https://www.uniprot.org/uniprot/?query=accession:<%= swissProtAccession %>&format=tab&columns=entry+name',
+        'https://rest.uniprot.org/uniprotkb/search?query=accession:<%= swissProtAccession %>&format=tsv&fields=id',
 
     ensembl_transcript_url:
         'http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
@@ -174,6 +174,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'http://ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
 
     query_product_limit: 1000000,
+
+    clinical_attribute_product_limit: 6500000,
 
     skin_show_gsva: false,
 
@@ -185,7 +187,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature,ARMLEVEL_CNA:Arm-level CNA',
 
     saml_logout_local: false,
-    patient_view_use_legacy_timeline: false,
+
     enable_request_body_gzip_compression: false,
     enable_treatment_groups: false,
 
@@ -197,6 +199,16 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'The study is unauthorized. You need to request access.',
     comparison_categorical_na_values: 'NA',
     skin_hide_download_controls: false,
+
+    oncoprint_clinical_tracks_config_json: '',
+
+    skin_patient_view_mutation_table_columns_show_on_init: '',
+
+    skin_results_view_mutation_table_columns_show_on_init: '',
+
+    skin_patient_view_copy_number_table_columns_show_on_init: '',
+
+    skin_patient_view_structural_variant_table_columns_show_on_init: '',
 };
 
 export default ServerConfigDefaults;

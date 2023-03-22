@@ -52,9 +52,12 @@ describe('comparison alterations tab', function() {
 
     it('filters CNA types', function() {
         clickAlterationTypeCheckBox('Mutations');
+        clickAlterationTypeCheckBox('Structural Variants / Fusions');
+
         submitEnrichmentRequest();
         $('[data-test=LazyMobXTable]').waitForDisplayed();
         assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
+
         clickAlterationTypeCheckBox('Deletion');
         submitEnrichmentRequest();
         $('[data-test=LazyMobXTable]').waitForDisplayed();

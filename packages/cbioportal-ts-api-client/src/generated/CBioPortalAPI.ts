@@ -100,6 +100,8 @@ export type CancerStudy = {
 
         'studyId': string
 
+        'treatmentCount': number
+
 };
 export type CancerStudyTags = {
     'cancerStudyId': number
@@ -197,6 +199,10 @@ export type CopyNumberSeg = {
         'uniqueSampleKey': string
 
 };
+export type DataFilter = {
+    'values': Array < DataFilterValue >
+
+};
 export type DataFilterValue = {
     'end': number
 
@@ -221,6 +227,8 @@ export type DiscreteCopyNumberData = {
         'gene': Gene
 
         'molecularProfileId': string
+
+        'namespaceColumns': {}
 
         'patientId': string
 
@@ -259,7 +267,7 @@ export type GeneFilter = {
 
 };
 export type GeneFilterQuery = {
-    'alterations': Array < "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL" >
+    'alterations': Array < "AMP" | "DIPLOID" | "GAIN" | "HETLOSS" | "HOMDEL" >
 
         'entrezGeneId': number
 
@@ -441,7 +449,7 @@ export type MolecularProfile = {
 
         'genericAssayType': string
 
-        'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "GENERIC_ASSAY"
+        'molecularAlterationType': "COPY_NUMBER_ALTERATION" | "GENERIC_ASSAY" | "GENESET_SCORE" | "METHYLATION" | "METHYLATION_BINARY" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "PHOSPHORYLATION" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_LEVEL" | "RNA_EXPRESSION" | "STRUCTURAL_VARIANT"
 
         'molecularProfileId': string
 
@@ -633,11 +641,9 @@ export type Sample = {
 
         'patientId': string
 
-        'profiledForFusions': boolean
-
         'sampleId': string
 
-        'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
+        'sampleType': "BLOOD_NORMAL" | "METASTATIC" | "PRIMARY_BLOOD_TUMOR" | "PRIMARY_SOLID_TUMOR" | "RECURRENT_BLOOD_TUMOR" | "RECURRENT_SOLID_TUMOR" | "SOLID_NORMAL"
 
         'sequenced': boolean
 
@@ -685,7 +691,7 @@ export type SampleMolecularIdentifier = {
 
 };
 export type SampleTreatmentFilter = {
-    'time': "Pre" | "Post"
+    'time': "Post" | "Pre"
 
         'treatment': string
 
@@ -695,7 +701,7 @@ export type SampleTreatmentRow = {
 
         'samples': Array < ClinicalEventSample >
 
-        'time': "Pre" | "Post"
+        'time': "Post" | "Pre"
 
         'treatment': string
 
@@ -711,6 +717,8 @@ export type StudyViewFilter = {
         >
 
         'clinicalDataFilters': Array < ClinicalDataFilter >
+
+        'clinicalEventFilters': Array < DataFilter >
 
         'customDataFilters': Array < ClinicalDataFilter >
 
@@ -811,8 +819,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "cancerTypeId" | "name" | "dedicatedColor" | "shortName" | "parent",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "cancerTypeId" | "dedicatedColor" | "name" | "parent" | "shortName",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -861,8 +869,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "cancerTypeId" | "name" | "dedicatedColor" | "shortName" | "parent",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "cancerTypeId" | "dedicatedColor" | "name" | "parent" | "shortName",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -923,8 +931,8 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "cancerTypeId" | "name" | "dedicatedColor" | "shortName" | "parent",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "cancerTypeId" | "dedicatedColor" | "name" | "parent" | "shortName",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < TypeOfCancer >
@@ -1012,8 +1020,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "clinicalAttributeId" | "datatype" | "description" | "displayName" | "patientAttribute" | "priority" | "studyId",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1062,8 +1070,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "clinicalAttributeId" | "datatype" | "description" | "displayName" | "patientAttribute" | "priority" | "studyId",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -1124,8 +1132,8 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "clinicalAttributeId" | "datatype" | "description" | "displayName" | "patientAttribute" | "priority" | "studyId",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < ClinicalAttribute >
@@ -1135,7 +1143,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchClinicalAttributesUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyIds': Array < string > ,
             $queryParameters ? : any
     }): string {
@@ -1163,7 +1171,7 @@ export default class CBioPortalAPI {
      * @param {} studyIds - List of Study IDs
      */
     fetchClinicalAttributesUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -1213,7 +1221,7 @@ export default class CBioPortalAPI {
      * @param {} studyIds - List of Study IDs
      */
     fetchClinicalAttributesUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'studyIds': Array < string > ,
                 $queryParameters ? : any,
                 $domain ? : string
@@ -1225,8 +1233,8 @@ export default class CBioPortalAPI {
         };
     fetchClinicalDataUsingPOSTURL(parameters: {
         'clinicalDataMultiStudyFilter': ClinicalDataMultiStudyFilter,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'clinicalDataType' ? : "PATIENT" | "SAMPLE",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1260,8 +1268,8 @@ export default class CBioPortalAPI {
      */
     fetchClinicalDataUsingPOSTWithHttpInfo(parameters: {
         'clinicalDataMultiStudyFilter': ClinicalDataMultiStudyFilter,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'clinicalDataType' ? : "PATIENT" | "SAMPLE",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1316,8 +1324,8 @@ export default class CBioPortalAPI {
      */
     fetchClinicalDataUsingPOST(parameters: {
             'clinicalDataMultiStudyFilter': ClinicalDataMultiStudyFilter,
-            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'clinicalDataType' ? : "PATIENT" | "SAMPLE",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < ClinicalData >
@@ -1328,7 +1336,7 @@ export default class CBioPortalAPI {
         };
     fetchCopyNumberSegmentsUsingPOSTURL(parameters: {
         'chromosome' ? : string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleIdentifiers': Array < SampleIdentifier > ,
             $queryParameters ? : any
     }): string {
@@ -1362,7 +1370,7 @@ export default class CBioPortalAPI {
      */
     fetchCopyNumberSegmentsUsingPOSTWithHttpInfo(parameters: {
         'chromosome' ? : string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleIdentifiers': Array < SampleIdentifier > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -1418,7 +1426,7 @@ export default class CBioPortalAPI {
      */
     fetchCopyNumberSegmentsUsingPOST(parameters: {
             'chromosome' ? : string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sampleIdentifiers': Array < SampleIdentifier > ,
                 $queryParameters ? : any,
                 $domain ? : string
@@ -1509,8 +1517,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "genePanelId" | "description",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "description" | "genePanelId",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1559,8 +1567,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "genePanelId" | "description",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "description" | "genePanelId",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -1621,8 +1629,8 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "genePanelId" | "description",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "description" | "genePanelId",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < GenePanel >
@@ -1633,7 +1641,7 @@ export default class CBioPortalAPI {
         };
     fetchGenePanelsUsingPOSTURL(parameters: {
         'genePanelIds': Array < string > ,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1662,7 +1670,7 @@ export default class CBioPortalAPI {
      */
     fetchGenePanelsUsingPOSTWithHttpInfo(parameters: {
         'genePanelIds': Array < string > ,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1712,7 +1720,7 @@ export default class CBioPortalAPI {
      */
     fetchGenePanelsUsingPOST(parameters: {
             'genePanelIds': Array < string > ,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenePanel >
@@ -1799,7 +1807,7 @@ export default class CBioPortalAPI {
     getGenericAssayDataInMolecularProfileUsingGETURL(parameters: {
         'genericAssayStableId': string,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1833,7 +1841,7 @@ export default class CBioPortalAPI {
     getGenericAssayDataInMolecularProfileUsingGETWithHttpInfo(parameters: {
         'genericAssayStableId': string,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1889,7 +1897,7 @@ export default class CBioPortalAPI {
     getGenericAssayDataInMolecularProfileUsingGET(parameters: {
             'genericAssayStableId': string,
             'molecularProfileId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayData >
@@ -1899,8 +1907,8 @@ export default class CBioPortalAPI {
             });
         };
     getGenericAssayMeta_gaUsingGETURL(parameters: {
-        'genericAssayStableId' ? : string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genericAssayStableId': string,
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1929,10 +1937,10 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     getGenericAssayMeta_gaUsingGETWithHttpInfo(parameters: {
-        'genericAssayStableId' ? : string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genericAssayStableId': string,
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
-            $domain ? : string
+        $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -1946,6 +1954,11 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
 
             path = path.replace('{genericAssayStableId}', parameters['genericAssayStableId'] + '');
+
+            if (parameters['genericAssayStableId'] === undefined) {
+                reject(new Error('Missing required  parameter: genericAssayStableId'));
+                return;
+            }
 
             if (parameters['projection'] !== undefined) {
                 queryParameters['projection'] = parameters['projection'];
@@ -1971,10 +1984,10 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     getGenericAssayMeta_gaUsingGET(parameters: {
-            'genericAssayStableId' ? : string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'genericAssayStableId': string,
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
-                $domain ? : string
+            $domain ? : string
         }): Promise < Array < GenericAssayMeta >
         > {
             return this.getGenericAssayMeta_gaUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
@@ -1983,7 +1996,7 @@ export default class CBioPortalAPI {
         };
     getGenericAssayMetaUsingGETURL(parameters: {
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2013,7 +2026,7 @@ export default class CBioPortalAPI {
      */
     getGenericAssayMetaUsingGETWithHttpInfo(parameters: {
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -2060,7 +2073,7 @@ export default class CBioPortalAPI {
      */
     getGenericAssayMetaUsingGET(parameters: {
             'molecularProfileId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayMeta >
@@ -2071,7 +2084,7 @@ export default class CBioPortalAPI {
         };
     fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
         'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2100,7 +2113,7 @@ export default class CBioPortalAPI {
      */
     fetchGenericAssayDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
         'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -2150,7 +2163,7 @@ export default class CBioPortalAPI {
      */
     fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(parameters: {
             'genericAssayDataMultipleStudyFilter': GenericAssayDataMultipleStudyFilter,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayData >
@@ -2162,7 +2175,7 @@ export default class CBioPortalAPI {
     fetchGenericAssayDataInMolecularProfileUsingPOSTURL(parameters: {
         'genericAssayDataFilter': GenericAssayFilter,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2194,7 +2207,7 @@ export default class CBioPortalAPI {
     fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
         'genericAssayDataFilter': GenericAssayFilter,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -2253,7 +2266,7 @@ export default class CBioPortalAPI {
     fetchGenericAssayDataInMolecularProfileUsingPOST(parameters: {
             'genericAssayDataFilter': GenericAssayFilter,
             'molecularProfileId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayData >
@@ -2264,7 +2277,7 @@ export default class CBioPortalAPI {
         };
     fetchGenericAssayMetaUsingPOSTURL(parameters: {
         'genericAssayMetaFilter': GenericAssayMetaFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2293,7 +2306,7 @@ export default class CBioPortalAPI {
      */
     fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters: {
         'genericAssayMetaFilter': GenericAssayMetaFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -2343,7 +2356,7 @@ export default class CBioPortalAPI {
      */
     fetchGenericAssayMetaUsingPOST(parameters: {
             'genericAssayMetaFilter': GenericAssayMetaFilter,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayMeta >
@@ -2358,8 +2371,8 @@ export default class CBioPortalAPI {
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "cytoband" | "entrezGeneId" | "hugoGeneSymbol" | "length" | "type",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2420,8 +2433,8 @@ export default class CBioPortalAPI {
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "cytoband" | "entrezGeneId" | "hugoGeneSymbol" | "length" | "type",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -2494,8 +2507,8 @@ export default class CBioPortalAPI {
             'keyword' ? : string,
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "cytoband" | "entrezGeneId" | "hugoGeneSymbol" | "length" | "type",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Gene >
@@ -2505,13 +2518,14 @@ export default class CBioPortalAPI {
             });
         };
     fetchGenesUsingPOSTURL(parameters: {
-        'geneIdType' ? : "ENTREZ_GENE_ID" | "HUGO_GENE_SYMBOL",
         'geneIds': Array < string > ,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            $queryParameters ? : any
+        'geneIdType' ? : "ENTREZ_GENE_ID" | "HUGO_GENE_SYMBOL",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/genes/fetch';
+
         if (parameters['geneIdType'] !== undefined) {
             queryParameters['geneIdType'] = parameters['geneIdType'];
         }
@@ -2534,16 +2548,16 @@ export default class CBioPortalAPI {
      * Fetch genes by ID
      * @method
      * @name CBioPortalAPI#fetchGenesUsingPOST
-     * @param {string} geneIdType - Type of gene ID
      * @param {} geneIds - List of Entrez Gene IDs or Hugo Gene Symbols
+     * @param {string} geneIdType - Type of gene ID
      * @param {string} projection - Level of detail of the response
      */
     fetchGenesUsingPOSTWithHttpInfo(parameters: {
-        'geneIdType' ? : "ENTREZ_GENE_ID" | "HUGO_GENE_SYMBOL",
         'geneIds': Array < string > ,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            $queryParameters ? : any,
-            $domain ? : string
+        'geneIdType' ? : "ENTREZ_GENE_ID" | "HUGO_GENE_SYMBOL",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        $queryParameters ? : any,
+        $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -2557,10 +2571,6 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            if (parameters['geneIdType'] !== undefined) {
-                queryParameters['geneIdType'] = parameters['geneIdType'];
-            }
-
             if (parameters['geneIds'] !== undefined) {
                 body = parameters['geneIds'];
             }
@@ -2568,6 +2578,10 @@ export default class CBioPortalAPI {
             if (parameters['geneIds'] === undefined) {
                 reject(new Error('Missing required  parameter: geneIds'));
                 return;
+            }
+
+            if (parameters['geneIdType'] !== undefined) {
+                queryParameters['geneIdType'] = parameters['geneIdType'];
             }
 
             if (parameters['projection'] !== undefined) {
@@ -2590,16 +2604,16 @@ export default class CBioPortalAPI {
      * Fetch genes by ID
      * @method
      * @name CBioPortalAPI#fetchGenesUsingPOST
-     * @param {string} geneIdType - Type of gene ID
      * @param {} geneIds - List of Entrez Gene IDs or Hugo Gene Symbols
+     * @param {string} geneIdType - Type of gene ID
      * @param {string} projection - Level of detail of the response
      */
     fetchGenesUsingPOST(parameters: {
-            'geneIdType' ? : "ENTREZ_GENE_ID" | "HUGO_GENE_SYMBOL",
             'geneIds': Array < string > ,
-                'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-                $queryParameters ? : any,
-                $domain ? : string
+            'geneIdType' ? : "ENTREZ_GENE_ID" | "HUGO_GENE_SYMBOL",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            $queryParameters ? : any,
+            $domain ? : string
         }): Promise < Array < Gene >
         > {
             return this.fetchGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
@@ -2881,7 +2895,7 @@ export default class CBioPortalAPI {
     };
     fetchMolecularDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
         'molecularDataMultipleStudyFilter': MolecularDataMultipleStudyFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2910,7 +2924,7 @@ export default class CBioPortalAPI {
      */
     fetchMolecularDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
         'molecularDataMultipleStudyFilter': MolecularDataMultipleStudyFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -2960,7 +2974,7 @@ export default class CBioPortalAPI {
      */
     fetchMolecularDataInMultipleMolecularProfilesUsingPOST(parameters: {
             'molecularDataMultipleStudyFilter': MolecularDataMultipleStudyFilter,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < NumericGeneMolecularData >
@@ -2973,8 +2987,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "datatype" | "description" | "molecularAlterationType" | "molecularProfileId" | "name" | "showProfileInAnalysisTab",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3023,8 +3037,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "datatype" | "description" | "molecularAlterationType" | "molecularProfileId" | "name" | "showProfileInAnalysisTab",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3085,8 +3099,8 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "datatype" | "description" | "molecularAlterationType" | "molecularProfileId" | "name" | "showProfileInAnalysisTab",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < MolecularProfile >
@@ -3097,7 +3111,7 @@ export default class CBioPortalAPI {
         };
     fetchMolecularProfilesUsingPOSTURL(parameters: {
         'molecularProfileFilter': MolecularProfileFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3126,7 +3140,7 @@ export default class CBioPortalAPI {
      */
     fetchMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
         'molecularProfileFilter': MolecularProfileFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -3176,7 +3190,7 @@ export default class CBioPortalAPI {
      */
     fetchMolecularProfilesUsingPOST(parameters: {
             'molecularProfileFilter': MolecularProfileFilter,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < MolecularProfile >
@@ -3261,9 +3275,9 @@ export default class CBioPortalAPI {
         });
     };
     getDiscreteCopyNumbersInMolecularProfileUsingGETURL(parameters: {
-        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'discreteCopyNumberEventType' ? : "ALL" | "AMP" | "DIPLOID" | "GAIN" | "HETLOSS" | "HOMDEL" | "HOMDEL_AND_AMP",
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleListId': string,
         $queryParameters ? : any
     }): string {
@@ -3302,9 +3316,9 @@ export default class CBioPortalAPI {
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
      */
     getDiscreteCopyNumbersInMolecularProfileUsingGETWithHttpInfo(parameters: {
-        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'discreteCopyNumberEventType' ? : "ALL" | "AMP" | "DIPLOID" | "GAIN" | "HETLOSS" | "HOMDEL" | "HOMDEL_AND_AMP",
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleListId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -3366,9 +3380,9 @@ export default class CBioPortalAPI {
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
      */
     getDiscreteCopyNumbersInMolecularProfileUsingGET(parameters: {
-            'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+            'discreteCopyNumberEventType' ? : "ALL" | "AMP" | "DIPLOID" | "GAIN" | "HETLOSS" | "HOMDEL" | "HOMDEL_AND_AMP",
             'molecularProfileId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sampleListId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -3379,10 +3393,10 @@ export default class CBioPortalAPI {
             });
         };
     fetchDiscreteCopyNumbersInMolecularProfileUsingPOSTURL(parameters: {
-        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'discreteCopyNumberEventType' ? : "ALL" | "AMP" | "DIPLOID" | "GAIN" | "HETLOSS" | "HOMDEL" | "HOMDEL_AND_AMP",
         'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3416,10 +3430,10 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchDiscreteCopyNumbersInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
-        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'discreteCopyNumberEventType' ? : "ALL" | "AMP" | "DIPLOID" | "GAIN" | "HETLOSS" | "HOMDEL" | "HOMDEL_AND_AMP",
         'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3481,10 +3495,10 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(parameters: {
-            'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+            'discreteCopyNumberEventType' ? : "ALL" | "AMP" | "DIPLOID" | "GAIN" | "HETLOSS" | "HOMDEL" | "HOMDEL_AND_AMP",
             'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
             'molecularProfileId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < DiscreteCopyNumberData >
@@ -3587,7 +3601,7 @@ export default class CBioPortalAPI {
     getAllMolecularDataInMolecularProfileUsingGETURL(parameters: {
         'entrezGeneId': number,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleListId': string,
         $queryParameters ? : any
     }): string {
@@ -3628,7 +3642,7 @@ export default class CBioPortalAPI {
     getAllMolecularDataInMolecularProfileUsingGETWithHttpInfo(parameters: {
         'entrezGeneId': number,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleListId': string,
         $queryParameters ? : any,
         $domain ? : string
@@ -3697,7 +3711,7 @@ export default class CBioPortalAPI {
     getAllMolecularDataInMolecularProfileUsingGET(parameters: {
             'entrezGeneId': number,
             'molecularProfileId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sampleListId': string,
             $queryParameters ? : any,
             $domain ? : string
@@ -3710,7 +3724,7 @@ export default class CBioPortalAPI {
     fetchAllMolecularDataInMolecularProfileUsingPOSTURL(parameters: {
         'molecularDataFilter': MolecularDataFilter,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3742,7 +3756,7 @@ export default class CBioPortalAPI {
     fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
         'molecularDataFilter': MolecularDataFilter,
         'molecularProfileId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -3801,7 +3815,7 @@ export default class CBioPortalAPI {
     fetchAllMolecularDataInMolecularProfileUsingPOST(parameters: {
             'molecularDataFilter': MolecularDataFilter,
             'molecularProfileId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < NumericGeneMolecularData >
@@ -3816,9 +3830,9 @@ export default class CBioPortalAPI {
         'molecularProfileId': string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleListId': string,
-        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+        'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3881,9 +3895,9 @@ export default class CBioPortalAPI {
         'molecularProfileId': string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleListId': string,
-        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+        'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3969,9 +3983,9 @@ export default class CBioPortalAPI {
             'molecularProfileId': string,
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sampleListId': string,
-            'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+            'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Mutation >
@@ -3986,8 +4000,8 @@ export default class CBioPortalAPI {
         'mutationFilter': MutationFilter,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -4042,8 +4056,8 @@ export default class CBioPortalAPI {
         'mutationFilter': MutationFilter,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -4125,8 +4139,8 @@ export default class CBioPortalAPI {
             'mutationFilter': MutationFilter,
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Mutation >
@@ -4140,8 +4154,8 @@ export default class CBioPortalAPI {
         'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -4192,8 +4206,8 @@ export default class CBioPortalAPI {
         'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -4266,8 +4280,8 @@ export default class CBioPortalAPI {
             'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "aminoAcidChange" | "center" | "endPosition" | "entrezGeneId" | "keyword" | "mutationStatus" | "mutationType" | "ncbiBuild" | "normalAltCount" | "normalRefCount" | "proteinChange" | "proteinPosEnd" | "proteinPosStart" | "referenceAllele" | "refseqMrnaId" | "startPosition" | "tumorAltCount" | "tumorRefCount" | "validationStatus" | "variantAllele" | "variantType",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Mutation >
@@ -4281,7 +4295,7 @@ export default class CBioPortalAPI {
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -4334,7 +4348,7 @@ export default class CBioPortalAPI {
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -4399,7 +4413,7 @@ export default class CBioPortalAPI {
             'keyword' ? : string,
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Patient >
@@ -4410,7 +4424,7 @@ export default class CBioPortalAPI {
         };
     fetchPatientsUsingPOSTURL(parameters: {
         'patientFilter': PatientFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -4439,7 +4453,7 @@ export default class CBioPortalAPI {
      */
     fetchPatientsUsingPOSTWithHttpInfo(parameters: {
         'patientFilter': PatientFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -4489,7 +4503,7 @@ export default class CBioPortalAPI {
      */
     fetchPatientsUsingPOST(parameters: {
             'patientFilter': PatientFilter,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < Patient >
@@ -4502,8 +4516,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "category" | "description" | "name" | "sampleListId" | "studyId",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -4552,8 +4566,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "category" | "description" | "name" | "sampleListId" | "studyId",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -4614,8 +4628,8 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "category" | "description" | "name" | "sampleListId" | "studyId",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < SampleList >
@@ -4625,7 +4639,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchSampleListsUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleListIds': Array < string > ,
             $queryParameters ? : any
     }): string {
@@ -4653,7 +4667,7 @@ export default class CBioPortalAPI {
      * @param {} sampleListIds - List of sample list IDs
      */
     fetchSampleListsUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleListIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -4703,7 +4717,7 @@ export default class CBioPortalAPI {
      * @param {} sampleListIds - List of sample list IDs
      */
     fetchSampleListsUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sampleListIds': Array < string > ,
                 $queryParameters ? : any,
                 $domain ? : string
@@ -4869,7 +4883,7 @@ export default class CBioPortalAPI {
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "sampleId" | "sampleType",
         $queryParameters ? : any
     }): string {
@@ -4925,7 +4939,7 @@ export default class CBioPortalAPI {
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "sampleId" | "sampleType",
         $queryParameters ? : any,
             $domain ? : string
@@ -4993,7 +5007,7 @@ export default class CBioPortalAPI {
             'keyword' ? : string,
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sortBy' ? : "sampleId" | "sampleType",
             $queryParameters ? : any,
                 $domain ? : string
@@ -5004,7 +5018,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchSamplesUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleFilter': SampleFilter,
         $queryParameters ? : any
     }): string {
@@ -5032,7 +5046,7 @@ export default class CBioPortalAPI {
      * @param {} sampleFilter - List of sample identifiers
      */
     fetchSamplesUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleFilter': SampleFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -5082,7 +5096,7 @@ export default class CBioPortalAPI {
      * @param {} sampleFilter - List of sample identifiers
      */
     fetchSamplesUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sampleFilter': SampleFilter,
             $queryParameters ? : any,
                 $domain ? : string
@@ -5102,8 +5116,8 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'principal' ? : {},
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "cancerTypeId" | "citation" | "description" | "groups" | "importDate" | "name" | "pmid" | "publicStudy" | "status" | "studyId",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -5188,8 +5202,8 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'principal' ? : {},
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "cancerTypeId" | "citation" | "description" | "groups" | "importDate" | "name" | "pmid" | "publicStudy" | "status" | "studyId",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -5286,8 +5300,8 @@ export default class CBioPortalAPI {
             'pageNumber' ? : number,
             'pageSize' ? : number,
             'principal' ? : {},
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "cancerTypeId" | "citation" | "description" | "groups" | "importDate" | "name" | "pmid" | "publicStudy" | "status" | "studyId",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CancerStudy >
@@ -5297,7 +5311,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchStudiesUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyIds': Array < string > ,
             $queryParameters ? : any
     }): string {
@@ -5325,7 +5339,7 @@ export default class CBioPortalAPI {
      * @param {} studyIds - List of Study IDs
      */
     fetchStudiesUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -5375,7 +5389,7 @@ export default class CBioPortalAPI {
      * @param {} studyIds - List of Study IDs
      */
     fetchStudiesUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'studyIds': Array < string > ,
                 $queryParameters ? : any,
                 $domain ? : string
@@ -5541,8 +5555,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "clinicalAttributeId" | "datatype" | "description" | "displayName" | "patientAttribute" | "priority" | "studyId",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -5595,8 +5609,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "clinicalAttributeId" | "datatype" | "description" | "displayName" | "patientAttribute" | "priority" | "studyId",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -5666,8 +5680,8 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "clinicalAttributeId" | "datatype" | "description" | "displayName" | "patientAttribute" | "priority" | "studyId",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -5768,11 +5782,11 @@ export default class CBioPortalAPI {
     };
     getAllClinicalDataInStudyUsingGETURL(parameters: {
         'attributeId' ? : string,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
+        'clinicalDataType' ? : "PATIENT" | "SAMPLE",
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "clinicalAttributeId" | "value",
         'studyId': string,
         $queryParameters ? : any
@@ -5834,11 +5848,11 @@ export default class CBioPortalAPI {
      */
     getAllClinicalDataInStudyUsingGETWithHttpInfo(parameters: {
         'attributeId' ? : string,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
+        'clinicalDataType' ? : "PATIENT" | "SAMPLE",
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "clinicalAttributeId" | "value",
         'studyId': string,
         $queryParameters ? : any,
@@ -5917,11 +5931,11 @@ export default class CBioPortalAPI {
      */
     getAllClinicalDataInStudyUsingGET(parameters: {
             'attributeId' ? : string,
-            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
+            'clinicalDataType' ? : "PATIENT" | "SAMPLE",
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sortBy' ? : "clinicalAttributeId" | "value",
             'studyId': string,
             $queryParameters ? : any,
@@ -5934,8 +5948,8 @@ export default class CBioPortalAPI {
         };
     fetchAllClinicalDataInStudyUsingPOSTURL(parameters: {
         'clinicalDataSingleStudyFilter': ClinicalDataSingleStudyFilter,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'clinicalDataType' ? : "PATIENT" | "SAMPLE",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -5973,8 +5987,8 @@ export default class CBioPortalAPI {
      */
     fetchAllClinicalDataInStudyUsingPOSTWithHttpInfo(parameters: {
         'clinicalDataSingleStudyFilter': ClinicalDataSingleStudyFilter,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'clinicalDataType' ? : "PATIENT" | "SAMPLE",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyId': string,
         $queryParameters ? : any,
         $domain ? : string
@@ -6038,8 +6052,8 @@ export default class CBioPortalAPI {
      */
     fetchAllClinicalDataInStudyUsingPOST(parameters: {
             'clinicalDataSingleStudyFilter': ClinicalDataSingleStudyFilter,
-            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'clinicalDataType' ? : "PATIENT" | "SAMPLE",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'studyId': string,
             $queryParameters ? : any,
             $domain ? : string
@@ -6053,8 +6067,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "datatype" | "description" | "molecularAlterationType" | "molecularProfileId" | "name" | "showProfileInAnalysisTab",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -6107,8 +6121,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "datatype" | "description" | "molecularAlterationType" | "molecularProfileId" | "name" | "showProfileInAnalysisTab",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -6178,8 +6192,8 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "datatype" | "description" | "molecularAlterationType" | "molecularProfileId" | "name" | "showProfileInAnalysisTab",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -6193,7 +6207,7 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -6244,7 +6258,7 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -6312,7 +6326,7 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -6417,7 +6431,7 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "clinicalAttributeId" | "value",
         'studyId': string,
         $queryParameters ? : any
@@ -6480,7 +6494,7 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "clinicalAttributeId" | "value",
         'studyId': string,
         $queryParameters ? : any,
@@ -6566,7 +6580,7 @@ export default class CBioPortalAPI {
             'pageNumber' ? : number,
             'pageSize' ? : number,
             'patientId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sortBy' ? : "clinicalAttributeId" | "value",
             'studyId': string,
             $queryParameters ? : any,
@@ -6582,7 +6596,7 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "sampleId" | "sampleType",
         'studyId': string,
         $queryParameters ? : any
@@ -6639,7 +6653,7 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "sampleId" | "sampleType",
         'studyId': string,
         $queryParameters ? : any,
@@ -6719,7 +6733,7 @@ export default class CBioPortalAPI {
             'pageNumber' ? : number,
             'pageSize' ? : number,
             'patientId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sortBy' ? : "sampleId" | "sampleType",
             'studyId': string,
             $queryParameters ? : any,
@@ -6734,8 +6748,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "category" | "description" | "name" | "sampleListId" | "studyId",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -6788,8 +6802,8 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+        'sortBy' ? : "category" | "description" | "name" | "sampleListId" | "studyId",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -6859,8 +6873,8 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
+            'sortBy' ? : "category" | "description" | "name" | "sampleListId" | "studyId",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string
@@ -6874,7 +6888,7 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "sampleId" | "sampleType",
         'studyId': string,
         $queryParameters ? : any
@@ -6928,7 +6942,7 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "sampleId" | "sampleType",
         'studyId': string,
         $queryParameters ? : any,
@@ -6999,7 +7013,7 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sortBy' ? : "sampleId" | "sampleType",
             'studyId': string,
             $queryParameters ? : any,
@@ -7104,7 +7118,7 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleId': string,
         'sortBy' ? : "clinicalAttributeId" | "value",
         'studyId': string,
@@ -7167,7 +7181,7 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleId': string,
         'sortBy' ? : "clinicalAttributeId" | "value",
         'studyId': string,
@@ -7253,7 +7267,7 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sampleId': string,
             'sortBy' ? : "clinicalAttributeId" | "value",
             'studyId': string,
@@ -7270,9 +7284,9 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleId': string,
-        'sortBy' ? : "chromosome" | "start" | "end" | "numberOfProbes" | "segmentMean",
+        'sortBy' ? : "chromosome" | "end" | "numberOfProbes" | "segmentMean" | "start",
         'studyId': string,
         $queryParameters ? : any
     }): string {
@@ -7333,9 +7347,9 @@ export default class CBioPortalAPI {
         'direction' ? : "ASC" | "DESC",
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sampleId': string,
-        'sortBy' ? : "chromosome" | "start" | "end" | "numberOfProbes" | "segmentMean",
+        'sortBy' ? : "chromosome" | "end" | "numberOfProbes" | "segmentMean" | "start",
         'studyId': string,
         $queryParameters ? : any,
             $domain ? : string
@@ -7419,9 +7433,9 @@ export default class CBioPortalAPI {
             'direction' ? : "ASC" | "DESC",
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sampleId': string,
-            'sortBy' ? : "chromosome" | "start" | "end" | "numberOfProbes" | "segmentMean",
+            'sortBy' ? : "chromosome" | "end" | "numberOfProbes" | "segmentMean" | "start",
             'studyId': string,
             $queryParameters ? : any,
                 $domain ? : string

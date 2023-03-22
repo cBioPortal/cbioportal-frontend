@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
     AlterationEnrichment,
+    GenericAssayEnrichment,
     GenomicEnrichment,
     MolecularProfile,
 } from 'cbioportal-ts-api-client';
@@ -11,10 +12,7 @@ import {
 } from 'shared/model/EnrichmentRow';
 import { formatLogOddsRatio, roundLogRatio } from 'shared/lib/FormatUtils';
 import _ from 'lodash';
-import {
-    AlterationTypeConstants,
-    DataTypeConstants,
-} from '../ResultsViewPageStore';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { filterAndSortProfiles } from '../coExpression/CoExpressionTabUtils';
 import { IMiniFrequencyScatterChartData } from './MiniFrequencyScatterChart';
 import {
@@ -31,7 +29,6 @@ import {
     ExpressionEnrichmentTableColumnType,
 } from './ExpressionEnrichmentsTable';
 import { Datalabel } from 'shared/lib/DataUtils';
-import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import {
     GenericAssayEnrichmentTableColumn,
     GenericAssayEnrichmentTableColumnType,
@@ -50,12 +47,17 @@ export type GenericAssayEnrichmentWithQ = GenericAssayEnrichment & {
     qValue: number;
 };
 
+export type ContinousDataPvalueTooltipProps = {
+    groupSize?: number;
+};
+
 export const CNA_AMP_VALUE = 2;
 export const CNA_HOMDEL_VALUE = -2;
 export const CNA_TO_ALTERATION: { [cna: number]: string } = {
     [CNA_AMP_VALUE]: 'AMP',
     [CNA_HOMDEL_VALUE]: 'HOMDEL',
 };
+export const PVALUE_TEST_GROUP_SIZE_THRESHOLD = 3;
 
 export enum GeneOptionLabel {
     USER_DEFINED_OPTION = 'User-defined genes',
@@ -1031,6 +1033,29 @@ export function getEnrichmentBarPlotData(
     );
 }
 
+export function compareByAlterationPercentage(
+    kv1: AlterationEnrichmentRow,
+    kv2: AlterationEnrichmentRow
+) {
+    const t1 = _.reduce(
+        kv1.groupsSet,
+        (acc, next) => {
+            acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
+            return acc;
+        },
+        0
+    );
+    const t2 = _.reduce(
+        kv2.groupsSet,
+        (acc, next) => {
+            acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
+            return acc;
+        },
+        0
+    );
+    return t2 - t1;
+}
+
 export function getGeneListOptions(
     data: AlterationEnrichmentRow[],
     includeAlteration?: boolean
@@ -1060,31 +1085,7 @@ export function getGeneListOptions(
     }
 
     let dataSortedByAlteredPercentage = _.clone(dataWithOptionName).sort(
-        function(kv1, kv2) {
-            const t1 = _.reduce(
-                kv1.groupsSet,
-                (acc, next) => {
-                    acc =
-                        next.alteredPercentage > acc
-                            ? next.alteredPercentage
-                            : acc;
-                    return acc;
-                },
-                0
-            );
-            const t2 = _.reduce(
-                kv2.groupsSet,
-                (acc, next) => {
-                    acc =
-                        next.alteredPercentage > acc
-                            ? next.alteredPercentage
-                            : acc;
-                    return acc;
-                },
-                0
-            );
-            return t2 - t1;
-        }
+        compareByAlterationPercentage
     );
 
     let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(function(
@@ -1148,3 +1149,15 @@ export function getGeneListOptions(
         },
     ];
 }
+
+export const ContinousDataPvalueTooltip: React.FunctionComponent<ContinousDataPvalueTooltipProps> = ({
+    groupSize,
+}) => {
+    return (
+        <span>
+            {groupSize && groupSize >= PVALUE_TEST_GROUP_SIZE_THRESHOLD
+                ? 'Derived from one-way ANOVA'
+                : "Derived from Student's t-test"}
+        </span>
+    );
+};

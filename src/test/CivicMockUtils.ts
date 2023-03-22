@@ -124,6 +124,7 @@ export function getCnaData(): Array<DiscreteCopyNumberData> {
             driverFilterAnnotation: '',
             driverTiersFilter: '',
             driverTiersFilterAnnotation: '',
+            namespaceColumns: {},
         },
     ];
 }

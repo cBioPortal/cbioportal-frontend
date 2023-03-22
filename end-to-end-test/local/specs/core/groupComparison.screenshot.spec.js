@@ -10,6 +10,7 @@ var setInputText = require('../../../shared/specUtils').setInputText;
 var {
     setDropdownOpen,
     selectClinicalTabPlotType,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -21,7 +22,7 @@ describe('group comparison page screenshot tests', function() {
             openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',
-                5000
+                10000
             );
             $('.tabAnchor_alterations').click();
             $(
@@ -158,10 +159,13 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison alteration enrichments two groups', function() {
-            goToUrlAndSetLocalStorage(
-                `${browser.getUrl()}&unselectedGroups=%5B"GB"%2C"OAST"%2C"ODG"%5D`,
-                true
-            );
+            // this test will not work on retry because groups will be toggled back on
+            this.retries(0);
+
+            getElementByTestHandle('groupSelectorButtonGB').click();
+            getElementByTestHandle('groupSelectorButtonOAST').click();
+            getElementByTestHandle('groupSelectorButtonODG').click();
+
             $(
                 '[data-test="GroupComparisonAlterationEnrichments"]'
             ).waitForExist({ timeout: 20000 });
@@ -203,12 +207,14 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('displays 100% stacked bar chart by default', () => {
+        it('displays 100 percent stacked bar chart for categorical data', () => {
+            $('[data-test="Oncotree Code"]').click();
             var res = checkClinicalTabPlot();
             assertScreenShotMatch(res);
         });
 
-        it('displays heatmap when picked from plot dropdown', () => {
+        it('displays heatmap when picked from categorical plot type dropdown', () => {
+            $('[data-test="Oncotree Code"]').click();
             selectClinicalTabPlotType('Heatmap');
 
             var res = checkClinicalTabPlot();

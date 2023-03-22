@@ -11,11 +11,11 @@ import {
     Modal,
     Radio,
 } from 'react-bootstrap';
-import { BinsGeneratorConfig } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import {
     BinMethodOption,
     StudyViewPageStore,
 } from 'pages/studyView/StudyViewPageStore';
+import { BinsGeneratorConfig } from 'cbioportal-ts-api-client';
 
 export type ICustomBinsProps = {
     show: boolean;

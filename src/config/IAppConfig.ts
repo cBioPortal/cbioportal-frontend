@@ -49,10 +49,10 @@ export interface IServerConfig {
     genomenexus_url: string | null;
     genomenexus_url_grch38: string | null;
     genomenexus_website_url: string | null;
+    genomenexus_isoform_override_source: string;
     mygene_info_url: string | null;
     g2s_url: string | null;
     google_analytics_profile_id: string | null;
-    isoformOverrideSource: string;
     ptmSources: string[] | undefined;
     oncoprint_hide_vus_default: boolean;
     mycancergenome_show: boolean | undefined;
@@ -137,11 +137,12 @@ export interface IServerConfig {
     query_sets_of_genes: string | null;
     skin_quick_select_buttons: string | null;
     base_url: string | null;
-    user_email_address: string;
+    user_display_name: string;
     sessionServiceEnabled: boolean;
     session_url_length_threshold: string;
     mskWholeSlideViewerToken: string;
     query_product_limit: number;
+    clinical_attribute_product_limit: number;
     dat_method: string;
     skin_show_gsva: boolean;
     skin_geneset_hierarchy_default_gsva_score: number;
@@ -151,7 +152,6 @@ export interface IServerConfig {
     oncokb_merge_icons_by_default: boolean;
     generic_assay_display_text: string; // this has a default
     saml_logout_local: boolean;
-    patient_view_use_legacy_timeline: boolean;
     installation_map_url: string;
     enable_request_body_gzip_compression: boolean;
     enable_treatment_groups: boolean;
@@ -159,12 +159,18 @@ export interface IServerConfig {
     skin_show_unauthorized_studies: boolean;
     skin_global_message_for_unauthorized_studies: string;
     skin_home_page_show_unauthorized_studies: boolean;
+    skin_home_page_show_reference_genome: string;
     skin_home_page_unauthorized_studies_global_message: string;
     skin_mutation_table_namespace_column_show_by_default: boolean;
+    skin_patient_view_mutation_table_columns_show_on_init: string;
+    skin_results_view_mutation_table_columns_show_on_init: string;
+    skin_patient_view_copy_number_table_columns_show_on_init: string;
+    skin_patient_view_structural_variant_table_columns_show_on_init: string;
     comparison_categorical_na_values: string;
     fhirspark?: IFhirsparkConfig;
     cancerdrugsUrl?: string;
     cancerdrugsJsonUrl?: string;
+    oncoprint_clinical_tracks_config_json: string;
 }
 
 export interface IFhirsparkConfig {

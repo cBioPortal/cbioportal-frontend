@@ -1,8 +1,8 @@
 import * as React from 'react';
 
-import { loaderIcon } from '../StatusHelpers';
 import { HotspotInfo } from '../hotspot/HotspotInfo';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { loaderIcon } from '../StatusHelpers';
 
 import hotspotImg from '../../images/cancer-hotspots.svg';
 import hotspot3dImg from '../../images/3d-hotspots.svg';

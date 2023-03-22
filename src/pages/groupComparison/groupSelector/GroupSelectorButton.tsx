@@ -25,6 +25,7 @@ import { ButtonHTMLAttributes } from 'react';
 export interface IGroupSelectorButtonProps {
     onClick: (name: string) => void;
     onClickDelete: (name: string) => void;
+    onClickOpenStudyViewGroup: (name: string) => void;
     deletable: boolean;
     isSelected: (name: string) => boolean;
     group: ComparisonGroup;
@@ -68,6 +69,11 @@ class GroupSelectorButton extends React.Component<
         this.hovered = false;
         clearTimeout(this.hoverTimeout);
         this.hoverTimeout = null;
+    }
+
+    @action.bound
+    private onClickOpenStudyViewGroup() {
+        this.props.onClickOpenStudyViewGroup(this.props.group.name);
     }
 
     @action.bound
@@ -167,29 +173,41 @@ class GroupSelectorButton extends React.Component<
                                     'cbioTooltip'
                                 )}
                             >
-                                <div>
-                                    {renderGroupNameWithOrdinal(group)}{' '}
-                                    {caseCountsInParens(
-                                        sampleIdentifiers,
-                                        patientIdentifiers
-                                    )}
-                                    {group.description &&
-                                        ` - ${group.description}`}
-                                </div>
-                                {this.props.excludedFromAnalysis && (
-                                    <div
-                                        style={{
-                                            maxWidth: 300,
-                                            whiteSpace: 'initial',
-                                            marginTop: 5,
-                                        }}
-                                    >
-                                        This group is a subset of the other
-                                        selected groups, so it's excluded from
-                                        analysis, and not considered in overlap
-                                        calculations.
+                                <>
+                                    <div>
+                                        {renderGroupNameWithOrdinal(group)}{' '}
+                                        {caseCountsInParens(
+                                            sampleIdentifiers,
+                                            patientIdentifiers
+                                        )}
+                                        {group.description &&
+                                            ` - ${group.description}`}
                                     </div>
-                                )}
+                                    {this.props.excludedFromAnalysis && (
+                                        <div
+                                            style={{
+                                                maxWidth: 300,
+                                                whiteSpace: 'initial',
+                                                marginTop: 5,
+                                            }}
+                                        >
+                                            This group is a subset of the other
+                                            selected groups, so it's excluded
+                                            from analysis, and not considered in
+                                            overlap calculations.
+                                        </div>
+                                    )}
+                                    <div style={{ marginTop: 10 }}>
+                                        <a
+                                            onClick={
+                                                this.onClickOpenStudyViewGroup
+                                            }
+                                        >
+                                            Open in study view{' '}
+                                            <i className="ci ci-pie-chart"></i>
+                                        </a>
+                                    </div>
+                                </>
                             </Popover>
                         </Overlay>,
                         document.body

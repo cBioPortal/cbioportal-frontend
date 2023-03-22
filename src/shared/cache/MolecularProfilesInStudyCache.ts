@@ -5,10 +5,6 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from '../api/cbioportalClientInstance';
 import _ from 'lodash';
-import {
-    DataTypeConstants,
-    AlterationTypeConstants,
-} from 'pages/resultsView/ResultsViewPageStore';
 
 function queryToKey(studyId: string) {
     return studyId;
@@ -28,19 +24,6 @@ async function fetch(
             } as MolecularProfileFilter,
         }
     );
-
-    //TODO: remove this block once data is fixed
-    profiles = profiles.map(profile => {
-        if (
-            profile.molecularAlterationType ===
-                AlterationTypeConstants.STRUCTURAL_VARIANT &&
-            profile.datatype === DataTypeConstants.SV
-        ) {
-            profile.showProfileInAnalysisTab = false;
-        }
-        return profile;
-    });
-    //TODO: remove this block once data is fixed
 
     const profilesByStudy = _.groupBy(profiles, profile => profile.studyId);
     return studyIds.map(studyId => {

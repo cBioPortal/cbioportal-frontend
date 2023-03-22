@@ -19,7 +19,7 @@ export const DEFAULT_MUTATION_ALIGNER_PROXY_URL_TEMPLATE =
 export const DEFAULT_MY_GENE_URL_TEMPLATE =
     'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot';
 export const DEFAULT_UNIPROT_ID_URL_TEMPLATE =
-    'https://www.uniprot.org/uniprot/?query=accession:<%= swissProtAccession %>&format=tab&columns=entry+name';
+    'https://rest.uniprot.org/uniprotkb/search?query=accession:<%= swissProtAccession %>&format=tsv&fields=id';
 export const DEFAULT_GENOME_NEXUS_URL = 'https://www.genomenexus.org/';
 
 // The legacy instance does not require an authentication but the data will not be update.
@@ -68,7 +68,7 @@ export function getUrl(urlTemplate: string, templateVariables: any) {
 export async function fetchVariantAnnotationsByMutation(
     mutations: Partial<Mutation>[],
     fields: string[] = ['annotation_summary'],
-    isoformOverrideSource: string = 'uniprot',
+    isoformOverrideSource: string = 'mskcc',
     client: Partial<GenomeNexusAPI> = DEFAULT_GENOME_NEXUS_CLIENT
 ) {
     const genomicLocations = uniqueGenomicLocations(mutations);
@@ -86,7 +86,7 @@ export async function fetchVariantAnnotationsByMutation(
 export async function fetchVariantAnnotationsIndexedByGenomicLocation(
     mutations: Partial<Mutation>[],
     fields: string[] = ['annotation_summary'],
-    isoformOverrideSource: string = 'uniprot',
+    isoformOverrideSource: string = 'mskcc',
     client: Partial<GenomeNexusAPI> = DEFAULT_GENOME_NEXUS_CLIENT
 ) {
     const variantAnnotations = await fetchVariantAnnotationsByMutation(

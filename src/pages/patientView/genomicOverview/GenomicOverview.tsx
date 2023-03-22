@@ -48,9 +48,18 @@ interface IGenomicOverviewProps {
     sampleIdToCopyNumberGenePanelId?: { [sampleId: string]: string };
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
-    locus?: string;
-    handleLocusChange?: (locus: string) => void;
+    store?: IGenomicOverviewStore;
+    onResetView: () => void;
     genome?: string;
+}
+
+interface IGenomicOverviewStore {
+    activeLocus: string | undefined;
+}
+
+class DefaultGenomicOverviewStore implements IGenomicOverviewStore {
+    @observable
+    public activeLocus: string | undefined;
 }
 
 function getCnaTrackSampleSummariesForIgvTrack(
@@ -104,8 +113,8 @@ function getGenePanelInfoForIgvTrack(
     );
 }
 
-function getUniqSampleKeys(sortedSamples: { uniqueSampleKey: string }[]) {
-    return _.uniq(sortedSamples.map(s => s.uniqueSampleKey));
+function getSampleIds(sortedSamples: { sampleId: string }[]) {
+    return _.uniq(sortedSamples.map(s => s.sampleId));
 }
 
 // TODO see if it is possible to pass custom components for "customButtons"
@@ -150,15 +159,15 @@ const ToggleButton: React.FunctionComponent<{
 export default class GenomicOverview extends React.Component<
     IGenomicOverviewProps
 > {
-    @observable locus: string | undefined;
     @observable compactIgvView = true;
 
+    private store: IGenomicOverviewStore;
     private genePanelManager: GenePanelManager;
 
     constructor(props: IGenomicOverviewProps) {
         super(props);
         makeObservable(this);
-        this.locus = props.locus;
+        this.store = props.store || new DefaultGenomicOverviewStore();
         this.genePanelManager = new GenePanelManager(
             props.sampleIdToMutationGenePanelId,
             props.sampleIdToCopyNumberGenePanelId
@@ -190,7 +199,7 @@ export default class GenomicOverview extends React.Component<
                 sampleExpandHeight: IGV_TRACK_SAMPLE_EXPAND_HEIGHT,
                 height: mutHeight,
                 features: mutFeatures,
-                samples: getUniqSampleKeys(sortedMutations),
+                samples: getSampleIds(sortedMutations),
             });
         }
 
@@ -213,7 +222,7 @@ export default class GenomicOverview extends React.Component<
                 sampleExpandHeight: IGV_TRACK_SAMPLE_EXPAND_HEIGHT,
                 height: segHeight,
                 features: segFeatures,
-                samples: getUniqSampleKeys(sortedSegments),
+                samples: getSampleIds(sortedSegments),
             });
         }
 
@@ -222,7 +231,7 @@ export default class GenomicOverview extends React.Component<
 
     @computed get igvProps() {
         const coreProps = {
-            locus: this.locus,
+            locus: this.store.activeLocus,
             onLocusChange: this.handleLocusChange,
             tracks: this.tracks,
             showTrackLabels: false,
@@ -375,14 +384,6 @@ export default class GenomicOverview extends React.Component<
         );
     }
 
-    componentWillReceiveProps(nextProps: Readonly<IGenomicOverviewProps>) {
-        // update the observable locus only if nextProps.locus is different than the current one
-        // no need to update if it is the same as the current one
-        if (this.locus !== nextProps.locus) {
-            this.locus = nextProps.locus;
-        }
-    }
-
     private get tracksWidth(): number {
         return this.props.containerWidth - 40;
     }
@@ -391,16 +392,12 @@ export default class GenomicOverview extends React.Component<
     private handleLocusChange(locus: string) {
         // update the observable locus only if it is different than the current one
         // no need to update (and re-render) if it is same as the current one
-        if (this.locus !== locus) {
-            this.locus = locus;
-        }
-
-        if (this.props.handleLocusChange) {
-            this.props.handleLocusChange(locus);
+        if (this.store.activeLocus !== locus) {
+            this.store.activeLocus = locus;
         }
 
         // switch to advanced view if locus is updated to anything other than whole genome
-        if (this.locus !== WHOLE_GENOME) {
+        if (this.store.activeLocus !== WHOLE_GENOME) {
             this.compactIgvView = false;
         }
     }
@@ -409,7 +406,7 @@ export default class GenomicOverview extends React.Component<
     private handleResetZoom() {
         // reset the observable locus to whole genome if it is not set to whole genome already
         // no need to reset (and re-render) if it is already set to whole genome
-        if (this.locus !== WHOLE_GENOME) {
+        if (this.store.activeLocus !== WHOLE_GENOME) {
             this.handleLocusChange(WHOLE_GENOME);
         }
     }
@@ -419,6 +416,7 @@ export default class GenomicOverview extends React.Component<
         // reset to default view
         this.compactIgvView = true;
         this.handleResetZoom();
+        this.props.onResetView();
     }
 
     @action.bound

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed, makeObservable } from 'mobx';
+import { observable, computed, makeObservable, action } from 'mobx';
 import {
     HitZoneConfig,
     defaultHitzoneConfig,
@@ -36,6 +36,7 @@ export type LollipopPlotProps = {
     hugoGeneSymbol?: string;
     dataStore?: DataStore;
     onXAxisOffset?: (offset: number) => void;
+    yAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
 };
 
 @observer
@@ -44,6 +45,7 @@ export default class LollipopPlot extends React.Component<
     {}
 > {
     @observable private hitZoneConfig: HitZoneConfig = defaultHitzoneConfig();
+    @observable private mirrorVisible: boolean = false; // lollipop and mirror lollipop share tooltip visibility
 
     private plot: LollipopPlotNoTooltip | undefined;
     private handlers: any;
@@ -57,7 +59,7 @@ export default class LollipopPlot extends React.Component<
 
         makeObservable<
             LollipopPlot,
-            'hitZoneConfig' | 'tooltipVisible' | 'hitZone'
+            'hitZoneConfig' | 'tooltipVisible' | 'hitZone' | 'mirrorHitZone'
         >(this);
 
         this.handlers = {
@@ -72,6 +74,13 @@ export default class LollipopPlot extends React.Component<
                     height: number;
                 },
                 content?: JSX.Element,
+                mirrorHitRect?: {
+                    x: number;
+                    y: number;
+                    width: number;
+                    height: number;
+                },
+                mirrorContent?: JSX.Element,
                 onMouseOver?: () => void,
                 onClick?: () => void,
                 onMouseOut?: () => void,
@@ -81,6 +90,8 @@ export default class LollipopPlot extends React.Component<
                 this.hitZoneConfig = {
                     hitRect,
                     content,
+                    mirrorHitRect,
+                    mirrorContent,
                     onMouseOver,
                     onClick,
                     onMouseOut,
@@ -90,6 +101,7 @@ export default class LollipopPlot extends React.Component<
             },
             getOverlay: () => this.hitZoneConfig.content,
             getOverlayPlacement: () => this.hitZoneConfig.tooltipPlacement,
+            getMirrorOverlay: () => this.hitZoneConfig.mirrorContent,
             onMouseLeave: () => {
                 this.hitZoneConfig.onMouseOut &&
                     this.hitZoneConfig.onMouseOut();
@@ -107,6 +119,22 @@ export default class LollipopPlot extends React.Component<
 
     @computed private get hitZone() {
         return initHitZoneFromConfig(this.hitZoneConfig);
+    }
+
+    // hit zone of mirror lollipop component initialized using config's mirrorHitRect (mirror lollipop location)
+    // used to determine where to apply the mirror lollipop tooltip
+    @computed private get mirrorHitZone() {
+        return initHitZoneFromConfig({
+            ...this.hitZoneConfig,
+            hitRect: { ...this.hitZoneConfig.mirrorHitRect! },
+        });
+    }
+
+    // handles lollipop and mirror lollipop component simultaneous tooltip visibility
+    // if lollipop tooltip is visible, make mirror lollipop tooltip visible as well
+    @action.bound
+    private onTooltipVisibleChange(visible: boolean) {
+        this.mirrorVisible = visible;
     }
 
     public toSVGDOMNode(): Element {
@@ -137,10 +165,27 @@ export default class LollipopPlot extends React.Component<
                 <DefaultTooltip
                     placement={this.handlers.getOverlayPlacement()}
                     overlay={this.handlers.getOverlay}
+                    visible={this.mirrorVisible}
+                    onVisibleChange={this.onTooltipVisibleChange}
                     {...tooltipVisibleProps}
                 >
                     {this.hitZone}
                 </DefaultTooltip>
+                {this.hitZoneConfig.mirrorHitRect && (
+                    <DefaultTooltip
+                        placement={
+                            this.handlers.getOverlayPlacement() === 'top'
+                                ? 'bottom'
+                                : 'top'
+                        }
+                        overlay={this.handlers.getMirrorOverlay}
+                        visible={this.mirrorVisible}
+                        onVisibleChange={this.onTooltipVisibleChange}
+                        {...tooltipVisibleProps}
+                    >
+                        {this.mirrorHitZone}
+                    </DefaultTooltip>
+                )}
                 <LollipopPlotNoTooltip
                     ref={this.handlers.ref}
                     setHitZone={this.handlers.setHitZone}

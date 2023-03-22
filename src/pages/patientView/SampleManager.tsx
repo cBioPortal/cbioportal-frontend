@@ -20,7 +20,7 @@ import { computed, makeObservable } from 'mobx';
 export function sortSamples(
     samples: Array<ClinicalDataBySampleId>,
     clinicalDataLegacyCleanAndDerived: { [s: string]: any },
-    events?: any
+    events?: ClinicalEvent[]
 ) {
     // natural sort (use contrived concatenation, to avoid complaints about
     // immutable types)
@@ -30,41 +30,10 @@ export function sortSamples(
         .sort(naturalSort);
 
     // based on sample collection data (timeline event)
-    let collectionDayMap: { [s: string]: number } = {};
-    if (events) {
-        // use SPECIMEN or SAMPLE_ACQUISITION track on timeline to get timeline
-        // event
-        // TODO: SAMPLE_ACQUISITION is specific to genie_bpc_test study. We
-        // should probably have some config to allow people to choose what
-        // timeline tracks get labels
-        const specimenEvents = events.filter(
-            (e: ClinicalEvent) =>
-                e.eventType === 'SPECIMEN' || 'SAMPLE_ACQUISITION'
-        );
-
-        collectionDayMap = specimenEvents.reduce(
-            (map: { [s: string]: number }, specimenEvent: ClinicalEvent) => {
-                let sampleAttr = _.find(
-                    specimenEvent.attributes,
-                    (attr: ClinicalEventData) => {
-                        // TODO: This is legacy support for old timeline data that does not use SAMPLE_ID, but one of the specrefnum
-                        return (
-                            (attr.key === 'SAMPLE_ID' ||
-                                attr.key === 'SpecimenReferenceNumber' ||
-                                attr.key === 'SPECIMEN_REFERENCE_NUMBER') &&
-                            naturalSortedSampleIDs.indexOf(attr.value) !== -1
-                        );
-                    }
-                );
-                if (sampleAttr) {
-                    map[sampleAttr.value] =
-                        specimenEvent.startNumberOfDaysSinceDiagnosis;
-                }
-                return map;
-            },
-            {}
-        );
-    }
+    const collectionDayMap = getSpecimenCollectionDayMap(
+        naturalSortedSampleIDs,
+        events
+    );
 
     // create new object array, to allow sorting of samples by multiple fields
     type sampleOrderT = {
@@ -81,7 +50,7 @@ export function sortSamples(
     for (let i: number = 0; i < samples.length; i++) {
         let id = samples[i].id;
         // 1. based on sample collection data (timeline event)
-        let eventOrdering = collectionDayMap[id];
+        let eventOrdering = collectionDayMap.get(id);
 
         // 2. if cases have derived normalized case types, put primary first
         const caseType =
@@ -113,6 +82,46 @@ export function sortSamples(
     return _.sortBy<ClinicalDataBySampleId>(samples, sample => {
         return sampleOrderMap[sample.id];
     });
+}
+
+export function getSpecimenCollectionDayMap(
+    sampleIDs: string[],
+    events?: ClinicalEvent[]
+) {
+    let collectionDayMap = new Map<string, number>();
+    if (events) {
+        // use SPECIMEN or SAMPLE_ACQUISITION track on timeline to get timeline
+        // event
+        // TODO: SAMPLE_ACQUISITION is specific to genie_bpc_test study. We
+        // should probably have some config to allow people to choose what
+        // timeline tracks get labels
+        const specimenEvents = events.filter((e: ClinicalEvent) => {
+            return /SPECIMEN|Sample Acquisition|sample_acquisition'/i.test(
+                e.eventType
+            );
+        });
+
+        specimenEvents.forEach((event: ClinicalEvent) => {
+            const sampleIdAttr = _.find(
+                event.attributes,
+                (attr: ClinicalEventData) => {
+                    return (
+                        (attr.key === 'SAMPLE_ID' ||
+                            attr.key === 'SpecimenReferenceNumber' ||
+                            attr.key === 'SPECIMEN_REFERENCE_NUMBER') &&
+                        sampleIDs.indexOf(attr.value) !== -1
+                    );
+                }
+            );
+            if (sampleIdAttr) {
+                collectionDayMap.set(
+                    sampleIdAttr.value,
+                    event.startNumberOfDaysSinceDiagnosis
+                );
+            }
+        });
+    }
+    return collectionDayMap;
 }
 
 export function clinicalAttributeListForSamples(
@@ -334,6 +343,12 @@ class SampleManager {
         return this.samples.map((sample: ClinicalDataBySampleId) => sample.id);
     }
 
+    getActiveSampleIdsInOrder(): string[] {
+        return this.getSampleIdsInOrder().filter(s =>
+            this.sampleIdsInHeader.includes(s)
+        );
+    }
+
     @computed get sampleIdToIndexMap() {
         let indexMap: { [sampleId: string]: number } = {};
         this.samples.forEach((sample, index) => {
@@ -351,6 +366,19 @@ class SampleManager {
             return this.sampleLabels[sampleId];
         }
         return '';
+    }
+
+    isOnlySequentialOrderingAvailable(events?: ClinicalEvent[]) {
+        let isOnlySequentialOrderingAvailable = true;
+        if (events) {
+            // when all samples do NOT have "daysSinceDiagnosis" data points, force sequential mode
+            isOnlySequentialOrderingAvailable = !(
+                events.length >= this.sampleOrder.length &&
+                getSpecimenCollectionDayMap(this.sampleOrder, events).size ===
+                    this.sampleOrder.length
+            );
+        }
+        return isOnlySequentialOrderingAvailable;
     }
 }
 

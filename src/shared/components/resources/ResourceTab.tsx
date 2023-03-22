@@ -9,6 +9,8 @@ import autobind from 'autobind-decorator';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { ResourceData } from 'cbioportal-ts-api-client';
 import { buildPDFUrl, getFileExtension } from './ResourcesTableUtils';
+import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
+import { getDigitalSlideArchiveIFrameUrl } from 'shared/api/urls';
 
 export interface IResourceTabProps {
     resourceData: ResourceData[];
@@ -140,12 +142,10 @@ export default class ResourceTab extends React.Component<
                             </a>
                         </div>
                     ) : (
-                        <iframe
-                            src={this.iframeUrl}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                            }}
+                        <IFrameLoader
+                            url={this.iframeUrl}
+                            height={this.iframeHeight}
+                            width={'100%'}
                         />
                     )}
                     {multipleData && (

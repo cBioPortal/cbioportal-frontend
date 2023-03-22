@@ -9,8 +9,8 @@ import {
     ResultsViewPageStore,
     ModifyQueryParams,
     CaseAggregatedData,
-    AlterationTypeConstants,
 } from '../ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
     getSingleGeneResultKey,
     getMultipleGeneResultKey,

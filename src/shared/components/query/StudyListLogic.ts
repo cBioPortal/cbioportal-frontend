@@ -10,14 +10,11 @@ import {
 } from 'cbioportal-ts-api-client';
 import { QueryStore } from './QueryStore';
 import { computed, action, makeObservable } from 'mobx';
-import {
-    parse_search_query,
-    perform_search_single,
-    SearchResult,
-} from '../../lib/textQueryUtils';
+import { performSearchSingle } from '../../lib/query/textQueryUtils';
 import { cached } from 'mobxpromise';
 import { ServerConfigHelpers } from '../../../config/config';
 import memoize from 'memoize-weak-decorator';
+import { SearchResult } from 'shared/components/query/filteredSearch/SearchClause';
 
 export const PAN_CAN_SIGNATURE = 'pan_can_atlas';
 
@@ -47,19 +44,12 @@ export default class StudyListLogic {
 
     @cached @computed get map_node_filterBySearchText() {
         // first compute individual node match results
-        let parsedQuery = parse_search_query(this.store.searchText);
         let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
 
-        for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
-            let searchTerms = meta.searchTerms;
-            if (node.hasOwnProperty('studyId')) {
-                searchTerms += (node as CancerStudy).studyId
-                    ? (node as CancerStudy).studyId
-                    : '';
-            }
+        for (const study of this.store.treeData.map_node_meta.keys()) {
             map_node_searchResult.set(
-                node,
-                perform_search_single(parsedQuery, searchTerms)
+                study,
+                performSearchSingle(this.store.searchClauses, study)
             );
         }
 

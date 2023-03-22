@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { CoverageInformation } from './GenePanelUtils';
+import { GenePanelData } from 'cbioportal-ts-api-client';
 
 export function isSampleProfiled(
     uniqueSampleKey: string,
@@ -80,4 +81,25 @@ export function isSampleProfiledInMultiple(
             molecularProfileId => !!profiledReport[molecularProfileId]
         );
     }
+}
+
+export interface IGenePanelDataByProfileIdAndSample {
+    [profileId: string]: {
+        [sampleId: string]: GenePanelData;
+    };
+}
+
+export function isSampleProfiledInProfile(
+    genePanelMap: IGenePanelDataByProfileIdAndSample,
+    profileId: string | undefined,
+    sampleId: string | undefined
+) {
+    return (
+        !!profileId &&
+        !!genePanelMap &&
+        !!sampleId &&
+        profileId in genePanelMap &&
+        sampleId in genePanelMap[profileId] &&
+        genePanelMap[profileId][sampleId].profiled === true
+    );
 }

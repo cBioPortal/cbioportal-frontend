@@ -99,21 +99,11 @@ export default class Oncoprinter extends React.Component<
             get annotateDriversOncoKbError() {
                 return self.props.store.didOncoKbFail;
             },
-            get annotateDriversCBioPortal() {
-                return self.props.store.driverAnnotationSettings
-                    .cbioportalCount;
-            },
             get hidePutativePassengers() {
                 return !self.props.store.driverAnnotationSettings.includeVUS;
             },
             get hideGermlineMutations() {
                 return self.props.store.hideGermlineMutations;
-            },
-            get annotateCBioPortalInputValue() {
-                return (
-                    self.props.store.driverAnnotationSettings
-                        .cbioportalCountThreshold + ''
-                );
             },
             get sortByDrivers() {
                 return self.sortByDrivers;
@@ -140,6 +130,18 @@ export default class Oncoprinter extends React.Component<
                 } else {
                     return undefined;
                 }
+            },
+            get isLoggedIn() {
+                // do nothing in oncoprinter mode:
+                return false;
+            },
+            get isClinicalTrackConfigDirty() {
+                // do nothing in oncoprinter mode:
+                return false;
+            },
+            get isSessionServiceEnabled() {
+                // do nothing in oncoprinter mode:
+                return false;
             },
         });
     }
@@ -181,7 +183,6 @@ export default class Oncoprinter extends React.Component<
             onSelectDistinguishDrivers: action((s: boolean) => {
                 if (!s) {
                     this.props.store.driverAnnotationSettings.oncoKb = false;
-                    this.props.store.driverAnnotationSettings.cbioportalCount = false;
                     this.props.store.driverAnnotationSettings.customBinary = false;
                     this.props.store.driverAnnotationSettings.includeVUS = true;
                 } else {
@@ -192,7 +193,6 @@ export default class Oncoprinter extends React.Component<
                         this.props.store.driverAnnotationSettings.oncoKb = true;
                     }
 
-                    this.props.store.driverAnnotationSettings.cbioportalCount = true;
                     this.props.store.driverAnnotationSettings.customBinary = true;
                 }
             }),

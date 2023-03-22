@@ -10,10 +10,10 @@ import {
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
-    AlterationTypeConstants,
-    DataTypeConstants,
+    allowExpressionProfiles,
     ResultsViewPageStore,
 } from '../ResultsViewPageStore';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { Button, FormControl } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
 import Select from 'react-select';
@@ -271,11 +271,11 @@ const mutationCountByOptions = [
     { value: MutationCountBy.DriverVsVUS, label: 'Driver vs VUS' },
 ];
 const structuralVariantCountByOptions = [
-    { value: StructuralVariantCountBy.VariantType, label: 'Variant Type' },
     {
         value: StructuralVariantCountBy.MutatedVsWildType,
         label: 'Variant vs No Variant',
     },
+    { value: StructuralVariantCountBy.VariantType, label: 'Variant Type' },
 ];
 
 const discreteVsDiscretePlotTypeOptions = [
@@ -792,7 +792,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
                 // otherwise, pick the default based on available options
                 const dataTypeOptions = dataTypeOptionsPromise.result!;
-                if (this._dataType === undefined && dataTypeOptions.length) {
+
+                // due to legacy urls, it's possible that selections can be made which
+                // are no longer avaiable.  this handles that case
+                const selectedDataTypeDoesNotExist = !_.some(
+                    dataTypeOptions,
+                    o =>
+                        this._dataType === NONE_SELECTED_OPTION_STRING_VALUE ||
+                        o.value === this._dataType
+                );
+
+                if (
+                    (this._dataType === undefined && dataTypeOptions.length) ||
+                    selectedDataTypeDoesNotExist
+                ) {
                     // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (
                         isAlterationTypePresent(
@@ -900,7 +913,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             get structuralVariantCountBy() {
                 if (this._structuralVariantCountBy === undefined) {
                     // default
-                    return StructuralVariantCountBy.VariantType;
+                    return StructuralVariantCountBy.MutatedVsWildType;
                 } else {
                     return this._structuralVariantCountBy;
                 }
@@ -909,7 +922,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this._structuralVariantCountBy = s;
             },
             get logScale() {
-                return this._logScale && logScalePossible(this);
+                //const horzAxisData = self.horzAxisDataPromise.result;
+                const axisData = vertical
+                    ? self.vertAxisDataPromise.result
+                    : self.horzAxisDataPromise.result;
+                return this._logScale && logScalePossible(this, axisData);
             },
             set logScale(v: boolean) {
                 this._logScale = v;
@@ -3269,6 +3286,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const axisIsStringData =
             axisDataPromise.isComplete && isStringData(axisDataPromise.result!);
 
+        // some structural variant data lacks variantClass data.  if none of the SV data has variantClass, then we
+        // we don't want to allow the data to be viewed by variantClass (Variant Type in UI) so remove
+        // that from the options
+        const filterStructuralVariantOptions = _.every(
+            this.props.store.structuralVariants.result,
+            sv => {
+                return !sv.variantClass || sv.variantClass === 'NA';
+            }
+        )
+            ? structuralVariantCountByOptions.filter(
+                  option =>
+                      option.value !== StructuralVariantCountBy.VariantType
+              )
+            : structuralVariantCountByOptions;
+
         switch (axisSelection.dataType) {
             case CLIN_ATTR_DATA_TYPE:
                 dataSourceLabel = 'Clinical Attribute';
@@ -3284,7 +3316,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
                 dataSourceLabel = 'Group Structural variants by';
                 dataSourceValue = axisSelection.structuralVariantCountBy;
-                dataSourceOptions = structuralVariantCountByOptions;
+                dataSourceOptions = filterStructuralVariantOptions;
                 onDataSourceChange = vertical
                     ? this.onVerticalAxisStructuralVariantCountBySelect
                     : this.onHorizontalAxisStructuralVariantCountBySelect;
@@ -3528,7 +3560,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 </div>
                             </div>
                         )}
-                    {logScalePossible(axisSelection) && (
+                    {logScalePossible(
+                        axisSelection,
+                        axisDataPromise.result
+                    ) && (
                         <div className="checkbox">
                             <label>
                                 <input
@@ -3537,7 +3572,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     name={
                                         vertical
                                             ? 'vert_logScale'
-                                            : 'vert_logScale'
+                                            : 'horz_logScale'
                                     }
                                     value={
                                         vertical
@@ -5474,6 +5509,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         store={this.props.store}
                         tabReflectsOql={false}
                     />
+
+                    {!allowExpressionProfiles(
+                        this.props.store.studies.result
+                    ) && (
+                        <div className={'alert alert-info'}>
+                            Expression data cannot be compared across the
+                            selected studies.
+                        </div>
+                    )}
+
                     <AlterationFilterWarning
                         store={this.props.store}
                         isUnaffected={true}

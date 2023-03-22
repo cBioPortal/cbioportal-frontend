@@ -16,12 +16,12 @@ import {
     decideMolecularProfileSortingOrder,
     generateStructuralDownloadData,
 } from './DownloadUtils';
+import { ExtendedAlteration } from '../ResultsViewPageStore';
+import oql_parser, { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
-    ExtendedAlteration,
-} from '../ResultsViewPageStore';
-import oql_parser, { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+} from 'shared/model/AnnotatedMutation';
 
 describe('DownloadUtils', () => {
     const genes = [
@@ -45,7 +45,7 @@ describe('DownloadUtils', () => {
         },
     ];
 
-    const samples = [
+    const samples = ([
         {
             uniqueSampleKey: 'UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3',
             uniquePatientKey: 'UC0wMDAwMzc4Om1za19pbXBhY3RfMjAxNw',
@@ -62,7 +62,7 @@ describe('DownloadUtils', () => {
             patientId: 'TCGA-EE-A20C',
             studyId: 'skcm_tcga',
         },
-    ] as Sample[];
+    ] as unknown) as Sample[];
 
     const sampleDataWithNoAlteration: (ExtendedAlteration &
         AnnotatedMutation)[] = [];

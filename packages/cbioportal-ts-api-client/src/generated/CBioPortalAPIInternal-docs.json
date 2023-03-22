@@ -146,10 +146,9 @@
             "required": false,
             "type": "string",
             "default": "SAMPLE",
-            "allowEmptyValue": false,
             "enum": [
-              "SAMPLE",
-              "PATIENT"
+              "PATIENT",
+              "SAMPLE"
             ]
           },
           {
@@ -172,8 +171,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/cache": {
@@ -188,20 +186,19 @@
         ],
         "parameters": [
           {
-            "name": "X-API-KEY",
-            "in": "header",
-            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "springManagedCache",
             "in": "query",
             "description": "Clear Spring-managed caches",
             "required": false,
             "type": "boolean",
-            "default": true,
-            "allowEmptyValue": false
+            "default": true
+          },
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -211,8 +208,7 @@
               "type": "string"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/cache/{studyId}": {
@@ -227,25 +223,24 @@
         ],
         "parameters": [
           {
-            "name": "X-API-KEY",
-            "in": "header",
-            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "springManagedCache",
             "in": "query",
             "description": "Clear Spring-managed caches",
             "required": false,
             "type": "boolean",
-            "default": true,
-            "allowEmptyValue": false
+            "default": true
           },
           {
             "name": "studyId",
             "in": "path",
             "description": "studyId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
             "required": true,
             "type": "string"
           }
@@ -257,8 +252,7 @@
               "type": "string"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/clinical-attributes/counts/fetch": {
@@ -295,8 +289,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/clinical-data-bin-counts/fetch": {
@@ -329,10 +322,9 @@
             "required": false,
             "type": "string",
             "default": "DYNAMIC",
-            "allowEmptyValue": false,
             "enum": [
-              "STATIC",
-              "DYNAMIC"
+              "DYNAMIC",
+              "STATIC"
             ]
           }
         ],
@@ -346,8 +338,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/clinical-data-counts/fetch": {
@@ -384,8 +375,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/clinical-data-density-plot/fetch": {
@@ -416,8 +406,7 @@
             "in": "query",
             "description": "Clinical Attribute ID of the X axis",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "xAxisBinCount",
@@ -426,16 +415,14 @@
             "required": false,
             "type": "integer",
             "default": 50,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "xAxisEnd",
             "in": "query",
             "description": "Starting point of the X axis, if different than largest value",
             "required": false,
-            "type": "number",
-            "allowEmptyValue": false
+            "type": "number"
           },
           {
             "name": "xAxisLogScale",
@@ -443,25 +430,21 @@
             "description": "Use log scale for X axis",
             "required": false,
             "type": "boolean",
-            "default": false,
-            "allowEmptyValue": false,
-            "x-example": false
+            "default": false
           },
           {
             "name": "xAxisStart",
             "in": "query",
             "description": "Starting point of the X axis, if different than smallest value",
             "required": false,
-            "type": "number",
-            "allowEmptyValue": false
+            "type": "number"
           },
           {
             "name": "yAxisAttributeId",
             "in": "query",
             "description": "Clinical Attribute ID of the Y axis",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "yAxisBinCount",
@@ -470,16 +453,14 @@
             "required": false,
             "type": "integer",
             "default": 50,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "yAxisEnd",
             "in": "query",
             "description": "Starting point of the Y axis, if different than largest value",
             "required": false,
-            "type": "number",
-            "allowEmptyValue": false
+            "type": "number"
           },
           {
             "name": "yAxisLogScale",
@@ -487,17 +468,14 @@
             "description": "Use log scale for Y axis",
             "required": false,
             "type": "boolean",
-            "default": false,
-            "allowEmptyValue": false,
-            "x-example": false
+            "default": false
           },
           {
             "name": "yAxisStart",
             "in": "query",
             "description": "Starting point of the Y axis, if different than smallest value",
             "required": false,
-            "type": "number",
-            "allowEmptyValue": false
+            "type": "number"
           }
         ],
         "responses": {
@@ -507,8 +485,7 @@
               "$ref": "#/definitions/DensityPlotData"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/clinical-data-enrichments/fetch": {
@@ -545,8 +522,95 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
+      }
+    },
+    "/clinical-data-table/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch clinical data for the Clinical Tab of Study View",
+        "operationId": "fetchClinicalDataClinicalTableUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "maximum": 1000000,
+            "exclusiveMaximum": false,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "searchTerm",
+            "in": "query",
+            "description": "Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "clinicalAttributeId",
+              "value"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ClinicalDataCollection"
+            }
+          }
+        }
       }
     },
     "/clinical-data-violin-plots/fetch": {
@@ -568,24 +632,21 @@
             "in": "query",
             "description": "Ending point  of the violin plot axis, if different than largest value",
             "required": false,
-            "type": "number",
-            "allowEmptyValue": false
+            "type": "number"
           },
           {
             "name": "axisStart",
             "in": "query",
             "description": "Starting point of the violin plot axis, if different than smallest value",
             "required": false,
-            "type": "number",
-            "allowEmptyValue": false
+            "type": "number"
           },
           {
             "name": "categoricalAttributeId",
             "in": "query",
             "description": "Clinical Attribute ID of the categorical attribute",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "logScale",
@@ -593,9 +654,7 @@
             "description": "Use log scale for the numerical attribute",
             "required": false,
             "type": "boolean",
-            "default": false,
-            "allowEmptyValue": false,
-            "x-example": false
+            "default": false
           },
           {
             "name": "numCurvePoints",
@@ -603,16 +662,14 @@
             "description": "Number of points in the curve",
             "required": false,
             "type": "number",
-            "default": 100,
-            "allowEmptyValue": false
+            "default": 100
           },
           {
             "name": "numericalAttributeId",
             "in": "query",
             "description": "Clinical Attribute ID of the numerical attribute",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "sigmaMultiplier",
@@ -620,8 +677,7 @@
             "description": "Sigma stepsize multiplier",
             "required": false,
             "type": "number",
-            "default": 1,
-            "allowEmptyValue": false
+            "default": 1
           },
           {
             "in": "body",
@@ -640,8 +696,44 @@
               "$ref": "#/definitions/ClinicalViolinPlotData"
             }
           }
-        },
-        "deprecated": false
+        }
+      }
+    },
+    "/clinical-event-type-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Get Counts of Clinical Event Types by Study View Filter",
+        "operationId": "getClinicalEventTypeCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalEventTypeCount"
+              }
+            }
+          }
+        }
       }
     },
     "/cna-genes/fetch": {
@@ -678,8 +770,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/cosmic-counts/fetch": {
@@ -719,8 +810,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/custom-data-counts/fetch": {
@@ -757,8 +847,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/custom-driver-annotation-report/fetch": {
@@ -795,8 +884,7 @@
               "$ref": "#/definitions/CustomDriverAnnotationReport"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/data-access-token": {
@@ -848,8 +936,7 @@
               "type": "string"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/data-access-tokens": {
@@ -904,8 +991,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       },
       "post": {
         "tags": [
@@ -958,8 +1044,7 @@
               "$ref": "#/definitions/DataAccessToken"
             }
           }
-        },
-        "deprecated": false
+        }
       },
       "delete": {
         "tags": [
@@ -1006,8 +1091,7 @@
           "200": {
             "description": "OK"
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/data-access-tokens/{token}": {
@@ -1036,8 +1120,7 @@
               "$ref": "#/definitions/DataAccessToken"
             }
           }
-        },
-        "deprecated": false
+        }
       },
       "delete": {
         "tags": [
@@ -1061,8 +1144,7 @@
           "200": {
             "description": "OK"
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/expression-enrichments/fetch": {
@@ -1086,10 +1168,9 @@
             "required": false,
             "type": "string",
             "default": "SAMPLE",
-            "allowEmptyValue": false,
             "enum": [
-              "SAMPLE",
-              "PATIENT"
+              "PATIENT",
+              "SAMPLE"
             ]
           },
           {
@@ -1115,8 +1196,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/filtered-samples/fetch": {
@@ -1139,9 +1219,7 @@
             "description": "Whether to negate the study view filters",
             "required": false,
             "type": "boolean",
-            "default": false,
-            "allowEmptyValue": false,
-            "x-example": false
+            "default": false
           },
           {
             "in": "body",
@@ -1163,8 +1241,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/generic-assay-data-bin-counts/fetch": {
@@ -1188,10 +1265,9 @@
             "required": false,
             "type": "string",
             "default": "DYNAMIC",
-            "allowEmptyValue": false,
             "enum": [
-              "STATIC",
-              "DYNAMIC"
+              "DYNAMIC",
+              "STATIC"
             ]
           },
           {
@@ -1214,8 +1290,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/generic-assay-data-counts/fetch": {
@@ -1252,8 +1327,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/generic-assay-enrichments/fetch": {
@@ -1277,10 +1351,9 @@
             "required": false,
             "type": "string",
             "default": "SAMPLE",
-            "allowEmptyValue": false,
             "enum": [
-              "SAMPLE",
-              "PATIENT"
+              "PATIENT",
+              "SAMPLE"
             ]
           },
           {
@@ -1306,8 +1379,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/geneset-hierarchy/fetch": {
@@ -1329,8 +1401,7 @@
             "in": "query",
             "description": "Genetic Profile ID e.g. gbm_tcga_gsva_scores. The final hierarchy  will only include gene sets scored in the specified profile.",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "percentile",
@@ -1343,8 +1414,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pvalueThreshold",
@@ -1357,8 +1427,7 @@
             "exclusiveMaximum": false,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "double",
-            "allowEmptyValue": false
+            "format": "double"
           },
           {
             "in": "body",
@@ -1377,8 +1446,7 @@
             "in": "query",
             "description": "Identifier of pre-defined sample list with samples to query, e.g. brca_tcga_all",
             "required": false,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "scoreThreshold",
@@ -1391,8 +1459,7 @@
             "exclusiveMaximum": false,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "double",
-            "allowEmptyValue": false
+            "format": "double"
           }
         ],
         "responses": {
@@ -1405,8 +1472,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/genesets": {
@@ -1429,8 +1495,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -1443,8 +1508,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "projection",
@@ -1453,12 +1517,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           }
         ],
@@ -1472,8 +1535,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/genesets/fetch": {
@@ -1513,8 +1575,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/genesets/version": {
@@ -1534,8 +1595,7 @@
               "type": "string"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/genesets/{genesetId}": {
@@ -1564,8 +1624,7 @@
               "$ref": "#/definitions/Geneset"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/genesets/{genesetId}/expression-correlation/fetch": {
@@ -1593,8 +1652,7 @@
             "exclusiveMaximum": false,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "double",
-            "allowEmptyValue": false
+            "format": "double"
           },
           {
             "name": "genesetId",
@@ -1608,8 +1666,7 @@
             "in": "query",
             "description": "Genetic Profile ID e.g. gbm_tcga_gsva_scores",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "in": "body",
@@ -1628,8 +1685,7 @@
             "in": "query",
             "description": "Identifier of pre-defined sample list with samples to query, e.g. brca_tcga_all",
             "required": false,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           }
         ],
         "responses": {
@@ -1642,8 +1698,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/genetic-profiles/{geneticProfileId}/geneset-genetic-data/fetch": {
@@ -1687,8 +1742,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/genomic-data-bin-counts/fetch": {
@@ -1712,10 +1766,9 @@
             "required": false,
             "type": "string",
             "default": "DYNAMIC",
-            "allowEmptyValue": false,
             "enum": [
-              "STATIC",
-              "DYNAMIC"
+              "DYNAMIC",
+              "STATIC"
             ]
           },
           {
@@ -1738,8 +1791,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/molecular-profile-sample-counts/fetch": {
@@ -1776,8 +1828,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/molecular-profiles/co-expressions/fetch": {
@@ -1808,16 +1859,14 @@
             "in": "query",
             "description": "Molecular Profile ID from the Genetic Entity referenced in the co-expression filter e.g. acc_tcga_rna_seq_v2_mrna",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "molecularProfileIdB",
             "in": "query",
             "description": "Molecular Profile ID (can be the same as molecularProfileIdA) e.g. acc_tcga_rna_seq_v2_mrna",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "threshold",
@@ -1826,8 +1875,7 @@
             "required": false,
             "type": "number",
             "default": 0.3,
-            "format": "double",
-            "allowEmptyValue": false
+            "format": "double"
           }
         ],
         "responses": {
@@ -1840,8 +1888,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/molecular-profiles/{molecularProfileId}/discrete-copy-number-counts/fetch": {
@@ -1888,8 +1935,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/molecular-profiles/{molecularProfileId}/mrna-percentile/fetch": {
@@ -1931,8 +1977,7 @@
             "in": "query",
             "description": "Sample ID e.g. TCGA-OR-A5J2-01",
             "required": true,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           }
         ],
         "responses": {
@@ -1945,8 +1990,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/molecular-profiles/{molecularProfileId}/mutation-spectrums/fetch": {
@@ -1990,8 +2034,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/molecular-profiles/{molecularProfileId}/variant-counts/fetch": {
@@ -2038,8 +2081,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/mutated-genes/fetch": {
@@ -2076,8 +2118,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/mutation-counts-by-position/fetch": {
@@ -2117,8 +2158,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/reference-genome-genes/{genomeName}": {
@@ -2150,8 +2190,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/reference-genome-genes/{genomeName}/fetch": {
@@ -2198,8 +2237,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/reference-genome-genes/{genomeName}/{geneId}": {
@@ -2236,8 +2274,7 @@
               "$ref": "#/definitions/ReferenceGenomeGene"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/resource-definitions/fetch": {
@@ -2261,12 +2298,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -2292,8 +2328,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/sample-lists-counts/fetch": {
@@ -2330,8 +2365,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/structural-variant/fetch": {
@@ -2349,46 +2383,9 @@
         ],
         "parameters": [
           {
-            "name": "entrezGeneIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "collectionFormat": "multi",
-            "maximum": 10000000,
-            "minimum": 0
-          },
-          {
-            "name": "molecularProfileIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi",
-            "maximum": 10000000,
-            "minimum": 0
-          },
-          {
-            "name": "sampleMolecularIdentifiers[0].molecularProfileId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "sampleMolecularIdentifiers[0].sampleId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "structuralVariantFilter",
-            "description": "List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers",
+            "description": "List of entrezGeneIds, structural variant queries and molecularProfileIds or sampleMolecularIdentifiers",
             "required": true,
             "schema": {
               "$ref": "#/definitions/StructuralVariantFilter"
@@ -2405,8 +2402,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/structuralvariant-genes/fetch": {
@@ -2443,8 +2439,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/clinical-events": {
@@ -2465,7 +2460,6 @@
             "required": false,
             "type": "string",
             "default": "ASC",
-            "allowEmptyValue": false,
             "enum": [
               "ASC",
               "DESC"
@@ -2480,8 +2474,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -2494,8 +2487,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "projection",
@@ -2504,12 +2496,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -2518,11 +2509,10 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
-            "allowEmptyValue": false,
             "enum": [
+              "endNumberOfDaysSinceDiagnosis",
               "eventType",
-              "startNumberOfDaysSinceDiagnosis",
-              "endNumberOfDaysSinceDiagnosis"
+              "startNumberOfDaysSinceDiagnosis"
             ]
           },
           {
@@ -2543,8 +2533,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/patients/{patientId}/clinical-events": {
@@ -2565,7 +2554,6 @@
             "required": false,
             "type": "string",
             "default": "ASC",
-            "allowEmptyValue": false,
             "enum": [
               "ASC",
               "DESC"
@@ -2580,8 +2568,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -2594,8 +2581,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "patientId",
@@ -2611,12 +2597,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -2625,11 +2610,10 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
-            "allowEmptyValue": false,
             "enum": [
+              "endNumberOfDaysSinceDiagnosis",
               "eventType",
-              "startNumberOfDaysSinceDiagnosis",
-              "endNumberOfDaysSinceDiagnosis"
+              "startNumberOfDaysSinceDiagnosis"
             ]
           },
           {
@@ -2650,8 +2634,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/patients/{patientId}/resource-data": {
@@ -2672,7 +2655,6 @@
             "required": false,
             "type": "string",
             "default": "ASC",
-            "allowEmptyValue": false,
             "enum": [
               "ASC",
               "DESC"
@@ -2687,8 +2669,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -2701,8 +2682,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "patientId",
@@ -2718,12 +2698,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -2731,8 +2710,7 @@
             "in": "query",
             "description": "Resource ID",
             "required": false,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "sortBy",
@@ -2740,7 +2718,6 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
-            "allowEmptyValue": false,
             "enum": [
               "ResourceId",
               "url"
@@ -2764,8 +2741,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/resource-data": {
@@ -2786,7 +2762,6 @@
             "required": false,
             "type": "string",
             "default": "ASC",
-            "allowEmptyValue": false,
             "enum": [
               "ASC",
               "DESC"
@@ -2801,8 +2776,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -2815,8 +2789,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "projection",
@@ -2825,12 +2798,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -2838,8 +2810,7 @@
             "in": "query",
             "description": "Resource ID",
             "required": false,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "sortBy",
@@ -2847,7 +2818,6 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
-            "allowEmptyValue": false,
             "enum": [
               "ResourceId",
               "url"
@@ -2871,8 +2841,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/resource-definitions": {
@@ -2893,7 +2862,6 @@
             "required": false,
             "type": "string",
             "default": "ASC",
-            "allowEmptyValue": false,
             "enum": [
               "ASC",
               "DESC"
@@ -2908,8 +2876,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -2922,8 +2889,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "projection",
@@ -2932,12 +2898,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -2946,14 +2911,13 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
-            "allowEmptyValue": false,
             "enum": [
-              "resourceId",
-              "displayName",
               "description",
-              "resourceType",
-              "priority",
+              "displayName",
               "openByDefault",
+              "priority",
+              "resourceId",
+              "resourceType",
               "studyId"
             ]
           },
@@ -2975,8 +2939,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/resource-definitions/{resourceId}": {
@@ -3012,8 +2975,7 @@
               "$ref": "#/definitions/ResourceDefinition"
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/samples/{sampleId}/resource-data": {
@@ -3034,7 +2996,6 @@
             "required": false,
             "type": "string",
             "default": "ASC",
-            "allowEmptyValue": false,
             "enum": [
               "ASC",
               "DESC"
@@ -3049,8 +3010,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -3063,8 +3023,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "projection",
@@ -3073,12 +3032,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -3086,8 +3044,7 @@
             "in": "query",
             "description": "Resource ID",
             "required": false,
-            "type": "string",
-            "allowEmptyValue": false
+            "type": "string"
           },
           {
             "name": "sampleId",
@@ -3102,7 +3059,6 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
-            "allowEmptyValue": false,
             "enum": [
               "ResourceId",
               "url"
@@ -3126,8 +3082,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/significant-copy-number-regions": {
@@ -3148,7 +3103,6 @@
             "required": false,
             "type": "string",
             "default": "ASC",
-            "allowEmptyValue": false,
             "enum": [
               "ASC",
               "DESC"
@@ -3163,8 +3117,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -3177,8 +3130,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "projection",
@@ -3187,12 +3139,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -3201,14 +3152,13 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
-            "allowEmptyValue": false,
             "enum": [
+              "amp",
               "chromosome",
               "cytoband",
-              "widePeakStart",
-              "widePeakEnd",
               "qValue",
-              "amp"
+              "widePeakEnd",
+              "widePeakStart"
             ]
           },
           {
@@ -3229,8 +3179,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/studies/{studyId}/significantly-mutated-genes": {
@@ -3251,7 +3200,6 @@
             "required": false,
             "type": "string",
             "default": "ASC",
-            "allowEmptyValue": false,
             "enum": [
               "ASC",
               "DESC"
@@ -3266,8 +3214,7 @@
             "default": 0,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "pageSize",
@@ -3280,8 +3227,7 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32",
-            "allowEmptyValue": false
+            "format": "int32"
           },
           {
             "name": "projection",
@@ -3290,12 +3236,11 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
-            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
               "DETAILED",
-              "META"
+              "ID",
+              "META",
+              "SUMMARY"
             ]
           },
           {
@@ -3304,14 +3249,13 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
-            "allowEmptyValue": false,
             "enum": [
               "entrezGeneId",
               "hugoGeneSymbol",
-              "rank",
               "numberOfMutations",
               "pValue",
-              "qValue"
+              "qValue",
+              "rank"
             ]
           },
           {
@@ -3332,8 +3276,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     },
     "/timestamps": {
@@ -3356,8 +3299,7 @@
               }
             }
           }
-        },
-        "deprecated": false
+        }
       }
     }
   },
@@ -3374,6 +3316,7 @@
         },
         "matchingGenePanelIds": {
           "type": "array",
+          "uniqueItems": true,
           "items": {
             "type": "string"
           }
@@ -3587,6 +3530,41 @@
       },
       "title": "ClinicalAttributeCountFilter"
     },
+    "ClinicalData": {
+      "type": "object",
+      "required": [
+        "clinicalAttributeId",
+        "patientId",
+        "studyId"
+      ],
+      "properties": {
+        "clinicalAttribute": {
+          "$ref": "#/definitions/ClinicalAttribute"
+        },
+        "clinicalAttributeId": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalData"
+    },
     "ClinicalDataBin": {
       "type": "object",
       "properties": {
@@ -3633,10 +3611,10 @@
         "binMethod": {
           "type": "string",
           "enum": [
-            "MEDIAN",
-            "QUARTILE",
             "CUSTOM",
-            "GENERATE"
+            "GENERATE",
+            "MEDIAN",
+            "QUARTILE"
           ]
         },
         "binsGeneratorConfig": {
@@ -3659,6 +3637,24 @@
         }
       },
       "title": "ClinicalDataBinFilter"
+    },
+    "ClinicalDataCollection": {
+      "type": "object",
+      "properties": {
+        "patientClinicalData": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalData"
+          }
+        },
+        "sampleClinicalData": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalData"
+          }
+        }
+      },
+      "title": "ClinicalDataCollection"
     },
     "ClinicalDataCount": {
       "type": "object",
@@ -3798,6 +3794,19 @@
       },
       "title": "ClinicalEventData"
     },
+    "ClinicalEventTypeCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "eventType": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalEventTypeCount"
+    },
     "ClinicalViolinPlotBoxData": {
       "type": "object",
       "properties": {
@@ -3905,9 +3914,9 @@
           "type": "string",
           "enum": [
             "GENE",
+            "GENERIC_ASSAY",
             "GENESET",
-            "PHOSPHOPROTEIN",
-            "GENERIC_ASSAY"
+            "PHOSPHOPROTEIN"
           ]
         },
         "pValue": {
@@ -3992,6 +4001,7 @@
         },
         "matchingGenePanelIds": {
           "type": "array",
+          "uniqueItems": true,
           "items": {
             "type": "string"
           }
@@ -4082,6 +4092,7 @@
         },
         "tiers": {
           "type": "array",
+          "uniqueItems": true,
           "items": {
             "type": "string"
           }
@@ -4108,6 +4119,18 @@
         }
       },
       "title": "DataAccessToken"
+    },
+    "DataFilter": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          }
+        }
+      },
+      "title": "DataFilter"
     },
     "DataFilterValue": {
       "type": "object",
@@ -4189,6 +4212,7 @@
         },
         "molecularProfileIds": {
           "type": "array",
+          "uniqueItems": true,
           "items": {
             "type": "string"
           }
@@ -4205,8 +4229,8 @@
             "type": "string",
             "enum": [
               "AMP",
-              "GAIN",
               "DIPLOID",
+              "GAIN",
               "HETLOSS",
               "HOMDEL"
             ]
@@ -4295,10 +4319,10 @@
         "binMethod": {
           "type": "string",
           "enum": [
-            "MEDIAN",
-            "QUARTILE",
             "CUSTOM",
-            "GENERATE"
+            "GENERATE",
+            "MEDIAN",
+            "QUARTILE"
           ]
         },
         "binsGeneratorConfig": {
@@ -4608,10 +4632,10 @@
         "binMethod": {
           "type": "string",
           "enum": [
-            "MEDIAN",
-            "QUARTILE",
             "CUSTOM",
-            "GENERATE"
+            "GENERATE",
+            "MEDIAN",
+            "QUARTILE"
           ]
         },
         "binsGeneratorConfig": {
@@ -5197,9 +5221,9 @@
         "resourceType": {
           "type": "string",
           "enum": [
-            "STUDY",
+            "PATIENT",
             "SAMPLE",
-            "PATIENT"
+            "STUDY"
           ]
         },
         "studyId": {
@@ -5222,22 +5246,19 @@
         "patientId": {
           "type": "string"
         },
-        "profiledForFusions": {
-          "type": "boolean"
-        },
         "sampleId": {
           "type": "string"
         },
         "sampleType": {
           "type": "string",
           "enum": [
-            "Primary Solid Tumor",
-            "Recurrent Solid Tumor",
-            "Primary Blood Tumor",
-            "Recurrent Blood Tumor",
-            "Metastatic",
-            "Blood Derived Normal",
-            "Solid Tissues Normal"
+            "BLOOD_NORMAL",
+            "METASTATIC",
+            "PRIMARY_BLOOD_TUMOR",
+            "PRIMARY_SOLID_TUMOR",
+            "RECURRENT_BLOOD_TUMOR",
+            "RECURRENT_SOLID_TUMOR",
+            "SOLID_NORMAL"
           ]
         },
         "sequenced": {
@@ -5285,8 +5306,8 @@
         "time": {
           "type": "string",
           "enum": [
-            "Pre",
-            "Post"
+            "Post",
+            "Pre"
           ]
         },
         "treatment": {
@@ -5302,9 +5323,6 @@
           "type": "string"
         },
         "breakpointType": {
-          "type": "string"
-        },
-        "center": {
           "type": "string"
         },
         "comments": {
@@ -5331,15 +5349,18 @@
         "eventInfo": {
           "type": "string"
         },
-        "externalAnnotation": {
-          "type": "string"
-        },
         "length": {
           "type": "integer",
           "format": "int32"
         },
         "molecularProfileId": {
           "type": "string"
+        },
+        "namespaceColumns": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
         },
         "ncbiBuild": {
           "type": "string"
@@ -5372,6 +5393,9 @@
         "site1Chromosome": {
           "type": "string"
         },
+        "site1Contig": {
+          "type": "string"
+        },
         "site1Description": {
           "type": "string"
         },
@@ -5382,10 +5406,6 @@
           "type": "integer",
           "format": "int32"
         },
-        "site1Exon": {
-          "type": "integer",
-          "format": "int32"
-        },
         "site1HugoSymbol": {
           "type": "string"
         },
@@ -5393,7 +5413,17 @@
           "type": "integer",
           "format": "int32"
         },
+        "site1Region": {
+          "type": "string"
+        },
+        "site1RegionNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
         "site2Chromosome": {
+          "type": "string"
+        },
+        "site2Contig": {
           "type": "string"
         },
         "site2Description": {
@@ -5409,10 +5439,6 @@
           "type": "integer",
           "format": "int32"
         },
-        "site2Exon": {
-          "type": "integer",
-          "format": "int32"
-        },
         "site2HugoSymbol": {
           "type": "string"
         },
@@ -5420,7 +5446,17 @@
           "type": "integer",
           "format": "int32"
         },
+        "site2Region": {
+          "type": "string"
+        },
+        "site2RegionNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
         "studyId": {
+          "type": "string"
+        },
+        "svStatus": {
           "type": "string"
         },
         "tumorPairedEndReadCount": {
@@ -5458,9 +5494,7 @@
           "type": "array",
           "items": {
             "type": "integer",
-            "format": "int32",
-            "minimum": 0,
-            "maximum": 10000000
+            "format": "int32"
           }
         },
         "molecularProfileIds": {
@@ -5474,9 +5508,47 @@
           "items": {
             "$ref": "#/definitions/SampleMolecularIdentifier"
           }
+        },
+        "structuralVariantQueries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StructuralVariantQuery"
+          }
         }
       },
       "title": "StructuralVariantFilter"
+    },
+    "StructuralVariantGeneSubQuery": {
+      "type": "object",
+      "properties": {
+        "entrezId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "specialValue": {
+          "type": "string",
+          "enum": [
+            "ANY_GENE",
+            "NO_GENE"
+          ]
+        }
+      },
+      "title": "StructuralVariantGeneSubQuery"
+    },
+    "StructuralVariantQuery": {
+      "type": "object",
+      "properties": {
+        "gene1": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "gene2": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        }
+      },
+      "title": "StructuralVariantQuery"
     },
     "StudyViewFilter": {
       "type": "object",
@@ -5497,6 +5569,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ClinicalDataFilter"
+          }
+        },
+        "clinicalEventFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilter"
           }
         },
         "customDataFilters": {

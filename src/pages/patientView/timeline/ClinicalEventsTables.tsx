@@ -37,6 +37,9 @@ const ClinicalEventsTables: React.FunctionComponent<{
                         if (['PATIENT_ID'].includes(item)) {
                             aggr.push(i);
                         }
+                        if (/^STYLE_/.test(item)) {
+                            aggr.push(i);
+                        }
                         return aggr;
                     },
                     []

@@ -13,6 +13,7 @@ import { ExpressionEnrichmentRow } from 'shared/model/EnrichmentRow';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
+import { ContinousDataPvalueTooltip } from './EnrichmentsUtil';
 
 export interface IExpressionEnrichmentTableProps {
     visibleOrderedColumnNames?: string[];
@@ -24,12 +25,13 @@ export interface IExpressionEnrichmentTableProps {
     onGeneNameClick?: (hugoGeneSymbol: string, entrezGeneId: number) => void;
     checkedGenes?: string[];
     mutexTendency?: boolean;
+    groupSize?: number;
 }
 
 export enum ExpressionEnrichmentTableColumnType {
     GENE = 'GENE',
     CYTOBAND = 'CYTOBAND',
-    LOG_RATIO = 'Log Ratio',
+    LOG_RATIO = 'Log2 Ratio',
     P_VALUE = 'P_VALUE',
     Q_VALUE = 'Q_VALUE',
     TENDENCY = 'Tendency',
@@ -140,7 +142,9 @@ export default class ExpressionEnrichmentTable extends React.Component<
                     {toConditionalPrecision(d.pValue, 3, 0.01)}
                 </span>
             ),
-            tooltip: <span>Derived from Student's t-test</span>,
+            tooltip: (
+                <ContinousDataPvalueTooltip groupSize={this.props.groupSize} />
+            ),
             sortBy: (d: ExpressionEnrichmentRow) => d.pValue,
             download: (d: ExpressionEnrichmentRow) =>
                 toConditionalPrecision(d.pValue, 3, 0.01),

@@ -58,7 +58,7 @@ class Example extends React.Component {
         store={
           new DefaultMutationMapperStore(
             {hugoGeneSymbol: "TP53", entrezGeneId: 7157},
-            {isoformOverrideSource: "uniprot", filterMutationsBySelectedTranscript: true},
+            {isoformOverrideSource: "mskcc", filterMutationsBySelectedTranscript: true},
             () => [{
               chromosome: "17",
               startPosition: 41246256,

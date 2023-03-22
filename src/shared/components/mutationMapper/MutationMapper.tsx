@@ -4,6 +4,7 @@ import { action, computed, makeObservable } from 'mobx';
 import classnames from 'classnames';
 import {
     applyDataFilters,
+    AxisScale,
     DataFilterType,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
     FilterResetPanel,
@@ -42,9 +43,9 @@ import WindowStore from '../window/WindowStore';
 
 import styles from './mutationMapper.module.scss';
 import { ProteinImpactType } from 'cbioportal-frontend-commons';
-import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
-import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
-import { PtmSource } from 'cbioportal-utils';
+import DriverAnnotationProteinImpactTypeBadgeSelector from './DriverAnnotationProteinImpactTypeBadgeSelector';
+import { Mutation, PtmSource } from 'cbioportal-utils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -61,6 +62,7 @@ export interface IMutationMapperProps {
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
     showPlotDownloadControls?: boolean;
+    showPlotPercentToggle?: boolean;
     mutationTable?: JSX.Element;
     pubMedCache?: PubMedCache;
     showTranscriptDropDown?: boolean;
@@ -76,6 +78,15 @@ export interface IMutationMapperProps {
     onTranscriptChange?: (transcript: string) => void;
     onClickSettingMenu?: (visible: boolean) => void;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
+    plotLollipopTooltipCountInfo?: (
+        count: number,
+        mutations?: Partial<Mutation>[],
+        axisMode?: AxisScale,
+        group?: string
+    ) => JSX.Element;
+    plotYAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
+    axisMode?: AxisScale;
+    onScaleToggle?: (selectedScale: AxisScale) => void;
     compactStyle?: boolean;
     mergeOncoKbIcons?: boolean; // TODO add server config param for this as well?
 
@@ -454,7 +465,7 @@ export default class MutationMapper<
     }
 
     @computed
-    protected get mutationsGroupedByProteinImpactType() {
+    protected get sortedFilteredDataWithoutProteinImpactTypeFilter() {
         // there are two types of filters (with putative driver, without putative driver)
         const filtersWithoutProteinImpactTypeFilter = this.store.dataStore.dataFilters.filter(
             f =>
@@ -470,12 +481,18 @@ export default class MutationMapper<
             this.store.dataStore.applyFilter
         );
 
+        return sortedFilteredData;
+    }
+
+    @computed
+    protected get mutationsGroupedByProteinImpactType() {
         // also apply lazy mobx table search filter
-        sortedFilteredData = sortedFilteredData.filter(m =>
-            (this.store
-                .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
-                m
-            )
+        const sortedFilteredData = this.sortedFilteredDataWithoutProteinImpactTypeFilter.filter(
+            m =>
+                (this.store
+                    .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
+                    m
+                )
         );
 
         return this.groupDataByProteinImpactType(sortedFilteredData);
@@ -543,6 +560,19 @@ export default class MutationMapper<
                         : undefined
                 }
                 legend={this.legendColorCodes}
+                customControls={this.customControls}
+                topYAxisSymbol={this.plotTopYAxisSymbol}
+                bottomYAxisSymbol={this.plotBottomYAxisSymbol}
+                topYAxisDefaultMax={this.plotTopYAxisDefaultMax}
+                bottomYAxisDefaultMax={this.plotBottomYAxisDefaultMax}
+                yMaxLabelPostfix={this.plotYMaxLabelPostfix}
+                lollipopTooltipCountInfo={
+                    this.props.plotLollipopTooltipCountInfo
+                }
+                yAxisLabelFormatter={this.props.plotYAxisLabelFormatter}
+                axisMode={this.props.axisMode}
+                onScaleToggle={this.props.onScaleToggle}
+                showPercentToggle={this.props.showPlotPercentToggle}
             />
         );
     }

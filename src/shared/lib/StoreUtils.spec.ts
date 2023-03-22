@@ -31,13 +31,13 @@ import {
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import {
-    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
 } from 'pages/resultsView/ResultsViewPageStore';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { observable } from 'mobx';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 describe('StoreUtils', () => {
     let emptyMutationData: MobxPromise<Mutation[]>;
@@ -1065,8 +1065,6 @@ describe('StoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: true,
-                        cbioportalCount: false,
-                        cosmicCount: true,
                         customDriverBinary: false,
                     }),
                     { 1: { hugoGeneSymbol: 'mygene' } as Gene }
@@ -1108,8 +1106,6 @@ describe('StoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: true,
-                        cbioportalCount: false,
-                        cosmicCount: true,
                         customDriverBinary: false,
                     }),
                     {
@@ -1166,8 +1162,6 @@ describe('StoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: false,
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     }),
                     {
@@ -1214,15 +1208,11 @@ describe('StoreUtils', () => {
                             ? {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: true,
                               }
                             : {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: false,
                               },
                     {
@@ -1286,8 +1276,6 @@ describe('StoreUtils', () => {
                     () => ({
                         oncoKb: '',
                         hotspots: false,
-                        cbioportalCount: false,
-                        cosmicCount: false,
                         customDriverBinary: false,
                     }),
                     {
@@ -1340,15 +1328,11 @@ describe('StoreUtils', () => {
                             ? {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: true,
                               }
                             : {
                                   oncoKb: '',
                                   hotspots: false,
-                                  cbioportalCount: false,
-                                  cosmicCount: false,
                                   customDriverBinary: false,
                               },
                     {

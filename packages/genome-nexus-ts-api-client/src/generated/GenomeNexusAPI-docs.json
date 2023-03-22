@@ -1026,7 +1026,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/Version"
+              "$ref": "#/definitions/AggregateSourceInfo"
             }
           }
         }
@@ -1034,6 +1034,23 @@
     }
   },
   "definitions": {
+    "AggregateSourceInfo": {
+      "type": "object",
+      "properties": {
+        "annotationSourcesInfo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SourceVersionInfo"
+          }
+        },
+        "genomeNexus": {
+          "$ref": "#/definitions/GenomeNexusInfo"
+        },
+        "vep": {
+          "$ref": "#/definitions/VEPInfo"
+        }
+      }
+    },
     "AlleleCount": {
       "type": "object",
       "required": [
@@ -1764,6 +1781,17 @@
         "frequencies": {
           "description": "Frequencies",
           "$ref": "#/definitions/SignalPopulationStats"
+        }
+      }
+    },
+    "GenomeNexusInfo": {
+      "type": "object",
+      "properties": {
+        "database": {
+          "$ref": "#/definitions/Version"
+        },
+        "server": {
+          "$ref": "#/definitions/Version"
         }
       }
     },
@@ -3021,6 +3049,29 @@
         }
       }
     },
+    "SourceVersionInfo": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
     "StatsByTumorType": {
       "type": "object",
       "properties": {
@@ -3227,6 +3278,9 @@
           "type": "string",
           "description": "Hugo gene symbol"
         },
+        "isVue": {
+          "type": "boolean"
+        },
         "polyphenPrediction": {
           "type": "string",
           "description": "Polyphen Prediction"
@@ -3339,6 +3393,20 @@
           "type": "integer",
           "format": "int32",
           "description": "Strand UTR is on, -1 for - and 1 for +"
+        }
+      }
+    },
+    "VEPInfo": {
+      "type": "object",
+      "properties": {
+        "cache": {
+          "$ref": "#/definitions/Version"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "server": {
+          "$ref": "#/definitions/Version"
         }
       }
     },
@@ -3513,6 +3581,9 @@
         "variantType": {
           "type": "string",
           "description": "Variant type"
+        },
+        "vues": {
+          "$ref": "#/definitions/Vues"
         }
       }
     },
@@ -3536,7 +3607,52 @@
     "Version": {
       "type": "object",
       "properties": {
+        "static": {
+          "type": "boolean"
+        },
         "version": {
+          "type": "string"
+        }
+      }
+    },
+    "Vues": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "defaultEffect": {
+          "type": "string"
+        },
+        "genomicLocation": {
+          "type": "string"
+        },
+        "genomicLocationDescription": {
+          "type": "string"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "pubmedIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "referenceText": {
+          "type": "string"
+        },
+        "revisedProteinEffect": {
+          "type": "string"
+        },
+        "transcriptId": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "variantClassification": {
           "type": "string"
         }
       }

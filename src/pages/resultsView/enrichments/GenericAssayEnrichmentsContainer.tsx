@@ -286,6 +286,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
                             column => column.uniqueName || column.name
                         )}
                         genericAssayType={this.props.genericAssayType}
+                        groupSize={this.props.groups.length}
                     />
                 </div>
             </div>

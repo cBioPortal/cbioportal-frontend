@@ -4,7 +4,6 @@ import localForage from 'localforage';
 import {
     fetchVariantAnnotationsByMutation as fetchDefaultVariantAnnotationsByMutation,
     fetchVariantAnnotationsIndexedByGenomicLocation as fetchDefaultVariantAnnotationsIndexedByGenomicLocation,
-    OtherBiomarkersQueryType,
 } from 'react-mutation-mapper';
 import {
     CancerStudy,
@@ -48,16 +47,17 @@ import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {
     EvidenceType,
-    generateAnnotateStructuralVariantQuery,
-    generateCopyNumberAlterationQuery,
-    generateIdToIndicatorMap,
-    generateProteinChangeQuery,
-    generateQueryVariantId,
     IHotspotIndex,
     IOncoKbData,
-    generateAnnotateStructuralVariantQueryFromGenes,
     isLinearClusterHotspot,
 } from 'cbioportal-utils';
+import {
+    generateQueryVariantId,
+    generateProteinChangeQuery,
+    generateIdToIndicatorMap,
+    generateCopyNumberAlterationQuery,
+    generateAnnotateStructuralVariantQuery,
+} from 'oncokb-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
 import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
@@ -66,19 +66,16 @@ import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
 import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    DataTypeConstants,
     GENOME_NEXUS_ARG_FIELD_ENUM,
-    MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
-    MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from 'shared/constants';
 import {
-    AlterationTypeConstants,
-    AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
 } from '../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getServerConfig } from 'config/config';
-import { getFrontendAssetUrl } from 'shared/api/urls';
 import {
     AnnotateCopyNumberAlterationQuery,
     AnnotateStructuralVariantQuery,
@@ -98,7 +95,6 @@ import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
     FilteredAndAnnotatedDiscreteCNAReport,
-    FilteredAndAnnotatedMutationsReport,
     ONCOKB_ONCOGENIC_LOWERCASE,
 } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
@@ -109,6 +105,13 @@ import {
 import { ObservableMap } from 'mobx';
 import { chunkCalls } from 'cbioportal-utils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
+import eventBus from 'shared/events/eventBus';
+
+import { ErrorMessages } from 'shared/errorMessages';
+import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { FilteredAndAnnotatedMutationsReport } from './comparison/AnalysisStoreUtils';
+import { SiteError } from 'shared/model/appMisc';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
@@ -166,7 +169,7 @@ export async function fetchMutationData(
 export async function fetchVariantAnnotationsByMutation(
     mutations: Mutation[],
     fields: string[] = [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
-    isoformOverrideSource: string = 'uniprot',
+    isoformOverrideSource: string = 'mskcc',
     client: GenomeNexusAPI = genomeNexusClient
 ) {
     return fetchDefaultVariantAnnotationsByMutation(
@@ -180,7 +183,7 @@ export async function fetchVariantAnnotationsByMutation(
 export async function fetchVariantAnnotationsIndexedByGenomicLocation(
     mutations: Mutation[],
     fields: string[] = [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
-    isoformOverrideSource: string = 'uniprot',
+    isoformOverrideSource: string = 'mskcc',
     client: GenomeNexusAPI = genomeNexusClient
 ) {
     return fetchDefaultVariantAnnotationsIndexedByGenomicLocation(
@@ -758,13 +761,17 @@ export async function fetchGenePanel(
 export async function fetchOncoKbCancerGenes(
     client: OncoKbAPI = oncokbClient
 ): Promise<CancerGene[]> {
-    return await client.utilsCancerGeneListGetUsingGET_1({});
+    return await client.utilsCancerGeneListGetUsingGET_1({}).catch(d => {
+        return d;
+    });
 }
 
 export async function fetchOncoKbInfo(
     client: OncoKbAPI = oncokbClient
 ): Promise<OncoKBInfo> {
-    return await client.infoGetUsingGET_1({});
+    return await client.infoGetUsingGET_1({}).catch(d => {
+        return d;
+    });
 }
 
 export async function fetchOncoKbData(
@@ -865,14 +872,12 @@ export async function fetchStructuralVariantOncoKbData(
         );
         const queryVariants = _.uniqBy(
             _.map(alterationsToQuery, datum => {
-                return generateAnnotateStructuralVariantQueryFromGenes(
-                    datum.site1EntrezGeneId,
-                    datum.site2EntrezGeneId,
+                return generateAnnotateStructuralVariantQuery(
+                    datum,
                     cancerTypeForOncoKb(
                         datum.uniqueSampleKey,
                         uniqueSampleKeyToTumorType
-                    ),
-                    datum.variantClass.toUpperCase() as any
+                    )
                 );
             }),
             datum => datum.id
@@ -954,23 +959,6 @@ export async function queryOncoKbData(
         ),
         'id'
     );
-    const structuralQueryVariants = _.uniqBy(
-        _.map(
-            annotationQueries.filter(
-                mutation => mutation.mutationType === fusionMutationType
-            ),
-            (mutation: OncoKbAnnotationQuery) => {
-                return generateAnnotateStructuralVariantQuery(
-                    mutation.entrezGeneId,
-                    mutation.tumorType,
-                    mutation.alteration,
-                    mutation.mutationType,
-                    evidenceTypes
-                );
-            }
-        ),
-        'id'
-    );
 
     const mutationQueryResult: IndicatorQueryResp[] = await chunkCalls(
         chunk =>
@@ -981,17 +969,8 @@ export async function queryOncoKbData(
         250
     );
 
-    const structuralVariantQueryResult =
-        structuralQueryVariants.length === 0
-            ? []
-            : await client.annotateStructuralVariantsPostUsingPOST_1({
-                  body: structuralQueryVariants,
-              });
-
     const oncoKbData: IOncoKbData = {
-        indicatorMap: generateIdToIndicatorMap(
-            mutationQueryResult.concat(structuralVariantQueryResult)
-        ),
+        indicatorMap: generateIdToIndicatorMap(mutationQueryResult),
     };
 
     return oncoKbData;
@@ -1060,7 +1039,7 @@ export function findDiscreteMolecularProfile(
     }
 
     return molecularProfilesInStudy.result.find((p: MolecularProfile) => {
-        return p.datatype === 'DISCRETE';
+        return p.datatype === DataTypeConstants.DISCRETE;
     });
 }
 
@@ -1654,7 +1633,7 @@ export async function fetchOncoKbDataForOncoprint(
                 'ONCOGENIC'
             );
         } catch (e) {
-            result = new Error();
+            result = new Error(ErrorMessages.ONCOKB_LOAD_ERROR);
         }
         return result;
     } else {
@@ -1915,17 +1894,11 @@ export function evaluateMutationPutativeDriverInfo(
     oncoKbDatum: IndicatorQueryResp | undefined | null | false,
     hotspotAnnotationsActive: boolean,
     hotspotDriver: boolean,
-    cbioportalCountActive: boolean,
-    cbioportalCountExceeded: boolean,
-    cosmicCountActive: boolean,
-    cosmicCountExceeded: boolean,
     customDriverAnnotationsActive: boolean,
     customDriverTierSelection: ObservableMap<string, boolean> | undefined
 ) {
     const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
     const hotspots = hotspotAnnotationsActive && hotspotDriver;
-    const cbioportalCount = cbioportalCountActive && cbioportalCountExceeded;
-    const cosmicCount = cosmicCountActive && cosmicCountExceeded;
 
     // Set driverFilter to true when:
     // (1) custom drivers active in settings menu
@@ -1948,8 +1921,6 @@ export function evaluateMutationPutativeDriverInfo(
     return {
         oncoKb,
         hotspots,
-        cbioportalCount,
-        cosmicCount,
         customDriverBinary,
         customDriverTier,
     };
@@ -1999,8 +1970,6 @@ export function filterAndAnnotateMutations(
     ) => {
         oncoKb: string;
         hotspots: boolean;
-        cbioportalCount: boolean;
-        cosmicCount: boolean;
         customDriverBinary: boolean;
         customDriverTier?: string;
     },
@@ -2041,4 +2010,22 @@ export function filterAndAnnotateMutations(
         germline,
         vusAndGermline,
     };
+}
+
+export function buildProteinChange(sv: StructuralVariant) {
+    const genes: string[] = [];
+
+    if (sv.site1HugoSymbol) {
+        genes.push(sv.site1HugoSymbol);
+    }
+
+    if (sv.site2HugoSymbol && sv.site1HugoSymbol !== sv.site2HugoSymbol) {
+        genes.push(sv.site2HugoSymbol);
+    }
+
+    if (genes.length === 2) {
+        return `${genes[0]}-${genes[1]} Fusion`;
+    } else {
+        return `${genes[0]} intragenic`;
+    }
 }

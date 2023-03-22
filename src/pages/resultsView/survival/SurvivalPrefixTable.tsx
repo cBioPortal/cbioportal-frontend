@@ -27,6 +27,7 @@ export interface ISurvivalPrefixTableProps {
     groupNames: string[];
     getSelectedPrefix: () => string | undefined;
     setSelectedPrefix: (p: string) => void;
+    dataStore?: SurvivalPrefixTableStore;
 }
 
 export type SurvivalPrefixSummary = {
@@ -104,21 +105,24 @@ class NumPatientsSlider extends React.Component<INumPatientsSliderProps, any> {
     }
 }
 
-class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicationDataStore<
+export class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicationDataStore<
     SurvivalPrefixSummary
 > {
+    @observable patientMinThreshold = getServerConfig()
+        .survival_min_group_threshold;
+
     constructor(
         getData: () => SurvivalPrefixSummary[],
-        getSelectedPrefix: () => string | undefined,
-        private getPatientMinThreshold: () => number
+        getSelectedPrefix: () => string | undefined
     ) {
         super(getData);
+        makeObservable(this);
         this.dataHighlighter = (d: SurvivalPrefixSummary) => {
             return d.prefix === getSelectedPrefix();
         };
     }
 
-    protected getSortedFilteredData = () => {
+    getSortedFilteredData = () => {
         const dataFilterWithThreshold = (
             d: SurvivalPrefixSummary,
             s: string,
@@ -129,7 +133,7 @@ class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicationDataS
                 // every group needs at least patientMinThreshold patients
                 _.every(
                     Object.values(d.numPatientsPerGroup),
-                    x => x >= this.getPatientMinThreshold()
+                    x => x >= this.patientMinThreshold
                 ) && this.dataFilter(d, s, sU, sL)
             );
         };
@@ -266,23 +270,17 @@ export default class SurvivalPrefixTable extends React.Component<
 > {
     private dataStore: SurvivalPrefixTableStore;
     @observable private columnVisibility: { [group: string]: boolean };
-    @observable private patientMinThreshold = getServerConfig()
-        .survival_min_group_threshold;
 
     constructor(props: ISurvivalPrefixTableProps) {
         super(props);
         makeObservable(this);
-        this.dataStore = new SurvivalPrefixTableStore(
-            () => this.props.survivalPrefixes,
-            this.props.getSelectedPrefix,
-            this.getPatientMinThreshold
-        );
+        this.dataStore =
+            props.dataStore ||
+            new SurvivalPrefixTableStore(
+                () => this.props.survivalPrefixes,
+                this.props.getSelectedPrefix
+            );
         this.columnVisibility = this.initColumnVisibility();
-    }
-
-    @autobind
-    private getPatientMinThreshold() {
-        return this.patientMinThreshold;
     }
 
     private initColumnVisibility() {
@@ -340,7 +338,7 @@ export default class SurvivalPrefixTable extends React.Component<
 
     @action.bound
     private onPatientMinThresholdChange(val: number) {
-        this.patientMinThreshold = val;
+        this.dataStore.patientMinThreshold = val;
     }
 
     public render() {
@@ -357,7 +355,7 @@ export default class SurvivalPrefixTable extends React.Component<
                     <NumPatientsSlider
                         maxNumPatients={this.maxNumPatients}
                         minNumPatients={this.minNumPatients}
-                        patientMinThreshold={this.patientMinThreshold}
+                        patientMinThreshold={this.dataStore.patientMinThreshold}
                         onPatientMinThresholdChange={
                             this.onPatientMinThresholdChange
                         }

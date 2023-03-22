@@ -41,6 +41,8 @@ export interface IChartHeaderProps {
     toggleBoxPlot?: () => void;
     toggleViolinPlot?: () => void;
     toggleNAValue?: () => void;
+    isLeftTruncationAvailable?: boolean;
+    toggleSurvivalPlotLeftTruncation?: () => void;
     swapAxes?: () => void;
     hideLabel?: boolean;
     chartControls?: ChartControls;
@@ -76,6 +78,8 @@ export interface ChartControls {
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
     showSwapAxes?: boolean;
+    showSurvivalPlotLeftTruncationToggle?: boolean;
+    survivalPlotLeftTruncationChecked?: boolean;
 }
 
 @observer
@@ -496,6 +500,39 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             items.push(
                 <li style={{ position: 'relative' }}>
                     {this.comparisonButton}
+                </li>
+            );
+        }
+
+        if (
+            this.props.chartControls &&
+            this.props.chartControls.showSurvivalPlotLeftTruncationToggle &&
+            this.props.toggleSurvivalPlotLeftTruncation
+        ) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item"
+                        onClick={this.props.toggleSurvivalPlotLeftTruncation}
+                    >
+                        <FlexAlignedCheckbox
+                            checked={
+                                !!(
+                                    this.props.chartControls &&
+                                    this.props.chartControls
+                                        .survivalPlotLeftTruncationChecked
+                                )
+                            }
+                            label={
+                                <span
+                                    style={{ marginTop: -3, paddingRight: 10 }}
+                                >
+                                    Left truncation
+                                </span>
+                            }
+                            style={{ marginTop: 1, marginBottom: -3 }}
+                        />
+                    </a>
                 </li>
             );
         }

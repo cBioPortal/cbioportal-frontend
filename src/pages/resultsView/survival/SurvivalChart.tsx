@@ -47,6 +47,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
+import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -71,6 +72,11 @@ export interface ISurvivalChartProps {
     xLabelWithoutEventTooltip: string;
     fileName: string;
     showTable?: boolean;
+    isLeftTruncationAvailable?: boolean;
+    showLeftTruncationCheckbox?: boolean;
+    isLeftTruncationChecked?: boolean;
+    onToggleSurvivalPlotLeftTruncation?: () => void;
+    patientSurvivalsWithoutLeftTruncation?: PatientSurvival[];
     legendLocation?: LegendLocation;
     showNaPatientsHiddenToggle?: boolean;
     pValue?: number | null;
@@ -243,24 +249,15 @@ export default class SurvivalChart
                 const groupName = this.analysisGroupsMap[group].name;
                 return {
                     numOfCases: survivals.length,
-                    line: getLineData(
-                        survivals,
-                        survivalSummaries.map(
-                            summary => summary.survivalFunctionEstimate
-                        )
-                    ),
+                    line: getLineData(survivals, survivalSummaries),
                     scatterWithOpacity: getScatterDataWithOpacity(
                         survivals,
-                        survivalSummaries.map(
-                            summary => summary.survivalFunctionEstimate
-                        ),
+                        survivalSummaries,
                         groupName
                     ),
                     scatter: getScatterData(
                         survivals,
-                        survivalSummaries.map(
-                            summary => summary.survivalFunctionEstimate
-                        ),
+                        survivalSummaries,
                         groupName
                     ),
                 };
@@ -426,9 +423,7 @@ export default class SurvivalChart
             data.push({
                 scatterData: getScatterData(
                     this.props.sortedGroupedSurvivals[group.value],
-                    this.survivalSummaries[group.value].map(
-                        summary => summary.survivalFunctionEstimate
-                    ),
+                    this.survivalSummaries[group.value],
                     group.value
                 ),
                 title: group.name !== undefined ? group.name : group.value,
@@ -584,6 +579,26 @@ export default class SurvivalChart
     get chart() {
         return (
             <div className={this.props.className} data-test={'SurvivalChart'}>
+                {this.props.showLeftTruncationCheckbox && (
+                    <LeftTruncationCheckbox
+                        className={styles.paddingLeftTruncationCheckbox}
+                        onToggleSurvivalPlotLeftTruncation={
+                            this.props.onToggleSurvivalPlotLeftTruncation
+                        }
+                        isLeftTruncationChecked={
+                            this.props.isLeftTruncationChecked
+                        }
+                        patientSurvivalsWithoutLeftTruncation={
+                            this.props.patientSurvivalsWithoutLeftTruncation
+                        }
+                        patientToAnalysisGroups={
+                            this.props.patientToAnalysisGroups
+                        }
+                        sortedGroupedSurvivals={
+                            this.props.sortedGroupedSurvivals
+                        }
+                    />
+                )}
                 {this.props.showDownloadButtons && (
                     <DownloadControls
                         dontFade={true}
@@ -596,44 +611,50 @@ export default class SurvivalChart
                     />
                 )}
 
-                {this.props.showSlider && (
-                    <div
-                        className="small"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            marginLeft: 60,
-                        }}
-                    >
-                        <span>X-Axis Max:</span>
+                <div
+                    style={{
+                        display: 'flex',
+                    }}
+                >
+                    {this.props.showSlider && (
                         <div
-                            className={'RangeSliderContainer'}
+                            className="small"
                             style={{
-                                width: 300,
-                                marginLeft: 10,
-                                marginRight: 10,
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginLeft: 60,
                             }}
                         >
-                            <Slider
-                                min={0}
-                                max={this.maximumDataMonthValue}
-                                value={this.sliderValue}
-                                onChange={this.onSliderChange}
-                                tooltip={false}
-                                step={1}
+                            <span>X-Axis Max:</span>
+                            <div
+                                className={'RangeSliderContainer'}
+                                style={{
+                                    width: 300,
+                                    marginLeft: 10,
+                                    marginRight: 10,
+                                }}
+                            >
+                                <Slider
+                                    min={0}
+                                    max={this.maximumDataMonthValue}
+                                    value={this.sliderValue}
+                                    onChange={this.onSliderChange}
+                                    tooltip={false}
+                                    step={1}
+                                />
+                            </div>
+                            <EditableSpan
+                                className={styles['XmaxNumberInput']}
+                                value={this.sliderValue.toString()}
+                                setValue={this.onSliderTextChange}
+                                numericOnly={true}
                             />
+                            <span>
+                                {pluralize('Month', this.sliderValue)} Survival
+                            </span>
                         </div>
-                        <EditableSpan
-                            className={styles['XmaxNumberInput']}
-                            value={this.sliderValue.toString()}
-                            setValue={this.onSliderTextChange}
-                            numericOnly={true}
-                        />
-                        <span>
-                            {pluralize('Month', this.sliderValue)} Survival
-                        </span>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 <VictoryChart
                     containerComponent={
@@ -849,6 +870,9 @@ export default class SurvivalChart
                                         }
                                     </span>
                                 )}
+                                <br />
+                                Number of patients at risk:{' '}
+                                {this.tooltipModel.datum.atRisk}
                             </div>
                         </Popover>
                     )}

@@ -440,6 +440,7 @@ describe('group comparison page screenshot tests', function() {
             });
         });
         it('group comparison page delete group from session', function() {
+            this.retries(0);
             $(
                 'button[data-test="groupSelectorButtonGARS mutant"] [data-test="deleteButton"]'
             ).click();

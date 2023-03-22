@@ -13,7 +13,7 @@ import {
     MUTATION_DATA_FIELD_ENUM,
 } from 'shared/constants';
 import MobxPromise from 'mobxpromise';
-import { errorIcon, loaderIcon } from 'react-mutation-mapper';
+import { errorIcon, loaderIcon } from 'oncokb-frontend-commons';
 
 /**
  * @author Avery Wang

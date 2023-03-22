@@ -72,6 +72,11 @@ $study-view-table-icon-size: 10px;
     line-height: 15px;
 }
 
+.pullRight {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+}
+
 .headerRow {
     border-bottom: 1px solid #d1d1d1;
 }

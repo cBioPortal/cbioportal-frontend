@@ -42,6 +42,8 @@ import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import {
+    compareByAlterationPercentage,
+    getAlterationRowData,
     pickCopyNumberEnrichmentProfiles,
     pickGenericAssayEnrichmentProfiles,
     pickMethylationEnrichmentProfiles,
@@ -74,11 +76,8 @@ import {
     getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
-import {
-    AlterationTypeConstants,
-    DataTypeConstants,
-    ResultsViewPageStore,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
@@ -104,33 +103,40 @@ import {
     ComparisonSession,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
+import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import AnalysisStore from './AnalysisStore';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { compileMutations } from './AnalysisStoreUtils';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
 }
 
-export default abstract class ComparisonStore
+export default abstract class ComparisonStore extends AnalysisStore
     implements IAnnotationFilterSettings {
     private tabHasBeenShown = observable.map<GroupComparisonTab, boolean>();
 
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
 
-    @observable
-    driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
-        () => false
-    );
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
+
+    @observable public adjustForLeftTruncation = true;
 
     constructor(
         protected appStore: AppStore,
         protected urlWrapper: IComparisonURLWrapper,
         protected resultsViewStore?: ResultsViewPageStore
     ) {
+        super();
         makeObservable(this);
+
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => false
+        );
 
         (window as any).compStore = this;
 
@@ -174,6 +180,11 @@ export default abstract class ComparisonStore
                     !!this.tabHasBeenShown.get(
                         GroupComparisonTab.ALTERATIONS
                     ) || this.showAlterationsTab
+                );
+                this.tabHasBeenShown.set(
+                    GroupComparisonTab.MUTATIONS,
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS) ||
+                        this.showMutationsTab
                 );
             });
         }); // do this after timeout so that all subclasses have time to construct
@@ -266,7 +277,6 @@ export default abstract class ComparisonStore
     abstract get overlapStrategy(): OverlapStrategy;
     abstract get usePatientLevelEnrichments(): boolean;
     abstract get samples(): MobxPromise<Sample[]>;
-    abstract get studies(): MobxPromise<CancerStudy[]>;
     // < / >
 
     public get isLoggedIn() {
@@ -1002,6 +1012,59 @@ export default abstract class ComparisonStore
         },
     });
 
+    readonly mutationsEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.alterationsEnrichmentAnalysisGroups,
+            this.selectedStudyMutationEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            if (
+                _(this.selectedMutationEnrichmentEventTypes)
+                    .values()
+                    .some()
+            ) {
+                return Promise.resolve(
+                    this.enrichmentAnalysisGroups.result!.reduce(
+                        (acc: MolecularProfileCasesGroupFilter[], group) => {
+                            let molecularProfileCaseIdentifiers: {
+                                caseId: string;
+                                molecularProfileId: string;
+                            }[] = [];
+                            group.samples.forEach(sample => {
+                                if (
+                                    this
+                                        .selectedStudyMutationEnrichmentProfileMap
+                                        .result![sample.studyId]
+                                ) {
+                                    molecularProfileCaseIdentifiers.push({
+                                        caseId: this.usePatientLevelEnrichments
+                                            ? sample.patientId
+                                            : sample.sampleId,
+                                        molecularProfileId: this
+                                            .selectedStudyMutationEnrichmentProfileMap
+                                            .result![sample.studyId]
+                                            .molecularProfileId,
+                                    });
+                                }
+                            });
+
+                            if (molecularProfileCaseIdentifiers.length > 0) {
+                                acc.push({
+                                    name: group.name,
+                                    molecularProfileCaseIdentifiers,
+                                });
+                            }
+                            return acc;
+                        },
+                        []
+                    )
+                );
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
     public readonly alterationsEnrichmentData = makeEnrichmentDataPromise({
         await: () => [this.alterationsEnrichmentDataRequestGroups],
         resultsViewPageStore: this.resultsViewStore,
@@ -1060,6 +1123,104 @@ export default abstract class ComparisonStore
                 });
             }
             return Promise.resolve([]);
+        },
+    });
+
+    public readonly alterationEnrichmentRowData = remoteData<
+        AlterationEnrichmentRow[]
+    >({
+        await: () => [
+            this.alterationsEnrichmentData,
+            this.alterationsEnrichmentAnalysisGroups,
+        ],
+        invoke: async () => {
+            return getAlterationRowData(
+                this.alterationsEnrichmentData.result!,
+                this.resultsViewStore
+                    ? this.resultsViewStore.hugoGeneSymbols
+                    : [],
+                this.alterationsEnrichmentAnalysisGroups.result!
+            );
+        },
+    });
+
+    public readonly mutationsEnrichmentData = makeEnrichmentDataPromise({
+        await: () => [this.mutationsEnrichmentDataRequestGroups],
+        resultsViewPageStore: this.resultsViewStore,
+        getSelectedProfileMaps: () => [
+            this.selectedStudyMutationEnrichmentProfileMap.result!,
+        ],
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        fetchData: () => {
+            if (
+                this.mutationsEnrichmentDataRequestGroups.result &&
+                this.mutationsEnrichmentDataRequestGroups.result.length > 1 &&
+                _(this.selectedMutationEnrichmentEventTypes)
+                    .values()
+                    .some()
+            ) {
+                const groupsAndAlterationTypes = {
+                    molecularProfileCasesGroupFilter: this
+                        .mutationsEnrichmentDataRequestGroups.result!,
+                    alterationEventTypes: ({
+                        mutationEventTypes: getMutationEventTypesAPIParameter(
+                            this.selectedMutationEnrichmentEventTypes
+                        ),
+                        includeDriver: this.driverAnnotationSettings
+                            .includeDriver,
+                        includeVUS: this.driverAnnotationSettings.includeVUS,
+                        includeUnknownOncogenicity: this
+                            .driverAnnotationSettings
+                            .includeUnknownOncogenicity,
+                        tiersBooleanMap: this.selectedDriverTiersMap,
+                        includeUnknownTier: this.driverAnnotationSettings
+                            .includeUnknownTier,
+                        includeGermline: this.includeGermlineMutations,
+                        includeSomatic: this.includeSomaticMutations,
+                        includeUnknownStatus: this
+                            .includeUnknownStatusMutations,
+                    } as unknown) as AlterationFilter,
+                };
+
+                return internalClient.fetchAlterationEnrichmentsUsingPOST({
+                    enrichmentType: this.usePatientLevelEnrichments
+                        ? 'PATIENT'
+                        : 'SAMPLE',
+                    groupsAndAlterationTypes,
+                });
+            }
+            return Promise.resolve([]);
+        },
+    });
+
+    readonly genesSortedByMutationFrequency = remoteData<string[]>({
+        await: () => [
+            this.mutationsEnrichmentData,
+            this.alterationsEnrichmentAnalysisGroups,
+        ],
+        invoke: async () => {
+            const alterationRowData: AlterationEnrichmentRow[] = getAlterationRowData(
+                this.mutationsEnrichmentData.result!,
+                this.resultsViewStore
+                    ? this.resultsViewStore.hugoGeneSymbols
+                    : [],
+                this.alterationsEnrichmentAnalysisGroups.result!
+            );
+            alterationRowData.sort(compareByAlterationPercentage);
+            return alterationRowData.map(a => a.hugoGeneSymbol);
+        },
+    });
+
+    readonly genesSortedByAlterationFrequency = remoteData<string[]>({
+        await: () => [
+            this.alterationEnrichmentRowData,
+            this.alterationsEnrichmentAnalysisGroups,
+        ],
+        invoke: async () => {
+            const alterationRowData: AlterationEnrichmentRow[] = this
+                .alterationEnrichmentRowData.result!;
+            alterationRowData.sort(compareByAlterationPercentage);
+            return alterationRowData.map(a => a.hugoGeneSymbol);
         },
     });
 
@@ -1583,6 +1744,30 @@ export default abstract class ComparisonStore
         );
     }
 
+    @computed get isMutationsTabShowable() {
+        return (
+            this.mutationEnrichmentProfiles.isComplete &&
+            this.mutationEnrichmentProfiles.result!.length > 0
+        );
+    }
+
+    @computed get showMutationsTab() {
+        return !!(
+            this.isMutationsTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS))
+        );
+    }
+
+    @computed get isMutationsTabUnavailable() {
+        return (
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result.length !== 2) || // not two active groups
+            !this.isMutationsTabShowable
+        );
+    }
+
     @computed get genericAssayTabShowable() {
         return (
             this.genericAssayEnrichmentProfilesGroupedByGenericAssayType
@@ -1676,6 +1861,26 @@ export default abstract class ComparisonStore
                 {} as { [uniqueSampleKey: string]: Sample }
             );
             return Promise.resolve(sampleSet);
+        },
+    });
+
+    readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
+        await: () => [
+            this._filteredAndAnnotatedMutationsReport,
+            this.sampleKeyToSample,
+        ],
+        invoke: () => {
+            const filteredMutations = compileMutations(
+                this._filteredAndAnnotatedMutationsReport.result!,
+                !this.driverAnnotationSettings.includeVUS,
+                !this.includeGermlineMutations
+            );
+            const sampleKeyToSample = this.sampleKeyToSample.result!;
+            return Promise.resolve(
+                filteredMutations.filter(
+                    m => m.uniqueSampleKey in sampleKeyToSample
+                )
+            );
         },
     });
 
@@ -1818,13 +2023,75 @@ export default abstract class ComparisonStore
         },
     });
 
-    readonly patientSurvivals = remoteData<{
+    // This method should be updated in the child component
+    protected get isLeftTruncationFeatureFlagEnabled() {
+        return false;
+    }
+
+    @computed get isGeniebpcStudy() {
+        if (this.studies.result) {
+            const studyIds = this.studies.result.map(s => s.studyId);
+            return (
+                studyIds.length === 1 &&
+                studyIds[0] === 'heme_onc_nsclc_genie_bpc'
+            );
+        }
+        return false;
+    }
+
+    readonly survivalEntryMonths = remoteData<
+        { [uniquePatientKey: string]: number } | undefined
+    >({
+        await: () => [this.studies],
+        invoke: async () => {
+            const studyIds = this.studies.result!.map(s => s.studyId);
+            // Please note:
+            // The left truncation adjustment is only available for one study: heme_onc_nsclc_genie_bpc at this time
+            // clinical attributeId still need to be decided in the future
+            if (
+                this.isGeniebpcStudy &&
+                this.isLeftTruncationFeatureFlagEnabled
+            ) {
+                const data = await client.getAllClinicalDataInStudyUsingGET({
+                    attributeId: 'TT_CPT_REPORT_MOS',
+                    clinicalDataType: 'PATIENT',
+                    studyId: studyIds[0],
+                });
+                return data.reduce(
+                    (map: { [patientKey: string]: number }, next) => {
+                        map[next.uniquePatientKey] = parseFloat(next.value);
+                        return map;
+                    },
+                    {}
+                );
+            } else {
+                return undefined;
+            }
+        },
+    });
+
+    readonly isLeftTruncationAvailable = remoteData<boolean>({
+        await: () => [this.survivalEntryMonths],
+        invoke: async () => {
+            return !!this.survivalEntryMonths.result;
+        },
+    });
+
+    @action.bound
+    public toggleLeftTruncationSelection() {
+        this.adjustForLeftTruncation = !this.adjustForLeftTruncation;
+    }
+
+    // patientSurvivalsWithoutLeftTruncation is used to compare with patient survival data with left truncation adjustment
+    // This is used for generating information about how many patients get excluded by enabling left truncation adjustment
+    readonly patientSurvivalsWithoutLeftTruncation = remoteData<{
         [prefix: string]: PatientSurvival[];
     }>({
         await: () => [
             this.survivalClinicalDataGroupByUniquePatientKey,
             this.activePatientKeysNotOverlapRemoved,
             this.survivalClinicalAttributesPrefix,
+            this.survivalEntryMonths,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -1837,7 +2104,42 @@ export default abstract class ComparisonStore
                             this.activePatientKeysNotOverlapRemoved.result!,
                             `${key}_STATUS`,
                             `${key}_MONTHS`,
-                            s => getSurvivalStatusBoolean(s, key)
+                            s => getSurvivalStatusBoolean(s, key),
+                            undefined
+                        );
+                        return acc;
+                    },
+                    {} as { [prefix: string]: PatientSurvival[] }
+                )
+            );
+        },
+    });
+
+    readonly patientSurvivals = remoteData<{
+        [prefix: string]: PatientSurvival[];
+    }>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.activePatientKeysNotOverlapRemoved,
+            this.survivalClinicalAttributesPrefix,
+            this.survivalEntryMonths,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.reduce(
+                    this.survivalClinicalAttributesPrefix.result!,
+                    (acc, key) => {
+                        acc[key] = getPatientSurvivals(
+                            this.survivalClinicalDataGroupByUniquePatientKey
+                                .result!,
+                            this.activePatientKeysNotOverlapRemoved.result!,
+                            `${key}_STATUS`,
+                            `${key}_MONTHS`,
+                            s => getSurvivalStatusBoolean(s, key),
+                            // Currently, left truncation is only appliable for Overall Survival data
+                            this.adjustForLeftTruncation && key === 'OS'
+                                ? this.survivalEntryMonths.result
+                                : undefined
                         );
                         return acc;
                     },

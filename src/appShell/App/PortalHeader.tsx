@@ -28,8 +28,8 @@ export default class PortalHeader extends React.Component<
             {
                 id: 'webAPI',
                 text: 'Web API',
-                address: '/webAPI',
-                internal: true,
+                address: 'https://docs.cbioportal.org/web-api-and-clients/',
+                internal: false,
                 hide: () => getServerConfig().skin_show_web_api_tab === false,
             },
 
@@ -44,24 +44,24 @@ export default class PortalHeader extends React.Component<
             {
                 id: 'tutorials',
                 text: 'Tutorials/Webinars',
-                address: '/tutorials',
-                internal: true,
+                address: 'https://docs.cbioportal.org/user-guide/overview/',
+                internal: false,
                 hide: () => getServerConfig().skin_show_tutorials_tab === false,
             },
 
             {
                 id: 'faq',
                 text: 'FAQ',
-                address: '/faq',
-                internal: true,
+                address: 'https://docs.cbioportal.org/user-guide/faq/',
+                internal: false,
                 hide: () => getServerConfig().skin_show_faqs_tab === false,
             },
 
             {
                 id: 'news',
                 text: 'News',
-                address: '/news',
-                internal: true,
+                address: getServerConfig().skin_documentation_news!,
+                internal: false,
                 hide: () => getServerConfig().skin_show_news_tab === false,
             },
 
@@ -76,8 +76,8 @@ export default class PortalHeader extends React.Component<
             {
                 id: 'about',
                 text: 'About',
-                address: '/about',
-                internal: true,
+                address: 'https://docs.cbioportal.org/about-us/',
+                internal: false,
                 hide: () => getServerConfig().skin_show_about_tab === false,
             },
 
@@ -104,7 +104,9 @@ export default class PortalHeader extends React.Component<
                             {tab.text}
                         </NavLink>
                     ) : (
-                        <a href={tab.address}>{tab.text}</a>
+                        <a target={'_blank'} href={tab.address}>
+                            {tab.text}
+                        </a>
                     )}
                 </li>
             );

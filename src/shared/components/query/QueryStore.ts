@@ -2,24 +2,24 @@
 import _ from 'lodash';
 import client from '../../api/cbioportalClientInstance';
 import {
-    ObservableMap,
-    toJS,
-    observable,
-    reaction,
     action,
     computed,
     makeObservable,
+    observable,
+    ObservableMap,
+    reaction,
+    toJS,
 } from 'mobx';
 import {
-    TypeOfCancer as CancerType,
-    MolecularProfile,
     CancerStudy,
-    SampleList,
     Gene,
+    Geneset,
+    MolecularProfile,
     Sample,
     SampleFilter,
+    SampleList,
+    TypeOfCancer as CancerType,
 } from 'cbioportal-ts-api-client';
-import { Geneset } from 'cbioportal-ts-api-client';
 import CancerStudyTreeData from './CancerStudyTreeData';
 import {
     getBrowserWindow,
@@ -27,7 +27,7 @@ import {
     stringListToIndexSet,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import { labelMobxPromises, cached, debounceAsync } from 'mobxpromise';
+import { cached, debounceAsync } from 'mobxpromise';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import { SingleGeneQuery, SyntaxError } from '../../lib/oql/oql-parser';
 import { parseOQLQuery } from '../../lib/oql/oqlfilter';
@@ -37,7 +37,7 @@ import URL from 'url';
 import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
-import { currentQueryParams, categorizedSamplesCount } from './QueryStoreUtils';
+import { categorizedSamplesCount, currentQueryParams } from './QueryStoreUtils';
 
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
@@ -51,13 +51,13 @@ import {
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import {
     getGenesetsFromHierarchy,
-    getVolcanoPlotMinYValue,
     getVolcanoPlotData,
+    getVolcanoPlotMinYValue,
 } from 'shared/components/query/GenesetsSelectorStore';
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from '../../lib/formSubmit';
 import { getServerConfig, ServerConfigHelpers } from '../../../config/config';
-import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from 'shared/constants';
 import {
     ResultsViewURLQuery,
     ResultsViewURLQueryEnum,
@@ -66,6 +66,11 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
+import { toQueryString } from 'shared/lib/query/textQueryUtils';
+import { SearchClause } from 'shared/components/query/filteredSearch/SearchClause';
+import { QueryParser } from 'shared/lib/query/QueryParser';
+import { AppStore } from 'AppStore';
+import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -113,13 +118,6 @@ export function normalizeQuery(geneQuery: string) {
 
 type GenesetId = string;
 
-export enum Focus {
-    Unfocused,
-    ShouldFocus,
-    Focused,
-}
-
-// mobx observable
 export class QueryStore {
     constructor(urlWithInitialParams?: string) {
         getBrowserWindow().activeQueryStore = this;
@@ -127,6 +125,11 @@ export class QueryStore {
         makeObservable(this);
 
         this.initialize(urlWithInitialParams);
+    }
+
+    @computed
+    get queryParser() {
+        return new QueryParser(this.referenceGenomes);
     }
 
     initialize(urlWithInitialParams?: string) {
@@ -156,7 +159,8 @@ export class QueryStore {
     }
 
     public singlePageAppSubmitRoutine: (
-        query: CancerStudyQueryUrlParams
+        query: CancerStudyQueryUrlParams,
+        currentTab?: ResultsViewTab
     ) => void;
 
     @observable studiesHaveChangedSinceInitialization: boolean = false;
@@ -246,6 +250,15 @@ export class QueryStore {
         return referenceGenomes.length === 1;
     }
 
+    @computed
+    get multipleReferenceGenomesPresentInAllStudies() {
+        const allStudies = this.treeData.map_studyId_cancerStudy;
+        const referenceGenomes = _.uniq(
+            Array.from(allStudies.values()).map(s => s.referenceGenome)
+        );
+        return referenceGenomes.length > 1;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     // QUERY PARAMETERS
     ////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +267,11 @@ export class QueryStore {
 
     @observable transposeDataMatrix = false;
 
-    @observable searchText: string = '';
+    @observable.ref searchClauses: SearchClause[] = [];
+
+    @computed get searchText(): string {
+        return toQueryString(this.searchClauses);
+    }
 
     @observable private _allSelectedStudyIds: ObservableMap<
         string,
@@ -549,6 +566,10 @@ export class QueryStore {
 
     @computed get userLoggedIn() {
         return getBrowserWindow().globalStores.appStore.isLoggedIn;
+    }
+
+    get appStore(): AppStore {
+        return getBrowserWindow().globalStores.appStore as AppStore;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1430,6 +1451,14 @@ export class QueryStore {
             .filter(_.identity);
     }
 
+    @computed get referenceGenomes(): Set<string> {
+        const studies = Array.from(this.treeData.map_node_meta.keys());
+        const referenceGenomes = studies
+            .map(n => (n as CancerStudy).referenceGenome)
+            .filter(n => !!n);
+        return new Set(referenceGenomes);
+    }
+
     @computed get selectableSelectedStudies() {
         return this.selectableSelectedStudyIds
             .map(
@@ -2144,7 +2173,7 @@ export class QueryStore {
 
     @action setSearchText(searchText: string) {
         this.clearSelectedCancerType();
-        this.searchText = searchText;
+        this.searchClauses = this.queryParser.parseSearchQuery(searchText);
     }
 
     @action clearSelectedCancerType() {
@@ -2232,7 +2261,7 @@ export class QueryStore {
         this.genesetQuery = genesetQuery;
     }
 
-    @action submit() {
+    @action submit(currentTab?: ResultsViewTab) {
         if (this.oql.error) {
             this.geneQueryErrorDisplayStatus = Focus.ShouldFocus;
             this.genesetQueryErrorDisplayStatus = Focus.ShouldFocus;
@@ -2252,7 +2281,7 @@ export class QueryStore {
                 'smart'
             );
         } else {
-            this.singlePageAppSubmitRoutine(urlParams.query);
+            this.singlePageAppSubmitRoutine(urlParams.query, currentTab);
         }
 
         return true;
@@ -2273,6 +2302,12 @@ export class QueryStore {
     @cached @computed get sampleListsInStudyCache() {
         return new SampleListsInStudyCache();
     }
+}
+
+export enum Focus {
+    Unfocused,
+    ShouldFocus,
+    Focused,
 }
 
 export const QueryStoreComponent = ComponentGetsStoreContext(QueryStore);

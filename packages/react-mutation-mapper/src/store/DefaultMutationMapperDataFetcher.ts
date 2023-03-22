@@ -5,16 +5,18 @@ import Response = request.Response;
 import {
     AggregatedHotspots,
     EvidenceType,
-    generateProteinChangeQuery,
-    generateAnnotateStructuralVariantQuery,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     IOncoKbData,
     Mutation,
     UniprotFeature,
     UniprotFeatureList,
     uniqueGenomicLocations,
-    StructuralVariantType,
 } from 'cbioportal-utils';
+import {
+    generateProteinChangeQuery,
+    generateAnnotateStructuralVariantQuery,
+    StructuralVariantType,
+} from 'oncokb-frontend-commons';
 import {
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
@@ -126,7 +128,7 @@ export class DefaultMutationMapperDataFetcher
     public async fetchVariantAnnotationsIndexedByGenomicLocation(
         mutations: Partial<Mutation>[],
         fields: string[] = ['annotation_summary'],
-        isoformOverrideSource: string = 'uniprot',
+        isoformOverrideSource: string = 'mskcc',
         client: GenomeNexusAPI = this.genomeNexusClient
     ): Promise<{ [genomicLocation: string]: VariantAnnotation }> {
         return await fetchVariantAnnotationsIndexedByGenomicLocation(
@@ -139,7 +141,7 @@ export class DefaultMutationMapperDataFetcher
 
     public async fetchMyVariantInfoAnnotationsIndexedByGenomicLocation(
         mutations: Partial<Mutation>[],
-        isoformOverrideSource: string = 'uniprot',
+        isoformOverrideSource: string = 'mskcc',
         client: GenomeNexusAPI = this.genomeNexusClient
     ): Promise<{ [genomicLocation: string]: MyVariantInfo }> {
         const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
@@ -344,6 +346,7 @@ export class DefaultMutationMapperDataFetcher
             ),
             'id'
         );
+
         const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
             _.map(
                 queryVariants.filter(
@@ -353,10 +356,9 @@ export class DefaultMutationMapperDataFetcher
                 ),
                 (mutation: Mutation) => {
                     return generateAnnotateStructuralVariantQuery(
-                        getEntrezGeneId(mutation),
+                        /* @ts-ignore */
+                        mutation.structuralVariant,
                         getTumorType(mutation),
-                        mutation.proteinChange,
-                        mutation.mutationType,
                         evidenceTypes
                     );
                 }
