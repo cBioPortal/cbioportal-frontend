@@ -2,6 +2,7 @@ import { SortMetric } from './ISortMetric';
 import { observable, computed, action, makeObservable } from 'mobx';
 import { lazyMobXTableSort } from '../components/lazyMobXTable/LazyMobXTable';
 import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL } from 'shared/components/paginationControls/PaginationControls';
+import _ from 'lodash';
 
 export interface ILazyMobXTableApplicationDataStore<T> {
     // setter
@@ -149,7 +150,7 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     }
 
     @computed get showingAllData() {
-        return this.tableData.length === this.allData.length;
+        return _.flatten(this.tableData).length === this.allData.length;
     }
 
     @action public setFilter(

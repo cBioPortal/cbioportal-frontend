@@ -246,6 +246,11 @@ export default class MutationMapperDataStore
     }
 
     @autobind
+    public setTableData(getTableData: () => Mutation[][]) {
+        this.getTableData = getTableData;
+    }
+
+    @autobind
     public dataMainFilter(d: Mutation[]): boolean {
         return applyDataFiltersOnDatum(d, this.dataFilters, this.applyFilter);
     }

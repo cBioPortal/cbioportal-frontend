@@ -43,6 +43,7 @@ import {
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import { maxPage } from './utils';
 import { inputBoxChangeTimeoutEvent } from '../../lib/EventUtils';
+import _ from 'lodash';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -119,6 +120,7 @@ type LazyMobXTableProps<T> = {
         column: Column<T>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
+    formatPaginationStatusText?: (text: string) => string;
 };
 
 function compareValues<U extends number | string>(
@@ -282,6 +284,9 @@ export class LazyMobXTableStore<T> {
     @observable private onRowClick: ((d: T) => void) | undefined;
     @observable private onRowMouseEnter: ((d: T) => void) | undefined;
     @observable private onRowMouseLeave: ((d: T) => void) | undefined;
+    @observable private formatPaginationStatusText:
+        | ((text: string) => string)
+        | undefined;
 
     // this observable is intended to always refer to props.columnToHeaderFilterIconModal
     @observable private _columnToHeaderFilterIconModal:
@@ -610,7 +615,9 @@ export class LazyMobXTableStore<T> {
                     : firstVisibleItemDisp + this.rows.length - 1;
         }
 
-        let itemsLabel: string = this.itemsLabel;
+        let itemsLabel: string = this.formatPaginationStatusText
+            ? this.formatPaginationStatusText(this.itemsLabel)
+            : this.itemsLabel;
         if (itemsLabel.length) {
             // we need to prepend the space here instead of within the actual return value
             // to avoid unnecessary white-space at the end of the string
@@ -770,6 +777,9 @@ export class LazyMobXTableStore<T> {
         }
         if (this.itemsPerPage === undefined) {
             this.itemsPerPage = props.initialItemsPerPage || 50;
+        }
+        if (props.formatPaginationStatusText) {
+            this.formatPaginationStatusText = props.formatPaginationStatusText;
         }
         // even if dataStore passed in, we need to initialize sort props if undefined
         // otherwise we lose the functionality of 'initialSortColumn' and 'initialSortDirection' props
@@ -1106,8 +1116,9 @@ export default class LazyMobXTable<T> extends React.Component<
                     fontWeight: 'bold',
                 }}
             >
-                {this.store.displayData.length} {this.store.itemsLabel} (page{' '}
-                {this.store.page + 1} of {this.store.maxPage + 1})
+                {_.flatten(this.store.displayData).length}{' '}
+                {this.store.itemsLabel} (page {this.store.page + 1} of{' '}
+                {this.store.maxPage + 1})
             </span>
         );
     }

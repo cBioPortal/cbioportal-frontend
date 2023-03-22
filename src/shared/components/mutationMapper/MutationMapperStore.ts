@@ -342,4 +342,17 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     @cached @computed get residueMappingCache() {
         return new ResidueMappingCache();
     }
+
+    @computed
+    get isCanonicalTranscript(): boolean {
+        if (this.canonicalTranscript.result && this.activeTranscript.result) {
+            // if transcript dropdown is enabled, return true for canonical transcript
+            return (
+                this.activeTranscript.result ===
+                this.canonicalTranscript.result.transcriptId
+            );
+        }
+        // return true if transcript dropdown is disabled
+        return true;
+    }
 }

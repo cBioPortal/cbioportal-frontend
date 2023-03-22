@@ -488,7 +488,9 @@ export default class MutationMapper<
         return (
             <FilterResetPanel
                 resetFilters={() => dataStore.resetFilters()}
-                filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
+                filterInfo={`Showing ${
+                    _.flatten(dataStore.tableData).length
+                } of ${dataStore.allData.length} mutations.`}
                 className={classnames(
                     'alert',
                     'alert-success',
@@ -506,6 +508,10 @@ export default class MutationMapper<
 
     protected get mutationTableComponent(): JSX.Element | null {
         // Child classes should override this method to return an instance of MutationTable
+        return null;
+    }
+
+    protected get fisherExactTwoSidedTestLabel(): JSX.Element | null {
         return null;
     }
 
@@ -527,6 +533,7 @@ export default class MutationMapper<
                         >
                             <div style={{ marginRight: 10 }}>
                                 {this.mutationPlot}
+                                {this.fisherExactTwoSidedTestLabel}
                                 {this.proteinChainPanel}
                             </div>
 
