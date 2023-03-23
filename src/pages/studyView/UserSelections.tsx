@@ -51,6 +51,7 @@ import {
     MUT_COLOR_MISSENSE,
 } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { DataFilter } from 'cbioportal-ts-api-client';
 
 export interface IUserSelectionsProps {
     store: StudyViewPageStore;
@@ -87,6 +88,8 @@ export interface IUserSelectionsProps {
         oredIndex: number,
         metaKey: string
     ) => void;
+
+    removeClinicalEventFilter: (value: string) => void;
 }
 
 @observer
@@ -423,6 +426,19 @@ export default class UserSelections extends React.Component<
         }
 
         if (
+            this.props.filter.clinicalEventFilters &&
+            this.props.filter.clinicalEventFilters.length > 0
+        ) {
+            const metaData = this.props.attributesMetaSet[
+                SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS
+            ];
+            const f = this.renderClinicalEventFilter(
+                this.props.filter.clinicalEventFilters,
+                metaData.displayName
+            );
+            components.push(f);
+        }
+        if (
             this.props.filter.sampleTreatmentFilters &&
             this.props.filter.sampleTreatmentFilters.filters.length > 0
         ) {
@@ -681,6 +697,50 @@ export default class UserSelections extends React.Component<
                 );
             }
         );
+
+        return (
+            <div className={styles.parentGroupLogic}>
+                <GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>
+                            {displayName}
+                        </span>,
+                        <GroupLogic
+                            components={filters}
+                            operation={'and'}
+                            group={false}
+                        />,
+                    ]}
+                    operation={':'}
+                    group={false}
+                />
+            </div>
+        );
+    }
+
+    private renderClinicalEventFilter(
+        f: DataFilter[],
+        displayName: string
+    ): JSX.Element {
+        const filters = f.map((oFilter: DataFilter) => {
+            const pills = oFilter.values.map((iFilter: DataFilterValue) => {
+                return (
+                    <PillTag
+                        content={iFilter.value}
+                        backgroundColor={
+                            STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                        }
+                        onDelete={() => {
+                            this.props.removeClinicalEventFilter(iFilter.value);
+                        }}
+                    />
+                );
+            });
+
+            return (
+                <GroupLogic components={pills} operation={'or'} group={true} />
+            );
+        });
 
         return (
             <div className={styles.parentGroupLogic}>

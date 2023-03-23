@@ -24,6 +24,7 @@ const {
     setDropdownOpen,
     jsApiHover,
     setCheckboxChecked,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils');
 
 var {
@@ -801,6 +802,46 @@ describe('study view treatments table', () => {
 
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
+    });
+});
+
+describe('study view timeline events availability table', () => {
+    it('verify timeline events availability table is visible', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/study/summary?id=cesc_tcga_pan_can_atlas_2018`
+        );
+        getElementByTestHandle('CLINICAL_EVENT_TYPE_COUNT-table').waitForExist({
+            timeout: 20000,
+        });
+    });
+
+    it('verify filters can be applied', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/study/summary?id=cesc_tcga_pan_can_atlas_2018`
+        );
+
+        getElementByTestHandle('CLINICAL_EVENT_TYPE_COUNT-table').waitForExist({
+            timeout: 20000,
+        });
+        const selectedPatients = getElementByTestHandle(
+            'selected-patients'
+        ).getText();
+
+        const timelineEventsAvailabilityCheckBox =
+            '[data-test="CLINICAL_EVENT_TYPE_COUNT-table"] .ReactVirtualized__Table__row:nth-child(2) input';
+
+        const applyFilterButton =
+            '[data-test="CLINICAL_EVENT_TYPE_COUNT-table"] button';
+
+        $(timelineEventsAvailabilityCheckBox).waitForExist();
+        $(timelineEventsAvailabilityCheckBox).click();
+        $(applyFilterButton).waitForExist();
+        $(applyFilterButton).click();
+        waitForNetworkQuiet();
+        assert.notEqual(
+            getElementByTestHandle('selected-patients').getText(),
+            selectedPatients
+        );
     });
 });
 

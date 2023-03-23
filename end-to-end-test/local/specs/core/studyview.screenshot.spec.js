@@ -216,7 +216,7 @@ describe('study view editable breadcrumbs', () => {
     });
 });
 
-describe('cancer gene filter', () => {
+describe('cancer gene filter', function() {
     this.retries(0);
 
     it('cancer gene filter should by default be disabled', () => {

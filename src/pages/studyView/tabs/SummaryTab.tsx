@@ -640,6 +640,15 @@ export class StudySummaryTab extends React.Component<
                 };
                 break;
             }
+            case ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE: {
+                props.filters = this.store.clinicalEventTypeFiltersRawStrings;
+                props.promise = this.store.clinicalEventTypeCounts;
+                props.onValueSelection = this.store.addClinicalEventTypeFilter;
+                props.onResetSelection = () => {
+                    this.store.resetClinicalEventTypeFilter();
+                };
+                break;
+            }
             default:
                 break;
         }
