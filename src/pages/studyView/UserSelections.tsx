@@ -813,7 +813,7 @@ export default class UserSelections extends React.Component<
     }
 
     submitHesitantFilters() {
-        this.context.store.filterSubmitTime = performance.now();
+        this.context.store.submitQueuedFilterUpdates();
     }
 
     render() {

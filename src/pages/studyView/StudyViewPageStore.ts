@@ -407,9 +407,6 @@ export class StudyViewPageStore
     @observable chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
-    @observable filterSubmitTime: number = performance.now();
-    @observable filterUpdateTime: number = 0;
-
     /**
      * Force remount of filters when:
      * - the submit mode changes;
@@ -417,7 +414,7 @@ export class StudyViewPageStore
      */
     @computed
     public get filtersRerenderKey() {
-        return `${this.hesitateUpdate}${this.filterSubmitTime}${this.filterUpdateTime}`;
+        return `${this.hesitateUpdate}${_.size(this.hesitantPillStore)}`;
     }
 
     private getDataBinFilterSet(uniqueKey: string) {
@@ -517,44 +514,13 @@ export class StudyViewPageStore
             reaction(
                 () => [this.filtersProxy, this.hesitateUpdate],
                 () => {
-                    if (!this.hesitateUpdate || this.filterUpdateTime === 0) {
+                    if (!this.hesitateUpdate || this.filters === undefined) {
                         this.submitFilters();
                     }
-                    this.filterUpdateTime = performance.now();
                 },
                 {
                     fireImmediately: true,
                     equals: comparer.structural,
-                }
-            )
-        );
-
-        /**
-         * Initialize this.filters only when this.filtersProxy is properly initialized
-         */
-        this.reactionDisposers.push(
-            reaction(
-                () => [this.filtersProxy, this.filters],
-                () => {
-                    const isFiltersInitialized = this.filters;
-                    const isFiltersProxyInitialized = _.keys(
-                        this.filtersProxy.alterationFilter.tiersBooleanMap
-                    ).length;
-                    if (!isFiltersInitialized && isFiltersProxyInitialized) {
-                        this.submitFilters();
-                    }
-                },
-                {
-                    equals: comparer.structural,
-                }
-            )
-        );
-
-        this.reactionDisposers.push(
-            reaction(
-                () => [this.hesitateUpdate, this.filterSubmitTime],
-                () => {
-                    this.submitQueuedFilterUpdates();
                 }
             )
         );

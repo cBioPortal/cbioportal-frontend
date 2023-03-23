@@ -3,7 +3,7 @@ import _ from 'lodash';
 import styles from './styles.module.scss';
 import { If } from 'react-if';
 import contrast from 'contrast';
-import { computed, makeObservable, observable } from 'mobx';
+import { computed, makeObservable, observable, toJS } from 'mobx';
 import classnames from 'classnames';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import {
@@ -40,7 +40,16 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
         super(props, context);
         makeObservable(this);
         // TODO: when switching to autocommit: trigger submit
-        if (this.hesitateUpdate && !this.submittedPillStoreEntry) {
+
+        const notInitializing =
+            props.store.filters !== undefined &&
+            !_.isEqual(toJS(props.store.filters), props.store.filtersProxy);
+
+        if (
+            notInitializing &&
+            this.hesitateUpdate &&
+            !this.submittedPillStoreEntry
+        ) {
             this.addPillToHesitateStore();
         } else {
             // We always need to keep track of submitted filters,
