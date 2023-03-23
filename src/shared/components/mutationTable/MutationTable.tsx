@@ -163,6 +163,7 @@ export interface IMutationTableProps {
     };
     groups?: ComparisonGroup[];
     formatPaginationStatusText?: (text: string) => string;
+    showTotalMutationCountsInCountHeader?: boolean;
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
@@ -1481,6 +1482,9 @@ export default class MutationTable<
                 deactivateColumnFilter={this.props.deactivateColumnFilter}
                 formatPaginationStatusText={
                     this.props.formatPaginationStatusText
+                }
+                showTotalMutationCountsInCountHeader={
+                    this.props.showTotalMutationCountsInCountHeader
                 }
             />
         );

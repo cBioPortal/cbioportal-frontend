@@ -148,6 +148,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 profiledPatientCountsByGroup={this.profiledPatientCountsByGroup}
                 groups={this.props.groups}
                 formatPaginationStatusText={this.formatPaginationStatusText}
+                showTotalMutationCountsInCountHeader={true}
             />
         );
     }
@@ -206,7 +207,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                         groupNameWithOrdinal={
                             this.props.groups[groupIndex].nameWithOrdinal
                         }
-                        height={149}
+                        height={148}
                     />
                 ) : (
                     <ProteinImpactTypeBadgeSelector
@@ -222,7 +223,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                         groupNameWithOrdinal={
                             this.props.groups[groupIndex].nameWithOrdinal
                         }
-                        height={109}
+                        height={108}
                     />
                 )}
             </>

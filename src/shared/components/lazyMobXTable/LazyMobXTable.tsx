@@ -121,6 +121,7 @@ type LazyMobXTableProps<T> = {
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
     formatPaginationStatusText?: (text: string) => string;
+    showTotalMutationCountsInCountHeader?: boolean;
 };
 
 function compareValues<U extends number | string>(
@@ -1116,7 +1117,9 @@ export default class LazyMobXTable<T> extends React.Component<
                     fontWeight: 'bold',
                 }}
             >
-                {_.flatten(this.store.displayData).length}{' '}
+                {this.props.showTotalMutationCountsInCountHeader
+                    ? _.flatten(this.store.displayData).length
+                    : this.store.displayData.length}{' '}
                 {this.store.itemsLabel} (page {this.store.page + 1} of{' '}
                 {this.store.maxPage + 1})
             </span>
