@@ -472,6 +472,35 @@ export class StudyViewPageStore
         This can be achieved by a better control mechanism: as for all our fetches, they should be invoked by reference in view layer.
         Here, we fire this in constructor of store, which is an anti-pattern in our app.
          */
+
+        // Include special charts into custom data list
+        SPECIAL_CHARTS.forEach(
+            (chartMeta: ChartMetaWithDimensionAndChartType) => {
+                const uniqueKey = chartMeta.uniqueKey;
+                if (!this.chartsType.has(uniqueKey)) {
+                    this.chartsType.set(uniqueKey, chartMeta.chartType);
+                }
+                const chartType = this.chartsType.get(uniqueKey);
+                if (chartType !== undefined) {
+                    this._customCharts.set(uniqueKey, {
+                        displayName: chartMeta.displayName,
+                        uniqueKey: uniqueKey,
+                        dataType: getChartMetaDataType(uniqueKey),
+                        patientAttribute: chartMeta.patientAttribute,
+                        description: chartMeta.description,
+                        renderWhenDataChange: false,
+                        priority:
+                            STUDY_VIEW_CONFIG.priority[uniqueKey] ||
+                            chartMeta.priority,
+                    });
+                    this.chartsType.set(uniqueKey, chartMeta.chartType);
+                    this.chartsDimension.set(uniqueKey, chartMeta.dimension);
+                }
+            }
+        );
+    }
+
+    initializeReaction() {
         this.reactionDisposers.push(
             reaction(
                 () => this.loadingInitialDataForSummaryTab,
@@ -494,6 +523,7 @@ export class StudyViewPageStore
                     this.filterUpdateTime = performance.now();
                 },
                 {
+                    fireImmediately: true,
                     equals: comparer.structural,
                 }
             )
@@ -618,32 +648,6 @@ export class StudyViewPageStore
                     }
                 }
             )
-        );
-
-        // Include special charts into custom data list
-        SPECIAL_CHARTS.forEach(
-            (chartMeta: ChartMetaWithDimensionAndChartType) => {
-                const uniqueKey = chartMeta.uniqueKey;
-                if (!this.chartsType.has(uniqueKey)) {
-                    this.chartsType.set(uniqueKey, chartMeta.chartType);
-                }
-                const chartType = this.chartsType.get(uniqueKey);
-                if (chartType !== undefined) {
-                    this._customCharts.set(uniqueKey, {
-                        displayName: chartMeta.displayName,
-                        uniqueKey: uniqueKey,
-                        dataType: getChartMetaDataType(uniqueKey),
-                        patientAttribute: chartMeta.patientAttribute,
-                        description: chartMeta.description,
-                        renderWhenDataChange: false,
-                        priority:
-                            STUDY_VIEW_CONFIG.priority[uniqueKey] ||
-                            chartMeta.priority,
-                    });
-                    this.chartsType.set(uniqueKey, chartMeta.chartType);
-                    this.chartsDimension.set(uniqueKey, chartMeta.dimension);
-                }
-            }
         );
     }
 

@@ -199,6 +199,7 @@ export default class StudyViewPage extends React.Component<
         onMobxPromise(
             this.store.queriedPhysicalStudyIds,
             (strArr: string[]) => {
+                this.store.initializeReaction();
                 trackEvent({
                     category: 'studyPage',
                     action: 'studyPageLoad',
@@ -1002,6 +1003,7 @@ export default class StudyViewPage extends React.Component<
                     />
                 );
             } else {
+                //return <></>;
                 return this.content();
             }
         },
