@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { computed } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import RightPanel from './rightPanel/RightPanel';
 import StudySummary from './studySummary/StudySummary';
@@ -18,6 +19,18 @@ export default class StudyPageHeader extends React.Component<
 > {
     constructor(props: IStudyPageHeaderProps) {
         super(props);
+    }
+
+    /**
+     * Force remount of filters when:
+     * - the submit mode changes;
+     * - filters are updated or submitted.
+     */
+    @computed
+    public get filtersRerenderKey() {
+        return `${this.props.store.hesitateUpdate}${_.size(
+            this.props.store.hesitantPillStore
+        )}`;
     }
 
     render() {
@@ -56,7 +69,7 @@ export default class StudyPageHeader extends React.Component<
 
                 {this.props.store.clinicalAttributeIdToDataType.isComplete && (
                     <UserSelections
-                        key={this.props.store.filtersRerenderKey}
+                        key={this.filtersRerenderKey}
                         store={this.props.store}
                         filter={this.props.store.userSelections}
                         comparisonGroupSelection={

@@ -1003,7 +1003,6 @@ export default class StudyViewPage extends React.Component<
                     />
                 );
             } else {
-                //return <></>;
                 return this.content();
             }
         },

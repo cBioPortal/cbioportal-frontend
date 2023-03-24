@@ -407,16 +407,6 @@ export class StudyViewPageStore
     @observable chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
-    /**
-     * Force remount of filters when:
-     * - the submit mode changes;
-     * - filters are updated or submitted.
-     */
-    @computed
-    public get filtersRerenderKey() {
-        return `${this.hesitateUpdate}${_.size(this.hesitantPillStore)}`;
-    }
-
     private getDataBinFilterSet(uniqueKey: string) {
         if (this.isGenericAssayChart(uniqueKey)) {
             return this._genericAssayDataBinFilterSet;
