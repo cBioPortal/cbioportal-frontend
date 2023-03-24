@@ -135,6 +135,25 @@ function badgeLabelFormat(
     }
 }
 
+function isExcludedProteinImpactType(
+    type: ProteinImpactType,
+    excludedProteinTypes?: string[],
+    counts?: { [proteinImpactType: string]: number }
+) {
+    return (
+        excludedProteinTypes?.includes(
+            type.split('_')[0] // get protein type without driver/vus suffix
+        ) ||
+        ((type === ProteinImpactType.OTHER_PUTATIVE_DRIVER ||
+            type === ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE ||
+            type === ProteinImpactType.OTHER) &&
+            counts &&
+            counts[ProteinImpactType.OTHER_PUTATIVE_DRIVER] +
+                counts[ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE] ===
+                0)
+    );
+}
+
 @observer
 export default class DriverAnnotationProteinImpactTypeBadgeSelector extends ProteinImpactTypeBadgeSelector<
     IDriverAnnotationProteinImpactTypeBadgeSelectorProps
@@ -146,28 +165,21 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         super(props);
         makeObservable(this);
 
+        // filter out driver/vus types prefixed by protein types in excludedProteinTypes props
         this.putativeDriverTypes = PUTATIVE_DRIVER_TYPE.filter(
             t =>
-                !(
-                    this.props.excludedProteinTypes?.includes(
-                        t.slice(0, t.indexOf('_'))
-                    ) ||
-                    (t === ProteinImpactType.OTHER_PUTATIVE_DRIVER &&
-                        this.props.counts?.[
-                            ProteinImpactType.OTHER_PUTATIVE_DRIVER
-                        ] === 0)
+                !isExcludedProteinImpactType(
+                    t,
+                    this.props.excludedProteinTypes,
+                    this.props.counts
                 )
         );
         this.unknownSignificanceTypes = UNKNOWN_SIGNIFICANCE_TYPE.filter(
             t =>
-                !(
-                    this.props.excludedProteinTypes?.includes(
-                        t.slice(0, t.indexOf('_'))
-                    ) ||
-                    (t === ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE &&
-                        this.props.counts?.[
-                            ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE
-                        ] === 0)
+                !isExcludedProteinImpactType(
+                    t,
+                    this.props.excludedProteinTypes,
+                    this.props.counts
                 )
         );
     }
@@ -252,26 +264,12 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
     protected get options() {
         // get options, hide "Other" if it's 0
-        let excludedProteinTypes = this.props.excludedProteinTypes || [];
-        if (
-            this.props.counts &&
-            this.props.counts[ProteinImpactType.OTHER_PUTATIVE_DRIVER] +
-                this.props.counts[
-                    ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE
-                ] ===
-                0
-        ) {
-            excludedProteinTypes = excludedProteinTypes.concat([
-                ProteinImpactWithoutVusMutationType.OTHER,
-            ]);
-        }
         return SELECTOR_VALUE_WITH_VUS.filter(
             type =>
-                !(
-                    excludedProteinTypes.includes(type) ||
-                    excludedProteinTypes.includes(
-                        type.slice(0, type.indexOf('_'))
-                    )
+                !isExcludedProteinImpactType(
+                    type,
+                    this.props.excludedProteinTypes,
+                    this.props.counts
                 )
         ).map(value => ({
             value,
