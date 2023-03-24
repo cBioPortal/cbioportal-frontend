@@ -147,10 +147,28 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         makeObservable(this);
 
         this.putativeDriverTypes = PUTATIVE_DRIVER_TYPE.filter(
-            t => !this.props.excludedProteinTypes?.includes(t)
+            t =>
+                !(
+                    this.props.excludedProteinTypes?.includes(
+                        t.slice(0, t.indexOf('_'))
+                    ) ||
+                    (t === ProteinImpactType.OTHER_PUTATIVE_DRIVER &&
+                        this.props.counts?.[
+                            ProteinImpactType.OTHER_PUTATIVE_DRIVER
+                        ] === 0)
+                )
         );
         this.unknownSignificanceTypes = UNKNOWN_SIGNIFICANCE_TYPE.filter(
-            t => !this.props.excludedProteinTypes?.includes(t)
+            t =>
+                !(
+                    this.props.excludedProteinTypes?.includes(
+                        t.slice(0, t.indexOf('_'))
+                    ) ||
+                    (t === ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE &&
+                        this.props.counts?.[
+                            ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE
+                        ] === 0)
+                )
         );
     }
 
