@@ -235,7 +235,9 @@ describe('track group headers', function() {
         $(mrnaElements.dropdown_selector + ' li:nth-child(2)').click(); // Click Don't Cluster
         browser.pause(2000); // give it time to sort
 
-        var res = checkOncoprintElement('.oncoprintContainer');
+        var res = checkOncoprintElement(undefined, [
+            { width: 2000, height: 1000 },
+        ]);
         assertScreenShotMatch(res);
     });
 });
