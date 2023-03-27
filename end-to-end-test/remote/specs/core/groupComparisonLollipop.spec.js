@@ -14,7 +14,7 @@ describe('group comparison mutations tab tests', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison/mutations?comparisonId=634006c24dd45f2bc4c3d4aa`
             );
-            $('a.tabAnchor_mutations').waitForDisplayed({ timeout: 20000 });
+            $('a.tabAnchor_mutations').waitForDisplayed({ timeout: 30000 });
         });
 
         it('too many groups alert displayed when more than 2 groups selected', function() {
@@ -280,6 +280,232 @@ describe('group comparison mutations tab tests', function() {
             );
         });
 
+        it('deselecting driver/vus badge deselects all protein driver/vus badges', function() {
+            // deselecting driver badge
+            $$('[data-test="badge-driver"]')[1].click();
+
+            assert.equal(
+                $$('[data-test="badge-driver"]')[1].getCSSProperty(
+                    'background-color'
+                ).parsed.hex,
+                $$('[data-test="badge-driver"]')[3].getCSSProperty(
+                    'background-color'
+                ).parsed.hex
+            );
+
+            assert.equal(
+                $$('[data-test="badge-driver"]')[1].getCSSProperty(
+                    'background-color'
+                ).parsed.hex,
+                '#ffffff'
+            );
+
+            getElementByTestHandle('filter-reset-panel').waitForDisplayed();
+
+            // all protein driver badges are deselected
+            assert.equal(
+                $$('[data-test="badge-driver"]')[1].getCSSProperty(
+                    'background-color'
+                ).parsed.hex,
+                $(
+                    '[data-test="badge-missense_putative_driver"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-missense_putative_driver"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $(
+                    '[data-test="badge-truncating_putative_driver"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-truncating_putative_driver"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
+                    'background-color'
+                ).parsed.hex
+            );
+
+            assert.equal(
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
+                    'background-color'
+                ).parsed.hex,
+                $('[data-test="badge-splice_putative_driver"]').getCSSProperty(
+                    'background-color'
+                ).parsed.hex
+            );
+
+            // selecting driver badge
+            $$('[data-test="badge-driver"]')[1].click();
+
+            assert.equal(
+                $$('[data-test="badge-driver"]')[1].getCSSProperty('color')
+                    .parsed.hex,
+                $$('[data-test="badge-driver"]')[3].getCSSProperty('color')
+                    .parsed.hex
+            );
+
+            assert.equal(
+                $$('[data-test="badge-driver"]')[1].getCSSProperty('color')
+                    .parsed.hex,
+                '#ffffff'
+            );
+
+            assert.equal(
+                getElementByTestHandle('filter-reset-panel').isDisplayed(),
+                false
+            );
+
+            // all protein driver badges are selected
+            assert.equal(
+                $$('[data-test="badge-driver"]')[1].getCSSProperty('color')
+                    .parsed.hex,
+                $(
+                    '[data-test="badge-missense_putative_driver"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-missense_putative_driver"]'
+                ).getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-truncating_putative_driver"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-truncating_putative_driver"]'
+                ).getCSSProperty('color').parsed.hex,
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
+                    'color'
+                ).parsed.hex
+            );
+
+            assert.equal(
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
+                    'color'
+                ).parsed.hex,
+                $('[data-test="badge-splice_putative_driver"]').getCSSProperty(
+                    'color'
+                ).parsed.hex
+            );
+
+            // deselecting vus badge
+            getElementByTestHandle('badge-VUS').click();
+
+            assert.equal(
+                $('[data-test="badge-VUS"]').getCSSProperty('background-color')
+                    .parsed.hex,
+                $$('[data-test="badge-VUS"]')[1].getCSSProperty(
+                    'background-color'
+                ).parsed.hex
+            );
+
+            assert.equal(
+                $('[data-test="badge-VUS"]').getCSSProperty('background-color')
+                    .parsed.hex,
+                '#ffffff'
+            );
+
+            getElementByTestHandle('filter-reset-panel').waitForDisplayed();
+
+            // all protein vus badges are deselected
+            assert.equal(
+                $('[data-test="badge-VUS"]').getCSSProperty('background-color')
+                    .parsed.hex,
+                $(
+                    '[data-test="badge-missense_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-missense_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $(
+                    '[data-test="badge-truncating_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-truncating_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $(
+                    '[data-test="badge-inframe_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-inframe_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $(
+                    '[data-test="badge-splice_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            // selecting vus badge
+            getElementByTestHandle('badge-VUS').click();
+
+            assert.equal(
+                $('[data-test="badge-VUS"]').getCSSProperty('color').parsed.hex,
+                $$('[data-test="badge-VUS"]')[1].getCSSProperty('color').parsed
+                    .hex
+            );
+
+            assert.equal(
+                $('[data-test="badge-VUS"]').getCSSProperty('color').parsed.hex,
+                '#ffffff'
+            );
+
+            assert.equal(
+                getElementByTestHandle('filter-reset-panel').isDisplayed(),
+                false
+            );
+
+            // all protein vus badges are selected
+            assert.equal(
+                $('[data-test="badge-VUS"]').getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-missense_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-missense_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-truncating_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-truncating_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-inframe_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-inframe_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-splice_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+        });
+
         it('adjusts mutation counts based on driver annotation settings', function() {
             getElementByTestHandle('badge-driver')
                 .$('span=116')
@@ -403,10 +629,85 @@ describe('group comparison mutations tab tests', function() {
                     .parsed.hex,
                 '#ffffff'
             );
+
+            getElementByTestHandle('filter-reset-panel').waitForDisplayed();
+
+            // all protein driver badges are selected
+            assert.equal(
+                $$('[data-test="badge-driver"]')[1].getCSSProperty('color')
+                    .parsed.hex,
+                $(
+                    '[data-test="badge-missense_putative_driver"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-missense_putative_driver"]'
+                ).getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-truncating_putative_driver"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-truncating_putative_driver"]'
+                ).getCSSProperty('color').parsed.hex,
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
+                    'color'
+                ).parsed.hex
+            );
+
+            assert.equal(
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
+                    'color'
+                ).parsed.hex,
+                $('[data-test="badge-splice_putative_driver"]').getCSSProperty(
+                    'color'
+                ).parsed.hex
+            );
+
             // vus badge deselected
             assert.equal(
                 $('[data-test="badge-VUS"]').getCSSProperty('color').parsed.hex,
                 '#696969'
+            );
+
+            // all protein vus badges are deselected
+            assert.equal(
+                $('[data-test="badge-VUS"]').getCSSProperty('background-color')
+                    .parsed.hex,
+                $(
+                    '[data-test="badge-missense_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-missense_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $(
+                    '[data-test="badge-truncating_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-truncating_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $(
+                    '[data-test="badge-inframe_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-inframe_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $(
+                    '[data-test="badge-splice_unknown_significance"]'
+                ).getCSSProperty('background-color').parsed.hex
             );
 
             // selecting vus only button
@@ -423,11 +724,94 @@ describe('group comparison mutations tab tests', function() {
                 $('[data-test="badge-VUS"]').getCSSProperty('color').parsed.hex,
                 '#ffffff'
             );
+
+            getElementByTestHandle('filter-reset-panel').waitForDisplayed();
+
+            // all protein vus badges are selected
+            assert.equal(
+                $('[data-test="badge-VUS"]').getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-missense_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-missense_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-truncating_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-truncating_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-inframe_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-inframe_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex,
+                $(
+                    '[data-test="badge-splice_unknown_significance"]'
+                ).getCSSProperty('color').parsed.hex
+            );
+
             // driver badge deselected
             assert.equal(
                 $$('[data-test="badge-driver"]')[1].getCSSProperty('color')
                     .parsed.hex,
                 '#000000'
+            );
+
+            // all protein driver badges are deselected
+            assert.equal(
+                $$('[data-test="badge-driver"]')[1].getCSSProperty(
+                    'background-color'
+                ).parsed.hex,
+                $(
+                    '[data-test="badge-missense_putative_driver"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-missense_putative_driver"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $(
+                    '[data-test="badge-truncating_putative_driver"]'
+                ).getCSSProperty('background-color').parsed.hex
+            );
+
+            assert.equal(
+                $(
+                    '[data-test="badge-truncating_putative_driver"]'
+                ).getCSSProperty('background-color').parsed.hex,
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
+                    'background-color'
+                ).parsed.hex
+            );
+
+            assert.equal(
+                $('[data-test="badge-inframe_putative_driver"]').getCSSProperty(
+                    'background-color'
+                ).parsed.hex,
+                $('[data-test="badge-splice_putative_driver"]').getCSSProperty(
+                    'background-color'
+                ).parsed.hex
+            );
+
+            // selecting driver badge
+            $$('[data-test="badge-driver"]')[1].click();
+
+            assert.equal(
+                getElementByTestHandle('filter-reset-panel').isDisplayed(),
+                false
             );
         });
     });
