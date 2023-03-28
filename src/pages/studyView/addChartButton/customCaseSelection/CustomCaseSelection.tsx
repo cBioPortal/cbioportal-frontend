@@ -34,11 +34,21 @@ export interface ICustomCaseSelectionProps {
     isChartNameValid?: (chartName: string) => boolean;
 }
 
+// This is the selection tool that is used to switch between bar and pie charts for categorical and numerical data.
+type CustomDataType = 'CATEGORICAL' | 'NUMERICAL';
+enum CustomDataTypeEnum {
+    CATEGORICAL = 'CATEGORICAL',
+    NUMERICAL = 'NUMERICAL',
+}
+
 const GroupByOptions: { value: ClinicalDataType; label: string }[] = [
     { value: ClinicalDataTypeEnum.SAMPLE, label: 'By sample ID' },
     { value: ClinicalDataTypeEnum.PATIENT, label: 'By patient ID' },
 ];
-
+const GroupByCustomDataType: { value: CustomDataType; label: string }[] = [
+    { value: CustomDataTypeEnum.CATEGORICAL, label: 'Categorical data' },
+    { value: CustomDataTypeEnum.NUMERICAL, label: 'Numerical data' },
+];
 enum SelectMode {
     SELECTED,
     UNSELECTED,
@@ -55,7 +65,8 @@ export default class CustomCaseSelection extends React.Component<
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
     @observable content: string = '';
     @observable validContent: string = '';
-
+    /** typeIdsMode is specified by the user (in the radio button) and can be either categorical or numerical **/
+    @observable typeIdsMode: CustomDataType = CustomDataTypeEnum.CATEGORICAL;
     constructor(props: any) {
         super(props);
         makeObservable(this);
@@ -90,7 +101,6 @@ export default class CustomCaseSelection extends React.Component<
             this.isSingleStudy
         );
     }
-
     @computed
     get newChartInfo(): CustomChartData {
         const displayName = this.chartName
@@ -101,7 +111,10 @@ export default class CustomCaseSelection extends React.Component<
         return {
             displayName,
             description: displayName,
-            datatype: DataType.STRING,
+            datatype:
+                this.typeIdsMode === CustomDataTypeEnum.CATEGORICAL
+                    ? DataType.STRING
+                    : DataType.NUMBER,
             patientAttribute: this.caseIdsMode === ClinicalDataTypeEnum.PATIENT,
             data:
                 this.result.validationResult.error.length === 0
@@ -248,7 +261,26 @@ export default class CustomCaseSelection extends React.Component<
                         );
                     })}
                 </ButtonGroup>
-
+                <ButtonGroup>
+                    {!this.props.disableGrouping &&
+                        GroupByCustomDataType.map((option, i) => {
+                            return (
+                                <Radio
+                                    checked={option.value === this.typeIdsMode}
+                                    onChange={e => {
+                                        this.typeIdsMode = $(e.target).attr(
+                                            'data-value'
+                                        ) as any;
+                                        this.validateContent = true;
+                                    }}
+                                    inline
+                                    data-value={option.value}
+                                >
+                                    {option.label}
+                                </Radio>
+                            );
+                        })}
+                </ButtonGroup>
                 <span>
                     <div
                         style={{

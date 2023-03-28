@@ -22,6 +22,7 @@ const ADD_CHART_X_VS_Y_TAB = '.addChartTabs a.tabAnchor_X_Vs_Y';
 const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
 const MUTATIONS_GENES_TABLE = "[data-test='mutations-table']";
 const CANCER_GENE_FILTER_ICON = "[data-test='header-filter-icon']";
+const ADD_CUSTOM_CHART_TAB = '.addChartTabs a.tabAnchor.tabAnchor_Custom_Data';
 
 describe('study view generic assay categorical/binary features', function() {
     it('generic assay pie chart should be added in the summary tab', () => {
@@ -76,6 +77,47 @@ describe('study view generic assay categorical/binary features', function() {
             'div[data-test="chart-container-mutational_signature_category_10_mutational_signature_category_v2"]'
         );
         assertScreenShotMatch(res);
+    });
+});
+
+describe('Test the Custom data tab', function() {
+    it('Add custom data tab should have numerical and categorical selector', () => {
+        const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
+        goToUrlAndSetLocalStorage(url, true);
+        waitForNetworkQuiet();
+
+        $(ADD_CHART_BUTTON).waitForDisplayed({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        $(ADD_CHART_BUTTON).click();
+
+        waitForNetworkQuiet();
+        // Change to custom tab
+        $(ADD_CUSTOM_CHART_TAB).waitForDisplayed({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        $(ADD_CUSTOM_CHART_TAB).click();
+        const res = browser.checkElement('div.msk-tab.custom');
+        assertScreenShotMatch(res);
+    });
+    it('Selecting numerical for custom data should return a bar chart', () => {
+        const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
+        goToUrlAndSetLocalStorage(url, true);
+        waitForNetworkQuiet();
+
+        $(ADD_CHART_BUTTON).waitForDisplayed({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        $(ADD_CHART_BUTTON).click();
+
+        waitForNetworkQuiet();
+        // Change to custom tab
+        $(ADD_CUSTOM_CHART_TAB).waitForDisplayed({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        $(ADD_CUSTOM_CHART_TAB).click();
+        CUSTOM_CHART_TAB = $('div.msk-tab.custom');
+        // Add values to the input form
     });
 });
 

@@ -63,6 +63,7 @@ import {
     statusFilterActive,
     StudyViewFilterWithSampleIdentifierFilters,
     toFixedDigit,
+    transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
     updateGeneQuery,
     updateSavedUserPreferenceChartIds,
@@ -70,6 +71,7 @@ import {
 import {
     CancerStudy,
     ClinicalAttribute,
+    ClinicalData,
     ClinicalDataCollection,
     DataFilterValue,
     Sample,
@@ -90,6 +92,7 @@ import {
 } from 'shared/lib/Colors';
 import {
     ChartUserSetting,
+    CustomChartIdentifierWithValue,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { remoteData, toPromise } from 'cbioportal-frontend-commons';
@@ -4988,6 +4991,94 @@ describe('StudyViewUtils', () => {
                 ),
                 result
             );
+        });
+    });
+    describe('Create object for group comparison custom numerical data', () => {
+        it('transform sample data to clinical data ', function() {
+            const sampleData = [
+                {
+                    patientId: 'TCGA-Test-Patient1',
+                    sampleId: 'TCGA-Test-Sample1',
+                    studyId: 'TCGA-Test',
+                    value: '3',
+                } as CustomChartIdentifierWithValue,
+                {
+                    patientId: 'TCGA-Test-Patient2',
+                    sampleId: 'TCGA-Test-Sample2',
+                    studyId: 'TCGA-Test',
+                    value: '1',
+                } as CustomChartIdentifierWithValue,
+                {
+                    patientId: 'TCGA-Test-Patient3',
+                    sampleId: 'TCGA-Test-Sample3',
+                    studyId: 'TCGA-Test',
+                    value: '4',
+                } as CustomChartIdentifierWithValue,
+                {
+                    patientId: 'TCGA-Test-Patient4',
+                    sampleId: 'TCGA-Test-Sample4',
+                    studyId: 'TCGA-Test',
+                    value: '3',
+                } as CustomChartIdentifierWithValue,
+            ];
+
+            const selectedSamples = [
+                {
+                    patientId: 'TCGA-Test-Patient1',
+                    sampleId: 'TCGA-Test-Sample1',
+                    studyId: 'TCGA-Test',
+                    uniquePatientKey: '124Axce343',
+                    uniqueSampleKey: '12cvgt4gv',
+                } as Sample,
+                {
+                    patientId: 'TCGA-Test-Patient2',
+                    sampleId: 'TCGA-Test-Sample2',
+                    studyId: 'TCGA-Test',
+                    uniquePatientKey: '349bvdmas',
+                    uniqueSampleKey: '21cax68m4c',
+                } as Sample,
+            ];
+
+            const clinicalAttributeTest = {
+                clinicalAttributeId: '640882e01bf4f517ddb3a261',
+                datatype: 'NUMBER',
+                description: 'Test data',
+                displayName: 'Test data',
+                patientAttribute: false,
+                priority: '0',
+                studyId: 'TCGA-test',
+            } as ClinicalAttribute;
+
+            const outputObject = [
+                {
+                    clinicalAttribute: clinicalAttributeTest,
+                    clinicalAttributeId:
+                        clinicalAttributeTest.clinicalAttributeId,
+                    patientId: 'TCGA-Test-Patient1',
+                    sampleId: 'TCGA-Test-Sample1',
+                    studyId: 'TCGA-Test',
+                    uniquePatientKey: '124Axce343',
+                    uniqueSampleKey: '12cvgt4gv',
+                    value: '3',
+                } as ClinicalData,
+                {
+                    clinicalAttribute: clinicalAttributeTest,
+                    clinicalAttributeId:
+                        clinicalAttributeTest.clinicalAttributeId,
+                    patientId: 'TCGA-Test-Patient2',
+                    sampleId: 'TCGA-Test-Sample2',
+                    studyId: 'TCGA-Test',
+                    uniquePatientKey: '349bvdmas',
+                    uniqueSampleKey: '21cax68m4c',
+                    value: '1',
+                } as ClinicalData,
+            ];
+            let result = transformSampleDataToSelectedSampleClinicalData(
+                sampleData,
+                selectedSamples,
+                clinicalAttributeTest
+            );
+            assert.deepEqual(result, outputObject);
         });
     });
 });

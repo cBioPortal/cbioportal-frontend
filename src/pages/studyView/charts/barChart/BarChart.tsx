@@ -115,7 +115,6 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     @computed
     get numericalTickFormat(): (string | string[])[] {
         const formatted = formatNumericalTickValues(this.numericalBins);
-
         // if the value contains ^ we need to return an array of values, instead of a single value
         // to be compatible with BarChartAxisLabel
         return formatted.map(value =>
