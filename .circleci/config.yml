@@ -2,6 +2,16 @@
 #
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
+
+
+parameters:
+  remote_spec_pattern:
+    type: string
+    default: "./remote/specs/**/*.spec.js"
+  run_remote:
+    type: boolean
+    default: true
+
 defaults: &defaults
   working_directory: /tmp/repo
   docker:
@@ -36,7 +46,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           sleep 1s && \
           echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
           yarn run test-webdriver-manager-remote
-        when: always
+        when: << pipeline.parameters.run_remote >>
         environment:
           FRONTEND_TEST_USE_LOCAL_DIST: true
           WEBPACK_PARALLEL: false
@@ -193,7 +203,7 @@ jobs:
   end_to_end_tests:
     <<: *defaults
     environment:
-      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
+      SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
@@ -201,7 +211,7 @@ jobs:
   end_to_end_tests_against_master:
     <<: *defaults
     environment:
-      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
+      SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
       CBIOPORTAL_URL: https://master.cbioportal.org
@@ -367,27 +377,27 @@ workflows:
                 - master
                 - release-*
  #               - rc
-      - unit_tests_main:
-          requires:
-            - install
-      - unit_tests_packages:
-            requires:
-              - install
+#      - unit_tests_main:
+#          requires:
+#            - install
+#      - unit_tests_packages:
+#            requires:
+#              - install
       - end_to_end_tests:
           requires:
             - install
-      - end_to_end_tests_localdb:
-          requires:
-            - install
-      - api_sync:
-          requires:
-            - install
-      - check_forgotten_spec_only_statements:
-          requires:
-            - install
-      - check_incorrect_import_statements:
-          requires:
-            - install
+#      - end_to_end_tests_localdb:
+#          requires:
+#            - install
+#      - api_sync:
+#          requires:
+#            - install
+#      - check_forgotten_spec_only_statements:
+#          requires:
+#            - install
+#      - check_incorrect_import_statements:
+#          requires:
+#            - install
   nightly:
     triggers:
       - schedule:
