@@ -10,7 +10,7 @@ parameters:
     default: "./remote/specs/**/*.spec.js"
   run_remote:
     type: boolean
-    default: true
+    default: false
 
 defaults: &defaults
   working_directory: /tmp/repo
