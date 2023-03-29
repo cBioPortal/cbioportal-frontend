@@ -1008,9 +1008,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     // select default if _selectedGenericAssayOption is undefined and there are generic assay options to choose from
                     // if there is a gene selected in the other axis, select the first related option in this axis
                     // this will not override the option recorded in the url
+                    // 1. get genericAssayType based on selection
                     const genericAssayType = vertical
                         ? self.vertSelection.dataType
                         : self.horzSelection.dataType;
+                    // 2. If this genericAssayType is gene-related && one gene is selected in the other axis
+                    // Then find gene-related options
                     const selectedGeneRelatedOptions =
                         genericAssayType &&
                         GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
@@ -1022,6 +1025,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                   [selectedHugoGeneSymbolInTheOtherAxis]
                               )
                             : [];
+                    // 3. return first gene-related option or the detault option
                     return !_.isEmpty(selectedGeneRelatedOptions)
                         ? selectedGeneRelatedOptions[0]
                         : genericAssayOptions[0];
