@@ -386,7 +386,7 @@ export default class CancerStudySelector extends React.Component<
                                                             shownAndAuthorizedStudies.length >
                                                                 0
                                                                 ? `Deselect all authorized studies ${
-                                                                      shownAndAuthorizedStudies.length <
+                                                                    shownStudies.length <
                                                                       this.store
                                                                           .cancerStudies
                                                                           .result
@@ -397,7 +397,7 @@ export default class CancerStudySelector extends React.Component<
                                                                       shownAndAuthorizedStudies.length
                                                                   })`
                                                                 : `Select all authorized studies ${
-                                                                      shownAndAuthorizedStudies.length <
+                                                                    shownStudies.length <
                                                                       this.store
                                                                           .cancerStudies
                                                                           .result
