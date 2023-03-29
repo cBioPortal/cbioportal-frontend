@@ -165,6 +165,8 @@ describe('select all/deselect all functionality in study selector', function() {
     });
 
     it('global deselect button clears all selected studies, even during filter', function() {
+        this.retries(0);
+
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         assert.equal(
