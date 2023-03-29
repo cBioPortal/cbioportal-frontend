@@ -76,6 +76,7 @@ import { ChartOption } from './addChartButton/AddChartButton';
 import { observer } from 'mobx-react';
 import {
     ChartUserSetting,
+    CustomChartIdentifierWithValue,
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
@@ -150,6 +151,7 @@ export type ChartMeta = {
     patientAttribute: boolean;
     renderWhenDataChange: boolean;
 };
+
 export type ChartMetaWithDimensionAndChartType = ChartMeta & {
     dimension: ChartDimension;
     chartType: ChartType;
@@ -3001,10 +3003,8 @@ export async function getAllClinicalDataByStudyViewFilter(
         sampleClinicalData: [],
         patientClinicalData: [],
     };
-
     const maxPageSize = 500000;
     let pageNumber = 0;
-
     do {
         const remoteClinicalDataCollection = await internalClient.fetchClinicalDataClinicalTableUsingPOST(
             {
@@ -3842,3 +3842,39 @@ export const FGA_VS_MUTATION_COUNT_KEY = makeXvsYUniqueKey(
 
 export const FGA_PLOT_DOMAIN = { min: 0, max: 1 };
 export const MUTATION_COUNT_PLOT_DOMAIN = { min: 0 };
+
+export type ComparisonCustomData = {
+    patientId: string;
+    sampleId: string;
+    studyId: string;
+    uniquePatientKey: string;
+    uniqueSampleKey: string;
+    value: string;
+};
+
+// This function returns the ClinicalData for the selected samples in a custom numerical dataset (for group comparison)
+export function transformSampleDataToSelectedSampleClinicalData(
+    sampleData: CustomChartIdentifierWithValue[],
+    selectedSamples: Sample[],
+    clinicalAttribute: ClinicalAttribute
+): ClinicalData[] {
+    const selectedSampleData: ComparisonCustomData[] = sampleData.map(
+        sample =>
+            ({
+                ...sample,
+                ...selectedSamples.find(
+                    itmInner => itmInner.sampleId === sample.sampleId
+                ),
+            } as ComparisonCustomData)
+    );
+    const clinicalDataSamples = selectedSampleData
+        .map(item => {
+            return {
+                clinicalAttribute: clinicalAttribute,
+                clinicalAttributeId: clinicalAttribute.clinicalAttributeId,
+                ...item,
+            } as ClinicalData;
+        })
+        .filter(item => item.uniqueSampleKey !== undefined);
+    return clinicalDataSamples;
+}

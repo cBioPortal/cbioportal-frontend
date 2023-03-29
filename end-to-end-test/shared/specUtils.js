@@ -422,7 +422,7 @@ function pasteToElement(elementSelector, text) {
     browser.keys(['Shift', 'Insert']);
 }
 
-function checkOncoprintElement(selector) {
+function checkOncoprintElement(selector, viewports) {
     //browser.moveToObject('body', 0, 0);
     browser.execute(function() {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
@@ -434,6 +434,7 @@ function checkOncoprintElement(selector) {
             '.oncoprintjs__track_options__dropdown',
             '.oncoprintjs__cell_overlay_div',
         ],
+        viewports: viewports,
     });
 }
 

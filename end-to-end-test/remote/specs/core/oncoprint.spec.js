@@ -519,12 +519,12 @@ describe('oncoprint', function() {
 
             clickQueryByGeneButton();
 
-            $('[data-test="dataTypePrioritySelector"]')
+            $('[data-test="molecularProfileSelector"]')
                 .$('label*=Mutations')
                 .$('input[type="checkbox"]')
                 .waitForExist({ timeout: 10000 });
-            $('[data-test="dataTypePrioritySelector"]')
-                .$('label*=Copy number alterations')
+            $('[data-test="molecularProfileSelector"]')
+                .$('label*=Putative copy-number alterations from GISTIC')
                 .$('input[type="checkbox"]')
                 .waitForExist({ timeout: 10000 });
 
