@@ -442,7 +442,7 @@ export class StudyViewPageStore
             return filter === undefined ? true : (filter!.showNA as boolean);
         } else {
             const filter = this.getDataBinFilterSet(uniqueKey).get(uniqueKey)!;
-            return filter.showNA === undefined
+            return filter?.showNA === undefined
                 ? true
                 : (filter!.showNA as boolean);
         }
