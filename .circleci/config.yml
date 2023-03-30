@@ -365,9 +365,7 @@ jobs:
 workflows:
   version: 2.1
   install_and_test:
-    when:
-      conditional:
-        - equal: [true, << pipeline.parameters.run_remote >> ]
+    when: << pipeline.parameters.run_remote >>
     jobs:
       - install
       - prettier:
