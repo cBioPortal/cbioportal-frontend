@@ -75,7 +75,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         path: /tmp/repo/end-to-end-test/remote/junit/errors
         destination: /errors
 
-version: 2
+version: 2.1
 jobs:
   install:
     <<: *defaults
@@ -363,9 +363,11 @@ jobs:
           command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
 
 workflows:
-  version: 2
+  version: 2.1
   install_and_test:
-    when: << pipeline.parameters.run_remote >>
+    when:
+      conditional:
+        - equal: [true, << pipeline.parameters.run_remote >> ]
     jobs:
       - install
       - prettier:
