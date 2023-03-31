@@ -372,7 +372,10 @@ function getNumberOfStudyViewCharts() {
 function setInputText(selector, text) {
     // backspace to delete current contents - webdriver is supposed to clear it but it doesnt always work
     $(selector).click();
-    browser.keys('\uE003'.repeat($(selector).getValue().length));
+    //browser.keys('\uE003'.repeat($(selector).getValue().length));
+
+    $(selector).clearValue();
+    //browser.pause(1000);
 
     $(selector).setValue(text);
 }
@@ -419,7 +422,7 @@ function pasteToElement(elementSelector, text) {
     browser.keys(['Shift', 'Insert']);
 }
 
-function checkOncoprintElement(selector) {
+function checkOncoprintElement(selector, viewports) {
     //browser.moveToObject('body', 0, 0);
     browser.execute(function() {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
@@ -431,6 +434,7 @@ function checkOncoprintElement(selector) {
             '.oncoprintjs__track_options__dropdown',
             '.oncoprintjs__cell_overlay_div',
         ],
+        viewports: viewports,
     });
 }
 

@@ -10,6 +10,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import { getServerConfig } from 'config/config';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
 
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<
@@ -21,7 +22,17 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
     }
 
     render() {
-        if (this.store.selectableSelectedStudyIds.length !== 1) return null;
+        // we pass default=false because when there is no configuration
+        // we want to maintain legacy behavior of forbidding expression comparison
+        // so we don't change current behavior of all portals
+        const allowExpression = allowExpressionCrossStudy(
+            this.store.selectedPhysicalStudies.result!,
+            getServerConfig().enable_cross_study_expression,
+            false
+        );
+
+        // we currently use the same logic as for expression data
+        const allowProteinLevel = allowExpression;
 
         return (
             <FlexRow padded className={styles.MolecularProfileSelector}>
@@ -43,23 +54,25 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     {this.renderGroup('COPY_NUMBER_ALTERATION', 'Copy Number')}
                     {this.showGSVA &&
                         this.renderGroup('GENESET_SCORE', 'GSVA scores')}
-                    {this.renderGroup('MRNA_EXPRESSION', 'mRNA Expression')}
+
+                    {allowExpression &&
+                        this.renderGroup('MRNA_EXPRESSION', 'mRNA Expression')}
+
                     {this.renderGroup('METHYLATION', 'DNA Methylation')}
                     {this.renderGroup('METHYLATION_BINARY', 'DNA Methylation')}
-                    {this.renderGroup(
-                        'PROTEIN_LEVEL',
-                        'Protein/phosphoprotein level'
-                    )}
+
+                    {allowProteinLevel &&
+                        this.renderGroup(
+                            'PROTEIN_LEVEL',
+                            'Protein/phosphoprotein level'
+                        )}
+
                     {!!(
                         this.store.molecularProfilesInSelectedStudies
                             .isComplete &&
                         !this.store.molecularProfilesInSelectedStudies.result
                             .length
-                    ) && (
-                        <strong>
-                            No Genomic Profiles available for this Cancer Study
-                        </strong>
-                    )}
+                    ) && <strong>No studies selected</strong>}
                 </div>
             </FlexRow>
         );
@@ -121,6 +134,17 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
         groupLabel: string
     ) {
         let profiles = this.store.getFilteredProfiles(molecularAlterationType);
+
+        const groupedProfiles = _.groupBy(profiles, profile => {
+            const profileType = profile.molecularProfileId.replace(
+                new RegExp(profile.studyId + '_'),
+                ''
+            );
+            return profileType;
+        });
+
+        profiles = _.map(groupedProfiles, arr => arr[0]);
+
         if (!profiles.length) return null;
 
         const isGroupSelected = _.some(profiles, profile =>

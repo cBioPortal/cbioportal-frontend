@@ -247,10 +247,9 @@ export default class ClinicalTable extends React.Component<
                 render: (data: ClinicalDataCountSummary) => (
                     <span
                         style={{
-                            flexDirection: 'row-reverse',
-                            display: 'flex',
                             marginRight: this.cellMargin[ColumnKey.FREQ],
                         }}
+                        className={styles.pullRight}
                     >
                         {data.freq}
                     </span>

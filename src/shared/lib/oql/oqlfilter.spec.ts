@@ -1,6 +1,5 @@
 import {
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
-    OQLLineFilterOutput,
     MergedTrackLineFilterOutput,
     filterCBioPortalWebServiceData,
     parseOQLQuery,
@@ -11,12 +10,9 @@ import {
 import {
     NumericGeneMolecularData,
     MolecularProfile,
-    Mutation,
 } from 'cbioportal-ts-api-client';
 import AccessorsForOqlFilter from './AccessorsForOqlFilter';
-import _ from 'lodash';
 import { assert } from 'chai';
-import sinon from 'sinon';
 import { CustomDriverNumericGeneMolecularData } from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
@@ -264,6 +260,12 @@ describe('doesQueryContainOQL', () => {
         assert.equal(doesQueryContainOQL('TP53 BRCA1 BRCA2:EXP>0'), true);
         assert.equal(doesQueryContainOQL('TP53 BRCA1 BRCA2:FUSION'), true);
         assert.equal(doesQueryContainOQL('TP53 BRCA1 BRCA2:DRIVER'), true);
+        assert.equal(doesQueryContainOQL('TP53 BRCA1 PTEN::'), true);
+        assert.equal(doesQueryContainOQL('TP53 BRCA1 ::IGF2'), true);
+        assert.equal(doesQueryContainOQL('TP53 BRCA1 PTEN::IGF2'), true);
+        assert.equal(doesQueryContainOQL('TP53 BRCA1 PTEN:FUSION::'), true);
+        assert.equal(doesQueryContainOQL('TP53 BRCA1 PTEN:FUSION::IGF2'), true);
+        assert.equal(doesQueryContainOQL('TP53 BRCA1 PTEN:IGF::FUSION'), true);
     });
 });
 
@@ -281,6 +283,15 @@ describe('doesQueryContainMutationOQL', () => {
             true
         );
         assert.equal(doesQueryContainMutationOQL('TP53: DRIVER'), true);
+
+        // Struct Vars
+        assert.equal(doesQueryContainMutationOQL('TP53: FUSION'), false);
+        assert.equal(doesQueryContainMutationOQL('TP53: FUSION::'), false);
+        assert.equal(doesQueryContainMutationOQL('TP53: ::FUSION'), false);
+        assert.equal(doesQueryContainMutationOQL('TP53: FUSION::-'), false);
+        assert.equal(doesQueryContainMutationOQL('TP53: -::FUSION'), false);
+        assert.equal(doesQueryContainMutationOQL('KIF5B: FUSION::RET'), false);
+        assert.equal(doesQueryContainMutationOQL('RET: KIF5B::FUSION'), false);
     });
 });
 
@@ -338,6 +349,29 @@ describe('unparseOQLQueryLine', () => {
         assert.equal(
             unparseOQLQueryLine(parsedLine),
             'TP53: MUT=INFRAME_DRIVER_GERMLINE_(1-100*) MUT_(-500) MUT_GERMLINE_(51-)_DRIVER;'
+        );
+    });
+    it('unparses queries with downstream fusion with RET', () => {
+        const parsedLine = parseOQLQuery(
+            'KIF5B: SOMATIC_FUSION::RET_DRIVER'
+        )[0];
+        assert.equal(
+            unparseOQLQueryLine(parsedLine),
+            'KIF5B: FUSION::RET_SOMATIC_DRIVER;'
+        );
+    });
+    it('unparses queries with downstream fusion with any gene', () => {
+        const parsedLine = parseOQLQuery('KIF5B: SOMATIC_FUSION::_DRIVER')[0];
+        assert.equal(
+            unparseOQLQueryLine(parsedLine),
+            'KIF5B: FUSION::_SOMATIC_DRIVER;'
+        );
+    });
+    it('unparses queries with downstream fusion with undefined gene', () => {
+        const parsedLine = parseOQLQuery('KIF5B: SOMATIC_FUSION::-_DRIVER')[0];
+        assert.equal(
+            unparseOQLQueryLine(parsedLine),
+            'KIF5B: FUSION::-_SOMATIC_DRIVER;'
         );
     });
 });

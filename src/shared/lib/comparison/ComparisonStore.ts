@@ -1076,9 +1076,9 @@ export default abstract class ComparisonStore extends AnalysisStore
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             if (
-                (this.alterationsEnrichmentDataRequestGroups.result &&
-                    this.alterationsEnrichmentDataRequestGroups.result.length >
-                        1 &&
+                (!_.isEmpty(
+                    this.alterationsEnrichmentDataRequestGroups.result
+                ) &&
                     (_(this.selectedMutationEnrichmentEventTypes)
                         .values()
                         .some() ||
@@ -1219,7 +1219,9 @@ export default abstract class ComparisonStore extends AnalysisStore
         invoke: async () => {
             const alterationRowData: AlterationEnrichmentRow[] = this
                 .alterationEnrichmentRowData.result!;
-            alterationRowData.sort(compareByAlterationPercentage);
+            // get a copy of the list to keep the original order intact
+            // this is to keep the order of rows in the alteration table as is
+            alterationRowData.slice().sort(compareByAlterationPercentage);
             return alterationRowData.map(a => a.hugoGeneSymbol);
         },
     });

@@ -197,7 +197,7 @@ export default class DataSetsPageTable extends React.Component<
                             },
                             { name: 'RPPA', type: 'rppa', visible: false },
                             {
-                                name: 'Mass Spectrometry',
+                                name: 'Protein Mass Spectrometry',
                                 type: 'massSpectrometry',
                                 visible: false,
                             },

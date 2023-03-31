@@ -219,6 +219,12 @@ export type ClinicalEventData = {
         'value': string
 
 };
+export type ClinicalEventTypeCount = {
+    'count': number
+
+        'eventType': string
+
+};
 export type ClinicalViolinPlotBoxData = {
     'median': number
 
@@ -349,6 +355,10 @@ export type DataAccessToken = {
         'token': string
 
         'username': string
+
+};
+export type DataFilter = {
+    'values': Array < DataFilterValue >
 
 };
 export type DataFilterValue = {
@@ -999,6 +1009,8 @@ export type StudyViewFilter = {
         >
 
         'clinicalDataFilters': Array < ClinicalDataFilter >
+
+        'clinicalEventFilters': Array < DataFilter >
 
         'customDataFilters': Array < ClinicalDataFilter >
 
@@ -2233,6 +2245,83 @@ export default class CBioPortalAPIInternal {
             return response.body;
         });
     };
+    getClinicalEventTypeCountsUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/clinical-event-type-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get Counts of Clinical Event Types by Study View Filter
+     * @method
+     * @name CBioPortalAPIInternal#getClinicalEventTypeCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getClinicalEventTypeCountsUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/clinical-event-type-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get Counts of Clinical Event Types by Study View Filter
+     * @method
+     * @name CBioPortalAPIInternal#getClinicalEventTypeCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getClinicalEventTypeCountsUsingPOST(parameters: {
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalEventTypeCount >
+        > {
+            return this.getClinicalEventTypeCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchCNAGenesUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
@@ -2384,6 +2473,97 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < CosmicMutation >
         > {
             return this.fetchCosmicCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchCustomDataBinCountsUsingPOSTURL(parameters: {
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/custom-data-bin-counts/fetch';
+
+        if (parameters['dataBinMethod'] !== undefined) {
+            queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch custom data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCustomDataBinCountsUsingPOST
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
+     * @param {string} dataBinMethod - Method for data binning
+     */
+    fetchCustomDataBinCountsUsingPOSTWithHttpInfo(parameters: {
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/custom-data-bin-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['clinicalDataBinCountFilter'] !== undefined) {
+                body = parameters['clinicalDataBinCountFilter'];
+            }
+
+            if (parameters['clinicalDataBinCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataBinCountFilter'));
+                return;
+            }
+
+            if (parameters['dataBinMethod'] !== undefined) {
+                queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch custom data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCustomDataBinCountsUsingPOST
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
+     * @param {string} dataBinMethod - Method for data binning
+     */
+    fetchCustomDataBinCountsUsingPOST(parameters: {
+            'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+            'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalDataBin >
+        > {
+            return this.fetchCustomDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

@@ -362,6 +362,7 @@ export default class StudyViewPage extends React.Component<
                 this.store.patientTreatments,
                 this.store.patientTreatmentGroups,
                 this.store.sampleTreatmentGroups,
+                this.store.clinicalEventTypeCounts,
             ];
         },
         invoke: async () => {

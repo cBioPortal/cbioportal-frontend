@@ -18118,10 +18118,10 @@ pathval@^1.1.1:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.1.tgz#8534e77a77ce7ac5a2512ea21e0fdb8fcf6c3d8d"
   integrity sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==
 
-pathway-mapper@^2.3.0-beta.3:
-  version "2.3.0-beta.3"
-  resolved "https://registry.yarnpkg.com/pathway-mapper/-/pathway-mapper-2.3.0-beta.3.tgz#da0082bea6433cd322b062cd0d8ae77784eaca96"
-  integrity sha512-9L0XqJ3VDSdkXo9yW/IyHn0ojdwCN5TrO6ieUwFqM135/+qZsL7RCPSjLms43JBvB/tOKUa44rPifr+4EGR0eg==
+pathway-mapper@^2.3.0-beta.6:
+  version "2.3.0-beta.6"
+  resolved "https://registry.yarnpkg.com/pathway-mapper/-/pathway-mapper-2.3.0-beta.6.tgz#14d75d3a8491aac20d4bd1f1c076685b88b26c6d"
+  integrity sha512-CjHnJ30VcEp5p2/o/ZbqueE2jDZ54P7vIY1sZohcd5ynITynKFdhw9TIo7sqZLHnAJh6W/uwMTchf5zxyRRdSg==
   dependencies:
     "@datastructures-js/max-heap" "^2.0.0"
     autobind-decorator "^2.4.0"

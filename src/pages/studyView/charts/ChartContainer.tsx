@@ -71,6 +71,9 @@ import {
 } from 'pages/resultsView/survival/SurvivalUtil';
 import StudyViewViolinPlotTable from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotTable';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
+import ClinicalEventTypeCountTable, {
+    ClinicalEventTypeCountColumnKey,
+} from 'pages/studyView/table/ClinicalEventTypeCountTable';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -1019,6 +1022,44 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         ]}
                         defaultSortBy={PatientTreatmentsTableColumnKey.COUNT}
                         selectedTreatments={[]}
+                    />
+                );
+            }
+            case ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE: {
+                return () => (
+                    <ClinicalEventTypeCountTable
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
+                        columns={[
+                            {
+                                columnKey:
+                                    ClinicalEventTypeCountColumnKey.CLINICAL_EVENT_TYPE,
+                            },
+                            {
+                                columnKey:
+                                    ClinicalEventTypeCountColumnKey.COUNT,
+                            },
+                            {
+                                columnKey: ClinicalEventTypeCountColumnKey.FREQ,
+                            },
+                        ]}
+                        selectedPatientsKeyPromise={
+                            this.props.store.selectedPatientKeys
+                        }
+                        defaultSortBy={ClinicalEventTypeCountColumnKey.COUNT}
                     />
                 );
             }

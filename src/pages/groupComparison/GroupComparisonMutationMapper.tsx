@@ -15,7 +15,9 @@ import { ComparisonGroup } from './GroupComparisonUtils';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'shared/components/mutationMapper/DriverAnnotationProteinImpactTypeBadgeSelector';
 import { IAnnotationFilterSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
-import { ProteinImpactType } from 'cbioportal-frontend-commons';
+import { ProteinImpactWithoutVusMutationType } from 'cbioportal-frontend-commons';
+import styles from './styles.module.scss';
+import { LegendColorCodes } from 'shared/components/mutationMapper/LegendColorCodes';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -31,6 +33,17 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 > {
     constructor(props: IGroupComparisonMutationMapperProps) {
         super(props);
+    }
+
+    protected legendColorCodes = (
+        <LegendColorCodes
+            isPutativeDriver={this.props.isPutativeDriver}
+            hideFusions={true}
+        />
+    );
+
+    protected get view3dButton(): JSX.Element | null {
+        return null;
     }
 
     protected get mutationTableComponent() {
@@ -75,10 +88,13 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                         }
                         disableAnnotationSettings={true}
                         excludedProteinTypes={[
-                            ProteinImpactType.FUSION,
-                            ProteinImpactType.FUSION_PUTATIVE_DRIVER,
-                            ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE,
+                            ProteinImpactWithoutVusMutationType.FUSION,
                         ]}
+                        groupIndex={groupIndex}
+                        groupNameWithOrdinal={
+                            this.props.groups[groupIndex].nameWithOrdinal
+                        }
+                        height={149}
                     />
                 ) : (
                     <ProteinImpactTypeBadgeSelector
@@ -87,7 +103,14 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                             groupIndex
                         )}
                         onSelect={this.onProteinImpactTypeSelect}
-                        excludedProteinTypes={[ProteinImpactType.FUSION]}
+                        excludedProteinTypes={[
+                            ProteinImpactWithoutVusMutationType.FUSION,
+                        ]}
+                        groupIndex={groupIndex}
+                        groupNameWithOrdinal={
+                            this.props.groups[groupIndex].nameWithOrdinal
+                        }
+                        height={109}
                     />
                 )}
             </>
@@ -99,14 +122,15 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
      */
     protected get mutationFilterPanel(): JSX.Element | null {
         return (
-            <div
-                style={
-                    this.props.isPutativeDriver
-                        ? { paddingTop: 5, paddingBottom: 5 }
-                        : { paddingTop: 5, paddingBottom: 15 }
-                }
-            >
-                <div>
+            <>
+                <div
+                    className={styles.settingsMenuButton}
+                    style={
+                        this.props.isPutativeDriver
+                            ? { position: 'absolute' }
+                            : {}
+                    }
+                >
                     <SettingsMenuButton
                         store={this.props.annotationFilterSettings}
                         disableInfoIcon={true}
@@ -115,42 +139,47 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                         showExcludeUnprofiledSamplesControl={false}
                         inFilterPanel={true}
                     />
-                    Annotation settings
                 </div>
                 <div
                     style={
                         this.props.isPutativeDriver
-                            ? {
-                                  paddingTop: 20,
-                              }
-                            : {
-                                  paddingTop: 92,
-                              }
+                            ? { paddingTop: 5, paddingBottom: 5 }
+                            : { paddingTop: 15, paddingBottom: 15 }
                     }
                 >
-                    {this.proteinImpactTypeBadgeSelectorForGroup(
-                        0,
-                        !!this.props.isPutativeDriver
-                    )}
-                    <hr
-                        style={
-                            this.props.isPutativeDriver
-                                ? {
-                                      marginTop: 2,
-                                      marginBottom: 2,
-                                  }
-                                : {
-                                      marginTop: 15,
-                                      marginBottom: 15,
-                                  }
-                        }
-                    ></hr>
-                    {this.proteinImpactTypeBadgeSelectorForGroup(
-                        1,
-                        !!this.props.isPutativeDriver
-                    )}
+                    <div>
+                        {this.proteinImpactTypeBadgeSelectorForGroup(
+                            0,
+                            !!this.props.isPutativeDriver
+                        )}
+                        <hr
+                            style={
+                                this.props.isPutativeDriver
+                                    ? {
+                                          marginTop: 10,
+                                          marginBottom: 10,
+                                          height: 1,
+                                          backgroundColor: 'black',
+                                          border: 'none',
+                                          color: 'black',
+                                      }
+                                    : {
+                                          marginTop: 15,
+                                          marginBottom: 15,
+                                          height: 1,
+                                          backgroundColor: 'black',
+                                          border: 'none',
+                                          color: 'black',
+                                      }
+                            }
+                        ></hr>
+                        {this.proteinImpactTypeBadgeSelectorForGroup(
+                            1,
+                            !!this.props.isPutativeDriver
+                        )}
+                    </div>
                 </div>
-            </div>
+            </>
         );
     }
 

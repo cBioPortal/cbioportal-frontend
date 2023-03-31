@@ -106,7 +106,8 @@ export function getFreqColumnRender(
     numberOfAlteredCases: number,
     matchingGenePanelIds: string[],
     toggleModal?: (panelName: string) => void,
-    style?: CSSProperties
+    style?: CSSProperties,
+    className?: string
 ) {
     let tooltipContent = '# of samples profiled';
     if (type !== 'data') {
@@ -131,7 +132,7 @@ export function getFreqColumnRender(
             overlay={addTotalProfiledOverlay}
             destroyTooltipOnHide={true}
         >
-            <span data-test="freq-cell" style={style}>
+            <span data-test="freq-cell" className={className} style={style}>
                 {getFrequencyStr(
                     (numberOfAlteredCases / numberOfProfiledCases) * 100
                 )}

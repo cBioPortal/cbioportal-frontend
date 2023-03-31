@@ -76,12 +76,14 @@ import { ChartOption } from './addChartButton/AddChartButton';
 import { observer } from 'mobx-react';
 import {
     ChartUserSetting,
+    CustomChartIdentifierWithValue,
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { getServerConfig } from 'config/config';
 import joinJsx from 'shared/lib/joinJsx';
 import { BoundType, NumberRange } from 'range-ts';
+import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -118,6 +120,7 @@ export enum SpecialChartsUniqueKeyEnum {
     SAMPLE_TREATMENTS = 'SAMPLE_TREATMENTS',
     SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
     SAMPLE_TREATMENT_TARGET = 'SAMPLE_TREATMENT_TARGET',
+    CLINICAL_EVENT_TYPE_COUNTS = 'CLINICAL_EVENT_TYPE_COUNTS',
 }
 
 export type AnalysisGroup = {
@@ -148,6 +151,7 @@ export type ChartMeta = {
     patientAttribute: boolean;
     renderWhenDataChange: boolean;
 };
+
 export type ChartMetaWithDimensionAndChartType = ChartMeta & {
     dimension: ChartDimension;
     chartType: ChartType;
@@ -779,6 +783,24 @@ export function getUniqueKeyFromMolecularProfileIds(
     return _.sortBy(molecularProfileIds).join(UNIQUE_KEY_SEPARATOR);
 }
 
+export function calculateSampleCountForClinicalEventTypeCountTable(
+    selectedPatientCnt: number,
+    selectedSampleCnt: number,
+    clinicalEventTypeCounts?: ClinicalEventTypeCount[]
+): number {
+    let sampleCount = 0;
+    if (!_.isEmpty(clinicalEventTypeCounts) && selectedPatientCnt > 0) {
+        const maxClinicalEventTypeCount = _.maxBy(
+            clinicalEventTypeCounts,
+            c => c.count
+        );
+        const freqOfPatients =
+            maxClinicalEventTypeCount!.count / selectedPatientCnt;
+        sampleCount = selectedSampleCnt * freqOfPatients;
+    }
+    return sampleCount;
+}
+
 export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
     return uniqueKey.split(UNIQUE_KEY_SEPARATOR);
 }
@@ -972,7 +994,8 @@ export function isFiltered(
             (!filter.patientTreatmentTargetFilters ||
                 _.isEmpty(filter.patientTreatmentTargetFilters.filters)) &&
             (!filter.sampleTreatmentTargetFilters ||
-                _.isEmpty(filter.sampleTreatmentTargetFilters.filters)))
+                _.isEmpty(filter.sampleTreatmentTargetFilters.filters)) &&
+            _.isEmpty(filter.clinicalEventFilters))
     );
 
     if (filter.sampleIdentifiersSet) {
@@ -2980,10 +3003,8 @@ export async function getAllClinicalDataByStudyViewFilter(
         sampleClinicalData: [],
         patientClinicalData: [],
     };
-
     const maxPageSize = 500000;
     let pageNumber = 0;
-
     do {
         const remoteClinicalDataCollection = await internalClient.fetchClinicalDataClinicalTableUsingPOST(
             {
@@ -3821,3 +3842,39 @@ export const FGA_VS_MUTATION_COUNT_KEY = makeXvsYUniqueKey(
 
 export const FGA_PLOT_DOMAIN = { min: 0, max: 1 };
 export const MUTATION_COUNT_PLOT_DOMAIN = { min: 0 };
+
+export type ComparisonCustomData = {
+    patientId: string;
+    sampleId: string;
+    studyId: string;
+    uniquePatientKey: string;
+    uniqueSampleKey: string;
+    value: string;
+};
+
+// This function returns the ClinicalData for the selected samples in a custom numerical dataset (for group comparison)
+export function transformSampleDataToSelectedSampleClinicalData(
+    sampleData: CustomChartIdentifierWithValue[],
+    selectedSamples: Sample[],
+    clinicalAttribute: ClinicalAttribute
+): ClinicalData[] {
+    const selectedSampleData: ComparisonCustomData[] = sampleData.map(
+        sample =>
+            ({
+                ...sample,
+                ...selectedSamples.find(
+                    itmInner => itmInner.sampleId === sample.sampleId
+                ),
+            } as ComparisonCustomData)
+    );
+    const clinicalDataSamples = selectedSampleData
+        .map(item => {
+            return {
+                clinicalAttribute: clinicalAttribute,
+                clinicalAttributeId: clinicalAttribute.clinicalAttributeId,
+                ...item,
+            } as ClinicalData;
+        })
+        .filter(item => item.uniqueSampleKey !== undefined);
+    return clinicalDataSamples;
+}
