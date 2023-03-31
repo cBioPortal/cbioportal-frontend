@@ -176,6 +176,9 @@ describe('select all/deselect all functionality in study selector', function() {
         );
 
         browser.pause(500);
+        $$(
+            '[data-test="StudySelect"] input[type=checkbox]'
+        )[50].waitForDisplayed();
         $$('[data-test="StudySelect"] input[type=checkbox]')[50].click();
 
         assert.equal(
@@ -187,14 +190,17 @@ describe('select all/deselect all functionality in study selector', function() {
         var input = $('div[data-test=study-search] input[type=text]');
 
         assert.equal(getCheckedCheckboxes().length, 1, 'we selected one study');
+        console.log('Function call 1 pass');
 
         // add a filter
         input.setValue('breast');
 
         //click global deselect all while filtered
+        $('[data-test=globalDeselectAllStudiesButton]').waitForDisplayed();
         $('[data-test=globalDeselectAllStudiesButton]').click();
 
         // click unfilter button
+        $('[data-test=clearStudyFilter]').waitForDisplayed();
         $('[data-test=clearStudyFilter]').click();
 
         assert.equal(
@@ -202,6 +208,7 @@ describe('select all/deselect all functionality in study selector', function() {
             0,
             'no selected studies are selected after deselect all clicked'
         );
+        console.log('Function call 2 pass');
     });
 });
 
