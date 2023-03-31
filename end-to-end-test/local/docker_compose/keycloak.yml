@@ -11,7 +11,7 @@ services:
     networks:
     - cbio-net
     container_name: keycloak
-    image: ${DOCKER_IMAGE_KEYCLOAK}
+    image: fuzhaoyuan/keycloak:11.0.3
     restart: unless-stopped
     depends_on:
     - kcdb
@@ -26,7 +26,7 @@ services:
     - DB_DATABASE=keycloak
     - KEYCLOAK_USER=admin
     - KEYCLOAK_PASSWORD=admin
-    - JDBC_PARAMS=${KEYCLOAK_JDBC_PARAMS:-useSSL=false}
+    - JDBC_PARAMS=${KEYCLOAK_JDBC_PARAMS:-useSSL=false&serverTimezone=UTC}
 
   kcdb:
     networks:
