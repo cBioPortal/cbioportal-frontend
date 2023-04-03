@@ -6175,7 +6175,7 @@ export class StudyViewPageStore
     @computed
     get visibleAttributes(): ChartMeta[] {
         return _.reduce(
-            Array.from(this._chartVisibility.entries()),
+            Array.from(this._chartVisibility.entries() || []),
             (acc, [chartUniqueKey, visible]) => {
                 if (visible && this.chartMetaSet[chartUniqueKey]) {
                     let chartMeta = this.chartMetaSet[chartUniqueKey];

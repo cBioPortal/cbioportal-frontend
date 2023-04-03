@@ -72,5 +72,7 @@ export {
     CustomDriverAnnotationReport,
     StructuralVariant,
     StructuralVariantFilter,
+    StructuralVariantQuery,
+    StructuralVariantGeneSubQuery,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';
