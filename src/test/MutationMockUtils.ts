@@ -13,8 +13,6 @@ export function emptyMutation(): Mutation {
         center: '',
         endPosition: -1,
         entrezGeneId: -1,
-        fisValue: -1,
-        functionalImpactScore: '',
         gene: {
             geneticEntityId: -1,
             entrezGeneId: -1,
@@ -33,9 +31,6 @@ export function emptyMutation(): Mutation {
         },
         molecularProfileId: '',
         keyword: '',
-        linkMsa: '',
-        linkPdb: '',
-        linkXvar: '',
         mutationStatus: '',
         mutationType: '',
         ncbiBuild: '',
