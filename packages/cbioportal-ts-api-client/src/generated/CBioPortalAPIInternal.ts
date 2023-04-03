@@ -108,6 +108,8 @@ export type ClinicalData = {
 
         'clinicalAttributeId': string
 
+        'patientAttribute': boolean
+
         'patientId': string
 
         'sampleId': string
@@ -2476,7 +2478,6 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-
     fetchCustomDataBinCountsUsingPOSTURL(parameters: {
         'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
         'dataBinMethod' ? : "DYNAMIC" | "STATIC",
