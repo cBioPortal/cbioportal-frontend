@@ -813,6 +813,55 @@
         }
       }
     },
+    "/custom-data-bin-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch custom data bin counts by study view filter",
+        "operationId": "fetchCustomDataBinCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "clinicalDataBinCountFilter",
+            "description": "Clinical data bin count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClinicalDataBinCountFilter"
+            }
+          },
+          {
+            "name": "dataBinMethod",
+            "in": "query",
+            "description": "Method for data binning",
+            "required": false,
+            "type": "string",
+            "default": "DYNAMIC",
+            "enum": [
+              "DYNAMIC",
+              "STATIC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalDataBin"
+              }
+            }
+          }
+        }
+      }
+    },
     "/custom-data-counts/fetch": {
       "post": {
         "tags": [
@@ -3543,6 +3592,9 @@
         },
         "clinicalAttributeId": {
           "type": "string"
+        },
+        "patientAttribute": {
+          "type": "boolean"
         },
         "patientId": {
           "type": "string"

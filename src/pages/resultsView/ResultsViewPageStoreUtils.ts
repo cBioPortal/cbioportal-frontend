@@ -914,6 +914,7 @@ export function getExtendsClinicalAttributesFromCustomData(
                         clinicalAttributeId: attr.clinicalAttributeId,
                         uniquePatientKey: sample.uniquePatientKey,
                         uniqueSampleKey: sample.uniqueSampleKey,
+                        patientAttribute: attr.patientAttribute,
                     });
                 }
 

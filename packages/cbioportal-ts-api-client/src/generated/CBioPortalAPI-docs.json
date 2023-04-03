@@ -4577,6 +4577,9 @@
         "clinicalAttributeId": {
           "type": "string"
         },
+        "patientAttribute": {
+          "type": "boolean"
+        },
         "patientId": {
           "type": "string"
         },
@@ -5435,25 +5438,10 @@
           "type": "integer",
           "format": "int32"
         },
-        "fisValue": {
-          "type": "number"
-        },
-        "functionalImpactScore": {
-          "type": "string"
-        },
         "gene": {
           "$ref": "#/definitions/Gene"
         },
         "keyword": {
-          "type": "string"
-        },
-        "linkMsa": {
-          "type": "string"
-        },
-        "linkPdb": {
-          "type": "string"
-        },
-        "linkXvar": {
           "type": "string"
         },
         "molecularProfileId": {

@@ -118,6 +118,7 @@ function makeComparisonGroupData(
         ret.push({
             clinicalAttribute: attribute as ClinicalAttribute,
             clinicalAttributeId: attribute.clinicalAttributeId,
+            patientAttribute: attribute.patientAttribute,
             patientId: sample.patientId,
             sampleId: sample.sampleId,
             studyId: sample.studyId,
@@ -163,6 +164,7 @@ function makeProfiledData(
                 clinicalAttribute: attribute as ClinicalAttribute,
                 clinicalAttributeId: attribute.clinicalAttributeId,
                 patientId: sample.patientId,
+                patientAttribute: attribute.patientAttribute,
                 sampleId: sample.sampleId,
                 studyId: sample.studyId,
                 uniquePatientKey: sample.uniquePatientKey,

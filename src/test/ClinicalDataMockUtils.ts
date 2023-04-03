@@ -25,6 +25,7 @@ export function emptyClinicalData(): ClinicalData {
         uniquePatientKey: '',
         uniqueSampleKey: '',
         value: '',
+        patientAttribute: false,
     };
 }
 
