@@ -2703,22 +2703,28 @@ export class PatientViewPageStore {
         [sampleId: string]: { [queryType: string]: IndicatorQueryResp };
     }>({
         invoke: async () => {
-            const allResult = await oncokbClient.annotateMutationsByProteinChangePostUsingPOST_1(
-                {
-                    body: this.otherBiomarkerQueries,
-                }
-            );
+            if (getServerConfig().show_oncokb) {
+                const allResult = await oncokbClient.annotateMutationsByProteinChangePostUsingPOST_1(
+                    {
+                        body: this.otherBiomarkerQueries,
+                    }
+                );
 
-            const updatedResult = allResult.map(resp => {
-                return {
-                    ...resp,
-                    ...parseOtherBiomarkerQueryId(resp.query.id),
-                };
-            });
-            return _.chain(updatedResult)
-                .groupBy(datum => datum.sampleId)
-                .mapValues(group => _.keyBy(group, groupItem => groupItem.type))
-                .value();
+                const updatedResult = allResult.map(resp => {
+                    return {
+                        ...resp,
+                        ...parseOtherBiomarkerQueryId(resp.query.id),
+                    };
+                });
+                return _.chain(updatedResult)
+                    .groupBy(datum => datum.sampleId)
+                    .mapValues(group =>
+                        _.keyBy(group, groupItem => groupItem.type)
+                    )
+                    .value();
+            } else {
+                return Promise.resolve({});
+            }
         },
         default: {},
         onError: () => {},
