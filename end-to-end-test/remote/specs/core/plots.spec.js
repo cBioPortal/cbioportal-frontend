@@ -1,8 +1,14 @@
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 var assert = require('assert');
-const { getElementByTestHandle } = require('../../../shared/specUtils');
+const {
+    getElementByTestHandle,
+    waitForPlotsTab,
+    getTextFromElement,
+} = require('../../../shared/specUtils');
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
+
+const METHYLATION_OPTION_SELECTION_BOX = 'div.genericAssaySelectBox';
 
 describe('plots tab tests', function() {
     it('shows data availability alert tooltip for plots tab multiple studies', () => {
@@ -44,6 +50,19 @@ describe('plots tab tests', function() {
             getElementByTestHandle('VerticalLogCheckbox').isExisting(),
             false,
             'Log Scale Checkbox should not be availble raw data type is not number'
+        );
+    });
+    it('plots tab select gene related generic assay default option', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/plots?cancer_study_list=acc_tcga_pan_can_atlas_2018&tab_index=tab_visualize&case_set_id=acc_tcga_pan_can_atlas_2018_all&Action=Submit&gene_list=TP53&plots_horz_selection=%7B%22dataType%22%3A%22METHYLATION%22%7D&plots_vert_selection=%7B%22selectedGeneOption%22%3A7157%7D&plots_coloring_selection=%7B%7D`
+        );
+        waitForPlotsTab();
+        $(METHYLATION_OPTION_SELECTION_BOX).waitForDisplayed({
+            timeout: 20000,
+        });
+        assert(
+            getTextFromElement(METHYLATION_OPTION_SELECTION_BOX) ===
+                "TP53;WRAP53 (cg06587969): TSS1500;5'UTR;1stExon"
         );
     });
 });

@@ -373,5 +373,6 @@
     "ts-node": "^10.2.1",
     "webpack-dev-server": "^4.1.0",
     "yargs": "^6.6.0"
-  }
+  },
+  "packageManager": "yarn@1.22.5"
 }
