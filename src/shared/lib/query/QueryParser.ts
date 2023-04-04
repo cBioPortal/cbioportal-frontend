@@ -1,7 +1,7 @@
 import {
-    CancerTreeNodeFields,
+    FullTextSearchFields,
     CancerTreeSearchFilter,
-    defaultNodeFields,
+    searchNodeFields,
 } from 'shared/lib/query/textQueryUtils';
 import {
     AndSearchClause,
@@ -14,7 +14,7 @@ import { FilterCheckbox } from 'shared/components/query/filteredSearch/field/Che
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import { FilterList } from 'shared/components/query/filteredSearch/field/ListFormField';
 import {
-    DefaultPhrase,
+    StringPhrase,
     ListPhrase,
     Phrase,
 } from 'shared/components/query/filteredSearch/Phrase';
@@ -32,7 +32,7 @@ export class QueryParser {
              */
             {
                 phrasePrefix: undefined,
-                nodeFields: defaultNodeFields,
+                nodeFields: searchNodeFields,
                 form: {
                     label: 'Example queries',
                     input: FilterList,
@@ -193,7 +193,7 @@ export class QueryParser {
     private createPhrase(data: string): Phrase {
         const parts: string[] = data.split(FILTER_SEPARATOR);
         let phrase: string;
-        let fields: CancerTreeNodeFields[];
+        let fields: FullTextSearchFields[];
         let filter = this._searchFilters.find(
             sf => sf.phrasePrefix === parts[0]
         );
@@ -203,8 +203,8 @@ export class QueryParser {
             return new ListPhrase(phrase, this.enquoteSpaces(data), fields);
         } else {
             phrase = parts[0];
-            fields = defaultNodeFields;
-            return new DefaultPhrase(phrase, this.enquoteSpaces(data), fields);
+            fields = searchNodeFields;
+            return new StringPhrase(phrase, this.enquoteSpaces(data), fields);
         }
     }
 
