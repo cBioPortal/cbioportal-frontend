@@ -1,19 +1,8 @@
 import * as React from 'react';
-import { observer, inject, Observer } from 'mobx-react';
-import { observable } from 'mobx';
-import Tour from 'reactour';
-import './tour.scss';
+import InteractiveTour from '../InteractiveTour';
+import './styles.scss';
 
-@observer
 export default class HomePageTour extends React.Component<{}, {}> {
-    @observable tourIsOpen = false;
-
-    constructor({}) {
-        super({});
-        this.endTour = this.endTour.bind(this);
-        this.startTour = this.startTour.bind(this);
-    }
-
     steps = [
         {
             selector: '#startTourButton',
@@ -118,41 +107,16 @@ export default class HomePageTour extends React.Component<{}, {}> {
         },
     ];
 
-    private endTour() {
-        console.log('Ending tour!');
-        this.tourIsOpen = false;
-    }
-
-    private startTour() {
-        console.log('Starting tour!');
-        this.tourIsOpen = true;
-    }
-
-    public render() {
-        let buttonStyle = {
-            margin: 10,
-        };
-        let tourStyle = {
-            marginLeft: 20,
-        };
-        console.log('Tour is open:  ' + this.tourIsOpen);
+    render() {
         return (
-            <div style={tourStyle}>
-                New to cBioPortal? Try our guided tour.{' '}
-                <button
-                    id="startTourButton"
-                    style={buttonStyle}
-                    onClick={this.startTour}
-                >
-                    Start Tour!
-                </button>
-                <Tour
-                    rounded={10}
-                    steps={this.steps}
-                    isOpen={this.tourIsOpen}
-                    onRequestClose={this.endTour}
-                />
-            </div>
+            <InteractiveTour
+                steps={this.steps}
+                rounded={10}
+                className="home-page-tour"
+                buttonID="startTourButton"
+                mainContent={`New to cBioPortal? Try our guided tour.${' '}`}
+                buttonContent={'Start Tour!'}
+            />
         );
     }
 }
