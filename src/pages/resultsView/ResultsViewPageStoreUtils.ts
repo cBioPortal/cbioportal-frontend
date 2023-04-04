@@ -11,9 +11,8 @@ import {
     PatientIdentifier,
     ReferenceGenomeGene,
     Sample,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
-
-import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 import { action, ObservableMap } from 'mobx';
 import AccessorsForOqlFilter, {
@@ -914,6 +913,7 @@ export function getExtendsClinicalAttributesFromCustomData(
                         clinicalAttributeId: attr.clinicalAttributeId,
                         uniquePatientKey: sample.uniquePatientKey,
                         uniqueSampleKey: sample.uniqueSampleKey,
+                        patientAttribute: attr.patientAttribute,
                     });
                 }
 

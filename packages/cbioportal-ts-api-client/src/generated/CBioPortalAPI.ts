@@ -130,6 +130,8 @@ export type ClinicalData = {
 
         'clinicalAttributeId': string
 
+        'patientAttribute': boolean
+
         'patientId': string
 
         'sampleId': string
@@ -495,19 +497,9 @@ export type Mutation = {
 
         'entrezGeneId': number
 
-        'fisValue': number
-
-        'functionalImpactScore': string
-
         'gene': Gene
 
         'keyword': string
-
-        'linkMsa': string
-
-        'linkPdb': string
-
-        'linkXvar': string
 
         'molecularProfileId': string
 

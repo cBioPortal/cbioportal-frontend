@@ -95,6 +95,9 @@ export declare type SingleGeneQuery = {
     gene: string;
     alterations: false | Alteration[];
 };
+
+export type StructVarSpecialValue = 'NO_GENE' | 'ANY_GENE';
+
 //
 // Alterations
 // 	= a1:Alteration sp a2:Alterations { return [a1].concat(a2);}
