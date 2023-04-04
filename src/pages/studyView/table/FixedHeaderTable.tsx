@@ -26,7 +26,6 @@ import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyM
 import { SelectionOperatorEnum } from '../TableUtils';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import classNames from 'classnames';
-import { StudyViewContext } from 'pages/studyView/StudyViewContext';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[];
@@ -42,6 +41,7 @@ export type IFixedHeaderTableProps<T> = {
     rowHeight?: number;
     numberOfSelectedRows: number;
     showSetOperationsButton?: boolean;
+    setOperationsButtonText?: string;
     afterSelectingRows?: () => void;
     toggleSelectionOperator?: () => void;
     // used only when showControlsAtTop === true (show controls at bottom otherwise)
@@ -425,9 +425,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                             className="btn btn-default btn-xs"
                             onClick={this.afterSelectingRows}
                         >
-                            {this.context.store.hesitateUpdate
-                                ? 'Add Filters '
-                                : 'Select Samples '}
+                            {this.props.setOperationsButtonText || ''}
                             <If condition={this.props.numberOfSelectedRows > 1}>
                                 <i
                                     style={{ marginTop: '-2px' }}
@@ -539,5 +537,3 @@ export default class FixedHeaderTable<T> extends React.Component<
         );
     }
 }
-
-FixedHeaderTable.contextType = StudyViewContext;

@@ -54,8 +54,6 @@ import {
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import classNames from 'classnames';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
-import { StudyViewContext } from 'pages/studyView/StudyViewContext';
-import { DataFilter } from 'cbioportal-ts-api-client';
 
 export interface IUserSelectionsProps {
     store: StudyViewPageStore;
@@ -117,9 +115,9 @@ export default class UserSelections extends React.Component<
         // show the button when we're on summary tab and in hesitate mode and
         // there are pending filters to submit
         return (
-            this.context.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY &&
-            this.context.store.hesitateUpdate &&
-            Object.keys(this.context.store.hesitantPillStore).length > 0
+            this.props.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY &&
+            this.props.store.hesitateUpdate &&
+            Object.keys(this.props.store.hesitantPillStore).length > 0
         );
     }
 
@@ -875,7 +873,7 @@ export default class UserSelections extends React.Component<
     }
 
     submitHesitantFilters() {
-        this.context.store.submitQueuedFilterUpdates();
+        this.props.store.submitQueuedFilterUpdates();
     }
 
     render() {
@@ -945,5 +943,3 @@ export default class UserSelections extends React.Component<
         }
     }
 }
-
-UserSelections.contextType = StudyViewContext;

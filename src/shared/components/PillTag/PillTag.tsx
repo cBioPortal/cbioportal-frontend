@@ -6,10 +6,6 @@ import contrast from 'contrast';
 import { computed, makeObservable, observable, toJS } from 'mobx';
 import classnames from 'classnames';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import {
-    IStudyViewContext,
-    StudyViewContext,
-} from 'pages/studyView/StudyViewContext';
 
 export interface IPillTagProps {
     content: string | { uniqueChartKey: string; element: JSX.Element };
@@ -36,8 +32,8 @@ export type PillStore = {
 };
 
 export class PillTag extends React.Component<IPillTagProps, {}> {
-    constructor(props: IPillTagProps, context: IStudyViewContext) {
-        super(props, context);
+    constructor(props: IPillTagProps) {
+        super(props);
         makeObservable(this);
         // TODO: when switching to autocommit: trigger submit
 
@@ -144,11 +140,11 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
     }
 
     private get hesitantPillStore(): PillStore {
-        return this.context.store.hesitantPillStore;
+        return this.props.store.hesitantPillStore;
     }
 
     private get submittedPillStore(): PillStore {
-        return this.context.store.submittedPillStore;
+        return this.props.store.submittedPillStore;
     }
 
     private get hesitantPillStoreEntry() {
@@ -218,5 +214,3 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
         );
     }
 }
-
-PillTag.contextType = StudyViewContext;
