@@ -599,6 +599,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 },
                             ]}
                             defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                            setOperationsButtonText={
+                                this.props.store.hesitateUpdate
+                                    ? 'Add Filters '
+                                    : 'Select Samples '
+                            }
                         />
                     );
                 };
@@ -673,6 +678,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 },
                             ]}
                             defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                            setOperationsButtonText={
+                                this.props.store.hesitateUpdate
+                                    ? 'Add Filters '
+                                    : 'Select Samples '
+                            }
                         />
                     );
                 };
@@ -756,6 +766,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 },
                             ]}
                             defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                            setOperationsButtonText={
+                                this.props.store.hesitateUpdate
+                                    ? 'Add Filters '
+                                    : 'Select Samples '
+                            }
                         />
                     );
                 };
@@ -802,6 +817,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             },
                         ]}
                         defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
                     />
                 );
             }
@@ -847,6 +867,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             },
                         ]}
                         defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
                     />
                 );
             }
@@ -978,6 +1003,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         ]}
                         defaultSortBy={SampleTreatmentsTableColumnKey.COUNT}
                         selectedTreatments={[]}
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
                     />
                 );
             }
@@ -1019,6 +1049,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         ]}
                         defaultSortBy={PatientTreatmentsTableColumnKey.COUNT}
                         selectedTreatments={[]}
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
                     />
                 );
             }
