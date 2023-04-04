@@ -12,6 +12,7 @@ import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable
 import _ from 'lodash';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
+import { getServerConfig } from 'config/config';
 
 export interface IStandaloneMutationMapperProps extends IMutationMapperProps {
     // add standalone view specific props here if needed
@@ -34,6 +35,7 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 }
                 oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
                 usingPublicOncoKbInstance={
+                    getServerConfig().show_oncokb &&
                     this.props.store.usingPublicOncoKbInstance
                 }
                 mergeOncoKbIcons={this.props.mergeOncoKbIcons}

@@ -42,6 +42,7 @@ import { submitToStudyViewPage } from '../querySummary/QuerySummaryUtils';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
+import { getServerConfig } from 'config/config';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -215,6 +216,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 cosmicData={this.props.store.cosmicData.result}
                 oncoKbData={this.props.store.oncoKbData}
                 usingPublicOncoKbInstance={
+                    getServerConfig().show_oncokb &&
                     this.props.store.usingPublicOncoKbInstance
                 }
                 mergeOncoKbIcons={this.props.mergeOncoKbIcons}
