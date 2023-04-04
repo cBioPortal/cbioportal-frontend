@@ -54,13 +54,12 @@ function waitForOncoprint(timeout) {
             return (
                 !$('.oncoprintLoadingIndicator').isExisting() && // wait for loading indicator to hide, and
                 $('#oncoprintDiv svg rect').isExisting() && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-                $('.oncoprintContainer').getCSSProperty('opacity').value ===
-                    1 && // oncoprint has faded in
                 $('.oncoprint__controls').isExisting()
             ); // oncoprint controls are showing
         },
         { timeout }
     );
+    browser.pause(200);
 }
 
 function waitForComparisonTab() {
