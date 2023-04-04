@@ -111,7 +111,7 @@ export default class HomePageTour extends React.Component<{}, {}> {
         return (
             <InteractiveTour
                 steps={this.steps}
-                rounded={10}
+                // rounded={10}
                 className="home-page-tour"
                 buttonID="startTourButton"
                 mainContent={`New to cBioPortal? Try our guided tour.${' '}`}

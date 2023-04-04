@@ -13,7 +13,10 @@ type Props = {
     buttonContent?: string;
     className?: string;
     buttonID?: string;
+    showStartButton?: Boolean;
     steps: StepItem[];
+    startTour?: () => void;
+    endTour?: () => void;
 };
 
 type State = {
@@ -29,10 +32,12 @@ export default class InteractiveTour extends React.Component<Props, State> {
     }
 
     endTour = () => {
+        this.props.endTour && this.props.endTour();
         this.setState({ tourIsOpen: false });
     };
 
     startTour = () => {
+        this.props.startTour && this.props.startTour();
         this.setState({ tourIsOpen: true });
     };
 
@@ -41,25 +46,29 @@ export default class InteractiveTour extends React.Component<Props, State> {
             steps,
             className,
             buttonID,
-            rounded = 10,
             mainContent = '',
             buttonContent = 'start',
+            showStartButton = true,
         } = this.props;
         const { tourIsOpen } = this.state;
 
         return (
-            <div className={className}>
-                {mainContent}
-                <button id={buttonID} onClick={this.startTour}>
-                    {buttonContent}
-                </button>
+            <>
+                {showStartButton && (
+                    <div className={className}>
+                        {mainContent}
+                        <button id={buttonID} onClick={this.startTour}>
+                            {buttonContent}
+                        </button>
+                    </div>
+                )}
                 <Tour
-                    rounded={rounded}
+                    showNavigation={false}
                     steps={steps}
                     isOpen={tourIsOpen}
                     onRequestClose={this.endTour}
                 />
-            </div>
+            </>
         );
     }
 }
