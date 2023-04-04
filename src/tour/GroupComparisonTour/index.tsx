@@ -7,16 +7,36 @@ type Props = {
 
 type State = {
     isTourOpen: Boolean;
-    currentStep: Number;
+    // currentStep: Number;
 };
+
+export const GC_MODE_ID = 'groupcomparison-v1-hintmode';
+export const GC_STEP_ID = 'groupcomparison-v1-stepleft';
 
 export default class GroupComparisonTour extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
             isTourOpen: false,
-            currentStep: 0,
+            // currentStep: 0,
         };
+    }
+
+    componentDidMount(): void {
+        const tourStatus = localStorage.getItem(GC_MODE_ID);
+        if (tourStatus === 'on') {
+            const stepLeft = localStorage.getItem(GC_STEP_ID);
+            if (
+                stepLeft &&
+                stepLeft !== '0' &&
+                typeof +stepLeft === 'number' &&
+                !isNaN(+stepLeft)
+            ) {
+                // this.setCurrentStep(+stepLeft);
+                this.steps = this.steps.slice(+stepLeft);
+                this.startTour();
+            }
+        }
     }
 
     steps = [
@@ -47,6 +67,9 @@ export default class GroupComparisonTour extends React.Component<Props, State> {
             content: () => (
                 <div className="step">Click “Explore Selected Studies”.</div>
             ),
+            action: () => {
+                localStorage.setItem(GC_STEP_ID, '3');
+            },
         },
         {
             selector: '#comparisonGroupManagerContainer > button:nth-child(2)',
@@ -57,13 +80,22 @@ export default class GroupComparisonTour extends React.Component<Props, State> {
                 </div>
             ),
         },
+        {
+            content: () => (
+                <div className="step">
+                    Demo tour is over. To be continued during GSoC...
+                </div>
+            ),
+        },
     ];
 
     endTour = () => {
+        localStorage.setItem(GC_MODE_ID, 'off');
         this.setState({ isTourOpen: false });
     };
 
     startTour = () => {
+        localStorage.setItem(GC_MODE_ID, 'on');
         this.setState({ isTourOpen: true });
     };
 
@@ -73,7 +105,7 @@ export default class GroupComparisonTour extends React.Component<Props, State> {
 
     render() {
         const { showStartButton = true } = this.props;
-        const { isTourOpen, currentStep } = this.state;
+        const { isTourOpen } = this.state;
         return (
             <>
                 {showStartButton && (

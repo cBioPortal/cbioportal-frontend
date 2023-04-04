@@ -76,6 +76,7 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import { GroupComparisonTour, GC_MODE_ID } from 'tour';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -989,12 +990,15 @@ export default class StudyViewPage extends React.Component<
     }
 
     render() {
+        const tourStatus = localStorage.getItem(GC_MODE_ID);
+        const showTour = tourStatus === 'on';
         return (
             <PageLayout
                 noMargin={true}
                 hideFooter={true}
                 className={'subhead-dark'}
             >
+                {showTour && <GroupComparisonTour showStartButton={false} />}
                 <LoadingIndicator
                     size={'big'}
                     isLoading={
