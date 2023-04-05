@@ -10,7 +10,8 @@ import { computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import {
-    evaluateMutationPutativeDriverInfo,
+    evaluatePutativeDriverInfo,
+    evaluatePutativeDriverInfoWithHotspots,
     fetchOncoKbCancerGenes,
     fetchOncoKbDataForOncoprint,
     filterAndAnnotateMutations,
@@ -205,13 +206,16 @@ export default abstract class AnalysisStore {
                     this.isHotspotForOncoprint.result!(mutation);
 
                 // Note: custom driver annotations are part of the incoming datum
-                return evaluateMutationPutativeDriverInfo(
+                return evaluatePutativeDriverInfoWithHotspots(
                     mutation,
                     oncoKbDatum,
-                    this.driverAnnotationSettings.hotspots,
-                    isHotspotDriver,
                     this.driverAnnotationSettings.customBinary,
-                    this.driverAnnotationSettings.driverTiers
+                    this.driverAnnotationSettings.driverTiers,
+                    {
+                        hotspotDriver: isHotspotDriver,
+                        hotspotAnnotationsActive: this.driverAnnotationSettings
+                            .hotspots,
+                    }
                 );
             });
         },

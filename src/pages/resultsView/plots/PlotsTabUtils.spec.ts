@@ -22,7 +22,6 @@ import {
     logScalePossible,
 } from './PlotsTabUtils';
 import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
-import { AnnotatedNumericGeneMolecularData } from '../ResultsViewPageStore';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
 import {
@@ -38,6 +37,7 @@ import {
 import _ from 'lodash';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 
 describe('PlotsTabUtils', () => {
     describe('makeClinicalAttributeOptions', () => {

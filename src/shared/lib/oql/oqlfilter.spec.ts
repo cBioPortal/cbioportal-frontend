@@ -13,12 +13,12 @@ import {
 } from 'cbioportal-ts-api-client';
 import AccessorsForOqlFilter from './AccessorsForOqlFilter';
 import { assert } from 'chai';
-import { CustomDriverNumericGeneMolecularData } from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 // This file uses type assertions to force functions that use overly specific
 // Swagger-generated types as parameters to accept mocked literals believed to

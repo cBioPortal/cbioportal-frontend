@@ -26,11 +26,6 @@ import {
     parseGenericAssayGroups,
 } from './ResultsViewPageStoreUtils';
 import {
-    AnnotatedExtendedAlteration,
-    CustomDriverNumericGeneMolecularData,
-    IQueriedMergedTrackCaseData,
-} from './ResultsViewPageStore';
-import {
     MergedTrackLineFilterOutput,
     OQLLineFilterOutput,
 } from '../../shared/lib/oql/oqlfilter';
@@ -55,6 +50,9 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import $ from 'jquery';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 describe('ResultsViewPageStoreUtils', () => {
     describe('computeCustomDriverAnnotationReport', () => {

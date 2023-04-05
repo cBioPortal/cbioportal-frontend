@@ -1,6 +1,6 @@
-import { ExtendedSample } from '../../../pages/resultsView/ResultsViewPageStore';
 import { calculateQValues } from './BenjaminiHochbergFDRCalculator';
 import { assert } from 'chai';
+import { ExtendedSample } from 'shared/model/ExtendedSample';
 
 const exampleData = [];
 

@@ -34,7 +34,7 @@ import _ from 'lodash';
 import { calculateQValues } from '../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { CoExpressionWithQ } from './CoExpressionTabUtils';
 import { GenesetMolecularData } from 'cbioportal-ts-api-client';
-import { GeneticEntity } from '../ResultsViewPageStore';
+import { GeneticEntity } from 'shared/model/GeneticEntity';
 
 export interface ICoExpressionVizProps {
     plotState: {

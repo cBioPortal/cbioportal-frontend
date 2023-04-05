@@ -23,7 +23,6 @@ import {
     MolecularProfile,
     MolecularProfileFilter,
     Mutation,
-    MutationCountByPosition,
     MutationFilter,
     MutationMultipleStudyFilter,
     NumericGeneMolecularData,
@@ -40,7 +39,6 @@ import {
 import client from 'shared/api/cbioportalClientInstance';
 import {
     CanonicalMutationType,
-    getBrowserWindow,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
@@ -52,22 +50,13 @@ import {
     observable,
     reaction,
 } from 'mobx';
-import {
-    getProteinPositionFromProteinChange,
-    IHotspotIndex,
-    indexHotspotsData,
-    IOncoKbData,
-} from 'cbioportal-utils';
+import { IOncoKbData } from 'cbioportal-utils';
 import {
     deriveStructuralVariantType,
     generateQueryStructuralVariantId,
 } from 'oncokb-frontend-commons';
-import {
-    GenomeNexusAPI,
-    GenomeNexusAPIInternal,
-    VariantAnnotation,
-} from 'genome-nexus-ts-api-client';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { cached, MobxPromise } from 'mobxpromise';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
@@ -80,16 +69,13 @@ import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
     buildProteinChange,
     cancerTypeForOncoKb,
-    evaluateDiscreteCNAPutativeDriverInfo,
-    evaluateMutationPutativeDriverInfo,
+    evaluatePutativeDriverInfo,
     existsSomeMutationWithAscnPropertyInCollection,
     fetchAllReferenceGenomeGenes,
     fetchCnaOncoKbDataForOncoprint,
     fetchCopyNumberSegmentsForSamples,
     fetchGenes,
     fetchGermlineConsentedSamples,
-    fetchOncoKbCancerGenes,
-    fetchOncoKbDataForOncoprint,
     fetchStructuralVariantOncoKbData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     fetchVariantAnnotationsIndexedByGenomicLocation,
@@ -99,15 +85,11 @@ import {
     generateUniqueSampleKeyToTumorTypeMap,
     getAllGenes,
     getGenomeBuildFromStudies,
-    getGenomeNexusUrl,
-    getOncoKbOncogenic,
     getSurvivalClinicalAttributesPrefix,
     groupBy,
     groupBySampleId,
     IDataQueryFilter,
     makeGetOncoKbCnaAnnotationForOncoprint,
-    makeGetOncoKbMutationAnnotationForOncoprint,
-    makeIsHotspotForOncoprint,
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
@@ -115,7 +97,6 @@ import {
     CoverageInformation,
     getCoverageInformation,
 } from 'shared/lib/GenePanelUtils';
-import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import _ from 'lodash';
@@ -129,28 +110,23 @@ import {
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
-    structuralVariantsInOQLQuery,
+    getFirstGene,
+    getSecondGene,
     nonStructuralVariantsOQLQuery,
     OQLLineFilterOutput,
+    structuralVariantsInOQLQuery,
     structVarOQLSpecialValues,
     UnflattenedOQLLineFilterOutput,
     uniqueGenesInOQLQuery,
-    getFirstGene,
-    getSecondGene,
 } from '../../shared/lib/oql/oqlfilter';
 import GeneMolecularDataCache from '../../shared/cache/GeneMolecularDataCache';
 import GenesetMolecularDataCache from '../../shared/cache/GenesetMolecularDataCache';
 import GenesetCorrelatedGeneCache from '../../shared/cache/GenesetCorrelatedGeneCache';
 import GenericAssayMolecularDataCache from '../../shared/cache/GenericAssayMolecularDataCache';
-import GeneCache from '../../shared/cache/GeneCache';
 import GenesetCache from '../../shared/cache/GenesetCache';
 import internalClient from '../../shared/api/cbioportalInternalClientInstance';
 import memoize from 'memoize-weak-decorator';
 import request from 'superagent';
-import {
-    countMutations,
-    mutationCountByPositionKey,
-} from './mutationCountHelpers';
 import { CancerStudyQueryUrlParams } from 'shared/components/query/QueryStore';
 import {
     compileStructuralVariants,
@@ -253,7 +229,6 @@ import {
 } from 'shared/constants';
 import {
     buildDriverAnnotationSettings,
-    DriverAnnotationSettings,
     IAnnotationFilterSettings,
     IDriverAnnotationReport,
 } from '../../shared/alterationFiltering/AnnotationFilteringSettings';
@@ -268,7 +243,6 @@ import {
     createCategoricalFilter,
     createNumericalFilter,
 } from 'shared/lib/MutationUtils';
-import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
 import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
 import {
     getTextForDataField,
@@ -314,6 +288,15 @@ import {
 } from 'shared/model/AnnotatedMutation';
 import { SiteError } from 'shared/model/appMisc';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { ExtendedSample } from 'shared/model/ExtendedSample';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
+import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
+import { GeneticEntity } from 'shared/model/GeneticEntity';
+import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -344,77 +327,6 @@ export const SampleListCategoryTypeToFullId = {
 export type SamplesSpecificationElement =
     | { studyId: string; sampleId: string; sampleListId: undefined }
     | { studyId: string; sampleId: undefined; sampleListId: string };
-
-export interface ExtendedAlteration
-    extends Mutation,
-        NumericGeneMolecularData,
-        StructuralVariant {
-    hugoGeneSymbol: string;
-    molecularProfileAlterationType: MolecularProfile['molecularAlterationType'];
-    // TODO: what is difference molecularProfileAlterationType and
-    // alterationType?
-    alterationType: string;
-    alterationSubType: string;
-}
-
-export interface CustomDriverNumericGeneMolecularData
-    extends NumericGeneMolecularData {
-    driverFilter: string;
-    driverFilterAnnotation: string;
-    driverTiersFilter: string;
-    driverTiersFilterAnnotation: string;
-}
-
-export interface AnnotatedNumericGeneMolecularData
-    extends CustomDriverNumericGeneMolecularData {
-    hugoGeneSymbol: string;
-    oncoKbOncogenic: string;
-    putativeDriver: boolean;
-}
-
-export interface AnnotatedExtendedAlteration
-    extends ExtendedAlteration,
-        AnnotatedMutation,
-        AnnotatedStructuralVariant,
-        AnnotatedNumericGeneMolecularData {}
-
-export interface ExtendedSample extends Sample {
-    cancerType: string;
-    cancerTypeDetailed: string;
-}
-
-export type CaseAggregatedData<T> = {
-    samples: { [uniqueSampleKey: string]: T[] };
-    patients: { [uniquePatientKey: string]: T[] };
-};
-
-/*
- * OQL-queried data by patient and sample, along with the query metadata and,
- * if specified in the type argument, a non-aggregated copy of the data
- */
-export interface IQueriedCaseData<DataInOQL> {
-    cases: CaseAggregatedData<AnnotatedExtendedAlteration>;
-    oql: OQLLineFilterOutput<DataInOQL>;
-}
-
-/*
- * OQL-queried data by patient and sample, along with the query metadata and a
- * non-aggregated copy of the data and, in case of a merged track, an array of
- * records per individual gene queried
- */
-export interface IQueriedMergedTrackCaseData {
-    cases: CaseAggregatedData<AnnotatedExtendedAlteration>;
-    oql: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>;
-    mergedTrackOqlList?: IQueriedCaseData<object>[];
-}
-
-export type GeneticEntity = {
-    geneticEntityName: string; // hugo gene symbol for gene, gene set name for geneset
-    geneticEntityType: GeneticEntityType;
-    geneticEntityId: string | number; //entrezGeneId (number) for "gene", genesetId (string) for "geneset"
-    cytoband: string; //will be "" for "geneset"
-    geneticEntityData: Gene | Geneset;
-};
 
 export function buildDefaultOQLProfile(
     profilesTypes: string[],
@@ -5031,12 +4943,17 @@ export class ResultsViewPageStore extends AnalysisStore
 
     readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
         {
-            await: () => [this.mutations, this.discreteCNAMolecularData],
+            await: () => [
+                this.mutations,
+                this.discreteCNAMolecularData,
+                this.structuralVariants,
+            ],
             invoke: () => {
                 return Promise.resolve(
                     computeCustomDriverAnnotationReport([
                         ...this.mutations.result!,
                         ...this.discreteCNAMolecularData.result!,
+                        ...this.structuralVariants.result!,
                     ])
                 );
             },
@@ -5203,7 +5120,7 @@ export class ResultsViewPageStore extends AnalysisStore
             return toAwait;
         },
         invoke: () => {
-            return Promise.resolve((structualVariant: StructuralVariant): {
+            return Promise.resolve((structuralVariant: StructuralVariant): {
                 oncoKb: string;
                 hotspots: boolean;
                 customDriverBinary: boolean;
@@ -5223,18 +5140,18 @@ export class ResultsViewPageStore extends AnalysisStore
                         Error
                     ) &&
                     getOncoKbStructuralVariantAnnotationForOncoprint(
-                        structualVariant
+                        structuralVariant
                     );
 
-                let oncoKb: string = '';
-                if (oncoKbDatum) {
-                    oncoKb = getOncoKbOncogenic(oncoKbDatum);
-                }
+                // Note: custom driver annotations are part of the incoming datum
                 return {
-                    oncoKb,
+                    ...evaluatePutativeDriverInfo(
+                        structuralVariant,
+                        oncoKbDatum,
+                        this.driverAnnotationSettings.customBinary,
+                        this.driverAnnotationSettings.driverTiers
+                    ),
                     hotspots: false,
-                    customDriverBinary: false,
-                    customDriverTier: undefined,
                 };
             });
         },
@@ -5270,7 +5187,7 @@ export class ResultsViewPageStore extends AnalysisStore
                         getOncoKBAnnotationFunc(cnaDatum);
 
                     // Note: custom driver annotations are part of the incoming datum
-                    return evaluateDiscreteCNAPutativeDriverInfo(
+                    return evaluatePutativeDriverInfo(
                         cnaDatum,
                         oncoKbDatum,
                         this.driverAnnotationSettings.customBinary,

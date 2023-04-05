@@ -1,5 +1,5 @@
 import {
-    evaluateDiscreteCNAPutativeDriverInfo,
+    evaluatePutativeDriverInfo,
     fetchCosmicData,
     fetchGermlineConsentedSamples,
     fetchOncoKbData,
@@ -30,14 +30,12 @@ import {
     Sample,
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
-import {
-    AnnotatedNumericGeneMolecularData,
-    CustomDriverNumericGeneMolecularData,
-} from 'pages/resultsView/ResultsViewPageStore';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { observable } from 'mobx';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 describe('StoreUtils', () => {
     let emptyMutationData: MobxPromise<Mutation[]>;
@@ -903,7 +901,7 @@ describe('StoreUtils', () => {
     describe('evaluateDiscreteCNAPutativeDriverInfo', () => {
         it('no driver annotations present', () => {
             assert.deepEqual(
-                evaluateDiscreteCNAPutativeDriverInfo(
+                evaluatePutativeDriverInfo(
                     {
                         entrezGeneId: 1,
                         value: 0,
@@ -927,7 +925,7 @@ describe('StoreUtils', () => {
         });
         it('OncoKb', () => {
             assert.deepEqual(
-                evaluateDiscreteCNAPutativeDriverInfo(
+                evaluatePutativeDriverInfo(
                     {
                         entrezGeneId: 1,
                         value: 0,
@@ -951,7 +949,7 @@ describe('StoreUtils', () => {
         });
         it('custom driver annnotation', () => {
             assert.deepEqual(
-                evaluateDiscreteCNAPutativeDriverInfo(
+                evaluatePutativeDriverInfo(
                     {
                         entrezGeneId: 1,
                         value: 0,
@@ -973,7 +971,7 @@ describe('StoreUtils', () => {
                 }
             );
             assert.deepEqual(
-                evaluateDiscreteCNAPutativeDriverInfo(
+                evaluatePutativeDriverInfo(
                     {
                         entrezGeneId: 1,
                         value: 0,
@@ -997,7 +995,7 @@ describe('StoreUtils', () => {
         });
         it('custom tiers active', () => {
             assert.deepEqual(
-                evaluateDiscreteCNAPutativeDriverInfo(
+                evaluatePutativeDriverInfo(
                     {
                         entrezGeneId: 1,
                         value: 0,
@@ -1019,7 +1017,7 @@ describe('StoreUtils', () => {
                 }
             );
             assert.deepEqual(
-                evaluateDiscreteCNAPutativeDriverInfo(
+                evaluatePutativeDriverInfo(
                     {
                         entrezGeneId: 1,
                         value: 0,

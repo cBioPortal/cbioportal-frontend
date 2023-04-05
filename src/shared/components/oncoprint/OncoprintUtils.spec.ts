@@ -12,12 +12,12 @@ import {
 import { IKeyValueMap, observable } from 'mobx';
 import _ from 'lodash';
 import { assert } from 'chai';
-import { IQueriedMergedTrackCaseData } from '../../../pages/resultsView/ResultsViewPageStore';
 import { splitHeatmapTextField } from 'shared/components/oncoprint/OncoprintUtils';
 import { ISelectOption } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { IHeatmapTrackSpec, IBaseHeatmapTrackDatum } from './Oncoprint';
 import { IGradientAndCategoricalRuleSetParams } from 'oncoprintjs';
 import { isMutationProfile } from 'shared/lib/StoreUtils';
+import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 describe('OncoprintUtils', () => {
     describe('alterationInfoForCaseAggregatedDataByOQLLine', () => {

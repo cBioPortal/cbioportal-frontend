@@ -23,12 +23,6 @@ import {
     genetic_rule_set_same_color_for_all_recurrence,
     germline_rule_params,
 } from './geneticrules';
-import {
-    AnnotatedExtendedAlteration,
-    CaseAggregatedData,
-    IQueriedCaseData,
-    IQueriedMergedTrackCaseData,
-} from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -74,6 +68,10 @@ import {
     isGenericAssayHeatmapProfile,
 } from 'shared/components/oncoprint/ResultsViewOncoprintUtils';
 import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
+import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
