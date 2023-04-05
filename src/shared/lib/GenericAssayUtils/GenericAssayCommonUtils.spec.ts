@@ -8,10 +8,12 @@ import {
     formatGenericAssayCompactLabelByNameAndId,
     filterGenericAssayEntitiesByGenes,
     makeGenericAssayPlotsTabOption,
+    filterGenericAssayOptionsByGenes,
 } from './GenericAssayCommonUtils';
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { ISelectOption } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 
 describe('GenericAssayCommonUtils', () => {
     describe('makeGenericAssayOption()', () => {
@@ -313,7 +315,7 @@ describe('GenericAssayCommonUtils', () => {
 
     describe('filterGenericAssayEntitiesByGenes()', () => {
         const TARGET_GENE_LIST = ['TP53'];
-        it('returns entity when it contains filtered gene', () => {
+        it('returns entities when it contains filtered gene', () => {
             const genericAssayEntity1: GenericAssayMeta = {
                 stableId: 'tp53',
                 entityType: 'GENERIC_ASSAY',
@@ -338,30 +340,45 @@ describe('GenericAssayCommonUtils', () => {
                     DESCRIPTION: 'tp53',
                 },
             };
+            const genericAssayEntity4: GenericAssayMeta = {
+                stableId: 'tp53:WRAP53',
+                entityType: 'GENERIC_ASSAY',
+                genericEntityMetaProperties: {
+                    NAME: 'name_1',
+                    DESCRIPTION: 'description_1',
+                },
+            };
+            const genericAssayEntity5: GenericAssayMeta = {
+                stableId: 'id_1',
+                entityType: 'GENERIC_ASSAY',
+                genericEntityMetaProperties: {
+                    NAME: 'tp53;WRAP53',
+                    DESCRIPTION: 'description_1',
+                },
+            };
+            const genericAssayEntity6: GenericAssayMeta = {
+                stableId: 'id_1',
+                entityType: 'GENERIC_ASSAY',
+                genericEntityMetaProperties: {
+                    NAME: 'name_1',
+                    DESCRIPTION: 'tp53 (cg02087342)',
+                },
+            };
+            const entityList = [
+                genericAssayEntity1,
+                genericAssayEntity2,
+                genericAssayEntity3,
+                genericAssayEntity4,
+                genericAssayEntity5,
+                genericAssayEntity6,
+            ];
             assert.deepEqual(
-                filterGenericAssayEntitiesByGenes(
-                    [genericAssayEntity1],
-                    TARGET_GENE_LIST
-                ),
-                [genericAssayEntity1]
-            );
-            assert.deepEqual(
-                filterGenericAssayEntitiesByGenes(
-                    [genericAssayEntity2],
-                    TARGET_GENE_LIST
-                ),
-                [genericAssayEntity2]
-            );
-            assert.deepEqual(
-                filterGenericAssayEntitiesByGenes(
-                    [genericAssayEntity3],
-                    TARGET_GENE_LIST
-                ),
-                [genericAssayEntity3]
+                filterGenericAssayEntitiesByGenes(entityList, TARGET_GENE_LIST),
+                entityList
             );
         });
-        it('returns empty list if cannot find a match', () => {
-            const genericAssayEntity: GenericAssayMeta = {
+        it('returns empty entity list if cannot find a match', () => {
+            const genericAssayEntity1: GenericAssayMeta = {
                 stableId: 'id_1',
                 entityType: 'GENERIC_ASSAY',
                 genericEntityMetaProperties: {
@@ -371,7 +388,83 @@ describe('GenericAssayCommonUtils', () => {
             };
             assert.equal(
                 filterGenericAssayEntitiesByGenes(
-                    [genericAssayEntity],
+                    [genericAssayEntity1],
+                    TARGET_GENE_LIST
+                ).length,
+                0
+            );
+            // This should be filtered out because tp53bp1 is not tp53
+            // alphanumeric characters is not allowed after gene symbol
+            const genericAssayEntity2: GenericAssayMeta = {
+                stableId: 'id_1',
+                entityType: 'GENERIC_ASSAY',
+                genericEntityMetaProperties: {
+                    NAME: 'name_1',
+                    DESCRIPTION: 'tp53bp1',
+                },
+            };
+            assert.equal(
+                filterGenericAssayEntitiesByGenes(
+                    [genericAssayEntity2],
+                    TARGET_GENE_LIST
+                ).length,
+                0
+            );
+        });
+    });
+
+    describe('filterGenericAssayOptionsByGenes()', () => {
+        const TARGET_GENE_LIST = ['TP53'];
+        it('returns options when it contains filtered gene', () => {
+            const genericAssayOption1: ISelectOption = {
+                value: 'id_1',
+                label: 'tp53',
+            };
+            const genericAssayOption2: ISelectOption = {
+                value: 'tp53',
+                label: 'label_1',
+            };
+            const genericAssayOption3: ISelectOption = {
+                value: 'tp53 (cg02087342)',
+                label: 'label_1',
+            };
+            const genericAssayOption4: ISelectOption = {
+                value: 'id_1',
+                label: 'tp53;WRAP53',
+            };
+            const optionList = [
+                genericAssayOption1,
+                genericAssayOption2,
+                genericAssayOption3,
+                genericAssayOption4,
+            ];
+
+            assert.deepEqual(
+                filterGenericAssayOptionsByGenes(optionList, TARGET_GENE_LIST),
+                optionList
+            );
+        });
+        it('returns empty option list if cannot find a match', () => {
+            const genericAssayOption1: ISelectOption = {
+                value: 'id_1',
+                label: 'label_1',
+            };
+            assert.equal(
+                filterGenericAssayOptionsByGenes(
+                    [genericAssayOption1],
+                    TARGET_GENE_LIST
+                ).length,
+                0
+            );
+            // This should be filtered out because tp53bp1 is not tp53
+            // alphanumeric characters is not allowed after gene symbol
+            const genericAssayOption2: ISelectOption = {
+                value: 'id_1',
+                label: 'tp53bp1',
+            };
+            assert.equal(
+                filterGenericAssayOptionsByGenes(
+                    [genericAssayOption2],
                     TARGET_GENE_LIST
                 ).length,
                 0
