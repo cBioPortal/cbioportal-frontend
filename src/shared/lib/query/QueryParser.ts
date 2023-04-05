@@ -26,7 +26,10 @@ export class QueryParser {
      */
     private readonly _searchFilters: CancerTreeSearchFilter[];
 
-    constructor(referenceGenomes: Set<string>) {
+    constructor(referenceGenomes: Set<string>, readPermissions: Set<string>) {
+        console.log('readPermissions');
+        console.log(readPermissions);
+        console.log(readPermissions.size);
         this._searchFilters = [
             /**
              * Example queries:
@@ -62,10 +65,10 @@ export class QueryParser {
                 nodeFields: ['readPermission'],
                 form: {
                     input: FilterCheckbox,
-                    options: [
+                    options: readPermissions.size > 1 ? [
                         { value: 'true', displayValue: 'Authorized' },
                         { value: 'false', displayValue: 'Unauthorized' },
-                    ],
+                    ]:[],
                     label: 'Controlled access',
                 },
             },

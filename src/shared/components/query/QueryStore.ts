@@ -129,7 +129,7 @@ export class QueryStore {
 
     @computed
     get queryParser() {
-        return new QueryParser(this.referenceGenomes);
+        return new QueryParser(this.referenceGenomes, this.readPermissions);
     }
 
     initialize(urlWithInitialParams?: string) {
@@ -1448,6 +1448,15 @@ export class QueryStore {
             .map(n => (n as CancerStudy).referenceGenome)
             .filter(n => !!n);
         return new Set(referenceGenomes);
+    }
+
+    @computed get readPermissions(): Set<string> {
+        const studies = Array.from(this.treeData.map_node_meta.keys()).filter( s => typeof((s as CancerStudy).readPermission) !== 'undefined' );
+        console.log(studies);
+        const readPermissions = studies
+            .map(n => (!!((n as CancerStudy).readPermission)).toString())
+            .filter(n => !!n);
+        return new Set(readPermissions);
     }
 
     @computed get selectableSelectedStudies() {
