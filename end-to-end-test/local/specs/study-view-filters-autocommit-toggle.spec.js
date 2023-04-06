@@ -17,9 +17,13 @@ const LOG2_PROFILE = "//span[text() = 'Log2 copy-number values']";
 const PILL_TAG = 'div[data-test="pill-tag"]';
 const DELETE_PILL_TAG = 'span[data-test="pill-tag-delete"]';
 
-describe.only('Toggling of study view filters autosubmit', function() {
+describe('Toggling of study view filters autosubmit', function() {
     it('autocommits filters by default', () => {
         goToUrlAndSetLocalStorage(studyViewUrl, true);
+
+        //this seems to fix issue with intermittent fail of test due to
+        //menu not being clickeable
+        browser.setWindowSize(1600, 1000);
 
         selectMutationProfile(0);
         selectSamples();
@@ -35,20 +39,25 @@ describe.only('Toggling of study view filters autosubmit', function() {
         $(SETTINGS_MENU_BUTTON).click();
         $(DISABLE_AUTOCOMMIT_FIELD).waitForDisplayed({ timeout: 20000 });
         $(DISABLE_AUTOCOMMIT_FIELD).click();
-
-        assert($(SUBMIT_STUDY_FILTERS).isDisplayed());
     });
 
     it('queues new filters when autosubmit disabled', () => {
+        // no submit button
+        assert.equal($(SUBMIT_STUDY_FILTERS).isExisting(), false);
+
         selectMutationProfile(1);
+
         queueFilter();
+
+        // now we see the submit button
+        $(SUBMIT_STUDY_FILTERS).waitForDisplayed();
 
         const queuedFilterInHeader = $(STUDY_VIEW_HEADER).$(LOG2_PROFILE);
         assert(queuedFilterInHeader.isDisplayed());
         const isFilterQueued = hasFilterClass(queuedFilterInHeader, 'pending');
         assert(isFilterQueued);
     });
-
+    //
     it('queues deleted filters when autosubmit disabled', () => {
         const submittedFilterInHeader = $(STUDY_VIEW_HEADER).$(
             PUTATIVE_PROFILE
@@ -69,7 +78,7 @@ describe.only('Toggling of study view filters autosubmit', function() {
         );
         assert(isFilterDeleted);
     });
-
+    //
     it('submits queued and deleted filters when manually submitting', () => {
         const queuedDeletedFilterInHeader = $(STUDY_VIEW_HEADER).$(
             PUTATIVE_PROFILE
