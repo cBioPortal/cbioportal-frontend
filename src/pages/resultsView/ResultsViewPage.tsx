@@ -18,7 +18,7 @@ import MutualExclusivityTab from './mutualExclusivity/MutualExclusivityTab';
 import DownloadTab from './download/DownloadTab';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import CNSegments from './cnSegments/CNSegments';
-import Fusion from './fusion/Fusions';
+import StructuralVariants from 'pages/resultsView/structuralVariant/StructuralVariants';
 import './styles.scss';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
@@ -278,7 +278,7 @@ export default class ResultsViewPage extends React.Component<
                 },
             },
             {
-                id: ResultsViewTab.FUSION,
+                id: ResultsViewTab.STRUCTURALVARIANTS,
                 hide: () => {
                     return (
                         !this.resultsViewPageStore.structuralVariants
@@ -291,10 +291,13 @@ export default class ResultsViewPage extends React.Component<
                     return (
                         <MSKTab
                             key={13}
-                            id={ResultsViewTab.FUSION}
-                            linkText="Fusion"
+                            id={ResultsViewTab.STRUCTURALVARIANTS}
+                            linkText="Structural Variants"
                         >
-                            <Fusion store={store} />
+                            <StructuralVariants
+                                store={store}
+                                urlWrapper={this.urlWrapper}
+                            />
                         </MSKTab>
                     );
                 },

@@ -15,7 +15,7 @@ export enum ResultsViewTab {
     MUTUAL_EXCLUSIVITY = 'mutualExclusivity',
     PLOTS = 'plots',
     MUTATIONS = 'mutations',
-    FUSION = 'fusions',
+    STRUCTURALVARIANTS = 'structuralVariants',
     COEXPRESSION = 'coexpression',
     COMPARISON = 'comparison',
     CN_SEGMENTS = 'cnSegments',

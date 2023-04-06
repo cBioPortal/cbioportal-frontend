@@ -21,60 +21,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-import {
-    EnsemblTranscript,
-    Exon,
-    PfamDomain,
-    PfamDomainRange,
-} from 'genome-nexus-ts-api-client/src';
-import { StructuralVariant } from 'cbioportal-ts-api-client/src';
-import { SampleMolecularIdentifier } from 'cbioportal-ts-api-client';
+import { Exon } from 'genome-nexus-ts-api-client';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
 
-export type ExonRangeExt = Exon & {
-    fillColor?: string;
-    width?: number;
-    x?: number;
-};
-
-export enum UtrType {
-    FivePrime = 'five_prime_UTR',
-    ThreePrime = 'three_prime_UTR',
-}
-
-export type PfamDomainRangeExt = PfamDomainRange & {
-    fillColor?: string;
-    width?: number;
-    x?: number;
-    name?: string;
-    description?: string;
-};
 export type StructuralVariantExt = StructuralVariant & {
     [index: string]: any;
-    isLeftAligned?: boolean;
-    isReferenceGene?: boolean;
-    fillColor?: string;
-    totalWidth?: number;
-    deltaX?: number;
-    exons?: ExonRangeExt[];
+    exons?: Exon[];
     label?: string;
     //added AARON  (these are requested by code)
-};
-
-export type EnsemblTranscriptExt = EnsemblTranscript & {
-    [index: string]: any;
-    isLeftAligned?: boolean;
-    isReferenceGene?: boolean;
-    fillColor?: string;
-    fusions?: StructuralVariantExt[];
-    totalWidth?: number;
-    deltaX?: number;
-    exons?: ExonRangeExt[];
-    fivePrimeLength?: number;
-    pfamDomains?: PfamDomainRangeExt[];
-};
-
-export type StructuralVariantFilterExt = {
-    entrezGeneIds: number[];
-    molecularProfileIds?: string[] | undefined;
-    sampleMolecularIdentifiers?: SampleMolecularIdentifier[] | undefined;
 };
