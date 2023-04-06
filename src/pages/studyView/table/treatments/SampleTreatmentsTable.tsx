@@ -52,6 +52,7 @@ export type SampleTreatmentsTableProps = {
     selectedTreatments: string[];
     defaultSortBy: SampleTreatmentsTableColumnKey;
     columns: SampleTreatmentsTableColumn[];
+    setOperationsButtonText: string;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {
@@ -296,6 +297,9 @@ export class SampleTreatmentsTable extends TreatmentsTable<
                             this.props.selectedRowsKeys.length
                         }
                         showSetOperationsButton={true}
+                        setOperationsButtonText={
+                            this.props.setOperationsButtonText
+                        }
                     />
                 )}
             </div>

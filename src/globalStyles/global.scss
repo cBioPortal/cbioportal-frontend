@@ -757,3 +757,7 @@ h2.divider {
         }
     }
 }
+
+.marching-ants {
+    @include marching-ants();
+}

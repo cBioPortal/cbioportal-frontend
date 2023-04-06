@@ -54,6 +54,7 @@ export type PatientTreatmentsTableProps = {
     selectedTreatments: string[];
     defaultSortBy: PatientTreatmentsTableColumnKey;
     columns: PatientTreatmentsTableColumn[];
+    setOperationsButtonText: string;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {
@@ -268,6 +269,9 @@ export class PatientTreatmentsTable extends TreatmentsTable<
                             this.props.selectedRowsKeys.length
                         }
                         showSetOperationsButton={true}
+                        setOperationsButtonText={
+                            this.props.setOperationsButtonText
+                        }
                     />
                 )}
             </div>
