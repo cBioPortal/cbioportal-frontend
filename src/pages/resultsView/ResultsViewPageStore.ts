@@ -5055,7 +5055,8 @@ export class ResultsViewPageStore extends AnalysisStore
                                     this.samples,
                                     this.structuralVariantsByGene.result![
                                         gene.hugoGeneSymbol
-                                    ] || []
+                                    ] || [],
+                                    this.uniqueSampleKeyToTumorType.result!
                                 );
                                 return map;
                             },

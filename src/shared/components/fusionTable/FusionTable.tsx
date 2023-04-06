@@ -46,6 +46,7 @@ import {
 export enum FusionTableColumnType {
     STUDY,
     SAMPLE_ID,
+    CANCER_TYPE_DETAILED,
     SITE1_ENTREZ_GENE_ID,
     SITE1_HUGO_SYMBOL,
     SITE1_ENSEMBL_TRANSCRIPT_ID,
@@ -61,6 +62,7 @@ export enum FusionTableColumnType {
     SITE2_POSITION,
     SITE2_DESCRIPTION,
     SITE2_EFFECT_ON_FRAME,
+    MUTATION_STATUS,
     NCBI_BUILD,
     DNA_SUPPORT,
     RNA_SUPPORT,
@@ -108,7 +110,12 @@ export const FusionTableColumnLabelProps: FusionTableColumnProps[] = [
         attribute: 'sampleId',
         visible: false,
     },
-
+    {
+        columnType: FusionTableColumnType.CANCER_TYPE_DETAILED,
+        label: 'Cancer Type Detailed',
+        attribute: 'cancerTypeDetailed',
+        visible: false,
+    },
     {
         columnType: FusionTableColumnType.SITE1_ENTREZ_GENE_ID,
         label: 'Site1 Entrez Gene Id',
@@ -200,7 +207,12 @@ export const FusionTableColumnLabelProps: FusionTableColumnProps[] = [
         attribute: 'site2EffectOnFrame',
         visible: false,
     },
-
+    {
+        columnType: FusionTableColumnType.MUTATION_STATUS,
+        label: 'MS',
+        attribute: 'svStatus',
+        visible: false,
+    },
     {
         columnType: FusionTableColumnType.NCBI_BUILD,
         label: 'NCBI Build',
@@ -357,6 +369,7 @@ type FusionTableColumn = Column<StructuralVariant[]> & {
 
 export interface IFusionTableProps {
     studyIdToStudy?: Map<string, CancerStudy>;
+    uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string };
     molecularProfileIdToMolecularProfile?: Map<string, MolecularProfile>;
     columns?: FusionTableColumnType[];
     dataStore?: ILazyMobXTableApplicationDataStore<StructuralVariant[]>;
@@ -518,17 +531,36 @@ export default class FusionTable<
                 };
             }
         }
+
+        if (
+            label.columnType === FusionTableColumnType.CANCER_TYPE_DETAILED &&
+            this.props.uniqueSampleKeyToTumorType
+        ) {
+            _renderColumnFn = (d: StructuralVariant[]) => {
+                let data: string | null = null;
+
+                if (this.props.uniqueSampleKeyToTumorType) {
+                    data =
+                        this.props.uniqueSampleKeyToTumorType[
+                            d[0].uniqueSampleKey
+                        ] || null;
+                }
+                return <span>{data || ''}</span>;
+            };
+        }
         return _renderColumnFn;
     }
 
     protected generateColumns() {
         let visibleColumns = [
             FusionTableColumnType.SAMPLE_ID,
+            FusionTableColumnType.CANCER_TYPE_DETAILED,
             FusionTableColumnType.SITE1_HUGO_SYMBOL,
             FusionTableColumnType.SITE2_HUGO_SYMBOL,
-            FusionTableColumnType.TUMOR_READ_COUNT,
-            FusionTableColumnType.TUMOR_VARIANT_COUNT,
             FusionTableColumnType.ANNOTATION,
+            FusionTableColumnType.VARIANT_CLASS,
+            FusionTableColumnType.EVENT_INFO,
+            FusionTableColumnType.CONNECTION_TYPE,
         ];
 
         this._columns = {};

@@ -31,7 +31,6 @@ import {
 import { observer } from 'mobx-react';
 import { action, observable } from 'mobx';
 import FusionMapperDataStore from '../../../pages/resultsView/fusion/ResultViewFusionMapperDataStore';
-import { FUS_GENE_COLORSCALE } from '../../../pages/resultsView/fusion/ResultViewFusionMapperStore';
 import { StructuralVariantExt } from '../../model/Fusion';
 import autobind from 'autobind-decorator';
 
@@ -98,7 +97,6 @@ export default class FusionPieChart extends React.Component<
         return (
             <VictoryPie
                 labelRadius={70}
-                colorScale={FUS_GENE_COLORSCALE}
                 style={{
                     parent: { width: '15%', stroke: 'red' },
                     labels: {

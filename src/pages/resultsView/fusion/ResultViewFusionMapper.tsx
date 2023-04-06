@@ -21,10 +21,8 @@
 import * as React from 'react';
 import ResultsViewFusionTable from './ResultsViewFusionTable';
 import { observer } from 'mobx-react';
-import ExonsChart from '../../../shared/components/exonsCharts/ExonsChart';
 import { ResultViewFusionMapperStore } from './ResultViewFusionMapperStore';
 import FusionPieChart from '../../../shared/components/fusionCharts/FusionPieChart';
-import FusionPieChartLegend from '../../../shared/components/fusionCharts/FusionPieChartLegend';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../../shared/components/ErrorMessage';
@@ -51,16 +49,12 @@ export default class ResultViewFusionMapper extends React.Component<
 
         return (
             <>
-                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                    <ExonsChart store={this.props.store.exonsChartStore} />
-                    <FusionPieChart
-                        store={this.props.store.dataStore}
-                        fusionCounts={this.props.store.fusionCounts}
-                    />
-                    <FusionPieChartLegend
-                        fusionCounts={this.props.store.fusionCounts}
-                    />
-                </div>
+                {/*<div style={{ display: 'flex', flexWrap: 'wrap' }}>*/}
+                {/*    <FusionPieChart*/}
+                {/*        store={this.props.store.dataStore}*/}
+                {/*        fusionCounts={this.props.store.fusionCounts}*/}
+                {/*    />*/}
+                {/*</div>*/}
                 <hr style={{ marginTop: 20 }} />
                 <ResultsViewFusionTable
                     dataStore={this.props.store.dataStore}
@@ -68,6 +62,9 @@ export default class ResultViewFusionMapper extends React.Component<
                     molecularProfileIdToMolecularProfile={molecularProfileMap}
                     fusionMolecularProfile={
                         this.props.store.fusionMolecularProfile
+                    }
+                    uniqueSampleKeyToTumorType={
+                        this.props.store.uniqueSampleKeyToTumorType
                     }
                 />
             </>
@@ -78,8 +75,6 @@ export default class ResultViewFusionMapper extends React.Component<
         await: () => [
             this.props.store.studyIdToStudy,
             this.props.store.molecularProfileIdToMolecularProfile,
-            this.props.store.ensemblTranscripts,
-            this.props.store.pfamDomainData,
         ],
         render: () => {
             return this.renderComponents();
