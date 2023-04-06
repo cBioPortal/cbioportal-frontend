@@ -39,6 +39,8 @@ import {
     MolecularProfile,
     StructuralVariant,
 } from 'cbioportal-ts-api-client/src';
+import styles from 'shared/components/mutationTable/column/mutationStatus.module.scss';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 /**
  * Fusion table column types
@@ -548,6 +550,38 @@ export default class FusionTable<
                 return <span>{data || ''}</span>;
             };
         }
+
+        if (label.columnType === FusionTableColumnType.MUTATION_STATUS) {
+            _renderColumnFn = (d: StructuralVariant[]) => {
+                const data = d[0].svStatus;
+                let content: JSX.Element;
+                let needTooltip = false;
+
+                if (data.toLowerCase().indexOf('somatic') > -1) {
+                    content = <span className={styles.somatic}>S</span>;
+                    needTooltip = true;
+                } else if (data.toLowerCase().indexOf('germline') > -1) {
+                    content = <span className={styles.germline}>G</span>;
+                    needTooltip = true;
+                } else {
+                    content = <span className={styles.unknown}>{data}</span>;
+                }
+
+                if (needTooltip) {
+                    content = (
+                        <DefaultTooltip
+                            overlay={<span>{data}</span>}
+                            placement="right"
+                        >
+                            {content}
+                        </DefaultTooltip>
+                    );
+                }
+
+                return content;
+            };
+        }
+
         return _renderColumnFn;
     }
 
