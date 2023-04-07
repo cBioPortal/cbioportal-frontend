@@ -2,7 +2,13 @@ import * as React from 'react';
 import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import { action, computed, observable, makeObservable } from 'mobx';
+import {
+    action,
+    computed,
+    makeObservable,
+    observable,
+    runInAction,
+} from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -18,6 +24,7 @@ import { ClinicalDataTab } from './tabs/ClinicalDataTab';
 import {
     DefaultTooltip,
     getBrowserWindow,
+    onMobxPromise,
     remoteData,
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -32,7 +39,6 @@ import { Else, If, Then } from 'react-if';
 import CustomCaseSelection from './addChartButton/customCaseSelection/CustomCaseSelection';
 import { AppStore } from '../../AppStore';
 import ActionButtons from './studyPageHeader/ActionButtons';
-import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
     GACustomFieldsEnum,
     serializeEvent,
@@ -43,10 +49,10 @@ import classNames from 'classnames';
 import { getServerConfig, ServerConfigHelpers } from '../../config/config';
 import {
     AlterationMenuHeader,
-    getButtonNameWithDownPointer,
     ChartMetaDataTypeEnum,
+    getButtonNameWithDownPointer,
 } from './StudyViewUtils';
-import { Alert, Modal } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import styles from './styles.module.scss';
@@ -67,8 +73,8 @@ import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
-import URL from 'url';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -191,6 +197,7 @@ export default class StudyViewPage extends React.Component<
         onMobxPromise(
             this.store.queriedPhysicalStudyIds,
             (strArr: string[]) => {
+                this.store.initializeReaction();
                 trackEvent({
                     category: 'studyPage',
                     action: 'studyPageLoad',
@@ -928,6 +935,9 @@ export default class StudyViewPage extends React.Component<
                                         {ServerConfigHelpers.sessionServiceIsEnabled() &&
                                             this.groupsButton}
                                     </div>
+                                    <StudyViewPageSettingsMenu
+                                        store={this.store}
+                                    />
                                 </div>
                             </div>
                         </div>

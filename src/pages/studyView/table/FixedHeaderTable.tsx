@@ -41,6 +41,7 @@ export type IFixedHeaderTableProps<T> = {
     rowHeight?: number;
     numberOfSelectedRows: number;
     showSetOperationsButton?: boolean;
+    setOperationsButtonText?: string;
     afterSelectingRows?: () => void;
     toggleSelectionOperator?: () => void;
     // used only when showControlsAtTop === true (show controls at bottom otherwise)
@@ -424,7 +425,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                             className="btn btn-default btn-xs"
                             onClick={this.afterSelectingRows}
                         >
-                            Select Samples{' '}
+                            {this.props.setOperationsButtonText || ''}
                             <If condition={this.props.numberOfSelectedRows > 1}>
                                 <i
                                     style={{ marginTop: '-2px' }}
