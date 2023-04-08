@@ -23,13 +23,15 @@ if [[ "$CIRCLECI" ]] || [[ "$NETLIFY" ]]; then
         BRANCH=$(curl "https://github.com/cBioPortal/cbioportal-frontend/pull/${PR_NUMBER}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
     elif [[ "$PR_URL" ]] && ! [[ $PR_BRANCH == "release-"* ]]; then
         BRANCH=$(curl "${PR_URL}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
+    elif [[ "$MANUAL_TRIGGER_BRANCH_ENV" ]]; then
+        BRANCH=$MANUAL_TRIGGER_BRANCH_ENV
     else
         BRANCH=$PR_BRANCH
     fi
     if test -f "$SCRIPT_DIR/../env/${BRANCH}.sh"; then
         cat $SCRIPT_DIR/../env/${BRANCH}.sh
     else
-        echo Branch name was not recognized. Please add env script to /env/ directory or test the branch as part of a github pull request. 
+        echo Branch name was not recognized. Please add env script to /env/ directory or test the branch as part of a github pull request.
     fi
     echo "export BRANCH_ENV=$BRANCH"
 elif [[ "$BRANCH_ENV" ]]; then
