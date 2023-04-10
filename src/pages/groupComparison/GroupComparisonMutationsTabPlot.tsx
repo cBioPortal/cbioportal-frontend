@@ -50,6 +50,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             {
                 ...this.props.filters,
                 countUniqueMutations: this.countUniqueMutationsInGroup,
+                filterMutationsBySelectedTranscript: true,
             }
         );
         return store;
