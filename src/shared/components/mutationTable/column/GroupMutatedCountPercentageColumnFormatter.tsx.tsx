@@ -1,72 +1,41 @@
 import * as React from 'react';
 import { formatPercentValue } from 'cbioportal-utils';
 import { Mutation } from 'cbioportal-ts-api-client';
+import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
 
 export default class GroupMutatedCountPercentageColumnFormatter {
-    public static sortBy(
-        mutationCountsByProteinChangeForGroup:
-            | ((
-                  groupIndex: number
-              ) => {
-                  [proteinChange: string]: number;
-              })
-            | undefined,
+    public static getMutatedCountData(
+        rowDataByProteinChange: {
+            [proteinChange: string]: ComparisonMutationsRow;
+        },
         groupIndex: number,
         d: Mutation[]
-    ): number | null {
-        let ret: number | null = null;
-        if (mutationCountsByProteinChangeForGroup) {
-            ret = this.getMutatedCountData(
-                mutationCountsByProteinChangeForGroup(groupIndex),
-                d
-            );
-        } else {
-            ret = null;
-        }
-        return ret;
-    }
-
-    public static getMutatedCountData(
-        mutationCountsByProteinChange:
-            | {
-                  [proteinChange: string]: number;
-              }
-            | undefined,
-        data: Mutation[]
     ) {
-        if (
-            data.length > 0 &&
-            mutationCountsByProteinChange &&
-            mutationCountsByProteinChange[data[0].proteinChange]
-        ) {
-            return mutationCountsByProteinChange[data[0].proteinChange];
-        } else {
-            return 0;
-        }
+        const rowData = rowDataByProteinChange[d[0].proteinChange];
+
+        return !!!groupIndex
+            ? rowData.groupAMutatedCount
+            : rowData.groupBMutatedCount;
     }
 
     public static getGroupMutatedCountPercentageTextValue(
-        mutationCountsByProteinChangeForGroup:
-            | ((
-                  groupIndex: number
-              ) => {
-                  [proteinChange: string]: number;
-              })
-            | undefined,
-        profiledPatientCounts: { [groupIndex: number]: number } | undefined,
+        rowDataByProteinChange: {
+            [proteinChange: string]: ComparisonMutationsRow;
+        },
         groupIndex: number,
-        data: Mutation[]
+        d: Mutation[]
     ) {
-        const mutatedCount = this.getMutatedCountData(
-            mutationCountsByProteinChangeForGroup?.(groupIndex),
-            data
-        );
-        const profiledPatientCount = profiledPatientCounts
-            ? profiledPatientCounts[groupIndex]
-            : 0;
+        const rowData = rowDataByProteinChange[d[0].proteinChange];
 
+        const mutatedCount = this.getMutatedCountData(
+            rowDataByProteinChange,
+            groupIndex,
+            d
+        );
         const percentage = formatPercentValue(
-            (mutatedCount / profiledPatientCount) * 100,
+            !!!groupIndex
+                ? rowData.groupAMutatedPercentage
+                : rowData.groupBMutatedPercentage,
             2
         );
 
@@ -74,24 +43,18 @@ export default class GroupMutatedCountPercentageColumnFormatter {
     }
 
     public static renderFunction(
-        mutationCountsByProteinChangeForGroup:
-            | ((
-                  groupIndex: number
-              ) => {
-                  [proteinChange: string]: number;
-              })
-            | undefined,
-        profiledPatientCounts: { [groupIndex: number]: number } | undefined,
+        rowDataByProteinChange: {
+            [proteinChange: string]: ComparisonMutationsRow;
+        },
         groupIndex: number,
-        data: Mutation[]
+        d: Mutation[]
     ) {
         let content = (
             <div>
                 {this.getGroupMutatedCountPercentageTextValue(
-                    mutationCountsByProteinChangeForGroup,
-                    profiledPatientCounts,
+                    rowDataByProteinChange,
                     groupIndex,
-                    data
+                    d
                 )}
             </div>
         );

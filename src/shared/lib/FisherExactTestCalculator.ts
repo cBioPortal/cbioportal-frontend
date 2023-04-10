@@ -51,3 +51,49 @@ export function getCumulativePValue(
     }
     return p;
 }
+
+export function getTwoTailedPValue(
+    a: number,
+    b: number,
+    c: number,
+    d: number
+): number {
+    let min: number, i: number;
+    const n: number = a + b + c + d;
+    let p: number = 0;
+    let logFactorial: number[] = new Array(n + 1);
+    logFactorial[0] = 0.0;
+
+    for (let j: number = 1; j <= n; j++) {
+        logFactorial[j] = logFactorial[j - 1] + Math.log(j);
+    }
+
+    let baseP = getProbability(a, b, c, d, logFactorial);
+    let initialA = a,
+        initialB = b,
+        initialC = c,
+        initialD = d;
+    p += baseP;
+
+    min = c < b ? c : b;
+    for (i = 0; i < min; i++) {
+        let tempP = getProbability(++a, --b, --c, ++d, logFactorial);
+        if (tempP <= baseP) {
+            p += tempP;
+        }
+    }
+
+    a = initialA;
+    b = initialB;
+    c = initialC;
+    d = initialD;
+
+    min = a < d ? a : d;
+    for (i = 0; i < min; i++) {
+        let pTemp = getProbability(--a, ++b, ++c, --d, logFactorial);
+        if (pTemp <= baseP) {
+            p += pTemp;
+        }
+    }
+    return p;
+}

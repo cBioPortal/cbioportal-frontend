@@ -482,15 +482,25 @@ export default class MutationMapper<
         );
     }
 
+    protected resetFilters() {
+        const dataStore = this.props.store.dataStore as MutationMapperDataStore;
+        dataStore.resetFilters();
+    }
+
     protected get filterResetPanel(): JSX.Element | null {
         const dataStore = this.props.store.dataStore as MutationMapperDataStore;
 
         return (
             <FilterResetPanel
-                resetFilters={() => dataStore.resetFilters()}
+                resetFilters={this.resetFilters}
                 filterInfo={`Showing ${
                     _.flatten(dataStore.tableData).length
                 } of ${dataStore.allData.length} mutations.`}
+                shiftClickMessage={
+                    dataStore.sortedFilteredSelectedData.length > 0
+                        ? ' (Shift click to select multiple residues)'
+                        : ''
+                }
                 className={classnames(
                     'alert',
                     'alert-success',

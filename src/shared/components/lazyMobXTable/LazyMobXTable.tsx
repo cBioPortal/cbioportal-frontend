@@ -122,6 +122,7 @@ type LazyMobXTableProps<T> = {
     deactivateColumnFilter?: (columnId: string) => void;
     formatPaginationStatusText?: (text: string) => string;
     showTotalMutationCountsInCountHeader?: boolean;
+    customControls?: JSX.Element;
 };
 
 function compareValues<U extends number | string>(
@@ -1221,6 +1222,7 @@ export default class LazyMobXTable<T> extends React.Component<
                     ) : (
                         ''
                     )}
+                    {this.props.customControls}
                     {this.props.showPagination &&
                     this.props.showPaginationAtTop ? (
                         <Observer>{this.getPaginationControls}</Observer>

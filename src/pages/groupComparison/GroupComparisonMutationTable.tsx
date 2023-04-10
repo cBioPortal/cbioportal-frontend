@@ -9,12 +9,29 @@ import { createMutationNamespaceColumns } from 'shared/components/mutationTable/
 import _ from 'lodash';
 import { adjustVisibility } from 'shared/components/alterationsTableUtils';
 import { getServerConfig } from 'config/config';
+import { ComparisonGroup } from './GroupComparisonUtils';
+import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
+import { Mutation, Sample } from 'cbioportal-ts-api-client';
+import GroupMutatedCountPercentageColumnFormatter from 'shared/components/mutationTable/column/GroupMutatedCountPercentageColumnFormatter.tsx';
+import LogRatioColumnFormatter from 'shared/components/mutationTable/column/LogRatioColumnFormatter';
+import EnrichedInColumnFormatter from 'shared/components/mutationTable/column/EnrichedInColumnFormatter';
+import AlterationOverlapColumnFormatter from 'shared/components/mutationTable/column/AlterationOverlapColumnFormatter';
+import PValueColumnFormatter from 'shared/components/mutationTable/column/PValueColumnFormatter';
+import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import QValueColumnFormatter from 'shared/components/mutationTable/column/QValueColumnFormatter';
 
 export interface IGroupComparisonMutationTableProps
     extends IMutationTableProps {
     // add comparison view specific props here if needed
-    totalNumberOfExons?: string;
     isCanonicalTranscript: boolean | undefined;
+    profiledPatientCountsByGroup: {
+        [groupIndex: number]: number;
+    };
+    groups: ComparisonGroup[];
+    sampleSet: ComplexKeyMap<Sample>;
+    getRowDataByProteinChange: () => {
+        [proteinChange: string]: ComparisonMutationsRow;
+    };
 }
 
 export default class GroupComparisonMutationTable extends MutationTable<
@@ -27,9 +44,13 @@ export default class GroupComparisonMutationTable extends MutationTable<
             MutationTableColumnType.MUTATION_STATUS,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
-            MutationTableColumnType.GROUP_A,
-            MutationTableColumnType.GROUP_B,
-            MutationTableColumnType.LOG_RATIO,
+            '(A) Group',
+            '(B) Group',
+            'Log2 Ratio',
+            'Enriched in',
+            'Alteration Overlap',
+            'P_VALUE',
+            'Q_VALUE',
         ],
         columnVisibilityProps: {},
     };
@@ -38,15 +59,203 @@ export default class GroupComparisonMutationTable extends MutationTable<
         super(props);
     }
 
-    componentWillUpdate(nextProps: IGroupComparisonMutationTableProps) {
-        this._columns[MutationTableColumnType.STUDY].visible = !!(
-            nextProps.studyIdToStudy &&
-            Object.keys(nextProps.studyIdToStudy).length > 1
-        );
-    }
-
     protected generateColumns() {
         super.generateColumns();
+        const rowDataByProteinChange = this.props.getRowDataByProteinChange();
+
+        this._columns['(A) Group'] = {
+            name: '(A) Group',
+            render: (d: Mutation[]) =>
+                GroupMutatedCountPercentageColumnFormatter.renderFunction(
+                    rowDataByProteinChange,
+                    0,
+                    d
+                ),
+            download: (d: Mutation[]) =>
+                GroupMutatedCountPercentageColumnFormatter.getGroupMutatedCountPercentageTextValue(
+                    rowDataByProteinChange,
+                    0,
+                    d
+                ),
+            sortBy: (d: Mutation[]) =>
+                GroupMutatedCountPercentageColumnFormatter.getMutatedCountData(
+                    rowDataByProteinChange,
+                    0,
+                    d
+                ),
+            tooltip: (
+                <span>
+                    <strong>{this.props.groups[0].nameWithOrdinal}:</strong>{' '}
+                    Number (percentage) of patients in{' '}
+                    {this.props.groups[0].nameWithOrdinal} that have an
+                    alteration in the selected gene for the listed protein
+                    change
+                </span>
+            ),
+        };
+
+        this._columns['(B) Group'] = {
+            name: '(B) Group',
+            render: (d: Mutation[]) =>
+                GroupMutatedCountPercentageColumnFormatter.renderFunction(
+                    rowDataByProteinChange,
+                    1,
+                    d
+                ),
+            download: (d: Mutation[]) =>
+                GroupMutatedCountPercentageColumnFormatter.getGroupMutatedCountPercentageTextValue(
+                    rowDataByProteinChange,
+                    1,
+                    d
+                ),
+            sortBy: (d: Mutation[]) =>
+                GroupMutatedCountPercentageColumnFormatter.getMutatedCountData(
+                    rowDataByProteinChange,
+                    1,
+                    d
+                ),
+            tooltip: (
+                <span>
+                    <strong>{this.props.groups[1].nameWithOrdinal}:</strong>{' '}
+                    Number (percentage) of patients in{' '}
+                    {this.props.groups[1].nameWithOrdinal} that have an
+                    alteration in the selected gene for the listed protein
+                    change
+                </span>
+            ),
+        };
+
+        this._columns['Log2 Ratio'] = {
+            name: 'Log2 Ratio',
+            render: (d: Mutation[]) =>
+                LogRatioColumnFormatter.renderFunction(
+                    rowDataByProteinChange,
+                    d
+                ),
+            download: (d: Mutation[]) =>
+                LogRatioColumnFormatter.getLogRatioTextValue(
+                    rowDataByProteinChange,
+                    d
+                ),
+            sortBy: (d: Mutation[]) =>
+                LogRatioColumnFormatter.getLogRatioData(
+                    rowDataByProteinChange,
+                    d
+                ),
+            tooltip: (
+                <span>
+                    Log2 based ratio of (pct in{' '}
+                    {this.props.groups[0].nameWithOrdinal}/ pct in{' '}
+                    {this.props.groups[1].nameWithOrdinal})
+                </span>
+            ),
+        };
+
+        this._columns['Enriched in'] = {
+            name: 'Enriched in',
+            render: (d: Mutation[]) =>
+                EnrichedInColumnFormatter.renderFunction(
+                    rowDataByProteinChange,
+                    d,
+                    this.props.groups
+                ),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                EnrichedInColumnFormatter.getFilterValue(
+                    rowDataByProteinChange,
+                    d,
+                    filterStringUpper
+                ),
+            download: (d: Mutation[]) =>
+                EnrichedInColumnFormatter.getEnrichedInData(
+                    rowDataByProteinChange,
+                    d
+                ),
+            sortBy: (d: Mutation[]) =>
+                EnrichedInColumnFormatter.getEnrichedInData(
+                    rowDataByProteinChange,
+                    d
+                ),
+            tooltip: (
+                <table>
+                    <tr>
+                        <td>Log ratio {'>'} 0</td>
+                        <td>
+                            : Enriched in {this.props.groups[0].nameWithOrdinal}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Log ratio &lt;= 0</td>
+                        <td>
+                            : Enriched in {this.props.groups[1].nameWithOrdinal}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>q-Value &lt; 0.05</td>
+                        <td>: Significant association</td>
+                    </tr>
+                </table>
+            ),
+        };
+
+        this._columns['Alteration Overlap'] = {
+            name: 'Alteration Overlap',
+            headerRender: () => <span>Co-occurrence Pattern</span>,
+            render: (d: Mutation[]) =>
+                AlterationOverlapColumnFormatter.renderFunction(
+                    rowDataByProteinChange,
+                    d,
+                    this.props.profiledPatientCountsByGroup,
+                    this.props.sampleSet,
+                    this.props.groups
+                ),
+            tooltip: (
+                <table>
+                    <tr>
+                        <td>Upper row</td>
+                        <td>: Patients colored according to group.</td>
+                    </tr>
+                    <tr>
+                        <td>Lower row</td>
+                        <td>
+                            : Patients with an alteration in the selected gene
+                            for the listed protein change are highlighted.
+                        </td>
+                    </tr>
+                </table>
+            ),
+        };
+
+        this._columns['P_VALUE'] = {
+            name: 'p-Value',
+            render: (d: Mutation[]) =>
+                PValueColumnFormatter.renderFunction(rowDataByProteinChange, d),
+            download: (d: Mutation[]) =>
+                PValueColumnFormatter.getPValueTextValue(
+                    rowDataByProteinChange,
+                    d
+                ),
+            sortBy: (d: Mutation[]) =>
+                PValueColumnFormatter.getPValueData(rowDataByProteinChange, d),
+            tooltip: <span>Derived from two-sided Fisher Exact test</span>,
+        };
+
+        this._columns['Q_VALUE'] = {
+            name: 'q-Value',
+            render: (d: Mutation[]) =>
+                QValueColumnFormatter.renderFunction(rowDataByProteinChange, d),
+            download: (d: Mutation[]) =>
+                QValueColumnFormatter.getQValueTextValue(
+                    rowDataByProteinChange,
+                    d
+                ),
+            sortBy: (d: Mutation[]) =>
+                QValueColumnFormatter.getQValueData(rowDataByProteinChange, d),
+            tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
+        };
 
         // generate namespace columns
         const namespaceColumns = createMutationNamespaceColumns(
@@ -67,31 +276,14 @@ export default class GroupComparisonMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 10;
         this._columns[MutationTableColumnType.ANNOTATION].order = 20;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 30;
-        this._columns[MutationTableColumnType.GROUP_A].order = 40;
-        this._columns[MutationTableColumnType.GROUP_B].order = 50;
-        this._columns[MutationTableColumnType.LOG_RATIO].order = 60;
-        this._columns[MutationTableColumnType.MUTATION_STATUS].order = 70;
-
-        this._columns[MutationTableColumnType.GROUP_A].shouldExclude = () => {
-            return (
-                !this.props.mutationCountsByProteinChangeForGroup ||
-                !this.props.profiledPatientCountsByGroup
-            );
-        };
-
-        this._columns[MutationTableColumnType.GROUP_B].shouldExclude = () => {
-            return (
-                !this.props.mutationCountsByProteinChangeForGroup ||
-                !this.props.profiledPatientCountsByGroup
-            );
-        };
-
-        this._columns[MutationTableColumnType.LOG_RATIO].shouldExclude = () => {
-            return (
-                !this.props.mutationCountsByProteinChangeForGroup ||
-                !this.props.profiledPatientCountsByGroup
-            );
-        };
+        this._columns['(A) Group'].order = 40;
+        this._columns['(B) Group'].order = 50;
+        this._columns['Alteration Overlap'].order = 60;
+        this._columns['Log2 Ratio'].order = 70;
+        this._columns['P_VALUE'].order = 80;
+        this._columns['Q_VALUE'].order = 90;
+        this._columns['Enriched in'].order = 100;
+        this._columns[MutationTableColumnType.MUTATION_STATUS].order = 110;
 
         //Adjust column visibility according to portal.properties
         adjustVisibility(

@@ -7,6 +7,7 @@ import styles from './filterResetPanel.module.scss';
 type FilterResetPanelProps = {
     resetFilters: () => void;
     filterInfo?: JSX.Element | string;
+    shiftClickMessage?: JSX.Element | string;
     className?: string;
     buttonText?: string;
     buttonClass?: string;
@@ -42,6 +43,7 @@ export class FilterResetPanel extends React.Component<
                     >
                         {this.props.buttonText}
                     </button>
+                    {this.props.shiftClickMessage}
                 </span>
             </div>
         );

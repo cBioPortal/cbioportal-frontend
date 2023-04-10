@@ -23,6 +23,7 @@ type GroupedData = { group: string; data: Mutation[][] }[];
 export const PROTEIN_IMPACT_TYPE_FILTER_ID =
     '_cBioPortalProteinImpactTypeFilter_';
 export const MUTATION_STATUS_FILTER_ID = '_cBioPortalMutationStatusFilter_';
+export const PROTEIN_CHANGE_FILTER_ID = '_cBioPortalProteinChangeFilter_';
 
 export function findProteinImpactTypeFilter(dataFilters: DataFilter[]) {
     // there are two types of filters (with putative driver, without putative driver)

@@ -1,10 +1,9 @@
 import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
 import {
-    MolecularProfile,
+    Mutation,
     PatientIdentifier,
     Sample,
     SampleIdentifier,
-    SampleMolecularIdentifier,
 } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
@@ -45,6 +44,9 @@ import {
     GroupData,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
+import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import { getTwoTailedPValue } from 'shared/lib/FisherExactTestCalculator';
+import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -1063,3 +1065,70 @@ const AlterationMenuHeader: React.FunctionComponent<{
         );
     }
 );
+
+export function getProteinChangeToMutationRowData(
+    tableData: Mutation[][],
+    mutatedCountsByProteinChangeForGroup: (
+        groupIndex: number
+    ) => {
+        [proteinChange: string]: number;
+    },
+    profiledPatientsCounts: { [groupIndex: number]: number },
+    groups: ComparisonGroup[]
+): {
+    [proteinChange: string]: ComparisonMutationsRow;
+} {
+    let rowData = tableData.map(proteinChangeRow => {
+        let groupAMutatedCount: number =
+            mutatedCountsByProteinChangeForGroup(0)[
+                proteinChangeRow[0].proteinChange
+            ] || 0;
+        let groupBMutatedCount: number =
+            mutatedCountsByProteinChangeForGroup(1)[
+                proteinChangeRow[0].proteinChange
+            ] || 0;
+        let groupAMutatedPercentage: number =
+            (groupAMutatedCount / profiledPatientsCounts[0]) * 100;
+        let groupBMutatedPercentage: number =
+            (groupBMutatedCount / profiledPatientsCounts[1]) * 100;
+        let logRatio: number = Math.log2(
+            groupAMutatedPercentage / groupBMutatedPercentage
+        );
+        let pValue: number = getTwoTailedPValue(
+            groupAMutatedCount,
+            profiledPatientsCounts[0] - groupAMutatedCount,
+            groupBMutatedCount,
+            profiledPatientsCounts[1] - groupBMutatedCount
+        );
+        let enrichedGroup: string =
+            logRatio > 0
+                ? groups[0].nameWithOrdinal
+                : groups[1].nameWithOrdinal;
+
+        return {
+            proteinChange: proteinChangeRow[0].proteinChange,
+            groupAMutatedCount: groupAMutatedCount,
+            groupBMutatedCount: groupBMutatedCount,
+            groupAMutatedPercentage: groupAMutatedPercentage,
+            groupBMutatedPercentage: groupBMutatedPercentage,
+            logRatio: logRatio,
+            pValue: pValue,
+            qValue: 0,
+            enrichedGroup: enrichedGroup,
+        };
+    });
+
+    rowData = _.sortBy(rowData, ['pValue']);
+    const qValues = calculateQValues(_.map(rowData, d => d.pValue));
+    rowData.forEach((d, i) => {
+        d.qValue = qValues[i];
+    });
+
+    const proteinChangeToRowData: {
+        [proteinChange: string]: ComparisonMutationsRow;
+    } = {};
+    rowData.forEach(o => {
+        proteinChangeToRowData[o['proteinChange']] = o;
+    });
+    return proteinChangeToRowData;
+}

@@ -153,17 +153,9 @@ export interface IMutationTableProps {
         column: Column<Mutation[]>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
-    mutationCountsByProteinChangeForGroup?: (
-        groupIndex: number
-    ) => {
-        [proteinChange: string]: number;
-    };
-    profiledPatientCountsByGroup?: {
-        [groupIndex: number]: number;
-    };
-    groups?: ComparisonGroup[];
     formatPaginationStatusText?: (text: string) => string;
     showTotalMutationCountsInCountHeader?: boolean;
+    customControls?: JSX.Element;
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
@@ -173,11 +165,7 @@ import {
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
 } from 'shared/lib/AnnotationColumnUtils';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
-import GroupMutatedCountPercentageColumnFormatter from './column/GroupMutatedCountPercentageColumnFormatter.tsx';
-import LogRatioColumnFormatter from './column/LogRatioColumnFormatter';
-import { ComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -223,9 +211,6 @@ export enum MutationTableColumnType {
     DBSNP = 'dbSNP',
     GENE_PANEL = 'Gene panel',
     SIGNAL = 'SIGNAL',
-    GROUP_A = '(A) Group',
-    GROUP_B = '(B) Group',
-    LOG_RATIO = 'Log2 Ratio',
 }
 
 export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
@@ -1109,105 +1094,6 @@ export default class MutationTable<
             align: 'right',
         };
 
-        this._columns[MutationTableColumnType.GROUP_A] = {
-            name: MutationTableColumnType.GROUP_A,
-            render: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.renderFunction(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    this.props.profiledPatientCountsByGroup,
-                    0,
-                    d
-                ),
-            download: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.getGroupMutatedCountPercentageTextValue(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    this.props.profiledPatientCountsByGroup,
-                    0,
-                    d
-                ),
-            sortBy: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.sortBy(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    0,
-                    d
-                ),
-            tooltip: this.props.groups ? (
-                <span>
-                    <strong>{this.props.groups[0].nameWithOrdinal}:</strong>{' '}
-                    Number (percentage) of samples in{' '}
-                    {this.props.groups[0].nameWithOrdinal} that have an
-                    alteration in the selected gene
-                </span>
-            ) : (
-                undefined
-            ),
-        };
-
-        this._columns[MutationTableColumnType.GROUP_B] = {
-            name: MutationTableColumnType.GROUP_B,
-            render: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.renderFunction(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    this.props.profiledPatientCountsByGroup,
-                    1,
-                    d
-                ),
-            download: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.getGroupMutatedCountPercentageTextValue(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    this.props.profiledPatientCountsByGroup,
-                    1,
-                    d
-                ),
-            sortBy: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.sortBy(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    1,
-                    d
-                ),
-            tooltip: this.props.groups ? (
-                <span>
-                    <strong>{this.props.groups[1].nameWithOrdinal}:</strong>{' '}
-                    Number (percentage) of samples in{' '}
-                    {this.props.groups[1].nameWithOrdinal} that have an
-                    alteration in the selected gene
-                </span>
-            ) : (
-                undefined
-            ),
-        };
-
-        this._columns[MutationTableColumnType.LOG_RATIO] = {
-            name: MutationTableColumnType.LOG_RATIO,
-            render: (d: Mutation[]) =>
-                LogRatioColumnFormatter.renderFunction(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    this.props.profiledPatientCountsByGroup,
-                    d
-                ),
-            download: (d: Mutation[]) =>
-                LogRatioColumnFormatter.getLogRatioTextValue(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    this.props.profiledPatientCountsByGroup,
-                    d
-                ),
-            sortBy: (d: Mutation[]) =>
-                LogRatioColumnFormatter.getLogRatioData(
-                    this.props.mutationCountsByProteinChangeForGroup,
-                    this.props.profiledPatientCountsByGroup,
-                    d
-                ),
-            tooltip: this.props.groups ? (
-                <span>
-                    Log2 based ratio of (pct in{' '}
-                    {this.props.groups[0].nameWithOrdinal}/ pct in{' '}
-                    {this.props.groups[1].nameWithOrdinal})
-                </span>
-            ) : (
-                undefined
-            ),
-        };
-
         this._columns[MutationTableColumnType.EXON] = {
             name: MutationTableColumnType.EXON,
             render: (d: Mutation[]) =>
@@ -1486,6 +1372,7 @@ export default class MutationTable<
                 showTotalMutationCountsInCountHeader={
                     this.props.showTotalMutationCountsInCountHeader
                 }
+                customControls={this.props.customControls}
             />
         );
     }
