@@ -64,7 +64,7 @@ export default class ResultsViewFusionTable extends FusionTable<
             FusionTableColumnType.TUMOR_PAIRED_END_READ_COUNT,
             FusionTableColumnType.NORMAL_SPLIT_READ_COUNT,
             FusionTableColumnType.TUMOR_SPLIT_READ_COUNT,
-            FusionTableColumnType.ANNOTATION,
+            FusionTableColumnType.FUSION_DESCRIPTION,
             FusionTableColumnType.BREAKPOINT_TYPE,
             FusionTableColumnType.CENTER,
             FusionTableColumnType.CONNECTION_TYPE,
@@ -72,11 +72,6 @@ export default class ResultsViewFusionTable extends FusionTable<
             FusionTableColumnType.VARIANT_CLASS,
             FusionTableColumnType.LENGTH,
             FusionTableColumnType.COMMENTS,
-            FusionTableColumnType.EXTERNAL_ANNOTATION,
-            FusionTableColumnType.DRIVER_FILTER,
-            FusionTableColumnType.DRIVER_FILTER_ANNOTATION,
-            FusionTableColumnType.DRIVER_TIERS_FILTER,
-            FusionTableColumnType.DRIVER_TIERS_FILTER_ANNOTATION,
         ],
     };
 }
