@@ -1,16 +1,6 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
-export type Drug = {
-    'drugName': string
-
-        'ncitCode': string
-
-        'synonyms': Array < string >
-
-        'uuid': string
-
-};
 export type AnnotateMutationByGenomicChangeQuery = {
     'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
 
@@ -23,32 +13,10 @@ export type AnnotateMutationByGenomicChangeQuery = {
         'tumorType': string
 
 };
-export type CuratedGene = {
-    'background': string
+export type Eligibility = {
+    'structured': StructuredEligibility
 
-        'entrezGeneId': number
-
-        'grch37Isoform': string
-
-        'grch37RefSeq': string
-
-        'grch38Isoform': string
-
-        'grch38RefSeq': string
-
-        'highestResistancLevel': string
-
-        'highestResistanceLevel': string
-
-        'highestSensitiveLevel': string
-
-        'hugoSymbol': string
-
-        'oncogene': boolean
-
-        'summary': string
-
-        'tsg': boolean
+        'unstructured': Array < UnstructuredEligibility >
 
 };
 export type Query = {
@@ -75,72 +43,6 @@ export type Query = {
         'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN"
 
         'tumorType': string
-
-};
-export type QueryGene = {
-    'entrezGeneId': number
-
-        'hugoSymbol': string
-
-};
-export type CancerGene = {
-    'entrezGeneId': number
-
-        'foundation': boolean
-
-        'foundationHeme': boolean
-
-        'geneAliases': Array < string >
-
-        'grch37Isoform': string
-
-        'grch37RefSeq': string
-
-        'grch38Isoform': string
-
-        'grch38RefSeq': string
-
-        'hugoSymbol': string
-
-        'mSKHeme': boolean
-
-        'mSKImpact': boolean
-
-        'occurrenceCount': number
-
-        'oncogene': boolean
-
-        'oncokbAnnotated': boolean
-
-        'sangerCGC': boolean
-
-        'tsg': boolean
-
-        'vogelstein': boolean
-
-};
-export type MainType = {
-    'id': number
-
-        'name': string
-
-        'tumorForm': "SOLID" | "LIQUID" | "MIXED"
-
-};
-export type OncoKBInfo = {
-    'apiVersion': SemVer
-
-        'appVersion': SemVer
-
-        'dataVersion': Version
-
-        'levels': Array < InfoLevel >
-
-        'ncitVersion': string
-
-        'oncoTreeVersion': string
-
-        'publicInstance': boolean
 
 };
 export type SemVer = {
@@ -171,46 +73,14 @@ export type Implication = {
         'tumorType': TumorType
 
 };
-export type AnnotateMutationByProteinChangeQuery = {
-    'alteration': string
+export type StructuredEligibility = {
+    'acceptsHealthyVolunteers': boolean
 
-        'consequence': string
+        'gender': string
 
-        'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
+        'maxAgeInYears': string
 
-        'gene': QueryGene
-
-        'id': string
-
-        'proteinEnd': number
-
-        'proteinStart': number
-
-        'referenceGenome': "GRCh37" | "GRCh38"
-
-        'tumorType': string
-
-};
-export type IndicatorQueryTreatment = {
-    'abstracts': Array < ArticleAbstract >
-
-        'alterations': Array < string >
-
-        'approvedIndications': Array < string >
-
-        'description': string
-
-        'drugs': Array < Drug >
-
-        'fdaLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
-
-        'level': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
-
-        'levelAssociatedCancerType': TumorType
-
-        'levelExcludedCancerTypes': Array < TumorType >
-
-        'pmids': Array < string >
+        'minAgeInYears': string
 
 };
 export type TumorType = {
@@ -235,44 +105,10 @@ export type TumorType = {
         'tumorForm': "SOLID" | "LIQUID" | "MIXED"
 
 };
-export type MutationEffectResp = {
-    'citations': Citations
-
-        'description': string
-
-        'knownEffect': string
-
-};
-export type AnnotateCopyNumberAlterationQuery = {
-    'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS"
-
-        'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
-
-        'gene': QueryGene
-
-        'id': string
-
-        'referenceGenome': "GRCh37" | "GRCh38"
-
-        'tumorType': string
-
-};
 export type Version = {
     'date': string
 
         'version': string
-
-};
-export type AnnotateMutationByHGVSgQuery = {
-    'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
-
-        'hgvsg': string
-
-        'id': string
-
-        'referenceGenome': "GRCh37" | "GRCh38"
-
-        'tumorType': string
 
 };
 export type AnnotateStructuralVariantQuery = {
@@ -345,12 +181,6 @@ export type IndicatorQueryResp = {
         'vus': boolean
 
 };
-export type Citations = {
-    'abstracts': Array < ArticleAbstract >
-
-        'pmids': Array < string >
-
-};
 export type ArticleAbstract = {
     'abstract': string
 
@@ -365,6 +195,232 @@ export type InfoLevel = {
         'htmlDescription': string
 
         'levelOfEvidence': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
+
+};
+export type Drug = {
+    'drugName': string
+
+        'ncitCode': string
+
+};
+export type CuratedGene = {
+    'background': string
+
+        'entrezGeneId': number
+
+        'grch37Isoform': string
+
+        'grch37RefSeq': string
+
+        'grch38Isoform': string
+
+        'grch38RefSeq': string
+
+        'highestResistancLevel': string
+
+        'highestResistanceLevel': string
+
+        'highestSensitiveLevel': string
+
+        'hugoSymbol': string
+
+        'oncogene': boolean
+
+        'summary': string
+
+        'tsg': boolean
+
+};
+export type Trial = {
+    'arms': Array < Arm >
+
+        'briefTitle': string
+
+        'collaborators': Array < Collaborator >
+
+        'currentTrialStatus': string
+
+        'currentTrialStatusDate': string
+
+        'eligibility': Eligibility
+
+        'isUSTrial': boolean
+
+        'nctId': string
+
+        'phase': string
+
+        'principalInvestigator': string
+
+        'sites': Array < string >
+
+};
+export type QueryGene = {
+    'entrezGeneId': number
+
+        'hugoSymbol': string
+
+};
+export type CancerGene = {
+    'entrezGeneId': number
+
+        'foundation': boolean
+
+        'foundationHeme': boolean
+
+        'geneAliases': Array < string >
+
+        'grch37Isoform': string
+
+        'grch37RefSeq': string
+
+        'grch38Isoform': string
+
+        'grch38RefSeq': string
+
+        'hugoSymbol': string
+
+        'mSKHeme': boolean
+
+        'mSKImpact': boolean
+
+        'occurrenceCount': number
+
+        'oncogene': boolean
+
+        'oncokbAnnotated': boolean
+
+        'sangerCGC': boolean
+
+        'tsg': boolean
+
+        'vogelstein': boolean
+
+};
+export type MainType = {
+    'id': number
+
+        'name': string
+
+        'tumorForm': "SOLID" | "LIQUID" | "MIXED"
+
+};
+export type OncoKBInfo = {
+    'apiVersion': SemVer
+
+        'appVersion': SemVer
+
+        'dataVersion': Version
+
+        'levels': Array < InfoLevel >
+
+        'ncitVersion': string
+
+        'oncoTreeVersion': string
+
+        'publicInstance': boolean
+
+};
+export type AnnotateMutationByProteinChangeQuery = {
+    'alteration': string
+
+        'consequence': string
+
+        'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
+
+        'gene': QueryGene
+
+        'id': string
+
+        'proteinEnd': number
+
+        'proteinStart': number
+
+        'referenceGenome': "GRCh37" | "GRCh38"
+
+        'tumorType': string
+
+};
+export type IndicatorQueryTreatment = {
+    'abstracts': Array < ArticleAbstract >
+
+        'alterations': Array < string >
+
+        'approvedIndications': Array < string >
+
+        'description': string
+
+        'drugs': Array < Drug >
+
+        'fdaLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
+
+        'level': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
+
+        'levelAssociatedCancerType': TumorType
+
+        'levelExcludedCancerTypes': Array < TumorType >
+
+        'pmids': Array < string >
+
+        'trials': Array < Trial >
+
+};
+export type Collaborator = {
+    'name': string
+
+};
+export type MutationEffectResp = {
+    'citations': Citations
+
+        'description': string
+
+        'knownEffect': string
+
+};
+export type AnnotateCopyNumberAlterationQuery = {
+    'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS"
+
+        'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
+
+        'gene': QueryGene
+
+        'id': string
+
+        'referenceGenome': "GRCh37" | "GRCh38"
+
+        'tumorType': string
+
+};
+export type AnnotateMutationByHGVSgQuery = {
+    'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
+
+        'hgvsg': string
+
+        'id': string
+
+        'referenceGenome': "GRCh37" | "GRCh38"
+
+        'tumorType': string
+
+};
+export type Citations = {
+    'abstracts': Array < ArticleAbstract >
+
+        'pmids': Array < string >
+
+};
+export type Arm = {
+    'armDescription': string
+
+        'drugs': Array < Drug >
+
+};
+export type UnstructuredEligibility = {
+    'description': string
+
+        'displayOrder': number
+
+        'inclusionIndicator': boolean
 
 };
 
