@@ -64,7 +64,7 @@ export default class GroupComparisonMutationTable extends MutationTable<
         const rowDataByProteinChange = this.props.getRowDataByProteinChange();
 
         this._columns['(A) Group'] = {
-            name: '(A) Group',
+            name: this.props.groups[0].nameWithOrdinal,
             render: (d: Mutation[]) =>
                 GroupMutatedCountPercentageColumnFormatter.renderFunction(
                     rowDataByProteinChange,
@@ -95,7 +95,7 @@ export default class GroupComparisonMutationTable extends MutationTable<
         };
 
         this._columns['(B) Group'] = {
-            name: '(B) Group',
+            name: this.props.groups[1].nameWithOrdinal,
             render: (d: Mutation[]) =>
                 GroupMutatedCountPercentageColumnFormatter.renderFunction(
                     rowDataByProteinChange,

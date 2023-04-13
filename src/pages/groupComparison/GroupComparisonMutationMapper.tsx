@@ -26,7 +26,6 @@ import { ProteinImpactWithoutVusMutationType } from 'cbioportal-frontend-commons
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import GroupComparisonMutationTable from './GroupComparisonMutationTable';
 import MutationMapperDataStore, {
-    MUTATION_STATUS_FILTER_ID,
     PROTEIN_CHANGE_FILTER_ID,
 } from 'shared/components/mutationMapper/MutationMapperDataStore';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
@@ -46,8 +45,10 @@ interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     groupToProfiledPatients: {
         [groupUid: string]: string[];
     };
-    samples?: Sample[];
     sampleSet: ComplexKeyMap<Sample>;
+    groupToProfiledPatientCounts: {
+        [groupUid: string]: number;
+    };
 }
 
 @observer
@@ -57,6 +58,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     @observable.ref _enrichedGroups: string[] = this.props.groups.map(
         group => group.nameWithOrdinal
     );
+    @observable significanceFilter: boolean = false;
 
     constructor(props: IGroupComparisonMutationMapperProps) {
         super(props);
@@ -104,7 +106,6 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 dataStore={
                     this.props.store.dataStore as MutationMapperDataStore
                 }
-                itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
                 myCancerGenomeData={this.props.store.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
@@ -136,15 +137,19 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 storeColumnVisibility={this.props.storeColumnVisibility}
                 namespaceColumns={this.props.store.namespaceColumnConfig}
                 columns={this.columns}
-                profiledPatientCountsByGroup={this.profiledPatientCountsByGroup}
+                profiledPatientCountsByGroup={
+                    this.props.groupToProfiledPatientCounts
+                }
                 groups={this.props.groups}
                 formatPaginationStatusText={this.formatPaginationStatusText}
                 showTotalMutationCountsInCountHeader={true}
                 sampleSet={this.props.sampleSet}
-                customControls={this.enrichedInDropdown}
+                customControls={this.tableCustomControls}
                 getRowDataByProteinChange={
                     this.rowDataByProteinChangeForEnrichedGroups
                 }
+                initialSortColumn={'p-Value'}
+                initialSortDirection={'asc'}
             />
         );
     }
@@ -157,7 +162,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         return getProteinChangeToMutationRowData(
             mutationsByProteinChange,
             this.mutatedCountsByProteinChangeForGroup,
-            this.profiledPatientCountsByGroup,
+            this.props.groupToProfiledPatientCounts,
             this.props.groups
         );
     }
@@ -169,7 +174,10 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
           }
         | {} {
         return _.pickBy(this.rowDataByProteinChange, v => {
-            return this._enrichedGroups.includes(v.enrichedGroup);
+            return this.significanceFilter
+                ? this._enrichedGroups.includes(v.enrichedGroup) &&
+                      v.qValue < 0.05
+                : this._enrichedGroups.includes(v.enrichedGroup);
         });
     }
 
@@ -350,26 +358,6 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         return map;
     }
 
-    @action.bound
-    protected onMutationStatusSelect(
-        selectedMutationStatusIds: string[],
-        allValuesSelected: boolean
-    ) {
-        onFilterOptionSelect(
-            selectedMutationStatusIds,
-            allValuesSelected,
-            this.store.dataStore,
-            DataFilterType.MUTATION_STATUS,
-            MUTATION_STATUS_FILTER_ID
-        );
-    }
-
-    @computed get mutationStatusFilter() {
-        return this.store.dataStore.dataFilters.find(
-            f => f.id === MUTATION_STATUS_FILTER_ID
-        );
-    }
-
     @autobind
     protected mutationsGroupedByProteinChangeForGroup(groupIndex: number) {
         let allGroupedData = this.store.dataStore.allData;
@@ -422,17 +410,6 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         return map;
     }
 
-    @computed get profiledPatientCountsByGroup(): {
-        [groupIndex: number]: number;
-    } {
-        const map: { [groupIndex: number]: number } = {};
-        _.forIn(this.props.groupToProfiledPatients, (p, i) => {
-            map[Object.keys(this.props.groupToProfiledPatients).indexOf(i)] =
-                p.length;
-        });
-        return map;
-    }
-
     protected get fisherExactTwoSidedTestLabel(): JSX.Element | null {
         return (
             <FisherExactTwoSidedTestLabel
@@ -440,21 +417,42 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                     this.props.store.dataStore as MutationMapperDataStore
                 }
                 groups={this.props.groups}
-                sampleSet={this.props.sampleSet}
+                groupToProfiledPatientCounts={
+                    this.props.groupToProfiledPatientCounts
+                }
             />
         );
     }
 
-    @computed get enrichedInDropdown(): JSX.Element {
+    @computed get tableCustomControls(): JSX.Element {
         return (
-            <div style={{ width: 250, marginRight: 7 }} className="pull-right">
-                <CheckedSelect
-                    name={'groupsSelector'}
-                    placeholder={'Enriched in ...'}
-                    onChange={this.onChange}
-                    options={this.options}
-                    value={this.selectedValues}
-                />
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    height: 30,
+                    float: 'right',
+                }}
+            >
+                <div style={{ width: 250, marginRight: 7 }}>
+                    <CheckedSelect
+                        name={'groupsSelector'}
+                        placeholder={'Enriched in ...'}
+                        onChange={this.onChange}
+                        options={this.options}
+                        value={this.selectedValues}
+                    />
+                </div>
+                <label className="checkbox-inline" style={{ marginRight: 7 }}>
+                    <input
+                        type="checkbox"
+                        checked={this.significanceFilter}
+                        onClick={this.toggleSignificanceFilter}
+                        data-test="SwapAxes"
+                    />
+                    Significant only
+                </label>
             </div>
         );
     }
@@ -477,17 +475,37 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         this._enrichedGroups = _.map(values, datum => datum.value);
         onFilterOptionSelect(
             _.keys(this.rowDataByProteinChangeForEnrichedGroups()),
-            values.length === 2,
+            this._enrichedGroups.length === 2 && !this.significanceFilter,
             this.store.dataStore,
             DataFilterType.PROTEIN_CHANGE,
             PROTEIN_CHANGE_FILTER_ID
         );
     }
 
+    @action.bound
+    toggleSignificanceFilter() {
+        this.significanceFilter = !this.significanceFilter;
+        onFilterOptionSelect(
+            _.keys(this.rowDataByProteinChangeForEnrichedGroups()),
+            this._enrichedGroups.length === 2 && !this.significanceFilter,
+            this.store.dataStore,
+            DataFilterType.PROTEIN_CHANGE,
+            PROTEIN_CHANGE_FILTER_ID
+        );
+    }
+
+    @action.bound
     protected resetFilters() {
         super.resetFilters();
         this._enrichedGroups = this.props.groups.map(
             group => group.nameWithOrdinal
         );
+        this.significanceFilter = false;
+    }
+
+    @action.bound
+    protected handleTranscriptChange(transcriptId: string) {
+        this.resetFilters();
+        super.handleTranscriptChange(transcriptId);
     }
 }

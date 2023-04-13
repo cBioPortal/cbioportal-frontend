@@ -153,6 +153,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             this.mutationMapperToolStore.mutationMapperStores,
             this.props.store.coverageInformation,
             this.props.store.groupToProfiledPatients,
+            this.props.store.groupToProfiledPatientCounts,
         ],
         render: () => {
             const mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
@@ -235,6 +236,10 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                                 this.props.store.groupToProfiledPatients.result!
                             }
                             sampleSet={this.props.store.sampleMap.result!}
+                            groupToProfiledPatientCounts={
+                                this.props.store.groupToProfiledPatientCounts
+                                    .result!
+                            }
                         />
                     </div>
                 );

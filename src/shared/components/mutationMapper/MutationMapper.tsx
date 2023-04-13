@@ -496,17 +496,22 @@ export default class MutationMapper<
                 filterInfo={`Showing ${
                     _.flatten(dataStore.tableData).length
                 } of ${dataStore.allData.length} mutations.`}
-                shiftClickMessage={
+                additionalInfo={
                     dataStore.sortedFilteredSelectedData.length > 0
                         ? ' (Shift click to select multiple residues)'
                         : ''
                 }
                 className={classnames(
-                    'alert',
                     'alert-success',
+                    'small',
                     styles.filterResetPanel
                 )}
-                buttonClass="btn btn-default btn-xs"
+                buttonClass={classnames(
+                    'btn',
+                    'btn-default',
+                    'btn-xs',
+                    styles.removeFilterButton
+                )}
             />
         );
     }

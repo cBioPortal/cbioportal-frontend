@@ -747,7 +747,10 @@ export class LazyMobXTableStore<T> {
     @computed get itemsLabel() {
         if (this._itemsLabel) {
             // use itemsLabel for plural in case no itemsLabelPlural provided
-            if (!this._itemsLabelPlural || this.displayData.length === 1) {
+            if (
+                !this._itemsLabelPlural ||
+                _.flatten(this.displayData).length === 1
+            ) {
                 return this._itemsLabel;
             } else {
                 return this._itemsLabelPlural;

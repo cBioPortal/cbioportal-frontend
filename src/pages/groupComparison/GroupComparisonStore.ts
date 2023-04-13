@@ -364,6 +364,19 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
+    public readonly groupToProfiledPatientCounts = remoteData({
+        await: () => [this.groupToProfiledPatients],
+        invoke: () => {
+            const map: { [groupIndex: number]: number } = {};
+            _.forIn(this.groupToProfiledPatients.result!, (p, i) => {
+                map[
+                    Object.keys(this.groupToProfiledPatients.result!).indexOf(i)
+                ] = p.length;
+            });
+            return Promise.resolve(map);
+        },
+    });
+
     readonly mutations = remoteData({
         await: () => [this.samples, this.mutationEnrichmentProfiles],
         invoke: async () => {

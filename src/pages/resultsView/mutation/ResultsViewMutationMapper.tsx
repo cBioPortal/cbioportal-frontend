@@ -108,13 +108,18 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             <FilterResetPanel
                 resetFilters={() => dataStore.resetFilters()}
                 filterInfo={filterInfo}
-                shiftClickMessage={shiftClickMessage}
+                additionalInfo={shiftClickMessage}
                 className={classnames(
-                    'alert',
                     'alert-success',
+                    'small',
                     styles.filterResetPanel
                 )}
-                buttonClass="btn btn-default btn-xs"
+                buttonClass={classnames(
+                    'btn',
+                    'btn-default',
+                    'btn-xs',
+                    styles.removeFilterButton
+                )}
             />
         );
     }
