@@ -63,7 +63,7 @@ export default class HomePage extends React.Component<
                 <QueryAndDownloadTabs
                     getQueryStore={this.getQueryStore}
                     showQuickSearchTab={getServerConfig().quick_search_enabled}
-                    showDownloadTab={true}
+                    showDownloadTab={false}
                 />
             </PageLayout>
         );
