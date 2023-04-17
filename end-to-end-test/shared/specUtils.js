@@ -491,6 +491,8 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
         );
     });
 
+    $(selector).waitForExist({ timeout: 5000 });
+
     const ret = checkElementWithTemporaryClass(
         selector,
         selector,
