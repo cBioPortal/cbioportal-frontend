@@ -21,13 +21,17 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { observable, computed } from 'mobx';
+import { observable, computed, action } from 'mobx';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import ResultViewFusionMapper from './ResultViewFusionMapper';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import autobind from 'autobind-decorator';
 import ErrorMessage from '../../../shared/components/ErrorMessage';
+import {
+    getOncoKbIconStyle,
+    updateOncoKbIconStyle,
+} from 'shared/lib/AnnotationColumnUtils';
 
 export interface IFusionPageProps {
     routing?: any;
@@ -38,6 +42,8 @@ export interface IFusionPageProps {
 @observer
 export default class Fusions extends React.Component<IFusionPageProps, {}> {
     @observable _fusionGeneTab: string | undefined = undefined;
+    @observable mergeMutationTableOncoKbIcons: boolean;
+
     @computed get fusionGeneTab() {
         return this._fusionGeneTab || this.props.store.hugoGeneSymbols[0];
     }
@@ -47,6 +53,7 @@ export default class Fusions extends React.Component<IFusionPageProps, {}> {
     }
 
     protected generateTabs(genes: string[]) {
+        this.mergeMutationTableOncoKbIcons = getOncoKbIconStyle().mergeIcons;
         const tabs: JSX.Element[] = [];
         genes.forEach((gene: string) => {
             const fusionMapperStore = this.props.store.fusionMapperStores
@@ -54,7 +61,13 @@ export default class Fusions extends React.Component<IFusionPageProps, {}> {
             if (fusionMapperStore) {
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene}>
-                        <ResultViewFusionMapper store={fusionMapperStore} />
+                        <ResultViewFusionMapper
+                            store={fusionMapperStore}
+                            mergeOncoKbIcons={
+                                this.mergeMutationTableOncoKbIcons
+                            }
+                            onOncoKbIconToggle={this.handleOncoKbIconToggle}
+                        />
                     </MSKTab>
                 );
             }
@@ -73,6 +86,12 @@ export default class Fusions extends React.Component<IFusionPageProps, {}> {
         else {
             this.fusionGeneTab = id;
         }
+    }
+
+    @action.bound
+    handleOncoKbIconToggle(mergeIcons: boolean) {
+        this.mergeMutationTableOncoKbIcons = mergeIcons;
+        updateOncoKbIconStyle({ mergeIcons });
     }
 
     readonly fusionUI = MakeMobxView({

@@ -29,6 +29,8 @@ import {
     SampleIdentifier,
     StructuralVariant,
 } from 'cbioportal-ts-api-client';
+import { IOncoKbData } from 'cbioportal-utils';
+import { CancerGene } from 'oncokb-ts-api-client';
 
 export class ResultViewFusionMapperStore {
     constructor(
@@ -41,7 +43,10 @@ export class ResultViewFusionMapperStore {
         public fusions: StructuralVariantExt[],
         public uniqueSampleKeyToTumorType: {
             [uniqueSampleKey: string]: string;
-        }
+        },
+        public structuralVariantOncoKbData: MobxPromise<IOncoKbData | Error>,
+        public oncoKbCancerGenes: MobxPromise<CancerGene[] | Error>,
+        public usingPublicOncoKbInstance: boolean
     ) {
         makeObservable(this);
         labelMobxPromises(this);

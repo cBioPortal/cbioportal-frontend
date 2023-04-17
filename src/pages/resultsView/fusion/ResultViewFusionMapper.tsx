@@ -29,6 +29,8 @@ import ErrorMessage from '../../../shared/components/ErrorMessage';
 
 export interface IFusionMapperProps {
     store: ResultViewFusionMapperStore;
+    mergeOncoKbIcons?: boolean;
+    onOncoKbIconToggle: (mergeIcons: boolean) => void;
 }
 
 @observer
@@ -58,7 +60,8 @@ export default class ResultViewFusionMapper extends React.Component<
                 <hr style={{ marginTop: 20 }} />
                 <ResultsViewFusionTable
                     dataStore={this.props.store.dataStore}
-                    studyIdToStudy={studyMap}
+                    studyIdToStudy={this.props.store.studyIdToStudy.result}
+                    studyMap={studyMap}
                     molecularProfileIdToMolecularProfile={molecularProfileMap}
                     fusionMolecularProfile={
                         this.props.store.fusionMolecularProfile
@@ -66,6 +69,15 @@ export default class ResultViewFusionMapper extends React.Component<
                     uniqueSampleKeyToTumorType={
                         this.props.store.uniqueSampleKeyToTumorType
                     }
+                    structuralVariantOncoKbData={
+                        this.props.store.structuralVariantOncoKbData
+                    }
+                    oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
+                    usingPublicOncoKbInstance={
+                        this.props.store.usingPublicOncoKbInstance
+                    }
+                    mergeOncoKbIcons={this.props.mergeOncoKbIcons}
+                    onOncoKbIconToggle={this.props.onOncoKbIconToggle}
                 />
             </>
         );

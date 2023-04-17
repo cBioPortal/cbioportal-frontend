@@ -41,6 +41,17 @@ import {
 } from 'cbioportal-ts-api-client/src';
 import styles from 'shared/components/mutationTable/column/mutationStatus.module.scss';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { Annotation } from 'react-mutation-mapper';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
+import AnnotationColumnFormatter from 'pages/patientView/structuralVariant/column/AnnotationColumnFormatter';
+import {
+    calculateOncoKbContentPadding,
+    calculateOncoKbContentWidthWithInterval,
+    DEFAULT_ONCOKB_CONTENT_WIDTH,
+} from 'shared/lib/AnnotationColumnUtils';
+import { IOncoKbData, RemoteData } from 'cbioportal-utils';
+import { CancerGene } from 'oncokb-ts-api-client';
+import PubMedCache from 'shared/cache/PubMedCache';
 
 /**
  * Fusion table column types
@@ -64,6 +75,7 @@ export enum FusionTableColumnType {
     SITE2_POSITION,
     SITE2_DESCRIPTION,
     SITE2_EFFECT_ON_FRAME,
+    ANNOTATION,
     MUTATION_STATUS,
     NCBI_BUILD,
     DNA_SUPPORT,
@@ -185,6 +197,11 @@ export const FusionTableColumnLabelProps: FusionTableColumnProps[] = [
         attribute: 'site2EffectOnFrame',
     },
     {
+        columnType: FusionTableColumnType.ANNOTATION,
+        label: 'Annotation',
+        attribute: '',
+    },
+    {
         columnType: FusionTableColumnType.MUTATION_STATUS,
         label: 'MS',
         attribute: 'svStatus',
@@ -294,7 +311,8 @@ export type FusionTableColumn = Column<StructuralVariant[]> & {
 };
 
 export interface IFusionTableProps {
-    studyIdToStudy?: Map<string, CancerStudy>;
+    studyIdToStudy?: { [studyId: string]: CancerStudy };
+    studyMap?: Map<string, CancerStudy>;
     uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string };
     molecularProfileIdToMolecularProfile?: Map<string, MolecularProfile>;
     columns?: FusionTableColumnType[];
@@ -309,21 +327,32 @@ export interface IFusionTableProps {
     initialSortDirection?: SortDirection;
     paginationProps?: IPaginationControlsProps;
     showCountHeader?: boolean;
+    structuralVariantOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
+    usingPublicOncoKbInstance: boolean;
+    mergeOncoKbIcons?: boolean;
+    onOncoKbIconToggle: (mergeIcons: boolean) => void;
+    pubMedCache?: PubMedCache;
 }
 
 export class FusionTableComponent extends LazyMobXTable<StructuralVariant[]> {}
+
+const ANNOTATION_ELEMENT_ID = 'fusion-annotation';
 
 @observer
 export default class FusionTable<
     P extends IFusionTableProps
 > extends React.Component<P, {}> {
+    @observable mergeOncoKbIcons;
+    @observable oncokbWidth = DEFAULT_ONCOKB_CONTENT_WIDTH;
+    private oncokbInterval: any;
     @observable protected _columns: { [columnEnum: number]: FusionTableColumn };
 
     public static defaultProps = {
         initialItemsPerPage: 25,
         showCountHeader: true,
         paginationProps: { itemsPerPageOptions: [25, 50, 100] },
-        initialSortColumn: 'Sample Id',
+        initialSortColumn: 'Annotation',
         initialSortDirection: 'desc',
         itemsLabel: 'Fusion',
         itemsLabelPlural: 'Fusions',
@@ -332,6 +361,16 @@ export default class FusionTable<
     constructor(props: P) {
         super(props);
         makeObservable(this);
+
+        this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
+            ANNOTATION_ELEMENT_ID,
+            oncoKbContentWidth => {
+                if (this.oncokbWidth !== oncoKbContentWidth)
+                    this.oncokbWidth = oncoKbContentWidth;
+            }
+        );
+        this.mergeOncoKbIcons = !!props.mergeOncoKbIcons;
+
         this._columns = {};
         this.generateColumns();
     }
@@ -363,14 +402,14 @@ export default class FusionTable<
     private renderColumnFn(
         label: FusionTableColumnProps,
         molecularProfileIdToMolecularProfile?: Map<string, MolecularProfile>,
-        studyIdToStudy?: Map<string, CancerStudy>
+        studyMap?: Map<string, CancerStudy>
     ) {
         let _renderColumnFn = (d: StructuralVariantExt[]) => {
             const data = d[0][label.attribute];
             return <span>{data}</span>;
         };
 
-        if (molecularProfileIdToMolecularProfile && studyIdToStudy) {
+        if (molecularProfileIdToMolecularProfile && studyMap) {
             if (
                 label.columnType === FusionTableColumnType.SAMPLE_ID &&
                 this.props.fusionMolecularProfile
@@ -384,9 +423,7 @@ export default class FusionTable<
                     );
 
                     if (geneticProfile) {
-                        const study = studyIdToStudy.get(
-                            geneticProfile.studyId
-                        );
+                        const study = studyMap.get(geneticProfile.studyId);
                         if (study) {
                             let linkToPatientView: string = `#/patient?sampleId=${sampleId}&studyId=${study.studyId}`;
                             // START HACK
@@ -432,7 +469,7 @@ export default class FusionTable<
 
                     if (!geneticProfile) return <span />;
 
-                    const study = studyIdToStudy.get(geneticProfile.studyId);
+                    const study = studyMap.get(geneticProfile.studyId);
                     return study ? (
                         <a
                             href={getStudySummaryUrl(study.studyId)}
@@ -515,13 +552,14 @@ export default class FusionTable<
             FusionTableColumnType.CANCER_TYPE_DETAILED,
             FusionTableColumnType.SITE1_HUGO_SYMBOL,
             FusionTableColumnType.SITE2_HUGO_SYMBOL,
+            FusionTableColumnType.ANNOTATION,
             FusionTableColumnType.VARIANT_CLASS,
             FusionTableColumnType.EVENT_INFO,
             FusionTableColumnType.CONNECTION_TYPE,
         ];
 
         this._columns = {};
-        if (this.props.studyIdToStudy && this.props.studyIdToStudy.size > 1) {
+        if (this.props.studyMap && this.props.studyMap.size > 1) {
             visibleColumns.push(FusionTableColumnType.STUDY);
         }
 
@@ -531,7 +569,7 @@ export default class FusionTable<
                 render: this.renderColumnFn(
                     label,
                     this.props.molecularProfileIdToMolecularProfile,
-                    this.props.studyIdToStudy
+                    this.props.studyMap
                 ),
                 download: (d: StructuralVariantExt[]) => d[0][label.attribute],
                 sortBy: (d: StructuralVariantExt[]) =>
@@ -544,6 +582,49 @@ export default class FusionTable<
                 visible: visibleColumns.indexOf(label.columnType) > -1,
             };
         });
+
+        this._columns[FusionTableColumnType.ANNOTATION] = {
+            name: 'Annotation',
+            headerRender: (name: string) =>
+                AnnotationColumnFormatter.headerRender(
+                    name,
+                    this.oncokbWidth,
+                    this.props.mergeOncoKbIcons,
+                    this.props.onOncoKbIconToggle
+                ),
+            render: (d: StructuralVariant[]) => (
+                <span id="sv-annotation">
+                    {AnnotationColumnFormatter.renderFunction(d, {
+                        uniqueSampleKeyToTumorType: this.props
+                            .uniqueSampleKeyToTumorType,
+                        oncoKbData: this.props.structuralVariantOncoKbData,
+                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                        usingPublicOncoKbInstance: this.props
+                            .usingPublicOncoKbInstance,
+                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+                        oncoKbContentPadding: calculateOncoKbContentPadding(
+                            this.oncokbWidth
+                        ),
+                        enableOncoKb: getServerConfig().show_oncokb as boolean,
+                        pubMedCache: this.props.pubMedCache,
+                        enableCivic: false,
+                        enableMyCancerGenome: false,
+                        enableHotspot: false,
+                        userDisplayName: ServerConfigHelpers.getUserDisplayName(),
+                        studyIdToStudy: this.props.studyIdToStudy,
+                    })}
+                </span>
+            ),
+            sortBy: (d: StructuralVariant[]) => {
+                return AnnotationColumnFormatter.sortValue(
+                    d,
+                    this.props.oncoKbCancerGenes,
+                    this.props.usingPublicOncoKbInstance,
+                    this.props.structuralVariantOncoKbData,
+                    this.props.uniqueSampleKeyToTumorType
+                );
+            },
+        };
     }
 
     @computed

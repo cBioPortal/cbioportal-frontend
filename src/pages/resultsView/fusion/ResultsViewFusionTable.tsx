@@ -52,6 +52,7 @@ export default class ResultsViewFusionTable extends FusionTable<
             FusionTableColumnType.SITE2_POSITION,
             FusionTableColumnType.SITE2_DESCRIPTION,
             FusionTableColumnType.SITE2_EFFECT_ON_FRAME,
+            FusionTableColumnType.ANNOTATION,
             FusionTableColumnType.MUTATION_STATUS,
             FusionTableColumnType.NCBI_BUILD,
             FusionTableColumnType.DNA_SUPPORT,
