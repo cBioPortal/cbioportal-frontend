@@ -1,5 +1,5 @@
 import {
-    defaultNodeFields,
+    searchNodeFields,
     toQueryString,
 } from 'shared/lib/query/textQueryUtils';
 import {
@@ -8,7 +8,7 @@ import {
     NotSearchClause,
 } from 'shared/components/query/filteredSearch/SearchClause';
 import { QueryParser } from 'shared/lib/query/QueryParser';
-import { DefaultPhrase } from 'shared/components/query/filteredSearch/Phrase';
+import { StringPhrase } from 'shared/components/query/filteredSearch/Phrase';
 
 describe('QueryParser', () => {
     const parser = new QueryParser(new Set<string>());
@@ -17,10 +17,10 @@ describe('QueryParser', () => {
     )!.nodeFields;
 
     describe('parseSearchQuery', () => {
-        const part1 = new DefaultPhrase('part1', 'part1', defaultNodeFields);
-        const part2 = new DefaultPhrase('part2', 'part2', defaultNodeFields);
-        const part3 = new DefaultPhrase('part3', 'part3', defaultNodeFields);
-        const hg42 = new DefaultPhrase(
+        const part1 = new StringPhrase('part1', 'part1', searchNodeFields);
+        const part2 = new StringPhrase('part2', 'part2', searchNodeFields);
+        const part3 = new StringPhrase('part3', 'part3', searchNodeFields);
+        const hg42 = new StringPhrase(
             'hg42',
             'reference-genome:hg42',
             referenceGenomeFields
@@ -65,10 +65,10 @@ describe('QueryParser', () => {
             const parsedQuery = parser.parseSearchQuery(query);
             const expected: SearchClause[] = [
                 new NotSearchClause(
-                    new DefaultPhrase(
+                    new StringPhrase(
                         'part2a part2b',
                         '"part2a part2b"',
-                        defaultNodeFields
+                        searchNodeFields
                     )
                 ),
             ];
@@ -98,15 +98,15 @@ describe('QueryParser', () => {
             const expected: SearchClause[] = [
                 new AndSearchClause([part1, hg42]),
                 new NotSearchClause(
-                    new DefaultPhrase('part4', 'part4', defaultNodeFields)
+                    new StringPhrase('part4', 'part4', searchNodeFields)
                 ),
                 new AndSearchClause([
-                    new DefaultPhrase(
+                    new StringPhrase(
                         'part5a part5b',
                         '"part5a part5b"',
-                        defaultNodeFields
+                        searchNodeFields
                     ),
-                    new DefaultPhrase('part6', 'part6', defaultNodeFields),
+                    new StringPhrase('part6', 'part6', searchNodeFields),
                 ]),
             ];
             expect(toQueryString(parsedQuery)).toEqual(toQueryString(expected));

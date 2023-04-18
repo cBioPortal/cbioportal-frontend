@@ -4,13 +4,13 @@ import {
 } from 'shared/components/query/filteredSearch/SearchClause';
 import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
 import {
-    DefaultPhrase,
+    StringPhrase,
     ListPhrase,
     Phrase,
 } from 'shared/components/query/filteredSearch/Phrase';
 
 function createTestPhrase(): Phrase {
-    return new DefaultPhrase('a', 'a', ['studyId']);
+    return new StringPhrase('a', 'a', ['studyId']);
 }
 
 describe('ISearchClause', () => {
@@ -30,28 +30,28 @@ describe('ISearchClause', () => {
         it('should equal when same phrases', () => {
             const a = new AndSearchClause([createTestPhrase()]);
             const b = new AndSearchClause([
-                new DefaultPhrase('a', 'a', ['studyId']),
+                new StringPhrase('a', 'a', ['studyId']),
             ]);
             expect(a.equals(b)).toEqual(true);
         });
 
         it('returns true when calling contains() with contained phrase', () => {
             const a = new AndSearchClause([createTestPhrase()]);
-            expect(
-                a.contains(new DefaultPhrase('a', 'a', ['studyId']))
-            ).toEqual(true);
+            expect(a.contains(new StringPhrase('a', 'a', ['studyId']))).toEqual(
+                true
+            );
         });
 
         it('returns false when calling contains() with non contained phrase', () => {
             const a = new AndSearchClause([createTestPhrase()]);
-            let b: Phrase = new DefaultPhrase('b', 'a', ['studyId']);
+            let b: Phrase = new StringPhrase('b', 'a', ['studyId']);
             expect(a.contains(b)).toEqual(false);
         });
 
         it('returns false when calling contains() with faulty textRepresentation', () => {
             const a = new AndSearchClause([createTestPhrase()]);
             expect(
-                a.contains(new DefaultPhrase('a', 'faulty', ['studyId']))
+                a.contains(new StringPhrase('a', 'faulty', ['studyId']))
             ).toEqual(true);
         });
 
@@ -77,29 +77,29 @@ describe('ISearchClause', () => {
         it('should not equal when different phrases', () => {
             const a = new NotSearchClause(createTestPhrase());
             const b = new NotSearchClause(
-                new DefaultPhrase('different', 'a', ['studyId'])
+                new StringPhrase('different', 'a', ['studyId'])
             );
             expect(a.equals(b)).toEqual(false);
         });
 
         it('returns true when calling contains() with contained phrase', () => {
             const a = new NotSearchClause(createTestPhrase());
-            expect(
-                a.contains(new DefaultPhrase('a', 'a', ['studyId']))
-            ).toEqual(true);
+            expect(a.contains(new StringPhrase('a', 'a', ['studyId']))).toEqual(
+                true
+            );
         });
 
         it('returns false when calling contains() with non contained phrase', () => {
             const a = new NotSearchClause(createTestPhrase());
-            expect(
-                a.contains(new DefaultPhrase('b', 'a', ['studyId']))
-            ).toEqual(false);
+            expect(a.contains(new StringPhrase('b', 'a', ['studyId']))).toEqual(
+                false
+            );
         });
 
         it('ignores textRepresentation when calling contains()', () => {
             const a = new NotSearchClause(createTestPhrase());
             expect(
-                a.contains(new DefaultPhrase('a', 'faulty', ['studyId']))
+                a.contains(new StringPhrase('a', 'faulty', ['studyId']))
             ).toEqual(true);
         });
 

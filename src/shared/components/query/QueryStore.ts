@@ -595,6 +595,7 @@ export class QueryStore {
         client.getAllStudiesUsingGET({ projection: 'SUMMARY' }),
         []
     );
+
     readonly cancerStudyIdsSet = remoteData<{ [studyId: string]: boolean }>({
         await: () => [this.cancerStudies],
         invoke: async () => {
@@ -603,6 +604,15 @@ export class QueryStore {
             );
         },
         default: {},
+    });
+
+    readonly cancerStudyTags = remoteData({
+        await: () => [this.cancerStudies],
+        invoke: async () => {
+            const studyIds = this.cancerStudies.result.map(s => s.studyId);
+            return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+        },
+        default: [],
     });
 
     private readonly physicalStudiesIdsSet = remoteData<{
@@ -1439,6 +1449,7 @@ export class QueryStore {
         return new CancerStudyTreeData({
             cancerTypes: this.cancerTypes.result,
             studies: this.cancerStudies.result,
+            allStudyTags: this.cancerStudyTags.result,
             priorityStudies: this.priorityStudies,
             virtualStudies: this.forDownloadTab
                 ? []

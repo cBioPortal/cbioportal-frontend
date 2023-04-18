@@ -4524,6 +4524,9 @@
           "type": "integer",
           "format": "int32"
         },
+        "studyId": {
+          "type": "string"
+        },
         "tags": {
           "type": "string"
         }

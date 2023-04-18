@@ -46,10 +46,17 @@ export default class StudyListLogic {
         // first compute individual node match results
         let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
 
-        for (const study of this.store.treeData.map_node_meta.keys()) {
+        for (const [
+            study,
+            meta,
+        ] of this.store.treeData.map_node_meta.entries()) {
+            const fullTextSearchNode = { ...(study as CancerStudy), ...meta };
             map_node_searchResult.set(
                 study,
-                performSearchSingle(this.store.searchClauses, study)
+                performSearchSingle(
+                    this.store.searchClauses,
+                    fullTextSearchNode
+                )
             );
         }
 
