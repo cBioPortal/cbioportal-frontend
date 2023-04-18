@@ -1,5 +1,6 @@
 export * from './model/ClinicalDataBySampleId';
 export * from './model/RequestStatus';
+export * from './model/ClinicalDataCollection';
 
 export * from './generated/CBioPortalAPI';
 export { default as CBioPortalAPI } from './generated/CBioPortalAPI';

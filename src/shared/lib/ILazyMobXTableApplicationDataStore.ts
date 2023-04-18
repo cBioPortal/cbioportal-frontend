@@ -1,10 +1,12 @@
 import { SortMetric } from './ISortMetric';
-import { observable, computed, action, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { lazyMobXTableSort } from '../components/lazyMobXTable/LazyMobXTable';
 import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL } from 'shared/components/paginationControls/PaginationControls';
+import { isFirstPage, isLastPage } from 'pages/studyView/StudyViewUtils';
 import _ from 'lodash';
 
 export interface ILazyMobXTableApplicationDataStore<T> {
+    initialFilterTextSet: boolean;
     // setter
     setFilter: (
         fn: (
@@ -20,6 +22,7 @@ export interface ILazyMobXTableApplicationDataStore<T> {
     sortedData: T[];
     sortedFilteredData: T[];
     sortedFilteredSelectedData: T[];
+    sortedDownloadedData: T[];
     tableData: T[];
     visibleData: T[];
 
@@ -28,10 +31,25 @@ export interface ILazyMobXTableApplicationDataStore<T> {
 
     // mobX observable public properties (note you can still implement with getter and setter)
     filterString: string;
-    sortAscending: boolean | undefined;
+    sortAscending: boolean;
     sortMetric: SortMetric<T> | undefined;
+
+    /**
+     * Query param sent to backend
+     */
+    sortParam: string | undefined;
+
+    /**
+     * Column header name
+     */
+    sortColumn: string | undefined;
+
     itemsPerPage: number;
+    moreItemsPerPage: number | undefined;
     page: number;
+    totalItems: number;
+    isLastPage: boolean;
+    isFirstPage: boolean;
 }
 
 export type DataFilterFunction<T> = (
@@ -67,12 +85,16 @@ export function getSortedFilteredData<T>(
 export function getVisibileData<T>(
     tableData: T[],
     itemsPerPage: number,
-    page: number
+    page: number,
+    moreItemsPerPage: number | undefined
 ): T[] {
     if (itemsPerPage === PAGINATION_SHOW_ALL) {
         return tableData;
     } else {
-        return tableData.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+        const pageStart = page * itemsPerPage;
+        const pageSize = moreItemsPerPage ? moreItemsPerPage : itemsPerPage;
+        const pageEnd = (page + 1) * pageSize;
+        return tableData.slice(pageStart, pageEnd);
     }
 }
 
@@ -95,9 +117,13 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
 
     @observable.ref public filterString: string;
     @observable public sortMetric: SortMetric<T> | undefined;
-    @observable public sortAscending: boolean | undefined;
+    @observable public sortAscending: boolean;
     @observable public page: number;
     @observable public itemsPerPage: number;
+    @observable public moreItemsPerPage: number;
+
+    @observable public sortParam: string | undefined;
+    @observable public sortColumn: string | undefined;
 
     protected getSortedData?: () => T[]; // optional, allows overriding by extending classes
     protected getSortedFilteredData?: () => T[]; // optional, allows overriding by extending classes
@@ -106,6 +132,7 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     @computed get allData() {
         return this.getData();
     }
+
     @computed get sortedData() {
         if (!this.getSortedData) {
             return getSortedData(
@@ -116,6 +143,10 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
         } else {
             return this.getSortedData();
         }
+    }
+
+    @computed get sortedDownloadedData() {
+        return this.sortedData;
     }
 
     @computed get sortedFilteredData() {
@@ -146,7 +177,12 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     }
 
     @computed get visibleData(): T[] {
-        return getVisibileData(this.tableData, this.itemsPerPage, this.page);
+        return getVisibileData(
+            this.tableData,
+            this.itemsPerPage,
+            this.page,
+            this.moreItemsPerPage
+        );
     }
 
     @computed get showingAllData() {
@@ -187,6 +223,24 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
             'dataFilter' | 'dataSelector'
         >(this);
     }
+
+    @computed get totalItems() {
+        return this.allData.length;
+    }
+
+    @computed get isLastPage() {
+        return isLastPage(
+            this.page,
+            this.itemsPerPage,
+            this.totalItems,
+            this.moreItemsPerPage
+        );
+    }
+    @computed get isFirstPage() {
+        return isFirstPage(this.page);
+    }
+
+    @observable initialFilterTextSet: boolean;
 }
 
 export class SimpleLazyMobXTableApplicationDataStore<

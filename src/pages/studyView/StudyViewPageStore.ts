@@ -2528,7 +2528,7 @@ export class StudyViewPageStore
             appendPosition: false,
             collapse: true,
             collapseDuration: 300,
-        });
+        } as any);
 
         toast.success(message, {
             delay: 0,
@@ -2540,7 +2540,8 @@ export class StudyViewPageStore
             draggable: true,
             progress: undefined,
             theme: 'light',
-        });
+        } as any);
+
         //only update geneQueryStr whenever a table gene is clicked.
         this.geneQueries = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
         this.geneQueryStr = this.geneQueries
@@ -8763,39 +8764,6 @@ export class StudyViewPageStore
             );
         },
         default: {},
-    });
-
-    readonly getDataForClinicalDataTab = remoteData({
-        await: () => [
-            this.clinicalAttributes,
-            this.selectedSamples,
-            this.sampleSetByKey,
-        ],
-        onError: () => {},
-        invoke: async () => {
-            if (this.selectedSamples.result.length === 0) {
-                return Promise.resolve([]);
-            }
-            let sampleClinicalDataMap = await getAllClinicalDataByStudyViewFilter(
-                this.filters
-            );
-
-            const sampleClinicalDataArray = _.mapValues(
-                sampleClinicalDataMap,
-                (attrs, uniqueSampleId) => {
-                    const sample = this.sampleSetByKey.result![uniqueSampleId];
-                    return {
-                        studyId: sample.studyId,
-                        patientId: sample.patientId,
-                        sampleId: sample.sampleId,
-                        ...attrs,
-                    };
-                }
-            );
-
-            return _.values(sampleClinicalDataArray);
-        },
-        default: [],
     });
 
     readonly clinicalAttributeProduct = remoteData({

@@ -21,6 +21,9 @@ describe('PaginationControls', () => {
                     onChangeItemsPerPage={(x: number) => {
                         itemsPerPage = x;
                     }}
+                    onShowMoreClick={(x: number) => {
+                        itemsPerPage = x;
+                    }}
                 />
             );
             let button = paginationControls.find('#showMoreButton');
@@ -88,6 +91,9 @@ describe('PaginationControls', () => {
                     onChangeItemsPerPage={(x: number) => {
                         itemsPerPage = x;
                     }}
+                    onShowMoreClick={(x: number) => {
+                        itemsPerPage = x;
+                    }}
                 />
             );
             let showMore = paginationControls.find('#showMoreButton');
@@ -110,6 +116,9 @@ describe('PaginationControls', () => {
                     itemsPerPage={3}
                     itemsPerPageOptions={[1, 2, 3, 4, 40]}
                     onChangeItemsPerPage={(x: number) => {
+                        itemsPerPage = x;
+                    }}
+                    onShowMoreClick={(x: number) => {
                         itemsPerPage = x;
                     }}
                 />

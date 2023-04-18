@@ -32,12 +32,12 @@ import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
 import { BarDatum } from './charts/barChart/BarChart';
 import {
+    BinMethodOption,
     GenericAssayChart,
     GenomicChart,
-    XvsYScatterChart,
     XvsYChartSettings,
+    XvsYScatterChart,
     XvsYViolinChart,
-    BinMethodOption,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -84,6 +84,7 @@ import { getServerConfig } from 'config/config';
 import joinJsx from 'shared/lib/joinJsx';
 import { BoundType, NumberRange } from 'range-ts';
 import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { TablePaginationParams } from 'shared/components/lazyMobXTable/TablePaginationParams';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -3002,45 +3003,85 @@ export function updateSavedUserPreferenceChartIds(
     return chartSettings;
 }
 
+export type ClinicalDataBySampleId = {
+    [sampleId: string]: { [attributeId: string]: string };
+};
+
 export async function getAllClinicalDataByStudyViewFilter(
     studyViewFilter: StudyViewFilter
-): Promise<{ [sampleId: string]: { [attributeId: string]: string } }> {
+): Promise<ClinicalDataBySampleId> {
+    const maxPageSize = 500000;
+    let pageNumber = 0;
+    let page = await getClinicalDataByStudyViewFilter(studyViewFilter, {
+        pageSize: maxPageSize,
+        pageNumber,
+        direction: 'ASC',
+    });
+    return page.content;
+}
+
+export type Page<T> = {
+    content: T;
+    pageSize: number;
+    pageNumber: number;
+    totalItems: number;
+    isFirst: boolean;
+    isLast: boolean;
+};
+
+export async function getClinicalDataByStudyViewFilter(
+    studyViewFilter: StudyViewFilter,
+    pageParams: TablePaginationParams
+): Promise<Page<ClinicalDataBySampleId>> {
     const localClinicalDataCollection: ClinicalDataCollection = {
         sampleClinicalData: [],
         patientClinicalData: [],
     };
-    let remoteClinicalDataCollection: ClinicalDataCollection = {
-        sampleClinicalData: [],
-        patientClinicalData: [],
-    };
-    const maxPageSize = 500000;
-    let pageNumber = 0;
-    do {
-        const remoteClinicalDataCollection = await internalClient.fetchClinicalDataClinicalTableUsingPOST(
-            {
-                studyViewFilter,
-                pageSize: maxPageSize,
-                pageNumber: pageNumber,
-                searchTerm: undefined,
-                sortBy: undefined,
-                direction: 'ASC',
-            }
-        );
-        localClinicalDataCollection.sampleClinicalData = localClinicalDataCollection.sampleClinicalData.concat(
-            remoteClinicalDataCollection.sampleClinicalData
-        );
-        localClinicalDataCollection.patientClinicalData = localClinicalDataCollection.patientClinicalData.concat(
-            remoteClinicalDataCollection.patientClinicalData
-        );
-        pageNumber++;
-    } while (remoteClinicalDataCollection.sampleClinicalData.length > 0);
+    let samples;
+    const [remoteClinicalDataCollection, totalItems]: [
+        ClinicalDataCollection,
+        number
+    ] = await internalClient
+        .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
+            studyViewFilter,
+            pageSize: pageParams.pageSize,
+            pageNumber: pageParams.pageNumber,
+            searchTerm: pageParams.searchTerm,
+            sortBy: pageParams.sortParam,
+            direction: pageParams.direction,
+        })
+        .then(response => {
+            return [response.body, parseInt(response.header['total-count'])];
+        });
 
-    return mergeClinicalDataCollection(localClinicalDataCollection);
+    samples = remoteClinicalDataCollection.sampleClinicalData;
+
+    localClinicalDataCollection.sampleClinicalData = localClinicalDataCollection.sampleClinicalData.concat(
+        samples ? samples : []
+    );
+    localClinicalDataCollection.patientClinicalData = localClinicalDataCollection.patientClinicalData.concat(
+        remoteClinicalDataCollection.patientClinicalData
+    );
+
+    const content = mergeClinicalDataCollection(localClinicalDataCollection);
+
+    return {
+        content,
+        totalItems,
+        pageNumber: pageParams.pageNumber,
+        pageSize: pageParams.pageSize,
+        isFirst: isFirstPage(pageParams.pageNumber),
+        isLast: isLastPage(
+            pageParams.pageNumber,
+            pageParams.pageSize,
+            totalItems
+        ),
+    };
 }
 
 export function mergeClinicalDataCollection(
     clinicalDataCollection: ClinicalDataCollection
-): { [sampleId: string]: { [attributeId: string]: string } } {
+): ClinicalDataBySampleId {
     const patientKeyedSampleData = _.groupBy(
         clinicalDataCollection.sampleClinicalData,
         d => d.uniquePatientKey
@@ -3887,4 +3928,19 @@ export function transformSampleDataToSelectedSampleClinicalData(
         })
         .filter(item => item.uniqueSampleKey !== undefined);
     return clinicalDataSamples;
+}
+
+export function isLastPage(
+    pageNumber: number,
+    itemsPerPage: number,
+    totalItems: number,
+    moreItemsPerPage?: number
+) {
+    const lastShownItem =
+        pageNumber * itemsPerPage + (moreItemsPerPage || itemsPerPage);
+    return totalItems <= lastShownItem;
+}
+
+export function isFirstPage(pageNumber: number) {
+    return pageNumber === 0;
 }

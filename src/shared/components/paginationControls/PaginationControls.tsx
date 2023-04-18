@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Button, ButtonGroup, FormGroup, FormControl } from 'react-bootstrap';
+import { Button, ButtonGroup, FormControl, FormGroup } from 'react-bootstrap';
 import styles from './paginationControls.module.scss';
-import { If, Then, Else } from 'react-if';
+import { If } from 'react-if';
 import { observer } from 'mobx-react';
 import classNames from 'classnames';
 import { EditableSpan } from 'cbioportal-frontend-commons';
@@ -14,6 +14,12 @@ export interface IPaginationControlsProps {
     currentPage?: number;
     totalItems?: number;
     itemsPerPage?: number;
+
+    /**
+     * Page size after clicking 'Show More'
+     */
+    moreItemsPerPage?: number;
+
     itemsPerPageOptions?: number[]; // sorted ascending
     showAllOption?: boolean;
     showMoreButton?: boolean;
@@ -27,6 +33,7 @@ export interface IPaginationControlsProps {
     showLastPage?: boolean;
     showItemsPerPageSelector?: boolean;
     onChangeItemsPerPage?: (itemsPerPage: number) => void;
+    onShowMoreClick?: (itemsPerPage: number) => void;
     onFirstPageClick?: () => void;
     onPreviousPageClick?: () => void;
     onNextPageClick?: () => void;
@@ -101,28 +108,30 @@ export class PaginationControls extends React.Component<
     }
 
     handleShowMore() {
+        const pageSizeOptions = this.props.itemsPerPageOptions;
         if (
-            this.props.itemsPerPageOptions &&
-            this.props.itemsPerPageOptions.length > 0 &&
+            pageSizeOptions &&
+            pageSizeOptions.length > 0 &&
             this.props.itemsPerPage &&
-            this.props.onChangeItemsPerPage
+            this.props.onShowMoreClick
         ) {
-            const index = this.props.itemsPerPageOptions.indexOf(
+            const currentPageSize =
+                this.props.moreItemsPerPage || this.props.itemsPerPage;
+            const largestPageSizeOption =
+                pageSizeOptions[pageSizeOptions.length - 1];
+            const currentPageSizeIndex = pageSizeOptions.indexOf(
                 this.props.itemsPerPage
             );
-            if (
-                index > -1 &&
-                index < this.props.itemsPerPageOptions.length - 1
-            ) {
-                this.props.onChangeItemsPerPage(
-                    this.props.itemsPerPageOptions[index + 1]
-                );
+            const hasLargerOption =
+                currentPageSizeIndex !== -1 &&
+                largestPageSizeOption > currentPageSize;
+            if (hasLargerOption) {
+                const largerPageSize =
+                    pageSizeOptions[currentPageSizeIndex + 1];
+                this.props.onShowMoreClick(largerPageSize);
             } else {
-                this.props.onChangeItemsPerPage(
-                    this.props.itemsPerPage +
-                        this.props.itemsPerPageOptions[
-                            this.props.itemsPerPageOptions.length - 1
-                        ]
+                this.props.onShowMoreClick(
+                    currentPageSize + largestPageSizeOption
                 );
             }
         }
@@ -141,12 +150,7 @@ export class PaginationControls extends React.Component<
                 <Button
                     id="showMoreButton"
                     bsSize="sm"
-                    disabled={
-                        !this.props.itemsPerPageOptions ||
-                        !this.props.itemsPerPage ||
-                        !this.props.totalItems ||
-                        this.props.itemsPerPage >= this.props.totalItems
-                    }
+                    disabled={this.isMoreButtonDisabled()}
                     onClick={this.handleShowMore}
                     style={{ width: 200 }}
                     bsStyle={this.props.bsStyle}
@@ -181,6 +185,25 @@ export class PaginationControls extends React.Component<
                 </span>
             );
         }
+    }
+
+    private isMoreButtonDisabled() {
+        if (
+            this.props.itemsPerPageOptions === undefined ||
+            this.props.totalItems === undefined ||
+            this.props.currentPage === undefined ||
+            this.props.itemsPerPage === undefined
+        ) {
+            return true;
+        }
+
+        const currentPageStart =
+            this.props.currentPage * this.props.itemsPerPage;
+        const currentPageSize =
+            this.props.moreItemsPerPage || this.props.itemsPerPage || 0;
+
+        const lastItemOnPage = currentPageStart + currentPageSize;
+        return lastItemOnPage >= this.props.totalItems;
     }
 
     private get shouldHidePaginationControls() {

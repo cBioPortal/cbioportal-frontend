@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import { SimpleLazyMobXTableApplicationDataStore } from './ILazyMobXTableApplicationDataStore';
+import { isLastPage } from 'pages/studyView/StudyViewUtils';
 
 describe('SimpleLazyMobXTableApplicationDataStore', () => {
     let data: number[];
@@ -130,5 +131,32 @@ describe('SimpleLazyMobXTableApplicationDataStore', () => {
             'all data, in same sorted order'
         );
         assert.equal(store.filterString.length, 0, 'filter string reset');
+    });
+});
+
+describe('isLastPage', () => {
+    it('considers 0 as first page', () => {
+        assert.isFalse(isLastPage(0, 10, 15));
+        assert.isTrue(isLastPage(1, 10, 15));
+    });
+
+    it('considers first page as last page when no items', () => {
+        assert.isTrue(isLastPage(0, 10, 5));
+    });
+
+    it('calculates last page when last page is full', () => {
+        assert.isTrue(isLastPage(0, 10, 10));
+    });
+
+    it('calculates last page when last page contains 1 item', () => {
+        assert.isFalse(isLastPage(0, 10, 11));
+        assert.isTrue(isLastPage(1, 10, 11));
+    });
+
+    it('calculates last page when "show more" has been clicked', () => {
+        assert.isTrue(isLastPage(0, 10, 11, 20));
+        assert.isTrue(isLastPage(0, 10, 20, 20));
+        assert.isFalse(isLastPage(0, 10, 21, 20));
+        assert.isTrue(isLastPage(1, 10, 21, 20));
     });
 });

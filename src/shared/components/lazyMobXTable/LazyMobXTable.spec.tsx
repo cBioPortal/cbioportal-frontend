@@ -7,7 +7,6 @@ import {
     Column,
     default as LazyMobXTable,
     lazyMobXTableSort,
-    LazyMobXTableStore,
 } from './LazyMobXTable';
 import SimpleTable from '../simpleTable/SimpleTable';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -24,6 +23,7 @@ import { SimpleLazyMobXTableApplicationDataStore } from '../../lib/ILazyMobXTabl
 import cloneJSXWithoutKeyAndRef from 'shared/lib/cloneJSXWithoutKeyAndRef';
 import { filterNumericalColumn, maxPage, parseNumericalFilter } from './utils';
 import _ from 'lodash';
+import { LazyMobXTableStore } from 'shared/components/lazyMobXTable/LazyMobXTableStore';
 
 expect.extend(expectJSX);
 chai.use(chaiEnzyme());

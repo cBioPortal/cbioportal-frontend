@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {
     Column,
-    LazyMobXTableStore,
     SortDirection,
     lazyMobXTableSort,
 } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
@@ -26,6 +25,7 @@ import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyM
 import { SelectionOperatorEnum } from '../TableUtils';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import classNames from 'classnames';
+import { LazyMobXTableStore } from 'shared/components/lazyMobXTable/LazyMobXTableStore';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[];

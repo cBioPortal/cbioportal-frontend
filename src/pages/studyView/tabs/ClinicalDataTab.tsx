@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
     Column,
     default as LazyMobXTable,
+    LazyMobXTableProps,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
@@ -13,6 +14,7 @@ import {
     ChartMeta,
     SpecialChartsUniqueKeyEnum,
     DataType,
+    getAllClinicalDataByStudyViewFilter,
 } from '../StudyViewUtils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
@@ -25,6 +27,13 @@ import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import { getServerConfig } from 'config/config';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
+import { TablePaginationStoreAdaptor } from 'shared/components/lazyMobXTable/TablePaginationStoreAdaptor';
+import {
+    ClinicalTableItem,
+    ClinicalTablePaginationStore,
+} from 'shared/components/lazyMobXTable/ClinicalTablePaginationStore';
+import PaginatedDownloadDataFetcher from 'pages/studyView/tabs/PaginatedDownloadDataFetcher';
+import { TablePaginationParams } from 'shared/components/lazyMobXTable/TablePaginationParams';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -32,7 +41,21 @@ export interface IClinicalDataTabTable {
 
 class ClinicalDataTabTableComponent extends LazyMobXTable<{
     [id: string]: string;
-}> {}
+}> {
+    constructor(props: LazyMobXTableProps<{ [id: string]: string }>) {
+        super(props);
+    }
+}
+
+type MapColumn = Column<{ [id: string]: string }>;
+
+const downloadParams = {
+    // Large page size to decrease db load:
+    pageSize: 10_000,
+    pageNumber: 0,
+    sortParam: undefined,
+    direction: 'ASC',
+} as TablePaginationParams;
 
 @observer
 export class ClinicalDataTab extends React.Component<
@@ -41,11 +64,11 @@ export class ClinicalDataTab extends React.Component<
 > {
     getDefaultColumnConfig(
         key: string,
-        columnName: string,
+        sortColumn: string,
         isNumber?: boolean
-    ) {
+    ): MapColumn {
         return {
-            name: columnName || '',
+            name: sortColumn || '',
             headerRender: (data: string) => (
                 <span data-test={data}>{data}</span>
             ),
@@ -70,6 +93,7 @@ export class ClinicalDataTab extends React.Component<
                 }
                 return null;
             },
+            sortParam: key,
             filter: (
                 data: { [id: string]: string },
                 filterString: string,
@@ -80,7 +104,7 @@ export class ClinicalDataTab extends React.Component<
 
     readonly columns = remoteData({
         invoke: async () => {
-            let defaultColumns: Column<{ [id: string]: string }>[] = [
+            let defaultColumns: MapColumn[] = [
                 {
                     ...this.getDefaultColumnConfig('patientId', 'Patient ID'),
                     render: (data: { [id: string]: string }) => {
@@ -129,11 +153,7 @@ export class ClinicalDataTab extends React.Component<
             }
             return _.reduce(
                 this.props.store.visibleAttributes.sort(chartMetaComparator),
-                (
-                    acc: Column<{ [id: string]: string }>[],
-                    chartMeta: ChartMeta,
-                    index: number
-                ) => {
+                (acc: MapColumn[], chartMeta: ChartMeta) => {
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
                             ...this.getDefaultColumnConfig(
@@ -162,6 +182,20 @@ export class ClinicalDataTab extends React.Component<
         default: [],
     });
 
+    private clinicalPageStore = new ClinicalTablePaginationStore(
+        this.props.store
+    );
+    private clinicalDataStore = new TablePaginationStoreAdaptor(
+        this.clinicalPageStore
+    );
+    private clinicalDownloadDataFetcher = new PaginatedDownloadDataFetcher<
+        ClinicalTableItem
+    >(
+        new ClinicalTablePaginationStore(this.props.store),
+        downloadParams,
+        this.clinicalDataStore
+    );
+
     @autobind
     getProgressItems(elapsedSecs: number): IProgressIndicatorItem[] {
         return [
@@ -169,7 +203,7 @@ export class ClinicalDataTab extends React.Component<
                 label:
                     'Loading clinical data' +
                     (elapsedSecs > 2 ? ' - this can take several seconds' : ''),
-                promises: [this.props.store.getDataForClinicalDataTab],
+                promises: [this.clinicalPageStore.pageItems],
             },
         ];
     }
@@ -241,8 +275,7 @@ export class ClinicalDataTab extends React.Component<
                                     <If
                                         condition={
                                             this.columns.isPending ||
-                                            this.props.store
-                                                .getDataForClinicalDataTab
+                                            this.clinicalPageStore.pageItems
                                                 .isPending
                                         }
                                     >
@@ -250,9 +283,8 @@ export class ClinicalDataTab extends React.Component<
                                             <LoadingIndicator
                                                 isLoading={
                                                     this.columns.isPending ||
-                                                    this.props.store
-                                                        .getDataForClinicalDataTab
-                                                        .isPending
+                                                    this.clinicalPageStore
+                                                        .pageItems.isPending
                                                 }
                                                 size={'big'}
                                                 center={true}
@@ -264,23 +296,28 @@ export class ClinicalDataTab extends React.Component<
                                                     show={
                                                         this.columns
                                                             .isPending ||
-                                                        this.props.store
-                                                            .getDataForClinicalDataTab
-                                                            .isPending
+                                                        this.clinicalPageStore
+                                                            .pageItems.isPending
                                                     }
                                                 />
                                             </LoadingIndicator>
                                         </Then>
                                         <Else>
                                             <ClinicalDataTabTableComponent
-                                                initialItemsPerPage={20}
+                                                dataStore={
+                                                    this.clinicalDataStore
+                                                }
+                                                downloadDataFetcher={
+                                                    this
+                                                        .clinicalDownloadDataFetcher
+                                                }
+                                                initialItemsPerPage={100}
+                                                initialFilterString={
+                                                    this.clinicalDataStore
+                                                        .filterString
+                                                }
                                                 showCopyDownload={true}
                                                 showColumnVisibility={false}
-                                                data={
-                                                    this.props.store
-                                                        .getDataForClinicalDataTab
-                                                        .result || []
-                                                }
                                                 columns={this.columns.result}
                                                 copyDownloadProps={{
                                                     showCopy: false,
