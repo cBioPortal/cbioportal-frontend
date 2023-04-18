@@ -721,7 +721,8 @@ describe('submit genes to results view query', () => {
             goToUrlAndSetLocalStorage(url);
             waitForNetworkQuiet();
         });
-        it('generic assay chart should be added in the summary tab', () => {
+        it('generic assay chart should be added in the summary tab', function() {
+            this.retries(0);
             $(ADD_CHART_BUTTON).waitForEnabled({
                 timeout: 60000,
             });
@@ -735,16 +736,22 @@ describe('submit genes to results view query', () => {
 
             // wait for generic assay data loading complete
             // and select a option
-            $('div[data-test="GenericAssaySelection"]').waitForExist();
-            $('div[data-test="GenericAssaySelection"] input').setValue(
-                'Prasinovirus'
-            );
+            $(
+                'div[data-test="GenericAssayEntitySelection"] #react-select-3-input'
+            ).waitForExist();
+            $(
+                'div[data-test="GenericAssayEntitySelection"] #react-select-3-input'
+            ).setValue('Prasinovirus');
+
             $('div=Select all filtered options (1)').click();
             // close the dropdown
             var indicators = $$('div[class$="indicatorContainer"]');
             indicators[0].click();
             var selectedOptions = $$('div[class$="multiValue"]');
             assert.equal(selectedOptions.length, 1);
+
+            // this is necessary to get the options selection to "take"
+            $(ADD_CHART_GENERIC_ASSAY_TAB).click();
 
             $('button=Add Chart').click();
             // Wait for chart to be added
