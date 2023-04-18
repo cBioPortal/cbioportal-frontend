@@ -212,6 +212,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_patient_view_copy_number_table_columns_show_on_init: '',
 
     skin_patient_view_structural_variant_table_columns_show_on_init: '',
+
+    studyview_max_samples_selected: 0,
 };
 
 export default ServerConfigDefaults;
