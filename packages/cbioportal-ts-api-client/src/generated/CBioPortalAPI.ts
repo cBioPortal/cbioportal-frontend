@@ -106,6 +106,8 @@ export type CancerStudy = {
 export type CancerStudyTags = {
     'cancerStudyId': number
 
+        'studyId': string
+
         'tags': string
 
 };
