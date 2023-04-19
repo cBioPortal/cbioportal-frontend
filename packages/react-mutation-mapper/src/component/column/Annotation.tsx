@@ -2,6 +2,7 @@ import {
     getCivicEntry,
     getMyCancerGenomeLinks,
     getRemoteDataGroupStatus,
+    getVariantAnnotation,
     ICivicEntry,
     ICivicGeneIndex,
     ICivicVariantIndex,
@@ -38,6 +39,8 @@ import HotspotAnnotation, {
 } from './HotspotAnnotation';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from '../../util/DataFetcherUtils';
 import { CanonicalMutationType } from 'cbioportal-frontend-commons';
+import { VariantAnnotation, Vues } from 'genome-nexus-ts-api-client';
+import { RevueIcon, sortValue as revueSortValue } from '../revue/Revue';
 
 export type AnnotationProps = {
     mutation?: Mutation;
@@ -45,6 +48,7 @@ export type AnnotationProps = {
     enableMyCancerGenome: boolean;
     enableHotspot: boolean;
     enableCivic: boolean;
+    enableRevue: boolean;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
@@ -57,6 +61,9 @@ export type AnnotationProps = {
     myCancerGenomeData?: IMyCancerGenomeData;
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
+    indexedVariantAnnotations?: RemoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >;
     userDisplayName?: string;
 };
 
@@ -66,6 +73,7 @@ export type GenericAnnotationProps = {
     enableHotspot: boolean;
     enableMyCancerGenome: boolean;
     enableOncoKb: boolean;
+    enableRevue: boolean;
     mergeOncoKbIcons?: boolean;
     oncoKbContentPadding?: number;
     pubMedCache?: MobxCache;
@@ -87,6 +95,8 @@ export interface IAnnotation {
     civicStatus: 'pending' | 'error' | 'complete';
     hasCivicVariants: boolean;
     hugoGeneSymbol: string;
+    isVue?: boolean;
+    vue?: Vues;
 }
 
 export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
@@ -102,6 +112,7 @@ export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
     hasCivicVariants: true,
     myCancerGenomeLinks: [],
     civicStatus: 'complete',
+    isVue: false,
 };
 
 function getDefaultEntrezGeneId(mutation: Mutation): number {
@@ -122,6 +133,9 @@ export function getAnnotationData(
     usingPublicOncoKbInstance?: boolean,
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>,
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>,
+    indexedVariantAnnotations?: RemoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >,
     resolveTumorType: (mutation: Mutation) => string = getDefaultTumorType,
     resolveEntrezGeneId: (mutation: Mutation) => number = getDefaultEntrezGeneId
 ): IAnnotation {
@@ -140,7 +154,9 @@ export function getAnnotationData(
             !!civicGenes &&
             civicGenes?.isComplete &&
             !!civicVariants &&
-            civicVariants?.isComplete;
+            civicVariants?.isComplete &&
+            !!indexedVariantAnnotations &&
+            indexedVariantAnnotations?.isComplete;
 
         if (memoize) {
             key = JSON.stringify(mutation) + !!usingPublicOncoKbInstance;
@@ -219,7 +235,44 @@ export function getAnnotationData(
                     ? is3dHotspot(mutation, hotspotData.result)
                     : false,
             hotspotStatus: hotspotData ? hotspotData.status : 'pending',
+            isVue:
+                indexedVariantAnnotations &&
+                indexedVariantAnnotations.result &&
+                indexedVariantAnnotations.status === 'complete'
+                    ? getVariantAnnotation(
+                          mutation,
+                          indexedVariantAnnotations.result
+                      )?.annotation_summary.transcriptConsequenceSummary
+                          .isVue === true
+                    : false,
+            vue:
+                indexedVariantAnnotations &&
+                indexedVariantAnnotations.result &&
+                indexedVariantAnnotations.status === 'complete'
+                    ? getVariantAnnotation(
+                          mutation,
+                          indexedVariantAnnotations.result
+                      )?.annotation_summary.vues
+                    : undefined,
         };
+        if (
+            indexedVariantAnnotations &&
+            indexedVariantAnnotations.result &&
+            indexedVariantAnnotations.status === 'complete'
+        ) {
+            if (
+                getVariantAnnotation(mutation, indexedVariantAnnotations.result)
+                    ?.start === 41266013
+            ) {
+                const haha =
+                    getVariantAnnotation(
+                        mutation,
+                        indexedVariantAnnotations.result
+                    )?.annotation_summary.transcriptConsequenceSummary.isVue ===
+                    true;
+                console.log(haha);
+            }
+        }
 
         // oncoKbData may exist but it might be an instance of Error, in that case we flag the status as error
         if (oncoKbData && oncoKbData.result instanceof Error) {
@@ -280,7 +333,13 @@ export function getAnnotationData(
             memoized.set(key, value as any);
         }
     } else {
+        console.log("i shoundn't be here");
+
         value = DEFAULT_ANNOTATION_DATA;
+    }
+
+    if (value.isVue === true) {
+        console.log(value);
     }
 
     return value as IAnnotation;
@@ -296,6 +355,7 @@ export function sortValue(annotation: IAnnotation): number[] {
         civicSortValue(annotation.civicEntry),
         myCancerGenomeSortValue(annotation.myCancerGenomeLinks),
         hotspotSortValue(annotation.isHotspot, annotation.is3dHotspot),
+        revueSortValue(annotation.vue),
         annotation.isOncoKbCancerGene ? 1 : 0,
     ]);
 }
@@ -307,11 +367,20 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
         enableHotspot,
         enableMyCancerGenome,
         enableOncoKb,
+        enableRevue,
         pubMedCache,
         userDisplayName,
         mergeOncoKbIcons,
         oncoKbContentPadding,
     } = props;
+
+    if (props.annotation.isVue === true) {
+        console.log(props.annotation.vue);
+    }
+    // console.log("I'mhere");
+    // console.log(props.annotation);
+
+    // console.log(props.annotation);
 
     return (
         <span style={{ display: 'flex', minWidth: 100 }}>
@@ -348,6 +417,9 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     status={annotation.hotspotStatus}
                 />
             )}
+            {enableRevue && (
+                <RevueIcon isVue={annotation.isVue} vue={annotation.vue} />
+            )}
         </span>
     );
 }
@@ -356,7 +428,9 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
 export default class Annotation extends React.Component<AnnotationProps, {}> {
     public render() {
         const annotation = this.getAnnotationData(this.props);
-
+        if (annotation.isVue === true) {
+            console.log("i'm fdsfd");
+        }
         return <GenericAnnotation {...this.props} annotation={annotation} />;
     }
 
@@ -372,7 +446,24 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             resolveTumorType,
             civicGenes,
             civicVariants,
+            indexedVariantAnnotations,
         } = props;
+
+        const annotation121 = getAnnotationData(
+            mutation,
+            oncoKbCancerGenes,
+            hotspotData,
+            myCancerGenomeData,
+            oncoKbData,
+            usingPublicOncoKbInstance,
+            civicGenes,
+            civicVariants,
+            indexedVariantAnnotations,
+            resolveTumorType,
+            resolveEntrezGeneId
+        );
+
+        console.log(indexedVariantAnnotations);
 
         return getAnnotationData(
             mutation,
@@ -383,6 +474,7 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             usingPublicOncoKbInstance,
             civicGenes,
             civicVariants,
+            indexedVariantAnnotations,
             resolveTumorType,
             resolveEntrezGeneId
         );

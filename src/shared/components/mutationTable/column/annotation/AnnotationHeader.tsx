@@ -466,6 +466,19 @@ const AnnotationHeader: React.FunctionComponent<{
                     />
                 </DefaultTooltip>
             )}
+            {getServerConfig().show_revue && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        "A curated database of known protein effects for those variants that aren't as easily predicted by conventional annotation tools"
+                    }
+                >
+                    <img
+                        src={require('../../../../../../src/rootImages/vue_logo.png')}
+                        style={{ height: 14, width: 14, marginLeft: 7 }}
+                    />
+                </DefaultTooltip>
+            )}
         </span>
     );
 };

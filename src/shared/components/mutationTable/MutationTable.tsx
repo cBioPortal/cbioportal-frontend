@@ -100,6 +100,7 @@ export interface IMutationTableProps {
     enableMyCancerGenome?: boolean;
     enableHotspot?: boolean;
     enableCivic?: boolean;
+    enableRevue?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -888,6 +889,7 @@ export default class MutationTable<
                         enableMyCancerGenome: this.props
                             .enableMyCancerGenome as boolean,
                         enableHotspot: this.props.enableHotspot as boolean,
+                        enableRevue: this.props.enableRevue as boolean,
                         userDisplayName: this.props.userDisplayName,
                         resolveTumorType: this.resolveTumorType,
                     })}
@@ -910,8 +912,12 @@ export default class MutationTable<
                             this.props.usingPublicOncoKbInstance,
                             this.props.civicGenes,
                             this.props.civicVariants,
+                            this.props.indexedVariantAnnotations,
                             this.resolveTumorType
                         );
+                        if (annotation.isVue === true) {
+                            console.log('HOTSPOT');
+                        }
 
                         ret = annotation.isHotspot;
                         break;
@@ -951,22 +957,24 @@ export default class MutationTable<
                     this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,
                     this.props.civicVariants,
+                    this.props.indexedVariantAnnotations,
                     this.resolveTumorType
                 );
             },
-            sortBy: (d: Mutation[]) => {
-                return AnnotationColumnFormatter.sortValue(
-                    d,
-                    this.props.oncoKbCancerGenes,
-                    this.props.hotspotData,
-                    this.props.myCancerGenomeData,
-                    this.props.oncoKbData,
-                    this.props.usingPublicOncoKbInstance,
-                    this.props.civicGenes,
-                    this.props.civicVariants,
-                    this.resolveTumorType
-                );
-            },
+            // sortBy: (d: Mutation[]) => {
+            //     return AnnotationColumnFormatter.sortValue(
+            //         d,
+            //         this.props.oncoKbCancerGenes,
+            //         this.props.hotspotData,
+            //         this.props.myCancerGenomeData,
+            //         this.props.oncoKbData,
+            //         this.props.usingPublicOncoKbInstance,
+            //         this.props.civicGenes,
+            //         this.props.civicVariants,
+            //         this.props.indexedVariantAnnotations,
+            //         this.resolveTumorType
+            //     );
+            // },
         };
 
         this._columns[MutationTableColumnType.HGVSG] = {

@@ -21,6 +21,7 @@ import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import { CancerStudy, Mutation } from 'cbioportal-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import AnnotationHeader from './annotation/AnnotationHeader';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 
 export interface IAnnotationColumnProps extends AnnotationProps {
     pubMedCache?: OncokbPubMedCache;
@@ -38,6 +39,9 @@ export default class AnnotationColumnFormatter {
         usingPublicOncoKbInstance?: boolean,
         civicGenes?: RemoteData<ICivicGeneIndex | undefined>,
         civicVariants?: RemoteData<ICivicVariantIndex | undefined>,
+        indexedVariantAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >,
         resolveTumorType?: (mutation: Mutation) => string
     ): number[] {
         const annotationData: IAnnotation = getAnnotationData(
@@ -49,9 +53,12 @@ export default class AnnotationColumnFormatter {
             usingPublicOncoKbInstance,
             civicGenes,
             civicVariants,
+            indexedVariantAnnotations,
             resolveTumorType
         );
-
+        if (annotationData.isVue === true) {
+            console.log('sortValue');
+        }
         return annotationSortValue(annotationData);
     }
 
@@ -64,6 +71,9 @@ export default class AnnotationColumnFormatter {
         usingPublicOncoKbInstance?: boolean,
         civicGenes?: RemoteData<ICivicGeneIndex | undefined>,
         civicVariants?: RemoteData<ICivicVariantIndex | undefined>,
+        indexedVariantAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >,
         resolveTumorType?: (mutation: Mutation) => string
     ) {
         const annotationData: IAnnotation = getAnnotationData(
@@ -75,6 +85,7 @@ export default class AnnotationColumnFormatter {
             usingPublicOncoKbInstance,
             civicGenes,
             civicVariants,
+            indexedVariantAnnotations,
             resolveTumorType
         );
 
