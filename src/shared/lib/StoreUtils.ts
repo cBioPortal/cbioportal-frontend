@@ -1175,14 +1175,19 @@ export function mergeDiscreteCNAData(
 }
 
 export function mergeMutations(
-    mutationData: MobxPromise<Mutation[]>,
+    mutationData: MobxPromise<Mutation[]> | Mutation[],
     generateMutationId: MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent
 ) {
+    const mutationDataResult: Mutation[] | undefined =
+        mutationData instanceof MobxPromise
+            ? mutationData.result
+            : mutationData;
+
     const idToMutations: { [key: string]: Mutation[] } = {};
 
     updateIdToMutationsMap(
         idToMutations,
-        mutationData,
+        mutationDataResult,
         generateMutationId,
         false
     );
@@ -1203,13 +1208,13 @@ export function mergeMutationsIncludingUncalled(
 
     updateIdToMutationsMap(
         idToMutations,
-        mutationData,
+        mutationData.result,
         generateMutationId,
         false
     );
     updateIdToMutationsMap(
         idToMutations,
-        uncalledMutationData,
+        uncalledMutationData.result,
         generateMutationId,
         true
     );
@@ -1219,12 +1224,12 @@ export function mergeMutationsIncludingUncalled(
 
 function updateIdToMutationsMap(
     idToMutations: { [key: string]: Mutation[] },
-    mutationData: MobxPromise<Mutation[]>,
+    mutationData: Mutation[] | undefined,
     generateMutationId: MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent,
     onlyUpdateExistingIds: boolean
 ) {
-    if (mutationData.result) {
-        for (const mutation of mutationData.result) {
+    if (mutationData) {
+        for (const mutation of mutationData) {
             const mutationId = generateMutationId(mutation);
             if (!onlyUpdateExistingIds || mutationId in idToMutations) {
                 idToMutations[mutationId] = idToMutations[mutationId] || [];
@@ -1279,6 +1284,10 @@ export function generateStructuralVariantId(s: StructuralVariant): string {
     ]
         .sort()
         .join('_');
+}
+
+export function generateMutationIdByGeneAndProteinChange(m: Mutation): string {
+    return [m.gene.hugoGeneSymbol, m.proteinChange].join('_');
 }
 
 export function generateMutationIdByGeneAndProteinChangeAndEvent(

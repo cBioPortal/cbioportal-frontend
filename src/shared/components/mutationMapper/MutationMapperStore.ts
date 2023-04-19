@@ -64,6 +64,7 @@ export interface IMutationMapperStoreConfig {
         filter: DataFilter<any>;
     }[];
     countUniqueMutations?: (mutations: Mutation[], group?: string) => number;
+    mergeMutationsForTableBy?: (m: Mutation) => string;
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
@@ -311,6 +312,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     protected getDataStore: () => MutationMapperDataStore = () => {
         return new MutationMapperDataStore(
             this.processedMutationData,
+            this.mutationMapperStoreConfig.mergeMutationsForTableBy,
             this.filterApplier,
             this.config.dataFilters,
             this.config.selectionFilters,

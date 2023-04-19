@@ -17,6 +17,7 @@ import {
     countDuplicateMutations,
     groupMutationsByGeneAndPatientAndProteinChange,
 } from 'shared/lib/MutationUtils';
+import { mergeMutations } from 'shared/lib/StoreUtils';
 
 type GroupedData = { group: string; data: Mutation[][] }[];
 
@@ -225,6 +226,7 @@ export default class MutationMapperDataStore
 
     constructor(
         data: Mutation[][],
+        mergeDataForTableBy?: (m: Mutation) => string,
         customFilterApplier?: FilterApplier,
         dataFilters: DataFilter[] = [],
         selectionFilters: DataFilter[] = [],
@@ -244,11 +246,17 @@ export default class MutationMapperDataStore
         this.dataHighlighter = (d: Mutation[]) => this.dataHighlightFilter(d);
         this.customFilterApplier = customFilterApplier;
         this.setFilter();
-    }
-
-    @autobind
-    public setTableData(getTableData: () => Mutation[][]) {
-        this.getTableData = getTableData;
+        this.getTableData = mergeDataForTableBy
+            ? () =>
+                  mergeMutations(
+                      _.flatten(
+                          this.sortedFilteredSelectedData.length !== 0
+                              ? this.sortedFilteredSelectedData
+                              : this.sortedFilteredData
+                      ),
+                      mergeDataForTableBy
+                  )
+            : undefined;
     }
 
     @autobind

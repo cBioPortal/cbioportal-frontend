@@ -22,7 +22,7 @@ import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import styles from './styles.module.scss';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
-import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMapperDataStore';
+import { generateMutationIdByGeneAndProteinChange } from 'shared/lib/StoreUtils';
 
 interface IGroupComparisonMutationsTabPlotProps {
     store: GroupComparisonStore;
@@ -50,6 +50,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             {
                 ...this.props.filters,
                 countUniqueMutations: this.countUniqueMutationsInGroup,
+                mergeMutationsForTableBy: generateMutationIdByGeneAndProteinChange,
                 filterMutationsBySelectedTranscript: true,
             }
         );
@@ -127,24 +128,6 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
         updateOncoKbIconStyle({ mergeIcons });
     }
 
-    protected getTableData(dataStore: MutationMapperDataStore) {
-        if (dataStore.sortedFilteredSelectedData.length) {
-            return _.values(
-                _.groupBy(
-                    _.flatten(dataStore.sortedFilteredSelectedData),
-                    d => d.proteinChange
-                )
-            );
-        } else {
-            return _.values(
-                _.groupBy(
-                    _.flatten(dataStore.sortedFilteredData),
-                    d => d.proteinChange
-                )
-            );
-        }
-    }
-
     readonly plotUI = MakeMobxView({
         await: () => [
             this.props.store.mutations,
@@ -161,8 +144,6 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             );
             if (mutationMapperStore) {
                 mutationMapperStore.uniqueSampleKeyToTumorType = this.props.store.uniqueSampleKeyToTumorType.result!;
-                let dataStore = mutationMapperStore.dataStore as MutationMapperDataStore;
-                dataStore.setTableData(() => this.getTableData(dataStore));
                 return (
                     <div
                         data-test="ComparisonPageMutationsTabPlot"
