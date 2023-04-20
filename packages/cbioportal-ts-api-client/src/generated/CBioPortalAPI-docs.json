@@ -2648,30 +2648,6 @@
         ],
         "parameters": [
           {
-            "name": "authenticated",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "authorities[0].authority",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "credentials",
-            "in": "query",
-            "required": false,
-            "type": "object"
-          },
-          {
-            "name": "details",
-            "in": "query",
-            "required": false,
-            "type": "object"
-          },
-          {
             "name": "direction",
             "in": "query",
             "description": "Direction of the sort",
@@ -2713,12 +2689,6 @@
             "minimum": 1,
             "exclusiveMinimum": false,
             "format": "int32"
-          },
-          {
-            "name": "principal",
-            "in": "query",
-            "required": false,
-            "type": "object"
           },
           {
             "name": "projection",
@@ -4141,7 +4111,7 @@
             "description": "tier",
             "required": false,
             "type": "string",
-            "default": "Treatment",
+            "default": "Agent",
             "enum": [
               "Agent",
               "AgentClass",
@@ -4191,7 +4161,7 @@
             "description": "tier",
             "required": false,
             "type": "string",
-            "default": "Treatment",
+            "default": "Agent",
             "enum": [
               "Agent",
               "AgentClass",
@@ -4238,7 +4208,7 @@
             "description": "tier",
             "required": false,
             "type": "string",
-            "default": "Treatment",
+            "default": "Agent",
             "enum": [
               "Agent",
               "AgentClass",
@@ -4288,7 +4258,7 @@
             "description": "tier",
             "required": false,
             "type": "string",
-            "default": "Treatment",
+            "default": "Agent",
             "enum": [
               "Agent",
               "AgentClass",

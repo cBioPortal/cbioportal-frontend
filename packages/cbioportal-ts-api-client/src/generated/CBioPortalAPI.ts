@@ -5101,37 +5101,16 @@ export default class CBioPortalAPI {
             });
         };
     getAllStudiesUsingGETURL(parameters: {
-        'authenticated' ? : boolean,
-        'authorities0Authority' ? : string,
-        'credentials' ? : {},
-        'details' ? : {},
         'direction' ? : "ASC" | "DESC",
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'principal' ? : {},
         'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "cancerTypeId" | "citation" | "description" | "groups" | "importDate" | "name" | "pmid" | "publicStudy" | "status" | "studyId",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/studies';
-        if (parameters['authenticated'] !== undefined) {
-            queryParameters['authenticated'] = parameters['authenticated'];
-        }
-
-        if (parameters['authorities0Authority'] !== undefined) {
-            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
-        }
-
-        if (parameters['credentials'] !== undefined) {
-            queryParameters['credentials'] = parameters['credentials'];
-        }
-
-        if (parameters['details'] !== undefined) {
-            queryParameters['details'] = parameters['details'];
-        }
-
         if (parameters['direction'] !== undefined) {
             queryParameters['direction'] = parameters['direction'];
         }
@@ -5146,10 +5125,6 @@ export default class CBioPortalAPI {
 
         if (parameters['pageSize'] !== undefined) {
             queryParameters['pageSize'] = parameters['pageSize'];
-        }
-
-        if (parameters['principal'] !== undefined) {
-            queryParameters['principal'] = parameters['principal'];
         }
 
         if (parameters['projection'] !== undefined) {
@@ -5174,28 +5149,18 @@ export default class CBioPortalAPI {
      * Get all studies
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} direction - Direction of the sort
      * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {integer} pageNumber - Page number of the result list
      * @param {integer} pageSize - Page size of the result list
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} projection - Level of detail of the response
      * @param {string} sortBy - Name of the property that the result list is sorted by
      */
     getAllStudiesUsingGETWithHttpInfo(parameters: {
-        'authenticated' ? : boolean,
-        'authorities0Authority' ? : string,
-        'credentials' ? : {},
-        'details' ? : {},
         'direction' ? : "ASC" | "DESC",
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
-        'principal' ? : {},
         'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
         'sortBy' ? : "cancerTypeId" | "citation" | "description" | "groups" | "importDate" | "name" | "pmid" | "publicStudy" | "status" | "studyId",
         $queryParameters ? : any,
@@ -5212,22 +5177,6 @@ export default class CBioPortalAPI {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
 
-            if (parameters['authenticated'] !== undefined) {
-                queryParameters['authenticated'] = parameters['authenticated'];
-            }
-
-            if (parameters['authorities0Authority'] !== undefined) {
-                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
-            }
-
-            if (parameters['credentials'] !== undefined) {
-                queryParameters['credentials'] = parameters['credentials'];
-            }
-
-            if (parameters['details'] !== undefined) {
-                queryParameters['details'] = parameters['details'];
-            }
-
             if (parameters['direction'] !== undefined) {
                 queryParameters['direction'] = parameters['direction'];
             }
@@ -5242,10 +5191,6 @@ export default class CBioPortalAPI {
 
             if (parameters['pageSize'] !== undefined) {
                 queryParameters['pageSize'] = parameters['pageSize'];
-            }
-
-            if (parameters['principal'] !== undefined) {
-                queryParameters['principal'] = parameters['principal'];
             }
 
             if (parameters['projection'] !== undefined) {
@@ -5272,28 +5217,18 @@ export default class CBioPortalAPI {
      * Get all studies
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} direction - Direction of the sort
      * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {integer} pageNumber - Page number of the result list
      * @param {integer} pageSize - Page size of the result list
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} projection - Level of detail of the response
      * @param {string} sortBy - Name of the property that the result list is sorted by
      */
     getAllStudiesUsingGET(parameters: {
-            'authenticated' ? : boolean,
-            'authorities0Authority' ? : string,
-            'credentials' ? : {},
-            'details' ? : {},
             'direction' ? : "ASC" | "DESC",
             'keyword' ? : string,
             'pageNumber' ? : number,
             'pageSize' ? : number,
-            'principal' ? : {},
             'projection' ? : "DETAILED" | "ID" | "META" | "SUMMARY",
             'sortBy' ? : "cancerTypeId" | "citation" | "description" | "groups" | "importDate" | "name" | "pmid" | "publicStudy" | "status" | "studyId",
             $queryParameters ? : any,
