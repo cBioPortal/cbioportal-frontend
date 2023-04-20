@@ -3,7 +3,7 @@ import {
     ITherapyRecommendation,
     IClinicalTrial,
 } from 'shared/model/TherapyRecommendation';
-import AsyncCreatableSelect from 'react-select/async-creatable';
+import AsyncCreatableSelect from 'react-select/async';
 import _ from 'lodash';
 import request from 'superagent';
 

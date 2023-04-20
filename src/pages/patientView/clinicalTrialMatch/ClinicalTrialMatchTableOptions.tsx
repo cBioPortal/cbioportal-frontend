@@ -800,9 +800,9 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                 )
                                             }
                                             isClearable={true}
-                                            isOptionDisabled={option =>
-                                                option.disabled
-                                            }
+                                            isOptionDisabled={(option: {
+                                                disabled: boolean;
+                                            }) => option.disabled}
                                             name="locationDistance"
                                             className="basic-select"
                                             classNamePrefix="select"

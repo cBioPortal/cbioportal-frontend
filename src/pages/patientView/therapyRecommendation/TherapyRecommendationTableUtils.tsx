@@ -65,14 +65,14 @@ export function setAuthorInTherapyRecommendation(
 }
 
 export function getAuthor(): string {
-    return getServerConfig().user_email_address;
+    return getServerConfig().user_display_name;
 }
 
 export function isTherapyRecommendationEmpty(
     therapyRecommendation: ITherapyRecommendation
 ): boolean {
     if (
-        therapyRecommendation.comment === [] &&
+        therapyRecommendation.comment &&
         therapyRecommendation.comment.every(s => s === '') &&
         therapyRecommendation.evidenceLevel === EvidenceLevel.NA &&
         _.isEmpty(therapyRecommendation.reasoning) &&

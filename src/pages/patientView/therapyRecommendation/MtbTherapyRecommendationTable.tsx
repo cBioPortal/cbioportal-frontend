@@ -871,7 +871,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             this.onHideAddEditForm(therapyRecommendation);
                         }}
                         title="Edit therapy recommendation"
-                        userEmailAddress={getServerConfig().user_email_address}
+                        userEmailAddress={getServerConfig().user_display_name}
                         clinicalTrialClipboard={
                             this.props.clinicalTrialClipboard
                         }
@@ -900,7 +900,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             this.onHideOncoKbForm(therapyRecommendations);
                         }}
                         title="Add therapy recommendation from OncoKB"
-                        userEmailAddress={getServerConfig().user_email_address}
+                        userEmailAddress={getServerConfig().user_display_name}
                     />
                 )}
                 {this.showOtherMtbForm && (
@@ -924,7 +924,7 @@ export default class MtbTherapyRecommendationTable extends React.Component<
                             this.onHideOncoKbForm(therapyRecommendations);
                         }}
                         title="Add therapy recommendation from template"
-                        userEmailAddress={getServerConfig().user_email_address}
+                        userEmailAddress={getServerConfig().user_display_name}
                     />
                 )}
                 <TherapyRecommendationTableComponent

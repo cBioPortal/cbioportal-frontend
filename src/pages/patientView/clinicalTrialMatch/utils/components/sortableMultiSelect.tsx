@@ -1,9 +1,9 @@
 import React, { FC } from 'react';
-
-import CreatableSelect, { components } from 'react-select';
-import MultiValueGenericProps from 'react-select/base/dist/react-select.cjs';
-import Options from 'react-select/base/dist/react-select.cjs';
-
+import { CreatableSelect, components } from 'react-select';
+import {
+    MultiValueGenericProps,
+    Options,
+} from 'react-select/dist/declarations/src';
 import {
     SortEnd,
     SortableContainer,
