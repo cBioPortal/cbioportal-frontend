@@ -288,6 +288,7 @@ export default class MutationTable<
         enableMyCancerGenome: true,
         enableHotspot: true,
         enableCivic: false,
+        enableRevue: true,
     };
 
     constructor(props: P) {
@@ -891,6 +892,8 @@ export default class MutationTable<
                         enableHotspot: this.props.enableHotspot as boolean,
                         enableRevue: this.props.enableRevue as boolean,
                         userDisplayName: this.props.userDisplayName,
+                        indexedVariantAnnotations: this.props
+                            .indexedVariantAnnotations,
                         resolveTumorType: this.resolveTumorType,
                     })}
                 </span>
@@ -961,20 +964,20 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
-            // sortBy: (d: Mutation[]) => {
-            //     return AnnotationColumnFormatter.sortValue(
-            //         d,
-            //         this.props.oncoKbCancerGenes,
-            //         this.props.hotspotData,
-            //         this.props.myCancerGenomeData,
-            //         this.props.oncoKbData,
-            //         this.props.usingPublicOncoKbInstance,
-            //         this.props.civicGenes,
-            //         this.props.civicVariants,
-            //         this.props.indexedVariantAnnotations,
-            //         this.resolveTumorType
-            //     );
-            // },
+            sortBy: (d: Mutation[]) => {
+                return AnnotationColumnFormatter.sortValue(
+                    d,
+                    this.props.oncoKbCancerGenes,
+                    this.props.hotspotData,
+                    this.props.myCancerGenomeData,
+                    this.props.oncoKbData,
+                    this.props.usingPublicOncoKbInstance,
+                    this.props.civicGenes,
+                    this.props.civicVariants,
+                    this.props.indexedVariantAnnotations,
+                    this.resolveTumorType
+                );
+            },
         };
 
         this._columns[MutationTableColumnType.HGVSG] = {

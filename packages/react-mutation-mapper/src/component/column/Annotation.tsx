@@ -338,10 +338,6 @@ export function getAnnotationData(
         value = DEFAULT_ANNOTATION_DATA;
     }
 
-    if (value.isVue === true) {
-        console.log(value);
-    }
-
     return value as IAnnotation;
 }
 
@@ -377,10 +373,6 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
     if (props.annotation.isVue === true) {
         console.log(props.annotation.vue);
     }
-    // console.log("I'mhere");
-    // console.log(props.annotation);
-
-    // console.log(props.annotation);
 
     return (
         <span style={{ display: 'flex', minWidth: 100 }}>
@@ -428,9 +420,6 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
 export default class Annotation extends React.Component<AnnotationProps, {}> {
     public render() {
         const annotation = this.getAnnotationData(this.props);
-        if (annotation.isVue === true) {
-            console.log("i'm fdsfd");
-        }
         return <GenericAnnotation {...this.props} annotation={annotation} />;
     }
 
@@ -462,8 +451,6 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             resolveTumorType,
             resolveEntrezGeneId
         );
-
-        console.log(indexedVariantAnnotations);
 
         return getAnnotationData(
             mutation,

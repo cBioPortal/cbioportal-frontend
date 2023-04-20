@@ -1,13 +1,14 @@
+import React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { Vues } from 'genome-nexus-ts-api-client';
-import React from 'react';
+import annotationStyles from '../column/annotation.module.scss';
 
 export const RevueContent: React.FunctionComponent<{ vue?: Vues }> = props => {
     return props.vue ? (
         <>
             {props.vue.comment}{' '}
             <a
-                href={`https://pubmed.ncbi.nlm.nih.gov/${props.vue.pubmedIds[0]}/`} // should be multiple links if have a list of ids? Also need a list of reference text
+                href={`https://pubmed.ncbi.nlm.nih.gov/${props.vue.pubmedIds[0]}/`}
                 rel="noopener noreferrer"
                 target="_blank"
             >
@@ -20,52 +21,46 @@ export const RevueContent: React.FunctionComponent<{ vue?: Vues }> = props => {
 };
 
 export function sortValue(vue: Vues | undefined): number {
-    let score = 0;
-
-    if (vue) {
-        score = 1;
-    }
-
-    return score;
+    return vue ? 1 : 0;
 }
 
 export const RevueIcon: React.FunctionComponent<{
     isVue?: boolean;
     vue?: Vues;
 }> = props => {
-    return <span>A</span>;
-    // return props.isVue ? (
-    //     <DefaultTooltip
-    //             placement="bottom"
-    //             overlay={
-    //                 <span>
-    //                     <RevueContent vue={props.vue} /> |
-    //                     Source:{' '}
-    //                     <a
-    //                         href="https://cancerrevue.org"
-    //                         target="_blank"
-    //                         rel="noopener noreferrer"
-    //                     >
-    //                         reVUE <i className="fa fa-external-link" />
-    //                     </a>
-    //                 </span>
-    //             }
-    //         >
-    //             <span>
-    //                 <a
-    //                     href="https://cancerrevue.org"
-    //                     target="_blank"
-    //                     rel="noopener noreferrer"
-    //                     style={{ textDecoration: 'none' }}
-    //                 >
-    //                     <img
-    //                         src={'../../images/vue_logo.png'}
-    //                         alt="reVUE logo"
-    //                         width={12}
-    //                         style={{ paddingRight: 5, marginTop: -2 }}
-    //                     />
-    //                 </a>
-    //             </span>
-    //         </DefaultTooltip>
-    // ) : <></>;
+    return props.isVue ? (
+        <DefaultTooltip
+            placement="bottom"
+            overlay={
+                <span>
+                    <RevueContent vue={props.vue} /> | Source:{' '}
+                    <a
+                        href="https://cancerrevue.org"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        reVUE <i className="fa fa-external-link" />
+                    </a>
+                </span>
+            }
+        >
+            <span className={`${annotationStyles['annotation-item']}`}>
+                <a
+                    href="https://cancerrevue.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: 'none' }}
+                >
+                    <img
+                        src={'../../images/vue_logo.png'}
+                        alt="reVUE logo"
+                        width={14}
+                        height={14}
+                    />
+                </a>
+            </span>
+        </DefaultTooltip>
+    ) : (
+        <></>
+    );
 };

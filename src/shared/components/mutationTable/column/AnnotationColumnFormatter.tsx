@@ -56,9 +56,6 @@ export default class AnnotationColumnFormatter {
             indexedVariantAnnotations,
             resolveTumorType
         );
-        if (annotationData.isVue === true) {
-            console.log('sortValue');
-        }
         return annotationSortValue(annotationData);
     }
 
