@@ -483,7 +483,6 @@ const AnnotationHeader: React.FunctionComponent<{
                             infoProps={
                                 sourceTooltipInfo[AnnotationSources.REVUE]
                             }
-                            legendDescriptions={myCancerGenomeData}
                         />
                     }
                 >
