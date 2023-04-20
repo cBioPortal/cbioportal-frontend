@@ -55,6 +55,7 @@ export enum AnnotationSources {
     CIVIC = 'civic',
     MY_CANCER_GENOME = 'myCancerGenome',
     CANCER_HOTSPOTS = 'cancerHotspots',
+    REVUE = 'reVue',
 }
 
 export const sourceTooltipInfo = {
@@ -102,6 +103,14 @@ export const sourceTooltipInfo = {
                 'a resource for statistically significant recurrent 3D clustered hotspots in cancer',
             reference: 'Gao et al. 2017',
             referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/28115009/',
+        },
+    ],
+    [AnnotationSources.REVUE]: [
+        {
+            sourceUrl: 'https://www.cancerrevue.org/',
+            sourceName: 'reVUE',
+            sourceDescription:
+                'a repository for variants with unexpected effects (VUE) in cancer',
         },
     ],
 };
@@ -470,7 +479,12 @@ const AnnotationHeader: React.FunctionComponent<{
                 <DefaultTooltip
                     placement="top"
                     overlay={
-                        "A curated database of known protein effects for those variants that aren't as easily predicted by conventional annotation tools"
+                        <AnnotationHeaderTooltipCard
+                            infoProps={
+                                sourceTooltipInfo[AnnotationSources.REVUE]
+                            }
+                            legendDescriptions={myCancerGenomeData}
+                        />
                     }
                 >
                     <img

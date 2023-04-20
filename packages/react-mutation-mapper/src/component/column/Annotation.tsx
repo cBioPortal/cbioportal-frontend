@@ -438,20 +438,6 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             indexedVariantAnnotations,
         } = props;
 
-        const annotation121 = getAnnotationData(
-            mutation,
-            oncoKbCancerGenes,
-            hotspotData,
-            myCancerGenomeData,
-            oncoKbData,
-            usingPublicOncoKbInstance,
-            civicGenes,
-            civicVariants,
-            indexedVariantAnnotations,
-            resolveTumorType,
-            resolveEntrezGeneId
-        );
-
         return getAnnotationData(
             mutation,
             oncoKbCancerGenes,
