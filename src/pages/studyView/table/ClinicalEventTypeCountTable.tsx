@@ -77,6 +77,7 @@ export interface IClinicalEventTypeCountTableProps {
         MultiSelectionTableRow
     >['extraButtons'];
     selectedPatientsKeyPromise: MobxPromise<string[]>;
+    setOperationsButtonText: string;
 }
 
 class ClinicalEventTypeCountTableComponent extends FixedHeaderTable<
@@ -478,6 +479,9 @@ export default class ClinicalEventTypeCountTable extends React.Component<
                             this.props.selectedRowsKeys.length
                         }
                         showSetOperationsButton={true}
+                        setOperationsButtonText={
+                            this.props.setOperationsButtonText
+                        }
                     />
                 )}
             </div>
