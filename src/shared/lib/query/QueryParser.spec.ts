@@ -11,7 +11,7 @@ import { QueryParser } from 'shared/lib/query/QueryParser';
 import { StringPhrase } from 'shared/components/query/filteredSearch/Phrase';
 
 describe('QueryParser', () => {
-    const parser = new QueryParser(new Set<string>(),new Set<string>());
+    const parser = new QueryParser(new Set<string>(), new Set<string>());
     const referenceGenomeFields = parser.searchFilters.find(
         f => f.phrasePrefix === 'reference-genome'
     )!.nodeFields;

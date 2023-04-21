@@ -1236,7 +1236,12 @@ export class QueryStore {
         return client
             .getAllSamplesOfPatientInStudyUsingGET({ studyId, patientId })
             .then(
-                samples => ({ studyId, patientId, samples, error: undefined }),
+                samples => ({
+                    studyId,
+                    patientId,
+                    samples,
+                    error: undefined,
+                }),
                 error => ({
                     studyId,
                     patientId,
@@ -1480,11 +1485,12 @@ export class QueryStore {
     }
 
     @computed get readPermissions(): Set<string> {
-        const studies = Array.from(this.treeData.map_node_meta.keys()).filter( s => typeof((s as CancerStudy).readPermission) !== 'undefined' );
-        console.log(studies);
-        const readPermissions = studies
-            .map(n => (!!((n as CancerStudy).readPermission)).toString())
-            .filter(n => !!n);
+        const studies = Array.from(this.treeData.map_node_meta.keys()).filter(
+            s => typeof (s as CancerStudy).readPermission !== 'undefined'
+        );
+        const readPermissions = studies.map(n =>
+            (n as CancerStudy).readPermission.toString()
+        );
         return new Set(readPermissions);
     }
 
