@@ -27,9 +27,6 @@ export class QueryParser {
     private readonly _searchFilters: CancerTreeSearchFilter[];
 
     constructor(referenceGenomes: Set<string>, readPermissions: Set<string>) {
-        console.log('readPermissions');
-        console.log(readPermissions);
-        console.log(readPermissions.size);
         this._searchFilters = [
             /**
              * Example queries:
