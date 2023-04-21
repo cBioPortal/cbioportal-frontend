@@ -145,7 +145,7 @@ function handleMouseEvents(
 }
 
 const hoverCallback = (
-    e: React.MouseEvent<any>,
+    e: React.MouseEvent<Element, MouseEvent>,
     styleTag: MutableRefObject<null>,
     uniqueId: string
 ) => {
@@ -168,12 +168,29 @@ const hoverCallback = (
                      #${uniqueId} .tl-timeline .tl-track:nth-child(${trackIndex +
                         1}) .tl-track-highlight {
                         opacity: 1 !important;
-                    }
+                     }
+                     
+                     #${uniqueId} .tl-tracklegend:nth-of-type(${trackIndex +
+                        1}) {
+                        display:block !important;
+                     }
+                     
                 `);
                 }
                 break;
             default:
-                jQuery(styleTag.current!).empty();
+                // when mouse is moving INTO the tooltip, we do not want to abide the
+                // mouseleave event. we treat it as if it's part of the track element
+                if (
+                    e.type === 'mouseleave' &&
+                    (e?.relatedTarget as Element).getAttribute('class') ===
+                        'arrow'
+                ) {
+                    break;
+                } else {
+                    // get rid of the above created inline style
+                    jQuery(styleTag.current!).empty();
+                }
                 break;
         }
     }

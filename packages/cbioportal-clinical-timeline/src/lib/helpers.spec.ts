@@ -4,6 +4,7 @@ import {
     formatDate,
     getAttributeValue,
     getPointInTrimmedSpace,
+    segmentAndSortAttributesForTooltip,
 } from './helpers';
 import intersect from './intersect';
 import { TimelineEvent } from '../types';
@@ -253,6 +254,39 @@ describe('color getter helpers', () => {
             colorGetterFactory(undefined)(ev),
             'rgb(31, 119, 180)',
             'if no custom getter passwed, we default getter plucks color from STYLE_COLOR'
+        );
+    });
+});
+
+describe('order attributes according to config', () => {
+    const atts = [
+        { key: 'key1', value: 'someValue' },
+        { key: 'key2', value: 'someValue' },
+        { key: 'key3', value: 'someValue' },
+        { key: 'key4', value: 'someValue' },
+    ];
+
+    it('places attributes in order by config', () => {
+        const processedAtts = segmentAndSortAttributesForTooltip(atts, [
+            'key4',
+            'key2',
+        ]);
+
+        assert.deepEqual(
+            processedAtts.map(a => a.key),
+            ['key4', 'key2', 'key1', 'key3']
+        );
+    });
+
+    it('handles missing attributes in config', () => {
+        const processedAtts = segmentAndSortAttributesForTooltip(atts, [
+            'key10',
+            'key2',
+        ]);
+
+        assert.deepEqual(
+            processedAtts.map(a => a.key),
+            ['key2', 'key1', 'key3', 'key4']
         );
     });
 });

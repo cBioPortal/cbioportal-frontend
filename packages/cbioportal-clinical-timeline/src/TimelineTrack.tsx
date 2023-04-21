@@ -1,9 +1,10 @@
 import {
     EventPosition,
-    POINT_COLOR,
+    ITrackEventConfig,
     POINT_RADIUS,
     TimeLineColorGetter,
     TimelineEvent,
+    TimelineEventAttribute,
     TimelineTrackSpecification,
     TimelineTrackType,
 } from './types';
@@ -14,6 +15,7 @@ import {
     formatDate,
     getTrackEventCustomColorGetterFromConfiguration,
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
+    segmentAndSortAttributesForTooltip,
     TIMELINE_TRACK_HEIGHT,
 } from './lib/helpers';
 import { TimelineStore } from './TimelineStore';
@@ -449,47 +451,53 @@ export const OurPopup: React.FunctionComponent<any> = observer(function(
 
 export const EventTooltipContent: React.FunctionComponent<{
     event: TimelineEvent;
-}> = function({ event }) {
-    const attributes = event.event.attributes.filter(attr => {
+    trackConfig: ITrackEventConfig | undefined;
+}> = function({ event, trackConfig }) {
+    let attributes = event.event.attributes.filter(attr => {
         return (
             attr.key !== COLOR_ATTRIBUTE_KEY && attr.key !== SHAPE_ATTRIBUTE_KEY
         );
     });
+
+    // if we have an attribute order configuration, we need to
+    // update attribute list accordingly
+    if (trackConfig?.attributeOrder) {
+        attributes = segmentAndSortAttributesForTooltip(
+            attributes,
+            trackConfig.attributeOrder
+        );
+    }
+
     return (
         <div>
-            <table>
+            <table className={'table table-condensed'}>
                 <tbody>
-                    {_.map(
-                        attributes.sort((a: any, b: any) =>
-                            a.key > b.key ? 1 : -1
-                        ),
-                        (att: any) => {
-                            return (
-                                <tr>
-                                    <th>{att.key.replace(/_/g, ' ')}</th>
-                                    <td>
-                                        <ReactMarkdown
-                                            allowedElements={['p', 'a']}
-                                            linkTarget={'_blank'}
-                                            components={{
-                                                a: ({ node, ...props }) => (
-                                                    <OurPopup {...props} />
-                                                ),
-                                            }}
-                                        >
-                                            {att.value}
-                                        </ReactMarkdown>
-                                    </td>
-                                </tr>
-                            );
-                        }
-                    )}
+                    {_.map(attributes, (att: any) => {
+                        return (
+                            <tr>
+                                <td>{att.key.replace(/_/g, ' ')}</td>
+                                <td>
+                                    <ReactMarkdown
+                                        allowedElements={['p', 'a']}
+                                        linkTarget={'_blank'}
+                                        components={{
+                                            a: ({ node, ...props }) => (
+                                                <OurPopup {...props} />
+                                            ),
+                                        }}
+                                    >
+                                        {att.value}
+                                    </ReactMarkdown>
+                                </td>
+                            </tr>
+                        );
+                    })}
                     <tr>
-                        <th>{`${
+                        <td>{`${
                             event.event.endNumberOfDaysSinceDiagnosis
                                 ? 'START DATE'
                                 : 'DATE'
-                        }`}</th>
+                        }`}</td>
                         <td className={'nowrap'}>
                             {formatDate(
                                 event.event.startNumberOfDaysSinceDiagnosis
@@ -498,7 +506,7 @@ export const EventTooltipContent: React.FunctionComponent<{
                     </tr>
                     {event.event.endNumberOfDaysSinceDiagnosis && (
                         <tr>
-                            <th>END DATE</th>
+                            <td>END DATE</td>
                             <td className={'nowrap'}>
                                 {formatDate(
                                     event.event.endNumberOfDaysSinceDiagnosis
