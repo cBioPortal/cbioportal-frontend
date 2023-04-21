@@ -66,7 +66,7 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
                 />
                 <div className={mainStyles.footer}>
                     {oncokbLinkOut() === undefined ? (
-                        { oncokbLogo }
+                        oncokbLogo
                     ) : (
                         <a
                             href={`${oncokbLinkOut()}`}
