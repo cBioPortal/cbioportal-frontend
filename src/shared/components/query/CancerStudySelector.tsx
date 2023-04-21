@@ -202,6 +202,9 @@ export default class CancerStudySelector extends React.Component<
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
             getServerConfig().skin_quick_select_buttons
         );
+        const shownStudiesLengthstring = shownStudies.length <
+                                        this.store.cancerStudies.result.length
+                                        ? 'matching filter': '';
 
         return (
             <FlexCol
@@ -339,24 +342,12 @@ export default class CancerStudySelector extends React.Component<
                                                             {shownAndSelectedStudies.length ===
                                                             shownStudies.length
                                                                 ? `Deselect all listed studies ${
-                                                                      shownStudies.length <
-                                                                      this.store
-                                                                          .cancerStudies
-                                                                          .result
-                                                                          .length
-                                                                          ? 'matching filter'
-                                                                          : ''
+                                                                    shownStudiesLengthstring
                                                                   } (${
                                                                       shownStudies.length
                                                                   })`
                                                                 : `Select all listed studies ${
-                                                                      shownStudies.length <
-                                                                      this.store
-                                                                          .cancerStudies
-                                                                          .result
-                                                                          .length
-                                                                          ? 'matching filter'
-                                                                          : ''
+                                                                    shownStudiesLengthstring
                                                                   }  (${
                                                                       shownStudies.length
                                                                   })`}
@@ -386,24 +377,12 @@ export default class CancerStudySelector extends React.Component<
                                                             shownAndAuthorizedStudies.length >
                                                                 0
                                                                 ? `Deselect all authorized studies ${
-                                                                    shownStudies.length <
-                                                                      this.store
-                                                                          .cancerStudies
-                                                                          .result
-                                                                          .length
-                                                                          ? 'matching filter'
-                                                                          : ''
+                                                                    shownStudiesLengthstring
                                                                   } (${
                                                                       shownAndAuthorizedStudies.length
                                                                   })`
                                                                 : `Select all authorized studies ${
-                                                                    shownStudies.length <
-                                                                      this.store
-                                                                          .cancerStudies
-                                                                          .result
-                                                                          .length
-                                                                          ? 'matching filter'
-                                                                          : ''
+                                                                    shownStudiesLengthstring
                                                                   }  (${
                                                                       shownAndAuthorizedStudies.length
                                                                   })`}
