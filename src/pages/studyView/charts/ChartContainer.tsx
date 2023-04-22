@@ -1095,6 +1095,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.store.selectedPatientKeys
                         }
                         defaultSortBy={ClinicalEventTypeCountColumnKey.COUNT}
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
                     />
                 );
             }
