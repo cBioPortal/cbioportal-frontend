@@ -8563,7 +8563,7 @@ export class StudyViewPageStore
                 this.patientTreatments.result,
                 (record: PatientTreatmentRow) => {
                     let rowData = [record.treatment, record.count];
-                    data.push(rowData.join('\n'));
+                    data.push(rowData.join('\t'));
                 }
             );
             return data.join('\n');
