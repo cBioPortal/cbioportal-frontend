@@ -1,9 +1,16 @@
 import * as React from 'react';
-import { calcProteinChangeSortValue } from 'cbioportal-utils';
+import {
+    calcProteinChangeSortValue,
+    getVariantAnnotation,
+    RemoteData,
+} from 'cbioportal-utils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { TruncatedText } from 'cbioportal-frontend-commons';
 import MutationStatusColumnFormatter from './MutationStatusColumnFormatter';
 import styles from './proteinChange.module.scss';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { Revue } from 'react-mutation-mapper';
+import _ from 'lodash';
 
 export default class ProteinChangeColumnFormatter {
     public static getSortValue(d: Mutation[]): number | null {
@@ -56,13 +63,33 @@ export default class ProteinChangeColumnFormatter {
         }
     }
 
-    public static renderWithMutationStatus(data: Mutation[]) {
+    public static renderWithMutationStatus(
+        data: Mutation[],
+        indexedVariantAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >
+    ) {
         // use text as display value
         const text: string = ProteinChangeColumnFormatter.getDisplayValue(data);
 
         const mutationStatus:
             | string
             | null = MutationStatusColumnFormatter.getData(data);
+
+        const vue =
+            indexedVariantAnnotations &&
+            indexedVariantAnnotations.result &&
+            indexedVariantAnnotations.status === 'complete' &&
+            !_.isEmpty(data)
+                ? getVariantAnnotation(
+                      data[0],
+                      indexedVariantAnnotations.result
+                  )?.annotation_summary.vues
+                : undefined;
+
+        const isGermlineMutation =
+            mutationStatus &&
+            mutationStatus.toLowerCase().indexOf('germline') > -1;
 
         let content = (
             <TruncatedText
@@ -73,18 +100,15 @@ export default class ProteinChangeColumnFormatter {
             />
         );
 
-        // add a germline indicator next to protein change if it is a germline mutation!
-        if (
-            mutationStatus &&
-            mutationStatus.toLowerCase().indexOf('germline') > -1
-        ) {
-            content = (
-                <span>
-                    {content}
+        content = (
+            <span>
+                {content}
+                {isGermlineMutation && ( // add a germline indicator next to protein change if it is a germline mutation!
                     <span className={styles.germline}>Germline</span>
-                </span>
-            );
-        }
+                )}
+                {vue && <Revue isVue={true} vue={vue} />}
+            </span>
+        );
 
         return content;
     }

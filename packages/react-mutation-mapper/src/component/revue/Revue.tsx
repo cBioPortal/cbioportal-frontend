@@ -24,7 +24,7 @@ export function sortValue(vue: Vues | undefined): number {
     return vue ? 1 : 0;
 }
 
-export const RevueIcon: React.FunctionComponent<{
+export const Revue: React.FunctionComponent<{
     isVue?: boolean;
     vue?: Vues;
 }> = props => {
@@ -44,7 +44,10 @@ export const RevueIcon: React.FunctionComponent<{
                 </span>
             }
         >
-            <span className={`${annotationStyles['annotation-item']}`}>
+            <span
+                className={`${annotationStyles['annotation-item']}`}
+                style={{ display: 'inline-flex' }}
+            >
                 <a
                     href="https://cancerrevue.org"
                     target="_blank"
@@ -61,6 +64,6 @@ export const RevueIcon: React.FunctionComponent<{
             </span>
         </DefaultTooltip>
     ) : (
-        <></>
+        <span className={`${annotationStyles['annotation-item']}`} />
     );
 };

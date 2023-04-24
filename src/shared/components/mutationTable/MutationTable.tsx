@@ -753,7 +753,11 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
             name: MutationTableColumnType.PROTEIN_CHANGE,
-            render: ProteinChangeColumnFormatter.renderWithMutationStatus,
+            render: d =>
+                ProteinChangeColumnFormatter.renderWithMutationStatus(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 ProteinChangeColumnFormatter.getSortValue(d),
@@ -762,7 +766,11 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {
             name: MutationTableColumnType.MUTATION_TYPE,
-            render: MutationTypeColumnFormatter.renderFunction,
+            render: d =>
+                MutationTypeColumnFormatter.renderFunction(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
             download: MutationTypeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 MutationTypeColumnFormatter.getDisplayValue(d),

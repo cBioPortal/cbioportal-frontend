@@ -407,6 +407,23 @@ const AnnotationHeader: React.FunctionComponent<{
                     />
                 </DefaultTooltip>
             )}
+            {getServerConfig().show_revue && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            infoProps={
+                                sourceTooltipInfo[AnnotationSources.REVUE]
+                            }
+                        />
+                    }
+                >
+                    <img
+                        src={require('../../../../../../src/rootImages/vue_logo.png')}
+                        style={{ height: 14, width: 14, marginLeft: 7 }}
+                    />
+                </DefaultTooltip>
+            )}
             {getServerConfig().show_civic && (
                 <DefaultTooltip
                     placement="top"
@@ -471,23 +488,6 @@ const AnnotationHeader: React.FunctionComponent<{
                 >
                     <img
                         src={require('../../../../../../src/rootImages/cancer-hotspots.svg')}
-                        style={{ height: 14, width: 14, marginLeft: 7 }}
-                    />
-                </DefaultTooltip>
-            )}
-            {getServerConfig().show_revue && (
-                <DefaultTooltip
-                    placement="top"
-                    overlay={
-                        <AnnotationHeaderTooltipCard
-                            infoProps={
-                                sourceTooltipInfo[AnnotationSources.REVUE]
-                            }
-                        />
-                    }
-                >
-                    <img
-                        src={require('../../../../../../src/rootImages/vue_logo.png')}
                         style={{ height: 14, width: 14, marginLeft: 7 }}
                     />
                 </DefaultTooltip>

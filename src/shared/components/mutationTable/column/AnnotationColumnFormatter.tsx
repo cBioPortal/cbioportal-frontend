@@ -90,6 +90,7 @@ export default class AnnotationColumnFormatter {
             `OncoKB: ${oncoKbAnnotationDownload(
                 annotationData.oncoKbIndicator
             )}`,
+            `reVUE: ${annotationData.isVue ? 'yes' : 'no'}`,
             `CIViC: ${civicDownload(annotationData.civicEntry)}`,
             `MyCancerGenome: ${myCancerGenomeDownload(
                 annotationData.myCancerGenomeLinks

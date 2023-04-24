@@ -40,7 +40,7 @@ import HotspotAnnotation, {
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from '../../util/DataFetcherUtils';
 import { CanonicalMutationType } from 'cbioportal-frontend-commons';
 import { VariantAnnotation, Vues } from 'genome-nexus-ts-api-client';
-import { RevueIcon, sortValue as revueSortValue } from '../revue/Revue';
+import { Revue, sortValue as revueSortValue } from '../revue/Revue';
 
 export type AnnotationProps = {
     mutation?: Mutation;
@@ -392,6 +392,9 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     contentPadding={oncoKbContentPadding}
                 />
             )}
+            {enableRevue && (
+                <Revue isVue={annotation.isVue} vue={annotation.vue} />
+            )}
             {enableCivic && (
                 <Civic
                     civicEntry={annotation.civicEntry}
@@ -408,9 +411,6 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     is3dHotspot={annotation.is3dHotspot}
                     status={annotation.hotspotStatus}
                 />
-            )}
-            {enableRevue && (
-                <RevueIcon isVue={annotation.isVue} vue={annotation.vue} />
             )}
         </span>
     );
