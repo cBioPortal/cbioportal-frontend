@@ -255,24 +255,6 @@ export function getAnnotationData(
                       )?.annotation_summary.vues
                     : undefined,
         };
-        if (
-            indexedVariantAnnotations &&
-            indexedVariantAnnotations.result &&
-            indexedVariantAnnotations.status === 'complete'
-        ) {
-            if (
-                getVariantAnnotation(mutation, indexedVariantAnnotations.result)
-                    ?.start === 41266013
-            ) {
-                const haha =
-                    getVariantAnnotation(
-                        mutation,
-                        indexedVariantAnnotations.result
-                    )?.annotation_summary.transcriptConsequenceSummary.isVue ===
-                    true;
-                console.log(haha);
-            }
-        }
 
         // oncoKbData may exist but it might be an instance of Error, in that case we flag the status as error
         if (oncoKbData && oncoKbData.result instanceof Error) {
@@ -333,8 +315,6 @@ export function getAnnotationData(
             memoized.set(key, value as any);
         }
     } else {
-        console.log("i shoundn't be here");
-
         value = DEFAULT_ANNOTATION_DATA;
     }
 
@@ -369,10 +349,6 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
         mergeOncoKbIcons,
         oncoKbContentPadding,
     } = props;
-
-    if (props.annotation.isVue === true) {
-        console.log(props.annotation.vue);
-    }
 
     return (
         <span style={{ display: 'flex', minWidth: 100 }}>

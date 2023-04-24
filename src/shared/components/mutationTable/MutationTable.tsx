@@ -926,9 +926,6 @@ export default class MutationTable<
                             this.props.indexedVariantAnnotations,
                             this.resolveTumorType
                         );
-                        if (annotation.isVue === true) {
-                            console.log('HOTSPOT');
-                        }
 
                         ret = annotation.isHotspot;
                         break;
