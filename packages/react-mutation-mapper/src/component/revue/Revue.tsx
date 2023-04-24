@@ -5,7 +5,7 @@ import annotationStyles from '../column/annotation.module.scss';
 
 export const RevueContent: React.FunctionComponent<{ vue?: Vues }> = props => {
     return props.vue ? (
-        <>
+        <div>
             {props.vue.comment}{' '}
             <a
                 href={`https://pubmed.ncbi.nlm.nih.gov/${props.vue.pubmedIds[0]}/`}
@@ -14,7 +14,30 @@ export const RevueContent: React.FunctionComponent<{ vue?: Vues }> = props => {
             >
                 ({props.vue.referenceText})
             </a>
-        </>
+            <ul>
+                <li>
+                    Predicted Effect: <strong>{props.vue.defaultEffect}</strong>
+                </li>
+                <li>
+                    Experimentally Validated Effect:{' '}
+                    <strong>{props.vue.variantClassification}</strong>
+                </li>
+                <li>
+                    Revised Protein Effect:{' '}
+                    <strong>{props.vue.revisedProteinEffect}</strong>
+                </li>
+            </ul>
+            <div>
+                Source:{' '}
+                <a
+                    href="https://cancerrevue.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    reVUE <i className="fa fa-external-link" />
+                </a>
+            </div>
+        </div>
     ) : (
         <span>NA</span>
     );
@@ -31,18 +54,7 @@ export const Revue: React.FunctionComponent<{
     return props.isVue ? (
         <DefaultTooltip
             placement="bottom"
-            overlay={
-                <span>
-                    <RevueContent vue={props.vue} /> | Source:{' '}
-                    <a
-                        href="https://cancerrevue.org"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        reVUE <i className="fa fa-external-link" />
-                    </a>
-                </span>
-            }
+            overlay={<RevueContent vue={props.vue} />}
         >
             <span
                 className={`${annotationStyles['annotation-item']}`}
