@@ -8569,6 +8569,19 @@ export class StudyViewPageStore
             return data.join('\n');
         } else return '';
     }
+public async getSampleTreatmentDownloadData(): Promise<string> {
+        if (this.sampleTreatments.result) {
+            const header = ['Treatment', 'Pre/Post', '#'];
+            let data = [header.join('\t')];
+            _.each(
+                this.sampleTreatments.result,
+                (record: SampleTreatmentRow) => {
+                    let rowData = [record.treatment, record.time, record.count];
+                    data.push(rowData.join('\t'));
+                }
+            );
+            return data.join('\n');
+        } else return '';
 
     readonly survivalEntryMonths = remoteData<
         { [uniquePatientKey: string]: number } | undefined
