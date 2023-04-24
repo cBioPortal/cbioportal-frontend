@@ -8555,6 +8555,20 @@ export class StudyViewPageStore
             return data.join('\n');
         } else return '';
     }
+    public async getPatientTreatmentDownloadData(): Promise<string> {
+        if (this.patientTreatments.result) {
+            let header = ['Treatment', '#'];
+            let data = [header.join('\t')];
+            _.each(
+                this.patientTreatments.result,
+                (record: PatientTreatmentRow) => {
+                    let rowData = [record.treatment, record.count];
+                    data.push(rowData.join('\n'));
+                }
+            );
+            return data.join('\n');
+        } else return '';
+    }
 
     readonly survivalEntryMonths = remoteData<
         { [uniquePatientKey: string]: number } | undefined
