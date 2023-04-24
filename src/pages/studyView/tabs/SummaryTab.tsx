@@ -651,7 +651,7 @@ export class StudySummaryTab extends React.Component<
                 props.onValueSelection = this.store.onTreatmentSelection;
                 props.getData = () =>
                     this.store.getPatientTreatmentDownloadData();
-                props.downloadTypes = ['Full Data', 'Summary Data'];
+                props.downloadTypes = ['Data'];
                 props.onResetSelection = () => {
                     this.store.clearPatientTreatmentFilters();
                 };
