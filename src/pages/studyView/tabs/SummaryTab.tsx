@@ -622,7 +622,7 @@ export class StudySummaryTab extends React.Component<
                 props.filters = this.store.sampleTreatmentFiltersAsStrings;
                 props.promise = this.store.sampleTreatments;
                 props.onValueSelection = this.store.onTreatmentSelection;
-                 props.getData = () => this.store.getSampleTreatmentDownloadData();
+                props.getData = () => this.store.getSampleTreatmentDownloadData();
                 props.downloadTypes = ['Data'];
                 props.onResetSelection = () => {
                     this.store.clearSampleTreatmentFilters();
