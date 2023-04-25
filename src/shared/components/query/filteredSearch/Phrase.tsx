@@ -125,7 +125,7 @@ export class ListPhrase implements Phrase {
     public toString() {
         return this._textRepresentation;
     }
-    
+
     public match(study: FullTextSearchNode): boolean {
         let anyFieldMatch = false;
         for (const fieldName of this.fields) {
