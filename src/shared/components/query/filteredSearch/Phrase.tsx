@@ -125,15 +125,13 @@ export class ListPhrase implements Phrase {
     public toString() {
         return this._textRepresentation;
     }
-
+    
     public match(study: FullTextSearchNode): boolean {
         let anyFieldMatch = false;
         for (const fieldName of this.fields) {
-            if (!_.has(study, fieldName)) {
-                continue;
-            }
-            const fieldValue = (study as any)[fieldName];
-            if (typeof fieldValue !== 'undefined') {
+            let anyPhraseMatch = false;
+            const fieldValue = study[fieldName];
+            if (fieldValue) {
                 for (const phrase of this._phraseList) {
                     anyPhraseMatch =
                         anyPhraseMatch ||
@@ -141,9 +139,9 @@ export class ListPhrase implements Phrase {
                 }
             }
             anyFieldMatch = anyFieldMatch || anyPhraseMatch;
-        }
-        return anyFieldMatch;
-    }
+       }
+       return anyFieldMatch;
+   }
 
     equals(other: Phrase): boolean {
         if (!other) {
