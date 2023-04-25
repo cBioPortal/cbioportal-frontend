@@ -90,7 +90,11 @@ export default class AnnotationColumnFormatter {
             `OncoKB: ${oncoKbAnnotationDownload(
                 annotationData.oncoKbIndicator
             )}`,
-            `reVUE: ${annotationData.isVue ? 'yes' : 'no'}`,
+            `reVUE: ${
+                annotationData.isVue
+                    ? `${annotationData.vue?.comment},PubmedId:${annotationData.vue?.pubmedIds[0]},PredictedEffect:${annotationData.vue?.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue?.variantClassification},RevisedProteinEffect:${annotationData.vue?.revisedProteinEffect}`
+                    : 'no'
+            }`,
             `CIViC: ${civicDownload(annotationData.civicEntry)}`,
             `MyCancerGenome: ${myCancerGenomeDownload(
                 annotationData.myCancerGenomeLinks
