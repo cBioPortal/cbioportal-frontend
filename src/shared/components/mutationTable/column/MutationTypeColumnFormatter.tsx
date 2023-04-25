@@ -179,10 +179,14 @@ export default class MutationTypeColumnFormatter {
             content = createToolTip(content, toolTip);
         }
         return (
-            <>
+            <span className={styles.mutationTypeCell}>
                 {content}
-                {vue && <Revue isVue={true} vue={vue} />}
-            </>
+                {vue && (
+                    <span className={styles.revueIcon}>
+                        <Revue isVue={true} vue={vue} />
+                    </span>
+                )}
+            </span>
         );
     }
 }

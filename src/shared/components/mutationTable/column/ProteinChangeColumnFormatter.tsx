@@ -101,12 +101,16 @@ export default class ProteinChangeColumnFormatter {
         );
 
         content = (
-            <span>
+            <span className={styles.proteinChangeCell}>
                 {content}
                 {isGermlineMutation && ( // add a germline indicator next to protein change if it is a germline mutation!
                     <span className={styles.germline}>Germline</span>
                 )}
-                {vue && <Revue isVue={true} vue={vue} />}
+                {vue && (
+                    <span className={styles.revueIcon}>
+                        <Revue isVue={true} vue={vue} />
+                    </span>
+                )}
             </span>
         );
 
