@@ -2,7 +2,6 @@ import * as React from 'react';
 import { computed, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-import { GeneticEntity } from '../ResultsViewPageStore';
 import { getSampleViewUrl } from '../../../shared/api/urls';
 import './styles.scss';
 import { bind } from 'bind-decorator';
@@ -17,6 +16,7 @@ import _ from 'lodash';
 import { scatterPlotSize } from '../../../shared/components/plots/PlotUtils';
 import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
 import autobind from 'autobind-decorator';
+import { GeneticEntity } from 'shared/model/GeneticEntity';
 
 export interface ICoExpressionPlotProps {
     xAxisGeneticEntity: GeneticEntity;

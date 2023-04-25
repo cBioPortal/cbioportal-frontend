@@ -55,8 +55,6 @@ import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import {
     concatMutationData,
-    evaluateDiscreteCNAPutativeDriverInfo,
-    evaluateMutationPutativeDriverInfo,
     existsSomeMutationWithAscnPropertyInCollection,
     fetchClinicalData,
     fetchClinicalDataForPatient,
@@ -105,6 +103,8 @@ import {
     fetchStructuralVariantOncoKbData,
     parseOtherBiomarkerQueryId,
     tumorTypeResolver,
+    evaluatePutativeDriverInfoWithHotspots,
+    evaluatePutativeDriverInfo,
 } from 'shared/lib/StoreUtils';
 import {
     computeGenePanelInformation,
@@ -157,10 +157,6 @@ import {
 import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
 import {
-    AnnotatedExtendedAlteration,
-    CustomDriverNumericGeneMolecularData,
-} from 'pages/resultsView/ResultsViewPageStore';
-import {
     cna_profile_data_to_string,
     getMutationSubType,
     getSimplifiedMutationType,
@@ -197,6 +193,8 @@ import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled'
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { SiteError } from 'shared/model/appMisc';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -2059,7 +2057,7 @@ export class PatientViewPageStore {
                         getOncoKBAnnotationFunc(cnaDatum);
 
                     // Note: custom driver annotations are part of the incoming datum
-                    return evaluateDiscreteCNAPutativeDriverInfo(
+                    return evaluatePutativeDriverInfo(
                         cnaDatum,
                         oncoKbDatum,
                         false,
@@ -2521,13 +2519,15 @@ export class PatientViewPageStore {
                 // - custom driver annotations are part of the incoming datum
                 // - cbio counts, cosmic and custom driver annnotations are
                 //   not used for driver evaluation
-                return evaluateMutationPutativeDriverInfo(
+                return evaluatePutativeDriverInfoWithHotspots(
                     mutation,
                     oncoKbDatum,
-                    true,
-                    isHotspotDriver,
                     false,
-                    undefined
+                    undefined,
+                    {
+                        hotspotAnnotationsActive: true,
+                        hotspotDriver: isHotspotDriver,
+                    }
                 );
             });
         },

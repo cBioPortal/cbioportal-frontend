@@ -10,10 +10,6 @@ import {
     UnflattenedOQLLineFilterOutput,
     MergedTrackLineFilterOutput,
 } from 'shared/lib/oql/oqlfilter';
-import {
-    AnnotatedExtendedAlteration,
-    IQueriedMergedTrackCaseData,
-} from '../ResultsViewPageStore';
 import { StudyLink } from 'shared/components/StudyLink/StudyLink';
 import { getPatientViewUrl, getSampleViewUrl } from 'shared/api/urls';
 import styles from './styles.module.scss';
@@ -23,6 +19,7 @@ import { AlteredStatus } from 'pages/resultsView/mutualExclusivity/MutualExclusi
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import { parsedOQLAlterationToSourceOQL } from 'shared/lib/oql/oqlfilter';
 import { insertBetween } from 'shared/lib/ArrayUtils';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 
 export interface ISubAlteration {
     type: string;

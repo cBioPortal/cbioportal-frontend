@@ -16,12 +16,12 @@ import {
     decideMolecularProfileSortingOrder,
     generateStructuralDownloadData,
 } from './DownloadUtils';
-import { ExtendedAlteration } from '../ResultsViewPageStore';
 import oql_parser, { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 
 describe('DownloadUtils', () => {
     const genes = [

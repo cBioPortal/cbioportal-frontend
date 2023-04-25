@@ -1,7 +1,3 @@
-import {
-    ExtendedAlteration,
-    ExtendedSample,
-} from '../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
     IAlterationCountMap,
@@ -11,6 +7,8 @@ import { Sample, MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { CoverageInformation } from './GenePanelUtils';
 import { isSampleProfiledInMultiple } from './isSampleProfiled';
+import { ExtendedSample } from 'shared/model/ExtendedSample';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 
 export function getAlterationCountsForCancerTypesByGene(
     alterationsByGeneBySampleKey: {

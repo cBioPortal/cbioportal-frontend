@@ -4,7 +4,6 @@ import { action, computed, observable, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import {
     ResultsViewPageStore,
-    GeneticEntity,
     GeneticEntityType,
 } from '../ResultsViewPageStore';
 import Select from 'react-select1';
@@ -34,6 +33,7 @@ import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { AlterationTypeConstants } from 'shared/constants';
+import { GeneticEntity } from 'shared/model/GeneticEntity';
 
 export interface ICoExpressionTabProps {
     store: ResultsViewPageStore;

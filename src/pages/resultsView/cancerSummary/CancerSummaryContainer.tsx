@@ -4,7 +4,7 @@ import { action, computed, observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
 import { CancerSummaryContent, IAlterationData } from './CancerSummaryContent';
-import { ExtendedSample, ResultsViewPageStore } from '../ResultsViewPageStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { default as LoadingIndicator } from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import { Gene } from 'cbioportal-ts-api-client';
 import './styles.scss';
@@ -21,6 +21,7 @@ import autobind from 'autobind-decorator';
 import { OncoprintAnalysisCaseType } from '../ResultsViewPageStoreUtils';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { shortenStudyName } from '../../../shared/lib/FormatUtils';
+import { ExtendedSample } from 'shared/model/ExtendedSample';
 
 interface ICancerSummaryContainerProps {
     store: ResultsViewPageStore;

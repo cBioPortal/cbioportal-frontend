@@ -40,10 +40,6 @@ import { BLACK, DEFAULT_GREY, LIGHT_GREY } from 'shared/lib/Colors';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
-    AnnotatedNumericGeneMolecularData,
-    CustomDriverNumericGeneMolecularData,
-} from '../ResultsViewPageStore';
-import {
     AlterationTypeConstants,
     DataTypeConstants,
     CLINICAL_ATTRIBUTE_FIELD_ENUM,
@@ -87,6 +83,8 @@ import {
 } from 'cbioportal-frontend-commons';
 import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
