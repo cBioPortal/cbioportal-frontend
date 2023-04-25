@@ -8557,7 +8557,7 @@ export class StudyViewPageStore
     }
     public async getPatientTreatmentDownloadData(): Promise<string> {
         if (this.patientTreatments.result) {
-            let header = ['Treatment', '#'];
+            const header = ['Treatment', '#'];
             let data = [header.join('\t')];
             _.each(
                 this.patientTreatments.result,
