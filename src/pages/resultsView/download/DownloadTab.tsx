@@ -4,11 +4,8 @@ import { action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import fileDownload from 'react-file-download';
 import {
-    AnnotatedExtendedAlteration,
-    ExtendedAlteration,
     ResultsViewPageStore,
     ModifyQueryParams,
-    CaseAggregatedData,
 } from '../ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
@@ -77,6 +74,9 @@ import FontAwesome from 'react-fontawesome';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { If, Then, Else } from 'react-if';
 import { ResultsViewTab } from '../ResultsViewPageHelpers';
+import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;

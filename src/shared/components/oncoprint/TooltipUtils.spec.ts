@@ -5,7 +5,6 @@ import {
     makeGeneticTrackTooltip_getCoverageInformation,
     makeHeatmapTrackTooltip,
 } from './TooltipUtils';
-import { AnnotatedExtendedAlteration } from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import $ from 'jquery';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
@@ -15,6 +14,7 @@ import ServerConfigDefaults from 'config/serverConfigDefaults';
 import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
 import { makeGeneticTrackTooltip } from 'shared/components/oncoprint/makeGeneticTrackTooltip';
 import { AnnotatedStructuralVariant } from 'shared/model/AnnotatedMutation';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 
 describe('Oncoprint TooltipUtils', () => {
     describe('getCaseViewElt', () => {

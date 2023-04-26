@@ -1,8 +1,3 @@
-import {
-    AnnotatedExtendedAlteration,
-    CaseAggregatedData,
-    CustomDriverNumericGeneMolecularData,
-} from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
     ClinicalAttribute,
@@ -32,6 +27,9 @@ import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { MUTATION_STATUS_GERMLINE } from 'shared/constants';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 const cnaDataToString: { [integerCNA: string]: string | undefined } = {
     '-2': 'homdel',

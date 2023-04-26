@@ -13,6 +13,7 @@ const studyViewUrl = `${CBIOPORTAL_URL}/study/summary?id=study_es_0`;
 const comparisonResultsViewUrl = `${CBIOPORTAL_URL}/results/comparison?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=study_es_0_cnaseq&gene_list=ABLIM1%2520TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit&comparison_subtab=alterations`;
 const selectSamplesButton = 'button=Select Samples';
 
+// Note: not all SV elements outside of visible area are rendered:
 const SV_COUNTS = {
     AGAP3: '2',
     AGK: '4',
@@ -26,10 +27,10 @@ const SV_COUNTS = {
     FAM131B: '1',
     GIPC2: '1',
     MKRN1: '2',
-    NCOA4: '2',
+    NCOA4: '3',
+    PIEZO1: '1',
     PRKAR2B: '1',
     RBM33: '1',
-    RET: '1',
     SND1: '10',
     TMPRSS2: '2',
     TNS3: '1',
@@ -197,10 +198,9 @@ describe('alteration filter menu', function() {
                     MSH3: '1',
                     MYB: '1',
                 });
-                assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
-                    SV_COUNTS
-                );
+
+                // For Structural Variants: see custom-driver-annotations-in-study-view.spec.js
+
                 assert.deepStrictEqual(
                     geneTableCounts('copy number alterations-table'),
                     {
@@ -235,10 +235,9 @@ describe('alteration filter menu', function() {
                     ADAMTS20: '1',
                     OR11H1: '1',
                 });
-                assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
-                    SV_COUNTS
-                );
+
+                // For Structural Variants: see custom-driver-annotations-in-study-view.spec.js
+
                 assert.deepStrictEqual(
                     geneTableCounts('copy number alterations-table'),
                     {
@@ -274,10 +273,9 @@ describe('alteration filter menu', function() {
                     OR11H1: '1',
                     TMEM247: '1',
                 });
-                assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
-                    SV_COUNTS
-                );
+
+                // For Structural Variants: see custom-driver-annotations-in-study-view.spec.js
+
                 assert.deepStrictEqual(
                     geneTableCounts('copy number alterations-table'),
                     {

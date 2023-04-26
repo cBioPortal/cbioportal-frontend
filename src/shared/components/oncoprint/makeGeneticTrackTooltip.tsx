@@ -2,7 +2,6 @@ import { ListIndexedMapOfCounts } from 'shared/lib/ListIndexedMap';
 import $ from 'jquery';
 import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
-import { CustomDriverNumericGeneMolecularData } from 'pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
 import {
@@ -14,6 +13,7 @@ import {
 import { MolecularProfile, StructuralVariant } from 'cbioportal-ts-api-client';
 
 import { deriveStructuralVariantType } from 'oncokb-frontend-commons';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 const hotspotsImg = require('../../../rootImages/cancer-hotspots.svg');
 const oncokbImg = require('oncokb-styles/images/oncogenic.svg');

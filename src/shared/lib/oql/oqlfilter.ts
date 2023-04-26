@@ -17,7 +17,6 @@ import oql_parser, {
     SingleGeneQuery,
 } from './oql-parser';
 import { annotateAlterationTypes } from './annotateAlterationTypes';
-import { ExtendedAlteration } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     Gene,
     Mutation,
@@ -34,6 +33,7 @@ import {
     AnnotatedStructuralVariant,
     SimplifiedMutationType,
 } from 'shared/model/AnnotatedMutation';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 
 export interface IAccessorsForOqlFilter<T> {
     // a null return for an attribute means that attribute

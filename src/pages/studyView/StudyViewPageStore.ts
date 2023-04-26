@@ -147,8 +147,8 @@ import {
     statusFilterActive,
     StudyWithSamples,
     submitToPage,
-    updateCustomIntervalFilter,
     transformSampleDataToSelectedSampleClinicalData,
+    updateCustomIntervalFilter,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -176,7 +176,6 @@ import {
 } from '../../shared/api/urls';
 import {
     DataType as DownloadDataType,
-    getBrowserWindow,
     onMobxPromise,
     pluralize,
     remoteData,
@@ -270,8 +269,6 @@ import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
-import { Simulate } from 'react-dom/test-utils';
-import select = Simulate.select;
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -3679,8 +3676,6 @@ export class StudyViewPageStore
     get filtersProxy(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
-        const clinicalDataFilters = this.clinicalDataFilters;
-
         const genomicDataIntervalFilters = this.genomicDataIntervalFilters;
         if (genomicDataIntervalFilters.length > 0) {
             filters.genomicDataFilters = genomicDataIntervalFilters;
@@ -3691,8 +3686,8 @@ export class StudyViewPageStore
             filters.genericAssayDataFilters = genericAssayDataFilters;
         }
 
-        if (clinicalDataFilters.length > 0) {
-            filters.clinicalDataFilters = clinicalDataFilters;
+        if (this.clinicalDataFilters.length > 0) {
+            filters.clinicalDataFilters = this.clinicalDataFilters;
         }
 
         if (this.customDataFilters.length > 0) {

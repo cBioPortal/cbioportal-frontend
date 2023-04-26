@@ -27,15 +27,7 @@ import {
 } from '../../shared/lib/oql/oqlfilter';
 import { Alteration } from '../../shared/lib/oql/oql-parser';
 import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
-import {
-    AnnotatedExtendedAlteration,
-    AnnotatedNumericGeneMolecularData,
-    CaseAggregatedData,
-    CustomDriverNumericGeneMolecularData,
-    IQueriedCaseData,
-    IQueriedMergedTrackCaseData,
-    ResultsViewPageStore,
-} from './ResultsViewPageStore';
+import { ResultsViewPageStore } from './ResultsViewPageStore';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
@@ -60,6 +52,12 @@ import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
+import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
+import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -76,7 +74,10 @@ export type ExtendedClinicalAttribute = Omit<
 export type SampleAlteredMap = { [trackOqlKey: string]: AlteredStatus[] };
 
 export function computeCustomDriverAnnotationReport(
-    annotations: { driverFilter: string; driverTiersFilter: string }[]
+    annotations: {
+        driverFilter: string;
+        driverTiersFilter: string;
+    }[]
 ): IDriverAnnotationReport {
     let hasBinary = false;
     let tiersMap: { [tier: string]: boolean } = {};
@@ -88,7 +89,7 @@ export function computeCustomDriverAnnotationReport(
     }
     return {
         hasBinary,
-        tiers: Object.keys(tiersMap),
+        tiers: Object.keys(tiersMap).sort(),
     };
 }
 
@@ -229,7 +230,7 @@ export function filterAndAnnotateStructuralVariants(
         customDriverBinary: boolean;
         customDriverTier?: string;
     }
-): FilteredAndAnnotatedStructuralVariantsReport<AnnotatedStructuralVariant> {
+): FilteredAndAnnotatedStructuralVariantsReport {
     const vus: AnnotatedStructuralVariant[] = [];
     const germline: AnnotatedStructuralVariant[] = [];
     const vusAndGermline: AnnotatedStructuralVariant[] = [];
@@ -815,39 +816,6 @@ export function createDiscreteCopyNumberDataKey(
     d: NumericGeneMolecularData | DiscreteCopyNumberData
 ) {
     return d.sampleId + '_' + d.molecularProfileId + '_' + d.entrezGeneId;
-}
-
-export function evaluateDiscreteCNAPutativeDriverInfo(
-    cnaDatum: CustomDriverNumericGeneMolecularData,
-    oncoKbDatum: IndicatorQueryResp | undefined | null | false,
-    customDriverAnnotationsActive: boolean,
-    customDriverTierSelection: ObservableMap<string, boolean> | undefined
-) {
-    const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
-
-    // Set driverFilter to true when:
-    // (1) custom drivers active in settings menu
-    // (2) the datum has a custom driver annotation
-    const customDriverBinary: boolean =
-        (customDriverAnnotationsActive &&
-            cnaDatum.driverFilter === 'Putative_Driver') ||
-        false;
-
-    // Set tier information to the tier name when the tiers checkbox
-    // is selected for the corresponding tier of the datum in settings menu.
-    // This forces the CNA to be counted as a driver mutation.
-    const customDriverTier: string | undefined =
-        cnaDatum.driverTiersFilter &&
-        customDriverTierSelection &&
-        customDriverTierSelection.get(cnaDatum.driverTiersFilter)
-            ? cnaDatum.driverTiersFilter
-            : undefined;
-
-    return {
-        oncoKb,
-        customDriverBinary,
-        customDriverTier,
-    };
 }
 
 export function evaluateMutationPutativeDriverInfo(

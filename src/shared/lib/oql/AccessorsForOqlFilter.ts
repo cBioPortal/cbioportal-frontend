@@ -6,10 +6,6 @@ import {
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 import _ from 'lodash';
-import {
-    CustomDriverNumericGeneMolecularData,
-    AnnotatedNumericGeneMolecularData,
-} from '../../../pages/resultsView/ResultsViewPageStore';
 import { isNotGermlineMutation } from '../MutationUtils';
 import { IAccessorsForOqlFilter } from './oqlfilter';
 import { AlterationTypeConstants } from 'shared/constants';
@@ -18,6 +14,8 @@ import {
     AnnotatedStructuralVariant,
     SimplifiedMutationType,
 } from 'shared/model/AnnotatedMutation';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 export const cna_profile_data_to_string: any = {
     '-2': 'homdel',

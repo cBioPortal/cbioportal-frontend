@@ -1,11 +1,4 @@
 import _ from 'lodash';
-import {
-    AnnotatedExtendedAlteration,
-    CaseAggregatedData,
-    ExtendedAlteration,
-    IQueriedCaseData,
-    IQueriedMergedTrackCaseData,
-} from '../ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import { alterationInfoForCaseAggregatedDataByOQLLine } from 'shared/components/oncoprint/OncoprintUtils';
 import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
@@ -46,6 +39,11 @@ import client from 'shared/api/cbioportalClientInstance';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
 import fileDownload from 'react-file-download';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
+import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
+import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 export interface IDownloadFileRow {
     studyId: string;
