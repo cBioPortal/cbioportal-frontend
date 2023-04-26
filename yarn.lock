@@ -23216,9 +23216,9 @@ svg-path-sdf@^1.1.3:
     parse-svg-path "^0.1.2"
     svg-path-bounds "^1.0.1"
 
-svg2pdf.js@^1.3.3, "svg2pdf.js@github:cbioportal/svg2pdf.js#v1.3.3-cbio":
+"svg2pdf.js@github:cbioportal/svg2pdf.js#v1.3.3-cbio-patch-1":
   version "1.3.3"
-  resolved "https://codeload.github.com/cbioportal/svg2pdf.js/tar.gz/37db750e7ba9e87de29a24df73c43e768837f734"
+  resolved "https://codeload.github.com/cbioportal/svg2pdf.js/tar.gz/5a935ad5432e181497bc101b1825c0adb6da6622"
   dependencies:
     jspdf-yworks "^2.0.1"
 
