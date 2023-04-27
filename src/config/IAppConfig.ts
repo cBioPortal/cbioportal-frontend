@@ -167,4 +167,5 @@ export interface IServerConfig {
     comparison_categorical_na_values: string;
     oncoprint_clinical_tracks_config_json: string;
     enable_cross_study_expression: string;
+    studyview_max_samples_selected: number;
 }

@@ -24,6 +24,7 @@ import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import $ from 'jquery';
 import { serializeEvent } from 'shared/lib/tracking';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
+import { getServerConfig } from 'config/config';
 
 interface QueryContainerProps {
     store: QueryStore;
@@ -178,19 +179,28 @@ export default class QueryContainer extends React.Component<
         this._showQueryControls = !this._showQueryControls;
     }
 
-    @computed get studyLimitedReached() {
-        return this.store.selectableSelectedStudyIds.length > 50;
+    @computed get sampleLimitedReached() {
+        const isSampleLimitEnabled =
+            getServerConfig().studyview_max_samples_selected &&
+            getServerConfig().studyview_max_samples_selected != 0 &&
+            this.store.selectableSelectedStudies.length > 1;
+        return isSampleLimitEnabled
+            ? this.store.sampleCountForSelectedStudies >
+                  getServerConfig().studyview_max_samples_selected
+            : false;
     }
 
     @computed get exploreCohortsButtonDisabled() {
-        return this.studyLimitedReached || !this.store.hasSelectedStudies;
+        return this.sampleLimitedReached || !this.store.hasSelectedStudies;
     }
 
     @computed get exploreCohortsButtonTooltipMessage() {
         if (this.store.selectableSelectedStudyIds.length === 0) {
             return 'Please select at least one study above';
-        } else if (this.studyLimitedReached) {
-            return 'Too many studies selected for study summary (limit: 50)';
+        } else if (this.sampleLimitedReached) {
+            return `Too many samples selected for study summary (limit: ${
+                getServerConfig().studyview_max_samples_selected
+            })`;
         } else {
             return 'Open summary of selected studies';
         }
