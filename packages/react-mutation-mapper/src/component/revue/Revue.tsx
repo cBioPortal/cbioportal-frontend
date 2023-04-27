@@ -1,10 +1,12 @@
 import React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { Vues } from 'genome-nexus-ts-api-client';
+import { Vues as VUE } from 'genome-nexus-ts-api-client';
 import annotationStyles from '../column/annotation.module.scss';
 
-export const RevueContent: React.FunctionComponent<{ vue?: Vues }> = props => {
-    return props.vue ? (
+export const RevueTooltipContent: React.FunctionComponent<{
+    vue: VUE;
+}> = props => {
+    return (
         <div>
             {props.vue.comment}{' '}
             <a
@@ -38,23 +40,20 @@ export const RevueContent: React.FunctionComponent<{ vue?: Vues }> = props => {
                 </a>
             </div>
         </div>
-    ) : (
-        <span>NA</span>
     );
 };
 
-export function sortValue(vue: Vues | undefined): number {
+export function sortValue(vue: VUE | undefined): number {
     return vue ? 1 : 0;
 }
 
-export const Revue: React.FunctionComponent<{
-    isVue?: boolean;
-    vue?: Vues;
+export const RevueCell: React.FunctionComponent<{
+    vue: VUE;
 }> = props => {
-    return props.isVue ? (
+    return (
         <DefaultTooltip
             placement="bottom"
-            overlay={<RevueContent vue={props.vue} />}
+            overlay={<RevueTooltipContent vue={props.vue} />}
         >
             <span
                 className={`${annotationStyles['annotation-item']}`}
@@ -75,7 +74,5 @@ export const Revue: React.FunctionComponent<{
                 </a>
             </span>
         </DefaultTooltip>
-    ) : (
-        <span className={`${annotationStyles['annotation-item']}`} />
     );
 };

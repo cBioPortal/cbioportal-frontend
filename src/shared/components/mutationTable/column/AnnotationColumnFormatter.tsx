@@ -31,7 +31,7 @@ export interface IAnnotationColumnProps extends AnnotationProps {
 
 export default class AnnotationColumnFormatter {
     public static sortValue(
-        data: Mutation[],
+        mutations: Mutation[],
         oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
         hotspotData?: RemoteData<IHotspotIndex | undefined>,
         myCancerGenomeData?: IMyCancerGenomeData,
@@ -45,7 +45,7 @@ export default class AnnotationColumnFormatter {
         resolveTumorType?: (mutation: Mutation) => string
     ): number[] {
         const annotationData: IAnnotation = getAnnotationData(
-            data ? data[0] : undefined,
+            mutations ? mutations[0] : undefined,
             oncoKbCancerGenes,
             hotspotData,
             myCancerGenomeData,
@@ -60,7 +60,7 @@ export default class AnnotationColumnFormatter {
     }
 
     public static download(
-        data: Mutation[] | undefined,
+        mutations: Mutation[] | undefined,
         oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
         hotspotData?: RemoteData<IHotspotIndex | undefined>,
         myCancerGenomeData?: IMyCancerGenomeData,
@@ -74,7 +74,7 @@ export default class AnnotationColumnFormatter {
         resolveTumorType?: (mutation: Mutation) => string
     ) {
         const annotationData: IAnnotation = getAnnotationData(
-            data ? data[0] : undefined,
+            mutations ? mutations[0] : undefined,
             oncoKbCancerGenes,
             hotspotData,
             myCancerGenomeData,
@@ -91,8 +91,8 @@ export default class AnnotationColumnFormatter {
                 annotationData.oncoKbIndicator
             )}`,
             `reVUE: ${
-                annotationData.isVue
-                    ? `${annotationData.vue?.comment},PubmedId:${annotationData.vue?.pubmedIds[0]},PredictedEffect:${annotationData.vue?.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue?.variantClassification},RevisedProteinEffect:${annotationData.vue?.revisedProteinEffect}`
+                annotationData.vue
+                    ? `${annotationData.vue.comment},PubmedId:${annotationData.vue.pubmedIds[0]},PredictedEffect:${annotationData.vue.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue.variantClassification},RevisedProteinEffect:${annotationData.vue.revisedProteinEffect}`
                     : 'no'
             }`,
             `CIViC: ${civicDownload(annotationData.civicEntry)}`,
@@ -121,12 +121,12 @@ export default class AnnotationColumnFormatter {
     }
 
     public static renderFunction(
-        data: Mutation[],
+        mutations: Mutation[],
         columnProps: IAnnotationColumnProps
     ) {
         return (
             <Annotation
-                mutation={data ? data[0] : undefined}
+                mutation={mutations ? mutations[0] : undefined}
                 {...columnProps}
             />
         );

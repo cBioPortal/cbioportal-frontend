@@ -12,7 +12,7 @@ import styles from './mutationType.module.scss';
 import { getVariantAnnotation, RemoteData } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
-import { Revue } from 'react-mutation-mapper';
+import { RevueCell } from 'react-mutation-mapper';
 
 /**
  * Mutation Column Formatter.
@@ -148,30 +148,33 @@ export default class MutationTypeColumnFormatter {
     }
 
     public static renderFunction(
-        data: Mutation[],
+        mutations: Mutation[],
         indexedVariantAnnotations?: RemoteData<
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >
     ) {
         // use text for all purposes (display, sort, filter)
-        const text: string = MutationTypeColumnFormatter.getDisplayValue(data);
+        const text: string = MutationTypeColumnFormatter.getDisplayValue(
+            mutations
+        );
         const className: string = MutationTypeColumnFormatter.getClassName(
-            data
+            mutations
         );
 
         const vue =
-            indexedVariantAnnotations &&
-            indexedVariantAnnotations.result &&
-            indexedVariantAnnotations.status === 'complete' &&
-            !_.isEmpty(data)
+            indexedVariantAnnotations?.isComplete &&
+            indexedVariantAnnotations?.result &&
+            !_.isEmpty(mutations)
                 ? getVariantAnnotation(
-                      data[0],
+                      mutations[0],
                       indexedVariantAnnotations.result
                   )?.annotation_summary.vues
                 : undefined;
 
         // use actual value for tooltip
-        const toolTip: string = MutationTypeColumnFormatter.getTextValue(data);
+        const toolTip: string = MutationTypeColumnFormatter.getTextValue(
+            mutations
+        );
         let content = <span className={className}>{text} </span>;
 
         // add tooltip only if the display value differs from the actual text value!
@@ -183,7 +186,7 @@ export default class MutationTypeColumnFormatter {
                 {content}
                 {vue && (
                     <span className={styles.revueIcon}>
-                        <Revue isVue={true} vue={vue} />
+                        <RevueCell vue={vue} />
                     </span>
                 )}
             </span>

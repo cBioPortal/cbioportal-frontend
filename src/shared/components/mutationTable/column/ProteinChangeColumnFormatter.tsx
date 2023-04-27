@@ -9,7 +9,7 @@ import { TruncatedText } from 'cbioportal-frontend-commons';
 import MutationStatusColumnFormatter from './MutationStatusColumnFormatter';
 import styles from './proteinChange.module.scss';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { Revue } from 'react-mutation-mapper';
+import { RevueCell } from 'react-mutation-mapper';
 import _ from 'lodash';
 
 export default class ProteinChangeColumnFormatter {
@@ -64,25 +64,26 @@ export default class ProteinChangeColumnFormatter {
     }
 
     public static renderWithMutationStatus(
-        data: Mutation[],
+        mutations: Mutation[],
         indexedVariantAnnotations?: RemoteData<
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >
     ) {
         // use text as display value
-        const text: string = ProteinChangeColumnFormatter.getDisplayValue(data);
+        const text: string = ProteinChangeColumnFormatter.getDisplayValue(
+            mutations
+        );
 
         const mutationStatus:
             | string
-            | null = MutationStatusColumnFormatter.getData(data);
+            | null = MutationStatusColumnFormatter.getData(mutations);
 
         const vue =
-            indexedVariantAnnotations &&
-            indexedVariantAnnotations.result &&
-            indexedVariantAnnotations.status === 'complete' &&
-            !_.isEmpty(data)
+            indexedVariantAnnotations?.isComplete &&
+            indexedVariantAnnotations?.result &&
+            !_.isEmpty(mutations)
                 ? getVariantAnnotation(
-                      data[0],
+                      mutations[0],
                       indexedVariantAnnotations.result
                   )?.annotation_summary.vues
                 : undefined;
@@ -108,7 +109,7 @@ export default class ProteinChangeColumnFormatter {
                 )}
                 {vue && (
                     <span className={styles.revueIcon}>
-                        <Revue isVue={true} vue={vue} />
+                        <RevueCell vue={vue} />
                     </span>
                 )}
             </span>

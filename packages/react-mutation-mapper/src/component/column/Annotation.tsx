@@ -39,8 +39,9 @@ import HotspotAnnotation, {
 } from './HotspotAnnotation';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from '../../util/DataFetcherUtils';
 import { CanonicalMutationType } from 'cbioportal-frontend-commons';
-import { VariantAnnotation, Vues } from 'genome-nexus-ts-api-client';
-import { Revue, sortValue as revueSortValue } from '../revue/Revue';
+import { VariantAnnotation, Vues as VUE } from 'genome-nexus-ts-api-client';
+import { RevueCell, sortValue as revueSortValue } from '../revue/Revue';
+import annotationStyles from './annotation.module.scss';
 
 export type AnnotationProps = {
     mutation?: Mutation;
@@ -95,8 +96,7 @@ export interface IAnnotation {
     civicStatus: 'pending' | 'error' | 'complete';
     hasCivicVariants: boolean;
     hugoGeneSymbol: string;
-    isVue?: boolean;
-    vue?: Vues;
+    vue?: VUE;
 }
 
 export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
@@ -112,7 +112,6 @@ export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
     hasCivicVariants: true,
     myCancerGenomeLinks: [],
     civicStatus: 'complete',
-    isVue: false,
 };
 
 function getDefaultEntrezGeneId(mutation: Mutation): number {
@@ -235,16 +234,6 @@ export function getAnnotationData(
                     ? is3dHotspot(mutation, hotspotData.result)
                     : false,
             hotspotStatus: hotspotData ? hotspotData.status : 'pending',
-            isVue:
-                indexedVariantAnnotations &&
-                indexedVariantAnnotations.result &&
-                indexedVariantAnnotations.status === 'complete'
-                    ? getVariantAnnotation(
-                          mutation,
-                          indexedVariantAnnotations.result
-                      )?.annotation_summary.transcriptConsequenceSummary
-                          .isVue === true
-                    : false,
             vue:
                 indexedVariantAnnotations &&
                 indexedVariantAnnotations.result &&
@@ -368,8 +357,10 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     contentPadding={oncoKbContentPadding}
                 />
             )}
-            {enableRevue && (
-                <Revue isVue={annotation.isVue} vue={annotation.vue} />
+            {enableRevue && annotation.vue ? (
+                <RevueCell vue={annotation.vue} />
+            ) : (
+                <span className={`${annotationStyles['annotation-item']}`} />
             )}
             {enableCivic && (
                 <Civic
