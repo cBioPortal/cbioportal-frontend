@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import Tooltip from 'rc-tooltip';
 import { ArticleAbstract, IndicatorQueryTreatment } from 'oncokb-ts-api-client';
 import * as React from 'react';
@@ -239,7 +238,7 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
                             <span style={{ marginRight: '5px' }}>
                                 {drug.drugName}
                             </span>
-                            <DefaultTooltip
+                            <Tooltip
                                 placement="left"
                                 trigger={['hover', 'focus']}
                                 overlay={
@@ -252,7 +251,7 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
                                 <i
                                     className={emaTooltipStyle(drug.drugName)}
                                 ></i>
-                            </DefaultTooltip>
+                            </Tooltip>
                         </div>
                     ))}
                 </div>
