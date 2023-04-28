@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
     calcProteinChangeSortValue,
     getVariantAnnotation,
+    isGermlineMutationStatus,
     RemoteData,
 } from 'cbioportal-utils';
 import { Mutation } from 'cbioportal-ts-api-client';
@@ -74,10 +75,6 @@ export default class ProteinChangeColumnFormatter {
             mutations
         );
 
-        const mutationStatus:
-            | string
-            | null = MutationStatusColumnFormatter.getData(mutations);
-
         const vue =
             indexedVariantAnnotations?.isComplete &&
             indexedVariantAnnotations?.result &&
@@ -88,9 +85,9 @@ export default class ProteinChangeColumnFormatter {
                   )?.annotation_summary.vues
                 : undefined;
 
-        const isGermlineMutation =
-            mutationStatus &&
-            mutationStatus.toLowerCase().indexOf('germline') > -1;
+        const isGermlineMutation = isGermlineMutationStatus(
+            MutationStatusColumnFormatter.getData(mutations)
+        );
 
         let content = (
             <TruncatedText

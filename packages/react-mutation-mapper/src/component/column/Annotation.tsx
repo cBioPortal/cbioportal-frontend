@@ -143,18 +143,12 @@ export function getAnnotationData(
     if (mutation) {
         let key = '';
         const memoize =
-            !!oncoKbCancerGenes &&
             oncoKbCancerGenes?.isComplete &&
-            !!hotspotData &&
             hotspotData?.isComplete &&
             !!myCancerGenomeData &&
-            !!oncoKbData &&
             oncoKbData?.isComplete &&
-            !!civicGenes &&
             civicGenes?.isComplete &&
-            !!civicVariants &&
             civicVariants?.isComplete &&
-            !!indexedVariantAnnotations &&
             indexedVariantAnnotations?.isComplete;
 
         if (memoize) {
@@ -222,22 +216,17 @@ export function getAnnotationData(
                 ? getMyCancerGenomeLinks(mutation, myCancerGenomeData)
                 : [],
             isHotspot:
-                hotspotData &&
-                hotspotData.result &&
-                hotspotData.status === 'complete'
+                hotspotData?.isComplete && hotspotData.result
                     ? isLinearClusterHotspot(mutation, hotspotData.result)
                     : false,
             is3dHotspot:
-                hotspotData &&
-                hotspotData.result &&
-                hotspotData.status === 'complete'
+                hotspotData?.isComplete && hotspotData.result
                     ? is3dHotspot(mutation, hotspotData.result)
                     : false,
             hotspotStatus: hotspotData ? hotspotData.status : 'pending',
             vue:
-                indexedVariantAnnotations &&
-                indexedVariantAnnotations.result &&
-                indexedVariantAnnotations.status === 'complete'
+                indexedVariantAnnotations?.isComplete &&
+                indexedVariantAnnotations.result
                     ? getVariantAnnotation(
                           mutation,
                           indexedVariantAnnotations.result

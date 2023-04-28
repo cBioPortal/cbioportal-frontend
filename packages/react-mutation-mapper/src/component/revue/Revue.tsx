@@ -59,19 +59,12 @@ export const RevueCell: React.FunctionComponent<{
                 className={`${annotationStyles['annotation-item']}`}
                 style={{ display: 'inline-flex' }}
             >
-                <a
-                    href="https://cancerrevue.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: 'none' }}
-                >
-                    <img
-                        src={'../../images/vue_logo.png'}
-                        alt="reVUE logo"
-                        width={14}
-                        height={14}
-                    />
-                </a>
+                <img
+                    src={'../../images/vue_logo.png'}
+                    alt="reVUE logo"
+                    width={14}
+                    height={14}
+                />
             </span>
         </DefaultTooltip>
     );
