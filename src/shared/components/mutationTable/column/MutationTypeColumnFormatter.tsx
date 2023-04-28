@@ -9,6 +9,10 @@ import {
     createToolTip,
 } from './CategoricalColumnFormatter';
 import styles from './mutationType.module.scss';
+import { getVariantAnnotation, RemoteData } from 'cbioportal-utils';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import _ from 'lodash';
+import { RevueCell } from 'react-mutation-mapper';
 
 /**
  * Mutation Column Formatter.
@@ -143,21 +147,49 @@ export default class MutationTypeColumnFormatter {
         }
     }
 
-    public static renderFunction(data: Mutation[]) {
+    public static renderFunction(
+        mutations: Mutation[],
+        indexedVariantAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >
+    ) {
         // use text for all purposes (display, sort, filter)
-        const text: string = MutationTypeColumnFormatter.getDisplayValue(data);
+        const text: string = MutationTypeColumnFormatter.getDisplayValue(
+            mutations
+        );
         const className: string = MutationTypeColumnFormatter.getClassName(
-            data
+            mutations
         );
 
+        const vue =
+            indexedVariantAnnotations?.isComplete &&
+            indexedVariantAnnotations?.result &&
+            !_.isEmpty(mutations)
+                ? getVariantAnnotation(
+                      mutations[0],
+                      indexedVariantAnnotations.result
+                  )?.annotation_summary.vues
+                : undefined;
+
         // use actual value for tooltip
-        const toolTip: string = MutationTypeColumnFormatter.getTextValue(data);
-        let content = <span className={className}>{text}</span>;
+        const toolTip: string = MutationTypeColumnFormatter.getTextValue(
+            mutations
+        );
+        let content = <span className={className}>{text} </span>;
 
         // add tooltip only if the display value differs from the actual text value!
         if (toolTip.toLowerCase() !== text.toLowerCase()) {
             content = createToolTip(content, toolTip);
         }
-        return content;
+        return (
+            <span className={styles.mutationTypeCell}>
+                {content}
+                {vue && (
+                    <span className={styles.revueIcon}>
+                        <RevueCell vue={vue} />
+                    </span>
+                )}
+            </span>
+        );
     }
 }

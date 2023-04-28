@@ -83,6 +83,7 @@ interface DefaultMutationMapperStoreConfig {
     oncoKbUrl?: string;
     enableCivic?: boolean;
     enableOncoKb?: boolean;
+    enableRevue?: boolean;
     cachePostMethodsOnClients?: boolean;
     apiCacheLimit?: number;
     getMutationCount?: (mutation: Partial<Mutation>) => number;

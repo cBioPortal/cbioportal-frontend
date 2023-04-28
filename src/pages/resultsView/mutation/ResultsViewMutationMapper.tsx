@@ -229,6 +229,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 enableHotspot={this.props.enableHotspot}
                 enableMyCancerGenome={this.props.enableMyCancerGenome}
                 enableCivic={this.props.enableCivic}
+                enableRevue={this.props.enableRevue}
                 totalNumberOfExons={this.totalExonNumber}
                 generateGenomeNexusHgvsgUrl={
                     this.props.store.generateGenomeNexusHgvsgUrl

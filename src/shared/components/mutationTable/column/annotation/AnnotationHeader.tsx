@@ -55,6 +55,7 @@ export enum AnnotationSources {
     CIVIC = 'civic',
     MY_CANCER_GENOME = 'myCancerGenome',
     CANCER_HOTSPOTS = 'cancerHotspots',
+    REVUE = 'reVue',
 }
 
 export const sourceTooltipInfo = {
@@ -102,6 +103,14 @@ export const sourceTooltipInfo = {
                 'a resource for statistically significant recurrent 3D clustered hotspots in cancer',
             reference: 'Gao et al. 2017',
             referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/28115009/',
+        },
+    ],
+    [AnnotationSources.REVUE]: [
+        {
+            sourceUrl: 'https://www.cancerrevue.org/',
+            sourceName: 'reVUE',
+            sourceDescription:
+                'a repository for variants with unexpected effects (VUE) in cancer',
         },
     ],
 };
@@ -398,6 +407,28 @@ const AnnotationHeader: React.FunctionComponent<{
                     />
                 </DefaultTooltip>
             )}
+            {getServerConfig().show_revue && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            infoProps={
+                                sourceTooltipInfo[AnnotationSources.REVUE]
+                            }
+                        />
+                    }
+                >
+                    <img
+                        src={require('../../../../../../src/rootImages/vue_logo.png')}
+                        style={{
+                            height: 14,
+                            width: 14,
+                            marginLeft: 6,
+                            marginRight: 1,
+                        }}
+                    />
+                </DefaultTooltip>
+            )}
             {getServerConfig().show_civic && (
                 <DefaultTooltip
                     placement="top"
@@ -415,7 +446,7 @@ const AnnotationHeader: React.FunctionComponent<{
                         style={{
                             height: 14,
                             width: 14,
-                            marginLeft: 6,
+                            marginLeft: 7,
                             marginRight: 1,
                         }}
                     />
