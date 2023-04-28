@@ -47,6 +47,7 @@ export default class MutationMapperDataStore
         group: string;
         filter: DataFilter;
     }[];
+    public isDataMerged: boolean = false;
 
     private lazyMobXTableFilter:
         | ((
@@ -65,7 +66,9 @@ export default class MutationMapperDataStore
     public get sortedFilteredGroupedData(): GroupedData {
         return groupDataByGroupFilters(
             this.groupFilters,
-            this.sortedFilteredData,
+            this.isDataMerged
+                ? _.flatten(this.sortedFilteredData).map(mutation => [mutation])
+                : this.sortedFilteredData,
             this.applyFilter
         );
     }
@@ -226,7 +229,7 @@ export default class MutationMapperDataStore
 
     constructor(
         data: Mutation[][],
-        mergeDataForTableBy?: (m: Mutation) => string,
+        isDataMerged?: boolean,
         customFilterApplier?: FilterApplier,
         dataFilters: DataFilter[] = [],
         selectionFilters: DataFilter[] = [],
@@ -246,17 +249,7 @@ export default class MutationMapperDataStore
         this.dataHighlighter = (d: Mutation[]) => this.dataHighlightFilter(d);
         this.customFilterApplier = customFilterApplier;
         this.setFilter();
-        this.getTableData = mergeDataForTableBy
-            ? () =>
-                  mergeMutations(
-                      _.flatten(
-                          this.sortedFilteredSelectedData.length !== 0
-                              ? this.sortedFilteredSelectedData
-                              : this.sortedFilteredData
-                      ),
-                      mergeDataForTableBy
-                  )
-            : undefined;
+        this.isDataMerged = !!isDataMerged;
     }
 
     @autobind

@@ -495,7 +495,7 @@ export default class MutationMapper<
                 resetFilters={this.resetFilters}
                 filterInfo={`Showing ${
                     _.flatten(dataStore.tableData).length
-                } of ${dataStore.allData.length} mutations.`}
+                } of ${_.flatten(dataStore.allData).length} mutations.`}
                 additionalInfo={
                     dataStore.sortedFilteredSelectedData.length > 0
                         ? ' (Shift click to select multiple residues)'
@@ -526,7 +526,8 @@ export default class MutationMapper<
         return null;
     }
 
-    protected get fisherExactTwoSidedTestLabel(): JSX.Element | null {
+    protected get plotFooter(): JSX.Element | null {
+        // Child classes should override this method to return a plot footer if needed
         return null;
     }
 
@@ -548,7 +549,7 @@ export default class MutationMapper<
                         >
                             <div style={{ marginRight: 10 }}>
                                 {this.mutationPlot}
-                                {this.fisherExactTwoSidedTestLabel}
+                                {this.plotFooter}
                                 {this.proteinChainPanel}
                             </div>
 

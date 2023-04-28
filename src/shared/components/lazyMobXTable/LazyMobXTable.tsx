@@ -120,7 +120,6 @@ type LazyMobXTableProps<T> = {
         column: Column<T>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
-    formatPaginationStatusText?: (text: string) => string;
     showTotalMutationCountsInCountHeader?: boolean;
     customControls?: JSX.Element;
 };
@@ -286,9 +285,6 @@ export class LazyMobXTableStore<T> {
     @observable private onRowClick: ((d: T) => void) | undefined;
     @observable private onRowMouseEnter: ((d: T) => void) | undefined;
     @observable private onRowMouseLeave: ((d: T) => void) | undefined;
-    @observable private formatPaginationStatusText:
-        | ((text: string) => string)
-        | undefined;
 
     // this observable is intended to always refer to props.columnToHeaderFilterIconModal
     @observable private _columnToHeaderFilterIconModal:
@@ -617,9 +613,7 @@ export class LazyMobXTableStore<T> {
                     : firstVisibleItemDisp + this.rows.length - 1;
         }
 
-        let itemsLabel: string = this.formatPaginationStatusText
-            ? this.formatPaginationStatusText(this.itemsLabel)
-            : this.itemsLabel;
+        let itemsLabel: string = this.itemsLabel;
         if (itemsLabel.length) {
             // we need to prepend the space here instead of within the actual return value
             // to avoid unnecessary white-space at the end of the string
@@ -747,10 +741,7 @@ export class LazyMobXTableStore<T> {
     @computed get itemsLabel() {
         if (this._itemsLabel) {
             // use itemsLabel for plural in case no itemsLabelPlural provided
-            if (
-                !this._itemsLabelPlural ||
-                _.flatten(this.displayData).length === 1
-            ) {
+            if (!this._itemsLabelPlural || this.displayData.length === 1) {
                 return this._itemsLabel;
             } else {
                 return this._itemsLabelPlural;
@@ -782,9 +773,6 @@ export class LazyMobXTableStore<T> {
         }
         if (this.itemsPerPage === undefined) {
             this.itemsPerPage = props.initialItemsPerPage || 50;
-        }
-        if (props.formatPaginationStatusText) {
-            this.formatPaginationStatusText = props.formatPaginationStatusText;
         }
         // even if dataStore passed in, we need to initialize sort props if undefined
         // otherwise we lose the functionality of 'initialSortColumn' and 'initialSortDirection' props

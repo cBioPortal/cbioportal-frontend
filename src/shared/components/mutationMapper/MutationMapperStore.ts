@@ -34,6 +34,7 @@ import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
 import {
     fetchPdbAlignmentData,
     indexPdbAlignmentData,
+    mergeMutations,
 } from 'shared/lib/StoreUtils';
 import { IPdbChain, PdbAlignmentIndex } from 'shared/model/Pdb';
 import {
@@ -54,6 +55,7 @@ import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
+import _ from 'lodash';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
@@ -64,7 +66,7 @@ export interface IMutationMapperStoreConfig {
         filter: DataFilter<any>;
     }[];
     countUniqueMutations?: (mutations: Mutation[], group?: string) => number;
-    mergeMutationsForTableBy?: (m: Mutation) => string;
+    mergeMutationsBy?: (m: Mutation) => string;
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
@@ -280,7 +282,12 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
 
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]
-        return (this.mutationData.result || []).map(mutation => [mutation]);
+        return this.mutationMapperStoreConfig.mergeMutationsBy
+            ? mergeMutations(
+                  _.flatten(this.mutationData.result),
+                  this.mutationMapperStoreConfig.mergeMutationsBy
+              )
+            : (this.mutationData.result || []).map(mutation => [mutation]);
     }
 
     @computed get mergedAlignmentData(): IPdbChain[] {
@@ -312,7 +319,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     protected getDataStore: () => MutationMapperDataStore = () => {
         return new MutationMapperDataStore(
             this.processedMutationData,
-            this.mutationMapperStoreConfig.mergeMutationsForTableBy,
+            !!this.mutationMapperStoreConfig.mergeMutationsBy,
             this.filterApplier,
             this.config.dataFilters,
             this.config.selectionFilters,

@@ -7,21 +7,21 @@ import {
 } from 'pages/groupComparison/GroupComparisonUtils';
 import { MiniOncoprint } from 'shared/components/miniOncoprint/MiniOncoprint';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import numeral from 'numeral';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import { AlterationOverlapOverlay } from './alterationOverlap/AlterationOverlapOverlay';
 
 export default class AlterationOverlapColumnFormatter {
     public static renderFunction(
         rowDataByProteinChange: {
             [proteinChange: string]: ComparisonMutationsRow;
         },
-        d: Mutation[],
-        profiledPatientsCounts: { [groupIndex: number]: number },
+        mutations: Mutation[],
+        profiledPatientsCounts: number[],
         sampleSet: ComplexKeyMap<Sample>,
         groups: ComparisonGroup[]
     ) {
-        const rowData = rowDataByProteinChange[d[0].proteinChange];
+        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
         const sampleIdentifiersForGroupA = getSampleIdentifiers([groups[0]]);
         const patientIdentifiersforGroupA = getPatientIdentifiers(
@@ -57,53 +57,14 @@ export default class AlterationOverlapColumnFormatter {
         const group2Altered =
             (rowData.groupBMutatedCount / totalQueriedCases) * 100;
 
-        const alterationLanguage = 'alterations';
-
-        const overlay = () => {
-            return (
-                <div>
-                    <h3>
-                        {`${d[0].gene.hugoGeneSymbol} ${alterationLanguage} for ${d[0].proteinChange} in:`}
-                    </h3>
-                    <table className={'table table-striped'}>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <strong>
-                                        {groups[0].nameWithOrdinal}:{' '}
-                                    </strong>
-                                </td>
-                                <td>
-                                    {rowData.groupAMutatedCount} of{' '}
-                                    {profiledPatientsCounts[0]} of profiled{' '}
-                                    {'patients'} (
-                                    {numeral(
-                                        rowData.groupAMutatedPercentage
-                                    ).format('0.0')}
-                                    %)
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <strong>
-                                        {groups[1].nameWithOrdinal}:{' '}
-                                    </strong>
-                                </td>
-                                <td>
-                                    {rowData.groupBMutatedCount} of{' '}
-                                    {profiledPatientsCounts[1]} of profiled{' '}
-                                    {'patients'} (
-                                    {numeral(
-                                        rowData.groupBMutatedPercentage
-                                    ).format('0.0')}
-                                    %)
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            );
-        };
+        const overlay = (
+            <AlterationOverlapOverlay
+                rowData={rowData}
+                mutations={mutations}
+                profiledPatientsCounts={profiledPatientsCounts}
+                groups={groups}
+            />
+        );
 
         return (
             <DefaultTooltip

@@ -9,11 +9,11 @@ export default class GroupMutatedCountPercentageColumnFormatter {
             [proteinChange: string]: ComparisonMutationsRow;
         },
         groupIndex: number,
-        d: Mutation[]
+        mutations: Mutation[]
     ) {
-        const rowData = rowDataByProteinChange[d[0].proteinChange];
+        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
-        return !!!groupIndex
+        return groupIndex === 0
             ? rowData.groupAMutatedCount
             : rowData.groupBMutatedCount;
     }
@@ -23,17 +23,17 @@ export default class GroupMutatedCountPercentageColumnFormatter {
             [proteinChange: string]: ComparisonMutationsRow;
         },
         groupIndex: number,
-        d: Mutation[]
+        mutations: Mutation[]
     ) {
-        const rowData = rowDataByProteinChange[d[0].proteinChange];
+        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
         const mutatedCount = this.getMutatedCountData(
             rowDataByProteinChange,
             groupIndex,
-            d
+            mutations
         );
         const percentage = formatPercentValue(
-            !!!groupIndex
+            groupIndex === 0
                 ? rowData.groupAMutatedPercentage
                 : rowData.groupBMutatedPercentage,
             2
@@ -47,16 +47,16 @@ export default class GroupMutatedCountPercentageColumnFormatter {
             [proteinChange: string]: ComparisonMutationsRow;
         },
         groupIndex: number,
-        d: Mutation[]
+        mutations: Mutation[]
     ) {
         let content = (
-            <div>
+            <span>
                 {this.getGroupMutatedCountPercentageTextValue(
                     rowDataByProteinChange,
                     groupIndex,
-                    d
+                    mutations
                 )}
-            </div>
+            </span>
         );
 
         return content;

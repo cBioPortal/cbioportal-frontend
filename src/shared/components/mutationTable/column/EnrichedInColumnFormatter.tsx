@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
-import { ComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
+import {
+    ComparisonGroup,
+    SIGNIFICANT_QVALUE_THRESHOLD,
+} from 'pages/groupComparison/GroupComparisonUtils';
 import styles from 'pages/resultsView/enrichments/styles.module.scss';
 import classNames from 'classnames';
 import _ from 'lodash';
@@ -12,9 +15,9 @@ export default class EnrichedInColumnFormatter {
         rowDataByProteinChange: {
             [proteinChange: string]: ComparisonMutationsRow;
         },
-        d: Mutation[]
+        mutations: Mutation[]
     ) {
-        const rowData = rowDataByProteinChange[d[0].proteinChange];
+        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
         return rowData.enrichedGroup;
     }
@@ -23,10 +26,10 @@ export default class EnrichedInColumnFormatter {
         rowDataByProteinChange: {
             [proteinChange: string]: ComparisonMutationsRow;
         },
-        d: Mutation[],
+        mutations: Mutation[],
         filterStringUpper: string
     ): boolean {
-        return this.getEnrichedInData(rowDataByProteinChange, d)
+        return this.getEnrichedInData(rowDataByProteinChange, mutations)
             .toUpperCase()
             .includes(filterStringUpper);
     }
@@ -35,17 +38,17 @@ export default class EnrichedInColumnFormatter {
         rowDataByProteinChange: {
             [proteinChange: string]: ComparisonMutationsRow;
         },
-        d: Mutation[],
+        mutations: Mutation[],
         groups: ComparisonGroup[]
     ) {
-        const rowData = rowDataByProteinChange[d[0].proteinChange];
+        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
-        const nameToGroup = _.keyBy(groups, g => g.name);
-        const significant = rowData.qValue < 0.05;
+        const nameToGroup = _.keyBy(groups, g => g.nameWithOrdinal);
+        const significant = rowData.qValue < SIGNIFICANT_QVALUE_THRESHOLD;
         const groupColor =
             significant && groups
                 ? nameToGroup[
-                      this.getEnrichedInData(rowDataByProteinChange, d).slice(4)
+                      this.getEnrichedInData(rowDataByProteinChange, mutations)
                   ].color
                 : undefined;
         let content = (
@@ -59,7 +62,7 @@ export default class EnrichedInColumnFormatter {
                     color: groupColor && getTextColor(groupColor),
                 }}
             >
-                {this.getEnrichedInData(rowDataByProteinChange, d)}
+                {this.getEnrichedInData(rowDataByProteinChange, mutations)}
             </div>
         );
 

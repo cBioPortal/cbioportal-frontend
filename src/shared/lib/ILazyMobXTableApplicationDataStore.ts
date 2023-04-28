@@ -150,7 +150,7 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     }
 
     @computed get showingAllData() {
-        return _.flatten(this.tableData).length === this.allData.length;
+        return this.tableData.length === this.allData.length;
     }
 
     @action public setFilter(

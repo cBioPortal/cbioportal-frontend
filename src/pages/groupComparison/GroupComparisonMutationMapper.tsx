@@ -16,6 +16,7 @@ import _ from 'lodash';
 import {
     ComparisonGroup,
     getProteinChangeToMutationRowData,
+    SIGNIFICANT_QVALUE_THRESHOLD,
 } from './GroupComparisonUtils';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'shared/components/mutationMapper/DriverAnnotationProteinImpactTypeBadgeSelector';
 import { IAnnotationFilterSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
@@ -23,7 +24,9 @@ import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenu
 import styles from './styles.module.scss';
 import { LegendColorCodes } from 'shared/components/mutationMapper/LegendColorCodes';
 import { ProteinImpactWithoutVusMutationType } from 'cbioportal-frontend-commons';
-import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import MutationTable, {
+    ExtendedMutationTableColumnType,
+} from 'shared/components/mutationTable/MutationTable';
 import GroupComparisonMutationTable from './GroupComparisonMutationTable';
 import MutationMapperDataStore, {
     PROTEIN_CHANGE_FILTER_ID,
@@ -34,7 +37,7 @@ import { Sample } from 'cbioportal-ts-api-client';
 import { FisherExactTwoSidedTestLabel } from './FisherExactTwoSidedTestLabel';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
-import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL } from '../../shared/components/paginationControls/PaginationControls';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -46,23 +49,65 @@ interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
         [groupUid: string]: string[];
     };
     sampleSet: ComplexKeyMap<Sample>;
-    groupToProfiledPatientCounts: {
-        [groupUid: string]: number;
-    };
+    profiledPatientCounts: number[];
 }
 
 @observer
 export default class GroupComparisonMutationMapper extends MutationMapper<
     IGroupComparisonMutationMapperProps
 > {
-    @observable.ref _enrichedGroups: string[] = this.props.groups.map(
-        group => group.nameWithOrdinal
-    );
-    @observable significanceFilter: boolean = false;
+    @observable.ref _selectedGroupsForEnrichedInFilter: string[];
+    @observable significanceFilterEnabled: boolean = false;
 
     constructor(props: IGroupComparisonMutationMapperProps) {
         super(props);
         makeObservable(this);
+
+        this._selectedGroupsForEnrichedInFilter = this.props.groups.map(
+            group => group.nameWithOrdinal
+        );
+    }
+
+    @computed get paginationStatusText(): string {
+        let firstVisibleItemDisp;
+        let lastVisibleItemDisp;
+        let dataStore = this.props.store.dataStore as MutationMapperDataStore;
+
+        if (dataStore.tableData.length === 0) {
+            firstVisibleItemDisp = 0;
+            lastVisibleItemDisp = 0;
+        } else {
+            firstVisibleItemDisp =
+                dataStore.itemsPerPage === PAGINATION_SHOW_ALL
+                    ? 1
+                    : dataStore.page * dataStore.itemsPerPage + 1;
+
+            lastVisibleItemDisp =
+                dataStore.itemsPerPage === PAGINATION_SHOW_ALL
+                    ? dataStore.visibleData.length
+                    : firstVisibleItemDisp + dataStore.visibleData.length - 1;
+        }
+
+        // if there are multiple mutations represented, use Mutations else Mutation in label
+        const mutationsLabel =
+            _.flatten(dataStore.tableData).length === 1
+                ? 'Mutation'
+                : 'Mutations';
+
+        // text originally shows Mutation(s) based on rows, since the rows represent protein changes now, replace Mutation(s)
+        // with Protein Change(s) with {mutationsLabel}
+        let itemsLabel =
+            dataStore.tableData.length === 1
+                ? `Protein Change with ${mutationsLabel}`
+                : `Protein Changes with ${mutationsLabel}`;
+
+        if (itemsLabel.length) {
+            // we need to prepend the space here instead of within the actual return value
+            // to avoid unnecessary white-space at the end of the string
+            itemsLabel = ` ${itemsLabel}`;
+        }
+
+        return `Showing ${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${dataStore.tableData.length}${itemsLabel}`;
     }
 
     protected legendColorCodes = (
@@ -75,21 +120,6 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     protected get view3dButton(): JSX.Element | null {
         return null;
     }
-
-    protected formatPaginationStatusText = (text: string) => {
-        let dataStore = this.props.store.dataStore as MutationMapperDataStore;
-        const mutationsLabel =
-            _.flatten(dataStore.tableData).length === 1
-                ? 'Mutation'
-                : 'Mutations';
-
-        return text.includes('Mutations')
-            ? text.replace(
-                  'Mutations',
-                  `Protein Changes with ${mutationsLabel}`
-              )
-            : text.replace('Mutation', `Protein Change with ${mutationsLabel}`);
-    };
 
     protected get mutationTableComponent() {
         return (
@@ -137,48 +167,44 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 storeColumnVisibility={this.props.storeColumnVisibility}
                 namespaceColumns={this.props.store.namespaceColumnConfig}
                 columns={this.columns}
-                profiledPatientCountsByGroup={
-                    this.props.groupToProfiledPatientCounts
-                }
+                profiledPatientCounts={this.props.profiledPatientCounts}
                 groups={this.props.groups}
-                formatPaginationStatusText={this.formatPaginationStatusText}
                 showTotalMutationCountsInCountHeader={true}
                 sampleSet={this.props.sampleSet}
                 customControls={this.tableCustomControls}
-                getRowDataByProteinChange={
-                    this.rowDataByProteinChangeForEnrichedGroups
-                }
-                initialSortColumn={'p-Value'}
+                rowDataByProteinChange={this.rowDataByProteinChange}
+                initialSortColumn={'q-Value'}
                 initialSortDirection={'asc'}
+                paginationProps={Object.assign(
+                    MutationTable.defaultProps.paginationProps,
+                    { textBeforeButtons: this.paginationStatusText }
+                )}
             />
         );
     }
 
     @computed get rowDataByProteinChange() {
-        let dataStore = this.props.store.dataStore as MutationMapperDataStore;
-        let mutationsByProteinChange = _.values(
-            _.groupBy(_.flatten(dataStore.allData), d => d.proteinChange)
-        );
         return getProteinChangeToMutationRowData(
-            mutationsByProteinChange,
-            this.mutatedCountsByProteinChangeForGroup,
-            this.props.groupToProfiledPatientCounts,
+            this.props.store.dataStore.allData,
+            this.mutationsGroupedByProteinChangeForGroup,
+            this.props.profiledPatientCounts,
             this.props.groups
         );
     }
 
-    @autobind
-    protected rowDataByProteinChangeForEnrichedGroups():
-        | {
-              [proteinChange: string]: ComparisonMutationsRow;
-          }
-        | {} {
-        return _.pickBy(this.rowDataByProteinChange, v => {
-            return this.significanceFilter
-                ? this._enrichedGroups.includes(v.enrichedGroup) &&
-                      v.qValue < 0.05
-                : this._enrichedGroups.includes(v.enrichedGroup);
-        });
+    @computed get selectedProteinChanges() {
+        return _(this.rowDataByProteinChange)
+            .filter(d => {
+                return this.significanceFilterEnabled
+                    ? this._selectedGroupsForEnrichedInFilter.includes(
+                          d.enrichedGroup
+                      ) && d.qValue < SIGNIFICANT_QVALUE_THRESHOLD
+                    : this._selectedGroupsForEnrichedInFilter.includes(
+                          d.enrichedGroup
+                      );
+            })
+            .map(d => d.proteinChange)
+            .value();
     }
 
     @computed get columns(): ExtendedMutationTableColumnType[] {
@@ -326,13 +352,12 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 
     @autobind
     protected mutationsGroupedByProteinImpactTypeForGroup(groupIndex: number) {
-        let sortedFilteredGroupedData = this
-            .sortedFilteredDataWithoutProteinImpactTypeFilter;
-
         // group the filtered data by comparison group
-        sortedFilteredGroupedData = groupDataByGroupFilters(
+        const sortedFilteredGroupedData = groupDataByGroupFilters(
             this.store.dataStore.groupFilters,
-            sortedFilteredGroupedData,
+            _.flatten(
+                this.sortedFilteredDataWithoutProteinImpactTypeFilter
+            ).map(d => [d]),
             this.store.dataStore.applyFilter
         );
 
@@ -360,29 +385,27 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 
     @autobind
     protected mutationsGroupedByProteinChangeForGroup(groupIndex: number) {
-        let allGroupedData = this.store.dataStore.allData;
-
         // group all data by comparison group
-        allGroupedData = groupDataByGroupFilters(
+        const allGroupedData = groupDataByGroupFilters(
             this.store.dataStore.groupFilters,
-            allGroupedData,
+            _.flatten(this.store.dataStore.allData).map(d => [d]),
             this.store.dataStore.applyFilter
         );
 
-        let proteinChanges = _(allGroupedData[groupIndex].data)
+        const filters = _(allGroupedData[groupIndex].data)
             .map((d: { proteinChange: any }[]) => d[0].proteinChange)
-            .uniq()
+            .uniq() // get the unique protein changes in the data
+            .map(value => ({
+                // map to filters
+                group: value,
+                filter: {
+                    type: DataFilterType.PROTEIN_CHANGE,
+                    values: [value],
+                },
+            }))
             .value();
 
-        const filters = proteinChanges.map(value => ({
-            group: value,
-            filter: {
-                type: DataFilterType.PROTEIN_CHANGE,
-                values: [value],
-            },
-        }));
-
-        let groupedData = groupDataByGroupFilters(
+        const groupedData = groupDataByGroupFilters(
             filters,
             allGroupedData[groupIndex].data,
             this.store.dataStore.applyFilter
@@ -391,35 +414,15 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         return _.keyBy(groupedData, d => d.group);
     }
 
-    @autobind
-    protected mutatedCountsByProteinChangeForGroup(
-        groupIndex: number
-    ): {
-        [proteinChange: string]: number;
-    } {
-        const map: { [proteinChange: string]: number } = {};
-
-        _.forIn(
-            this.mutationsGroupedByProteinChangeForGroup(groupIndex),
-            (v, k) => {
-                const uniqueMutations = _.uniqBy(v.data, d => d[0].patientId);
-                map[v.group] = uniqueMutations.length;
-            }
-        );
-
-        return map;
-    }
-
-    protected get fisherExactTwoSidedTestLabel(): JSX.Element | null {
+    @computed
+    protected get plotFooter(): JSX.Element {
         return (
             <FisherExactTwoSidedTestLabel
                 dataStore={
                     this.props.store.dataStore as MutationMapperDataStore
                 }
                 groups={this.props.groups}
-                groupToProfiledPatientCounts={
-                    this.props.groupToProfiledPatientCounts
-                }
+                profiledPatientCounts={this.props.profiledPatientCounts}
             />
         );
     }
@@ -447,9 +450,9 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 <label className="checkbox-inline" style={{ marginRight: 7 }}>
                     <input
                         type="checkbox"
-                        checked={this.significanceFilter}
+                        checked={this.significanceFilterEnabled}
                         onClick={this.toggleSignificanceFilter}
-                        data-test="SwapAxes"
+                        data-test="significantOnlyCheckbox"
                     />
                     Significant only
                 </label>
@@ -467,15 +470,21 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     @computed get selectedValues() {
-        return this._enrichedGroups.map(id => ({ value: id }));
+        return this._selectedGroupsForEnrichedInFilter.map(id => ({
+            value: id,
+        }));
     }
 
     @action.bound
     onChange(values: { value: string }[]) {
-        this._enrichedGroups = _.map(values, datum => datum.value);
+        this._selectedGroupsForEnrichedInFilter = _.map(
+            values,
+            datum => datum.value
+        );
         onFilterOptionSelect(
-            _.keys(this.rowDataByProteinChangeForEnrichedGroups()),
-            this._enrichedGroups.length === 2 && !this.significanceFilter,
+            this.selectedProteinChanges,
+            this.selectedProteinChanges.length ===
+                _.keys(this.rowDataByProteinChange).length,
             this.store.dataStore,
             DataFilterType.PROTEIN_CHANGE,
             PROTEIN_CHANGE_FILTER_ID
@@ -484,10 +493,11 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 
     @action.bound
     toggleSignificanceFilter() {
-        this.significanceFilter = !this.significanceFilter;
+        this.significanceFilterEnabled = !this.significanceFilterEnabled;
         onFilterOptionSelect(
-            _.keys(this.rowDataByProteinChangeForEnrichedGroups()),
-            this._enrichedGroups.length === 2 && !this.significanceFilter,
+            this.selectedProteinChanges,
+            this.selectedProteinChanges.length ===
+                _.keys(this.rowDataByProteinChange).length,
             this.store.dataStore,
             DataFilterType.PROTEIN_CHANGE,
             PROTEIN_CHANGE_FILTER_ID
@@ -497,10 +507,10 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     @action.bound
     protected resetFilters() {
         super.resetFilters();
-        this._enrichedGroups = this.props.groups.map(
+        this._selectedGroupsForEnrichedInFilter = this.props.groups.map(
             group => group.nameWithOrdinal
         );
-        this.significanceFilter = false;
+        this.significanceFilterEnabled = false;
     }
 
     @action.bound

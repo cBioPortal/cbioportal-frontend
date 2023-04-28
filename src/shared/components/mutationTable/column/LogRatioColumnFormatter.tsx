@@ -8,9 +8,9 @@ export default class LogRatioColumnFormatter {
         rowDataByProteinChange: {
             [proteinChange: string]: ComparisonMutationsRow;
         },
-        d: Mutation[]
+        mutations: Mutation[]
     ) {
-        const rowData = rowDataByProteinChange[d[0].proteinChange];
+        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
         return rowData.logRatio;
     }
@@ -19,10 +19,10 @@ export default class LogRatioColumnFormatter {
         rowDataByProteinChange: {
             [proteinChange: string]: ComparisonMutationsRow;
         },
-        d: Mutation[]
+        mutations: Mutation[]
     ) {
         return formatLogOddsRatio(
-            this.getLogRatioData(rowDataByProteinChange, d)
+            this.getLogRatioData(rowDataByProteinChange, mutations)
         );
     }
 
@@ -30,10 +30,12 @@ export default class LogRatioColumnFormatter {
         rowDataByProteinChange: {
             [proteinChange: string]: ComparisonMutationsRow;
         },
-        d: Mutation[]
+        mutations: Mutation[]
     ) {
         let content = (
-            <div>{this.getLogRatioTextValue(rowDataByProteinChange, d)}</div>
+            <span>
+                {this.getLogRatioTextValue(rowDataByProteinChange, mutations)}
+            </span>
         );
 
         return content;

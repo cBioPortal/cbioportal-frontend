@@ -364,16 +364,12 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    public readonly groupToProfiledPatientCounts = remoteData({
+    public readonly profiledPatientCounts = remoteData({
         await: () => [this.groupToProfiledPatients],
         invoke: () => {
-            const map: { [groupIndex: number]: number } = {};
-            _.forIn(this.groupToProfiledPatients.result!, (p, i) => {
-                map[
-                    Object.keys(this.groupToProfiledPatients.result!).indexOf(i)
-                ] = p.length;
-            });
-            return Promise.resolve(map);
+            return Promise.resolve(
+                _.map(this.groupToProfiledPatients.result!, g => g.length)
+            );
         },
     });
 

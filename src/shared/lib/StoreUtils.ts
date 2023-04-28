@@ -1175,19 +1175,14 @@ export function mergeDiscreteCNAData(
 }
 
 export function mergeMutations(
-    mutationData: MobxPromise<Mutation[]> | Mutation[],
+    mutationData: Mutation[],
     generateMutationId: MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent
 ) {
-    const mutationDataResult: Mutation[] | undefined =
-        mutationData instanceof MobxPromise
-            ? mutationData.result
-            : mutationData;
-
     const idToMutations: { [key: string]: Mutation[] } = {};
 
     updateIdToMutationsMap(
         idToMutations,
-        mutationDataResult,
+        mutationData,
         generateMutationId,
         false
     );
@@ -1287,7 +1282,7 @@ export function generateStructuralVariantId(s: StructuralVariant): string {
 }
 
 export function generateMutationIdByGeneAndProteinChange(m: Mutation): string {
-    return [m.gene.hugoGeneSymbol, m.proteinChange].join('_');
+    return `${m.gene.hugoGeneSymbol}_${m.proteinChange}`;
 }
 
 export function generateMutationIdByGeneAndProteinChangeAndEvent(

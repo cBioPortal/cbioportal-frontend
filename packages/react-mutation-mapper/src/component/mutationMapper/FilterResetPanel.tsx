@@ -35,9 +35,7 @@ export class FilterResetPanel extends React.Component<
                 data-test="filter-reset-panel"
             >
                 <span style={{ verticalAlign: 'middle' }}>
-                    <span style={{ fontWeight: 'bold' }}>
-                        {this.props.filterInfo}
-                    </span>
+                    <strong>{this.props.filterInfo}</strong>
                     <button
                         className={this.props.buttonClass}
                         style={{ cursor: 'pointer', marginLeft: 6 }}
@@ -46,7 +44,7 @@ export class FilterResetPanel extends React.Component<
                         {this.props.buttonText}
                     </button>
                     <br />
-                    <span>{this.props.additionalInfo}</span>
+                    {this.props.additionalInfo}
                 </span>
             </div>
         );

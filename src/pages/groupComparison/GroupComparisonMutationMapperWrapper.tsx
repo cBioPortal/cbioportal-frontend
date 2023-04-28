@@ -24,7 +24,7 @@ import styles from './styles.module.scss';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 import { generateMutationIdByGeneAndProteinChange } from 'shared/lib/StoreUtils';
 
-interface IGroupComparisonMutationsTabPlotProps {
+interface IGroupComparisonMutationMapperWrapperProps {
     store: GroupComparisonStore;
     onScaleToggle: (selectedScale: AxisScale) => void;
     mutations?: Mutation[];
@@ -32,13 +32,13 @@ interface IGroupComparisonMutationsTabPlotProps {
 }
 
 @observer
-export default class GroupComparisonMutationsTabPlot extends React.Component<
-    IGroupComparisonMutationsTabPlotProps,
+export default class GroupComparisonMutationMapperWrapper extends React.Component<
+    IGroupComparisonMutationMapperWrapperProps,
     {}
 > {
     private userSelectionStore: MutationMapperUserSelectionStore;
 
-    constructor(props: IGroupComparisonMutationsTabPlotProps) {
+    constructor(props: IGroupComparisonMutationMapperWrapperProps) {
         super(props);
         makeObservable(this);
         this.userSelectionStore = new MutationMapperUserSelectionStore();
@@ -50,7 +50,7 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             {
                 ...this.props.filters,
                 countUniqueMutations: this.countUniqueMutationsInGroup,
-                mergeMutationsForTableBy: generateMutationIdByGeneAndProteinChange,
+                mergeMutationsBy: generateMutationIdByGeneAndProteinChange,
                 filterMutationsBySelectedTranscript: true,
             }
         );
@@ -136,14 +136,13 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
             this.mutationMapperToolStore.mutationMapperStores,
             this.props.store.coverageInformation,
             this.props.store.groupToProfiledPatients,
-            this.props.store.groupToProfiledPatientCounts,
+            this.props.store.profiledPatientCounts,
         ],
         render: () => {
             const mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
                 this.props.store.activeMutationMapperGene!.hugoGeneSymbol
             );
             if (mutationMapperStore) {
-                mutationMapperStore.uniqueSampleKeyToTumorType = this.props.store.uniqueSampleKeyToTumorType.result!;
                 return (
                     <div
                         data-test="ComparisonPageMutationsTabPlot"
@@ -217,9 +216,8 @@ export default class GroupComparisonMutationsTabPlot extends React.Component<
                                 this.props.store.groupToProfiledPatients.result!
                             }
                             sampleSet={this.props.store.sampleMap.result!}
-                            groupToProfiledPatientCounts={
-                                this.props.store.groupToProfiledPatientCounts
-                                    .result!
+                            profiledPatientCounts={
+                                this.props.store.profiledPatientCounts.result!
                             }
                         />
                     </div>

@@ -153,7 +153,6 @@ export interface IMutationTableProps {
         column: Column<Mutation[]>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
-    formatPaginationStatusText?: (text: string) => string;
     showTotalMutationCountsInCountHeader?: boolean;
     customControls?: JSX.Element;
 }
@@ -1366,9 +1365,6 @@ export default class MutationTable<
                     this.props.columnToHeaderFilterIconModal
                 }
                 deactivateColumnFilter={this.props.deactivateColumnFilter}
-                formatPaginationStatusText={
-                    this.props.formatPaginationStatusText
-                }
                 showTotalMutationCountsInCountHeader={
                     this.props.showTotalMutationCountsInCountHeader
                 }

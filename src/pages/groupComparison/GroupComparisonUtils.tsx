@@ -1066,27 +1066,33 @@ const AlterationMenuHeader: React.FunctionComponent<{
     }
 );
 
+// Benjamini-Hochberg procedure q-value, used to show significant association of mutations enriched in a group
+export const SIGNIFICANT_QVALUE_THRESHOLD = 0.05;
+
 export function getProteinChangeToMutationRowData(
     tableData: Mutation[][],
-    mutatedCountsByProteinChangeForGroup: (
+    mutationsGroupedByProteinChangeForGroup: (
         groupIndex: number
-    ) => {
-        [proteinChange: string]: number;
-    },
-    profiledPatientsCounts: { [groupIndex: number]: number },
+    ) => _.Dictionary<{
+        group: string;
+        data: any[];
+    }>,
+    profiledPatientsCounts: number[],
     groups: ComparisonGroup[]
 ): {
     [proteinChange: string]: ComparisonMutationsRow;
 } {
     let rowData = tableData.map(proteinChangeRow => {
         let groupAMutatedCount: number =
-            mutatedCountsByProteinChangeForGroup(0)[
-                proteinChangeRow[0].proteinChange
-            ] || 0;
+            getMutatedCountsByProteinChangeForGroup(
+                mutationsGroupedByProteinChangeForGroup,
+                0
+            )[proteinChangeRow[0].proteinChange] || 0;
         let groupBMutatedCount: number =
-            mutatedCountsByProteinChangeForGroup(1)[
-                proteinChangeRow[0].proteinChange
-            ] || 0;
+            getMutatedCountsByProteinChangeForGroup(
+                mutationsGroupedByProteinChangeForGroup,
+                1
+            )[proteinChangeRow[0].proteinChange] || 0;
         let groupAMutatedPercentage: number =
             (groupAMutatedCount / profiledPatientsCounts[0]) * 100;
         let groupBMutatedPercentage: number =
@@ -1118,17 +1124,33 @@ export function getProteinChangeToMutationRowData(
         };
     });
 
-    rowData = _.sortBy(rowData, ['pValue']);
+    rowData = _.sortBy(rowData, r => r.pValue);
     const qValues = calculateQValues(_.map(rowData, d => d.pValue));
     rowData.forEach((d, i) => {
         d.qValue = qValues[i];
     });
 
-    const proteinChangeToRowData: {
-        [proteinChange: string]: ComparisonMutationsRow;
-    } = {};
-    rowData.forEach(o => {
-        proteinChangeToRowData[o['proteinChange']] = o;
+    return _.keyBy(rowData, d => d.proteinChange);
+}
+
+export function getMutatedCountsByProteinChangeForGroup(
+    mutationsGroupedByProteinChangeForGroup: (
+        groupIndex: number
+    ) => _.Dictionary<{
+        group: string;
+        data: any[];
+    }>,
+    groupIndex: number
+): {
+    [proteinChange: string]: number;
+} {
+    const map: { [proteinChange: string]: number } = {};
+
+    _.forIn(mutationsGroupedByProteinChangeForGroup(groupIndex), (v, k) => {
+        // mutations are unique by gene, protein change, patientId. mutations by gene and protein change are already grouped
+        const uniqueMutations = _.uniqBy(v.data, d => d[0].patientId);
+        map[v.group] = uniqueMutations.length;
     });
-    return proteinChangeToRowData;
+
+    return map;
 }

@@ -8,78 +8,75 @@ import _ from 'lodash';
 import { getTwoTailedPValue } from 'shared/lib/FisherExactTestCalculator';
 import { countUniqueMutations } from 'shared/lib/MutationUtils';
 import { formatPercentValue } from 'cbioportal-utils';
+import intersect from 'fast_array_intersect';
 
 interface IFisherExactTwoSidedTestLabelProps {
     dataStore: MutationMapperDataStore;
     groups: ComparisonGroup[];
-    groupToProfiledPatientCounts: {
-        [groupUid: string]: number;
-    };
+    profiledPatientCounts: number[];
 }
 
 export const FisherExactTwoSidedTestLabel: React.FC<IFisherExactTwoSidedTestLabelProps> = observer(
     ({
         dataStore,
         groups,
-        groupToProfiledPatientCounts,
+        profiledPatientCounts,
     }: IFisherExactTwoSidedTestLabelProps) => {
         const mutationCountForActiveGeneGroupA = countUniqueMutations(
-            _.intersection(
+            intersect([
                 _.flatten(dataStore.tableData),
-                _.flatten(dataStore.sortedFilteredGroupedData[0].data)
-            )
+                _.flatten(dataStore.sortedFilteredGroupedData[0].data),
+            ])
         );
         const mutationCountForActiveGeneGroupB = countUniqueMutations(
-            _.intersection(
+            intersect([
                 _.flatten(dataStore.tableData),
-                _.flatten(dataStore.sortedFilteredGroupedData[1].data)
-            )
+                _.flatten(dataStore.sortedFilteredGroupedData[1].data),
+            ])
         );
 
-        const getFisherTestLabel = () => {
-            if (dataStore.sortedFilteredSelectedData.length > 0) {
-                return 'Fisher Exact Two-Sided Test p-value for selected mutations - ';
-            } else if (
-                dataStore.sortedFilteredData.length < dataStore.allData.length
-            ) {
-                return 'Fisher Exact Two-Sided Test p-value for filtered mutations - ';
-            }
-            return 'Fisher Exact Two-Sided Test p-value for all mutations - ';
-        };
+        const getFisherTestLabel =
+            dataStore.sortedFilteredSelectedData.length > 0
+                ? 'Fisher Exact Two-Sided Test p-value for selected mutations - '
+                : dataStore.sortedFilteredData.length < dataStore.allData.length
+                ? 'Fisher Exact Two-Sided Test p-value for filtered mutations - '
+                : 'Fisher Exact Two-Sided Test p-value for all mutations - ';
 
         return (
-            <div style={{ fontWeight: 'bold' }}>
-                {getFisherTestLabel()}
-                {groups[0].nameWithOrdinal}, {mutationCountForActiveGeneGroupA}{' '}
-                (
-                {formatPercentValue(
-                    (mutationCountForActiveGeneGroupA /
-                        groupToProfiledPatientCounts[0]) *
-                        100,
-                    2
-                )}
-                %) vs {groups[1].nameWithOrdinal},{' '}
-                {mutationCountForActiveGeneGroupB} (
-                {formatPercentValue(
-                    (mutationCountForActiveGeneGroupB /
-                        groupToProfiledPatientCounts[1]) *
-                        100,
-                    2
-                )}
-                %):{' '}
-                {toConditionalPrecisionWithMinimum(
-                    getTwoTailedPValue(
-                        mutationCountForActiveGeneGroupA,
-                        groupToProfiledPatientCounts[0] -
+            <div>
+                <strong>
+                    {getFisherTestLabel}
+                    {groups[0].nameWithOrdinal},{' '}
+                    {mutationCountForActiveGeneGroupA} (
+                    {formatPercentValue(
+                        (mutationCountForActiveGeneGroupA /
+                            profiledPatientCounts[0]) *
+                            100,
+                        2
+                    )}
+                    %) vs {groups[1].nameWithOrdinal},{' '}
+                    {mutationCountForActiveGeneGroupB} (
+                    {formatPercentValue(
+                        (mutationCountForActiveGeneGroupB /
+                            profiledPatientCounts[1]) *
+                            100,
+                        2
+                    )}
+                    %):{' '}
+                    {toConditionalPrecisionWithMinimum(
+                        getTwoTailedPValue(
                             mutationCountForActiveGeneGroupA,
-                        mutationCountForActiveGeneGroupB,
-                        groupToProfiledPatientCounts[1] -
-                            mutationCountForActiveGeneGroupB
-                    ),
-                    3,
-                    0.01,
-                    -10
-                )}
+                            profiledPatientCounts[0] -
+                                mutationCountForActiveGeneGroupA,
+                            mutationCountForActiveGeneGroupB,
+                            profiledPatientCounts[1] -
+                                mutationCountForActiveGeneGroupB
+                        ),
+                        3,
+                        0.01,
+                        -10
+                    )}
+                </strong>
             </div>
         );
     }
