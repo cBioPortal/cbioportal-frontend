@@ -8066,9 +8066,8 @@ export class StudyViewPageStore
                                   this.survivalDescriptions.result![prefix][0]
                                       .displayName
                               )
-                            : `${prefix} Survival`;
+                            : `${prefix}`;
                     plotTitle += ' (months)';
-
                     const survivalStatusAttribute = this
                         .clinicalAttributeIdToClinicalAttribute.result![
                         `${prefix}_STATUS`

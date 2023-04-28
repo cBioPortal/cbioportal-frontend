@@ -771,6 +771,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             this.selectedSurvivalPlotPrefix
                                         ]
                                     }
+                                    compactMode={false}
                                 />
                             </div>
                         </div>

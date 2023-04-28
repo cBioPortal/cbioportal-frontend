@@ -58,6 +58,7 @@ export interface IChartHeaderProps {
         hugoGeneSymbols?: string[];
         treatmentUniqueKeys?: string[];
     }) => void;
+    isCompactSurvivalChart?: boolean;
 }
 
 export interface ChartControls {
@@ -705,7 +706,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         this.props.description
                                             ? this.props.description.description
                                             : '',
-                                        this.props.chartMeta.uniqueKey
+                                        this.props.chartMeta.uniqueKey,
+                                        this.props.isCompactSurvivalChart
                                     )}
                                     destroyTooltipOnHide={true}
                                 >
