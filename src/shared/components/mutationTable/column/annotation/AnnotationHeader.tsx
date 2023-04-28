@@ -420,7 +420,12 @@ const AnnotationHeader: React.FunctionComponent<{
                 >
                     <img
                         src={require('../../../../../../src/rootImages/vue_logo.png')}
-                        style={{ height: 14, width: 14, marginLeft: 6 }}
+                        style={{
+                            height: 14,
+                            width: 14,
+                            marginLeft: 6,
+                            marginRight: 1,
+                        }}
                     />
                 </DefaultTooltip>
             )}
@@ -441,7 +446,7 @@ const AnnotationHeader: React.FunctionComponent<{
                         style={{
                             height: 14,
                             width: 14,
-                            marginLeft: 6,
+                            marginLeft: 7,
                             marginRight: 1,
                         }}
                     />
