@@ -76,6 +76,7 @@ export type MutationMapperProps = {
     oncoKbUrl?: string;
     enableOncoKb?: boolean;
     enableCivic?: boolean;
+    enableRevue?: boolean;
     cachePostMethodsOnClients?: boolean;
     apiCacheLimit?: number;
     showTranscriptDropDown?: boolean;
@@ -121,6 +122,7 @@ export function initDefaultMutationMapperStore(props: MutationMapperProps) {
             oncoKbUrl: props.oncoKbUrl,
             enableCivic: props.enableCivic,
             enableOncoKb: props.enableOncoKb,
+            enableRevue: props.enableRevue,
             cachePostMethodsOnClients: props.cachePostMethodsOnClients,
             apiCacheLimit: props.apiCacheLimit,
             getMutationCount: props.getMutationCount,
@@ -146,6 +148,7 @@ export default class MutationMapper<
         showTranscriptDropDown: false,
         enableCivic: true,
         enableOncoKb: true,
+        enableRevue: true,
         filterMutationsBySelectedTranscript: false,
         cachePostMethodsOnClients: true,
     };
@@ -302,6 +305,7 @@ export default class MutationMapper<
                     oncoKbCancerGenes={this.store.oncoKbCancerGenes}
                     myCancerGenomeData={this.store.myCancerGenomeData}
                     enableCivic={this.props.enableCivic}
+                    enableRevue={this.props.enableRevue}
                     civicGenes={this.store.civicGenes}
                     civicVariants={this.store.civicVariants}
                     indexedMyVariantInfoAnnotations={

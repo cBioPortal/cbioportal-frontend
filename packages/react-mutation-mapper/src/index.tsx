@@ -52,6 +52,7 @@ export {
     default as ProteinChange,
     proteinChangeSortMethod,
 } from './component/column/ProteinChange';
+export { RevueCell, RevueTooltipContent } from './component/revue/Revue';
 export {
     default as Signal,
     getSignalData,

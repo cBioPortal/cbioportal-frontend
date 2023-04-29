@@ -14,3 +14,15 @@
     font-style: italic;
     margin-left: 5px;
 }
+
+.revueIcon {
+    visibility: hidden;
+}
+
+.proteinChangeCell {
+    display: block;
+}
+
+.proteinChangeCell:hover .revueIcon {
+    visibility: visible;
+}

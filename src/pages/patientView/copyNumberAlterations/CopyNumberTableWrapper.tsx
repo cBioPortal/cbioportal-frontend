@@ -269,6 +269,7 @@ export default class CopyNumberTableWrapper extends React.Component<
                         enableCivic: getServerConfig().show_civic as boolean,
                         enableMyCancerGenome: false,
                         enableHotspot: false,
+                        enableRevue: false,
                         userDisplayName: getServerConfig().user_display_name,
                         studyIdToStudy: this.pageStore.studyIdToStudy.result,
                     })}

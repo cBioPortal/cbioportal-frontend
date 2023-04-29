@@ -474,3 +474,9 @@ export function calcProteinChangeSortValue(
         return null;
     }
 }
+
+export function isGermlineMutationStatus(mutationStatus: string | null) {
+    return (
+        mutationStatus && mutationStatus.toLowerCase().indexOf('germline') > -1
+    );
+}

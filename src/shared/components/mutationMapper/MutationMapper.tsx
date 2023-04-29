@@ -103,6 +103,7 @@ export interface IMutationMapperProps {
     enableHotspot?: boolean;
     enableMyCancerGenome?: boolean;
     enableCivic?: boolean;
+    enableRevue?: boolean;
     ptmSources?: string[];
 }
 

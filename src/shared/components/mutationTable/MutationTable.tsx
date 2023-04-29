@@ -100,6 +100,7 @@ export interface IMutationTableProps {
     enableMyCancerGenome?: boolean;
     enableHotspot?: boolean;
     enableCivic?: boolean;
+    enableRevue?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -287,6 +288,7 @@ export default class MutationTable<
         enableMyCancerGenome: true,
         enableHotspot: true,
         enableCivic: false,
+        enableRevue: true,
     };
 
     constructor(props: P) {
@@ -751,7 +753,11 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
             name: MutationTableColumnType.PROTEIN_CHANGE,
-            render: ProteinChangeColumnFormatter.renderWithMutationStatus,
+            render: d =>
+                ProteinChangeColumnFormatter.renderWithMutationStatus(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 ProteinChangeColumnFormatter.getSortValue(d),
@@ -760,7 +766,11 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {
             name: MutationTableColumnType.MUTATION_TYPE,
-            render: MutationTypeColumnFormatter.renderFunction,
+            render: d =>
+                MutationTypeColumnFormatter.renderFunction(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
             download: MutationTypeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 MutationTypeColumnFormatter.getDisplayValue(d),
@@ -888,7 +898,10 @@ export default class MutationTable<
                         enableMyCancerGenome: this.props
                             .enableMyCancerGenome as boolean,
                         enableHotspot: this.props.enableHotspot as boolean,
+                        enableRevue: this.props.enableRevue as boolean,
                         userDisplayName: this.props.userDisplayName,
+                        indexedVariantAnnotations: this.props
+                            .indexedVariantAnnotations,
                         resolveTumorType: this.resolveTumorType,
                     })}
                 </span>
@@ -910,6 +923,7 @@ export default class MutationTable<
                             this.props.usingPublicOncoKbInstance,
                             this.props.civicGenes,
                             this.props.civicVariants,
+                            this.props.indexedVariantAnnotations,
                             this.resolveTumorType
                         );
 
@@ -951,6 +965,7 @@ export default class MutationTable<
                     this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,
                     this.props.civicVariants,
+                    this.props.indexedVariantAnnotations,
                     this.resolveTumorType
                 );
             },
@@ -964,6 +979,7 @@ export default class MutationTable<
                     this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,
                     this.props.civicVariants,
+                    this.props.indexedVariantAnnotations,
                     this.resolveTumorType
                 );
             },
