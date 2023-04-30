@@ -230,7 +230,7 @@ export function getAnnotationData(
                     ? getVariantAnnotation(
                           mutation,
                           indexedVariantAnnotations.result
-                      )?.annotation_summary.vues
+                      )?.annotation_summary?.vues
                     : undefined,
         };
 
