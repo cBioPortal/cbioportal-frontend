@@ -82,7 +82,7 @@ export default class ProteinChangeColumnFormatter {
                 ? getVariantAnnotation(
                       mutations[0],
                       indexedVariantAnnotations.result
-                  )?.annotation_summary.vues
+                  )?.annotation_summary?.vues
                 : undefined;
 
         const isGermlineMutation = isGermlineMutationStatus(
