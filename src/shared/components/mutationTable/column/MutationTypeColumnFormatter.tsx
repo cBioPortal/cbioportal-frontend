@@ -168,7 +168,7 @@ export default class MutationTypeColumnFormatter {
                 ? getVariantAnnotation(
                       mutations[0],
                       indexedVariantAnnotations.result
-                  )?.annotation_summary.vues
+                  )?.annotation_summary?.vues
                 : undefined;
 
         // use actual value for tooltip
