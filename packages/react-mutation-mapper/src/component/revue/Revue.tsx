@@ -2,6 +2,7 @@ import React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { Vues as VUE } from 'genome-nexus-ts-api-client';
 import annotationStyles from '../column/annotation.module.scss';
+import revueLogo from '../../images/vue_logo.png';
 
 export const RevueTooltipContent: React.FunctionComponent<{
     vue: VUE;
@@ -59,12 +60,7 @@ export const RevueCell: React.FunctionComponent<{
                 className={`${annotationStyles['annotation-item']}`}
                 style={{ display: 'inline-flex' }}
             >
-                <img
-                    src={'../../images/vue_logo.png'}
-                    alt="reVUE logo"
-                    width={14}
-                    height={14}
-                />
+                <img src={revueLogo} alt="reVUE logo" width={14} height={14} />
             </span>
         </DefaultTooltip>
     );
