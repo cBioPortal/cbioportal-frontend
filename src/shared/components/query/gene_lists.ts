@@ -163,7 +163,7 @@ const gene_lists = [
             'PEG3',
         ],
     },
-        {
+    {
         id: 'General: Cell Cycle - TCGA PanCan Pathways',
         genes: [
             'CDKN1A',
