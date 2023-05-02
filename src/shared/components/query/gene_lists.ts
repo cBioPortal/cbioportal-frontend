@@ -216,15 +216,7 @@ const gene_lists = [
     },
     {
         id: 'General: MYC - TCGA PanCan Pathways',
-        genes: [
-            'MAX',
-            'MGA',
-            'MLX',
-            'MNT',
-            'MXI1',
-            'MYC',
-            'MYCN',
-        ],
+        genes: ['MAX', 'MGA', 'MLX', 'MNT', 'MXI1', 'MYC', 'MYCN'],
     },
     {
         id: 'General: NOTCH - TCGA PanCan Pathways',
@@ -263,11 +255,7 @@ const gene_lists = [
     },
     {
         id: 'General: NRF2 - TCGA PanCan Pathways',
-        genes: [
-            'NFE2L2',
-            'KEAP1',
-            'CUL3',
-        ],
+        genes: ['NFE2L2', 'KEAP1', 'CUL3'],
     },
     {
         id: 'General: PI3K - TCGA PanCan Pathways',
@@ -354,19 +342,12 @@ const gene_lists = [
     },
     {
         id: 'General: TP53 - TCGA PanCan Pathways',
-        genes: [
-            'TP53',
-            'MDM2',
-            'MDM4',
-            'ATM',
-            'CHEK2',
-            'RPS6KA3',
-        ],
+        genes: ['TP53', 'MDM2', 'MDM4', 'ATM', 'CHEK2', 'RPS6KA3'],
     },
     {
         id: 'General: WNT - TCGA PanCan Pathways',
         genes: [
-        SFRP1
+            'SFRP1',
             'SFRP2',
             'SFRP4',
             'SFRP5',
@@ -392,7 +373,7 @@ const gene_lists = [
             'TCF7',
             'TCF7L2',
         ],
-    }, 
+    },
     {
         id: 'General: Cell Cycle Control',
         genes: [
