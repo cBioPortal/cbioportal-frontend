@@ -24,6 +24,7 @@ import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { getColor } from 'cbioportal-frontend-commons';
 import ReactMarkdown from 'react-markdown';
+import { TimelineLegendItem } from 'cbioportal-clinical-timeline';
 
 const OTHER = 'Other';
 
@@ -145,6 +146,14 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
         'Med Onc Assessment',
     ];
 
+    const legend: TimelineLegendItem[] = [
+        { label: 'Indeterminate', color: '#ffffff' },
+        { label: 'Stable', color: '#dcdcdc' },
+        { label: 'Mixed', color: '#daa520' },
+        { label: 'Improving', color: 'rgb(44, 160, 44)' },
+        { label: 'Worsening', color: 'rgb(214, 39, 40)' },
+    ];
+
     // this differs from default in that on genie, we do NOT distinguish tracks based on subtype. we hide on subtype
     baseConfig.trackStructures = [
         ['TREATMENT', 'TREATMENT_TYPE', 'AGENT'],
@@ -155,6 +164,8 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
     baseConfig.trackEventRenderers = baseConfig.trackEventRenderers || [];
     baseConfig.trackEventRenderers.push({
         trackTypeMatch: /Med Onc Assessment|MedOnc/i,
+        legend,
+        attributeOrder: ['CURATED_CANCER_STATUS', 'CANCER_STATUS'],
         configureTrack: (cat: TimelineTrackSpecification) => {
             cat.label = 'Med Onc Assessment';
             const _getEventColor = (event: TimelineEvent) => {
@@ -167,7 +178,7 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
                     ['CURATED_CANCER_STATUS'],
                     [
                         { re: /indeter/i, color: '#ffffff' },
-                        { re: /stable/i, color: 'gainsboro' },
+                        { re: /stable/i, color: '#dcdcdc' },
                         { re: /mixed/i, color: 'goldenrod' },
                         {
                             re: /improving/i,
@@ -180,7 +191,6 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
                     ]
                 );
             };
-            cat.eventColorGetter = _getEventColor;
             cat.renderEvents = (events, y) => {
                 if (events.length === 1) {
                     const color = _getEventColor(events[0]);
@@ -203,6 +213,8 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
     // imaging track
     baseConfig.trackEventRenderers.push({
         trackTypeMatch: /IMAGING/i,
+        legend,
+        attributeOrder: ['CURATED_CANCER_STATUS', 'CANCER_STATUS'],
         configureTrack: (cat: TimelineTrackSpecification) => {
             cat.label = 'Imaging Assessment';
             if (cat.items && cat.items.length) {

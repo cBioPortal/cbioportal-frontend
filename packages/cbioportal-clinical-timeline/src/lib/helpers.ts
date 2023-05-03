@@ -1,7 +1,9 @@
 import {
     POINT_COLOR,
+    SegmentedAttributes,
     TimeLineColorGetter,
     TimelineEvent,
+    TimelineEventAttribute,
     TimelineTick,
     TimelineTrackSpecification,
     TimelineTrackType,
@@ -304,3 +306,34 @@ export const colorGetterFactory = (eventColorGetter?: TimeLineColorGetter) => {
         }
     };
 };
+
+export function segmentAndSortAttributesForTooltip(
+    attributes: TimelineEventAttribute[],
+    attributeOrder: string[]
+) {
+    const segmentedAttributes = attributes.reduce(
+        (agg: SegmentedAttributes, att) => {
+            if (attributeOrder?.includes(att.key)) {
+                agg.first.push(att);
+            } else {
+                agg.rest.push(att);
+            }
+            return agg;
+        },
+        { first: [], rest: [] }
+    );
+
+    // now we need to sort the first according to the provided attribute configuration
+    // make a map keyed by attr key for easy lookup
+    const attrMap = _.keyBy(segmentedAttributes.first, att => att.key);
+    // iterate through the configuration and get the attr object for
+    // each type
+    segmentedAttributes.first = _(attributeOrder)
+        .map(k => attrMap[k])
+        // we need to get rid of undefined if corresponding att is missing (sometimes is)
+        .compact()
+        .value();
+
+    // now overwrite attributes with first followed by rest list
+    return segmentedAttributes.first.concat(segmentedAttributes.rest);
+}
