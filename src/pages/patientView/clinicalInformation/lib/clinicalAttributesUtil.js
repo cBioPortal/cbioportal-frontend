@@ -150,6 +150,7 @@ function derive(clinicalData) {
         'SAMPLE_TYPE',
         'TUMOR_TISSUE_SITE',
         'TUMOR_TYPE',
+        'SAMPLE_TYPE_DETAILED',
     ]);
     if (caseTypeNormalized !== null) {
         let loc;
