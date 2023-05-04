@@ -2744,7 +2744,9 @@ export class StudyViewPageStore
     readonly hasRawDataForDownload = remoteData<boolean>({
         invoke: async () => {
             if (this.studyIds.length === 1) {
-                const response = await request(getStudyDownloadListUrl());
+                const response = await request(
+                    getStudyDownloadListUrl()
+                ).catch(err => Promise.resolve({ body: '' }));
                 return response.body.includes(this.studyIds[0]);
             } else {
                 return false;
