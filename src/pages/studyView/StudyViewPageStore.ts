@@ -6021,16 +6021,19 @@ export class StudyViewPageStore
             this.chartClinicalAttributes.result,
             (acc: { [id: string]: ChartMeta }, attribute) => {
                 const uniqueKey = getUniqueKey(attribute);
-                acc[uniqueKey] = {
-                    displayName: attribute.displayName,
-                    uniqueKey: uniqueKey,
-                    dataType: getChartMetaDataType(uniqueKey),
-                    patientAttribute: attribute.patientAttribute,
-                    description: attribute.description,
-                    priority: getPriorityByClinicalAttribute(attribute),
-                    renderWhenDataChange: false,
-                    clinicalAttribute: attribute,
-                };
+                const priority = getPriorityByClinicalAttribute(attribute);
+                if (priority > -1) {
+                    acc[uniqueKey] = {
+                        displayName: attribute.displayName,
+                        uniqueKey: uniqueKey,
+                        dataType: getChartMetaDataType(uniqueKey),
+                        patientAttribute: attribute.patientAttribute,
+                        description: attribute.description,
+                        priority: priority,
+                        renderWhenDataChange: false,
+                        clinicalAttribute: attribute,
+                    };
+                }
                 return acc;
             },
             _chartMetaSet
