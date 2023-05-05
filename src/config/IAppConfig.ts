@@ -169,4 +169,5 @@ export interface IServerConfig {
     oncoprint_clinical_tracks_config_json: string;
     enable_cross_study_expression: string;
     studyview_max_samples_selected: number;
+    study_download_url: string;
 }

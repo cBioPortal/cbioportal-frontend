@@ -1,3 +1,4 @@
+import { getStudyDownloadUrl } from 'shared/api/urls';
 import * as React from 'react';
 import { trackEvent } from 'shared/lib/tracking';
 
@@ -10,11 +11,7 @@ export class StudyDataDownloadLink extends React.Component<
             <a
                 className="dataset-table-download-link"
                 style={{ display: 'block' }}
-                href={
-                    'https://cbioportal-datahub.s3.amazonaws.com/' +
-                    this.props.studyId +
-                    '.tar.gz'
-                }
+                href={getStudyDownloadUrl() + this.props.studyId + '.tar.gz'}
                 download
                 onClick={() =>
                     trackEvent({

@@ -290,7 +290,11 @@ export function getDarwinUrl(sampleIds: string[], caseId: string) {
 }
 
 export function getStudyDownloadListUrl() {
-    return 'https://cbioportal-datahub.s3.amazonaws.com/study_list.json';
+    return getServerConfig().study_download_url + 'study_list.json';
+}
+
+export function getStudyDownloadUrl() {
+    return getServerConfig().study_download_url;
 }
 
 export function getMDAndersonHeatmapPatientUrl(patientId: string) {

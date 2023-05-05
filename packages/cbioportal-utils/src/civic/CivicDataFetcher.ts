@@ -156,10 +156,7 @@ export class CivicAPI {
                     id: record.id,
                     name: record.name,
                     description: record.description,
-                    url:
-                        'https://civicdb.org/events/genes/' +
-                        record.id +
-                        '/summary',
+                    url: 'https://civicdb.org/genes/' + record.id + '/summary',
                     variants: createVariantMap(record.variants),
                 }));
             });
@@ -186,12 +183,7 @@ export class CivicAPI {
                     name,
                     geneId,
                     description: result.description,
-                    url:
-                        'https://civicdb.org/events/genes/' +
-                        geneId +
-                        '/summary/variants/' +
-                        id +
-                        '/summary#variant',
+                    url: 'https://civicdb.org/variants/' + id + '/summary',
                     evidenceCounts: countEvidenceTypes(result.evidence_items),
                     evidences: supportingEvidences.map(summarizeEvidence),
                 };
