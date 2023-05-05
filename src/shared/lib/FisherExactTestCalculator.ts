@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 function getProbability(
     a: number,
     b: number,
@@ -64,9 +66,9 @@ export function getTwoTailedPValue(
     let logFactorial: number[] = new Array(n + 1);
     logFactorial[0] = 0.0;
 
-    for (let j: number = 1; j <= n; j++) {
-        logFactorial[j] = logFactorial[j - 1] + Math.log(j);
-    }
+    _.forEach(logFactorial, (n, i) => {
+        i > 0 ? (logFactorial[i] = logFactorial[i - 1] + Math.log(i)) : null;
+    });
 
     let baseP = getProbability(a, b, c, d, logFactorial);
     let initialA = a,
@@ -76,12 +78,12 @@ export function getTwoTailedPValue(
     p += baseP;
 
     min = c < b ? c : b;
-    for (i = 0; i < min; i++) {
+    _.forEach(_.range(0, min), () => {
         let tempP = getProbability(++a, --b, --c, ++d, logFactorial);
         if (tempP <= baseP) {
             p += tempP;
         }
-    }
+    });
 
     a = initialA;
     b = initialB;
@@ -89,11 +91,11 @@ export function getTwoTailedPValue(
     d = initialD;
 
     min = a < d ? a : d;
-    for (i = 0; i < min; i++) {
+    _.forEach(_.range(0, min), () => {
         let pTemp = getProbability(--a, ++b, ++c, --d, logFactorial);
         if (pTemp <= baseP) {
             p += pTemp;
         }
-    }
+    });
     return p;
 }

@@ -74,7 +74,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         let filterInfo:
             | JSX.Element
             | string = `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
-        let shiftClickMessage: string =
+        const shiftClickMessage: string =
             dataStore.sortedFilteredSelectedData.length > 0
                 ? ' (Shift click to select multiple residues)'
                 : '';

@@ -3,41 +3,35 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { formatLogOddsRatio } from 'shared/lib/FormatUtils';
 import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
 
-export default class LogRatioColumnFormatter {
-    public static getLogRatioData(
-        rowDataByProteinChange: {
-            [proteinChange: string]: ComparisonMutationsRow;
-        },
-        mutations: Mutation[]
-    ) {
-        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
+export function getLogRatioData(
+    rowDataByProteinChange: {
+        [proteinChange: string]: ComparisonMutationsRow;
+    },
+    mutations: Mutation[]
+) {
+    const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
-        return rowData.logRatio;
-    }
+    return rowData.logRatio;
+}
 
-    public static getLogRatioTextValue(
-        rowDataByProteinChange: {
-            [proteinChange: string]: ComparisonMutationsRow;
-        },
-        mutations: Mutation[]
-    ) {
-        return formatLogOddsRatio(
-            this.getLogRatioData(rowDataByProteinChange, mutations)
-        );
-    }
+export function getLogRatioTextValue(
+    rowDataByProteinChange: {
+        [proteinChange: string]: ComparisonMutationsRow;
+    },
+    mutations: Mutation[]
+) {
+    return formatLogOddsRatio(
+        getLogRatioData(rowDataByProteinChange, mutations)
+    );
+}
 
-    public static renderFunction(
-        rowDataByProteinChange: {
-            [proteinChange: string]: ComparisonMutationsRow;
-        },
-        mutations: Mutation[]
-    ) {
-        let content = (
-            <span>
-                {this.getLogRatioTextValue(rowDataByProteinChange, mutations)}
-            </span>
-        );
-
-        return content;
-    }
+export function logRatioRenderFunction(
+    rowDataByProteinChange: {
+        [proteinChange: string]: ComparisonMutationsRow;
+    },
+    mutations: Mutation[]
+) {
+    return (
+        <span>{getLogRatioTextValue(rowDataByProteinChange, mutations)}</span>
+    );
 }

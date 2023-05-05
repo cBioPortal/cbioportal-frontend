@@ -1083,44 +1083,44 @@ export function getProteinChangeToMutationRowData(
     [proteinChange: string]: ComparisonMutationsRow;
 } {
     let rowData = tableData.map(proteinChangeRow => {
-        let groupAMutatedCount: number =
-            getMutatedCountsByProteinChangeForGroup(
+        const groupAMutatedCount: number =
+            getMutatedCountsByAttributeForGroup(
                 mutationsGroupedByProteinChangeForGroup,
                 0
             )[proteinChangeRow[0].proteinChange] || 0;
-        let groupBMutatedCount: number =
-            getMutatedCountsByProteinChangeForGroup(
+        const groupBMutatedCount: number =
+            getMutatedCountsByAttributeForGroup(
                 mutationsGroupedByProteinChangeForGroup,
                 1
             )[proteinChangeRow[0].proteinChange] || 0;
-        let groupAMutatedPercentage: number =
+        const groupAMutatedPercentage: number =
             (groupAMutatedCount / profiledPatientsCounts[0]) * 100;
-        let groupBMutatedPercentage: number =
+        const groupBMutatedPercentage: number =
             (groupBMutatedCount / profiledPatientsCounts[1]) * 100;
-        let logRatio: number = Math.log2(
+        const logRatio: number = Math.log2(
             groupAMutatedPercentage / groupBMutatedPercentage
         );
-        let pValue: number = getTwoTailedPValue(
+        const pValue: number = getTwoTailedPValue(
             groupAMutatedCount,
             profiledPatientsCounts[0] - groupAMutatedCount,
             groupBMutatedCount,
             profiledPatientsCounts[1] - groupBMutatedCount
         );
-        let enrichedGroup: string =
+        const enrichedGroup: string =
             logRatio > 0
                 ? groups[0].nameWithOrdinal
                 : groups[1].nameWithOrdinal;
 
         return {
             proteinChange: proteinChangeRow[0].proteinChange,
-            groupAMutatedCount: groupAMutatedCount,
-            groupBMutatedCount: groupBMutatedCount,
-            groupAMutatedPercentage: groupAMutatedPercentage,
-            groupBMutatedPercentage: groupBMutatedPercentage,
-            logRatio: logRatio,
-            pValue: pValue,
+            groupAMutatedCount,
+            groupBMutatedCount,
+            groupAMutatedPercentage,
+            groupBMutatedPercentage,
+            logRatio,
+            pValue,
             qValue: 0,
-            enrichedGroup: enrichedGroup,
+            enrichedGroup,
         };
     });
 
@@ -1133,8 +1133,8 @@ export function getProteinChangeToMutationRowData(
     return _.keyBy(rowData, d => d.proteinChange);
 }
 
-export function getMutatedCountsByProteinChangeForGroup(
-    mutationsGroupedByProteinChangeForGroup: (
+export function getMutationCountsByAttributeForGroup(
+    getMutationsGroupedByAttributeForGroup: (
         groupIndex: number
     ) => _.Dictionary<{
         group: string;
@@ -1142,11 +1142,30 @@ export function getMutatedCountsByProteinChangeForGroup(
     }>,
     groupIndex: number
 ): {
-    [proteinChange: string]: number;
+    [attribute: string]: number;
 } {
-    const map: { [proteinChange: string]: number } = {};
+    const map: { [attribute: string]: number } = {};
 
-    _.forIn(mutationsGroupedByProteinChangeForGroup(groupIndex), (v, k) => {
+    _.forIn(getMutationsGroupedByAttributeForGroup(groupIndex), (v, k) => {
+        map[v.group] = v.data.length;
+    });
+    return map;
+}
+
+export function getMutatedCountsByAttributeForGroup(
+    getMutationsGroupedByAttributeForGroup: (
+        groupIndex: number
+    ) => _.Dictionary<{
+        group: string;
+        data: any[];
+    }>,
+    groupIndex: number
+): {
+    [attribute: string]: number;
+} {
+    const map: { [attribute: string]: number } = {};
+
+    _.forIn(getMutationsGroupedByAttributeForGroup(groupIndex), (v, k) => {
         // mutations are unique by gene, protein change, patientId. mutations by gene and protein change are already grouped
         const uniqueMutations = _.uniqBy(v.data, d => d[0].patientId);
         map[v.group] = uniqueMutations.length;

@@ -15,6 +15,7 @@ import {
 import _ from 'lodash';
 import {
     ComparisonGroup,
+    getMutationCountsByAttributeForGroup,
     getProteinChangeToMutationRowData,
     SIGNIFICANT_QVALUE_THRESHOLD,
 } from './GroupComparisonUtils';
@@ -37,7 +38,7 @@ import { Sample } from 'cbioportal-ts-api-client';
 import { FisherExactTwoSidedTestLabel } from './FisherExactTwoSidedTestLabel';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
-import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL } from '../../shared/components/paginationControls/PaginationControls';
+import { paginationStatusText } from 'shared/components/lazyMobXTable/utils';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -68,48 +69,6 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         );
     }
 
-    @computed get paginationStatusText(): string {
-        let firstVisibleItemDisp;
-        let lastVisibleItemDisp;
-        let dataStore = this.props.store.dataStore as MutationMapperDataStore;
-
-        if (dataStore.tableData.length === 0) {
-            firstVisibleItemDisp = 0;
-            lastVisibleItemDisp = 0;
-        } else {
-            firstVisibleItemDisp =
-                dataStore.itemsPerPage === PAGINATION_SHOW_ALL
-                    ? 1
-                    : dataStore.page * dataStore.itemsPerPage + 1;
-
-            lastVisibleItemDisp =
-                dataStore.itemsPerPage === PAGINATION_SHOW_ALL
-                    ? dataStore.visibleData.length
-                    : firstVisibleItemDisp + dataStore.visibleData.length - 1;
-        }
-
-        // if there are multiple mutations represented, use Mutations else Mutation in label
-        const mutationsLabel =
-            _.flatten(dataStore.tableData).length === 1
-                ? 'Mutation'
-                : 'Mutations';
-
-        // text originally shows Mutation(s) based on rows, since the rows represent protein changes now, replace Mutation(s)
-        // with Protein Change(s) with {mutationsLabel}
-        let itemsLabel =
-            dataStore.tableData.length === 1
-                ? `Protein Change with ${mutationsLabel}`
-                : `Protein Changes with ${mutationsLabel}`;
-
-        if (itemsLabel.length) {
-            // we need to prepend the space here instead of within the actual return value
-            // to avoid unnecessary white-space at the end of the string
-            itemsLabel = ` ${itemsLabel}`;
-        }
-
-        return `Showing ${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${dataStore.tableData.length}${itemsLabel}`;
-    }
-
     protected legendColorCodes = (
         <LegendColorCodes
             isPutativeDriver={this.props.isPutativeDriver}
@@ -122,6 +81,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     protected get mutationTableComponent() {
+        const dataStore = this.props.store.dataStore as MutationMapperDataStore;
         return (
             <GroupComparisonMutationTable
                 uniqueSampleKeyToTumorType={
@@ -133,9 +93,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 genomeNexusMutationAssessorCache={
                     this.props.genomeNexusMutationAssessorCache
                 }
-                dataStore={
-                    this.props.store.dataStore as MutationMapperDataStore
-                }
+                dataStore={dataStore}
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
                 myCancerGenomeData={this.props.store.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
@@ -177,7 +135,15 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 initialSortDirection={'asc'}
                 paginationProps={Object.assign(
                     MutationTable.defaultProps.paginationProps,
-                    { textBeforeButtons: this.paginationStatusText }
+                    {
+                        textBeforeButtons: paginationStatusText(
+                            dataStore.visibleData.length,
+                            dataStore.itemsPerPage,
+                            dataStore.page,
+                            'Protein Change(s) with Mutation(s)',
+                            dataStore.tableData.length
+                        ),
+                    }
                 )}
             />
         );
@@ -186,7 +152,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     @computed get rowDataByProteinChange() {
         return getProteinChangeToMutationRowData(
             this.props.store.dataStore.allData,
-            this.mutationsGroupedByProteinChangeForGroup,
+            this.getMutationsGroupedByProteinChangeForGroup,
             this.props.profiledPatientCounts,
             this.props.groups
         );
@@ -246,7 +212,8 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 {driversAnnotated ? (
                     <DriverAnnotationProteinImpactTypeBadgeSelector
                         filter={this.proteinImpactTypeFilter}
-                        counts={this.mutationCountsByProteinImpactTypeForGroup(
+                        counts={getMutationCountsByAttributeForGroup(
+                            this.getMutationsGroupedByProteinImpactTypeForGroup,
                             groupIndex
                         )}
                         onSelect={this.onProteinImpactTypeSelect}
@@ -266,7 +233,8 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 ) : (
                     <ProteinImpactTypeBadgeSelector
                         filter={this.proteinImpactTypeFilter}
-                        counts={this.mutationCountsByProteinImpactTypeForGroup(
+                        counts={getMutationCountsByAttributeForGroup(
+                            this.getMutationsGroupedByProteinImpactTypeForGroup,
                             groupIndex
                         )}
                         onSelect={this.onProteinImpactTypeSelect}
@@ -351,7 +319,9 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     @autobind
-    protected mutationsGroupedByProteinImpactTypeForGroup(groupIndex: number) {
+    protected getMutationsGroupedByProteinImpactTypeForGroup(
+        groupIndex: number
+    ) {
         // group the filtered data by comparison group
         const sortedFilteredGroupedData = groupDataByGroupFilters(
             this.store.dataStore.groupFilters,
@@ -367,24 +337,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     @autobind
-    protected mutationCountsByProteinImpactTypeForGroup(
-        groupIndex: number
-    ): {
-        [proteinImpactType: string]: number;
-    } {
-        const map: { [proteinImpactType: string]: number } = {};
-
-        _.forIn(
-            this.mutationsGroupedByProteinImpactTypeForGroup(groupIndex),
-            (v, k) => {
-                map[v.group] = v.data.length;
-            }
-        );
-        return map;
-    }
-
-    @autobind
-    protected mutationsGroupedByProteinChangeForGroup(groupIndex: number) {
+    protected getMutationsGroupedByProteinChangeForGroup(groupIndex: number) {
         // group all data by comparison group
         const allGroupedData = groupDataByGroupFilters(
             this.store.dataStore.groupFilters,
@@ -438,7 +391,10 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                     float: 'right',
                 }}
             >
-                <div style={{ width: 250, marginRight: 7 }}>
+                <div
+                    style={{ width: 250, marginRight: 7 }}
+                    data-test="enrichedInDropdown"
+                >
                     <CheckedSelect
                         name={'groupsSelector'}
                         placeholder={'Enriched in ...'}

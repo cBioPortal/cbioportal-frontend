@@ -10,62 +10,57 @@ import _ from 'lodash';
 import { getTextColor } from 'pages/groupComparison/OverlapUtils';
 import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
 
-export default class EnrichedInColumnFormatter {
-    public static getEnrichedInData(
-        rowDataByProteinChange: {
-            [proteinChange: string]: ComparisonMutationsRow;
-        },
-        mutations: Mutation[]
-    ) {
-        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
+export function getEnrichedInData(
+    rowDataByProteinChange: {
+        [proteinChange: string]: ComparisonMutationsRow;
+    },
+    mutations: Mutation[]
+) {
+    const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
-        return rowData.enrichedGroup;
-    }
+    return rowData.enrichedGroup;
+}
 
-    public static getFilterValue(
-        rowDataByProteinChange: {
-            [proteinChange: string]: ComparisonMutationsRow;
-        },
-        mutations: Mutation[],
-        filterStringUpper: string
-    ): boolean {
-        return this.getEnrichedInData(rowDataByProteinChange, mutations)
-            .toUpperCase()
-            .includes(filterStringUpper);
-    }
+export function getEnrichedInFilterValue(
+    rowDataByProteinChange: {
+        [proteinChange: string]: ComparisonMutationsRow;
+    },
+    mutations: Mutation[],
+    filterStringUpper: string
+): boolean {
+    return getEnrichedInData(rowDataByProteinChange, mutations)
+        .toUpperCase()
+        .includes(filterStringUpper);
+}
 
-    public static renderFunction(
-        rowDataByProteinChange: {
-            [proteinChange: string]: ComparisonMutationsRow;
-        },
-        mutations: Mutation[],
-        groups: ComparisonGroup[]
-    ) {
-        const rowData = rowDataByProteinChange[mutations[0].proteinChange];
+export function enrichedInRenderFunction(
+    rowDataByProteinChange: {
+        [proteinChange: string]: ComparisonMutationsRow;
+    },
+    mutations: Mutation[],
+    groups: ComparisonGroup[]
+) {
+    const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
-        const nameToGroup = _.keyBy(groups, g => g.nameWithOrdinal);
-        const significant = rowData.qValue < SIGNIFICANT_QVALUE_THRESHOLD;
-        const groupColor =
-            significant && groups
-                ? nameToGroup[
-                      this.getEnrichedInData(rowDataByProteinChange, mutations)
-                  ].color
-                : undefined;
-        let content = (
-            <div
-                className={classNames(styles.Tendency, {
-                    [styles.Significant]: significant,
-                    [styles.ColoredBackground]: !!groupColor,
-                })}
-                style={{
-                    backgroundColor: groupColor,
-                    color: groupColor && getTextColor(groupColor),
-                }}
-            >
-                {this.getEnrichedInData(rowDataByProteinChange, mutations)}
-            </div>
-        );
-
-        return content;
-    }
+    const nameToGroup = _.keyBy(groups, g => g.nameWithOrdinal);
+    const significant = rowData.qValue < SIGNIFICANT_QVALUE_THRESHOLD;
+    const groupColor =
+        significant && groups
+            ? nameToGroup[getEnrichedInData(rowDataByProteinChange, mutations)]
+                  .color
+            : undefined;
+    return (
+        <div
+            className={classNames(styles.Tendency, {
+                [styles.Significant]: significant,
+                [styles.ColoredBackground]: !!groupColor,
+            })}
+            style={{
+                backgroundColor: groupColor,
+                color: groupColor && getTextColor(groupColor),
+            }}
+        >
+            {getEnrichedInData(rowDataByProteinChange, mutations)}
+        </div>
+    );
 }

@@ -9,6 +9,7 @@ import { getTwoTailedPValue } from 'shared/lib/FisherExactTestCalculator';
 import { countUniqueMutations } from 'shared/lib/MutationUtils';
 import { formatPercentValue } from 'cbioportal-utils';
 import intersect from 'fast_array_intersect';
+import InfoIcon from 'shared/components/InfoIcon';
 
 interface IFisherExactTwoSidedTestLabelProps {
     dataStore: MutationMapperDataStore;
@@ -43,40 +44,53 @@ export const FisherExactTwoSidedTestLabel: React.FC<IFisherExactTwoSidedTestLabe
                 : 'Fisher Exact Two-Sided Test p-value for all mutations - ';
 
         return (
-            <div>
-                <strong>
-                    {getFisherTestLabel}
-                    {groups[0].nameWithOrdinal},{' '}
-                    {mutationCountForActiveGeneGroupA} (
-                    {formatPercentValue(
-                        (mutationCountForActiveGeneGroupA /
-                            profiledPatientCounts[0]) *
-                            100,
-                        2
-                    )}
-                    %) vs {groups[1].nameWithOrdinal},{' '}
-                    {mutationCountForActiveGeneGroupB} (
-                    {formatPercentValue(
-                        (mutationCountForActiveGeneGroupB /
-                            profiledPatientCounts[1]) *
-                            100,
-                        2
-                    )}
-                    %):{' '}
-                    {toConditionalPrecisionWithMinimum(
-                        getTwoTailedPValue(
+            <div data-test="fisherTestLabel">
+                {getFisherTestLabel}
+                {groups[0].nameWithOrdinal},{' '}
+                {`${mutationCountForActiveGeneGroupA} patients`} (
+                {formatPercentValue(
+                    (mutationCountForActiveGeneGroupA /
+                        profiledPatientCounts[0]) *
+                        100,
+                    2
+                )}
+                %) vs {groups[1].nameWithOrdinal},{' '}
+                {`${mutationCountForActiveGeneGroupB} patients`} (
+                {formatPercentValue(
+                    (mutationCountForActiveGeneGroupB /
+                        profiledPatientCounts[1]) *
+                        100,
+                    2
+                )}
+                %):{' '}
+                {toConditionalPrecisionWithMinimum(
+                    getTwoTailedPValue(
+                        mutationCountForActiveGeneGroupA,
+                        profiledPatientCounts[0] -
                             mutationCountForActiveGeneGroupA,
-                            profiledPatientCounts[0] -
-                                mutationCountForActiveGeneGroupA,
-                            mutationCountForActiveGeneGroupB,
-                            profiledPatientCounts[1] -
-                                mutationCountForActiveGeneGroupB
-                        ),
-                        3,
-                        0.01,
-                        -10
-                    )}
-                </strong>
+                        mutationCountForActiveGeneGroupB,
+                        profiledPatientCounts[1] -
+                            mutationCountForActiveGeneGroupB
+                    ),
+                    3,
+                    0.01,
+                    -10
+                )}
+                <InfoIcon
+                    divStyle={{ display: 'inline-block', marginLeft: 6 }}
+                    tooltip={
+                        <span>
+                            {`includes ${
+                                dataStore.duplicateMutationCountInMultipleSamples
+                            } duplicate mutation(s) in ${
+                                _.filter(
+                                    dataStore.tableDataGroupedByPatients,
+                                    d => d.length > 1
+                                ).length
+                            } patient(s) with multiple samples`}
+                        </span>
+                    }
+                />
             </div>
         );
     }

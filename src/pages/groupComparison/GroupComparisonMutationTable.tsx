@@ -15,13 +15,33 @@ import {
 } from './GroupComparisonUtils';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
-import GroupMutatedCountPercentageColumnFormatter from 'shared/components/mutationTable/column/GroupMutatedCountPercentageColumnFormatter.tsx';
-import LogRatioColumnFormatter from 'shared/components/mutationTable/column/LogRatioColumnFormatter';
-import EnrichedInColumnFormatter from 'shared/components/mutationTable/column/EnrichedInColumnFormatter';
-import AlterationOverlapColumnFormatter from 'shared/components/mutationTable/column/AlterationOverlapColumnFormatter';
-import PValueColumnFormatter from 'shared/components/mutationTable/column/PValueColumnFormatter';
 import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
-import QValueColumnFormatter from 'shared/components/mutationTable/column/QValueColumnFormatter';
+import {
+    getGroupMutatedCountPercentageTextValue,
+    getMutatedCountData,
+    groupMutatedCountPercentageRenderFunction,
+} from 'shared/components/mutationTable/column/GroupMutatedCountPercentageColumnFormatter';
+import {
+    getLogRatioData,
+    getLogRatioTextValue,
+    logRatioRenderFunction,
+} from 'shared/components/mutationTable/column/LogRatioColumnFormatter';
+import {
+    enrichedInRenderFunction,
+    getEnrichedInData,
+    getEnrichedInFilterValue,
+} from 'shared/components/mutationTable/column/EnrichedInColumnFormatter';
+import { alterationOverlapRenderFunction } from 'shared/components/mutationTable/column/AlterationOverlapColumnFormatter';
+import {
+    getPValueData,
+    getPValueTextValue,
+    pValueRenderFunction,
+} from 'shared/components/mutationTable/column/PValueColumnFormatter';
+import {
+    getQValueData,
+    getQValueTextValue,
+    qValueRenderFunction,
+} from 'shared/components/mutationTable/column/QValueColumnFormatter';
 
 export interface IGroupComparisonMutationTableProps
     extends IMutationTableProps {
@@ -45,13 +65,13 @@ export default class GroupComparisonMutationTable extends MutationTable<
             MutationTableColumnType.MUTATION_STATUS,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
-            '(A) Group',
-            '(B) Group',
-            'Log2 Ratio',
-            'Enriched in',
-            'Alteration Overlap',
-            'P_VALUE',
-            'Q_VALUE',
+            MutationTableColumnType.NUM_MUTATED_GROUP_A,
+            MutationTableColumnType.NUM_MUTATED_GROUP_B,
+            MutationTableColumnType.LOG_RATIO,
+            MutationTableColumnType.ENRICHED_IN,
+            MutationTableColumnType.ALTERATION_OVERLAP,
+            MutationTableColumnType.P_VALUE,
+            MutationTableColumnType.Q_VALUE,
         ],
         columnVisibilityProps: {},
     };
@@ -63,26 +83,22 @@ export default class GroupComparisonMutationTable extends MutationTable<
     protected generateColumns() {
         super.generateColumns();
 
-        this._columns['(A) Group'] = {
+        this._columns[MutationTableColumnType.NUM_MUTATED_GROUP_A] = {
             name: this.props.groups[0].nameWithOrdinal,
             render: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.renderFunction(
+                groupMutatedCountPercentageRenderFunction(
                     this.props.rowDataByProteinChange,
                     0,
                     d
                 ),
             download: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.getGroupMutatedCountPercentageTextValue(
+                getGroupMutatedCountPercentageTextValue(
                     this.props.rowDataByProteinChange,
                     0,
                     d
                 ),
             sortBy: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.getMutatedCountData(
-                    this.props.rowDataByProteinChange,
-                    0,
-                    d
-                ),
+                getMutatedCountData(this.props.rowDataByProteinChange, 0, d),
             tooltip: (
                 <span>
                     <strong>{this.props.groups[0].nameWithOrdinal}:</strong>{' '}
@@ -94,26 +110,22 @@ export default class GroupComparisonMutationTable extends MutationTable<
             ),
         };
 
-        this._columns['(B) Group'] = {
+        this._columns[MutationTableColumnType.NUM_MUTATED_GROUP_B] = {
             name: this.props.groups[1].nameWithOrdinal,
             render: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.renderFunction(
+                groupMutatedCountPercentageRenderFunction(
                     this.props.rowDataByProteinChange,
                     1,
                     d
                 ),
             download: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.getGroupMutatedCountPercentageTextValue(
+                getGroupMutatedCountPercentageTextValue(
                     this.props.rowDataByProteinChange,
                     1,
                     d
                 ),
             sortBy: (d: Mutation[]) =>
-                GroupMutatedCountPercentageColumnFormatter.getMutatedCountData(
-                    this.props.rowDataByProteinChange,
-                    1,
-                    d
-                ),
+                getMutatedCountData(this.props.rowDataByProteinChange, 1, d),
             tooltip: (
                 <span>
                     <strong>{this.props.groups[1].nameWithOrdinal}:</strong>{' '}
@@ -125,23 +137,14 @@ export default class GroupComparisonMutationTable extends MutationTable<
             ),
         };
 
-        this._columns['Log2 Ratio'] = {
-            name: 'Log2 Ratio',
+        this._columns[MutationTableColumnType.LOG_RATIO] = {
+            name: MutationTableColumnType.LOG_RATIO,
             render: (d: Mutation[]) =>
-                LogRatioColumnFormatter.renderFunction(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                logRatioRenderFunction(this.props.rowDataByProteinChange, d),
             download: (d: Mutation[]) =>
-                LogRatioColumnFormatter.getLogRatioTextValue(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                getLogRatioTextValue(this.props.rowDataByProteinChange, d),
             sortBy: (d: Mutation[]) =>
-                LogRatioColumnFormatter.getLogRatioData(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                getLogRatioData(this.props.rowDataByProteinChange, d),
             tooltip: (
                 <span>
                     Log2 based ratio of (pct in{' '}
@@ -151,10 +154,10 @@ export default class GroupComparisonMutationTable extends MutationTable<
             ),
         };
 
-        this._columns['Enriched in'] = {
-            name: 'Enriched in',
+        this._columns[MutationTableColumnType.ENRICHED_IN] = {
+            name: MutationTableColumnType.ENRICHED_IN,
             render: (d: Mutation[]) =>
-                EnrichedInColumnFormatter.renderFunction(
+                enrichedInRenderFunction(
                     this.props.rowDataByProteinChange,
                     d,
                     this.props.groups
@@ -164,21 +167,15 @@ export default class GroupComparisonMutationTable extends MutationTable<
                 filterString: string,
                 filterStringUpper: string
             ) =>
-                EnrichedInColumnFormatter.getFilterValue(
+                getEnrichedInFilterValue(
                     this.props.rowDataByProteinChange,
                     d,
                     filterStringUpper
                 ),
             download: (d: Mutation[]) =>
-                EnrichedInColumnFormatter.getEnrichedInData(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                getEnrichedInData(this.props.rowDataByProteinChange, d),
             sortBy: (d: Mutation[]) =>
-                EnrichedInColumnFormatter.getEnrichedInData(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                getEnrichedInData(this.props.rowDataByProteinChange, d),
             tooltip: (
                 <table>
                     <tr>
@@ -201,11 +198,11 @@ export default class GroupComparisonMutationTable extends MutationTable<
             ),
         };
 
-        this._columns['Alteration Overlap'] = {
-            name: 'Alteration Overlap',
+        this._columns[MutationTableColumnType.ALTERATION_OVERLAP] = {
+            name: MutationTableColumnType.ALTERATION_OVERLAP,
             headerRender: () => <span>Co-occurrence Pattern</span>,
             render: (d: Mutation[]) =>
-                AlterationOverlapColumnFormatter.renderFunction(
+                alterationOverlapRenderFunction(
                     this.props.rowDataByProteinChange,
                     d,
                     this.props.profiledPatientCounts,
@@ -229,43 +226,25 @@ export default class GroupComparisonMutationTable extends MutationTable<
             ),
         };
 
-        this._columns['P_VALUE'] = {
+        this._columns[MutationTableColumnType.P_VALUE] = {
             name: 'p-Value',
             render: (d: Mutation[]) =>
-                PValueColumnFormatter.renderFunction(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                pValueRenderFunction(this.props.rowDataByProteinChange, d),
             download: (d: Mutation[]) =>
-                PValueColumnFormatter.getPValueTextValue(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                getPValueTextValue(this.props.rowDataByProteinChange, d),
             sortBy: (d: Mutation[]) =>
-                PValueColumnFormatter.getPValueData(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                getPValueData(this.props.rowDataByProteinChange, d),
             tooltip: <span>Derived from two-sided Fisher Exact test</span>,
         };
 
-        this._columns['Q_VALUE'] = {
+        this._columns[MutationTableColumnType.Q_VALUE] = {
             name: 'q-Value',
             render: (d: Mutation[]) =>
-                QValueColumnFormatter.renderFunction(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                qValueRenderFunction(this.props.rowDataByProteinChange, d),
             download: (d: Mutation[]) =>
-                QValueColumnFormatter.getQValueTextValue(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                getQValueTextValue(this.props.rowDataByProteinChange, d),
             sortBy: (d: Mutation[]) =>
-                QValueColumnFormatter.getQValueData(
-                    this.props.rowDataByProteinChange,
-                    d
-                ),
+                getQValueData(this.props.rowDataByProteinChange, d),
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
         };
 
@@ -288,13 +267,13 @@ export default class GroupComparisonMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 10;
         this._columns[MutationTableColumnType.ANNOTATION].order = 20;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 30;
-        this._columns['(A) Group'].order = 40;
-        this._columns['(B) Group'].order = 50;
-        this._columns['Alteration Overlap'].order = 60;
-        this._columns['Log2 Ratio'].order = 70;
-        this._columns['P_VALUE'].order = 80;
-        this._columns['Q_VALUE'].order = 90;
-        this._columns['Enriched in'].order = 100;
+        this._columns[MutationTableColumnType.NUM_MUTATED_GROUP_A].order = 40;
+        this._columns[MutationTableColumnType.NUM_MUTATED_GROUP_B].order = 50;
+        this._columns[MutationTableColumnType.ALTERATION_OVERLAP].order = 60;
+        this._columns[MutationTableColumnType.LOG_RATIO].order = 70;
+        this._columns[MutationTableColumnType.P_VALUE].order = 80;
+        this._columns[MutationTableColumnType.Q_VALUE].order = 90;
+        this._columns[MutationTableColumnType.ENRICHED_IN].order = 100;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 110;
 
         //Adjust column visibility according to portal.properties

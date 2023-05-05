@@ -210,6 +210,13 @@ export enum MutationTableColumnType {
     DBSNP = 'dbSNP',
     GENE_PANEL = 'Gene panel',
     SIGNAL = 'SIGNAL',
+    NUM_MUTATED_GROUP_A = '(A) Group',
+    NUM_MUTATED_GROUP_B = '(B) Group',
+    LOG_RATIO = 'Log2 Ratio',
+    ENRICHED_IN = 'Enriched in',
+    ALTERATION_OVERLAP = 'Alteration Overlap',
+    P_VALUE = 'P_VALUE',
+    Q_VALUE = 'Q_VALUE',
 }
 
 export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
