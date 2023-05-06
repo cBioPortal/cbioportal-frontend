@@ -298,9 +298,6 @@ jobs:
             - restore_cache:
                 keys:
                   - v10-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
-            - restore_cache:
-                keys:
-                  - v14-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
             - run:
                 name: Init database
                 command: |
@@ -326,10 +323,6 @@ jobs:
                       sudo chmod -R 777 $KC_DB_DATA_DIR && \
                       sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
                   fi
-            - save_cache:
-                paths:
-                  - /tmp/repo/e2e-localdb-workspace/kc_db_data
-                key: v14-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
             - run:
                 name: Run end-2-end tests with studies in local database
                 command: |
