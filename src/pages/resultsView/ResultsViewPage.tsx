@@ -292,7 +292,14 @@ export default class ResultsViewPage extends React.Component<
                         <MSKTab
                             key={13}
                             id={ResultsViewTab.STRUCTURALVARIANTS}
-                            linkText="Structural Variants"
+                            linkText={
+                                <>
+                                    Structural Variants&nbsp;
+                                    <strong className={'beta-text'}>
+                                        Beta!
+                                    </strong>
+                                </>
+                            }
                         >
                             <StructuralVariants
                                 store={store}
