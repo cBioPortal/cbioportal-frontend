@@ -280,12 +280,16 @@ export default class ResultsViewPage extends React.Component<
             {
                 id: ResultsViewTab.STRUCTURALVARIANTS,
                 hide: () => {
-                    return (
-                        !this.resultsViewPageStore.structuralVariants
-                            .isComplete ||
-                        this.resultsViewPageStore.structuralVariants.result
-                            .length === 0
-                    );
+                    if (this.appStore.featureFlagStore.has('SVTAB')) {
+                        return (
+                            !this.resultsViewPageStore.structuralVariants
+                                .isComplete ||
+                            this.resultsViewPageStore.structuralVariants.result
+                                .length === 0
+                        );
+                    } else {
+                        return true;
+                    }
                 },
                 getTab: () => {
                     return (
