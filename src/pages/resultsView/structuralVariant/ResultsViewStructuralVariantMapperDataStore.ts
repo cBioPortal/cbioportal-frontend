@@ -23,7 +23,7 @@ import { computed, makeObservable } from 'mobx';
 import { SimpleLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 
-export default class FusionMapperDataStore extends SimpleLazyMobXTableApplicationDataStore<
+export default class ResultsViewStructuralVariantMapperDataStore extends SimpleLazyMobXTableApplicationDataStore<
     StructuralVariant[]
 > {
     constructor(data: StructuralVariant[][]) {

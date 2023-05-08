@@ -5819,6 +5819,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 this.structuralVariantData,
                 this.clinicalDataForSamples,
                 this.studies,
+                this.uniqueSampleKeyToTumorType,
             ],
             invoke: async () => {
                 if (getServerConfig().show_oncokb) {
