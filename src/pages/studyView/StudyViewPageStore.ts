@@ -57,6 +57,7 @@ import {
     PatientTreatmentRow,
     ResourceData,
     Sample,
+    SampleFilter,
     SampleIdentifier,
     SampleMolecularIdentifier,
     SampleTreatmentRow,
@@ -387,6 +388,15 @@ export enum BinMethodOption {
 enum CustomDataTypeEnum {
     CATEGORICAL = 'CATEGORICAL',
     NUMERICAL = 'NUMERICAL',
+}
+
+interface PatientIdentifierFilter {
+    patientIdentifiers: PatientIdentifier[];
+}
+
+interface PatientIdentifier {
+    patientId: string;
+    studyId: string;
 }
 
 export class StudyViewPageStore
@@ -2165,14 +2175,26 @@ export class StudyViewPageStore
         // We do not support studyIds in the query filters
         let filters: Partial<StudyViewFilter> = {};
         if (query.filterJson) {
-            try {
-                filters = JSON.parse(
-                    decodeURIComponent(query.filterJson)
-                ) as Partial<StudyViewFilter>;
-                this.updateStoreByFilters(filters);
-            } catch (e) {
-                //  TODO: add some logging here?
+            const parsedFilterJson = this.parseRawFilterJson(query.filterJson);
+            if (query.filterJson.includes('patientIdentifiers')) {
+                const sampleListIds = studyIds.map(s => s.concat('', '_all'));
+                const samples = await this.fetchSamplesWithSampleListIds(
+                    sampleListIds
+                );
+                const {
+                    patientIdentifiers,
+                } = parsedFilterJson as PatientIdentifierFilter;
+                const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
+                    patientIdentifiers,
+                    samples
+                );
+                if (sampleIdentifiers.length > 0) {
+                    filters.sampleIdentifiers = sampleIdentifiers;
+                }
+            } else {
+                filters = parsedFilterJson as Partial<StudyViewFilter>;
             }
+            this.updateStoreByFilters(filters);
         } else if (query.filterAttributeId && query.filterValues) {
             const clinicalAttributes = _.uniqBy(
                 await defaultClient.fetchClinicalAttributesUsingPOST({
@@ -2222,6 +2244,41 @@ export class StudyViewPageStore
                 };
             }
         }
+    }
+
+    parseRawFilterJson(filterJson: string): any {
+        let rawJson;
+        try {
+            rawJson = JSON.parse(decodeURIComponent(filterJson));
+        } catch (e) {
+            console.error('FilterJson invalid Json: error: ', e);
+        }
+        return rawJson;
+    }
+
+    fetchSamplesWithSampleListIds(sampleListIds: string[]) {
+        return defaultClient.fetchSamplesUsingPOST({
+            sampleFilter: {
+                sampleListIds: sampleListIds,
+            } as SampleFilter,
+            projection: 'SUMMARY',
+        });
+    }
+
+    convertPatientIdentifiersToSampleIdentifiers(
+        patientIdentifiers: Array<PatientIdentifier>,
+        samples: Sample[]
+    ): SampleIdentifier[] {
+        return samples
+            .filter(s =>
+                patientIdentifiers.some(
+                    p => p.patientId === s.patientId && p.studyId === s.studyId
+                )
+            )
+            .map(s => ({
+                sampleId: s.sampleId,
+                studyId: s.studyId,
+            }));
     }
 
     @computed
