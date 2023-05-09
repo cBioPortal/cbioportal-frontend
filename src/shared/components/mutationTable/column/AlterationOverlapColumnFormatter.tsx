@@ -16,7 +16,7 @@ export function alterationOverlapRenderFunction(
         [proteinChange: string]: ComparisonMutationsRow;
     },
     mutations: Mutation[],
-    profiledPatientsCounts: number[],
+    profiledPatientCounts: number[],
     sampleSet: ComplexKeyMap<Sample>,
     groups: ComparisonGroup[]
 ) {
@@ -39,15 +39,15 @@ export function alterationOverlapRenderFunction(
         (patientIdentifiersforGroupA.length / totalQueriedCases) * 100;
     const group2Width = 100 - group1Width;
     const group1Unprofiled =
-        ((patientIdentifiersforGroupA.length - profiledPatientsCounts[0]) /
+        ((patientIdentifiersforGroupA.length - profiledPatientCounts[0]) /
             totalQueriedCases) *
         100;
     const group1Unaltered =
-        ((profiledPatientsCounts[0] - rowData.groupAMutatedCount) /
+        ((profiledPatientCounts[0] - rowData.groupAMutatedCount) /
             totalQueriedCases) *
         100;
     const group2Unprofiled =
-        ((patientIdentifiersforGroupB.length - profiledPatientsCounts[1]) /
+        ((patientIdentifiersforGroupB.length - profiledPatientCounts[1]) /
             totalQueriedCases) *
         100;
     const group1Altered =
@@ -57,9 +57,11 @@ export function alterationOverlapRenderFunction(
 
     const overlay = (
         <AlterationOverlapOverlay
-            rowData={rowData}
-            mutations={mutations}
-            profiledPatientsCounts={profiledPatientsCounts}
+            groupAMutatedCount={rowData.groupAMutatedCount}
+            groupBMutatedCount={rowData.groupBMutatedCount}
+            hugoGeneSymbol={mutations[0].gene.hugoGeneSymbol}
+            proteinChange={mutations[0].proteinChange}
+            profiledPatientCounts={profiledPatientCounts}
             groups={groups}
         />
     );

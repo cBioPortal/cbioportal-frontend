@@ -1,6 +1,5 @@
 import { SHOW_ALL_PAGE_SIZE } from '../paginationControls/PaginationControls';
 import { CancerStudy } from 'cbioportal-ts-api-client';
-import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL } from '../paginationControls/PaginationControls';
 
 export function maxPage(displayDataLength: number, itemsPerPage: number) {
     if (itemsPerPage === SHOW_ALL_PAGE_SIZE) {
@@ -75,32 +74,4 @@ export function filterNumericalColumn<D>(
         }
         return ret;
     };
-}
-
-export function paginationStatusText(
-    numOfRowsDisplayed: number,
-    itemsPerPage: number,
-    pageNum: number,
-    itemsLabel: string,
-    numOfRows: number
-): string {
-    let firstVisibleItemDisp;
-    let lastVisibleItemDisp;
-
-    if (numOfRowsDisplayed === 0) {
-        firstVisibleItemDisp = 0;
-        lastVisibleItemDisp = 0;
-    } else {
-        firstVisibleItemDisp =
-            itemsPerPage === PAGINATION_SHOW_ALL
-                ? 1
-                : pageNum * itemsPerPage + 1;
-
-        lastVisibleItemDisp =
-            itemsPerPage === PAGINATION_SHOW_ALL
-                ? numOfRowsDisplayed
-                : firstVisibleItemDisp + numOfRowsDisplayed - 1;
-    }
-
-    return `Showing ${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${numOfRows} ${itemsLabel}`.trim();
 }

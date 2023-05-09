@@ -8,6 +8,7 @@ import {
 import {
     AxisScale,
     DataFilterType,
+    FilterResetPanel,
     groupDataByGroupFilters,
     onFilterOptionSelect,
     ProteinImpactTypeBadgeSelector,
@@ -25,20 +26,21 @@ import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenu
 import styles from './styles.module.scss';
 import { LegendColorCodes } from 'shared/components/mutationMapper/LegendColorCodes';
 import { ProteinImpactWithoutVusMutationType } from 'cbioportal-frontend-commons';
-import MutationTable, {
-    ExtendedMutationTableColumnType,
-} from 'shared/components/mutationTable/MutationTable';
+import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import GroupComparisonMutationTable from './GroupComparisonMutationTable';
 import MutationMapperDataStore, {
     PROTEIN_CHANGE_FILTER_ID,
 } from 'shared/components/mutationMapper/MutationMapperDataStore';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import autobind from 'autobind-decorator';
-import { Sample } from 'cbioportal-ts-api-client';
+import { CancerStudy, Sample } from 'cbioportal-ts-api-client';
 import { FisherExactTwoSidedTestLabel } from './FisherExactTwoSidedTestLabel';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
-import { paginationStatusText } from 'shared/components/lazyMobXTable/utils';
+import { PatientSampleSummary } from 'pages/resultsView/querySummary/PatientSampleSummary';
+import classnames from 'classnames';
+import mutationMapperStyles from 'shared/components/mutationMapper/mutationMapper.module.scss';
+import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -51,6 +53,7 @@ interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     };
     sampleSet: ComplexKeyMap<Sample>;
     profiledPatientCounts: number[];
+    queriedStudies: CancerStudy[];
 }
 
 @observer
@@ -127,24 +130,11 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 columns={this.columns}
                 profiledPatientCounts={this.props.profiledPatientCounts}
                 groups={this.props.groups}
-                showTotalMutationCountsInCountHeader={true}
                 sampleSet={this.props.sampleSet}
                 customControls={this.tableCustomControls}
                 rowDataByProteinChange={this.rowDataByProteinChange}
                 initialSortColumn={'q-Value'}
                 initialSortDirection={'asc'}
-                paginationProps={Object.assign(
-                    MutationTable.defaultProps.paginationProps,
-                    {
-                        textBeforeButtons: paginationStatusText(
-                            dataStore.visibleData.length,
-                            dataStore.itemsPerPage,
-                            dataStore.page,
-                            'Protein Change(s) with Mutation(s)',
-                            dataStore.tableData.length
-                        ),
-                    }
-                )}
             />
         );
     }
@@ -249,6 +239,63 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                     />
                 )}
             </>
+        );
+    }
+
+    protected get filterResetPanel(): JSX.Element | null {
+        const dataStore = this.props.store.dataStore as MutationMapperDataStore;
+        let filterInfo:
+            | JSX.Element
+            | string = `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
+        const shiftClickMessage: string =
+            dataStore.sortedFilteredSelectedData.length > 0
+                ? ' (Shift click to select multiple residues)'
+                : '';
+        if (this.props.queriedStudies) {
+            const linkToFilteredStudyView = (
+                <a
+                    onClick={() => {
+                        submitToStudyViewPage(
+                            this.props.queriedStudies,
+                            dataStore.tableDataSamples,
+                            true
+                        );
+                    }}
+                >
+                    <PatientSampleSummary
+                        samples={dataStore.tableDataSamples}
+                        patients={dataStore.tableDataPatients}
+                    />
+                </a>
+            );
+            filterInfo = (
+                <span>
+                    {`Showing ${
+                        _.flatten(dataStore.tableData).length
+                    } mutations (`}
+                    {linkToFilteredStudyView}
+                    {')'}
+                </span>
+            );
+        }
+
+        return (
+            <FilterResetPanel
+                resetFilters={() => dataStore.resetFilters()}
+                filterInfo={filterInfo}
+                additionalInfo={shiftClickMessage}
+                className={classnames(
+                    'alert-success',
+                    'small',
+                    mutationMapperStyles.filterResetPanel
+                )}
+                buttonClass={classnames(
+                    'btn',
+                    'btn-default',
+                    'btn-xs',
+                    mutationMapperStyles.removeFilterButton
+                )}
+            />
         );
     }
 
@@ -374,6 +421,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 dataStore={
                     this.props.store.dataStore as MutationMapperDataStore
                 }
+                hugoGeneSymbol={this.props.store.gene.hugoGeneSymbol}
                 groups={this.props.groups}
                 profiledPatientCounts={this.props.profiledPatientCounts}
             />

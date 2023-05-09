@@ -21,7 +21,7 @@ import { AxisScale } from 'react-mutation-mapper';
 import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import styles from './styles.module.scss';
-import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { saveOncoKbIconStyleToLocalStorage } from 'shared/lib/AnnotationColumnUtils';
 import { generateMutationIdByGeneAndProteinChange } from 'shared/lib/StoreUtils';
 
 interface IGroupComparisonMutationMapperWrapperProps {
@@ -118,14 +118,14 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                 ' profiled pts'
             );
         } else {
-            return `**${label}**\n${symbol} mutated`;
+            return `**${label}**\n${symbol} patients`;
         }
     }
 
     @action.bound
     protected handleOncoKbIconToggle(mergeIcons: boolean) {
         this.userSelectionStore.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
+        saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
     readonly plotUI = MakeMobxView({
@@ -218,6 +218,9 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                             sampleSet={this.props.store.sampleMap.result!}
                             profiledPatientCounts={
                                 this.props.store.profiledPatientCounts.result!
+                            }
+                            queriedStudies={
+                                this.props.store.displayedStudies.result!
                             }
                         />
                     </div>

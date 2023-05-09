@@ -153,7 +153,6 @@ export interface IMutationTableProps {
         column: Column<Mutation[]>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
-    showTotalMutationCountsInCountHeader?: boolean;
     customControls?: JSX.Element;
 }
 import MobxPromise from 'mobxpromise';
@@ -1372,9 +1371,6 @@ export default class MutationTable<
                     this.props.columnToHeaderFilterIconModal
                 }
                 deactivateColumnFilter={this.props.deactivateColumnFilter}
-                showTotalMutationCountsInCountHeader={
-                    this.props.showTotalMutationCountsInCountHeader
-                }
                 customControls={this.props.customControls}
             />
         );

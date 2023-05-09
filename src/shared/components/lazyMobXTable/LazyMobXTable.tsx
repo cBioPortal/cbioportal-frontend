@@ -41,7 +41,7 @@ import {
     SimpleLazyMobXTableApplicationDataStore,
 } from '../../lib/ILazyMobXTableApplicationDataStore';
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
-import { maxPage, paginationStatusText } from './utils';
+import { maxPage } from './utils';
 import { inputBoxChangeTimeoutEvent } from '../../lib/EventUtils';
 import _ from 'lodash';
 
@@ -120,7 +120,6 @@ type LazyMobXTableProps<T> = {
         column: Column<T>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
-    showTotalMutationCountsInCountHeader?: boolean;
     customControls?: JSX.Element;
 };
 
@@ -594,6 +593,35 @@ export class LazyMobXTableStore<T> {
         return colVisProp;
     }
 
+    @computed get paginationStatusText(): string {
+        let firstVisibleItemDisp;
+        let lastVisibleItemDisp;
+
+        if (this.rows.length === 0) {
+            firstVisibleItemDisp = 0;
+            lastVisibleItemDisp = 0;
+        } else {
+            firstVisibleItemDisp =
+                this.itemsPerPage === PAGINATION_SHOW_ALL
+                    ? 1
+                    : this.page * this.itemsPerPage + 1;
+
+            lastVisibleItemDisp =
+                this.itemsPerPage === PAGINATION_SHOW_ALL
+                    ? this.rows.length
+                    : firstVisibleItemDisp + this.rows.length - 1;
+        }
+
+        let itemsLabel: string = this.itemsLabel;
+        if (itemsLabel.length) {
+            // we need to prepend the space here instead of within the actual return value
+            // to avoid unnecessary white-space at the end of the string
+            itemsLabel = ` ${itemsLabel}`;
+        }
+
+        return `Showing ${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.displayData.length}${itemsLabel}`;
+    }
+
     @computed get tds(): JSX.Element[][] {
         return this.visibleData.map((datum: T, rowIndex: number) => {
             return this.visibleColumns.map((column: Column<T>) => {
@@ -1045,13 +1073,7 @@ export default class LazyMobXTable<T> extends React.Component<
             onNextPageClick: this.handlers.incPage,
             previousPageDisabled: this.store.page === 0,
             nextPageDisabled: this.store.page === this.store.maxPage,
-            textBeforeButtons: paginationStatusText(
-                this.store.rows.length,
-                this.store.itemsPerPage,
-                this.store.page,
-                this.store.itemsLabel,
-                this.store.displayData.length
-            ),
+            textBeforeButtons: this.store.paginationStatusText,
             groupButtons: false,
             bsStyle: 'primary',
         };
@@ -1060,13 +1082,9 @@ export default class LazyMobXTable<T> extends React.Component<
             // put status text between button if no show more button
             if (this.props.paginationProps.showMoreButton === false) {
                 delete paginationProps['textBeforeButtons'];
-                paginationProps['textBetweenButtons'] = paginationStatusText(
-                    this.store.rows.length,
-                    this.store.itemsPerPage,
-                    this.store.page,
-                    this.store.itemsLabel,
-                    this.store.displayData.length
-                );
+                paginationProps[
+                    'textBetweenButtons'
+                ] = this.store.paginationStatusText;
             }
             paginationProps = Object.assign(
                 paginationProps,
@@ -1090,11 +1108,8 @@ export default class LazyMobXTable<T> extends React.Component<
                     fontWeight: 'bold',
                 }}
             >
-                {this.props.showTotalMutationCountsInCountHeader
-                    ? _.flatten(this.store.displayData).length
-                    : this.store.displayData.length}{' '}
-                {this.store.itemsLabel} (page {this.store.page + 1} of{' '}
-                {this.store.maxPage + 1})
+                {this.store.displayData.length} {this.store.itemsLabel} (page{' '}
+                {this.store.page + 1} of {this.store.maxPage + 1})
             </span>
         );
     }
