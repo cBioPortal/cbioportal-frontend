@@ -18,6 +18,7 @@ import MutualExclusivityTab from './mutualExclusivity/MutualExclusivityTab';
 import DownloadTab from './download/DownloadTab';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import CNSegments from './cnSegments/CNSegments';
+import StructuralVariants from 'pages/resultsView/structuralVariant/StructuralVariants';
 import './styles.scss';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
@@ -276,7 +277,42 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-
+            {
+                id: ResultsViewTab.STRUCTURALVARIANTS,
+                hide: () => {
+                    if (this.appStore.featureFlagStore.has('SVTAB')) {
+                        return (
+                            !this.resultsViewPageStore.structuralVariants
+                                .isComplete ||
+                            this.resultsViewPageStore.structuralVariants.result
+                                .length === 0
+                        );
+                    } else {
+                        return true;
+                    }
+                },
+                getTab: () => {
+                    return (
+                        <MSKTab
+                            key={13}
+                            id={ResultsViewTab.STRUCTURALVARIANTS}
+                            linkText={
+                                <>
+                                    Structural Variants&nbsp;
+                                    <strong className={'beta-text'}>
+                                        Beta!
+                                    </strong>
+                                </>
+                            }
+                        >
+                            <StructuralVariants
+                                store={store}
+                                urlWrapper={this.urlWrapper}
+                            />
+                        </MSKTab>
+                    );
+                },
+            },
             {
                 id: ResultsViewTab.COEXPRESSION,
                 hide: () => {

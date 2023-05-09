@@ -3,7 +3,7 @@ import {
     initDefaultTrackVisibility,
     TrackVisibility,
 } from 'react-mutation-mapper';
-import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { getOncoKbIconStyleFromLocalStorage } from 'shared/lib/AnnotationColumnUtils';
 
 export default class MutationMapperUserSelectionStore {
     @observable trackVisibility: TrackVisibility;
@@ -17,7 +17,7 @@ export default class MutationMapperUserSelectionStore {
     constructor() {
         makeObservable(this);
         this.trackVisibility = initDefaultTrackVisibility();
-        this.mergeOncoKbIcons = getOncoKbIconStyle().mergeIcons;
+        this.mergeOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
     }
 
     @action.bound

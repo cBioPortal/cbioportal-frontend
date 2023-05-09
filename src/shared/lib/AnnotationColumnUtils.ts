@@ -52,14 +52,16 @@ export function calculateOncoKbContentPadding(oncoKbContentWidth?: number) {
     return oncoKbContentWidth || 0 > 22 ? oncoKbContentWidth! - 22 : 0;
 }
 
-export function updateOncoKbIconStyle(style: { mergeIcons: boolean }) {
+export function saveOncoKbIconStyleToLocalStorage(style: {
+    mergeIcons: boolean;
+}) {
     getBrowserWindow().localStorage.setItem(
         'mergeOncoKbIcons',
         `${style.mergeIcons}`
     );
 }
 
-export function getOncoKbIconStyle() {
+export function getOncoKbIconStyleFromLocalStorage() {
     const mergeOncoKbIcons = getBrowserWindow().localStorage.getItem(
         'mergeOncoKbIcons'
     );
