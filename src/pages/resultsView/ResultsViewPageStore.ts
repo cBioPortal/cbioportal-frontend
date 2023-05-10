@@ -92,6 +92,7 @@ import {
     makeGetOncoKbCnaAnnotationForOncoprint,
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
+    fetchOncoKbInfo,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -186,6 +187,7 @@ import {
     FGA_VS_MUTATION_COUNT_KEY,
     getChartMetaDataType,
     getDefaultPriorityByUniqueKey,
+    getFilteredMolecularProfilesByAlterationType,
     getFilteredStudiesWithSamples,
     getPriorityByClinicalAttribute,
     getUniqueKey,
@@ -297,6 +299,11 @@ import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
 import { GeneticEntity } from 'shared/model/GeneticEntity';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
+import { ResultsViewStructuralVariantMapperStore } from 'pages/resultsView/structuralVariant/ResultsViewStructuralVariantMapperStore';
+import {
+    ONCOKB_DEFAULT_INFO,
+    USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
+} from 'react-mutation-mapper';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3367,6 +3374,27 @@ export class ResultsViewPageStore extends AnalysisStore
         },
     });
 
+    readonly structuralVariantsByGene = remoteData({
+        await: () => [this.structuralVariants],
+        invoke: async () => {
+            const svByGene: Record<string, StructuralVariant[]> = {};
+            this.structuralVariants.result!.forEach(sv => {
+                if (sv.site1HugoSymbol) {
+                    svByGene[sv.site1HugoSymbol] =
+                        svByGene[sv.site1HugoSymbol] || [];
+                    svByGene[sv.site1HugoSymbol].push(sv);
+                }
+
+                if (sv.site2HugoSymbol) {
+                    svByGene[sv.site2HugoSymbol] =
+                        svByGene[sv.site2HugoSymbol] || [];
+                    svByGene[sv.site2HugoSymbol].push(sv);
+                }
+            });
+            return svByGene;
+        },
+    });
+
     readonly structuralVariantsReportByGene = remoteData<{
         [hugeGeneSymbol: string]: FilteredAndAnnotatedStructuralVariantsReport;
     }>({
@@ -4984,6 +5012,54 @@ export class ResultsViewPageStore extends AnalysisStore
         },
     });
 
+    readonly structuralVariantMapperStores = remoteData<{
+        [hugoGeneSymbol: string]: ResultsViewStructuralVariantMapperStore;
+    }>(
+        {
+            await: () => [
+                this.genes,
+                this.structuralVariantsByGene,
+                this.studyIdToStudy,
+                this.molecularProfileIdToMolecularProfile,
+                this.samples,
+            ],
+            invoke: () => {
+                if (this.genes.result && this.structuralVariantsByGene.result) {
+                    return Promise.resolve(
+                        this.genes.result.reduce(
+                            (
+                                map: {
+                                    [hugoGeneSymbol: string]: ResultsViewStructuralVariantMapperStore;
+                                },
+                                gene: Gene
+                            ) => {
+                                map[
+                                    gene.hugoGeneSymbol
+                                ] = new ResultsViewStructuralVariantMapperStore(
+                                    gene,
+                                    this.studyIdToStudy,
+                                    this.molecularProfileIdToMolecularProfile,
+                                    this.structuralVariantsByGene.result![
+                                        gene.hugoGeneSymbol
+                                    ] || [],
+                                    this.uniqueSampleKeyToTumorType.result!,
+                                    this.structuralVariantOncoKbData,
+                                    this.oncoKbCancerGenes,
+                                    this.usingPublicOncoKbInstance
+                                );
+                                return map;
+                            },
+                            {}
+                        )
+                    );
+                } else {
+                    return Promise.resolve({});
+                }
+            },
+        },
+        {}
+    );
+
     readonly filteredAndAnnotatedStructuralVariants = remoteData<
         AnnotatedStructuralVariant[]
     >({
@@ -5696,5 +5772,89 @@ export class ResultsViewPageStore extends AnalysisStore
         return this.driverAnnotationSettings.driversAnnotated
             ? (m: AnnotatedMutation) => m.putativeDriver
             : undefined;
+    }
+
+    readonly structuralVariantProfile = remoteData({
+        await: () => [this.studyToMolecularProfiles],
+        invoke: async () => {
+            const structuralVariantProfiles = getFilteredMolecularProfilesByAlterationType(
+                this.studyToMolecularProfiles.result!,
+                AlterationTypeConstants.STRUCTURAL_VARIANT,
+                [DataTypeConstants.FUSION, DataTypeConstants.SV]
+            );
+            if (structuralVariantProfiles.length > 0) {
+                return structuralVariantProfiles[0];
+            }
+            return undefined;
+        },
+    });
+
+    readonly structuralVariantData = remoteData({
+        await: () => [this.samples, this.structuralVariantProfile],
+        invoke: async () => {
+            if (this.structuralVariantProfile.result) {
+                const structuralVariantFilter = {
+                    sampleMolecularIdentifiers: this.sampleIds.map(sampleId => {
+                        return {
+                            molecularProfileId: this.structuralVariantProfile
+                                .result!.molecularProfileId,
+                            sampleId,
+                        };
+                    }),
+                } as StructuralVariantFilter;
+
+                return internalClient.fetchStructuralVariantsUsingPOST({
+                    structuralVariantFilter,
+                });
+            }
+            return [];
+        },
+        default: [],
+    });
+
+    readonly structuralVariantOncoKbData = remoteData<IOncoKbData>(
+        {
+            await: () => [
+                this.oncoKbAnnotatedGenes,
+                this.structuralVariantData,
+                this.clinicalDataForSamples,
+                this.studies,
+                this.uniqueSampleKeyToTumorType,
+            ],
+            invoke: async () => {
+                if (getServerConfig().show_oncokb) {
+                    return fetchStructuralVariantOncoKbData(
+                        this.uniqueSampleKeyToTumorType.result!,
+                        this.oncoKbAnnotatedGenes.result || {},
+                        this.structuralVariantData
+                    );
+                } else {
+                    return ONCOKB_DEFAULT;
+                }
+            },
+            onError: (err: Error) => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        },
+        ONCOKB_DEFAULT
+    );
+
+    readonly oncoKbInfo = remoteData(
+        {
+            invoke: () => {
+                if (getServerConfig().show_oncokb) {
+                    return fetchOncoKbInfo();
+                } else {
+                    return Promise.resolve(ONCOKB_DEFAULT_INFO);
+                }
+            },
+        },
+        ONCOKB_DEFAULT_INFO
+    );
+
+    @computed get usingPublicOncoKbInstance() {
+        return this.oncoKbInfo.result
+            ? this.oncoKbInfo.result.publicInstance
+            : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB;
     }
 }

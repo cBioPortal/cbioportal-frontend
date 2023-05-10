@@ -22,7 +22,7 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { saveOncoKbIconStyleToLocalStorage } from 'shared/lib/AnnotationColumnUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { getProteinImpactType } from 'cbioportal-frontend-commons';
 import { isPutativeDriver } from 'shared/lib/MutationUtils';
@@ -165,7 +165,7 @@ export default class Mutations extends React.Component<
     @action.bound
     protected handleOncoKbIconToggle(mergeIcons: boolean) {
         this.userSelectionStore.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
+        saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
     @computed get geneTabContent() {

@@ -46,8 +46,8 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import {
-    getOncoKbIconStyle,
-    updateOncoKbIconStyle,
+    getOncoKbIconStyleFromLocalStorage,
+    saveOncoKbIconStyleToLocalStorage,
 } from 'shared/lib/AnnotationColumnUtils';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
@@ -176,7 +176,7 @@ export class PatientViewPageInner extends React.Component<
 
         this.setOpenResourceTabs();
 
-        this.mergeMutationTableOncoKbIcons = getOncoKbIconStyle().mergeIcons;
+        this.mergeMutationTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
     }
 
     setOpenResourceTabs() {
@@ -225,7 +225,7 @@ export class PatientViewPageInner extends React.Component<
     @action.bound
     handleOncoKbIconToggle(mergeIcons: boolean) {
         this.mergeMutationTableOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
+        saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
     @computed get showWholeSlideViewerTab() {

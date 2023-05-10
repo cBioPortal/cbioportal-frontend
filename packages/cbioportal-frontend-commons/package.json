@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.5.45",
+  "version": "0.5.46",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -57,7 +57,7 @@
     "save-svg-as-png": "^1.4.6",
     "seamless-immutable": "^7.0.1",
     "superagent": "^3.8.3",
-    "svg2pdf.js": "^1.3.3",
+    "svg2pdf.js": "github:cbioportal/svg2pdf.js#v1.3.3-cbio-patch-1",
     "typescript": "4.0.3",
     "url": "^0.11.0",
     "victory": "30.0.0"

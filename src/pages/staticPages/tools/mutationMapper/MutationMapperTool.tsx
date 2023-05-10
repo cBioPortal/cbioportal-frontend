@@ -29,7 +29,7 @@ import {
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 import { getServerConfig } from 'config/config';
-import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { saveOncoKbIconStyleToLocalStorage } from 'shared/lib/AnnotationColumnUtils';
 
 interface IMutationMapperToolProps {
     routing: any;
@@ -688,7 +688,7 @@ export default class MutationMapperTool extends React.Component<
     @action.bound
     protected handleOncoKbIconToggle(mergeIcons: boolean) {
         this.userSelectionStore.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
+        saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
     @computed get grch38Warning() {
