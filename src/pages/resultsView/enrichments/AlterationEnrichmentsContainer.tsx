@@ -478,8 +478,12 @@ export default class AlterationEnrichmentContainer extends React.Component<
     }
 
     public render() {
-        if (this.props.data.length === 0) {
-            return (
+        let alert: JSX.Element | null = null;
+
+        const hasData = this.props.data.length > 0;
+
+        if (hasData === false) {
+            alert = (
                 <div
                     className={'alert alert-info'}
                     style={{
@@ -520,12 +524,6 @@ export default class AlterationEnrichmentContainer extends React.Component<
                                 : 'auto',
                     }}
                 >
-                    {
-                        // The alteration type selector is shown to left of the
-                        // graph panels ('in-line'). This div element pushes the
-                        // graph elements to the right when the type selector
-                        // is shown 'in-line'.
-                    }
                     {useInlineTypeSelectorMenu && (
                         <AlterationEnrichmentTypeSelector
                             classNames={styles.inlineAlterationTypeSelectorMenu}
@@ -547,178 +545,192 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             }
                         />
                     )}
-                    {this.isTwoGroupAnalysis && (
-                        <MiniScatterChart
-                            data={getAlterationScatterData(
-                                this.data,
-                                this.props.store
-                                    ? this.props.store.hugoGeneSymbols
-                                    : []
+
+                    {hasData === false && alert}
+
+                    {hasData && (
+                        <>
+                            {this.isTwoGroupAnalysis && (
+                                <MiniScatterChart
+                                    data={getAlterationScatterData(
+                                        this.data,
+                                        this.props.store
+                                            ? this.props.store.hugoGeneSymbols
+                                            : []
+                                    )}
+                                    xAxisLeftLabel={
+                                        this.group2.nameOfEnrichmentDirection ||
+                                        this.group2.name
+                                    }
+                                    xAxisRightLabel={
+                                        this.group1.nameOfEnrichmentDirection ||
+                                        this.group1.name
+                                    }
+                                    xAxisDomain={15}
+                                    xAxisTickValues={[-10, 0, 10]}
+                                    selectedSet={this.selectedGenesSet}
+                                    onGeneNameClick={this.onGeneNameClick}
+                                    onSelection={this.onSelection}
+                                    onSelectionCleared={this.onSelectionCleared}
+                                />
                             )}
-                            xAxisLeftLabel={
-                                this.group2.nameOfEnrichmentDirection ||
-                                this.group2.name
-                            }
-                            xAxisRightLabel={
-                                this.group1.nameOfEnrichmentDirection ||
-                                this.group1.name
-                            }
-                            xAxisDomain={15}
-                            xAxisTickValues={[-10, 0, 10]}
-                            selectedSet={this.selectedGenesSet}
-                            onGeneNameClick={this.onGeneNameClick}
-                            onSelection={this.onSelection}
-                            onSelectionCleared={this.onSelectionCleared}
-                        />
+                            {this.isTwoGroupAnalysis && (
+                                <MiniFrequencyScatterChart
+                                    data={getAlterationFrequencyScatterData(
+                                        this.data,
+                                        this.props.store
+                                            ? this.props.store.hugoGeneSymbols
+                                            : [],
+                                        this.group1.name,
+                                        this.group2.name
+                                    )}
+                                    xGroupName={this.group1.name}
+                                    yGroupName={this.group2.name}
+                                    onGeneNameClick={this.onGeneNameClick}
+                                    selectedGenesSet={this.selectedGenesSet}
+                                    onSelection={this.onSelection}
+                                    onSelectionCleared={this.onSelectionCleared}
+                                />
+                            )}
+                            <div style={{ maxWidth: this.genePlotMaxWidth }}>
+                                <GeneBarPlot
+                                    data={this.data}
+                                    isTwoGroupAnalysis={this.isTwoGroupAnalysis}
+                                    groupOrder={this.props.groups.map(
+                                        group => group.name
+                                    )}
+                                    yAxisLabel={this.geneBarplotYAxislabel}
+                                    showCNAInTable={this.props.showCNAInTable}
+                                    categoryToColor={this.categoryToColor}
+                                    dataStore={this.dataStore}
+                                />
+                            </div>
+                        </>
                     )}
-                    {this.isTwoGroupAnalysis && (
-                        <MiniFrequencyScatterChart
-                            data={getAlterationFrequencyScatterData(
-                                this.data,
-                                this.props.store
-                                    ? this.props.store.hugoGeneSymbols
-                                    : [],
-                                this.group1.name,
-                                this.group2.name
-                            )}
-                            xGroupName={this.group1.name}
-                            yGroupName={this.group2.name}
-                            onGeneNameClick={this.onGeneNameClick}
-                            selectedGenesSet={this.selectedGenesSet}
-                            onSelection={this.onSelection}
-                            onSelectionCleared={this.onSelectionCleared}
-                        />
-                    )}
-                    <div style={{ maxWidth: this.genePlotMaxWidth }}>
-                        <GeneBarPlot
-                            data={this.data}
-                            isTwoGroupAnalysis={this.isTwoGroupAnalysis}
-                            groupOrder={this.props.groups.map(
-                                group => group.name
-                            )}
-                            yAxisLabel={this.geneBarplotYAxislabel}
-                            showCNAInTable={this.props.showCNAInTable}
-                            categoryToColor={this.categoryToColor}
-                            dataStore={this.dataStore}
-                        />
-                    </div>
                 </div>
 
-                <div>
+                {hasData && (
                     <div>
-                        <h3>{this.props.headerName}</h3>
-                        {this.props.store && (
-                            <AddCheckedGenes checkedGenes={this.checkedGenes} />
-                        )}
-                    </div>
-                    <div className={styles.Checkboxes}>
-                        <div style={{ width: 250, marginRight: 7 }}>
-                            <ReactSelect
-                                name="select enrichments level: sample or patient"
-                                onChange={(option: any | null) => {
-                                    if (option) {
-                                        this.props.onSetPatientLevelEnrichments(
-                                            option.value
-                                        );
-                                    }
-                                }}
-                                options={[
-                                    {
-                                        label: 'Patient-level enrichments',
-                                        value: true,
-                                    },
-                                    {
-                                        label: 'Sample-level enrichments',
-                                        value: false,
-                                    },
-                                ]}
-                                clearable={false}
-                                searchable={false}
-                                value={{
-                                    label: this.props.patientLevelEnrichments
-                                        ? 'Patient-level enrichments'
-                                        : 'Sample-level enrichments',
-                                    value: this.props.patientLevelEnrichments,
-                                }}
-                                styles={{
-                                    control: (provided: any) => ({
-                                        ...provided,
-                                        height: 36,
-                                        minHeight: 36,
-                                        border: '1px solid rgb(204,204,204)',
-                                    }),
-                                    menu: (provided: any) => ({
-                                        ...provided,
-                                        maxHeight: 400,
-                                    }),
-                                    menuList: (provided: any) => ({
-                                        ...provided,
-                                        maxHeight: 400,
-                                    }),
-                                    placeholder: (provided: any) => ({
-                                        ...provided,
-                                        color: '#000000',
-                                    }),
-                                    dropdownIndicator: (provided: any) => ({
-                                        ...provided,
-                                        color: '#000000',
-                                    }),
-                                    option: (provided: any, state: any) => {
-                                        return {
+                        <div>
+                            <h3>{this.props.headerName}</h3>
+                            {this.props.store && (
+                                <AddCheckedGenes
+                                    checkedGenes={this.checkedGenes}
+                                />
+                            )}
+                        </div>
+                        <div className={styles.Checkboxes}>
+                            <div style={{ width: 250, marginRight: 7 }}>
+                                <ReactSelect
+                                    name="select enrichments level: sample or patient"
+                                    onChange={(option: any | null) => {
+                                        if (option) {
+                                            this.props.onSetPatientLevelEnrichments(
+                                                option.value
+                                            );
+                                        }
+                                    }}
+                                    options={[
+                                        {
+                                            label: 'Patient-level enrichments',
+                                            value: true,
+                                        },
+                                        {
+                                            label: 'Sample-level enrichments',
+                                            value: false,
+                                        },
+                                    ]}
+                                    clearable={false}
+                                    searchable={false}
+                                    value={{
+                                        label: this.props
+                                            .patientLevelEnrichments
+                                            ? 'Patient-level enrichments'
+                                            : 'Sample-level enrichments',
+                                        value: this.props
+                                            .patientLevelEnrichments,
+                                    }}
+                                    styles={{
+                                        control: (provided: any) => ({
                                             ...provided,
-                                            cursor: 'pointer',
-                                        };
-                                    },
-                                }}
-                                theme={(theme: any) => ({
-                                    ...theme,
-                                    colors: {
-                                        ...theme.colors,
-                                        neutral80: 'black',
-                                        //primary: theme.colors.primary50
-                                    },
-                                })}
-                            />
+                                            height: 36,
+                                            minHeight: 36,
+                                            border:
+                                                '1px solid rgb(204,204,204)',
+                                        }),
+                                        menu: (provided: any) => ({
+                                            ...provided,
+                                            maxHeight: 400,
+                                        }),
+                                        menuList: (provided: any) => ({
+                                            ...provided,
+                                            maxHeight: 400,
+                                        }),
+                                        placeholder: (provided: any) => ({
+                                            ...provided,
+                                            color: '#000000',
+                                        }),
+                                        dropdownIndicator: (provided: any) => ({
+                                            ...provided,
+                                            color: '#000000',
+                                        }),
+                                        option: (provided: any, state: any) => {
+                                            return {
+                                                ...provided,
+                                                cursor: 'pointer',
+                                            };
+                                        },
+                                    }}
+                                    theme={(theme: any) => ({
+                                        ...theme,
+                                        colors: {
+                                            ...theme.colors,
+                                            neutral80: 'black',
+                                            //primary: theme.colors.primary50
+                                        },
+                                    })}
+                                />
+                            </div>
+                            <div style={{ width: 250, marginRight: 7 }}>
+                                <CheckedSelect
+                                    name={'groupsSelector'}
+                                    placeholder={'Enriched in ...'}
+                                    onChange={this.onChange}
+                                    options={this.options}
+                                    value={this.selectedValues}
+                                    height={36}
+                                />
+                            </div>
+                            <label className="checkbox-inline">
+                                <input
+                                    type="checkbox"
+                                    checked={this.significanceFilter}
+                                    onClick={this.toggleSignificanceFilter}
+                                    data-test="SwapAxes"
+                                />
+                                Significant only
+                            </label>
                         </div>
-                        <div style={{ width: 250, marginRight: 7 }}>
-                            <CheckedSelect
-                                name={'groupsSelector'}
-                                placeholder={'Enriched in ...'}
-                                onChange={this.onChange}
-                                options={this.options}
-                                value={this.selectedValues}
-                                height={36}
-                            />
-                        </div>
-                        <label className="checkbox-inline">
-                            <input
-                                type="checkbox"
-                                checked={this.significanceFilter}
-                                onClick={this.toggleSignificanceFilter}
-                                data-test="SwapAxes"
-                            />
-                            Significant only
-                        </label>
+                        <AlterationEnrichmentTable
+                            key={this.props.patientLevelEnrichments.toString()}
+                            data={this.filteredData}
+                            onCheckGene={
+                                this.props.store ? this.onCheckGene : undefined
+                            }
+                            checkedGenes={
+                                this.props.store ? this.checkedGenes : undefined
+                            }
+                            dataStore={this.dataStore}
+                            visibleOrderedColumnNames={
+                                this.visibleOrderedColumnNames
+                            }
+                            customColumns={_.keyBy(
+                                this.customColumns,
+                                column => column.name
+                            )}
+                        />
                     </div>
-                    <AlterationEnrichmentTable
-                        key={this.props.patientLevelEnrichments.toString()}
-                        data={this.filteredData}
-                        onCheckGene={
-                            this.props.store ? this.onCheckGene : undefined
-                        }
-                        checkedGenes={
-                            this.props.store ? this.checkedGenes : undefined
-                        }
-                        dataStore={this.dataStore}
-                        visibleOrderedColumnNames={
-                            this.visibleOrderedColumnNames
-                        }
-                        customColumns={_.keyBy(
-                            this.customColumns,
-                            column => column.name
-                        )}
-                    />
-                </div>
+                )}
             </div>
         );
     }
