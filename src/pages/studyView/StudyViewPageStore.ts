@@ -268,6 +268,10 @@ import { PageType } from 'shared/userSession/PageType';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
+import {
+    PatientIdentifier,
+    PatientIdentifierFilter,
+} from 'shared/model/PatientIdentifierFilter';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -388,15 +392,6 @@ export enum BinMethodOption {
 enum CustomDataTypeEnum {
     CATEGORICAL = 'CATEGORICAL',
     NUMERICAL = 'NUMERICAL',
-}
-
-interface PatientIdentifierFilter {
-    patientIdentifiers: PatientIdentifier[];
-}
-
-interface PatientIdentifier {
-    patientId: string;
-    studyId: string;
 }
 
 export class StudyViewPageStore
@@ -2181,16 +2176,10 @@ export class StudyViewPageStore
                 const samples = await this.fetchSamplesWithSampleListIds(
                     sampleListIds
                 );
-                const {
-                    patientIdentifiers,
-                } = parsedFilterJson as PatientIdentifierFilter;
-                const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
-                    patientIdentifiers,
+                filters = this.getStudyViewFilterFromPatientIdentifierFilter(
+                    parsedFilterJson as PatientIdentifierFilter,
                     samples
                 );
-                if (sampleIdentifiers.length > 0) {
-                    filters.sampleIdentifiers = sampleIdentifiers;
-                }
             } else {
                 filters = parsedFilterJson as Partial<StudyViewFilter>;
             }
@@ -2265,15 +2254,31 @@ export class StudyViewPageStore
         });
     }
 
+    getStudyViewFilterFromPatientIdentifierFilter(
+        patientIdentifierFilter: PatientIdentifierFilter,
+        samples: Sample[]
+    ): Partial<StudyViewFilter> {
+        const filters: Partial<StudyViewFilter> = {};
+        const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
+            patientIdentifierFilter.patientIdentifiers,
+            samples
+        );
+        if (sampleIdentifiers.length > 0) {
+            filters.sampleIdentifiers = sampleIdentifiers;
+        }
+        return filters;
+    }
+
     convertPatientIdentifiersToSampleIdentifiers(
         patientIdentifiers: Array<PatientIdentifier>,
         samples: Sample[]
     ): SampleIdentifier[] {
+        const patientIdentifiersMap = new Map<string, PatientIdentifier>(
+            patientIdentifiers.map(p => [p.studyId.concat('_', p.patientId), p])
+        );
         return samples
             .filter(s =>
-                patientIdentifiers.some(
-                    p => p.patientId === s.patientId && p.studyId === s.studyId
-                )
+                patientIdentifiersMap.has(s.studyId.concat('_', s.patientId))
             )
             .map(s => ({
                 sampleId: s.sampleId,
