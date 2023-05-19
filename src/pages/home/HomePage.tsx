@@ -11,6 +11,7 @@ import RightBar from '../../shared/components/rightbar/RightBar';
 import './homePage.scss';
 import autobind from 'autobind-decorator';
 import { createQueryStore } from 'shared/lib/createQueryStore';
+import HomePageTour from '../../tour/HomePageTour';
 
 const win = window as any;
 
@@ -59,7 +60,7 @@ export default class HomePage extends React.Component<
                         __html: getServerConfig().skin_blurb!,
                     }}
                 ></div>
-
+                <HomePageTour />
                 <QueryAndDownloadTabs
                     getQueryStore={this.getQueryStore}
                     showQuickSearchTab={getServerConfig().quick_search_enabled}
