@@ -26,7 +26,7 @@ import {
     clinicalAttributeIsPROFILEDIN,
 } from 'shared/cache/ClinicalDataCache';
 import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
-import { ClinicalAttribute, GenericAssayMeta } from 'cbioportal-ts-api-client';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import SaveClinicalTracksButton from 'pages/resultsView/oncoprint/SaveClinicalTracksButton';
@@ -60,11 +60,6 @@ export const COUNT_PADDING_WIDTH = 17;
 export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     @observable tabId: Tab | string = Tab.CLINICAL;
 
-    private selectedGenericAssayProfileIdByType = observable.map<
-        string,
-        string
-    >({}, { deep: true });
-
     constructor(props: IAddTrackProps) {
         super(props);
         makeObservable(this);
@@ -93,10 +88,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     // make sure data from generic assay endpoints fetched
     @computed get isGenericAssayDataComplete() {
         return (
-            this.props.store &&
-            this.props.store.genericAssayProfiles.isComplete &&
-            this.props.store.genericAssayEntitiesGroupByMolecularProfileId
-                .isComplete
+            this.props.store && this.props.store.genericAssayProfiles.isComplete
         );
     }
 
@@ -402,23 +394,12 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         },
     });
 
-    @action.bound
-    private onSelectGenericAssayProfileByType(
-        genericAssayType: string,
-        profileId: string
-    ) {
-        this.selectedGenericAssayProfileIdByType.set(
-            genericAssayType,
-            profileId
-        );
-    }
-
     @computed
     private get genericAssayTabs() {
         let tabs = [];
         if (this.isGenericAssayDataComplete && this.showGenericAssayTabs) {
-            const genericAssayEntitiesGroupByMolecularProfileId = this.props
-                .store.genericAssayEntitiesGroupByMolecularProfileId.result;
+            const genericAssayEntitiesGroupedByGenericAssayType = this.props
+                .store.genericAssayEntitiesGroupedByGenericAssayType.result;
             // create one tab for each generic assay type
             tabs = _.map(this.profilesByGenericAssayType, (profiles, type) => {
                 const profileOptions = _.map(profiles, profile => {
@@ -428,40 +409,20 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     };
                 });
 
-                let selectedProfileId = this.selectedGenericAssayProfileIdByType.get(
-                    type
-                );
-                // Add the first type if there is no selected Generic Assay Profile (on init)
-                selectedProfileId =
-                    typeof selectedProfileId === 'undefined'
-                        ? profileOptions[0].value
-                        : selectedProfileId;
-
-                let genericEntitiesOfSelectedProfile: GenericAssayMeta[] = [];
-                if (
-                    genericAssayEntitiesGroupByMolecularProfileId &&
-                    selectedProfileId
-                ) {
-                    genericEntitiesOfSelectedProfile =
-                        genericAssayEntitiesGroupByMolecularProfileId[
-                            selectedProfileId
-                        ];
-                }
-
                 // bring gene related options to the front
-                let entities;
+                let entities = [];
                 const filteredEntities = GENERIC_ASSAY_CONFIG
                     .genericAssayConfigByType[type]?.globalConfig
                     ?.geneRelatedGenericAssayType
                     ? filterGenericAssayEntitiesByGenes(
-                          genericEntitiesOfSelectedProfile,
+                          genericAssayEntitiesGroupedByGenericAssayType[type],
                           this.props.store.hugoGeneSymbols
                       )
                     : [];
                 entities = [
                     ...filteredEntities,
                     ..._.difference(
-                        genericEntitiesOfSelectedProfile,
+                        genericAssayEntitiesGroupedByGenericAssayType[type],
                         filteredEntities
                     ),
                 ];
@@ -500,11 +461,8 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                                       ]
                                     : []
                             }
-                            onSelectGenericAssayProfile={profileId =>
-                                this.onSelectGenericAssayProfileByType(
-                                    type,
-                                    profileId
-                                )
+                            onSelectGenericAssayProfile={
+                                this.props.handlers.onSelectGenericAssayProfile
                             }
                             onTrackSubmit={this.onGenericAssaySubmit}
                             allowEmptySubmission={true}
