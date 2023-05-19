@@ -189,13 +189,18 @@ export default class StudyViewPage extends React.Component<
                 newStudyViewFilter.sharedCustomData = params.sharedCustomData;
             }
         }
+
+        let updateStoreFromURLPromise = remoteData(() => Promise.resolve([]));
         if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
-            this.store.updateStoreFromURL(newStudyViewFilter);
             this.store.studyViewQueryFilter = newStudyViewFilter;
+            updateStoreFromURLPromise = remoteData(async () => {
+                await this.store.updateStoreFromURL(newStudyViewFilter);
+                return [];
+            });
         }
 
         onMobxPromise(
-            this.store.queriedPhysicalStudyIds,
+            [this.store.queriedPhysicalStudyIds, updateStoreFromURLPromise],
             (strArr: string[]) => {
                 this.store.initializeReaction();
                 trackEvent({
