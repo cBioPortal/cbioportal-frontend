@@ -57,6 +57,7 @@ import {
     PatientTreatmentRow,
     ResourceData,
     Sample,
+    SampleFilter,
     SampleIdentifier,
     SampleMolecularIdentifier,
     SampleTreatmentRow,
@@ -267,6 +268,10 @@ import { PageType } from 'shared/userSession/PageType';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
+import {
+    PatientIdentifier,
+    PatientIdentifierFilter,
+} from 'shared/model/PatientIdentifierFilter';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -2165,14 +2170,20 @@ export class StudyViewPageStore
         // We do not support studyIds in the query filters
         let filters: Partial<StudyViewFilter> = {};
         if (query.filterJson) {
-            try {
-                filters = JSON.parse(
-                    decodeURIComponent(query.filterJson)
-                ) as Partial<StudyViewFilter>;
-                this.updateStoreByFilters(filters);
-            } catch (e) {
-                //  TODO: add some logging here?
+            const parsedFilterJson = this.parseRawFilterJson(query.filterJson);
+            if (query.filterJson.includes('patientIdentifiers')) {
+                const sampleListIds = studyIds.map(s => s.concat('', '_all'));
+                const samples = await this.fetchSamplesWithSampleListIds(
+                    sampleListIds
+                );
+                filters = this.getStudyViewFilterFromPatientIdentifierFilter(
+                    parsedFilterJson as PatientIdentifierFilter,
+                    samples
+                );
+            } else {
+                filters = parsedFilterJson as Partial<StudyViewFilter>;
             }
+            this.updateStoreByFilters(filters);
         } else if (query.filterAttributeId && query.filterValues) {
             const clinicalAttributes = _.uniqBy(
                 await defaultClient.fetchClinicalAttributesUsingPOST({
@@ -2222,6 +2233,57 @@ export class StudyViewPageStore
                 };
             }
         }
+    }
+
+    parseRawFilterJson(filterJson: string): any {
+        let rawJson;
+        try {
+            rawJson = JSON.parse(decodeURIComponent(filterJson));
+        } catch (e) {
+            console.error('FilterJson invalid Json: error: ', e);
+        }
+        return rawJson;
+    }
+
+    fetchSamplesWithSampleListIds(sampleListIds: string[]) {
+        return defaultClient.fetchSamplesUsingPOST({
+            sampleFilter: {
+                sampleListIds: sampleListIds,
+            } as SampleFilter,
+            projection: 'SUMMARY',
+        });
+    }
+
+    getStudyViewFilterFromPatientIdentifierFilter(
+        patientIdentifierFilter: PatientIdentifierFilter,
+        samples: Sample[]
+    ): Partial<StudyViewFilter> {
+        const filters: Partial<StudyViewFilter> = {};
+        const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
+            patientIdentifierFilter.patientIdentifiers,
+            samples
+        );
+        if (sampleIdentifiers.length > 0) {
+            filters.sampleIdentifiers = sampleIdentifiers;
+        }
+        return filters;
+    }
+
+    convertPatientIdentifiersToSampleIdentifiers(
+        patientIdentifiers: Array<PatientIdentifier>,
+        samples: Sample[]
+    ): SampleIdentifier[] {
+        const patientIdentifiersMap = new Map<string, PatientIdentifier>(
+            patientIdentifiers.map(p => [p.studyId.concat('_', p.patientId), p])
+        );
+        return samples
+            .filter(s =>
+                patientIdentifiersMap.has(s.studyId.concat('_', s.patientId))
+            )
+            .map(s => ({
+                sampleId: s.sampleId,
+                studyId: s.studyId,
+            }));
     }
 
     @computed
