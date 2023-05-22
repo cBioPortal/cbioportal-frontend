@@ -124,6 +124,26 @@ export class QueryStore {
 
         makeObservable(this);
 
+        /**
+         * Reset selectedSampleListId when sampleLists and sampleListInSelectedStudies have finished
+         */
+        reaction(
+            () => [this.sampleLists, this.sampleListInSelectedStudies],
+            () => {
+                if (
+                    !this.sampleLists.isComplete ||
+                    !this.sampleListInSelectedStudies.isComplete
+                ) {
+                    return;
+                }
+                if (
+                    !this.initiallySelected.sampleListId ||
+                    this.studiesHaveChangedSinceInitialization
+                ) {
+                    this._selectedSampleListId = undefined;
+                }
+            }
+        );
         this.initialize(urlWithInitialParams);
     }
 
@@ -1004,14 +1024,6 @@ export class QueryStore {
             );
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly validProfileIdSetForSelectedStudies = remoteData({
@@ -1088,14 +1100,6 @@ export class QueryStore {
             return _.sortBy(sampleLists, sampleList => sampleList.name);
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly mutSigForSingleStudy = remoteData({
