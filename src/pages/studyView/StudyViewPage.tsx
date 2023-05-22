@@ -2,6 +2,7 @@ import * as React from 'react';
 import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
+import 'react-toastify/dist/ReactToastify.css';
 import {
     action,
     computed,

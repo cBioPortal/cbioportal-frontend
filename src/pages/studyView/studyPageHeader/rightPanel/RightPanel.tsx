@@ -162,7 +162,8 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                         data-test="geneSetSubmit"
                         onClick={() => this.props.store.onSubmitQuery()}
                     >
-                        Query
+                        <i className={'fa fa-search'}></i>
+                        &nbsp; Query
                     </button>
                 </div>
             </div>

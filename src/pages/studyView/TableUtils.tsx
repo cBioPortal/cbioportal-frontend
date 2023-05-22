@@ -48,6 +48,11 @@ export function getGeneColumnCellOverlaySimple(
                     isTumorSuppressorGene
                 )}
             </span>
+            <strong>
+                {geneIsSelected
+                    ? `Click gene symbol to remove from query queue`
+                    : 'Click gene symbol to queue for query'}
+            </strong>
         </div>
     );
 }
