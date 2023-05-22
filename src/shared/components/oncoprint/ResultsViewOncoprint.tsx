@@ -812,12 +812,16 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.setHeatmapTracks(this.selectedHeatmapProfileId, genes);
             },
             onSelectGenericAssayProfile: (id: string) => {
+                // there is a duplicated state. this should be passed into the
+                // track selection component
                 this.selectedGenericAssayProfileId = id;
             },
             onClickAddGenericAssays: (info: GenericAssayTrackInfo[]) => {
+                // you can't select entities from multiple profiles
+                // at the same time, so just use first one
+                // (should be refactored)
                 this.setGenericAssayTracks(
-                    // selectedGenericAssayProfileId will be updated in GenericAssaySelection component
-                    this.selectedGenericAssayProfileId!,
+                    info[0].profileId,
                     info.map(d => d.genericAssayEntityId)
                 );
             },
