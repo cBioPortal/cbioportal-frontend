@@ -401,7 +401,14 @@ export default class QueryContainer extends React.Component<
                                             }
                                         )}
                                     >
-                                        Query By Gene
+                                        <i
+                                            className={'fa fa-search'}
+                                            style={{
+                                                marginTop: 4,
+                                                marginRight: -2,
+                                            }}
+                                        />
+                                        &nbsp; Query By Gene
                                     </a>
                                 </DefaultTooltip>
                                 OR

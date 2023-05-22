@@ -30,16 +30,9 @@ export type IGeneCellProps = {
 
 @observer
 export class GeneCell extends React.Component<IGeneCellProps, {}> {
-    @observable isVisible: boolean = false;
-
     constructor(props: IGeneCellProps) {
         super(props);
         makeObservable(this);
-    }
-
-    @action.bound
-    onVisibleChange(isVisible: boolean) {
-        this.isVisible = isVisible;
     }
 
     render() {
@@ -53,70 +46,69 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
         };
 
         return (
-            <DefaultTooltip
-                placement="left"
-                disabled={!this.props.isCancerGene}
-                overlay={getGeneColumnCellOverlaySimple(
-                    this.props.hugoGeneSymbol,
-                    geneIsSelected,
-                    this.props.isCancerGene,
-                    this.props.oncokbAnnotated,
-                    this.props.isOncogene,
-                    this.props.isTumorSuppressorGene
-                )}
-                destroyTooltipOnHide={true}
-            >
-                <div
-                    data-test="geneNameCell"
-                    className={classnames(
-                        styles.geneSymbol,
-                        styles.displayFlex
+            <div className={styles.geneSymbol}>
+                <DefaultTooltip
+                    placement="left"
+                    disabled={!this.props.isCancerGene}
+                    overlay={getGeneColumnCellOverlaySimple(
+                        this.props.hugoGeneSymbol,
+                        geneIsSelected,
+                        this.props.isCancerGene,
+                        this.props.oncokbAnnotated,
+                        this.props.isOncogene,
+                        this.props.isTumorSuppressorGene
                     )}
-                    onMouseEnter={() => this.onVisibleChange(true)}
-                    onMouseLeave={() => this.onVisibleChange(false)}
-                    onClick={() =>
-                        this.props.onGeneSelect(this.props.hugoGeneSymbol)
-                    }
+                    destroyTooltipOnHide={true}
                 >
-                    <EllipsisTextTooltip
-                        text={this.props.hugoGeneSymbol}
-                        hideTooltip={this.props.isCancerGene}
-                    />
-                    <span style={{ marginLeft: 5 }}>
-                        <If condition={geneIsSelected}>
-                            <Then>
-                                <i className="fa fa-check-square-o"></i>
-                            </Then>
-                            <Else>
-                                <If condition={this.isVisible}>
-                                    <i className="fa fa-square-o"></i>
+                    <div
+                        data-test="geneNameCell"
+                        className={classnames(styles.displayFlex)}
+                        onClick={() =>
+                            this.props.onGeneSelect(this.props.hugoGeneSymbol)
+                        }
+                    >
+                        <EllipsisTextTooltip
+                            text={this.props.hugoGeneSymbol}
+                            hideTooltip={this.props.isCancerGene}
+                        />
+                        <If condition={!_.isUndefined(this.props.qValue)}>
+                            <span style={iconStyle}>
+                                <If
+                                    condition={
+                                        this.props.tableType ===
+                                        FreqColumnTypeEnum.MUTATION
+                                    }
+                                >
+                                    <Then>
+                                        <MutSigAnnotation
+                                            qValue={this.props.qValue}
+                                        />
+                                    </Then>
+                                    <Else>
+                                        <GisticAnnotation
+                                            qValue={this.props.qValue}
+                                        />
+                                    </Else>
                                 </If>
-                            </Else>
+                            </span>
                         </If>
-                    </span>
-                    <If condition={!_.isUndefined(this.props.qValue)}>
-                        <span style={iconStyle}>
-                            <If
-                                condition={
-                                    this.props.tableType ===
-                                    FreqColumnTypeEnum.MUTATION
-                                }
-                            >
-                                <Then>
-                                    <MutSigAnnotation
-                                        qValue={this.props.qValue}
-                                    />
-                                </Then>
-                                <Else>
-                                    <GisticAnnotation
-                                        qValue={this.props.qValue}
-                                    />
-                                </Else>
-                            </If>
-                        </span>
-                    </If>
-                </div>
-            </DefaultTooltip>
+
+                        <div
+                            className={classnames({
+                                [styles.addGeneUI]: true,
+                                [styles.selected]: geneIsSelected,
+                            })}
+                            onClick={() =>
+                                this.props.onGeneSelect(
+                                    this.props.hugoGeneSymbol
+                                )
+                            }
+                        >
+                            <i className="fa fa-search"></i>
+                        </div>
+                    </div>
+                </DefaultTooltip>
+            </div>
         );
     }
 }

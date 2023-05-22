@@ -268,6 +268,7 @@ import { PageType } from 'shared/userSession/PageType';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
+import { toast, cssTransition } from 'react-toastify';
 import {
     PatientIdentifier,
     PatientIdentifierFilter,
@@ -2621,6 +2622,31 @@ export class StudyViewPageStore
 
     @action.bound
     onCheckGene(hugoGeneSymbol: string): void {
+        let message = '';
+        if (this.geneQueries.find(q => q.gene === hugoGeneSymbol)) {
+            message = `${hugoGeneSymbol} removed from query queue`;
+        } else {
+            message = `${hugoGeneSymbol} queued for query (see top right)`;
+        }
+
+        const Zoom = cssTransition({
+            enter: 'zoomIn',
+            exit: 'zoomOut',
+            appendPosition: false,
+            collapse: true,
+            collapseDuration: 300,
+        });
+
+        toast.success(message, {
+            position: 'top-right',
+            autoClose: 2000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: 'light',
+        });
         //only update geneQueryStr whenever a table gene is clicked.
         this.geneQueries = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
         this.geneQueryStr = this.geneQueries
