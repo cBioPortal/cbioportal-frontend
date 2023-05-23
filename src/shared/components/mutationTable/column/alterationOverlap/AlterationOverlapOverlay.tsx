@@ -39,8 +39,8 @@ export const AlterationOverlapOverlay: React.FC<IAlterationOverlapOverlayProps> 
                             </td>
                             <td>
                                 {groupAMutatedCount} of{' '}
-                                {profiledPatientCounts[0]} of profiled{' '}
-                                {'patients'} (
+                                {profiledPatientCounts[0]} profiled {'patients'}{' '}
+                                (
                                 {numeral(
                                     (groupAMutatedCount /
                                         profiledPatientCounts[0]) *
@@ -55,8 +55,8 @@ export const AlterationOverlapOverlay: React.FC<IAlterationOverlapOverlayProps> 
                             </td>
                             <td>
                                 {groupBMutatedCount} of{' '}
-                                {profiledPatientCounts[1]} of profiled{' '}
-                                {'patients'} (
+                                {profiledPatientCounts[1]} profiled {'patients'}{' '}
+                                (
                                 {numeral(
                                     (groupBMutatedCount /
                                         profiledPatientCounts[1]) *
