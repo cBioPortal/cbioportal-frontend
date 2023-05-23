@@ -302,7 +302,7 @@
     "responsive-fixed-data-table": "^2.0.0",
     "rollup": "^2.73.0",
     "rollup-plugin-node-externals": "^4.0.0",
-    "rollup-plugin-postcss": "^2.9.0",
+    "rollup-plugin-postcss": "^4.0.1",
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-typescript2": "^0.31.2",
     "rollup-plugin-web-worker-loader": "^1.6.1",
