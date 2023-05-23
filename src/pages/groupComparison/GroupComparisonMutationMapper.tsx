@@ -281,7 +281,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 
         return (
             <FilterResetPanel
-                resetFilters={() => dataStore.resetFilters()}
+                resetFilters={this.resetFilters}
                 filterInfo={filterInfo}
                 additionalInfo={shiftClickMessage}
                 className={classnames(
