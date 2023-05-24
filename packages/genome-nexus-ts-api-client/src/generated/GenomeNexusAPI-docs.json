@@ -83,14 +83,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "hotspots"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -149,14 +171,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: annotation_summary",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "annotation_summary"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -210,14 +254,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: annotation_summary",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "annotation_summary"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -273,14 +339,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "hotspots"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -334,14 +422,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "hotspots"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -392,14 +502,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "hotspots"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
