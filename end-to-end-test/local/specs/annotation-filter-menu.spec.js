@@ -564,6 +564,7 @@ describe('alteration filter menu', function() {
         // -+=+ MUTATION STATUS +=+-
         it('filters enrichment table when unchecking germline checkbox', () => {
             clickCheckBoxResultsView('Germline');
+
             assert.deepStrictEqual(enrichmentTableCounts(), {
                 DTNB: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ADAMTS20: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },

@@ -463,7 +463,7 @@ export function tabs(
             key={2}
             id={PatientViewPageTabs.ClinicalData}
             linkText="Clinical Data"
-            className={'patient-clinical-data-tab'}
+            containerClassName={'patient-clinical-data-tab'}
         >
             <div className="clearfix">
                 <h3 className={'pull-left'}>Patient</h3>

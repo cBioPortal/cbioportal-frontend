@@ -449,38 +449,28 @@ export function MakeEnrichmentsTabUI(
                 (multiGroupAnalysisPossible && activeGroupsCount < 2)
             ) {
                 return (
-                    <span>
+                    <div className={'alert alert-info'}>
                         {ENRICHMENTS_NOT_2_GROUPS_MSG(
                             store.activeGroups.result!.length,
                             store._activeGroupsNotOverlapRemoved.result!.length,
                             multiGroupAnalysisPossible
                         )}
-                    </span>
+                    </div>
                 );
             } else if (
                 store.activeStudyIds.result!.length > 1 &&
                 !multiStudyAnalysisPossible
             ) {
                 return (
-                    <span>
+                    <div className={'alert alert-info'}>
                         {ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentType)}
-                    </span>
+                    </div>
                 );
             } else {
                 const content: any = [];
-                const doShowInlineTypeSelectionMenu =
-                    enrichmentType == 'alterations' &&
-                    !getServerConfig().skin_show_settings_menu;
+
                 content.push(
-                    // The alteration type selector is shown to left of the
-                    // graph panels ('in-line'). This div element pushes the
-                    // graph elements to the right when the type selector
-                    // is shown 'in-line'.
-                    <div
-                        style={{
-                            marginLeft: doShowInlineTypeSelectionMenu ? 244 : 0,
-                        }}
-                    >
+                    <div>
                         <OverlapExclusionIndicator
                             store={store}
                             only={
@@ -492,7 +482,19 @@ export function MakeEnrichmentsTabUI(
                         />
                     </div>
                 );
+
+                getServerConfig().skin_show_settings_menu &&
+                    content.push(
+                        <AlterationFilterMenuSection
+                            store={store}
+                            updateSelectedEnrichmentEventTypes={
+                                store.updateSelectedEnrichmentEventTypes
+                            }
+                        />
+                    );
+
                 content.push(getEnrichmentsUI().component);
+
                 return content;
             }
         },

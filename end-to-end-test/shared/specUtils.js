@@ -57,7 +57,7 @@ function waitForOncoprint(timeout) {
                 $('.oncoprint__controls').isExisting()
             ); // oncoprint controls are showing
         },
-        { timeout }
+        { timeout: 5000 }
     );
     browser.pause(200);
 }

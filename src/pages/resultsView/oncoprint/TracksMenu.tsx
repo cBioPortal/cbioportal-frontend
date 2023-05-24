@@ -479,7 +479,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     <MSKTab
                         key={type}
                         id={type}
-                        className="oncoprintGenericAssayTab"
+                        containerClassName="oncoprintGenericAssayTab"
                         linkText={linkText}
                     >
                         <GenericAssaySelection

@@ -6,6 +6,7 @@
 
 .ChartsPanel {
     display: flex;
+    align-items: start;
 
     > div {
         margin-right: $standardMargin;
@@ -148,4 +149,10 @@
 .ProfileInfoIcon {
     margin-left: 8px;
     color: #555;
+}
+
+.inlineAlterationTypeSelectorMenu {
+    background: #eee;
+    border-radius: 4px;
+    padding: 10px;
 }

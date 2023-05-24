@@ -803,7 +803,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         key={0}
                         id={ChartMetaDataTypeEnum.CLINICAL}
                         linkText={TabNamesEnum.CLINICAL}
-                        className="addClinicalChartTab"
+                        containerClassName="addClinicalChartTab"
                     >
                         <AddChartByType
                             width={this.getTabsWidth}
@@ -822,7 +822,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             this.props.disableGenomicTab ||
                             this.genomicChartOptions.length === 0
                         }
-                        className="addGenomicChartTab"
+                        containerClassName="addGenomicChartTab"
                     >
                         <AddChartByType
                             width={this.getTabsWidth}
@@ -888,7 +888,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={ChartMetaDataTypeEnum.CUSTOM_DATA}
                         linkText={TabNamesEnum.CUSTOM_DATA}
                         hide={this.props.disableCustomTab}
-                        className="custom"
+                        containerClassName="custom"
                     >
                         <div
                             style={{

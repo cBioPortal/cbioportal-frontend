@@ -4,7 +4,10 @@ import AlterationEnrichmentContainer from '../resultsView/enrichments/Alteration
 import { MakeMobxView } from '../../shared/components/MobxView';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
-import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
+import {
+    AlterationFilterMenuSection,
+    MakeEnrichmentsTabUI,
+} from './GroupComparisonUtils';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { ResultsViewPageStore } from '../resultsView/ResultsViewPageStore';
 import { GENOMIC_ALTERATIONS_TAB_NAME } from 'pages/groupComparison/GroupComparisonTabs';
@@ -79,6 +82,6 @@ export default class AlterationEnrichments extends React.Component<
     });
 
     render() {
-        return this.tabUI.component;
+        return <>{this.tabUI.component}</>;
     }
 }

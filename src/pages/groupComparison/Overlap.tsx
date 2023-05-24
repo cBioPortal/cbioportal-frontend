@@ -67,7 +67,11 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             const content: any[] = [];
 
             if (this.props.store._selectedGroups.result!.length < 2) {
-                content.push(<span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>);
+                content.push(
+                    <div className={'alert alert-info'}>
+                        {OVERLAP_NOT_ENOUGH_GROUPS_MSG}
+                    </div>
+                );
             } else {
                 content.push(
                     <OverlapExclusionIndicator

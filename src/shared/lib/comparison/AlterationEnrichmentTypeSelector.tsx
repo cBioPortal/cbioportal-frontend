@@ -167,7 +167,6 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
-        console.log((event.target as HTMLInputElement).value);
         switch ((event.target as HTMLInputElement).value) {
             case checkbox.mutations:
                 this.toggleMutGroup(
