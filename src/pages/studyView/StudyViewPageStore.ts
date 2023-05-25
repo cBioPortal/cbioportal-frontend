@@ -2136,24 +2136,11 @@ export class StudyViewPageStore
 
     @action
     async updateStoreFromURL(query: StudyViewURLQuery): Promise<void> {
-        let studyIdsString: string = '';
-        let studyIds: string[] = [];
-        if (query.studyId) {
-            studyIdsString = query.studyId;
-        }
-        if (query.cancer_study_id) {
-            studyIdsString = query.cancer_study_id;
-        }
-        if (query.id) {
-            studyIdsString = query.id;
-        }
-        if (studyIdsString) {
-            studyIds = studyIdsString.trim().split(',');
-            if (!_.isEqual(studyIds, toJS(this.studyIds))) {
-                // update if different
-                this.studyIds = studyIds;
-            }
-        }
+        const studyIds = this.parseStudyIdsFromUrlQuery(
+            query.studyId,
+            query.cancer_study_id,
+            query.id
+        );
         if (query.sharedGroups) {
             this.sharedGroupSet = stringListToSet(
                 query.sharedGroups.trim().split(',')
@@ -2234,6 +2221,23 @@ export class StudyViewPageStore
                 };
             }
         }
+    }
+
+    parseStudyIdsFromUrlQuery(
+        studyId: string | undefined,
+        cancer_study_id: string | undefined,
+        id: string | undefined
+    ): Array<string> {
+        let studyIds: Array<string> = [];
+        const studyIdsString = studyId ?? cancer_study_id ?? id ?? '';
+        if (studyIdsString) {
+            studyIds = studyIdsString.trim().split(',');
+            if (!_.isEqual(studyIds, toJS(this.studyIds))) {
+                // update if different
+                this.studyIds = studyIds;
+            }
+        }
+        return studyIds;
     }
 
     parseRawFilterJson(filterJson: string): any {
