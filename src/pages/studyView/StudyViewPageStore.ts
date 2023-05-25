@@ -2638,9 +2638,8 @@ export class StudyViewPageStore
         });
 
         toast.success(message, {
-            delay: 0,
             position: 'top-right',
-            autoClose: 1500,
+            autoClose: 2000,
             hideProgressBar: true,
             closeOnClick: true,
             pauseOnHover: true,
