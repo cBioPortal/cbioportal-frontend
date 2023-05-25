@@ -98,6 +98,11 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                                 [styles.addGeneUI]: true,
                                 [styles.selected]: geneIsSelected,
                             })}
+                            onClick={() =>
+                                this.props.onGeneSelect(
+                                    this.props.hugoGeneSymbol
+                                )
+                            }
                         >
                             <i className="fa fa-search"></i>
                         </div>
