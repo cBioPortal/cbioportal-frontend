@@ -2,10 +2,6 @@ const {
     getNthOncoprintTrackOptionsElements,
 } = require('../../../shared/specUtils');
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-
-var getElementByTestHandle = require('../../../shared/specUtils')
-    .getElementByTestHandle;
-
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
@@ -269,7 +265,7 @@ describe('sorting', function() {
 
         $('[data-test="StudySelect"] input').click();
 
-        getElementByTestHandle('queryByGeneButton').click();
+        $('a=Query By Gene').click();
 
         browser.pause(1000);
 
@@ -323,7 +319,7 @@ describe('sorting', function() {
 
         $('[data-test="StudySelect"] input').click();
 
-        getElementByTestHandle('queryByGeneButton').click();
+        $('a=Query By Gene').click();
 
         //browser.pause(500);
 

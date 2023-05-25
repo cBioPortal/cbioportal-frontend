@@ -528,7 +528,7 @@ function clickQueryByGeneButton() {
     $('.disabled[data-test=queryByGeneButton]').waitForExist({
         reverse: true,
     });
-    getElementByTestHandle('queryByGeneButton').click();
+    $('a=Query By Gene').click();
     $('body').scrollIntoView();
 }
 

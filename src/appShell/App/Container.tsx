@@ -2,7 +2,6 @@ import * as React from 'react';
 
 import 'cbioportal-frontend-commons/dist/styles.css';
 import '../../globalStyles/prefixed-global.scss';
-import { ToastContainer } from 'react-toastify';
 
 import PortalHeader from './PortalHeader';
 import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
@@ -103,7 +102,6 @@ export default class Container extends React.Component<IContainerProps, {}> {
             <AppContext.Provider value={this.appContext}>
                 <ErrorBoundary>
                     <div>
-                        <ToastContainer />
                         <Helmet>
                             <meta charSet="utf-8" />
                             <title>{getServerConfig().skin_title}</title>
