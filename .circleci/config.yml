@@ -297,7 +297,7 @@ jobs:
                   docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
             - restore_cache:
                 keys:
-                  - v10-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+                  - v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
             - run:
                 name: Init database
                 command: |
@@ -311,7 +311,7 @@ jobs:
             - save_cache:
                 paths:
                   - /tmp/repo/e2e-localdb-workspace/cbio_db_data
-                key: v10-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+                key: v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
             - run:
                 name: Start cbioportal and other services
                 command: |

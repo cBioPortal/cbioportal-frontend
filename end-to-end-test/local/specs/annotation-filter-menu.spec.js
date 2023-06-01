@@ -39,6 +39,10 @@ const SV_COUNTS = {
 };
 
 describe('alteration filter menu', function() {
+    // set retries to zero because
+    // there are tests which are order dependent (interdependent)
+    this.retries(0);
+
     describe('study view', () => {
         describe('filtering of gene tables', () => {
             before(() => {
@@ -90,7 +94,7 @@ describe('alteration filter menu', function() {
                 clickCheckBoxStudyView('Germline');
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '6',
-                    ACPP: '5',
+                    ACP3: '5',
                     BRCA1: '4',
                     ATM: '1',
                     DTNB: '1',
@@ -141,7 +145,7 @@ describe('alteration filter menu', function() {
                 waitForStudyView();
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
-                    ACPP: '5',
+                    ACP3: '5',
                     BRCA1: '5',
                     ATM: '2',
                     DTNB: '1',
@@ -187,7 +191,7 @@ describe('alteration filter menu', function() {
                 clickCheckBoxStudyView('Putative drivers');
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
-                    ACPP: '5',
+                    ACP3: '5',
                     BRCA1: '3',
                     PIEZO1: '1',
                     ATM: '2',
@@ -227,7 +231,7 @@ describe('alteration filter menu', function() {
                 clickCheckBoxStudyView('Putative passengers');
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
-                    ACPP: '5',
+                    ACP3: '5',
                     BRCA1: '4',
                     ATM: '2',
                     ABLIM1: '1',
@@ -304,7 +308,7 @@ describe('alteration filter menu', function() {
             it('does not filter tables when checking all tier checkboxes', () => {
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
-                    ACPP: '5',
+                    ACP3: '5',
                     BRCA1: '5',
                     ATM: '2',
                     DTNB: '1',
@@ -436,7 +440,7 @@ describe('alteration filter menu', function() {
                 waitForStudyView();
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
-                    ACPP: '5',
+                    ACP3: '5',
                     ATM: '2',
                     BRCA1: '2',
                     TP53: '2',
@@ -572,7 +576,7 @@ describe('alteration filter menu', function() {
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA2: { alt: '0 (0.00%)', unalt: '6 (30.00%)' },
-                ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             clickCheckBoxResultsView('Germline');
         });
@@ -598,7 +602,7 @@ describe('alteration filter menu', function() {
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             $('[data-test=ShowUnknown]').click();
         });
@@ -613,7 +617,7 @@ describe('alteration filter menu', function() {
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             clickCheckBoxResultsView('Putative drivers');
         });
@@ -626,7 +630,7 @@ describe('alteration filter menu', function() {
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             clickCheckBoxResultsView('Putative passengers');
         });
@@ -652,7 +656,7 @@ describe('alteration filter menu', function() {
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
         });
 
@@ -674,7 +678,7 @@ describe('alteration filter menu', function() {
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             $('[data-test=ShowUnknownTier]').click();
         });
