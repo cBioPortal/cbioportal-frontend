@@ -305,7 +305,7 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
         <div className="oncokb-treatment-table">
             <ReactTable
                 data={treatments}
-                columns={columns}
+                columns={drugInfos ? columns : undefined}
                 showPagination={false}
                 pageSize={treatments.length}
                 className="-striped -highlight"
