@@ -32,7 +32,6 @@ export type IGeneCellProps = {
 export class GeneCell extends React.Component<IGeneCellProps, {}> {
     constructor(props: IGeneCellProps) {
         super(props);
-        makeObservable(this);
     }
 
     render() {
