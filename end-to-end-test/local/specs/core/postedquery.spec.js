@@ -58,19 +58,26 @@ describe('posting query parameters (instead of GET) to query page', function() {
     });
 });
 
-describe('Post Data for StudyView Filtering with filterJson via HTTP Post', () => {
+describe.only('Post Data for StudyView Filtering with filterJson via HTTP Post', () => {
     it('Send PatientIdentifier Filter via postData', () => {
         const filterJsonQuery = {
-            patientIdentifiers: [
-                { study_id: 'msk_impact_2017', patientId: 'P-0000004' },
-            ],
+            filterJson:
+                '{"patientIdentifiers":[{"study_id":"study_es_0","patientId":"TCGA-A1-A0SB" }]}',
         };
 
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`, true);
+
         postDataToUrl(
-            `${CBIOPORTAL_URL}/study/summary?id=msk_impact_2017`,
+            `${CBIOPORTAL_URL}/study/summary?id=study_es_0&localdev=true`,
             filterJsonQuery
         );
 
+        const postData = browser.execute(() => {
+            return window.postData;
+        });
+
+        console.log(postData);
+        //browser.debug();
         getElementByTestHandle('selected-samples').waitForExist({
             timeout: 20000,
         });

@@ -241,7 +241,9 @@ export default class StudyViewPage extends React.Component<
 
     private getPostDataFilterJson(): string | undefined {
         let rawFilterJsonStr: string | undefined;
-        const postData = getBrowserWindow()?.postData?.filterJson;
+        let postData: string = getBrowserWindow()?.postData?.filterJson;
+        const regx = /&quot;/;
+        postData = postData.replace(regx, '"');
         if (postData) {
             try {
                 JSON.parse(postData);
