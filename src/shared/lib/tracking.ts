@@ -38,6 +38,7 @@ export function initializeTracking() {
 }
 
 export function trackEvent(event: GAEvent) {
+    return;
     // trackEvent is used to send custom UI events which may depend on custom configuration within GA
     // for other installers, we want to shut these off, leaving them with bare-bones out-of-box GA implemenation
     if (/cbioportal\.org$|mskcc\.org$/.test(getBrowserWindow().location.host)) {
@@ -94,31 +95,17 @@ export function sendToLoggly(payload: Record<string, string | number>) {
 export function embedGoogleAnalytics(ga_code: string) {
     $(document).ready(function() {
         $(
-            '<script async src="https://www.google-analytics.com/analytics.js"></script>'
+            `<script async src="https://www.googletagmanager.com/gtag/js?id=${ga_code}"></script>`
         ).appendTo('body');
-        $(
-            '<script async src="https://cdnjs.cloudflare.com/ajax/libs/autotrack/2.4.1/autotrack.js"></script>'
-        ).appendTo('body');
-        getBrowserWindow().ga =
-            getBrowserWindow().ga ||
-            function() {
-                (ga.q = ga.q || []).push(arguments);
-            };
-        const ga: UniversalAnalytics.ga = getBrowserWindow().ga;
-        ga.l = +new Date();
-        ga('create', ga_code, 'auto');
 
-        ga('require', 'urlChangeTracker', {
-            hitFilter: function(model: any) {
-                sendToLoggly({ message: 'PAGE_VIEW' });
-            },
-        });
+        getBrowserWindow().dataLayer = getBrowserWindow().dataLayer || [];
+        function gtag(...args: any[]) {
+            getBrowserWindow().dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
 
-        ga('require', 'cleanUrlTracker', {
-            stripQuery: true,
-            trailingSlash: 'remove',
-        });
-        ga('send', 'pageview');
+        gtag('config', ga_code);
+
         sendToLoggly({ message: 'PAGE_VIEW' });
     });
 }
