@@ -10,6 +10,8 @@ import {
 } from 'oncokb-frontend-commons';
 import classnames from 'classnames';
 import { getServerConfig } from 'config/config';
+import { RemoteData } from 'cbioportal-utils';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 
 // oncokb
 enum OncokbTabs {
@@ -370,6 +372,7 @@ const AnnotationHeader: React.FunctionComponent<{
     width: number;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
+    showRevueIcon?: boolean;
 }> = props => {
     return (
         <span>
@@ -402,12 +405,13 @@ const AnnotationHeader: React.FunctionComponent<{
                             marginLeft: 5,
                             marginBottom: 0,
                             marginRight:
-                                props.width - 21 > 0 ? props.width - 21 : 0,
+                                props.width - 22 > 0 ? props.width - 22 : 0,
                         }}
                     />
                 </DefaultTooltip>
             )}
-            {getServerConfig().show_revue && (
+            {/* only show reVUE when reVUE is enabled and there are reVUE mutations in the query */}
+            {getServerConfig().show_revue && props.showRevueIcon && (
                 <DefaultTooltip
                     placement="top"
                     overlay={
@@ -423,7 +427,7 @@ const AnnotationHeader: React.FunctionComponent<{
                         style={{
                             height: 14,
                             width: 14,
-                            marginLeft: 6,
+                            marginLeft: 7,
                             marginRight: 1,
                         }}
                     />

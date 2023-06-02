@@ -13,6 +13,7 @@ import { getVariantAnnotation, RemoteData } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { RevueCell } from 'react-mutation-mapper';
+import { getServerConfig } from 'config/config';
 
 /**
  * Mutation Column Formatter.
@@ -184,7 +185,7 @@ export default class MutationTypeColumnFormatter {
         return (
             <span className={styles.mutationTypeCell}>
                 {content}
-                {vue && (
+                {vue && getServerConfig().show_revue && (
                     <span className={styles.revueIcon}>
                         <RevueCell vue={vue} />
                     </span>
