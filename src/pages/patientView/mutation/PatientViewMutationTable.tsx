@@ -289,6 +289,9 @@ export default class PatientViewMutationTable extends MutationTable<
                     width={this.oncokbWidth}
                     mergeOncoKbIcons={this.props.mergeOncoKbIcons}
                     onOncoKbIconToggle={this.handleOncoKbIconModeToggle}
+                    showRevueIcon={
+                        this.props.enableRevue && this.shouldShowRevue
+                    }
                 />
             );
         };
