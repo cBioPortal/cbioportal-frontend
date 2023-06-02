@@ -854,8 +854,7 @@ export default class SurvivalChart
     @computed get compactTooltipContent() {
         return (
             <div>
-                Events during [{this.tooltipModel.datum.x},
-                {this.tooltipModel.datum.x + 1}) months
+                Events during month {this.tooltipModel.datum.x}
                 <br />
                 {this.tooltipModel.datum.numberOfEvents !== undefined && (
                     <>
