@@ -105,7 +105,7 @@ export default class ProteinChangeColumnFormatter {
                 {isGermlineMutation && ( // add a germline indicator next to protein change if it is a germline mutation!
                     <span className={styles.germline}>Germline</span>
                 )}
-                {vue && getServerConfig().show_revue && (
+                {getServerConfig().show_revue && vue && (
                     <span className={styles.revueIcon}>
                         <RevueCell vue={vue} />
                     </span>

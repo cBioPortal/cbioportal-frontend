@@ -185,7 +185,7 @@ export default class MutationTypeColumnFormatter {
         return (
             <span className={styles.mutationTypeCell}>
                 {content}
-                {vue && getServerConfig().show_revue && (
+                {getServerConfig().show_revue && vue && (
                     <span className={styles.revueIcon}>
                         <RevueCell vue={vue} />
                     </span>

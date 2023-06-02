@@ -10,8 +10,6 @@ import {
 } from 'oncokb-frontend-commons';
 import classnames from 'classnames';
 import { getServerConfig } from 'config/config';
-import { RemoteData } from 'cbioportal-utils';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 
 // oncokb
 enum OncokbTabs {

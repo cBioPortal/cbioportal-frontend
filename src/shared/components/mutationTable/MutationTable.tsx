@@ -358,16 +358,19 @@ export default class MutationTable<
     // hide reVUE if there is no reVUE mutations in the query
     @computed get shouldShowRevue() {
         const genomicLocationStrings = _.chain(this.props.dataStore?.allData)
-            .map(mutationList => extractGenomicLocation(mutationList[0]))
-            .compact()
-            .map(genomicLocation => genomicLocationString(genomicLocation!))
+            .filter(mutationList => mutationList.length > 0) // get all mutations and filter out empty mutation list
+            .map(mutationList => mutationList[0]) // get mutation object (it's a list but only has one mutation)
+            .map(mutation => extractGenomicLocation(mutation))
+            .compact() // filter out undefined
+            .map(genomicLocation => genomicLocationString(genomicLocation))
             .value();
-
+        const genomicLocationStringSet = new Set(genomicLocationStrings);
         if (this.props.indexedVariantAnnotations?.result) {
             const filteredVariantAnnotations = _.values(
                 _.pickBy(
                     this.props.indexedVariantAnnotations!.result,
-                    (value, key) => _.includes(genomicLocationStrings, key)
+                    (annotation, genomicLocationString) =>
+                        genomicLocationStringSet.has(genomicLocationString)
                 )
             );
             return _.some(
@@ -928,8 +931,7 @@ export default class MutationTable<
                             .enableMyCancerGenome as boolean,
                         enableHotspot: this.props.enableHotspot as boolean,
                         enableRevue:
-                            (this.props.enableRevue as boolean) &&
-                            this.shouldShowRevue,
+                            !!this.props.enableRevue && this.shouldShowRevue,
                         userDisplayName: this.props.userDisplayName,
                         indexedVariantAnnotations: this.props
                             .indexedVariantAnnotations,
@@ -998,7 +1000,7 @@ export default class MutationTable<
                     this.props.civicVariants,
                     this.props.indexedVariantAnnotations,
                     this.resolveTumorType,
-                    (this.props.enableRevue as boolean) && this.shouldShowRevue
+                    !!this.props.enableRevue && this.shouldShowRevue
                 );
             },
             sortBy: (d: Mutation[]) => {
