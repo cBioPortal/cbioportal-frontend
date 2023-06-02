@@ -24,7 +24,7 @@ import { DefaultTooltip, getBrowserWindow } from 'cbioportal-frontend-commons';
 export interface IMSKTabProps {
     inactive?: boolean;
     id: string;
-    linkText: string | JSX.Element;
+    linkText?: string | JSX.Element;
     linkTooltip?: string | JSX.Element;
     activeId?: string;
     className?: string;
@@ -37,6 +37,7 @@ export interface IMSKTabProps {
     onTabUnmount?: (tab: HTMLDivElement) => void;
     onClickClose?: (tabId: string) => void;
     pending?: boolean;
+    linkOverride?: JSX.Element;
 }
 
 @observer
@@ -416,26 +417,31 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                         ref={this.tabRefHandler.bind(this, tab.props.id)}
                         className={activeClass}
                     >
-                        <DefaultTooltip
-                            overlay={tab.props.linkTooltip}
-                            mouseEnterDelay={0}
-                            placement="top"
-                            visible={tab.props.linkTooltip ? undefined : false}
-                        >
-                            <a
-                                className={classnames(
-                                    'tabAnchor',
-                                    `tabAnchor_${tab.props.id}`,
-                                    tab.props.anchorClassName
-                                )}
-                                onClick={this.tabClickHandlers(tab.props)}
-                                href={href}
-                                style={tab.props.anchorStyle}
+                        {' '}
+                        {tab.props.linkOverride || (
+                            <DefaultTooltip
+                                overlay={tab.props.linkTooltip}
+                                mouseEnterDelay={0}
+                                placement="top"
+                                visible={
+                                    tab.props.linkTooltip ? undefined : false
+                                }
                             >
-                                {tab.props.linkText}
-                                {closeButton}
-                            </a>
-                        </DefaultTooltip>
+                                <a
+                                    className={classnames(
+                                        'tabAnchor',
+                                        `tabAnchor_${tab.props.id}`,
+                                        tab.props.anchorClassName
+                                    )}
+                                    onClick={this.tabClickHandlers(tab.props)}
+                                    href={href}
+                                    style={tab.props.anchorStyle}
+                                >
+                                    {tab.props.linkText}
+                                    {closeButton}
+                                </a>
+                            </DefaultTooltip>
+                        )}
                     </li>
                 );
             }
