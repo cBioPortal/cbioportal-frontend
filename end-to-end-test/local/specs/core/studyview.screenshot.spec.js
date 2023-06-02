@@ -139,7 +139,8 @@ describe('Test the Custom data tab', function() {
     });
 });
 
-describe('study view x vs y charts', () => {
+describe('study view x vs y charts', function() {
+    this.retries(0);
     const X_VS_Y_CHART = `div[data-test="chart-container-X-VS-Y-AGE-MUTATION_COUNT"]`;
     const X_VS_Y_HAMBURGER_ICON = `${X_VS_Y_CHART} [data-test="chart-header-hamburger-icon"]`;
     const X_VS_Y_MENU = `${X_VS_Y_CHART} [data-test="chart-header-hamburger-icon-menu"]`;
@@ -205,6 +206,7 @@ describe('study view x vs y charts', () => {
         }
 
         $(X_VS_Y_CHART).waitForExist();
+
         const res = checkElementWithMouseDisabled(X_VS_Y_CHART);
         assertScreenShotMatch(res);
     });
