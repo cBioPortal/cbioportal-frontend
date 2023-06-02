@@ -7,6 +7,7 @@ var _ = require('lodash');
 var {
     useExternalFrontend,
     waitForOncoprint,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -54,5 +55,26 @@ describe('posting query parameters (instead of GET) to query page', function() {
         assert(postData === null, 'postData has been set to null after read');
 
         waitForOncoprint();
+    });
+});
+
+describe('Post Data for StudyView Filtering with filterJson via HTTP Post', () => {
+    it('Send PatientIdentifier Filter via postData', () => {
+        const filterJsonQuery = {
+            patientIdentifiers: [
+                { study_id: 'msk_impact_2017', patientId: 'P-0000004' },
+            ],
+        };
+
+        postDataToUrl(
+            `${CBIOPORTAL_URL}/study/summary?id=msk_impact_2017`,
+            filterJsonQuery
+        );
+
+        getElementByTestHandle('selected-samples').waitForExist({
+            timeout: 20000,
+        });
+
+        assert.equal(getElementByTestHandle('selected-samples').getText(), 1);
     });
 });

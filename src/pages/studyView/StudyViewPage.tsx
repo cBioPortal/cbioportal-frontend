@@ -191,6 +191,11 @@ export default class StudyViewPage extends React.Component<
             }
         }
 
+        const postDataFilterJson = this.getPostDataFilterJson();
+        if (postDataFilterJson) {
+            newStudyViewFilter.filterJson = postDataFilterJson;
+        }
+
         let updateStoreFromURLPromise = remoteData(() => Promise.resolve([]));
         if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
             this.store.studyViewQueryFilter = newStudyViewFilter;
@@ -232,6 +237,21 @@ export default class StudyViewPage extends React.Component<
                 this.toolbarLeft = $(this.toolbar).position().left;
             }
         }, 500);
+    }
+
+    private getPostDataFilterJson(): string | undefined {
+        debugger;
+        let rawFilterJsonStr: string | undefined;
+        let postData: string = getBrowserWindow()?.postData?.filterJson;
+        if (postData) {
+            try {
+                JSON.parse(postData);
+                rawFilterJsonStr = postData;
+            } catch (error) {
+                console.error('PostData.filterJson does not have valid JSON');
+            }
+        }
+        return rawFilterJsonStr;
     }
 
     @autobind
