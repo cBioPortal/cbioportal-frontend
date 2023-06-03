@@ -63,6 +63,8 @@ import {
     IMyCancerGenomeData,
     RemoteData,
     IMyVariantInfoIndex,
+    extractGenomicLocation,
+    genomicLocationString,
 } from 'cbioportal-utils';
 import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
@@ -350,6 +352,35 @@ export default class MutationTable<
                 width =>
                     (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
             );
+        }
+    }
+
+    // hide reVUE if there is no reVUE mutations in the query
+    @computed get shouldShowRevue() {
+        const genomicLocationStrings = _.chain(this.props.dataStore?.allData)
+            .filter(mutationList => mutationList.length > 0) // get all mutations and filter out empty mutation list
+            .map(mutationList => mutationList[0]) // get mutation object (it's a list but only has one mutation)
+            .map(mutation => extractGenomicLocation(mutation))
+            .compact() // filter out undefined
+            .map(genomicLocation => genomicLocationString(genomicLocation))
+            .value();
+        const genomicLocationStringSet = new Set(genomicLocationStrings);
+        if (this.props.indexedVariantAnnotations?.result) {
+            const filteredVariantAnnotations = _.values(
+                _.pickBy(
+                    this.props.indexedVariantAnnotations!.result,
+                    (annotation, genomicLocationString) =>
+                        genomicLocationStringSet.has(genomicLocationString)
+                )
+            );
+            return _.some(
+                filteredVariantAnnotations.map(
+                    annotation =>
+                        annotation?.annotation_summary?.vues !== undefined
+                )
+            );
+        } else {
+            return false;
         }
     }
 
@@ -875,7 +906,8 @@ export default class MutationTable<
                     name,
                     this.oncokbWidth,
                     this.props.mergeOncoKbIcons,
-                    this.handleOncoKbIconModeToggle
+                    this.handleOncoKbIconModeToggle,
+                    this.shouldShowRevue
                 ),
             render: (d: Mutation[]) => (
                 <span id="mutation-annotation">
@@ -898,7 +930,8 @@ export default class MutationTable<
                         enableMyCancerGenome: this.props
                             .enableMyCancerGenome as boolean,
                         enableHotspot: this.props.enableHotspot as boolean,
-                        enableRevue: this.props.enableRevue as boolean,
+                        enableRevue:
+                            !!this.props.enableRevue && this.shouldShowRevue,
                         userDisplayName: this.props.userDisplayName,
                         indexedVariantAnnotations: this.props
                             .indexedVariantAnnotations,
@@ -966,7 +999,8 @@ export default class MutationTable<
                     this.props.civicGenes,
                     this.props.civicVariants,
                     this.props.indexedVariantAnnotations,
-                    this.resolveTumorType
+                    this.resolveTumorType,
+                    !!this.props.enableRevue && this.shouldShowRevue
                 );
             },
             sortBy: (d: Mutation[]) => {
