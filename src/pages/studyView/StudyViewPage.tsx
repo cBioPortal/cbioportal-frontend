@@ -191,7 +191,8 @@ export default class StudyViewPage extends React.Component<
             }
         }
 
-        const postDataFilterJson = this.getPostDataFilterJson();
+        // Overrite filterJson from URL with what is defined in postData
+        const postDataFilterJson = this.getFilterJsonFromPostData();
         if (postDataFilterJson) {
             newStudyViewFilter.filterJson = postDataFilterJson;
         }
@@ -239,21 +240,26 @@ export default class StudyViewPage extends React.Component<
         }, 500);
     }
 
-    private getPostDataFilterJson(): string | undefined {
-        let rawFilterJsonStr: string | undefined;
-        let postData: string = getBrowserWindow()?.postData?.filterJson;
+    private getFilterJsonFromPostData(): string | undefined {
+        let filterJson: string | undefined;
+        let rawPostDataFilterJson: string = getBrowserWindow()?.postData
+            ?.filterJson;
+
+        // Strip potential HTML encoded quotes
         const regx = /&quot;/g;
-        postData = postData?.replace(regx, '"');
-        console.log(`PostData: ${postData}`);
-        if (postData) {
+        rawPostDataFilterJson = rawPostDataFilterJson?.replace(regx, '"');
+
+        if (rawPostDataFilterJson) {
             try {
-                JSON.parse(postData);
-                rawFilterJsonStr = postData;
+                JSON.parse(rawPostDataFilterJson);
+                filterJson = rawPostDataFilterJson;
             } catch (error) {
-                console.error('PostData.filterJson does not have valid JSON');
+                console.error(
+                    `PostData.filterJson does not have valid JSON, error: ${error}`
+                );
             }
         }
-        return rawFilterJsonStr;
+        return filterJson;
     }
 
     @autobind

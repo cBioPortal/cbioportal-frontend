@@ -24,6 +24,7 @@ export interface StudyViewQueryExtractor<T> {
     accept(query: StudyViewURLQuery, store: StudyViewPageStore): T;
 }
 
+// TODO: Refactor even further to abstract all updates to StudyViewPageStore.... Should only be doing this at one place
 export class StudyIdQueryExtractor implements StudyViewQueryExtractor<void> {
     accept(query: StudyViewURLQuery, store: StudyViewPageStore): void {
         let studyIds: Array<string> = [];
@@ -82,13 +83,13 @@ export class StudyViewFilterQueryExtractor
     }
 
     parseRawFilterJson(filterJson: string): any {
-        let rawJson;
+        let parsedJson;
         try {
-            rawJson = JSON.parse(decodeURIComponent(filterJson));
+            parsedJson = JSON.parse(decodeURIComponent(filterJson));
         } catch (e) {
             console.error('FilterJson invalid Json: error: ', e);
         }
-        return rawJson;
+        return parsedJson;
     }
 
     getStudyViewFilterFromPatientIdentifierFilter(
@@ -96,12 +97,18 @@ export class StudyViewFilterQueryExtractor
         samples: Sample[]
     ): Partial<StudyViewFilter> {
         const filters: Partial<StudyViewFilter> = {};
-        const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
-            patientIdentifierFilter.patientIdentifiers,
-            samples
-        );
-        if (sampleIdentifiers.length > 0) {
-            filters.sampleIdentifiers = sampleIdentifiers;
+        try {
+            const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
+                patientIdentifierFilter.patientIdentifiers,
+                samples
+            );
+            if (sampleIdentifiers.length > 0) {
+                filters.sampleIdentifiers = sampleIdentifiers;
+            }
+        } catch (err) {
+            console.error(
+                `Failure to extract SampleIds from PatientIdentifier filter error: ${err}`
+            );
         }
         return filters;
     }

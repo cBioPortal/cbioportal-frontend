@@ -188,20 +188,17 @@ function setDropdownOpen(
         }
     );
 }
-function getCorrectUrlAndSetLocalStorage(url) {
+
+/**
+ * @param {string} url
+ * @returns {string} modifiedUrl
+ */
+function getUrl(url) {
     if (!useExternalFrontend) {
         console.log('Connecting to: ' + url);
-    } else if (useNetlifyDeployPreview) {
-        browser.execute(
-            function(config) {
-                this.localStorage.setItem('netlify', config.netlify);
-            },
-            { netlify: netlifyDeployPreview }
-        );
-        console.log('Connecting to: ' + url);
     } else {
-        var urlparam = useLocalDist ? 'localdist' : 'localdev';
-        var prefix = url.indexOf('?') > 0 ? '&' : '?';
+        const urlparam = useLocalDist ? 'localdist' : 'localdev';
+        const prefix = url.indexOf('?') > 0 ? '&' : '?';
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
         url = `${url}${prefix}${urlparam}=true`;
     }
@@ -573,14 +570,20 @@ function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
     };
 }
 
+/**
+ *
+ * @param {string} url
+ * @param {any} data
+ * @param {boolean} authenticated
+ */
 function postDataToUrl(url, data, authenticated = true) {
     const currentUrl = browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
 
-    url = getCorrectUrlAndSetLocalStorage(url);
+    url = getUrl(url);
     browser.execute(
-        (url, data) => {
+        (/** @type {string} */ url, /** @type {any} */ data) => {
             function formSubmit(url, params) {
                 // method="smart" means submit with GET iff the URL wouldn't be too long
 
