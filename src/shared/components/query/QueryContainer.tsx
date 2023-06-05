@@ -47,13 +47,12 @@ export default class QueryContainer extends React.Component<
     // indicates we have loaded the study data necessary to show default selected studies (e.g. modify query scenario), studiesHaveChangedSinceInitialization indicates all data is ready and we don't need to consider other conditions anymore.
     @computed get studiesDataReady(): boolean {
         return (
-            this.store.studiesHaveChangedSinceInitialization ||
-            (this.store.selectableStudiesSet.isComplete &&
-                this.store.initiallySelected.profileIds &&
-                this.store.cancerTypes.isComplete &&
-                this.store.cancerStudies.isComplete &&
-                this.store.selectedPhysicalStudies.isComplete &&
-                this.store.profiledSamplesCount.isComplete)
+            this.store.selectableStudiesSet.isComplete &&
+            this.store.initiallySelected.profileIds &&
+            this.store.cancerTypes.isComplete &&
+            this.store.cancerStudies.isComplete &&
+            this.store.selectedPhysicalStudies.isComplete &&
+            this.store.profiledSamplesCount.isComplete
         );
     }
 

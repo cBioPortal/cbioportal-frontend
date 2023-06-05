@@ -149,21 +149,12 @@ export class QueryStore {
                 throw 'error parseing/setting legacyStudySubmission';
             }
         }
-
-        reaction(
-            () => this.allSelectedStudyIds,
-            () => {
-                this.studiesHaveChangedSinceInitialization = true;
-            }
-        );
     }
 
     public singlePageAppSubmitRoutine: (
         query: CancerStudyQueryUrlParams,
         currentTab?: ResultsViewTab
     ) => void;
-
-    @observable studiesHaveChangedSinceInitialization: boolean = false;
 
     //temporary store to collect deleted studies.
     //it is used to restore virtual studies in current window
@@ -340,83 +331,64 @@ export class QueryStore {
             const groupedMolecularProfilesByType = this
                 .validProfileIdSetForSelectedStudies.result;
             if (this.profileFilterSet === undefined) {
-                if (!this.studiesHaveChangedSinceInitialization) {
-                    if (!_.isEmpty(this.profileFilterSetFromUrl)) {
-                        this.profileFilterSetFromUrl!.forEach(profileFilter => {
-                            if (groupedMolecularProfilesByType[profileFilter]) {
-                                selectedIdSet[profileFilter] = true;
-                            }
-                        });
-                    } else if (!_.isEmpty(this.profileIdsFromUrl)) {
-                        _.chain(this.profileIdsFromUrl)
-                            .reduce((acc: MolecularProfile[], profileId) => {
-                                const molecularProfile = this
-                                    .dict_molecularProfileId_molecularProfile[
-                                    profileId
-                                ];
-                                if (molecularProfile) {
-                                    acc.push(molecularProfile);
-                                    if (
-                                        molecularProfile.molecularAlterationType ===
-                                        AlterationTypeConstants.MUTATION_EXTENDED
-                                    ) {
-                                        acc = acc.concat(
-                                            this.getFilteredProfiles(
-                                                'STRUCTURAL_VARIANT'
-                                            )
-                                        );
-                                    }
-                                }
-                                return acc;
-                            }, [])
-                            .forEach(profile => {
-                                selectedIdSet[
-                                    getSuffixOfMolecularProfile(profile)
-                                ] = true;
-                            })
-                            .value();
-                    } else {
-                        const altTypes: MolecularProfile['molecularAlterationType'][] = [];
-                        switch (this.dataTypePriorityFromUrl) {
-                            default:
-                            case '0':
-                                altTypes.push('MUTATION_EXTENDED');
-                                altTypes.push('STRUCTURAL_VARIANT');
-                                altTypes.push('COPY_NUMBER_ALTERATION');
-                                break;
-                            case '1':
-                                altTypes.push('MUTATION_EXTENDED');
-                                altTypes.push('STRUCTURAL_VARIANT');
-                                break;
-                            case '2':
-                                altTypes.push('COPY_NUMBER_ALTERATION');
-                                break;
+                if (!_.isEmpty(this.profileFilterSetFromUrl)) {
+                    this.profileFilterSetFromUrl!.forEach(profileFilter => {
+                        if (groupedMolecularProfilesByType[profileFilter]) {
+                            selectedIdSet[profileFilter] = true;
                         }
-
-                        let profiles = _.flatMap(altTypes, altType =>
-                            this.getFilteredProfiles(altType)
-                        );
-
-                        profiles.forEach(profile => {
+                    });
+                } else if (!_.isEmpty(this.profileIdsFromUrl)) {
+                    _.chain(this.profileIdsFromUrl)
+                        .reduce((acc: MolecularProfile[], profileId) => {
+                            const molecularProfile = this
+                                .dict_molecularProfileId_molecularProfile[
+                                profileId
+                            ];
+                            if (molecularProfile) {
+                                acc.push(molecularProfile);
+                                if (
+                                    molecularProfile.molecularAlterationType ===
+                                    AlterationTypeConstants.MUTATION_EXTENDED
+                                ) {
+                                    acc = acc.concat(
+                                        this.getFilteredProfiles(
+                                            'STRUCTURAL_VARIANT'
+                                        )
+                                    );
+                                }
+                            }
+                            return acc;
+                        }, [])
+                        .forEach(profile => {
                             selectedIdSet[
                                 getSuffixOfMolecularProfile(profile)
                             ] = true;
-                        });
-                    }
+                        })
+                        .value();
                 } else {
-                    const altTypes: MolecularProfile['molecularAlterationType'][] = [
-                        'MUTATION_EXTENDED',
-                        'STRUCTURAL_VARIANT',
-                        'COPY_NUMBER_ALTERATION',
-                    ];
-                    altTypes.forEach(altType => {
-                        _(this.getFilteredProfiles(altType))
-                            .groupBy(profile => profile.studyId)
-                            .forEach(profiles => {
-                                selectedIdSet[
-                                    getSuffixOfMolecularProfile(profiles[0])
-                                ] = true;
-                            });
+                    const altTypes: MolecularProfile['molecularAlterationType'][] = [];
+                    switch (this.dataTypePriorityFromUrl) {
+                        default:
+                        case '0':
+                            altTypes.push('MUTATION_EXTENDED');
+                            altTypes.push('STRUCTURAL_VARIANT');
+                            altTypes.push('COPY_NUMBER_ALTERATION');
+                            break;
+                        case '1':
+                            altTypes.push('MUTATION_EXTENDED');
+                            altTypes.push('STRUCTURAL_VARIANT');
+                            break;
+                        case '2':
+                            altTypes.push('COPY_NUMBER_ALTERATION');
+                            break;
+                    }
+                    let profiles = _.flatMap(altTypes, altType =>
+                        this.getFilteredProfiles(altType)
+                    );
+                    profiles.forEach(profile => {
+                        selectedIdSet[
+                            getSuffixOfMolecularProfile(profile)
+                        ] = true;
                     });
                 }
             } else {
@@ -973,14 +945,6 @@ export class QueryStore {
             return _.flatten(profiles.map(d => (d.data ? d.data : [])));
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.profileIds ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this.profileFilterSet = undefined;
-            }
-        },
     });
 
     readonly sampleListInSelectedStudies = remoteData<SampleList[]>({
@@ -1004,14 +968,6 @@ export class QueryStore {
             );
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly validProfileIdSetForSelectedStudies = remoteData({
@@ -1076,26 +1032,22 @@ export class QueryStore {
     }
 
     readonly sampleLists = remoteData({
+        await: () => [this.selectedPhysicalStudies],
         invoke: async () => {
             if (!this.isSingleNonVirtualStudySelected) {
                 return [];
             }
-            this.sampleListsInStudyCache.get(this.selectableSelectedStudyIds[0])
-                .result!;
-            let sampleLists = await this.sampleListsInStudyCache.get(
-                this.selectableSelectedStudyIds[0]
-            ).result!;
-            return _.sortBy(sampleLists, sampleList => sampleList.name);
+
+            const lists = await client.getAllSampleListsUsingGET({
+                projection: 'DETAILED',
+            });
+
+            // for each study find the lists which belong to it
+            return _.flatMap(this.selectedPhysicalStudies.result, study => {
+                return _.filter(lists, list => list.studyId === study.studyId);
+            });
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly mutSigForSingleStudy = remoteData({
@@ -1436,7 +1388,7 @@ export class QueryStore {
 
             return retSamples;
         },
-        500
+        20000
     );
 
     ////////////////////////////////////////////////////////////////////////////////
