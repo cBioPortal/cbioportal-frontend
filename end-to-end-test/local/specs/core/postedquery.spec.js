@@ -62,16 +62,10 @@ describe.only('Post Data for StudyView Filtering with filterJson via HTTP Post',
     it('Send PatientIdentifier Filter via postData', () => {
         const filterJsonQuery = {
             filterJson:
-                '{"patientIdentifiers":[{"study_id":"lgg_ucsf_2014_test_generic_assay","patientId":"P01" }]}',
+                '{"patientIdentifiers":[{"studyId":"lgg_ucsf_2014_test_generic_assay","patientId":"P01"}]}',
         };
 
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`, true);
-        // browser.execute(
-        //     function(config) {
-        //         this.localStorage.setItem('netlify', config.netlify);
-        //     },
-        //     { netlify: netlifyDeployPreview }
-        // );
         postDataToUrl(
             `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
             filterJsonQuery
@@ -82,7 +76,6 @@ describe.only('Post Data for StudyView Filtering with filterJson via HTTP Post',
         });
 
         console.log(postData);
-        //browser.debug();
         getElementByTestHandle('selected-patients').waitForExist({
             timeout: 20000,
         });

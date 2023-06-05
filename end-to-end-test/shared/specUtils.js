@@ -188,6 +188,25 @@ function setDropdownOpen(
         }
     );
 }
+function getCorrectUrlAndSetLocalStorage(url) {
+    if (!useExternalFrontend) {
+        console.log('Connecting to: ' + url);
+    } else if (useNetlifyDeployPreview) {
+        browser.execute(
+            function(config) {
+                this.localStorage.setItem('netlify', config.netlify);
+            },
+            { netlify: netlifyDeployPreview }
+        );
+        console.log('Connecting to: ' + url);
+    } else {
+        var urlparam = useLocalDist ? 'localdist' : 'localdev';
+        var prefix = url.indexOf('?') > 0 ? '&' : '?';
+        console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
+        url = `${url}${prefix}${urlparam}=true`;
+    }
+    return url;
+}
 
 function goToUrlAndSetLocalStorage(url, authenticated = false) {
     const currentUrl = browser.getUrl();
@@ -558,6 +577,8 @@ function postDataToUrl(url, data, authenticated = true) {
     const currentUrl = browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
+
+    url = getCorrectUrlAndSetLocalStorage(url);
     browser.execute(
         (url, data) => {
             function formSubmit(url, params) {
