@@ -382,6 +382,7 @@ export default class MutationMapper<
     }
 
     protected get mutationPlot(): JSX.Element | null {
+        console.log(this.props.store);
         return (
             <LollipopMutationPlot
                 store={this.props.store}

@@ -450,7 +450,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @action.bound
     private onToggleOption(chartUniqueKey: string) {
+        console.log(chartUniqueKey);
         const chartMeta = this.props.store.chartMetaSet[chartUniqueKey];
+        console.log(chartMeta);
+        console.log(this.selectedAttrs);
         if (chartMeta !== undefined) {
             const chartTypeName =
                 ChartTypeNameEnum[
@@ -462,6 +465,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     false
                 );
                 let additionType = '';
+                console.log(this.props.currentTab);
                 if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
                     additionType = ` ${chartTypeName}`;
                 } else if (

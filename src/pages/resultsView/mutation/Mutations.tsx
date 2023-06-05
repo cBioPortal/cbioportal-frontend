@@ -51,6 +51,7 @@ export default class Mutations extends React.Component<
     }
 
     @computed get selectedGene() {
+        console.log(this.props.store.genes.result);
         return _.find(
             this.props.store.genes.result,
             gene => gene.hugoGeneSymbol === this.selectedGeneSymbol

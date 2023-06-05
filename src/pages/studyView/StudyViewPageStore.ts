@@ -184,7 +184,10 @@ import {
     toPromise,
 } from 'cbioportal-frontend-commons';
 import request from 'superagent';
-import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
+import {
+    trackEvent,
+    trackStudyViewFilterEvent,
+} from '../../shared/lib/tracking';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import {
     finalizeStudiesAttr,
@@ -505,6 +508,8 @@ export class StudyViewPageStore
                 }
             }
         );
+
+        console.log(this._customCharts);
     }
 
     initializeReaction() {
@@ -2622,6 +2627,7 @@ export class StudyViewPageStore
 
     @action.bound
     onCheckGene(hugoGeneSymbol: string): void {
+        console.log(this.chartMetaSet);
         let message = '';
         if (this.geneQueries.find(q => q.gene === hugoGeneSymbol)) {
             message = `${hugoGeneSymbol} removed from query queue`;
@@ -2653,6 +2659,12 @@ export class StudyViewPageStore
         this.geneQueryStr = this.geneQueries
             .map(query => unparseOQLQueryLine(query))
             .join(' ');
+
+        this.addCharts(
+            this.visibleAttributes
+                .map(attr => attr.uniqueKey)
+                .concat(['MUTATION_PLOT'])
+        );
     }
 
     @action.bound
@@ -2881,6 +2893,7 @@ export class StudyViewPageStore
         chartUniqueKey: string,
         values: DataFilterValue[]
     ): void {
+        console.log(chartUniqueKey, values);
         if (this.chartMetaSet[chartUniqueKey]) {
             let chartMeta = this.chartMetaSet[chartUniqueKey];
             trackStudyViewFilterEvent('clinicalDataFilters', this);
@@ -2895,6 +2908,7 @@ export class StudyViewPageStore
         clinicalAttributeId: string,
         values: DataFilterValue[]
     ): void {
+        console.log(clinicalAttributeId, values);
         if (values.length > 0) {
             const clinicalDataFilter = {
                 attributeId: clinicalAttributeId,
@@ -3706,11 +3720,13 @@ export class StudyViewPageStore
 
     @action
     addCharts(visibleChartIds: string[]): void {
+        console.log(visibleChartIds);
         visibleChartIds.forEach(chartId => {
             if (!this._chartVisibility.has(chartId)) {
                 this.newlyAddedCharts.push(chartId);
             }
         });
+        console.log(this.newlyAddedCharts);
         this.updateChartsVisibility(visibleChartIds);
     }
 
@@ -6092,8 +6108,10 @@ export class StudyViewPageStore
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
+        console.log('What are custom charts?');
         // Only add Mobx Promises that are not dependent on StudyViewFilter will force re-render
         let _chartMetaSet = _.fromPairs(this._customCharts.toJSON());
+        console.log(_chartMetaSet);
         if (_.isEmpty(this.molecularProfiles.result)) {
             delete _chartMetaSet[
                 SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT
@@ -6108,6 +6126,8 @@ export class StudyViewPageStore
 
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
+
+        console.log(this.chartClinicalAttributes);
         _.reduce(
             this.chartClinicalAttributes.result,
             (acc: { [id: string]: ChartMeta }, attribute) => {
@@ -6337,6 +6357,7 @@ export class StudyViewPageStore
         return _.reduce(
             Array.from(this._chartVisibility.entries() || []),
             (acc, [chartUniqueKey, visible]) => {
+                console.log(this.chartMetaSet[chartUniqueKey], chartUniqueKey);
                 if (visible && this.chartMetaSet[chartUniqueKey]) {
                     let chartMeta = this.chartMetaSet[chartUniqueKey];
                     acc.push(chartMeta);

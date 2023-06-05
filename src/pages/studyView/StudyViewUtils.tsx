@@ -121,6 +121,7 @@ export enum SpecialChartsUniqueKeyEnum {
     SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
     SAMPLE_TREATMENT_TARGET = 'SAMPLE_TREATMENT_TARGET',
     CLINICAL_EVENT_TYPE_COUNTS = 'CLINICAL_EVENT_TYPE_COUNTS',
+    MUTATION_PLOT = 'MUTATION_PLOT',
 }
 
 export type AnalysisGroup = {
@@ -227,6 +228,20 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
         displayName: 'Case Lists',
         description: '',
         chartType: ChartTypeEnum.CASE_LIST_TABLE,
+        dataType: ChartMetaDataTypeEnum.CLINICAL,
+        patientAttribute: false,
+        dimension: {
+            w: 2,
+            h: 2,
+        },
+        priority: 70,
+        renderWhenDataChange: false,
+    },
+    {
+        uniqueKey: SpecialChartsUniqueKeyEnum.MUTATION_PLOT,
+        displayName: 'Mutation Plot',
+        description: '',
+        chartType: ChartTypeEnum.MUTATION_DIAGRAM,
         dataType: ChartMetaDataTypeEnum.CLINICAL,
         patientAttribute: false,
         dimension: {

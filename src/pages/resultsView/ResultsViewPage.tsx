@@ -262,6 +262,7 @@ export default class ResultsViewPage extends React.Component<
             {
                 id: ResultsViewTab.MUTATIONS,
                 getTab: () => {
+                    console.log(store);
                     return (
                         <MSKTab
                             key={3}

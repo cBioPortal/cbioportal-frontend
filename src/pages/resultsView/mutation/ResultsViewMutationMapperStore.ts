@@ -130,6 +130,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             genomenexusClient,
             genomenexusInternalClient
         );
+        console.log(gene);
 
         makeObservable(this);
 

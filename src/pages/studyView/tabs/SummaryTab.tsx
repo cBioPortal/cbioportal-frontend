@@ -173,6 +173,9 @@ export class StudySummaryTab extends React.Component<
                 .setComparisonConfirmationModal,
         };
 
+        console.log('Summary Tab', chartMeta);
+        console.log(this.store.chartsType.get(chartMeta.uniqueKey));
+
         switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART: {
                 //if the chart is one of the custom charts then get the appropriate promise
@@ -685,6 +688,11 @@ export class StudySummaryTab extends React.Component<
                 props.onResetSelection = () => {
                     this.store.resetClinicalEventTypeFilter();
                 };
+                break;
+            }
+            case ChartTypeEnum.MUTATION_DIAGRAM: {
+                // I will check the data it needs here.
+                props.promise = this.store.clinicalEventTypeCounts;
                 break;
             }
             default:
