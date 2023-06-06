@@ -197,7 +197,7 @@ function getUrl(url) {
     if (!useExternalFrontend) {
         console.log('Connecting to: ' + url);
     } else {
-        const urlparam = useLocalDist ? 'localdist' : 'localdev';
+        const urlparam = 'localdev';
         const prefix = url.indexOf('?') > 0 ? '&' : '?';
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
         url = `${url}${prefix}${urlparam}=true`;
