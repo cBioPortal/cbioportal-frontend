@@ -76,6 +76,7 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import QueryString from 'qs';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -242,17 +243,15 @@ export default class StudyViewPage extends React.Component<
 
     private getFilterJsonFromPostData(): string | undefined {
         let filterJson: string | undefined;
-        let rawPostDataFilterJson: string = getBrowserWindow()?.postData
-            ?.filterJson;
 
-        // Strip potential HTML encoded quotes
-        const regx = /&quot;/g;
-        rawPostDataFilterJson = rawPostDataFilterJson?.replace(regx, '"');
+        const parsedFilterJson = _.unescape(
+            getBrowserWindow()?.postData?.filterJson
+        );
 
-        if (rawPostDataFilterJson) {
+        if (parsedFilterJson) {
             try {
-                JSON.parse(rawPostDataFilterJson);
-                filterJson = rawPostDataFilterJson;
+                JSON.parse(parsedFilterJson);
+                filterJson = parsedFilterJson;
             } catch (error) {
                 console.error(
                     `PostData.filterJson does not have valid JSON, error: ${error}`
