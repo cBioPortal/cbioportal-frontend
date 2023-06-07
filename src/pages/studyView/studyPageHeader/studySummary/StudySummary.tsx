@@ -170,6 +170,7 @@ export default class StudySummary extends React.Component<
                         {this.descriptionFirstLine}
                         {this.hasMoreDescription && (
                             <i
+                                id="show-more-description-icon"
                                 className={`fa fa-${
                                     this.showMoreDescription ? 'minus' : 'plus'
                                 }-circle`}

@@ -103,6 +103,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
 ];
 
 export interface IChartContainerProps {
+    id?: string,
     chartMeta: ChartMeta;
     chartType: ChartType;
     store: StudyViewPageStore;

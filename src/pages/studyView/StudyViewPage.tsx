@@ -76,6 +76,7 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import Tour, { checkForTour } from 'tours/Tour';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -121,6 +122,8 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
     ];
+
+    private checkForTour: number | null = null
 
     private toolbar: any;
     private toolbarLeftUpdater: any;
@@ -232,6 +235,8 @@ export default class StudyViewPage extends React.Component<
                 this.toolbarLeft = $(this.toolbar).position().left;
             }
         }, 500);
+
+        this.checkForTour = checkForTour();
     }
 
     @autobind
@@ -989,6 +994,10 @@ export default class StudyViewPage extends React.Component<
     }
 
     render() {
+        const isLoading = this.store.queriedSampleIdentifiers.isPending ||
+            this.store.invalidSampleIds.isPending ||
+            this.body.isPending
+        const showTour = this.checkForTour !== null && !isLoading
         return (
             <PageLayout
                 noMargin={true}
@@ -997,14 +1006,17 @@ export default class StudyViewPage extends React.Component<
             >
                 <LoadingIndicator
                     size={'big'}
-                    isLoading={
-                        this.store.queriedSampleIdentifiers.isPending ||
-                        this.store.invalidSampleIds.isPending ||
-                        this.body.isPending
-                    }
+                    isLoading={isLoading}
                     center={true}
                 />
                 {this.body.component}
+                {showTour && (
+                    <Tour
+                        hideEntry
+                        studies={0}
+                        startAt={this.checkForTour || 0}
+                    />
+                )}
             </PageLayout>
         );
     }

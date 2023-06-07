@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { buildCBioPortalPageUrl } from '../../api/urls';
 import { ResultsViewTab } from '../../../pages/resultsView/ResultsViewPageHelpers';
+import Tour from 'tours/Tour';
 
 interface IRightBarProps {
     queryStore: QueryStore;
@@ -303,9 +304,19 @@ export default class RightBar extends React.Component<
         ) : null;
     }
 
+    getHomePageTour() {
+        return getServerConfig().skin_right_nav_show_testimonials ? (
+            <div className="rightBarSection" style={{ minHeight: '70px' }}>
+                <h3>Web Tours</h3>
+                <Tour studies={this.studyStore.selectableSelectedStudyIds.length}/>
+            </div>
+        ) : null;
+    }
+
     render() {
         return (
             <div>
+                {this.getHomePageTour()}
                 {this.getWhatsNew()}
                 {this.getExampleSection()}
                 {this.getInstallationMap()}
