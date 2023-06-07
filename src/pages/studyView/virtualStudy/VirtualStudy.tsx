@@ -229,7 +229,7 @@ export default class VirtualStudy extends React.Component<
 
     render() {
         return (
-            <div className={styles.virtualStudy}>
+            <div id="virtual-study-summary-panel" className={styles.virtualStudy}>
                 <If condition={this.virtualStudy.isError}>
                     <Then>
                         <div style={{ textAlign: 'center' }}>
@@ -308,6 +308,7 @@ export default class VirtualStudy extends React.Component<
                                                     </button>
                                                 )}
                                                 <button
+                                                    id="virtual-study-summary-share-btn"
                                                     className={classnames(
                                                         'btn btn-default',
                                                         styles.saveButton
