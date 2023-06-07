@@ -3386,9 +3386,14 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
 
                 if (sv.site2HugoSymbol) {
-                    svByGene[sv.site2HugoSymbol] =
-                        svByGene[sv.site2HugoSymbol] || [];
-                    svByGene[sv.site2HugoSymbol].push(sv);
+                    if (
+                        !sv.site1HugoSymbol ||
+                        sv.site2HugoSymbol !== sv.site1HugoSymbol
+                    ) {
+                        svByGene[sv.site2HugoSymbol] =
+                            svByGene[sv.site2HugoSymbol] || [];
+                        svByGene[sv.site2HugoSymbol].push(sv);
+                    }
                 }
             });
             return svByGene;
