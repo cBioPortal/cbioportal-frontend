@@ -1098,7 +1098,19 @@ export default class LazyMobXTable<T> extends React.Component<
     }
 
     private get countHeader() {
-        return (
+        return this.props.customControls ? (
+            <h3
+                data-test="LazyMobXTable_CountHeader"
+                style={{
+                    color: 'black',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                }}
+            >
+                {this.store.displayData.length} {this.store.itemsLabel} (page{' '}
+                {this.store.page + 1} of {this.store.maxPage + 1})
+            </h3>
+        ) : (
             <span
                 data-test="LazyMobXTable_CountHeader"
                 style={{

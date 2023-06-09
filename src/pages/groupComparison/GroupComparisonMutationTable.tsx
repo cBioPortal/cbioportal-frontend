@@ -31,7 +31,7 @@ import {
     getEnrichedInData,
     getEnrichedInFilterValue,
 } from 'shared/components/mutationTable/column/EnrichedInColumnFormatter';
-import { alterationOverlapRenderFunction } from 'shared/components/mutationTable/column/AlterationOverlapColumnFormatter';
+import { mutationOverlapRenderFunction } from 'shared/components/mutationTable/column/MutationOverlapColumnFormatter';
 import {
     getPValueData,
     getPValueTextValue,
@@ -69,7 +69,7 @@ export default class GroupComparisonMutationTable extends MutationTable<
             MutationTableColumnType.NUM_MUTATED_GROUP_B,
             MutationTableColumnType.LOG_RATIO,
             MutationTableColumnType.ENRICHED_IN,
-            MutationTableColumnType.ALTERATION_OVERLAP,
+            MutationTableColumnType.MUTATION_OVERLAP,
             MutationTableColumnType.P_VALUE,
             MutationTableColumnType.Q_VALUE,
         ],
@@ -103,9 +103,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
                 <span>
                     <strong>{this.props.groups[0].nameWithOrdinal}:</strong>{' '}
                     Number (percentage) of patients in{' '}
-                    {this.props.groups[0].nameWithOrdinal} that have an
-                    alteration in the selected gene for the listed protein
-                    change
+                    {this.props.groups[0].nameWithOrdinal} that have a mutation
+                    in the selected gene for the listed protein change
                 </span>
             ),
         };
@@ -130,9 +129,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
                 <span>
                     <strong>{this.props.groups[1].nameWithOrdinal}:</strong>{' '}
                     Number (percentage) of patients in{' '}
-                    {this.props.groups[1].nameWithOrdinal} that have an
-                    alteration in the selected gene for the listed protein
-                    change
+                    {this.props.groups[1].nameWithOrdinal} that have a mutation
+                    in the selected gene for the listed protein change
                 </span>
             ),
         };
@@ -198,11 +196,11 @@ export default class GroupComparisonMutationTable extends MutationTable<
             ),
         };
 
-        this._columns[MutationTableColumnType.ALTERATION_OVERLAP] = {
-            name: MutationTableColumnType.ALTERATION_OVERLAP,
+        this._columns[MutationTableColumnType.MUTATION_OVERLAP] = {
+            name: MutationTableColumnType.MUTATION_OVERLAP,
             headerRender: () => <span>Co-occurrence Pattern</span>,
             render: (d: Mutation[]) =>
-                alterationOverlapRenderFunction(
+                mutationOverlapRenderFunction(
                     this.props.rowDataByProteinChange,
                     d,
                     this.props.profiledPatientCounts,
@@ -218,8 +216,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
                     <tr>
                         <td>Lower row</td>
                         <td>
-                            : Patients with an alteration in the selected gene
-                            for the listed protein change are highlighted.
+                            : Patients with a mutation in the selected gene for
+                            the listed protein change are highlighted.
                         </td>
                     </tr>
                 </table>
@@ -269,7 +267,7 @@ export default class GroupComparisonMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 30;
         this._columns[MutationTableColumnType.NUM_MUTATED_GROUP_A].order = 40;
         this._columns[MutationTableColumnType.NUM_MUTATED_GROUP_B].order = 50;
-        this._columns[MutationTableColumnType.ALTERATION_OVERLAP].order = 60;
+        this._columns[MutationTableColumnType.MUTATION_OVERLAP].order = 60;
         this._columns[MutationTableColumnType.LOG_RATIO].order = 70;
         this._columns[MutationTableColumnType.P_VALUE].order = 80;
         this._columns[MutationTableColumnType.Q_VALUE].order = 90;

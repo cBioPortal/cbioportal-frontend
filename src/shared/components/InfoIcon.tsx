@@ -26,6 +26,7 @@ export default class InfoIcon extends React.Component<IInfoIconProps, {}> {
                             },
                             this.props.style || {}
                         )}
+                        data-test="infoIcon"
                     />
                 </div>
             </DefaultTooltip>

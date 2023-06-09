@@ -9,7 +9,7 @@ import { getTwoTailedPValue } from 'shared/lib/FisherExactTestCalculator';
 import { formatPercentValue } from 'cbioportal-utils';
 import intersect from 'fast_array_intersect';
 import InfoIcon from 'shared/components/InfoIcon';
-import { AlterationOverlapOverlay } from 'shared/components/mutationTable/column/alterationOverlap/AlterationOverlapOverlay';
+import { MutationOverlapOverlay } from 'shared/components/mutationTable/column/mutationOverlap/MutationOverlapOverlay';
 
 interface IFisherExactTwoSidedTestLabelProps {
     dataStore: MutationMapperDataStore;
@@ -81,14 +81,14 @@ export const FisherExactTwoSidedTestLabel: React.FC<IFisherExactTwoSidedTestLabe
                     divStyle={{ display: 'inline-block', marginLeft: 6 }}
                     tooltip={
                         <>
-                            <AlterationOverlapOverlay
+                            <MutationOverlapOverlay
                                 groupAMutatedCount={groupAMutatedCount}
                                 groupBMutatedCount={groupBMutatedCount}
                                 hugoGeneSymbol={hugoGeneSymbol}
                                 profiledPatientCounts={profiledPatientCounts}
                                 groups={groups}
                             />
-                            <span>
+                            <span data-test="patientMultipleMutationsMessage">
                                 {`${
                                     _.filter(
                                         dataStore.tableDataGroupedByPatients,

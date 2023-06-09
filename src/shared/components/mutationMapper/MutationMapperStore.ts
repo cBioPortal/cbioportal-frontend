@@ -12,12 +12,17 @@ import {
     ONCOKB_DEFAULT_INFO,
     ApplyFilterFn,
     DataFilter,
+    ONCOKB_DEFAULT_DATA,
 } from 'react-mutation-mapper';
 import {
     groupOncoKbIndicatorDataByMutations,
     defaultOncoKbIndicatorFilter,
 } from 'oncokb-frontend-commons';
-import { IHotspotIndex, getMutationsByTranscriptId } from 'cbioportal-utils';
+import {
+    IHotspotIndex,
+    getMutationsByTranscriptId,
+    IOncoKbData,
+} from 'cbioportal-utils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
@@ -67,6 +72,9 @@ export interface IMutationMapperStoreConfig {
     }[];
     countUniqueMutations?: (mutations: Mutation[], group?: string) => number;
     mergeMutationsBy?: (m: Mutation) => string;
+    uniqueSampleKeyToTumorType?: {
+        [uniqueSampleKey: string]: string;
+    };
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
@@ -221,7 +229,11 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
 
     @autobind
     protected getDefaultTumorType(mutation: Mutation): string {
-        return this.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey];
+        return this.mutationMapperStoreConfig.uniqueSampleKeyToTumorType
+            ? this.mutationMapperStoreConfig.uniqueSampleKeyToTumorType[
+                  mutation.uniqueSampleKey
+              ]
+            : this.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey];
     }
 
     @autobind
@@ -364,4 +376,28 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         // return true if transcript dropdown is disabled
         return true;
     }
+
+    readonly oncoKbDataForUnknownPrimary: MobxPromise<
+        IOncoKbData | Error
+    > = remoteData(
+        {
+            await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
+            invoke: () => {
+                return this.config.enableOncoKb
+                    ? this.dataFetcher.fetchOncoKbData(
+                          this.mutations,
+                          this.oncoKbAnnotatedGenes.result!,
+                          () => {
+                              return 'Cancer of Unknown Primary';
+                          },
+                          this.getDefaultEntrezGeneId
+                      )
+                    : Promise.resolve(ONCOKB_DEFAULT_DATA);
+            },
+            onError: () => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        },
+        ONCOKB_DEFAULT_DATA
+    );
 }

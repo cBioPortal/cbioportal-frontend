@@ -41,6 +41,8 @@ import { PatientSampleSummary } from 'pages/resultsView/querySummary/PatientSamp
 import classnames from 'classnames';
 import mutationMapperStyles from 'shared/components/mutationMapper/mutationMapper.module.scss';
 import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
+import checkboxStyles from 'pages/resultsView/enrichments/styles.module.scss';
+import { getServerConfig } from 'config/config';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -54,6 +56,9 @@ interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     sampleSet: ComplexKeyMap<Sample>;
     profiledPatientCounts: number[];
     queriedStudies: CancerStudy[];
+    uniqueSampleKeyToTumorType: {
+        [uniqueSampleKey: string]: string;
+    };
 }
 
 @observer
@@ -88,7 +93,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         return (
             <GroupComparisonMutationTable
                 uniqueSampleKeyToTumorType={
-                    this.props.store.uniqueSampleKeyToTumorType
+                    this.props.uniqueSampleKeyToTumorType
                 }
                 oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
                 pubMedCache={this.props.pubMedCache}
@@ -107,7 +112,11 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                     this.props.store.indexedMyVariantInfoAnnotations
                 }
                 oncoKbData={this.props.store.oncoKbData}
+                oncoKbDataForUnknownPrimary={
+                    this.props.store.oncoKbDataForUnknownPrimary
+                }
                 usingPublicOncoKbInstance={
+                    getServerConfig().show_oncokb &&
                     this.props.store.usingPublicOncoKbInstance
                 }
                 mergeOncoKbIcons={this.props.mergeOncoKbIcons}
@@ -430,15 +439,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 
     @computed get tableCustomControls(): JSX.Element {
         return (
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    height: 30,
-                    float: 'right',
-                }}
-            >
+            <div className={checkboxStyles.Checkboxes}>
                 <div
                     style={{ width: 250, marginRight: 7 }}
                     data-test="enrichedInDropdown"

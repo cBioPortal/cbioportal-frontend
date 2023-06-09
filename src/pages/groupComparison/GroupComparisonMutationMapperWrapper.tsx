@@ -52,6 +52,8 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                 countUniqueMutations: this.countUniqueMutationsInGroup,
                 mergeMutationsBy: generateMutationIdByGeneAndProteinChange,
                 filterMutationsBySelectedTranscript: true,
+                uniqueSampleKeyToTumorType: this.props.store
+                    .uniqueSampleKeyToTumorType.result,
             }
         );
         return store;
@@ -221,6 +223,10 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                             }
                             queriedStudies={
                                 this.props.store.displayedStudies.result!
+                            }
+                            uniqueSampleKeyToTumorType={
+                                this.props.store.uniqueSampleKeyToTumorType
+                                    .result!
                             }
                         />
                     </div>

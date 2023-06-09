@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import numeral from 'numeral';
 
-interface IAlterationOverlapOverlayProps {
+interface IMutationOverlapOverlayProps {
     groupAMutatedCount: number;
     groupBMutatedCount: number;
     hugoGeneSymbol: string;
@@ -14,22 +14,21 @@ interface IAlterationOverlapOverlayProps {
     note?: string;
 }
 
-export const AlterationOverlapOverlay: React.FC<IAlterationOverlapOverlayProps> = observer(
+export const MutationOverlapOverlay: React.FC<IMutationOverlapOverlayProps> = observer(
     ({
-        // rowData,
         groupAMutatedCount,
         groupBMutatedCount,
         hugoGeneSymbol,
         proteinChange,
         profiledPatientCounts,
         groups,
-    }: IAlterationOverlapOverlayProps) => {
+    }: IMutationOverlapOverlayProps) => {
         return (
             <div>
                 <h3>
                     {proteinChange
-                        ? `${hugoGeneSymbol} alterations for ${proteinChange} in:`
-                        : `${hugoGeneSymbol} alterations in:`}
+                        ? `${hugoGeneSymbol} mutations for ${proteinChange} in:`
+                        : `${hugoGeneSymbol} mutations in:`}
                 </h3>
                 <table className={'table table-striped'}>
                     <tbody>

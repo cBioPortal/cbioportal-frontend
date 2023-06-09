@@ -9,9 +9,9 @@ import { MiniOncoprint } from 'shared/components/miniOncoprint/MiniOncoprint';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
-import { AlterationOverlapOverlay } from './alterationOverlap/AlterationOverlapOverlay';
+import { MutationOverlapOverlay } from './mutationOverlap/MutationOverlapOverlay';
 
-export function alterationOverlapRenderFunction(
+export function mutationOverlapRenderFunction(
     rowDataByProteinChange: {
         [proteinChange: string]: ComparisonMutationsRow;
     },
@@ -56,7 +56,7 @@ export function alterationOverlapRenderFunction(
         (rowData.groupBMutatedCount / totalQueriedCases) * 100;
 
     const overlay = (
-        <AlterationOverlapOverlay
+        <MutationOverlapOverlay
             groupAMutatedCount={rowData.groupAMutatedCount}
             groupBMutatedCount={rowData.groupBMutatedCount}
             hugoGeneSymbol={mutations[0].gene.hugoGeneSymbol}
