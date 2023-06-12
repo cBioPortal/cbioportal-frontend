@@ -956,7 +956,8 @@ export default class MutationTable<
                                 .enableMyCancerGenome as boolean,
                             enableHotspot: this.props.enableHotspot as boolean,
                             enableRevue:
-                                !!this.props.enableRevue && this.shouldShowRevue,
+                                !!this.props.enableRevue &&
+                                this.shouldShowRevue,
                             userDisplayName: this.props.userDisplayName,
                             indexedVariantAnnotations: this.props
                                 .indexedVariantAnnotations,
