@@ -272,16 +272,6 @@ export function defaultFilter(
     }
 }
 
-export function haveDifferentCancerTypes(
-    data: Mutation[],
-    resolveTumorType: (mutation: Mutation) => string
-): boolean {
-    return !_.every(
-        data,
-        m => resolveTumorType(m) === resolveTumorType(data[0])
-    );
-}
-
 const ANNOTATION_ELEMENT_ID = 'mutation-annotation';
 
 @observer
@@ -338,7 +328,7 @@ export default class MutationTable<
     }
 
     @autobind
-    private resolveTumorType(mutation: Mutation) {
+    protected resolveTumorType(mutation: Mutation) {
         // first, try to get it from uniqueSampleKeyToTumorType map
         if (this.props.uniqueSampleKeyToTumorType) {
             return this.props.uniqueSampleKeyToTumorType[
@@ -929,47 +919,32 @@ export default class MutationTable<
                 ),
             render: (d: Mutation[]) => (
                 <span id="mutation-annotation">
-                    {AnnotationColumnFormatter.renderFunction(
-                        d,
-                        {
-                            hotspotData: this.props.hotspotData,
-                            myCancerGenomeData: this.props.myCancerGenomeData,
-                            oncoKbData: haveDifferentCancerTypes(
-                                d,
-                                this.resolveTumorType
-                            )
-                                ? this.props.oncoKbDataForUnknownPrimary
-                                : this.props.oncoKbData,
-                            oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                            usingPublicOncoKbInstance: this.props
-                                .usingPublicOncoKbInstance,
-                            mergeOncoKbIcons: this.props.mergeOncoKbIcons,
-                            oncoKbContentPadding: calculateOncoKbContentPadding(
-                                this.oncokbWidth
-                            ),
-                            pubMedCache: this.props.pubMedCache,
-                            civicGenes: this.props.civicGenes,
-                            civicVariants: this.props.civicVariants,
-                            enableCivic: this.props.enableCivic as boolean,
-                            enableOncoKb: this.props.enableOncoKb as boolean,
-                            enableMyCancerGenome: this.props
-                                .enableMyCancerGenome as boolean,
-                            enableHotspot: this.props.enableHotspot as boolean,
-                            enableRevue:
-                                !!this.props.enableRevue &&
-                                this.shouldShowRevue,
-                            userDisplayName: this.props.userDisplayName,
-                            indexedVariantAnnotations: this.props
-                                .indexedVariantAnnotations,
-                            resolveTumorType: haveDifferentCancerTypes(
-                                d,
-                                this.resolveTumorType
-                            )
-                                ? () => 'Cancer of Unknown Primary'
-                                : this.resolveTumorType,
-                        },
-                        haveDifferentCancerTypes(d, this.resolveTumorType)
-                    )}
+                    {AnnotationColumnFormatter.renderFunction(d, {
+                        hotspotData: this.props.hotspotData,
+                        myCancerGenomeData: this.props.myCancerGenomeData,
+                        oncoKbData: this.props.oncoKbData,
+                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                        usingPublicOncoKbInstance: this.props
+                            .usingPublicOncoKbInstance,
+                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+                        oncoKbContentPadding: calculateOncoKbContentPadding(
+                            this.oncokbWidth
+                        ),
+                        pubMedCache: this.props.pubMedCache,
+                        civicGenes: this.props.civicGenes,
+                        civicVariants: this.props.civicVariants,
+                        enableCivic: this.props.enableCivic as boolean,
+                        enableOncoKb: this.props.enableOncoKb as boolean,
+                        enableMyCancerGenome: this.props
+                            .enableMyCancerGenome as boolean,
+                        enableHotspot: this.props.enableHotspot as boolean,
+                        enableRevue:
+                            !!this.props.enableRevue && this.shouldShowRevue,
+                        userDisplayName: this.props.userDisplayName,
+                        indexedVariantAnnotations: this.props
+                            .indexedVariantAnnotations,
+                        resolveTumorType: this.resolveTumorType,
+                    })}
                 </span>
             ),
             filter: (

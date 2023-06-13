@@ -42,6 +42,8 @@ import {
     getQValueTextValue,
     qValueRenderFunction,
 } from 'shared/components/mutationTable/column/QValueColumnFormatter';
+import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import { calculateOncoKbContentPadding } from 'shared/lib/AnnotationColumnUtils';
 
 export interface IGroupComparisonMutationTableProps
     extends IMutationTableProps {
@@ -53,6 +55,16 @@ export interface IGroupComparisonMutationTableProps
     rowDataByProteinChange: {
         [proteinChange: string]: ComparisonMutationsRow;
     };
+}
+
+export function haveDifferentCancerTypes(
+    data: Mutation[],
+    resolveTumorType: (mutation: Mutation) => string
+): boolean {
+    return !_.every(
+        data,
+        m => resolveTumorType(m) === resolveTumorType(data[0])
+    );
 }
 
 export default class GroupComparisonMutationTable extends MutationTable<
@@ -245,6 +257,54 @@ export default class GroupComparisonMutationTable extends MutationTable<
                 getQValueData(this.props.rowDataByProteinChange, d),
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
         };
+
+        // comparison annotation column render
+        this._columns[MutationTableColumnType.ANNOTATION].render = (
+            d: Mutation[]
+        ) => (
+            <span id="mutation-annotation">
+                {AnnotationColumnFormatter.renderFunction(
+                    d,
+                    {
+                        hotspotData: this.props.hotspotData,
+                        myCancerGenomeData: this.props.myCancerGenomeData,
+                        oncoKbData: haveDifferentCancerTypes(
+                            d,
+                            this.resolveTumorType
+                        )
+                            ? this.props.oncoKbDataForUnknownPrimary
+                            : this.props.oncoKbData,
+                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                        usingPublicOncoKbInstance: this.props
+                            .usingPublicOncoKbInstance,
+                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+                        oncoKbContentPadding: calculateOncoKbContentPadding(
+                            this.oncokbWidth
+                        ),
+                        pubMedCache: this.props.pubMedCache,
+                        civicGenes: this.props.civicGenes,
+                        civicVariants: this.props.civicVariants,
+                        enableCivic: this.props.enableCivic as boolean,
+                        enableOncoKb: this.props.enableOncoKb as boolean,
+                        enableMyCancerGenome: this.props
+                            .enableMyCancerGenome as boolean,
+                        enableHotspot: this.props.enableHotspot as boolean,
+                        enableRevue:
+                            !!this.props.enableRevue && this.shouldShowRevue,
+                        userDisplayName: this.props.userDisplayName,
+                        indexedVariantAnnotations: this.props
+                            .indexedVariantAnnotations,
+                        resolveTumorType: haveDifferentCancerTypes(
+                            d,
+                            this.resolveTumorType
+                        )
+                            ? () => 'Cancer of Unknown Primary'
+                            : this.resolveTumorType,
+                    },
+                    haveDifferentCancerTypes(d, this.resolveTumorType)
+                )}
+            </span>
+        );
 
         // generate namespace columns
         const namespaceColumns = createMutationNamespaceColumns(
