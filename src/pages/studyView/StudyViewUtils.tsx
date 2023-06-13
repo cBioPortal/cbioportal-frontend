@@ -245,7 +245,7 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
         dataType: ChartMetaDataTypeEnum.CLINICAL,
         patientAttribute: false,
         dimension: {
-            w: 2,
+            w: 5,
             h: 2,
         },
         priority: 70,
@@ -2586,6 +2586,7 @@ export function submitToPage(
                 'legacyStudySubmission',
                 JSON.stringify(params)
             );
+
             window.open(buildCBioPortalPageUrl(url), target);
         } catch (e) {
             // TODO - currenlty alerting user with message until we have a proper solution

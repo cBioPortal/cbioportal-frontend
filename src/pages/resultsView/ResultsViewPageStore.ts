@@ -3391,7 +3391,6 @@ export class ResultsViewPageStore extends AnalysisStore
                     svByGene[sv.site2HugoSymbol].push(sv);
                 }
             });
-            console.log(svByGene);
             return svByGene;
         },
     });
@@ -3471,10 +3470,6 @@ export class ResultsViewPageStore extends AnalysisStore
             return promises;
         },
         invoke: () => {
-            console.log(this.selectedMolecularProfiles);
-            console.log(this.defaultOQLQuery);
-            console.log(this.mutationsReportByGene);
-            console.log(this.structuralVariantsReportByGene);
             const mutationsByGene = _.mapValues(
                 this.mutationsReportByGene.result!,
                 (mutationGroups: FilteredAndAnnotatedMutationsReport) => {
@@ -3513,9 +3508,6 @@ export class ResultsViewPageStore extends AnalysisStore
                     }
                 }
             );
-
-            console.log(mutationsByGene);
-            console.log(this.structuralVariantsReportByGene.result);
 
             //TODO: remove once SV/Fusion tab is merged
             _.forEach(
@@ -3600,9 +3592,6 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
             );
             //TODO: remove once SV/Fusion tab is merged
-
-            console.log(this.structuralVariantsReportByGene.result);
-            console.log(mutationsByGene);
 
             return Promise.resolve(mutationsByGene);
         },

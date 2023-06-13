@@ -663,7 +663,6 @@ export function makeEnrichmentDataPromise<
         await: () => {
             const ret = params.await();
             if (params.resultsViewPageStore) {
-                console.log(params.resultsViewPageStore);
                 ret.push(params.resultsViewPageStore.selectedMolecularProfiles);
             }
             ret.push(params.referenceGenesPromise);

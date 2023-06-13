@@ -75,7 +75,11 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import ClinicalEventTypeCountTable, {
     ClinicalEventTypeCountColumnKey,
 } from 'pages/studyView/table/ClinicalEventTypeCountTable';
-import { LollipopMutationPlot } from 'react-mutation-mapper';
+import {
+    DefaultMutationMapperStore,
+    LollipopMutationPlot,
+} from 'react-mutation-mapper';
+import { If } from 'react-if';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -484,7 +488,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get chart(): (() => JSX.Element) | null {
-        console.log(this.chartType);
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
                 return () => (
@@ -1228,7 +1231,20 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             case ChartTypeEnum.MUTATION_DIAGRAM:
-                return () => <p>Adding a mutation diagram here!</p>;
+                return () =>
+                    this.props.store.mutationPlotData.isPending ? (
+                        <></>
+                    ) : (
+                        <LollipopMutationPlot
+                            store={this.props.store.getMutationStore()}
+                            autoHideControls={false}
+                            showLegendToggle={false}
+                            showDownloadControls={false}
+                            showTrackSelector={false}
+                            showYMaxSlider={false}
+                            geneWidth={666}
+                        />
+                    );
             default:
                 return null;
         }

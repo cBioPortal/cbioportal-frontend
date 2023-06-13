@@ -4,6 +4,7 @@ import { If } from 'react-if';
 import {
     ChartType,
     NumericalGroupComparisonType,
+    SpecialChartsUniqueKeyEnum,
 } from 'pages/studyView/StudyViewUtils';
 import classnames from 'classnames';
 import { action, computed, makeObservable, observable } from 'mobx';

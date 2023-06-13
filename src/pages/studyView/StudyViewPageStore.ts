@@ -276,6 +276,7 @@ import {
     PatientIdentifier,
     PatientIdentifierFilter,
 } from 'shared/model/PatientIdentifierFilter';
+import { DefaultMutationMapperStore } from 'react-mutation-mapper';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -421,6 +422,9 @@ export class StudyViewPageStore
     @observable userGroupColors: { [groupId: string]: string } = {};
     @observable typeIdsMode: string = CustomDataTypeEnum.CATEGORICAL;
     @observable chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
+    @observable mutationPlotStore: {
+        [hugoGeneSymbol: string]: DefaultMutationMapperStore<any>;
+    } = {};
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
     private getDataBinFilterSet(uniqueKey: string) {
@@ -508,8 +512,6 @@ export class StudyViewPageStore
                 }
             }
         );
-
-        console.log(this._customCharts);
     }
 
     initializeReaction() {
@@ -1992,6 +1994,7 @@ export class StudyViewPageStore
     >();
 
     @observable.ref geneQueryStr: string;
+    @observable public selectedMutationPlotGene: string;
 
     @observable public geneQueries: SingleGeneQuery[] = [];
 
@@ -2627,7 +2630,6 @@ export class StudyViewPageStore
 
     @action.bound
     onCheckGene(hugoGeneSymbol: string): void {
-        console.log(this.chartMetaSet);
         let message = '';
         if (this.geneQueries.find(q => q.gene === hugoGeneSymbol)) {
             message = `${hugoGeneSymbol} removed from query queue`;
@@ -2660,11 +2662,60 @@ export class StudyViewPageStore
             .map(query => unparseOQLQueryLine(query))
             .join(' ');
 
+        this.selectedMutationPlotGene = hugoGeneSymbol;
+
         this.addCharts(
             this.visibleAttributes
                 .map(attr => attr.uniqueKey)
-                .concat(['MUTATION_PLOT'])
+                .concat([SpecialChartsUniqueKeyEnum.MUTATION_PLOT])
         );
+
+        const chartAddedMessage = `Mutation Plot for ${hugoGeneSymbol} added.`;
+
+        toast.success(chartAddedMessage, {
+            delay: 0,
+            position: 'top-right',
+            autoClose: 1500,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: 'light',
+        });
+    }
+
+    public readonly mutationPlotData = remoteData({
+        await: () => [this.selectedSamples, this.mutationProfiles],
+        invoke: async () => {
+            const mutationData = await getMutationData(
+                this.selectedSamples.result,
+                this.mutationProfiles.result,
+                [this.selectedMutationPlotGene]
+            );
+
+            return Promise.resolve(mutationData);
+        },
+    });
+
+    public createMutationStore() {
+        const store = new DefaultMutationMapperStore(
+            { hugoGeneSymbol: this.selectedMutationPlotGene },
+            {},
+            () => this.mutationPlotData.result!
+        );
+
+        this.mutationPlotStore[this.selectedMutationPlotGene] = store;
+
+        return store;
+    }
+
+    public getMutationStore() {
+        if (this.mutationPlotStore[this.selectedMutationPlotGene]) {
+            return this.mutationPlotStore[this.selectedMutationPlotGene];
+        }
+
+        return this.createMutationStore();
     }
 
     @action.bound
@@ -2893,7 +2944,6 @@ export class StudyViewPageStore
         chartUniqueKey: string,
         values: DataFilterValue[]
     ): void {
-        console.log(chartUniqueKey, values);
         if (this.chartMetaSet[chartUniqueKey]) {
             let chartMeta = this.chartMetaSet[chartUniqueKey];
             trackStudyViewFilterEvent('clinicalDataFilters', this);
@@ -2908,7 +2958,6 @@ export class StudyViewPageStore
         clinicalAttributeId: string,
         values: DataFilterValue[]
     ): void {
-        console.log(clinicalAttributeId, values);
         if (values.length > 0) {
             const clinicalDataFilter = {
                 attributeId: clinicalAttributeId,
@@ -3720,13 +3769,11 @@ export class StudyViewPageStore
 
     @action
     addCharts(visibleChartIds: string[]): void {
-        console.log(visibleChartIds);
         visibleChartIds.forEach(chartId => {
             if (!this._chartVisibility.has(chartId)) {
                 this.newlyAddedCharts.push(chartId);
             }
         });
-        console.log(this.newlyAddedCharts);
         this.updateChartsVisibility(visibleChartIds);
     }
 
@@ -6108,10 +6155,8 @@ export class StudyViewPageStore
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
-        console.log('What are custom charts?');
         // Only add Mobx Promises that are not dependent on StudyViewFilter will force re-render
         let _chartMetaSet = _.fromPairs(this._customCharts.toJSON());
-        console.log(_chartMetaSet);
         if (_.isEmpty(this.molecularProfiles.result)) {
             delete _chartMetaSet[
                 SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT
@@ -6127,7 +6172,6 @@ export class StudyViewPageStore
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
 
-        console.log(this.chartClinicalAttributes);
         _.reduce(
             this.chartClinicalAttributes.result,
             (acc: { [id: string]: ChartMeta }, attribute) => {
@@ -6357,7 +6401,6 @@ export class StudyViewPageStore
         return _.reduce(
             Array.from(this._chartVisibility.entries() || []),
             (acc, [chartUniqueKey, visible]) => {
-                console.log(this.chartMetaSet[chartUniqueKey], chartUniqueKey);
                 if (visible && this.chartMetaSet[chartUniqueKey]) {
                     let chartMeta = this.chartMetaSet[chartUniqueKey];
                     acc.push(chartMeta);
