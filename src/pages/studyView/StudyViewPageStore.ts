@@ -2662,6 +2662,13 @@ export class StudyViewPageStore
             .map(query => unparseOQLQueryLine(query))
             .join(' ');
 
+        if (this.selectedMutationPlotGene != hugoGeneSymbol) {
+            this.addMutationPlot(hugoGeneSymbol);
+        }
+    }
+
+    @action.bound
+    addMutationPlot(hugoGeneSymbol: string): void {
         this.selectedMutationPlotGene = hugoGeneSymbol;
 
         this.addCharts(
@@ -9511,7 +9518,7 @@ export class StudyViewPageStore
     }
 
     @autobind
-    onSubmitQuery(): void {
+    getQueryData(): any {
         const unknownQueriedIdsMap = stringListToSet(
             this.unknownQueriedIds.result
         );
@@ -9600,6 +9607,13 @@ export class StudyViewPageStore
             }
         }
 
+        return formOps;
+    }
+
+    @autobind
+    onSubmitQuery(): void {
+        let formOps = this.getQueryData();
+
         let url = '/';
         if (!_.isEmpty(this.geneQueries)) {
             formOps.Action = 'Submit';
@@ -9608,6 +9622,15 @@ export class StudyViewPageStore
                 .join('\n');
             url = '/results';
         }
+        submitToPage(url, formOps, '_blank');
+    }
+
+    onVisualizingMutationPlot(): void {
+        let formOps = this.getQueryData();
+
+        let url = '/results';
+        formOps.Action = 'Submit';
+        formOps.gene_list = this.selectedMutationPlotGene;
         submitToPage(url, formOps, '_blank');
     }
 

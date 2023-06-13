@@ -26,6 +26,7 @@ export type IGeneCellProps = {
     isOncogene: boolean;
     isTumorSuppressorGene: boolean;
     onGeneSelect: (hugoGeneSymbol: string) => void;
+    selectedMutationPlotGene: string;
 };
 
 @observer
@@ -99,6 +100,17 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                             })}
                         >
                             <i className="fa fa-search"></i>
+                            <If
+                                condition={
+                                    this.props.hugoGeneSymbol ==
+                                    this.props.selectedMutationPlotGene
+                                }
+                            >
+                                <i
+                                    className="fa fa-line-chart"
+                                    style={{ paddingLeft: 4 }}
+                                ></i>
+                            </If>
                         </div>
                     </div>
                 </DefaultTooltip>

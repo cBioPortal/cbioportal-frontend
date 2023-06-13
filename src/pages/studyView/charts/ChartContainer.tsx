@@ -180,6 +180,7 @@ export interface IChartContainerProps {
 @observer
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private chartHeaderHeight = 20;
+    private mutationPlotRef: any;
 
     private handlers: any;
     private plot: AbstractChart;
@@ -197,6 +198,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         super(props);
 
         makeObservable(this);
+        this.mutationPlotRef = React.createRef();
 
         this.chartType = this.props.chartType;
 
@@ -284,6 +286,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     public toSVGDOMNode(): SVGElement {
+        console.log(this.plot);
         if (this.plot) {
             // Get result of plot
             return this.plot.toSVGDOMNode() as SVGElement;
@@ -344,6 +347,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         .survivalPlotLeftTruncationChecked,
                 };
             }
+            case ChartTypeEnum.MUTATION_DIAGRAM: {
+                controls = {
+                    showResultsPageButton: true,
+                };
+            }
         }
         if (this.comparisonPagePossible) {
             controls.showComparisonPageIcon = true;
@@ -367,6 +375,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             this.props.promise.result!.length > 1 &&
             COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1
         );
+    }
+
+    svgHandler(chartType: ChartType): Promise<SVGElement> {
+        if (chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
+            return this.mutationPlotRef.getSVG();
+        }
+
+        return Promise.resolve(this.toSVGDOMNode());
     }
 
     @action.bound
@@ -580,6 +596,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 this.props.dimension,
                                 this.chartHeaderHeight
                             )}
+                            selectedMutationPlotGene={
+                                this.props.store.selectedMutationPlotGene
+                            }
                             filters={this.props.filters}
                             onSubmitSelection={this.handlers.onValueSelection}
                             onChangeSelectedRows={
@@ -659,6 +678,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 this.props.dimension,
                                 this.chartHeaderHeight
                             )}
+                            selectedMutationPlotGene={
+                                this.props.store.selectedMutationPlotGene
+                            }
                             filters={this.props.filters}
                             onSubmitSelection={this.handlers.onValueSelection}
                             onChangeSelectedRows={
@@ -745,6 +767,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeSelectedRows={
                                 this.handlers.onChangeSelectedRows
                             }
+                            selectedMutationPlotGene={
+                                this.props.store.selectedMutationPlotGene
+                            }
                             extraButtons={
                                 this.comparisonButtonForTables && [
                                     this.comparisonButtonForTables,
@@ -817,6 +842,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        selectedMutationPlotGene={
+                            this.props.store.selectedMutationPlotGene
+                        }
                         selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
@@ -862,6 +890,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
+                        selectedMutationPlotGene={
+                            this.props.store.selectedMutationPlotGene
+                        }
                         filters={this.props.filters}
                         onSubmitSelection={this.handlers.onValueSelection}
                         onChangeSelectedRows={
@@ -1243,6 +1274,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             showTrackSelector={false}
                             showYMaxSlider={false}
                             geneWidth={666}
+                            onRef={(ref: any) => {
+                                this.mutationPlotRef = ref;
+                            }}
                         />
                     );
             default:
@@ -1253,6 +1287,18 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed
     get highlightChart() {
         return this.newlyAdded;
+    }
+
+    get chartTitle() {
+        if (this.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
+            return (
+                this.props.title +
+                ' - ' +
+                this.props.store.selectedMutationPlotGene
+            );
+        }
+
+        return this.props.title;
     }
 
     componentDidMount() {
@@ -1289,7 +1335,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     chartMeta={this.props.chartMeta}
                     chartType={this.props.chartType}
                     store={this.props.store}
-                    title={this.props.title}
+                    title={this.chartTitle}
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
@@ -1309,7 +1355,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     toggleNAValue={this.handlers.onToggleNAValue}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
-                    getSVG={() => Promise.resolve(this.toSVGDOMNode())}
+                    getSVG={() => this.svgHandler(this.chartType)}
                     getData={this.props.getData}
                     downloadTypes={this.props.downloadTypes}
                     openComparisonPage={this.openComparisonPage}

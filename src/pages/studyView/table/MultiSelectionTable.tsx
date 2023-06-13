@@ -93,6 +93,7 @@ export type MultiSelectionTableProps = {
     defaultSortBy: MultiSelectionTableColumnKey;
     columns: MultiSelectionTableColumn[];
     setOperationsButtonText: string;
+    selectedMutationPlotGene: string;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {
@@ -181,6 +182,9 @@ export class MultiSelectionTable extends React.Component<
                                 data.isOncokbTumorSuppressorGene
                             }
                             onGeneSelect={this.props.onGeneSelect}
+                            selectedMutationPlotGene={
+                                this.props.selectedMutationPlotGene
+                            }
                         />
                     );
                 },

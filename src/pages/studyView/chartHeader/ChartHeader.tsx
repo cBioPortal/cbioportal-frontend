@@ -80,6 +80,7 @@ export interface ChartControls {
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
     showSwapAxes?: boolean;
+    showResultsPageButton?: boolean;
     showSurvivalPlotLeftTruncationToggle?: boolean;
     survivalPlotLeftTruncationChecked?: boolean;
 }
@@ -99,6 +100,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @computed
     get fileName() {
+        if (this.props.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
+            return this.props.store.selectedMutationPlotGene + '_lollipop';
+        }
         return this.props.chartMeta.displayName.replace(/[ \t]/g, '_');
     }
 
@@ -601,6 +605,29 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     </li>
                 );
             }
+        }
+
+        if (this.props.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item"
+                        onClick={() =>
+                            this.props.store.onVisualizingMutationPlot()
+                        }
+                    >
+                        <i
+                            className={classnames(
+                                'fa fa-xs fa-fw',
+                                'fa-eye',
+                                styles.menuItemIcon
+                            )}
+                            aria-hidden="true"
+                        />
+                        Visualize
+                    </a>
+                </li>
+            );
         }
 
         if (this.showDownload) {
