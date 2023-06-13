@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Tooltip from 'rc-tooltip';
 import { ArticleAbstract, IndicatorQueryTreatment } from 'oncokb-ts-api-client';
 import * as React from 'react';
+import { useState, useEffect } from 'react';
 import ReactTable from 'react-table';
 
 import {
@@ -24,8 +25,6 @@ type OncoKbTreatmentTableProps = {
     treatments: IndicatorQueryTreatment[];
 };
 
-const drugInfos = new Object() as DrugInfo;
-
 type EmaDrugInfo = {
     infoAvailable: boolean;
     activeSubstance: string;
@@ -36,26 +35,25 @@ type EmaDrugInfo = {
     url: string;
 };
 
+type OncoKbTreatmentTableState = {
+    isLoading: boolean;
+    drugInfos: DrugInfo[];
+};
+
 interface DrugInfo {
-    [key: string]: [EmaDrugInfo];
+    name: string;
+    drugInfo: EmaDrugInfo[];
 }
 
-// export const OncoKbTreatmentTable: React.Component<OncoKbTreatmentTableProps, OncoKbTreatmentTableState> = ({variant, treatments,}) => {
-//     constructor(props: OncoKbTreatmentTableProps) {
-//         super(props);
-//         this.state = {
-//             drugInfos: new Object() as DrugInfo,
-//         };
-//         this.props.treatments.map(treatment =>
-//             treatment.drugs.map(drug => this.promiseDrugInfo(drug.drugName))
-//         );
-//     }
-
-//     const levelTooltipContent = (level: string) => {
 export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableProps> = ({
     variant,
     treatments,
 }: OncoKbTreatmentTableProps) => {
+    const [state, setState] = React.useState<OncoKbTreatmentTableState>({
+        isLoading: true,
+        drugInfos: [],
+    });
+
     const levelTooltipContent = (level: string) => {
         return (
             <div style={{ maxWidth: '200px' }}>
@@ -89,53 +87,108 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
         );
     };
 
-    const promiseDrugInfo = (drug: string) =>
-        new Promise<EmaDrugInfo>((resolve, reject) => {
-            request
-                .get(cancerdrugsJsonUrl + drug.replace(' ', '_') + '.json')
-                .end((err, res) => {
-                    if (!err && res.ok) {
-                        const response = JSON.parse(res.text);
-                        const emaEpar = response.emaEpar;
-                        if (emaEpar.length === 0) {
-                            const emaInfo = {
-                                infoAvailable: false,
-                            } as EmaDrugInfo;
-                            _.extend(drugInfos, {
-                                [drug]: [emaInfo],
-                            });
-                        } else {
-                            const emaInfos = new Array<EmaDrugInfo>();
-                            emaEpar.map((emaEparEntry: any) => {
-                                const emaInfo = {
-                                    infoAvailable: true,
-                                    activeSubstance:
-                                        emaEparEntry.activeSubstance,
-                                    conditionIndication:
-                                        emaEparEntry.conditionIndication,
-                                    authorisationDate:
-                                        emaEparEntry.marketingAuthorisationDate,
-                                    authorisationHolder:
-                                        emaEparEntry.marketingAuthorisationHolder,
-                                    medicineName: emaEparEntry.medicineName,
-                                    url: emaEparEntry.url,
-                                } as EmaDrugInfo;
-                                emaInfos.push(emaInfo);
-                            });
-                            _.extend(drugInfos, {
-                                [drug]: emaInfos,
-                            });
-                        }
+    useEffect(() => {
+        let promiseDrugInfos = [] as DrugInfo[];
+
+        async function promiseDrugInfo(drug: string): Promise<DrugInfo> {
+            try {
+                let getResponse = await request.get(
+                    cancerdrugsJsonUrl + drug.replace(' ', '_') + '.json'
+                );
+
+                if (
+                    !getResponse.clientError &&
+                    !getResponse.serverError &&
+                    getResponse.status == 200
+                ) {
+                    const response = JSON.parse(getResponse.text);
+                    const emaEpar = response.emaEpar;
+                    if (emaEpar.length === 0) {
+                        const emaInfo = {
+                            infoAvailable: false,
+                        } as EmaDrugInfo;
+                        promiseDrugInfos = [
+                            ...promiseDrugInfos,
+                            {
+                                name: drug,
+                                drugInfo: [emaInfo],
+                            },
+                        ];
                     } else {
-                        _.extend(drugInfos, {
-                            [drug]: [],
+                        const emaInfos = new Array<EmaDrugInfo>();
+                        emaEpar.map((emaEparEntry: any) => {
+                            const emaInfo = {
+                                infoAvailable: true,
+                                activeSubstance: emaEparEntry.activeSubstance,
+                                conditionIndication:
+                                    emaEparEntry.conditionIndication,
+                                authorisationDate:
+                                    emaEparEntry.marketingAuthorisationDate,
+                                authorisationHolder:
+                                    emaEparEntry.marketingAuthorisationHolder,
+                                medicineName: emaEparEntry.medicineName,
+                                url: emaEparEntry.url,
+                            } as EmaDrugInfo;
+                            emaInfos.push(emaInfo);
                         });
+                        promiseDrugInfos = [
+                            ...promiseDrugInfos,
+                            {
+                                name: drug,
+                                drugInfo: emaInfos,
+                            },
+                        ];
                     }
-                });
+                } else {
+                    promiseDrugInfos = [
+                        ...promiseDrugInfos,
+                        {
+                            name: drug,
+                            drugInfo: [],
+                        },
+                    ];
+                }
+            } catch (error) {
+                promiseDrugInfos = [
+                    ...promiseDrugInfos,
+                    {
+                        name: drug,
+                        drugInfo: [],
+                    },
+                ];
+            }
+
+            return new Promise<DrugInfo>((resolve, reject) =>
+                resolve({
+                    name: drug,
+                    drugInfo:
+                        promiseDrugInfos.find(pdi => pdi.name == drug)
+                            ?.drugInfo || [],
+                })
+            );
+        }
+
+        let promiseArray = [] as Array<Promise<DrugInfo>>;
+        treatments.forEach(treatment =>
+            treatment.drugs.forEach(drug =>
+                promiseArray.push(promiseDrugInfo(drug.drugName))
+            )
+        );
+
+        Promise.all(promiseArray).finally(() => {
+            setState({
+                isLoading: false,
+                drugInfos: promiseDrugInfos.filter(
+                    (tag, index, array) =>
+                        array.findIndex(t => t.name == tag.name) == index
+                ),
+            });
         });
+    }, []);
 
     const emaTooltipStyle = (drugName: string) => {
-        const drugInfo = drugInfos[drugName];
+        const drugInfo = state.drugInfos.find(drug => drug.name == drugName)
+            ?.drugInfo;
         if (!drugInfo) {
             return 'fa fa-spinner fa-spin fa-lg';
         } else if (drugInfo.length < 1) {
@@ -148,7 +201,8 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
     };
 
     const emaTooltipContent = (drugName: string) => {
-        const drugInfo = drugInfos[drugName];
+        const drugInfo = state.drugInfos.find(drug => drug.name == drugName)
+            ?.drugInfo;
         if (!drugInfo) {
             return (
                 <div style={{ maxWidth: '400px' }}>
@@ -179,7 +233,7 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
         } else {
             return (
                 <div style={{ maxWidth: '400px' }}>
-                    {drugInfo.map(drugInfoEntry =>
+                    {drugInfo.map((drugInfoEntry: EmaDrugInfo) =>
                         emaTooltipEntry(drugName, drugInfoEntry)
                     )}
                     <a
@@ -209,103 +263,103 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
         );
     };
 
-    treatments.map(treatment =>
-        treatment.drugs.map(drug => promiseDrugInfo(drug.drugName))
-    );
-
-    const columns = [
-        OncoKbHelper.getDefaultColumnDefinition('level'),
-        {
-            ...OncoKbHelper.getDefaultColumnDefinition('alterations'),
-            Cell: (props: { value: string[] }) => {
-                return OncoKbHelper.getAlterationsColumnCell(
-                    props.value,
-                    variant
-                );
+    function getColumns() {
+        return [
+            OncoKbHelper.getDefaultColumnDefinition('level'),
+            {
+                ...OncoKbHelper.getDefaultColumnDefinition('alterations'),
+                Cell: (props: { value: string[] }) => {
+                    return OncoKbHelper.getAlterationsColumnCell(
+                        props.value,
+                        variant
+                    );
+                },
             },
-        },
-        {
-            id: 'treatment',
-            Header: <span>Drug(s)</span>,
-            accessor: 'drugs',
-            Cell: (props: { original: IndicatorQueryTreatment }) => (
-                <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
-                    {/* {props.original.drugs
-                        .map(drug => drug.drugName)
-                        .join(' + ')} */}
-                    {props.original.drugs.map(drug => (
-                        <div>
-                            <span style={{ marginRight: '5px' }}>
-                                {drug.drugName}
-                            </span>
-                            <Tooltip
-                                placement="left"
-                                trigger={['hover', 'focus']}
-                                overlay={
-                                    <div>
-                                        {emaTooltipContent(drug.drugName)}
-                                    </div>
-                                }
-                                destroyTooltipOnHide={true}
-                            >
-                                <i
-                                    className={emaTooltipStyle(drug.drugName)}
-                                ></i>
-                            </Tooltip>
-                        </div>
-                    ))}
-                </div>
-            ),
-        },
-        {
-            id: 'cancerType',
-            Header: (
-                <span>
-                    Level-associated
-                    <br />
-                    cancer type(s)
-                </span>
-            ),
-            accessor: 'levelAssociatedCancerType',
-            minWidth: 120,
-            Cell: (props: { original: IndicatorQueryTreatment }) => (
-                <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
-                    {getTumorTypeNameWithExclusionInfo(
-                        props.original.levelAssociatedCancerType,
-                        props.original.levelExcludedCancerTypes
-                    )}
-                </div>
-            ),
-        },
-        {
-            id: 'referenceList',
-            Header: <span />,
-            sortable: false,
-            maxWidth: 25,
-            Cell: (props: { original: IndicatorQueryTreatment }) =>
-                (props.original.abstracts.length > 0 ||
-                    props.original.pmids.length > 0) && (
-                    <Tooltip
-                        overlay={treatmentTooltipContent(
-                            props.original.abstracts,
-                            props.original.pmids.map(pmid => Number(pmid)),
-                            props.original.description
-                        )}
-                        placement="right"
-                        trigger={['hover', 'focus']}
-                        destroyTooltipOnHide={true}
-                    >
-                        <i className="fa fa-book" />
-                    </Tooltip>
+            {
+                id: 'treatment',
+                Header: <span>Drug(s)</span>,
+                accessor: 'drugs',
+                Cell: (props: { original: IndicatorQueryTreatment }) => (
+                    <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
+                        {/* {props.original.drugs
+                            .map(drug => drug.drugName)
+                            .join(' + ')} */}
+                        {props.original.drugs.map(drug => (
+                            <div>
+                                <span style={{ marginRight: '5px' }}>
+                                    {drug.drugName}
+                                </span>
+                                <Tooltip
+                                    placement="left"
+                                    trigger={['hover', 'focus']}
+                                    overlay={
+                                        <div>
+                                            {emaTooltipContent(drug.drugName)}
+                                        </div>
+                                    }
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <i
+                                        className={emaTooltipStyle(
+                                            drug.drugName
+                                        )}
+                                    ></i>
+                                </Tooltip>
+                            </div>
+                        ))}
+                    </div>
                 ),
-        },
-    ];
+            },
+            {
+                id: 'cancerType',
+                Header: (
+                    <span>
+                        Level-associated
+                        <br />
+                        cancer type(s)
+                    </span>
+                ),
+                accessor: 'levelAssociatedCancerType',
+                minWidth: 120,
+                Cell: (props: { original: IndicatorQueryTreatment }) => (
+                    <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
+                        {getTumorTypeNameWithExclusionInfo(
+                            props.original.levelAssociatedCancerType,
+                            props.original.levelExcludedCancerTypes
+                        )}
+                    </div>
+                ),
+            },
+            {
+                id: 'referenceList',
+                Header: <span />,
+                sortable: false,
+                maxWidth: 25,
+                Cell: (props: { original: IndicatorQueryTreatment }) =>
+                    (props.original.abstracts.length > 0 ||
+                        props.original.pmids.length > 0) && (
+                        <Tooltip
+                            overlay={treatmentTooltipContent(
+                                props.original.abstracts,
+                                props.original.pmids.map(pmid => Number(pmid)),
+                                props.original.description
+                            )}
+                            placement="right"
+                            trigger={['hover', 'focus']}
+                            destroyTooltipOnHide={true}
+                        >
+                            <i className="fa fa-book" />
+                        </Tooltip>
+                    ),
+            },
+        ];
+    }
 
     return (
         <div className="oncokb-treatment-table">
             <ReactTable
                 data={treatments}
-                columns={drugInfos ? columns : undefined}
+                columns={getColumns()}
                 showPagination={false}
                 pageSize={treatments.length}
                 className="-striped -highlight"
