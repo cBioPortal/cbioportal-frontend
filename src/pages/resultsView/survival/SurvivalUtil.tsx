@@ -98,7 +98,8 @@ export const survivalClinicalDataNullValueSet = new Set([
     'na',
 ]);
 
-export const SURVIVAL_COMPACT_MODE_THRESHOLD = 1000;
+// TODO: We can add this into the server properties if needed
+export const SURVIVAL_COMPACT_MODE_THRESHOLD = 15000;
 
 export function sortPatientSurvivals(patientSurvivals: PatientSurvival[]) {
     // First sort by month in asc order (smaller number to the front)

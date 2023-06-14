@@ -11,6 +11,7 @@ import MutationStatusColumnFormatter from './MutationStatusColumnFormatter';
 import styles from './proteinChange.module.scss';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { RevueCell } from 'react-mutation-mapper';
+import { getServerConfig } from 'config/config';
 import _ from 'lodash';
 
 export default class ProteinChangeColumnFormatter {
@@ -104,7 +105,7 @@ export default class ProteinChangeColumnFormatter {
                 {isGermlineMutation && ( // add a germline indicator next to protein change if it is a germline mutation!
                     <span className={styles.germline}>Germline</span>
                 )}
-                {vue && (
+                {getServerConfig().show_revue && vue && (
                     <span className={styles.revueIcon}>
                         <RevueCell vue={vue} />
                     </span>

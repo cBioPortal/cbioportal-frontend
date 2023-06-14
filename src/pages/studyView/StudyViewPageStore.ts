@@ -277,6 +277,13 @@ import {
     PatientIdentifierFilter,
 } from 'shared/model/PatientIdentifierFilter';
 import { DefaultMutationMapperStore } from 'react-mutation-mapper';
+import {
+    ClinicalAttributeQueryExtractor,
+    SharedGroupsAndCustomDataQueryExtractor,
+    StudyIdQueryExtractor,
+    StudyViewFilterQueryExtractor,
+    StudyViewQueryExtractor,
+} from './StudyViewQueryExtractor';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -2144,114 +2151,27 @@ export class StudyViewPageStore
 
     @action
     async updateStoreFromURL(query: StudyViewURLQuery): Promise<void> {
-        let studyIdsString: string = '';
-        let studyIds: string[] = [];
-        if (query.studyId) {
-            studyIdsString = query.studyId;
-        }
-        if (query.cancer_study_id) {
-            studyIdsString = query.cancer_study_id;
-        }
-        if (query.id) {
-            studyIdsString = query.id;
-        }
-        if (studyIdsString) {
-            studyIds = studyIdsString.trim().split(',');
-            if (!_.isEqual(studyIds, toJS(this.studyIds))) {
-                // update if different
-                this.studyIds = studyIds;
-            }
-        }
-        if (query.sharedGroups) {
-            this.sharedGroupSet = stringListToSet(
-                query.sharedGroups.trim().split(',')
-            );
-            // Open group comparison manager if there are shared groups in the url
-            this.showComparisonGroupUI = true;
-        }
-        if (query.sharedCustomData) {
-            this.sharedCustomChartSet = stringListToSet(
-                query.sharedCustomData.trim().split(',')
-            );
-            this.showCustomDataSelectionUI = true;
-        }
+        const queryExtractors: Array<StudyViewQueryExtractor<void>> = [
+            new StudyIdQueryExtractor(),
+            new SharedGroupsAndCustomDataQueryExtractor(),
+        ];
 
-        // We do not support studyIds in the query filters
-        let filters: Partial<StudyViewFilter> = {};
+        const asyncQueryExtractors: Array<StudyViewQueryExtractor<
+            Promise<void>
+        >> = [];
         if (query.filterJson) {
-            const parsedFilterJson = this.parseRawFilterJson(query.filterJson);
-            if (query.filterJson.includes('patientIdentifiers')) {
-                const sampleListIds = studyIds.map(s => s.concat('', '_all'));
-                const samples = await this.fetchSamplesWithSampleListIds(
-                    sampleListIds
-                );
-                filters = this.getStudyViewFilterFromPatientIdentifierFilter(
-                    parsedFilterJson as PatientIdentifierFilter,
-                    samples
-                );
-            } else {
-                filters = parsedFilterJson as Partial<StudyViewFilter>;
-            }
-            this.updateStoreByFilters(filters);
+            asyncQueryExtractors.push(new StudyViewFilterQueryExtractor());
         } else if (query.filterAttributeId && query.filterValues) {
-            const clinicalAttributes = _.uniqBy(
-                await defaultClient.fetchClinicalAttributesUsingPOST({
-                    studyIds: studyIds,
-                }),
-                clinicalAttribute =>
-                    `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
-            );
-
-            const matchedAttr = _.find(
-                clinicalAttributes,
-                (attr: ClinicalAttribute) =>
-                    attr.clinicalAttributeId.toUpperCase() ===
-                    query.filterAttributeId!.toUpperCase()
-            );
-            if (matchedAttr !== undefined) {
-                if (matchedAttr.datatype == DataType.NUMBER) {
-                    filters.clinicalDataFilters = [
-                        {
-                            attributeId: matchedAttr.clinicalAttributeId,
-                            values: query
-                                .filterValues!.split(',')
-                                .map(range => {
-                                    const convertResult = range.split('-');
-                                    return {
-                                        start: Number(convertResult[0]),
-                                        end: Number(convertResult[1]),
-                                    } as DataFilterValue;
-                                }),
-                        } as ClinicalDataFilter,
-                    ];
-                } else {
-                    filters.clinicalDataFilters = [
-                        {
-                            attributeId: matchedAttr.clinicalAttributeId,
-                            values: getClinicalEqualityFilterValuesByString(
-                                query.filterValues
-                            ).map(value => ({ value })),
-                        } as ClinicalDataFilter,
-                    ];
-                }
-                this.updateStoreByFilters(filters);
-            } else {
-                this.pageStatusMessages['unknownClinicalAttribute'] = {
-                    message: `The clinical attribute ${query.filterAttributeId} is not available for this study`,
-                    status: 'danger',
-                };
-            }
+            asyncQueryExtractors.push(new ClinicalAttributeQueryExtractor());
         }
-    }
 
-    parseRawFilterJson(filterJson: string): any {
-        let rawJson;
-        try {
-            rawJson = JSON.parse(decodeURIComponent(filterJson));
-        } catch (e) {
-            console.error('FilterJson invalid Json: error: ', e);
+        for (const extractor of queryExtractors) {
+            extractor.accept(query, this);
         }
-        return rawJson;
+
+        await Promise.all(
+            asyncQueryExtractors.map(ex => ex.accept(query, this))
+        );
     }
 
     fetchSamplesWithSampleListIds(sampleListIds: string[]) {
@@ -2261,38 +2181,6 @@ export class StudyViewPageStore
             } as SampleFilter,
             projection: 'SUMMARY',
         });
-    }
-
-    getStudyViewFilterFromPatientIdentifierFilter(
-        patientIdentifierFilter: PatientIdentifierFilter,
-        samples: Sample[]
-    ): Partial<StudyViewFilter> {
-        const filters: Partial<StudyViewFilter> = {};
-        const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
-            patientIdentifierFilter.patientIdentifiers,
-            samples
-        );
-        if (sampleIdentifiers.length > 0) {
-            filters.sampleIdentifiers = sampleIdentifiers;
-        }
-        return filters;
-    }
-
-    convertPatientIdentifiersToSampleIdentifiers(
-        patientIdentifiers: Array<PatientIdentifier>,
-        samples: Sample[]
-    ): SampleIdentifier[] {
-        const patientIdentifiersMap = new Map<string, PatientIdentifier>(
-            patientIdentifiers.map(p => [p.studyId.concat('_', p.patientId), p])
-        );
-        return samples
-            .filter(s =>
-                patientIdentifiersMap.has(s.studyId.concat('_', s.patientId))
-            )
-            .map(s => ({
-                sampleId: s.sampleId,
-                studyId: s.studyId,
-            }));
     }
 
     @computed

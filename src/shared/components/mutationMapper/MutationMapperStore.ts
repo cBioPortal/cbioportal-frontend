@@ -97,6 +97,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
                     mutationMapperStoreConfig.filterMutationsBySelectedTranscript,
                 enableCivic: mutationMapperServerConfig.show_civic,
                 enableOncoKb: mutationMapperServerConfig.show_oncokb,
+                enableRevue: mutationMapperServerConfig.show_revue,
                 filterAppliersOverride:
                     mutationMapperStoreConfig.filterAppliersOverride,
                 genomeBuild: mutationMapperStoreConfig.genomeBuild,

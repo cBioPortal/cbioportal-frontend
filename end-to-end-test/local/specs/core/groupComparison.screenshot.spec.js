@@ -18,6 +18,8 @@ const selectGenesDropdownButton = '[data-test="selectGenes"]';
 
 describe('group comparison page screenshot tests', function() {
     describe('Alteration enrichments tab', function() {
+        this.retries(0);
+
         before(function() {
             openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
