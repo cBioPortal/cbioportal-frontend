@@ -472,21 +472,39 @@ export const EventTooltipContent: React.FunctionComponent<{
         <div>
             <table className={'table table-condensed'}>
                 <tbody>
-                    {_.map(attributes, (att: any) => {
+                    {_.map(attributes, (attr: any) => {
                         return (
                             <tr>
-                                <td>{att.key.replace(/_/g, ' ')}</td>
+                                <td>{attr.key.replace(/_/g, ' ')}</td>
                                 <td>
                                     <ReactMarkdown
                                         allowedElements={['p', 'a']}
                                         linkTarget={'_blank'}
                                         components={{
-                                            a: ({ node, ...props }) => (
-                                                <OurPopup {...props} />
-                                            ),
+                                            a: ({ node, ...props }) => {
+                                                if (
+                                                    /:blank$/.test(props.href!)
+                                                ) {
+                                                    return (
+                                                        <a
+                                                            href={props.href?.replace(
+                                                                /:blank$/,
+                                                                ''
+                                                            )}
+                                                            target={'_blank'}
+                                                        >
+                                                            {props.children}
+                                                        </a>
+                                                    );
+                                                } else {
+                                                    return (
+                                                        <OurPopup {...props} />
+                                                    );
+                                                }
+                                            },
                                         }}
                                     >
-                                        {att.value}
+                                        {attr.value}
                                     </ReactMarkdown>
                                 </td>
                             </tr>
