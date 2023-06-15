@@ -8,6 +8,7 @@ import {
     observable,
     ObservableMap,
     reaction,
+    runInAction,
     toJS,
 } from 'mobx';
 import {
@@ -296,7 +297,10 @@ export class QueryStore {
     }
 
     set selectableSelectedStudyIds(val: string[]) {
-        this._allSelectedStudyIds = observable.map(stringListToSet(val));
+        runInAction(() => {
+            this.selectedSampleListId = undefined;
+            this._allSelectedStudyIds = observable.map(stringListToSet(val));
+        });
     }
 
     @action
@@ -474,9 +478,12 @@ export class QueryStore {
     @observable private _selectedSampleListId?: string = undefined; // user selection
     @computed
     public get selectedSampleListId() {
-        if (this._selectedSampleListId !== undefined)
-            return this._selectedSampleListId;
-        return this.defaultSelectedSampleListId;
+        const matchesSelectedStudy = this.sampleListInSelectedStudies.result.some(
+            sampleList => sampleList.sampleListId === this._selectedSampleListId
+        );
+        return matchesSelectedStudy
+            ? this._selectedSampleListId
+            : this.defaultSelectedSampleListId;
     }
 
     public set selectedSampleListId(value) {
@@ -1004,14 +1011,6 @@ export class QueryStore {
             );
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly validProfileIdSetForSelectedStudies = remoteData({
@@ -1075,7 +1074,7 @@ export class QueryStore {
         return _.sumBy(this.selectableSelectedStudies, s => s.allSampleCount);
     }
 
-    readonly sampleLists = remoteData({
+    readonly sampleLists = remoteData<SampleList[]>({
         invoke: async () => {
             if (!this.isSingleNonVirtualStudySelected) {
                 return [];
@@ -1088,14 +1087,6 @@ export class QueryStore {
             return _.sortBy(sampleLists, sampleList => sampleList.name);
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly mutSigForSingleStudy = remoteData({
@@ -2295,16 +2286,7 @@ export class QueryStore {
 
         let urlParams = this.asyncUrlParams.result;
 
-        if (this.forDownloadTab) {
-            formSubmit(
-                buildCBioPortalPageUrl('data_download'),
-                urlParams.query,
-                undefined,
-                'smart'
-            );
-        } else {
-            this.singlePageAppSubmitRoutine(urlParams.query, currentTab);
-        }
+        this.singlePageAppSubmitRoutine(urlParams.query, currentTab);
 
         return true;
     }
