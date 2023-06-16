@@ -142,7 +142,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 sampleSet={this.props.sampleSet}
                 customControls={this.tableCustomControls}
                 rowDataByProteinChange={this.rowDataByProteinChange}
-                initialSortColumn={'q-Value'}
+                initialSortColumn={'p-Value'}
                 initialSortDirection={'asc'}
             />
         );
