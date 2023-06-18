@@ -1,3 +1,55 @@
 .interactive-tour {
     cursor: pointer;
 }
+
+.reactour__helper {
+    box-shadow: 0 15px 20px rgba(0, 0, 0, 0.6);
+    padding: 20px 30px;
+    background: #f9fbf8;
+
+    .step {
+        .title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin: 0;
+        }
+    }
+
+    .skip-all-btn,
+    .next-step-btn,
+    .finish-step-btn {
+        border: none;
+        border-radius: 10px;
+        font-size: 13px;
+        padding: 6px 10px;
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+
+    .skip-all-btn {
+        background-color: #f0f0f4;
+        color: #666;
+    }
+
+    .next-step-btn,
+    .finish-step-btn {
+        background-color: #e0f0e9;
+        color: #0c8918;
+    }
+
+    div:nth-child(2) {
+        justify-content: space-between;
+    }
+
+    .btn-class {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 16px;
+    }
+}

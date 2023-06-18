@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { buildCBioPortalPageUrl } from '../../api/urls';
 import { ResultsViewTab } from '../../../pages/resultsView/ResultsViewPageHelpers';
-import { VirtualStudyTour, virtualStudyId, checkForTour } from 'tours';
+import { Tour } from 'tours';
 import { mockOrder } from 'pages/patientView/vafPlot/mockData';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { sleep } from 'shared/lib/TimeUtils';
@@ -27,11 +27,6 @@ export default class RightBar extends React.Component<
 > {
     constructor(props: IRightBarProps) {
         super(props);
-    }
-
-    private checkForTour: number | null = null
-    componentDidMount() {
-        this.checkForTour = checkForTour(virtualStudyId);
     }
 
     get studyStore() {
@@ -312,7 +307,15 @@ export default class RightBar extends React.Component<
         return getServerConfig().skin_right_nav_show_testimonials ? (
             <div className="rightBarSection" style={{ minHeight: '70px' }}>
                 <h3>Web Tours</h3>
-                {!isLoading && <VirtualStudyTour studies={this.studyStore.selectableSelectedStudyIds.length} startAt={this.checkForTour || 0}/>}
+                {!isLoading && (
+                    <Tour
+                        hideEntry={false}
+                        isLoggedIn={this.studyStore.userLoggedIn}
+                        studies={
+                            this.studyStore.selectableSelectedStudyIds.length
+                        }
+                    />
+                )}
             </div>
         ) : null;
     }

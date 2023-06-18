@@ -1,77 +1,140 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Tour from 'reactour';
-
+import {
+    getGroupComparisonSteps,
+    getVirtualStudySteps,
+    groupComparisonId,
+    virtualStudyId,
+} from '../Steps';
+import { TourProps, TourMapProps } from './types';
 import './styles.scss';
 
-type Steps = Array<{
-    selector: string; 
-    content: () => any; 
-    action?: (node: Element) => void; 
-}>
+export const setTourLocalStorage = (id: string, value: string) => {
+    localStorage.setItem('web-tour', id);
+    localStorage.setItem(id, value);
+};
 
-type SetLockTour = (value: React.SetStateAction<boolean>) => void;
-type SetGotoStep = (value: React.SetStateAction<number | null>) => void;
-type GetStepsProps = {
-    isLoggedIn: boolean, studies:number, setLockTour: SetLockTour, setGotoStep: SetGotoStep, endTour: () => void
-}
-export type GetSteps = (props: GetStepsProps) => Steps;
-
-type TourProps = {
-    title?: string;
-    studies?: number;
-    startAt?: number;
-    hideEntry?: boolean;
-    isLoggedIn?: boolean;
-    localStorageId: string;
-    getSteps: GetSteps;
+export const setTourLocalStorageFromURL = () => {
+    /**
+     * If the url contains a query param 'webtour', set the localStorage
+     */
+    const urlStr = window.location.href.split('?')[1];
+    if (urlStr) {
+        const urlSearchParams = new URLSearchParams(urlStr);
+        const webTour = urlSearchParams.get('webtour');
+        if (webTour && [groupComparisonId, virtualStudyId].includes(webTour)) {
+            setTourLocalStorage(webTour, '0');
+        }
+    }
 };
 
 export default function WebTour({
-    title = '',
-    studies = 0,
-    startAt = 0,
-    hideEntry = false,
+    hideEntry = true,
     isLoggedIn = false,
-    localStorageId,
-    getSteps,
+    studies = 0,
 }: TourProps) {
+    const [currentTour, setCurrentTour] = useState<string | null | undefined>(
+        null
+    );
+    const [isOpen, setIsOpen] = useState(true);
     const [gotoStep, setGotoStep] = useState(null);
-    const [isOpen, setIsOpen] = useState(startAt > 0 ? true : false);
     const [lockTour, setLockTour] = useState(false);
 
-    const startTour = () => {
-        if (hideEntry) return;
+    const [startAt, setStartAt] = useState<number>(0);
+    const endTour = () => setIsOpen(false);
+    const endTourWithBtn = (e: any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(false);
+    };
+
+    useEffect(() => {
+        /**
+         * Two sources to determine the current tour:
+         * 1. the tourType prop passed from the parent component
+         * 2. the localStorage (when load to another page)
+         */
+        const tourContinued = localStorage.getItem('web-tour');
+        if (tourContinued) {
+            localStorage.removeItem('web-tour');
+            const currentStep = localStorage.getItem(tourContinued);
+            if (currentStep) {
+                localStorage.removeItem(tourContinued);
+                setCurrentTour(tourContinued);
+                setStartAt(+currentStep);
+            }
+        }
+    }, [currentTour]);
+
+    const toursMap: TourMapProps = {
+        [virtualStudyId]: {
+            className: virtualStudyId + '-modal',
+            title: 'Create a Virtual Study',
+            getSteps: getVirtualStudySteps,
+        },
+        [groupComparisonId]: {
+            className: groupComparisonId + '-modal',
+            title: 'Compare User-defined Groups of Samples',
+            getSteps: getGroupComparisonSteps,
+        },
+    };
+
+    // click on the title to start the tour
+    const handleClick = (e: any) => {
+        const tourType = e.target.dataset.type;
+        setCurrentTour(tourType);
+        setStartAt(0);
         setIsOpen(true);
     };
 
-    const endTour = () => {
-        setIsOpen(false);
-        const currentStep = localStorage.getItem(localStorageId);
-        if (currentStep) localStorage.removeItem(localStorageId);
-    };
-
-    // when return to the homepage, the tour should be continued
-    useEffect(() => {
-        if (startAt > 0 && !isOpen) setIsOpen(true);
-    }, [startAt])
-
     return (
-        <div className="interactive-tour" onClick={startTour}>
-            {hideEntry ? '' : title}
-            <Tour
-                rounded={5}
-                closeWithMask
-                isOpen={isOpen}
-                startAt={startAt}
-                goToStep={gotoStep}
-                showNumber={false}
-                showNavigation={false}
-                showButtons={!lockTour}
-                showNavigationNumber={false}
-                onRequestClose={endTour}
-                steps={getSteps({ isLoggedIn, studies, setLockTour, setGotoStep, endTour })}
-                lastStepNextButton={<button onClick={endTour}>Done! Finish guidance.</button>}
-            />
+        <div>
+            {!hideEntry &&
+                Object.keys(toursMap).map(tourType => {
+                    return (
+                        <div
+                            className="interactive-tour"
+                            key={tourType}
+                            data-type={tourType}
+                            onClick={handleClick}
+                        >
+                            {toursMap[tourType].title}
+                        </div>
+                    );
+                })}
+            {currentTour && (
+                <Tour
+                    rounded={16}
+                    // closeWithMask
+                    isOpen={isOpen}
+                    startAt={startAt}
+                    goToStep={gotoStep}
+                    showNumber={false}
+                    showNavigation={false}
+                    showButtons={!lockTour}
+                    showNavigationNumber={false}
+                    onRequestClose={endTour}
+                    className={toursMap[currentTour].className}
+                    steps={toursMap[currentTour].getSteps({
+                        isLoggedIn,
+                        studies,
+                        setLockTour,
+                        setGotoStep,
+                        endTour,
+                    })}
+                    lastStepNextButton={
+                        <div className="finish-step-btn">
+                            Finish guidance 🎉
+                        </div>
+                    }
+                    prevButton={
+                        <div className="skip-all-btn" onClick={endTourWithBtn}>
+                            Skip All
+                        </div>
+                    }
+                    nextButton={<div className="next-step-btn">Next Step</div>}
+                />
+            )}
         </div>
     );
 }

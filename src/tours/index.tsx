@@ -1,9 +1,3 @@
-import VirtualStudyTour, { virtualStudyId } from './VirtualStudyTour';
-import GroupComparisonTour, { groupComparisonId } from './GroupComparisonTour';
-import { checkForTour } from './Tour/utils';
+import Tour, { setTourLocalStorageFromURL } from './Tour';
 
-export {
-    checkForTour,
-    VirtualStudyTour,
-    virtualStudyId,
-}
+export { Tour, setTourLocalStorageFromURL };

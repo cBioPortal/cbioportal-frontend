@@ -76,7 +76,7 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
-import { VirtualStudyTour, checkForTour, virtualStudyId } from 'tours';
+import { Tour } from 'tours';
 import QueryString from 'qs';
 
 export interface IStudyViewPageProps {
@@ -123,8 +123,6 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
     ];
-
-    private checkForTour: number | null = null
 
     private toolbar: any;
     private toolbarLeftUpdater: any;
@@ -242,8 +240,6 @@ export default class StudyViewPage extends React.Component<
                 this.toolbarLeft = $(this.toolbar).position().left;
             }
         }, 500);
-
-        this.checkForTour = checkForTour(virtualStudyId);
     }
 
     private getFilterJsonFromPostData(): string | undefined {
@@ -1021,11 +1017,15 @@ export default class StudyViewPage extends React.Component<
     }
 
     render() {
-        const isLoading = this.store.queriedSampleIdentifiers.isPending ||
+        const isLoading =
+            this.store.queriedSampleIdentifiers.isPending ||
             this.store.invalidSampleIds.isPending ||
-            this.body.isPending
-        const showTour = this.checkForTour !== null && !isLoading
-        const studies = this.store.selectedSamples.result.length !== this.store.samples.result.length ? 1 : 0
+            this.body.isPending;
+        const studies =
+            this.store.selectedSamples.result.length !==
+            this.store.samples.result.length
+                ? 1
+                : 0;
         return (
             <PageLayout
                 noMargin={true}
@@ -1038,12 +1038,10 @@ export default class StudyViewPage extends React.Component<
                     center={true}
                 />
                 {this.body.component}
-                {showTour && (
-                    <VirtualStudyTour
-                        hideEntry
+                {!isLoading && (
+                    <Tour
                         studies={studies}
                         isLoggedIn={this.props.appStore.isLoggedIn}
-                        startAt={this.checkForTour || 0}
                     />
                 )}
             </PageLayout>
