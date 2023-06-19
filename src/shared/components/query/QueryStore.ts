@@ -498,9 +498,14 @@ export class QueryStore {
     @observable private _selectedSampleListId?: string = undefined; // user selection
     @computed
     public get selectedSampleListId() {
-        const matchesSelectedStudy = this.sampleListInSelectedStudies.result.some(
-            sampleList => sampleList.sampleListId === this._selectedSampleListId
-        );
+        // check to make sure selected sample list belongs to study
+        // OR is custom list
+        const matchesSelectedStudy =
+            this._selectedSampleListId === CUSTOM_CASE_LIST_ID ||
+            this.sampleListInSelectedStudies.result.some(
+                sampleList =>
+                    sampleList.sampleListId === this._selectedSampleListId
+            );
         return matchesSelectedStudy
             ? this._selectedSampleListId
             : this.defaultSelectedSampleListId;
