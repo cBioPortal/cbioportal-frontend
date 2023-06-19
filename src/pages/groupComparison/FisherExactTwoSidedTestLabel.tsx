@@ -53,19 +53,7 @@ export const FisherExactTwoSidedTestLabel: React.FC<IFisherExactTwoSidedTestLabe
         return (
             <div data-test="fisherTestLabel">
                 {getFisherTestLabel}
-                {groups[0].nameWithOrdinal}, {`${groupAMutatedCount} patients`}{' '}
-                (
-                {formatPercentValue(
-                    (groupAMutatedCount / profiledPatientCounts[0]) * 100,
-                    2
-                )}
-                %) vs {groups[1].nameWithOrdinal},{' '}
-                {`${groupBMutatedCount} patients`} (
-                {formatPercentValue(
-                    (groupBMutatedCount / profiledPatientCounts[1]) * 100,
-                    2
-                )}
-                %):{' '}
+                {groups[0].nameWithOrdinal} vs {groups[1].nameWithOrdinal}:{' '}
                 {toConditionalPrecisionWithMinimum(
                     getTwoTailedPValue(
                         groupAMutatedCount,
