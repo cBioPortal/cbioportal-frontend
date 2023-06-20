@@ -8,7 +8,10 @@ import { sortPatientSurvivals } from 'pages/resultsView/survival/SurvivalUtil';
 export function makeSurvivalChartData(
     patientSurvivals: ReadonlyArray<PatientSurvival>,
     analysisGroups: ReadonlyArray<AnalysisGroup>,
-    patientToAnalysisGroup: { [uniquePatientKey: string]: string }
+    patientToAnalysisGroup: {
+        [uniquePatientKey: string]: string;
+    },
+    attributeId: string
 ) {
     let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [
         group,
@@ -48,7 +51,35 @@ export function makeSurvivalChartData(
         analysisGroups,
         sortedGroupedSurvivals,
         pValue,
+        attributeId,
     };
 }
 
 export function makeScatterPlotData() {}
+
+export function isSurvivalAttributeId(attributeId: string) {
+    return attributeId.includes('_MONTHS') || attributeId.includes('_STATUS');
+}
+
+export function isSurvivalChart(chartUniqueKey: string) {
+    return chartUniqueKey.includes('_SURVIVAL');
+}
+
+export function getAllowedSurvivalClinicalDataFilterId(chartUniqueKey: string) {
+    const prefix = chartUniqueKey.substring(
+        0,
+        chartUniqueKey.indexOf('_SURVIVAL')
+    );
+    return `${prefix}_MONTHS`;
+}
+
+export function getSurvivalChartMetaId(attributeId: string) {
+    const survivalClinicalDataType = attributeId.includes('_MONTHS')
+        ? '_MONTHS'
+        : '_STATUS';
+    const prefix = attributeId.substring(
+        0,
+        attributeId.indexOf(survivalClinicalDataType)
+    );
+    return `${prefix}_SURVIVAL`;
+}

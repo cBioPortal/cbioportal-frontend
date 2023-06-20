@@ -16,6 +16,7 @@ import {
     VictoryLabel,
     VictoryScatter,
     VictoryZoomContainer,
+    VictorySelectionContainer,
 } from 'victory';
 import {
     getSurvivalSummaries,
@@ -29,12 +30,13 @@ import {
     SurvivalPlotFilters,
     SurvivalSummary,
     SURVIVAL_COMPACT_MODE_THRESHOLD,
+    ScatterData,
 } from './SurvivalUtil';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
 import { DefaultTooltip, DownloadControls } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
-import { AnalysisGroup } from '../../studyView/StudyViewUtils';
+import { AnalysisGroup, DataBin } from '../../studyView/StudyViewUtils';
 import { AbstractChart } from '../../studyView/charts/ChartContainer';
 import { toSvgDomNodeWithLegend } from '../../studyView/StudyViewUtils';
 import classnames from 'classnames';
@@ -91,6 +93,8 @@ export interface ISurvivalChartProps {
     xAxisTickCount?: number;
     // Compact mode will hide censoring dots in the chart and do binning based on configuration
     compactMode?: boolean;
+    attributeId?: string;
+    onUserSelection?: (dataBins: DataBin[]) => void;
 }
 
 const MIN_GROUP_SIZE_FOR_LOGRANK = 10;
@@ -594,6 +598,52 @@ export default class SurvivalChart
         this.sliderValue = Number.parseFloat(text);
     }
 
+    @autobind
+    private onSelection(data: any[]) {
+        const scatterPoints: Array<ScatterData> = data[1].data;
+        if (scatterPoints.length > 2) {
+            const dataBin = this.generateFilterDataBin(scatterPoints);
+            if (this.props.onUserSelection) {
+                this.props.onUserSelection([dataBin]);
+            }
+            console.log(dataBin);
+        }
+    }
+
+    private generateFilterDataBin(scatterPoints: Array<ScatterData>): DataBin {
+        const minX = scatterPoints[0].x;
+        const maxX = scatterPoints[scatterPoints.length - 1].x;
+        return {
+            id: this.props.attributeId!,
+            start: minX,
+            end: maxX,
+        } as DataBin;
+    }
+
+    @computed
+    get victoryChartContainer() {
+        return this.props.onUserSelection ? (
+            <VictorySelectionContainer
+                selectionDimension="x"
+                onSelection={this.onSelection}
+            />
+        ) : (
+            <VictoryZoomContainer
+                responsive={false}
+                disable={true}
+                zoomDomain={
+                    this.props.showSlider
+                        ? { x: [0, this.sliderValue] }
+                        : undefined
+                }
+                onZoomDomainChange={_.debounce((domain: any) => {
+                    this.scatterFilter = domain as SurvivalPlotFilters;
+                }, 1000)}
+                containerRef={(ref: any) => (this.svgContainer = ref)}
+            />
+        );
+    }
+
     @computed
     get chart() {
         return (
@@ -676,23 +726,7 @@ export default class SurvivalChart
                 </div>
 
                 <VictoryChart
-                    containerComponent={
-                        <VictoryZoomContainer
-                            responsive={false}
-                            disable={true}
-                            zoomDomain={
-                                this.props.showSlider
-                                    ? { x: [0, this.sliderValue] }
-                                    : undefined
-                            }
-                            onZoomDomainChange={_.debounce((domain: any) => {
-                                this.scatterFilter = domain as SurvivalPlotFilters;
-                            }, 1000)}
-                            containerRef={(ref: any) =>
-                                (this.svgContainer = ref)
-                            }
-                        />
-                    }
+                    containerComponent={this.victoryChartContainer}
                     height={this.styleOpts.height}
                     width={this.styleOpts.width}
                     padding={this.styleOpts.padding}
