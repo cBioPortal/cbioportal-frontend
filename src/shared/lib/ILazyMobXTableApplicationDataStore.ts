@@ -160,7 +160,6 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
             filterStringLower?: string
         ) => boolean
     ) {
-        console.log(fn);
         this.dataFilter = fn;
     }
 
