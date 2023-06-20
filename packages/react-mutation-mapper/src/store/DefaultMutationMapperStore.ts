@@ -106,6 +106,7 @@ class DefaultMutationMapperStore<T extends Mutation>
 
     @observable
     private _selectedTranscript: string | undefined = undefined;
+    sampleDataByCodon?: any[] = [];
 
     // this allows us to keep selected transcript state in one of two places
     // external (e.g. url)
@@ -1148,6 +1149,10 @@ class DefaultMutationMapperStore<T extends Mutation>
     // Get genome build for exon track
     public get genomeBuild(): string {
         return this.config.genomeBuild || 'hg19';
+    }
+
+    clearFilters() {
+        this.sampleDataByCodon = [];
     }
 }
 

@@ -607,7 +607,9 @@ export default class LollipopMutationPlot<
     }
 
     componentWillUnmount() {
-        this.props?.onRef(undefined);
+        if (this.props?.onRef) {
+            this.props?.onRef(undefined);
+        }
     }
 
     @autobind
@@ -845,6 +847,11 @@ export default class LollipopMutationPlot<
         }
     }
 
+    @action.bound
+    public setCustomDataByCodon(data: any[]) {
+        this.props.store.sampleDataByCodon = data.slice();
+    }
+
     render() {
         if (
             this.props.store.pfamDomainData.isComplete &&
@@ -924,6 +931,7 @@ export default class LollipopMutationPlot<
                         bottomYAxisSymbol={this.props.bottomYAxisSymbol}
                         groups={this.groups}
                         yAxisLabelFormatter={this.props.yAxisLabelFormatter}
+                        getFilteredData={this.setCustomDataByCodon}
                     />
                     <TrackPanel
                         store={this.props.store}

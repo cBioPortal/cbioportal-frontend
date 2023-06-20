@@ -272,10 +272,6 @@ import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
 import { toast, cssTransition } from 'react-toastify';
-import {
-    PatientIdentifier,
-    PatientIdentifierFilter,
-} from 'shared/model/PatientIdentifierFilter';
 import { DefaultMutationMapperStore } from 'react-mutation-mapper';
 import {
     ClinicalAttributeQueryExtractor,
@@ -2583,6 +2579,11 @@ export class StudyViewPageStore
     public readonly mutationPlotData = remoteData({
         await: () => [this.selectedSamples, this.mutationProfiles],
         invoke: async () => {
+            if (!this.selectedMutationPlotGene) {
+                this.selectedMutationPlotGene = 'TP53';
+                // selected default mutation gene because if no gene is clicked and a plot is trigerred from filter, an invalid API call will be made.
+            }
+
             const mutationData = await getMutationData(
                 this.selectedSamples.result,
                 this.mutationProfiles.result,
@@ -2592,6 +2593,27 @@ export class StudyViewPageStore
             return Promise.resolve(mutationData);
         },
     });
+
+    @action.bound
+    async updateStudyViewFilter() {
+        const filteredMutationPlotData = this.mutationPlotStore[
+            this.selectedMutationPlotGene
+        ].sampleDataByCodon;
+
+        if (filteredMutationPlotData && filteredMutationPlotData.length > 0) {
+            const customChartData = {
+                data: filteredMutationPlotData!,
+                datatype: 'STRING',
+                description: 'Mutation plot filtered data',
+                displayName: 'Mutation Plot',
+                patientAttribute: false,
+                origin: [''],
+                priority: 0,
+            };
+
+            this.updateCustomSelect(customChartData);
+        }
+    }
 
     public createMutationStore() {
         const store = new DefaultMutationMapperStore(
@@ -2717,6 +2739,7 @@ export class StudyViewPageStore
         this.submittedPillStore = {};
         this.hesitantPillStore = {};
         this.resetClinicalEventTypeFilter();
+        this.mutationPlotStore[this.selectedMutationPlotGene].clearFilters();
     }
 
     @computed

@@ -16,6 +16,7 @@ import {
 import { LollipopPlacement, LollipopSpec } from '../../model/LollipopSpec';
 import { DomainSpec } from '../../model/DomainSpec';
 import {
+    filteredDataByCodon,
     updatePositionHighlightFilters,
     updatePositionSelectionFilters,
 } from '../../util/FilterUtils';
@@ -109,6 +110,16 @@ export default class LollipopPlotNoTooltip extends React.Component<
     @action.bound
     protected onLollipopClick(codon: number) {
         if (this.props.dataStore) {
+            const filteredDataForStudyView = filteredDataByCodon(
+                codon,
+                this.props.dataStore
+            );
+
+            // Send the data to study view if the page is study view.
+            if (this.props.getFilteredData !== undefined) {
+                this.props.getFilteredData(filteredDataForStudyView);
+            }
+
             updatePositionSelectionFilters(
                 this.props.dataStore,
                 codon,

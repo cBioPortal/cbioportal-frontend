@@ -100,17 +100,19 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                             })}
                         >
                             <i className="fa fa-search"></i>
-                            <If
-                                condition={
+                        </div>
+                        <div
+                            className={classnames({
+                                [styles.addGeneUI]: true,
+                                [styles.selected]:
                                     this.props.hugoGeneSymbol ==
-                                    this.props.selectedMutationPlotGene
-                                }
-                            >
-                                <i
-                                    className="fa fa-line-chart"
-                                    style={{ paddingLeft: 4 }}
-                                ></i>
-                            </If>
+                                    this.props.selectedMutationPlotGene,
+                            })}
+                        >
+                            <i
+                                className="fa fa-line-chart"
+                                style={{ paddingLeft: 4 }}
+                            ></i>
                         </div>
                     </div>
                 </DefaultTooltip>

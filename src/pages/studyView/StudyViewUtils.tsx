@@ -240,7 +240,7 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
     {
         uniqueKey: SpecialChartsUniqueKeyEnum.MUTATION_PLOT,
         displayName: 'Mutation Plot',
-        description: '',
+        description: ' ',
         chartType: ChartTypeEnum.MUTATION_DIAGRAM,
         dataType: ChartMetaDataTypeEnum.CLINICAL,
         patientAttribute: false,

@@ -77,6 +77,7 @@ import ClinicalEventTypeCountTable, {
 } from 'pages/studyView/table/ClinicalEventTypeCountTable';
 import {
     DefaultMutationMapperStore,
+    FilterResetPanel,
     LollipopMutationPlot,
 } from 'react-mutation-mapper';
 import { If } from 'react-if';
@@ -286,7 +287,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     public toSVGDOMNode(): SVGElement {
-        console.log(this.plot);
         if (this.plot) {
             // Get result of plot
             return this.plot.toSVGDOMNode() as SVGElement;
@@ -346,11 +346,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     survivalPlotLeftTruncationChecked: this.props
                         .survivalPlotLeftTruncationChecked,
                 };
+                break;
             }
             case ChartTypeEnum.MUTATION_DIAGRAM: {
                 controls = {
                     showResultsPageButton: true,
                 };
+                break;
             }
         }
         if (this.comparisonPagePossible) {
@@ -1262,10 +1264,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             case ChartTypeEnum.MUTATION_DIAGRAM:
-                return () =>
-                    this.props.store.mutationPlotData.isPending ? (
-                        <></>
-                    ) : (
+                return () => (
+                    <div
+                        onClick={_ => this.props.store.updateStudyViewFilter()}
+                        style={{ scale: '120%' }}
+                    >
                         <LollipopMutationPlot
                             store={this.props.store.getMutationStore()}
                             autoHideControls={false}
@@ -1277,8 +1280,16 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onRef={(ref: any) => {
                                 this.mutationPlotRef = ref;
                             }}
+                            filterResetPanel={
+                                this.props.filters.length > 0 ? (
+                                    <div>Filtered</div>
+                                ) : (
+                                    <></>
+                                )
+                            }
                         />
-                    );
+                    </div>
+                );
             default:
                 return null;
         }

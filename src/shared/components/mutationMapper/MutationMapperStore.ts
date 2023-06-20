@@ -180,7 +180,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
                 }
             },
             invoke: async () => {
-                console.log(this.mutations);
                 return this.mutations as Mutation[];
             },
         },

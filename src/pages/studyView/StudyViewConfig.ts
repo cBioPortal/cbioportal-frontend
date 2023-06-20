@@ -102,7 +102,7 @@ export enum ChartTypeNameEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'table',
     PATIENT_TREATMENT_TARGET_TABLE = 'table',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'table',
-    MUTATION_DIAGRAM = 'lollipop plot',
+    MUTATION_DIAGRAM = 'lollipop diagram',
     NONE = 'none',
 }
 
