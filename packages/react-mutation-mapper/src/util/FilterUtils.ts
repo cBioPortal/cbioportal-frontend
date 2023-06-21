@@ -17,26 +17,6 @@ import { ApplyFilterFn } from '../model/FilterApplier';
 
 export const TEXT_INPUT_FILTER_ID = '_mutationTableTextInputFilter_';
 
-export function filteredDataByCodon(
-    codon: number,
-    datastore: DataStore
-): any[] {
-    const filteredData = _.filter(
-        datastore.allData,
-        data => data.proteinPosStart == codon
-    );
-
-    const results = filteredData.map(m => {
-        return {
-            patientId: m.patientId,
-            studyId: m.studyId,
-            sampleId: m.sampleId,
-        };
-    });
-
-    return results;
-}
-
 export function updatePositionSelectionFilters(
     dataStore: DataStore,
     position: number,

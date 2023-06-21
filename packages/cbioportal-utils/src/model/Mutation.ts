@@ -14,4 +14,7 @@ export type Mutation = {
     proteinPosEnd?: number;
     proteinPosStart: number;
     mutationType?: string;
+    patientId?: string;
+    studyId?: string;
+    sampleId?: string;
 };

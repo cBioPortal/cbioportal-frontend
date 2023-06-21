@@ -181,7 +181,7 @@ export interface IChartContainerProps {
 @observer
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private chartHeaderHeight = 20;
-    private mutationPlotRef: any;
+    private mutationPlotRef: LollipopMutationPlot<any>;
 
     private handlers: any;
     private plot: AbstractChart;
@@ -199,7 +199,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         super(props);
 
         makeObservable(this);
-        this.mutationPlotRef = React.createRef();
 
         this.chartType = this.props.chartType;
 
@@ -381,7 +380,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     svgHandler(chartType: ChartType): Promise<SVGElement> {
         if (chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
-            return this.mutationPlotRef.getSVG();
+            return Promise.resolve(this.mutationPlotRef.getSVG());
         }
 
         return Promise.resolve(this.toSVGDOMNode());
@@ -1266,8 +1265,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.MUTATION_DIAGRAM:
                 return () => (
                     <div
-                        onClick={_ => this.props.store.updateStudyViewFilter()}
                         style={{ scale: '120%' }}
+                        onClick={_ => this.props.store.updateStudyViewFilter()}
                     >
                         <LollipopMutationPlot
                             store={this.props.store.getMutationStore()}
@@ -1290,6 +1289,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         />
                     </div>
                 );
+
             default:
                 return null;
         }

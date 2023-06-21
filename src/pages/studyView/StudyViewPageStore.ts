@@ -272,7 +272,10 @@ import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
 import { toast, cssTransition } from 'react-toastify';
-import { DefaultMutationMapperStore } from 'react-mutation-mapper';
+import {
+    DefaultMutationMapperDataStore,
+    DefaultMutationMapperStore,
+} from 'react-mutation-mapper';
 import {
     ClinicalAttributeQueryExtractor,
     SharedGroupsAndCustomDataQueryExtractor,
@@ -280,6 +283,7 @@ import {
     StudyViewFilterQueryExtractor,
     StudyViewQueryExtractor,
 } from './StudyViewQueryExtractor';
+import StudyViewMutationMapperStore from './charts/mutationPlot/StudyViewMutationMapperStore';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -426,7 +430,7 @@ export class StudyViewPageStore
     @observable typeIdsMode: string = CustomDataTypeEnum.CATEGORICAL;
     @observable chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
     @observable mutationPlotStore: {
-        [hugoGeneSymbol: string]: DefaultMutationMapperStore<any>;
+        [hugoGeneSymbol: string]: StudyViewMutationMapperStore;
     } = {};
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
@@ -2598,11 +2602,11 @@ export class StudyViewPageStore
     async updateStudyViewFilter() {
         const filteredMutationPlotData = this.mutationPlotStore[
             this.selectedMutationPlotGene
-        ].sampleDataByCodon;
+        ].samplesViaSelectedCodons;
 
-        if (filteredMutationPlotData && filteredMutationPlotData.length > 0) {
+        if (filteredMutationPlotData.length) {
             const customChartData = {
-                data: filteredMutationPlotData!,
+                data: filteredMutationPlotData,
                 datatype: 'STRING',
                 description: 'Mutation plot filtered data',
                 displayName: 'Mutation Plot',
@@ -2616,7 +2620,7 @@ export class StudyViewPageStore
     }
 
     public createMutationStore() {
-        const store = new DefaultMutationMapperStore(
+        const store = new StudyViewMutationMapperStore(
             { hugoGeneSymbol: this.selectedMutationPlotGene },
             {},
             () => this.mutationPlotData.result!
@@ -2739,7 +2743,6 @@ export class StudyViewPageStore
         this.submittedPillStore = {};
         this.hesitantPillStore = {};
         this.resetClinicalEventTypeFilter();
-        this.mutationPlotStore[this.selectedMutationPlotGene].clearFilters();
     }
 
     @computed

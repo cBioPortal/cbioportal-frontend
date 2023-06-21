@@ -37,7 +37,6 @@ export type LollipopPlotProps = {
     dataStore?: DataStore;
     onXAxisOffset?: (offset: number) => void;
     yAxisLabelFormatter?: (symbol?: string, groupName?: string) => string;
-    getFilteredData?: (selectedLollipopData: any[]) => void;
 };
 
 @observer
