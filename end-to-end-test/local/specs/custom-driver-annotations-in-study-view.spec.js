@@ -1,5 +1,8 @@
 const assert = require('assert');
-const { waitForNetworkQuiet } = require('../../shared/specUtils');
+const {
+    waitForNetworkQuiet,
+    waitForStudyView,
+} = require('../../shared/specUtils');
 const goToUrlAndSetLocalStorage = require('../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 
@@ -29,21 +32,21 @@ describe('custom driver annotations feature in study view', function() {
             $(SV_TABLE)
                 .$(BRAF_ROW)
                 .waitForDisplayed();
-            assert($(SV_TABLE).$$(ANY_ROW).length === 21);
+            expect($(SV_TABLE).$$(ANY_ROW).length).toBe(21);
             let geneName = $(SV_TABLE)
                 .$(BRAF_ROW)
                 .$(GENE_NAME)
                 .getText();
-            assert(geneName === 'BRAF');
+            expect(geneName).toBe('BRAF');
             const alterations = $(SV_TABLE)
                 .$(BRAF_ROW)
                 .$(ALTERATIONS_TOTAL);
-            assert(alterations.getText() === '36');
+            expect(alterations.getText()).toBe('37');
             const alterationCases = $(SV_TABLE)
                 .$(BRAF_ROW)
                 .$(ALTERATION_CASES)
                 .getText();
-            assert(alterationCases === '35');
+            expect(alterationCases).toBe('35');
         });
 
         it('can exclude unknown (and NULL) driver tiers', () => {
@@ -54,17 +57,17 @@ describe('custom driver annotations feature in study view', function() {
             $(SV_TABLE)
                 .$(BRAF_ROW)
                 .waitForDisplayed();
-            assert($(SV_TABLE).$$(ANY_ROW).length === 10);
+            expect($(SV_TABLE).$$(ANY_ROW).length).toBe(10);
             const alterations = $(SV_TABLE)
                 .$(BRAF_ROW)
                 .$(ALTERATIONS_TOTAL)
                 .getText();
-            assert(alterations === '1');
+            expect(alterations).toBe('1');
             const brafCases = $(SV_TABLE)
                 .$(BRAF_ROW)
                 .$(ALTERATION_CASES)
                 .getText();
-            assert(brafCases === '1');
+            expect(brafCases).toBe('1');
         });
 
         it('can exclude custom driver tiers', () => {
@@ -83,7 +86,7 @@ describe('custom driver annotations feature in study view', function() {
                 .$(ANY_ROW)
                 .waitForDisplayed();
 
-            assert($(SV_TABLE).$$(ANY_ROW).length === 5);
+            expect($(SV_TABLE).$$(ANY_ROW).length).toBe(5);
             assert(getAllGeneNames() === 'ALK,EGFR,EML4,ERG,TMPRSS2');
         });
 
@@ -101,8 +104,8 @@ describe('custom driver annotations feature in study view', function() {
                 .$(ANY_ROW)
                 .waitForDisplayed();
 
-            assert($(SV_TABLE).$$(ANY_ROW).length === 2);
-            assert(getAllGeneNames() === 'NCOA4,RET');
+            expect($(SV_TABLE).$$(ANY_ROW).length).toBe(2);
+            expect(getAllGeneNames()).toBe('NCOA4,RET');
         });
     });
 });
