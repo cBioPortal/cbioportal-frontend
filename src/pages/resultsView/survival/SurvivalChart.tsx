@@ -606,7 +606,6 @@ export default class SurvivalChart
             if (this.props.onUserSelection) {
                 this.props.onUserSelection([dataBin]);
             }
-            console.log(dataBin);
         }
     }
 
