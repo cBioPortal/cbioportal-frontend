@@ -688,7 +688,9 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.MUTATION_DIAGRAM: {
-                props.promise = this.store.mutationPlotData;
+                props.promise = this.store.createAndAddMutationStore(
+                    chartMeta.uniqueKey
+                );
                 props.downloadTypes = ['SVG', 'PNG', 'PDF'];
                 break;
             }

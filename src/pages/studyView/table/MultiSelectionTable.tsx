@@ -39,6 +39,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
+import { ChartTypeEnum } from '../StudyViewConfig';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -82,7 +83,10 @@ export type MultiSelectionTableProps = {
         MultiSelectionTableRow
     >['extraButtons'];
     selectedRowsKeys: string[];
-    onGeneSelect: (hugoGeneSymbol: string) => void;
+    onGeneSelect: (
+        hugoGeneSymbol: string,
+        chartType?: FreqColumnTypeEnum
+    ) => void;
     selectedGenes: string[];
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
@@ -93,7 +97,7 @@ export type MultiSelectionTableProps = {
     defaultSortBy: MultiSelectionTableColumnKey;
     columns: MultiSelectionTableColumn[];
     setOperationsButtonText: string;
-    selectedMutationPlotGene: string;
+    selectedMutationPlotGenes?: string[];
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {
@@ -182,8 +186,8 @@ export class MultiSelectionTable extends React.Component<
                                 data.isOncokbTumorSuppressorGene
                             }
                             onGeneSelect={this.props.onGeneSelect}
-                            selectedMutationPlotGene={
-                                this.props.selectedMutationPlotGene
+                            selectedMutationPlotGenes={
+                                this.props.selectedMutationPlotGenes
                             }
                         />
                     );

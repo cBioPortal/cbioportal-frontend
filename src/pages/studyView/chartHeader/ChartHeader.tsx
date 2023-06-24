@@ -100,9 +100,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @computed
     get fileName() {
-        if (this.props.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
-            return this.props.store.selectedMutationPlotGene + '_lollipop';
-        }
         return this.props.chartMeta.displayName.replace(/[ \t]/g, '_');
     }
 
@@ -613,7 +610,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <a
                         className="dropdown-item"
                         onClick={() =>
-                            this.props.store.onVisualizingMutationPlot()
+                            this.props.store.onVisualizingMutationPlot(
+                                this.props.chartMeta.uniqueKey
+                            )
                         }
                     >
                         <i

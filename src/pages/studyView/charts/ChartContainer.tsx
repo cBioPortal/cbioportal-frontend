@@ -597,8 +597,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 this.props.dimension,
                                 this.chartHeaderHeight
                             )}
-                            selectedMutationPlotGene={
-                                this.props.store.selectedMutationPlotGene
+                            selectedMutationPlotGenes={
+                                this.props.store.visibleMutationPlotGenes
                             }
                             filters={this.props.filters}
                             onSubmitSelection={this.handlers.onValueSelection}
@@ -679,9 +679,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 this.props.dimension,
                                 this.chartHeaderHeight
                             )}
-                            selectedMutationPlotGene={
-                                this.props.store.selectedMutationPlotGene
-                            }
                             filters={this.props.filters}
                             onSubmitSelection={this.handlers.onValueSelection}
                             onChangeSelectedRows={
@@ -768,9 +765,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeSelectedRows={
                                 this.handlers.onChangeSelectedRows
                             }
-                            selectedMutationPlotGene={
-                                this.props.store.selectedMutationPlotGene
-                            }
                             extraButtons={
                                 this.comparisonButtonForTables && [
                                     this.comparisonButtonForTables,
@@ -843,9 +837,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
-                        selectedMutationPlotGene={
-                            this.props.store.selectedMutationPlotGene
-                        }
                         selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
@@ -891,9 +882,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
-                        selectedMutationPlotGene={
-                            this.props.store.selectedMutationPlotGene
-                        }
                         filters={this.props.filters}
                         onSubmitSelection={this.handlers.onValueSelection}
                         onChangeSelectedRows={
@@ -1263,32 +1251,41 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             case ChartTypeEnum.MUTATION_DIAGRAM:
-                return () => (
-                    <div
-                        style={{ scale: '120%' }}
-                        onClick={_ => this.props.store.updateStudyViewFilter()}
-                    >
-                        <LollipopMutationPlot
-                            store={this.props.store.getMutationStore()}
-                            autoHideControls={false}
-                            showLegendToggle={false}
-                            showDownloadControls={false}
-                            showTrackSelector={false}
-                            showYMaxSlider={false}
-                            geneWidth={666}
-                            onRef={(ref: any) => {
-                                this.mutationPlotRef = ref;
-                            }}
-                            filterResetPanel={
-                                this.props.filters.length > 0 ? (
-                                    <div>Filtered</div>
-                                ) : (
-                                    <></>
-                                )
-                            }
-                        />
-                    </div>
-                );
+                return () =>
+                    this.props.promise.isComplete ? (
+                        <div style={{ scale: '120%' }}>
+                            <LollipopMutationPlot
+                                store={this.props.store.getMutationStore(
+                                    this.props.chartMeta.uniqueKey
+                                )}
+                                autoHideControls={false}
+                                showLegendToggle={false}
+                                showDownloadControls={false}
+                                showTrackSelector={false}
+                                showYMaxSlider={false}
+                                geneWidth={666}
+                                onRef={(ref: any) => {
+                                    this.mutationPlotRef = ref;
+                                }}
+                                yAxisLabelFormatter={() => {
+                                    return '';
+                                }}
+                                filterResetPanel={
+                                    <button
+                                        onClick={_ =>
+                                            this.props.store.updateStudyViewFilter(
+                                                this.props.chartMeta.uniqueKey
+                                            )
+                                        }
+                                    >
+                                        Filter
+                                    </button>
+                                }
+                            />
+                        </div>
+                    ) : (
+                        <p>Loading...</p>
+                    );
 
             default:
                 return null;
@@ -1301,14 +1298,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     get chartTitle() {
-        if (this.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
-            return (
-                this.props.title +
-                ' - ' +
-                this.props.store.selectedMutationPlotGene
-            );
-        }
-
         return this.props.title;
     }
 

@@ -237,20 +237,20 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
         priority: 70,
         renderWhenDataChange: false,
     },
-    {
-        uniqueKey: SpecialChartsUniqueKeyEnum.MUTATION_PLOT,
-        displayName: 'Mutation Plot',
-        description: ' ',
-        chartType: ChartTypeEnum.MUTATION_DIAGRAM,
-        dataType: ChartMetaDataTypeEnum.CLINICAL,
-        patientAttribute: false,
-        dimension: {
-            w: 5,
-            h: 2,
-        },
-        priority: 70,
-        renderWhenDataChange: false,
-    },
+    // {
+    //     uniqueKey: SpecialChartsUniqueKeyEnum.MUTATION_PLOT,
+    //     displayName: 'Mutation Plot',
+    //     description: ' ',
+    //     chartType: ChartTypeEnum.MUTATION_DIAGRAM,
+    //     dataType: ChartMetaDataTypeEnum.GENE_SPECIFIC,
+    //     patientAttribute: false,
+    //     dimension: {
+    //         w: 5,
+    //         h: 2,
+    //     },
+    //     priority: 70,
+    //     renderWhenDataChange: false,
+    // },
 ];
 
 export const COLORS = [

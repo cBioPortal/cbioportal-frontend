@@ -25,8 +25,11 @@ export type IGeneCellProps = {
     oncokbAnnotated: boolean;
     isOncogene: boolean;
     isTumorSuppressorGene: boolean;
-    onGeneSelect: (hugoGeneSymbol: string) => void;
-    selectedMutationPlotGene: string;
+    onGeneSelect: (
+        hugoGeneSymbol: string,
+        tableType: FreqColumnTypeEnum
+    ) => void;
+    selectedMutationPlotGenes?: string[];
 };
 
 @observer
@@ -64,7 +67,10 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         data-test="geneNameCell"
                         className={classnames(styles.displayFlex)}
                         onClick={() =>
-                            this.props.onGeneSelect(this.props.hugoGeneSymbol)
+                            this.props.onGeneSelect(
+                                this.props.hugoGeneSymbol,
+                                this.props.tableType
+                            )
                         }
                     >
                         <EllipsisTextTooltip
@@ -101,19 +107,21 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         >
                             <i className="fa fa-search"></i>
                         </div>
-                        <div
-                            className={classnames({
-                                [styles.addGeneUI]: true,
-                                [styles.selected]:
-                                    this.props.hugoGeneSymbol ==
-                                    this.props.selectedMutationPlotGene,
-                            })}
-                        >
-                            <i
-                                className="fa fa-line-chart"
-                                style={{ paddingLeft: 4 }}
-                            ></i>
-                        </div>
+                        {this.props.selectedMutationPlotGenes && (
+                            <div
+                                className={classnames({
+                                    [styles.addGeneUI]: true,
+                                    [styles.selected]: this.props.selectedMutationPlotGenes.includes(
+                                        this.props.hugoGeneSymbol
+                                    ),
+                                })}
+                            >
+                                <i
+                                    className="fa fa-line-chart"
+                                    style={{ paddingLeft: 4 }}
+                                ></i>
+                            </div>
+                        )}
                     </div>
                 </DefaultTooltip>
             </div>

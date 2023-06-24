@@ -398,6 +398,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @action.bound
     private onAddAll(keys: string[]) {
+        console.log(keys);
         this.props.store.addCharts(this.selectedAttrs.concat(keys));
 
         const addInSummaryInfoMessage = `${keys.length} chart${

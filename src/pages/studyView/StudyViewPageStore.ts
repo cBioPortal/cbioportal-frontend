@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _, { uniq } from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -50,6 +50,7 @@ import {
     GenomicDataFilter,
     MolecularProfile,
     MolecularProfileFilter,
+    Mutation,
     NumericGeneMolecularData,
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
@@ -203,7 +204,7 @@ import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { CancerGene } from 'oncokb-ts-api-client';
 
 import { AppStore } from 'AppStore';
-import { getGeneCNAOQL } from 'pages/studyView/TableUtils';
+import { FreqColumnTypeEnum, getGeneCNAOQL } from 'pages/studyView/TableUtils';
 import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import {
     getGroupParameters,
@@ -284,6 +285,7 @@ import {
     StudyViewQueryExtractor,
 } from './StudyViewQueryExtractor';
 import StudyViewMutationMapperStore from './charts/mutationPlot/StudyViewMutationMapperStore';
+import { C } from 'js-combinatorics';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -365,6 +367,12 @@ export type GenomicChart = {
     description?: string;
     profileType: string;
     hugoGeneSymbol: string;
+};
+
+export type MutationPlot = {
+    name?: string;
+    hugoGeneSymbol: string;
+    description?: string;
 };
 
 export type GenericAssayChart = {
@@ -2001,7 +2009,6 @@ export class StudyViewPageStore
     >();
 
     @observable.ref geneQueryStr: string;
-    @observable public selectedMutationPlotGene: string;
 
     @observable public geneQueries: SingleGeneQuery[] = [];
 
@@ -2348,6 +2355,7 @@ export class StudyViewPageStore
     @observable private _filterMutatedGenesTableByCancerGenes: boolean = false;
     @observable private _filterSVGenesTableByCancerGenes: boolean = false;
     @observable private _filterCNAGenesTableByCancerGenes: boolean = false;
+    public visibleMutationPlotGenes: string[] = [];
 
     @action.bound
     updateMutatedGenesTableByCancerGenesFilter(filtered: boolean): void {
@@ -2419,6 +2427,10 @@ export class StudyViewPageStore
     @observable private _genericAssayChartMap = observable.map<
         ChartUniqueKey,
         GenericAssayChart
+    >({}, { deep: false });
+    @observable private _mutationPlots = observable.map<
+        ChartUniqueKey,
+        ChartMeta
     >({}, { deep: false });
     @observable private _genericAssayCharts = observable.map<
         ChartUniqueKey,
@@ -2516,8 +2528,15 @@ export class StudyViewPageStore
         );
     }
 
+    visibleMutationPlotByGene(hugoGeneSymbol: string): Boolean {
+        return this.visibleMutationPlotGenes.includes(hugoGeneSymbol);
+    }
+
     @action.bound
-    onCheckGene(hugoGeneSymbol: string): void {
+    async onCheckGene(
+        hugoGeneSymbol: string,
+        selectedTable: FreqColumnTypeEnum
+    ): Promise<void> {
         let message = '';
         if (this.geneQueries.find(q => q.gene === hugoGeneSymbol)) {
             message = `${hugoGeneSymbol} removed from query queue`;
@@ -2550,24 +2569,37 @@ export class StudyViewPageStore
             .map(query => unparseOQLQueryLine(query))
             .join(' ');
 
-        if (this.selectedMutationPlotGene != hugoGeneSymbol) {
+        // trigger an update to mutation plot for the selected gene.
+        if (selectedTable == FreqColumnTypeEnum.MUTATION)
             this.addMutationPlot(hugoGeneSymbol);
-        }
     }
 
     @action.bound
     addMutationPlot(hugoGeneSymbol: string): void {
-        this.selectedMutationPlotGene = hugoGeneSymbol;
+        if (!this.visibleMutationPlotByGene(hugoGeneSymbol)) {
+            let mutationPlotSpecs = [
+                {
+                    hugoGeneSymbol,
+                },
+            ];
 
-        this.addCharts(
-            this.visibleAttributes
-                .map(attr => attr.uniqueKey)
-                .concat([SpecialChartsUniqueKeyEnum.MUTATION_PLOT])
-        );
+            this.addMutationPlotAsChart(mutationPlotSpecs);
 
-        const chartAddedMessage = `Mutation Plot for ${hugoGeneSymbol} added.`;
+            const chartAddedMessage = `Mutation Plot for ${hugoGeneSymbol} added.`;
 
-        toast.success(chartAddedMessage, {
+            this.launchToastMessage(chartAddedMessage);
+        } else {
+            this.changeChartVisibility(hugoGeneSymbol, false);
+            _.pull(this.visibleMutationPlotGenes, hugoGeneSymbol);
+
+            const chartRemovedMessage = `Mutation Plot for ${hugoGeneSymbol} removed.`;
+
+            this.launchToastMessage(chartRemovedMessage);
+        }
+    }
+
+    launchToastMessage(message: string): void {
+        toast.success(message, {
             delay: 0,
             position: 'top-right',
             autoClose: 1500,
@@ -2580,29 +2612,36 @@ export class StudyViewPageStore
         });
     }
 
-    public readonly mutationPlotData = remoteData({
-        await: () => [this.selectedSamples, this.mutationProfiles],
-        invoke: async () => {
-            if (!this.selectedMutationPlotGene) {
-                this.selectedMutationPlotGene = 'TP53';
-                // selected default mutation gene because if no gene is clicked and a plot is trigerred from filter, an invalid API call will be made.
-            }
+    public createAndAddMutationStore(
+        hugoGeneSymbol: string
+    ): MobxPromise<Mutation[]> {
+        const data = remoteData({
+            await: () => [this.selectedSamples, this.mutationProfiles],
+            invoke: async () => {
+                const mutationData = await getMutationData(
+                    this.selectedSamples.result,
+                    this.mutationProfiles.result,
+                    [hugoGeneSymbol]
+                );
 
-            const mutationData = await getMutationData(
-                this.selectedSamples.result,
-                this.mutationProfiles.result,
-                [this.selectedMutationPlotGene]
-            );
+                return Promise.resolve(mutationData);
+            },
+        });
 
-            return Promise.resolve(mutationData);
-        },
-    });
+        const store = new StudyViewMutationMapperStore(
+            { hugoGeneSymbol },
+            {},
+            () => data.result!
+        );
 
-    @action.bound
-    async updateStudyViewFilter() {
-        const filteredMutationPlotData = this.mutationPlotStore[
-            this.selectedMutationPlotGene
-        ].samplesViaSelectedCodons;
+        this.mutationPlotStore[hugoGeneSymbol] = store;
+
+        return data;
+    }
+
+    async updateStudyViewFilter(hugoGeneSymbol: string) {
+        const filteredMutationPlotData = this.mutationPlotStore[hugoGeneSymbol]
+            .samplesViaSelectedCodons;
 
         if (filteredMutationPlotData.length) {
             const customChartData = {
@@ -2619,24 +2658,13 @@ export class StudyViewPageStore
         }
     }
 
-    public createMutationStore() {
-        const store = new StudyViewMutationMapperStore(
-            { hugoGeneSymbol: this.selectedMutationPlotGene },
-            {},
-            () => this.mutationPlotData.result!
-        );
-
-        this.mutationPlotStore[this.selectedMutationPlotGene] = store;
-
-        return store;
-    }
-
-    public getMutationStore() {
-        if (this.mutationPlotStore[this.selectedMutationPlotGene]) {
-            return this.mutationPlotStore[this.selectedMutationPlotGene];
+    public getMutationStore(
+        hugoGeneSymbol: string
+    ): StudyViewMutationMapperStore {
+        if (!this.mutationPlotStore[hugoGeneSymbol]) {
+            this.createAndAddMutationStore(hugoGeneSymbol);
         }
-
-        return this.createMutationStore();
+        return this.mutationPlotStore[hugoGeneSymbol];
     }
 
     @action.bound
@@ -5959,6 +5987,36 @@ export class StudyViewPageStore
     }
 
     @action.bound
+    addMutationPlotAsChart(newCharts: MutationPlot[]): void {
+        newCharts.forEach(newChart => {
+            const uniqueKey = newChart.hugoGeneSymbol;
+
+            if (this._mutationPlots.has(uniqueKey)) {
+                this.changeChartVisibility(uniqueKey, true);
+            } else {
+                const newChartName =
+                    'Mutation Plot - ' + newChart.hugoGeneSymbol;
+                let chartMeta: ChartMeta = {
+                    uniqueKey: uniqueKey,
+                    displayName: newChartName,
+                    description: newChart.description || newChartName,
+                    dataType: ChartMetaDataTypeEnum.CLINICAL,
+                    patientAttribute: false,
+                    renderWhenDataChange: false,
+                    priority: 0,
+                };
+
+                this._mutationPlots.set(uniqueKey, chartMeta);
+
+                this.changeChartVisibility(uniqueKey, true);
+                this.chartsType.set(uniqueKey, ChartTypeEnum.MUTATION_DIAGRAM);
+                this.chartsDimension.set(uniqueKey, { w: 5, h: 2 });
+                this.visibleMutationPlotGenes.push(uniqueKey);
+            }
+        });
+    }
+
+    @action.bound
     addGenericAssayContinuousCharts(
         newCharts: GenericAssayChart[],
         loadedfromUserSettings: boolean = false
@@ -6087,7 +6145,8 @@ export class StudyViewPageStore
             _chartMetaSet,
             _.fromPairs(this._geneSpecificCharts.toJSON()),
             _.fromPairs(this._genericAssayCharts.toJSON()),
-            _.fromPairs(this._XvsYCharts.toJSON())
+            _.fromPairs(this._XvsYCharts.toJSON()),
+            _.fromPairs(this._mutationPlots.toJSON())
         );
 
         // Add meta information for each of the clinical attribute
@@ -9539,12 +9598,12 @@ export class StudyViewPageStore
         submitToPage(url, formOps, '_blank');
     }
 
-    onVisualizingMutationPlot(): void {
+    onVisualizingMutationPlot(hugoGeneSymbol: string): void {
         let formOps = this.getQueryData();
 
         let url = '/results';
         formOps.Action = 'Submit';
-        formOps.gene_list = this.selectedMutationPlotGene;
+        formOps.gene_list = hugoGeneSymbol;
         submitToPage(url, formOps, '_blank');
     }
 
