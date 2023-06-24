@@ -285,7 +285,6 @@ import {
     StudyViewQueryExtractor,
 } from './StudyViewQueryExtractor';
 import StudyViewMutationMapperStore from './charts/mutationPlot/StudyViewMutationMapperStore';
-import { C } from 'js-combinatorics';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -2355,7 +2354,7 @@ export class StudyViewPageStore
     @observable private _filterMutatedGenesTableByCancerGenes: boolean = false;
     @observable private _filterSVGenesTableByCancerGenes: boolean = false;
     @observable private _filterCNAGenesTableByCancerGenes: boolean = false;
-    public visibleMutationPlotGenes: string[] = [];
+    @observable public visibleMutationPlotGenes: string[] = [];
 
     @action.bound
     updateMutatedGenesTableByCancerGenesFilter(filtered: boolean): void {
@@ -2584,9 +2583,7 @@ export class StudyViewPageStore
             ];
 
             this.addMutationPlotAsChart(mutationPlotSpecs);
-
             const chartAddedMessage = `Mutation Plot for ${hugoGeneSymbol} added.`;
-
             this.launchToastMessage(chartAddedMessage);
         } else {
             this.changeChartVisibility(hugoGeneSymbol, false);
@@ -2596,6 +2593,18 @@ export class StudyViewPageStore
 
             this.launchToastMessage(chartRemovedMessage);
         }
+    }
+
+    addMutationPlotByQuery() {
+        let geneList: string[] = this.geneQueryStr.split(' ');
+
+        let mutationPlotSpecs = geneList.map<MutationPlot>(gene => {
+            return {
+                hugoGeneSymbol: gene,
+            };
+        });
+
+        this.addMutationPlotAsChart(mutationPlotSpecs);
     }
 
     launchToastMessage(message: string): void {
@@ -2642,6 +2651,8 @@ export class StudyViewPageStore
     async updateStudyViewFilter(hugoGeneSymbol: string) {
         const filteredMutationPlotData = this.mutationPlotStore[hugoGeneSymbol]
             .samplesViaSelectedCodons;
+
+        console.log(this.visibleMutationPlotGenes);
 
         if (filteredMutationPlotData.length) {
             const customChartData = {
@@ -3427,6 +3438,11 @@ export class StudyViewPageStore
                     break;
                 case ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE:
                     this.setClinicalEventTypeFilter([]);
+                    break;
+                case ChartTypeEnum.MUTATION_DIAGRAM:
+                    this.visibleMutationPlotGenes = this.visibleMutationPlotGenes.filter(
+                        k => k != chartUniqueKey
+                    );
                     break;
                 default:
                     this._clinicalDataFilterSet.delete(chartUniqueKey);
@@ -5993,6 +6009,9 @@ export class StudyViewPageStore
 
             if (this._mutationPlots.has(uniqueKey)) {
                 this.changeChartVisibility(uniqueKey, true);
+                if (!this.visibleMutationPlotByGene(uniqueKey)) {
+                    this.visibleMutationPlotGenes.push(uniqueKey);
+                }
             } else {
                 const newChartName =
                     'Mutation Plot - ' + newChart.hugoGeneSymbol;

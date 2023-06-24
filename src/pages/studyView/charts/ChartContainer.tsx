@@ -1271,15 +1271,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     return '';
                                 }}
                                 filterResetPanel={
-                                    <button
-                                        onClick={_ =>
-                                            this.props.store.updateStudyViewFilter(
-                                                this.props.chartMeta.uniqueKey
-                                            )
-                                        }
-                                    >
-                                        Filter
-                                    </button>
+                                    this.props.store.getMutationStore(
+                                        this.props.chartMeta.uniqueKey
+                                    ).samplesViaSelectedCodons.length > 0 ? (
+                                        <button
+                                            onClick={_ =>
+                                                this.props.store.updateStudyViewFilter(
+                                                    this.props.chartMeta
+                                                        .uniqueKey
+                                                )
+                                            }
+                                        >
+                                            Filter
+                                        </button>
+                                    ) : (
+                                        <></>
+                                    )
                                 }
                             />
                         </div>

@@ -165,6 +165,19 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                         <i className={'fa fa-search'}></i>
                         &nbsp; Query
                     </button>
+                    <button
+                        disabled={this.isQueryButtonDisabled}
+                        className={classnames(
+                            'btn btn-primary btn-sm',
+                            styles.submitQuery
+                        )}
+                        onClick={() =>
+                            this.props.store.addMutationPlotByQuery()
+                        }
+                    >
+                        <i className={'fa fa-search'}></i>
+                        &nbsp; Add Mutation Plots
+                    </button>
                 </div>
             </div>
         );
