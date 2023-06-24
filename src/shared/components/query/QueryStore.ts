@@ -72,6 +72,7 @@ import { SearchClause } from 'shared/components/query/filteredSearch/SearchClaus
 import { QueryParser } from 'shared/lib/query/QueryParser';
 import { AppStore } from 'AppStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
+import { CaseSetId } from 'shared/components/query/CaseSetSelectorUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -501,11 +502,18 @@ export class QueryStore {
         // check to make sure selected sample list belongs to study
         // OR is custom list
         const matchesSelectedStudy =
+            // custom list
             this._selectedSampleListId === CUSTOM_CASE_LIST_ID ||
+            // if multiple studies selected, then we look for list classes enumerated in CaseSetId enum
+            _.values(CaseSetId).includes(
+                this._selectedSampleListId as CaseSetId
+            ) ||
+            // otherwise, we check that this sample list belongs to a selected study
             this.sampleListInSelectedStudies.result.some(
                 sampleList =>
                     sampleList.sampleListId === this._selectedSampleListId
             );
+
         return matchesSelectedStudy
             ? this._selectedSampleListId
             : this.defaultSelectedSampleListId;
