@@ -43,7 +43,11 @@ import {
     STUDY_VIEW_CONFIG,
 } from '../StudyViewConfig';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { DataType, DownloadControlsButton } from 'cbioportal-frontend-commons';
+import {
+    DataType,
+    DownloadControlsButton,
+    EditableSpan,
+} from 'cbioportal-frontend-commons';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
@@ -81,6 +85,7 @@ import {
     LollipopMutationPlot,
 } from 'react-mutation-mapper';
 import { If } from 'react-if';
+import { studyViewLoadingIndicator } from '../styles.module.scss';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -474,6 +479,37 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             );
         }
         return false;
+    }
+
+    getMutationPlotControls() {
+        const length = this.props.store.getMutationStore(
+            this.props.chartMeta.uniqueKey
+        ).samplesViaSelectedCodons.length;
+
+        return (
+            <div>
+                <button
+                    className={classnames(
+                        styles.controls,
+                        styles.controlsAtTop
+                    )}
+                    disabled={length == 0}
+                    onClick={_ =>
+                        length > 0
+                            ? this.props.store.updateStudyViewFilter(
+                                  this.props.chartMeta.uniqueKey
+                              )
+                            : () => {}
+                    }
+                >
+                    {length > 0
+                        ? `Filter according to ${length} ${
+                              length == 1 ? 'sample' : 'samples'
+                          }`
+                        : 'No Samples Selected'}
+                </button>
+            </div>
+        );
     }
 
     @computed get comparisonButtonForTables() {
@@ -1253,7 +1289,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.MUTATION_DIAGRAM:
                 return () =>
                     this.props.promise.isComplete ? (
-                        <div style={{ scale: '120%' }}>
+                        <div>
                             <LollipopMutationPlot
                                 store={this.props.store.getMutationStore(
                                     this.props.chartMeta.uniqueKey
@@ -1263,32 +1299,24 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 showDownloadControls={false}
                                 showTrackSelector={false}
                                 showYMaxSlider={false}
-                                geneWidth={666}
+                                geneWidth={
+                                    this.props.store.chartsDimension.get(
+                                        this.props.chartMeta.uniqueKey
+                                    )!.w * 165
+                                }
+                                vizHeight={
+                                    this.props.store.chartsDimension.get(
+                                        this.props.chartMeta.uniqueKey
+                                    )!.h * 140
+                                }
                                 onRef={(ref: any) => {
                                     this.mutationPlotRef = ref;
                                 }}
                                 yAxisLabelFormatter={() => {
                                     return '';
                                 }}
-                                filterResetPanel={
-                                    this.props.store.getMutationStore(
-                                        this.props.chartMeta.uniqueKey
-                                    ).samplesViaSelectedCodons.length > 0 ? (
-                                        <button
-                                            onClick={_ =>
-                                                this.props.store.updateStudyViewFilter(
-                                                    this.props.chartMeta
-                                                        .uniqueKey
-                                                )
-                                            }
-                                        >
-                                            Filter
-                                        </button>
-                                    ) : (
-                                        <></>
-                                    )
-                                }
                             />
+                            {this.getMutationPlotControls()}
                         </div>
                     ) : (
                         <p>Loading...</p>

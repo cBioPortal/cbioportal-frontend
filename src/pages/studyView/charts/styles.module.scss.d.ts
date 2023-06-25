@@ -7,6 +7,8 @@ declare const styles: {
   readonly "chartLoader": string;
   readonly "chartWidthOne": string;
   readonly "chartWidthTwo": string;
+  readonly "controls": string;
+  readonly "controlsAtTop": string;
   readonly "highlight": string;
 };
 export = styles;

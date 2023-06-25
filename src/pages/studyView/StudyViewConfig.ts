@@ -261,9 +261,10 @@ const studyViewFrontEnd = {
                 minW: 2,
             },
             [ChartTypeEnum.MUTATION_DIAGRAM]: {
-                w: 2,
+                w: 5,
                 h: 2,
                 minW: 2,
+                minH: 2,
             },
             [ChartTypeEnum.NONE]: {
                 w: 0,

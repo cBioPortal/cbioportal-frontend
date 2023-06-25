@@ -2633,7 +2633,7 @@ export class StudyViewPageStore
                     [hugoGeneSymbol]
                 );
 
-                return Promise.resolve(mutationData);
+                return mutationData;
             },
         });
 

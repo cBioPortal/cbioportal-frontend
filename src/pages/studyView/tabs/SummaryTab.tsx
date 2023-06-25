@@ -120,6 +120,7 @@ export class StudySummaryTab extends React.Component<
                 );
             },
             onLayoutChange: (layout: ReactGridLayout.Layout[]) => {
+                console.log(layout);
                 this.store.updateCurrentGridLayout(layout);
                 this.onResize(layout);
             },
@@ -725,6 +726,7 @@ export class StudySummaryTab extends React.Component<
 
     @autobind
     onResize(newLayout: Layout[]) {
+        console.log(newLayout);
         newLayout
             .filter(l => {
                 const layout = this.store.chartsDimension.get(l.i as string);
