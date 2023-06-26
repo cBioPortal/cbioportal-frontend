@@ -1,5 +1,4 @@
 import { PatientSurvival } from '../../../../shared/model/PatientSurvival';
-import { IChartContainerProps } from '../ChartContainer';
 import { AnalysisGroup } from '../../StudyViewUtils';
 import _ from 'lodash';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
@@ -58,7 +57,7 @@ export function makeSurvivalChartData(
 export function makeScatterPlotData() {}
 
 export function isSurvivalAttributeId(attributeId: string) {
-    return attributeId.includes('_MONTHS') || attributeId.includes('_STATUS');
+    return /_MONTHS||_STATUS$/.test(attributeId);
 }
 
 export function isSurvivalChart(chartUniqueKey: string) {
@@ -74,7 +73,7 @@ export function getAllowedSurvivalClinicalDataFilterId(chartUniqueKey: string) {
 }
 
 export function getSurvivalChartMetaId(attributeId: string) {
-    const survivalClinicalDataType = attributeId.includes('_MONTHS')
+    const survivalClinicalDataType = /_MONTHS$/.test(attributeId)
         ? '_MONTHS'
         : '_STATUS';
     const prefix = attributeId.substring(

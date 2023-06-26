@@ -600,23 +600,23 @@ export default class SurvivalChart
 
     @autobind
     private onSelection(data: any[]) {
+        if (data.length < 2) {
+            console.error(
+                'Survival Plot onSelection Failure: Not enough elements to select'
+            );
+            return;
+        }
+
         const scatterPoints: Array<ScatterData> = data[1].data;
         if (scatterPoints.length > 2) {
-            const dataBin = this.generateFilterDataBin(scatterPoints);
+            const dataBin = generateFilterDataBin(
+                scatterPoints,
+                () => this.props.attributeId!
+            );
             if (this.props.onUserSelection) {
                 this.props.onUserSelection([dataBin]);
             }
         }
-    }
-
-    private generateFilterDataBin(scatterPoints: Array<ScatterData>): DataBin {
-        const minX = scatterPoints[0].x;
-        const maxX = scatterPoints[scatterPoints.length - 1].x;
-        return {
-            id: this.props.attributeId!,
-            start: minX,
-            end: maxX,
-        } as DataBin;
     }
 
     @computed
@@ -976,4 +976,17 @@ export default class SurvivalChart
             );
         }
     }
+}
+
+export function generateFilterDataBin(
+    scatterPoints: Array<ScatterData>,
+    getAttributeId: () => string
+): DataBin {
+    const minX = scatterPoints[0].x;
+    const maxX = scatterPoints[scatterPoints.length - 1].x;
+    return {
+        id: getAttributeId(),
+        start: minX,
+        end: maxX,
+    } as DataBin;
 }
