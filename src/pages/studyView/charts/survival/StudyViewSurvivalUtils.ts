@@ -57,11 +57,11 @@ export function makeSurvivalChartData(
 export function makeScatterPlotData() {}
 
 export function isSurvivalAttributeId(attributeId: string) {
-    return /_MONTHS||_STATUS$/.test(attributeId);
+    return /_MONTHS||_STATUS$/.test(attributeId.toUpperCase());
 }
 
 export function isSurvivalChart(chartUniqueKey: string) {
-    return chartUniqueKey.includes('_SURVIVAL');
+    return /_SURVIVAL$/.test(chartUniqueKey.toUpperCase());
 }
 
 export function getAllowedSurvivalClinicalDataFilterId(chartUniqueKey: string) {
@@ -73,7 +73,7 @@ export function getAllowedSurvivalClinicalDataFilterId(chartUniqueKey: string) {
 }
 
 export function getSurvivalChartMetaId(attributeId: string) {
-    const survivalClinicalDataType = /_MONTHS$/.test(attributeId)
+    const survivalClinicalDataType = /_MONTHS$/.test(attributeId.toUpperCase())
         ? '_MONTHS'
         : '_STATUS';
     const prefix = attributeId.substring(
