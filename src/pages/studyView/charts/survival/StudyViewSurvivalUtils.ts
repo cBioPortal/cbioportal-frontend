@@ -57,7 +57,7 @@ export function makeSurvivalChartData(
 export function makeScatterPlotData() {}
 
 export function isSurvivalAttributeId(attributeId: string) {
-    return /_MONTHS||_STATUS$/i.test(attributeId);
+    return /_MONTHS|_STATUS$/i.test(attributeId);
 }
 
 export function isSurvivalChart(chartUniqueKey: string) {
