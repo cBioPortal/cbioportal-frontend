@@ -14,38 +14,23 @@ const comparisonResultsViewUrl = `${CBIOPORTAL_URL}/results/comparison?genetic_p
 const selectSamplesButton = 'button=Select Samples';
 
 // Note: not all SV elements outside of visible area are rendered:
-const SV_COUNTS = {
-    AGAP3: '2',
+const SV_COUNTS_SORT_DESC_10 = {
+    BRAF: '37',
+    SND1: '10',
     AGK: '4',
     ALK: '4',
-    BRAF: '36',
-    CDK5RAP2: '2',
-    CUL1: '1',
-    EGFR: '1',
-    EML4: '2',
-    ERG: '1',
-    FAM131B: '1',
-    GIPC2: '1',
+    TTN: '4',
     MKRN1: '2',
-    NCOA4: '3',
-    PIEZO1: '1',
-    PRKAR2B: '1',
-    RBM33: '1',
-    SND1: '10',
+    AGAP3: '2',
     TMPRSS2: '2',
-    TNS3: '1',
-    TTN: '3',
-    ZNF207: '1',
+    EML4: '2',
+    CDK5RAP2: '2',
 };
 
 describe('alteration filter menu', function() {
-    // set retries to zero because
-    // there are tests which are order dependent (interdependent)
-    this.retries(0);
-
     describe('study view', () => {
         describe('filtering of gene tables', () => {
-            before(() => {
+            beforeEach(() => {
                 goToUrlAndSetLocalStorage(studyViewUrl, true);
                 waitForStudyView();
                 turnOffCancerGenesFilters();
@@ -87,7 +72,6 @@ describe('alteration filter menu', function() {
                         AGRN_HOMDEL: '2',
                     }
                 );
-                clickCheckBoxStudyView('Somatic');
             });
 
             it('filters mutation table when unchecking germline checkbox', () => {
@@ -108,9 +92,13 @@ describe('alteration filter menu', function() {
                     TMEM247: '1',
                 });
                 // does not filter structural variant table
+                // (sort and take top ten, as react does not render all rows)
+                sortPaneByCount('structural variants-table');
                 assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
-                    SV_COUNTS
+                    sortDescLimit10(
+                        geneTableCounts('structural variants-table')
+                    ),
+                    SV_COUNTS_SORT_DESC_10
                 );
                 // does not filter cna table
                 assert.deepStrictEqual(
@@ -132,7 +120,6 @@ describe('alteration filter menu', function() {
                         AGRN_HOMDEL: '2',
                     }
                 );
-                clickCheckBoxStudyView('Germline');
             });
 
             it('does not filter mutation table when unchecking unknown status checkbox', () => {
@@ -159,9 +146,12 @@ describe('alteration filter menu', function() {
                     TMEM247: '1',
                 });
                 // does not filter structural variant table
+                // (sort and take top ten, as react does not render all rows)
                 assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
-                    SV_COUNTS
+                    sortDescLimit10(
+                        geneTableCounts('structural variants-table')
+                    ),
+                    SV_COUNTS_SORT_DESC_10
                 );
                 // does not filter cna table
                 assert.deepStrictEqual(
@@ -183,7 +173,6 @@ describe('alteration filter menu', function() {
                         AGRN_HOMDEL: '2',
                     }
                 );
-                $('[data-test=ShowUnknown]').click();
             });
 
             // -+=+ DRIVER ANNOTATIONS +=+-
@@ -224,7 +213,6 @@ describe('alteration filter menu', function() {
                         ERCC5_HOMDEL: '1',
                     }
                 );
-                clickCheckBoxStudyView('Putative drivers');
             });
 
             it('filters tables when unchecking passenger checkbox', () => {
@@ -261,7 +249,6 @@ describe('alteration filter menu', function() {
                         AGRN_HOMDEL: '2',
                     }
                 );
-                clickCheckBoxStudyView('Putative passengers');
             });
 
             it('filters tables when unchecking when unchecking unknown oncogenicity checkbox', () => {
@@ -290,7 +277,6 @@ describe('alteration filter menu', function() {
                         ERCC5_HOMDEL: '1',
                     }
                 );
-                $('[data-test=ShowUnknownOncogenicity]').click();
             });
 
             it('filters structural variant tables when unchecking when unchecking somatic oncogenicity checkbox', () => {
@@ -301,11 +287,11 @@ describe('alteration filter menu', function() {
                         .length,
                     0
                 );
-                $('[data-test=HideSomatic]').click();
             });
 
             // -+=+ TIER ANNOTATIONS +=+-
             it('does not filter tables when checking all tier checkboxes', () => {
+                waitForStudyView();
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
                     ACP3: '5',
@@ -321,10 +307,9 @@ describe('alteration filter menu', function() {
                     OR11H1: '1',
                     TMEM247: '1',
                 });
-                // assert.deepStrictEqual(
-                //     geneTableCounts('structural variants-table'),
-                //     SV_COUNTS
-                // );
+
+                // For Structural Variants: see custom-driver-annotations-in-study-view.spec.js
+
                 assert.deepStrictEqual(
                     geneTableCounts('copy number alterations-table'),
                     {
@@ -449,7 +434,7 @@ describe('alteration filter menu', function() {
                 });
                 assert.deepStrictEqual(
                     geneTableCounts('structural variants-table'),
-                    SV_COUNTS
+                    SV_COUNTS_SORT_DESC_10
                 );
                 assert.deepStrictEqual(
                     geneTableCounts('copy number alterations-table'),
@@ -685,11 +670,28 @@ describe('alteration filter menu', function() {
     });
 });
 
-var clickCheckBoxStudyView = name => {
-    $('label=' + name)
-        .$('input')
+function sortPaneByCount(pane) {
+    $('//*[@data-test="' + pane + '"]')
+        .$('span=#')
         .click();
     waitForStudyView();
+}
+
+var clickCheckBoxStudyView = name => {
+    const checkboxContainer = $('label=' + name);
+    checkboxContainer.waitForDisplayed();
+    const checkboxField = checkboxContainer.$('input');
+    checkboxField.waitForDisplayed();
+    checkboxField.click();
+    waitForStudyView();
+};
+
+var sortDescLimit10 = entryCounts => {
+    return Object.fromEntries(
+        Object.entries(entryCounts)
+            .sort((e1, e2) => e1[1] < e2[1])
+            .slice(0, 10)
+    );
 };
 
 var clickCheckBoxResultsView = name => {

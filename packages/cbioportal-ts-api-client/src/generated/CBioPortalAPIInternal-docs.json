@@ -585,13 +585,9 @@
           {
             "name": "sortBy",
             "in": "query",
-            "description": "Name of the property that the result list is sorted by",
+            "description": "sampleId, patientId, or the ATTR_ID to sorted by",
             "required": false,
-            "type": "string",
-            "enum": [
-              "clinicalAttributeId",
-              "value"
-            ]
+            "type": "string"
           },
           {
             "in": "body",

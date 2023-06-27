@@ -916,7 +916,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                                 : 'samples'
                         } in ${
                             group.name
-                        } that have an alteration in the listed gene.`,
+                        } that are profiled for, and altered in, listed gene.`,
                     };
                 })
             );
