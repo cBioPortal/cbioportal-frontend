@@ -2595,18 +2595,6 @@ export class StudyViewPageStore
         }
     }
 
-    addMutationPlotByQuery() {
-        let geneList: string[] = this.geneQueryStr.split(' ');
-
-        let mutationPlotSpecs = geneList.map<MutationPlot>(gene => {
-            return {
-                hugoGeneSymbol: gene,
-            };
-        });
-
-        this.addMutationPlotAsChart(mutationPlotSpecs);
-    }
-
     launchToastMessage(message: string): void {
         toast.success(message, {
             delay: 0,
@@ -6021,7 +6009,7 @@ export class StudyViewPageStore
                     uniqueKey: uniqueKey,
                     displayName: newChartName,
                     description: newChart.description || newChartName,
-                    dataType: ChartMetaDataTypeEnum.GENE_SPECIFIC,
+                    dataType: ChartMetaDataTypeEnum.GENOMIC,
                     patientAttribute: false,
                     renderWhenDataChange: false,
                     priority: 0,
