@@ -173,7 +173,7 @@ export class StudySummaryTab extends React.Component<
             setComparisonConfirmationModal: this.store
                 .setComparisonConfirmationModal,
         };
-
+        console.log('Re-render');
         switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART: {
                 //if the chart is one of the custom charts then get the appropriate promise
@@ -689,9 +689,9 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.MUTATION_DIAGRAM: {
-                props.promise = this.store.createAndAddMutationStore(
-                    chartMeta.uniqueKey
-                );
+                props.promise = this.store.mutationPlotData.get({
+                    hugoGeneSymbol: chartMeta.uniqueKey,
+                });
                 props.downloadTypes = ['SVG', 'PNG', 'PDF'];
                 break;
             }

@@ -2621,31 +2621,33 @@ export class StudyViewPageStore
         });
     }
 
-    public createAndAddMutationStore(
-        hugoGeneSymbol: string
-    ): MobxPromise<Mutation[]> {
-        const data = remoteData({
-            await: () => [this.selectedSamples, this.mutationProfiles],
-            invoke: async () => {
-                const mutationData = await getMutationData(
-                    this.selectedSamples.result,
-                    this.mutationProfiles.result,
-                    [hugoGeneSymbol]
-                );
+    public mutationPlotData = new MobxPromiseCache<
+        {
+            hugoGeneSymbol: string;
+        },
+        {
+            data: Mutation[];
+        }
+    >(q => ({
+        await: () => [this.selectedSamples, this.mutationProfiles],
+        invoke: async () => ({
+            data: await getMutationData(
+                this.selectedSamples.result,
+                this.mutationProfiles.result,
+                [q.hugoGeneSymbol]
+            ),
+        }),
+    }));
 
-                return mutationData;
-            },
-        });
-
+    public createMutationStore(hugoGeneSymbol: string): void {
+        const data = this.mutationPlotData.get({ hugoGeneSymbol });
         const store = new StudyViewMutationMapperStore(
             { hugoGeneSymbol },
             {},
-            () => data.result!
+            () => data.result!.data
         );
 
         this.mutationPlotStore[hugoGeneSymbol] = store;
-
-        return data;
     }
 
     async updateStudyViewFilter(hugoGeneSymbol: string) {
@@ -2673,7 +2675,7 @@ export class StudyViewPageStore
         hugoGeneSymbol: string
     ): StudyViewMutationMapperStore {
         if (!this.mutationPlotStore[hugoGeneSymbol]) {
-            this.createAndAddMutationStore(hugoGeneSymbol);
+            this.createMutationStore(hugoGeneSymbol);
         }
         return this.mutationPlotStore[hugoGeneSymbol];
     }
@@ -6019,7 +6021,7 @@ export class StudyViewPageStore
                     uniqueKey: uniqueKey,
                     displayName: newChartName,
                     description: newChart.description || newChartName,
-                    dataType: ChartMetaDataTypeEnum.CLINICAL,
+                    dataType: ChartMetaDataTypeEnum.GENE_SPECIFIC,
                     patientAttribute: false,
                     renderWhenDataChange: false,
                     priority: 0,
@@ -6029,7 +6031,12 @@ export class StudyViewPageStore
 
                 this.changeChartVisibility(uniqueKey, true);
                 this.chartsType.set(uniqueKey, ChartTypeEnum.MUTATION_DIAGRAM);
-                this.chartsDimension.set(uniqueKey, { w: 5, h: 2 });
+                this.chartsDimension.set(uniqueKey, {
+                    w: 5,
+                    h: 2,
+                    minW: 5,
+                    minH: 2,
+                });
                 this.visibleMutationPlotGenes.push(uniqueKey);
             }
         });

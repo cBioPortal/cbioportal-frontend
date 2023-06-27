@@ -45,8 +45,10 @@ import {
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import {
     DataType,
+    DefaultTooltip,
     DownloadControlsButton,
     EditableSpan,
+    EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
@@ -86,6 +88,7 @@ import {
 } from 'react-mutation-mapper';
 import { If } from 'react-if';
 import { studyViewLoadingIndicator } from '../styles.module.scss';
+import { Tooltip } from 'pages/resultsView/survival/styles.module.scss';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -487,7 +490,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         ).samplesViaSelectedCodons.length;
 
         return (
-            <div>
+            <div
+                style={{
+                    position: 'absolute',
+                    bottom: 5,
+                    display: 'flex',
+                }}
+            >
                 <button
                     className={classnames(
                         styles.controls,
@@ -502,12 +511,24 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             : () => {}
                     }
                 >
-                    {length > 0
-                        ? `Filter according to ${length} ${
-                              length == 1 ? 'sample' : 'samples'
-                          }`
-                        : 'No Samples Selected'}
+                    {`Select ${length} ${length == 1 ? 'sample' : 'samples'}`}
                 </button>
+                <DefaultTooltip
+                    overlay={<p>Press shift to select more lollipops.</p>}
+                    trigger={['hover']}
+                    destroyTooltipOnHide={true}
+                    mouseEnterDelay={0}
+                >
+                    <div className={classnames('btn btn-xs btn-default')}>
+                        <i
+                            className={classnames(
+                                'fa fa-xs fa-fw',
+                                'fa-info-circle'
+                            )}
+                            aria-hidden="true"
+                        />
+                    </div>
+                </DefaultTooltip>
             </div>
         );
     }
@@ -1316,7 +1337,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     return '';
                                 }}
                             />
-                            {this.getMutationPlotControls()}
+                            {this.props.store.getMutationStore(
+                                this.props.chartMeta.uniqueKey
+                            ).samplesViaSelectedCodons.length > 0 &&
+                                this.getMutationPlotControls()}
                         </div>
                     ) : (
                         <p>Loading...</p>
