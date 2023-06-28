@@ -448,7 +448,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     this.props.chartMeta.uniqueKey
                 ]?.survivalData,
                 this.props.analysisGroupsSettings.groups,
-                this.props.patientToAnalysisGroup!.result!
+                this.props.patientToAnalysisGroup!.result!,
+                this.props.chartMeta.uniqueKey
             );
         } else {
             return undefined;
@@ -1063,6 +1064,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             yAxisTickCount={2}
                             xAxisTickCount={4}
                             compactMode={this.showCompactSurvivalChart}
+                            attributeId={data.attributeId}
+                            onUserSelection={this.handlers.onDataBinSelection}
                         />
                     );
                 } else {
