@@ -10,12 +10,27 @@ import { formatPercentValue } from 'cbioportal-utils';
 import intersect from 'fast_array_intersect';
 import InfoIcon from 'shared/components/InfoIcon';
 import { MutationOverlapOverlay } from 'shared/components/mutationTable/column/mutationOverlap/MutationOverlapOverlay';
+import { Mutation } from 'cbioportal-ts-api-client';
 
 interface IFisherExactTwoSidedTestLabelProps {
     dataStore: MutationMapperDataStore;
     hugoGeneSymbol: string;
     groups: ComparisonGroup[];
     profiledPatientCounts: number[];
+}
+
+export function countMutated(
+    tableData: Mutation[][],
+    filteredGroupData: Mutation[][]
+) {
+    return _.uniq(
+        // only count unique patients
+        intersect([
+            // all/selected/filtered mutations is the intersect of table data and filtered group data
+            _.flatten(tableData),
+            _.flatten(filteredGroupData),
+        ]).map(m => m.patientId)
+    ).length;
 }
 
 export const FisherExactTwoSidedTestLabel: React.FC<IFisherExactTwoSidedTestLabelProps> = observer(
@@ -25,23 +40,16 @@ export const FisherExactTwoSidedTestLabel: React.FC<IFisherExactTwoSidedTestLabe
         groups,
         profiledPatientCounts,
     }: IFisherExactTwoSidedTestLabelProps) => {
-        const groupAMutatedCount = _.uniq(
-            _.flatten(
-                intersect([
-                    _.flatten(dataStore.tableData),
-                    _.flatten(dataStore.sortedFilteredGroupedData[0].data),
-                ])
-            ).map(m => m.patientId)
-        ).length;
+        // get table data for group A/B and get the number of unique patients using that data
+        const groupAMutatedCount = countMutated(
+            dataStore.tableData,
+            dataStore.sortedFilteredGroupedData[0].data
+        );
 
-        const groupBMutatedCount = _.uniq(
-            _.flatten(
-                intersect([
-                    _.flatten(dataStore.tableData),
-                    _.flatten(dataStore.sortedFilteredGroupedData[1].data),
-                ])
-            ).map(m => m.patientId)
-        ).length;
+        const groupBMutatedCount = countMutated(
+            dataStore.tableData,
+            dataStore.sortedFilteredGroupedData[1].data
+        );
 
         const getFisherTestLabel =
             dataStore.sortedFilteredSelectedData.length > 0
@@ -86,7 +94,7 @@ export const FisherExactTwoSidedTestLabel: React.FC<IFisherExactTwoSidedTestLabe
                                     _.filter(
                                         dataStore.tableDataGroupedByPatients,
                                         d => d.length > 1
-                                    ).length == 1
+                                    ).length === 1
                                         ? 'patient has'
                                         : 'patients have'
                                 } more than one mutation in ${hugoGeneSymbol}`}

@@ -1,4 +1,4 @@
-export interface ComparisonMutationsRow {
+export interface GroupComparisonMutation {
     proteinChange: string;
     groupAMutatedCount: number;
     groupBMutatedCount: number;

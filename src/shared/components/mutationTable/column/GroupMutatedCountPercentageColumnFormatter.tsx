@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { formatPercentValue } from 'cbioportal-utils';
 import { Mutation } from 'cbioportal-ts-api-client';
-import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
 
 export function getMutatedCountData(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     groupIndex: number,
     mutations: Mutation[]
@@ -19,7 +19,7 @@ export function getMutatedCountData(
 
 export function getGroupMutatedCountPercentageTextValue(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     groupIndex: number,
     mutations: Mutation[]
@@ -43,7 +43,7 @@ export function getGroupMutatedCountPercentageTextValue(
 
 export function groupMutatedCountPercentageRenderFunction(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     groupIndex: number,
     mutations: Mutation[]

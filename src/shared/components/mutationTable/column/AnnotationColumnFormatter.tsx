@@ -135,12 +135,12 @@ export default class AnnotationColumnFormatter {
     public static renderFunction(
         mutations: Mutation[],
         columnProps: IAnnotationColumnProps,
-        haveDifferentCancerTypes?: boolean
+        hasMultipleCancerTypes?: boolean
     ) {
         return (
             <Annotation
                 mutation={mutations ? mutations[0] : undefined}
-                haveDifferentCancerTypes={haveDifferentCancerTypes}
+                hasMultipleCancerTypes={hasMultipleCancerTypes}
                 {...columnProps}
             />
         );

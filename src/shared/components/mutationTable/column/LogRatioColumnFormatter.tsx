@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { formatLogOddsRatio } from 'shared/lib/FormatUtils';
-import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
 
 export function getLogRatioData(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[]
 ) {
@@ -16,7 +16,7 @@ export function getLogRatioData(
 
 export function getLogRatioTextValue(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[]
 ) {
@@ -27,7 +27,7 @@ export function getLogRatioTextValue(
 
 export function logRatioRenderFunction(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[]
 ) {

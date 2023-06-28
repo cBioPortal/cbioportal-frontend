@@ -8,11 +8,11 @@ import styles from 'pages/resultsView/enrichments/styles.module.scss';
 import classNames from 'classnames';
 import _ from 'lodash';
 import { getTextColor } from 'pages/groupComparison/OverlapUtils';
-import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
 
 export function getEnrichedInData(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[]
 ) {
@@ -23,7 +23,7 @@ export function getEnrichedInData(
 
 export function getEnrichedInFilterValue(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[],
     filterStringUpper: string
@@ -35,7 +35,7 @@ export function getEnrichedInFilterValue(
 
 export function enrichedInRenderFunction(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[],
     groups: ComparisonGroup[]

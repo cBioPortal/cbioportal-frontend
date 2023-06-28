@@ -33,7 +33,7 @@ export interface IOncoKbProps {
     userDisplayName?: string;
     disableFeedback?: boolean;
     contentPadding?: number;
-    haveDifferentCancerTypes?: boolean;
+    hasMultipleCancerTypes?: boolean;
 }
 
 export function sortValue(
@@ -214,7 +214,7 @@ function tooltipContent(
             handleFeedbackOpen={
                 props.disableFeedback ? undefined : handleFeedbackOpen
             }
-            haveDifferentCancerTypes={props.haveDifferentCancerTypes}
+            hasMultipleCancerTypes={props.hasMultipleCancerTypes}
         />
     );
 }

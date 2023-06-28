@@ -66,7 +66,7 @@ export type AnnotationProps = {
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
     userDisplayName?: string;
-    haveDifferentCancerTypes?: boolean;
+    hasMultipleCancerTypes?: boolean;
 };
 
 export type GenericAnnotationProps = {
@@ -80,7 +80,7 @@ export type GenericAnnotationProps = {
     oncoKbContentPadding?: number;
     pubMedCache?: MobxCache;
     userDisplayName?: string;
-    haveDifferentCancerTypes?: boolean;
+    hasMultipleCancerTypes?: boolean;
 };
 
 export interface IAnnotation {
@@ -328,7 +328,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
         userDisplayName,
         mergeOncoKbIcons,
         oncoKbContentPadding,
-        haveDifferentCancerTypes,
+        hasMultipleCancerTypes,
     } = props;
 
     return (
@@ -347,7 +347,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     mergeAnnotationIcons={mergeOncoKbIcons}
                     userDisplayName={userDisplayName}
                     contentPadding={oncoKbContentPadding}
-                    haveDifferentCancerTypes={haveDifferentCancerTypes}
+                    hasMultipleCancerTypes={hasMultipleCancerTypes}
                 />
             )}
             {/* only show reVUE when reVUE is enabled and there are reVUE mutations in the query */}

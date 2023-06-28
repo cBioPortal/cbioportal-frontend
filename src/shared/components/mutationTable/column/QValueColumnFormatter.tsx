@@ -2,12 +2,12 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
-import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
 import { SIGNIFICANT_QVALUE_THRESHOLD } from 'pages/groupComparison/GroupComparisonUtils';
 
 export function getQValueData(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[]
 ) {
@@ -18,7 +18,7 @@ export function getQValueData(
 
 export function getQValueTextValue(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[]
 ) {
@@ -28,7 +28,7 @@ export function getQValueTextValue(
 
 export function qValueRenderFunction(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[]
 ) {

@@ -8,12 +8,12 @@ import {
 import { MiniOncoprint } from 'shared/components/miniOncoprint/MiniOncoprint';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import { ComparisonMutationsRow } from 'shared/model/ComparisonMutationsRow';
+import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
 import { MutationOverlapOverlay } from './mutationOverlap/MutationOverlapOverlay';
 
 export function mutationOverlapRenderFunction(
     rowDataByProteinChange: {
-        [proteinChange: string]: ComparisonMutationsRow;
+        [proteinChange: string]: GroupComparisonMutation;
     },
     mutations: Mutation[],
     profiledPatientCounts: number[],
