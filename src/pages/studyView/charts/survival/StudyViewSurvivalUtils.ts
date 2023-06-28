@@ -1,5 +1,4 @@
 import { PatientSurvival } from '../../../../shared/model/PatientSurvival';
-import { IChartContainerProps } from '../ChartContainer';
 import { AnalysisGroup } from '../../StudyViewUtils';
 import _ from 'lodash';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
@@ -8,7 +7,10 @@ import { sortPatientSurvivals } from 'pages/resultsView/survival/SurvivalUtil';
 export function makeSurvivalChartData(
     patientSurvivals: ReadonlyArray<PatientSurvival>,
     analysisGroups: ReadonlyArray<AnalysisGroup>,
-    patientToAnalysisGroup: { [uniquePatientKey: string]: string }
+    patientToAnalysisGroup: {
+        [uniquePatientKey: string]: string;
+    },
+    attributeId: string
 ) {
     let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [
         group,
@@ -48,7 +50,35 @@ export function makeSurvivalChartData(
         analysisGroups,
         sortedGroupedSurvivals,
         pValue,
+        attributeId,
     };
 }
 
 export function makeScatterPlotData() {}
+
+export function isSurvivalAttributeId(attributeId: string) {
+    return /_MONTHS|_STATUS$/i.test(attributeId);
+}
+
+export function isSurvivalChart(chartUniqueKey: string) {
+    return /_SURVIVAL$/i.test(chartUniqueKey);
+}
+
+export function getAllowedSurvivalClinicalDataFilterId(chartUniqueKey: string) {
+    const prefix = chartUniqueKey.substring(
+        0,
+        chartUniqueKey.indexOf('_SURVIVAL')
+    );
+    return `${prefix}_MONTHS`;
+}
+
+export function getSurvivalChartMetaId(attributeId: string) {
+    const survivalClinicalDataType = /_MONTHS$/i.test(attributeId)
+        ? '_MONTHS'
+        : '_STATUS';
+    const prefix = attributeId.substring(
+        0,
+        attributeId.indexOf(survivalClinicalDataType)
+    );
+    return `${prefix}_SURVIVAL`;
+}
