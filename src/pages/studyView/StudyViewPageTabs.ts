@@ -1,5 +1,6 @@
 export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',
+    SUMMARY_COLUMN_STORE = 'summaryColumnStore',
     CLINICAL_DATA = 'clinicalData',
     HEATMAPS = 'heatmaps',
     CN_SEGMENTS = 'cnSegments',
