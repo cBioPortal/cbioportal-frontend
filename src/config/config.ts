@@ -20,7 +20,9 @@ import internalGenomeNexusClient from '../shared/api/genomeNexusInternalClientIn
 import oncoKBClient from '../shared/api/oncokbClientInstance';
 import genome2StructureClient from '../shared/api/g2sClientInstance';
 import client from '../shared/api/cbioportalClientInstance';
-import internalClient from '../shared/api/cbioportalInternalClientInstance';
+import internalClient, {
+    getInternalClient,
+} from '../shared/api/cbioportalInternalClientInstance';
 import $ from 'jquery';
 import { AppStore } from '../AppStore';
 import { CBioPortalAPI, CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
@@ -194,6 +196,7 @@ export function initializeAPIClients() {
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
     (internalClient as any).domain = getCbioPortalApiUrl();
+    (getInternalClient() as any).domain = getCbioPortalApiUrl();
     (genomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (internalGenomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (oncoKBClient as any).domain = getOncoKbApiUrl();
@@ -387,4 +390,11 @@ export function fetchServerConfig() {
 export function initializeAppStore(appStore: AppStore) {
     appStore.authMethod = getServerConfig().authenticationMethod;
     appStore.userName = getServerConfig().user_display_name;
+}
+
+export function isClickhouseMode() {
+    return (
+        !/legacy=1/.test(getBrowserWindow().location.search) &&
+        getServerConfig().clickhouse_mode === true
+    );
 }

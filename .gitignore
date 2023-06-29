@@ -52,6 +52,7 @@ end-to-end-test/results-0-0..xml
 end-to-end-test/customReport.json
 end-to-end-test/customReportJSONP.js
 end-to-end-test/shared/results
+api-e2e/json/merged-tests.json
 wdio/browserstack.txt
 env/custom.sh
 image-compare/errors.js
@@ -65,3 +66,4 @@ e2e-localdb-workspace/
 junit.xml
 .nvim.lua
 .luarc.json
+api-e2e/validation.js
