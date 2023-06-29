@@ -33,7 +33,9 @@ import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
-
+import internalClient, {
+    internalClientColumnStore,
+} from 'shared/api/cbioportalInternalClientInstance';
 import AddChartButton from './addChartButton/AddChartButton';
 import { sleep } from '../../shared/lib/TimeUtils';
 import { Else, If, Then } from 'react-if';
@@ -141,8 +143,18 @@ export default class StudyViewPage extends React.Component<
         this.store = new StudyViewPageStore(
             this.props.appStore,
             ServerConfigHelpers.sessionServiceIsEnabled(),
-            this.urlWrapper
+            this.urlWrapper,
+            this.props.routing.query.columnStore === '1'
+                ? internalClientColumnStore
+                : internalClient
         );
+
+        // this.store_column_store = new StudyViewPageStore(
+        //     this.props.appStore,
+        //     ServerConfigHelpers.sessionServiceIsEnabled(),
+        //     this.urlWrapper,
+        //     internalClientColumnStore
+        // );
 
         const openResourceId =
             this.urlWrapper.tabId &&
@@ -607,6 +619,19 @@ export default class StudyViewPage extends React.Component<
                                             store={this.store}
                                         ></StudySummaryTab>
                                     </MSKTab>
+
+                                    {/*<MSKTab*/}
+                                    {/*    key={10}*/}
+                                    {/*    id={*/}
+                                    {/*        StudyViewPageTabKeyEnum.SUMMARY_COLUMN_STORE*/}
+                                    {/*    }*/}
+                                    {/*    linkText={'Summary (Column Store)'}*/}
+                                    {/*>*/}
+                                    {/*    <StudySummaryTab*/}
+                                    {/*        store={this.store_column_store}*/}
+                                    {/*    ></StudySummaryTab>*/}
+                                    {/*</MSKTab>*/}
+
                                     <MSKTab
                                         key={1}
                                         id={
