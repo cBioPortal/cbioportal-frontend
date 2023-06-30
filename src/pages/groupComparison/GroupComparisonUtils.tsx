@@ -45,7 +45,7 @@ import {
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
 import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
-import { getTwoTailedPValue } from 'shared/lib/FisherExactTestCalculator';
+import { getTwoTailedPValue } from 'shared/lib/calculation/FisherExactTestCalculator';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;

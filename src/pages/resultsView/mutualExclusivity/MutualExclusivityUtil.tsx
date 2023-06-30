@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getTwoTailedPValue } from '../../../shared/lib/FisherExactTestCalculator';
+import { getTwoTailedPValue } from '../../../shared/lib/calculation/FisherExactTestCalculator';
 import { MutualExclusivity } from '../../../shared/model/MutualExclusivity';
 import { calculateQValues } from '../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import Combinatorics from 'js-combinatorics';

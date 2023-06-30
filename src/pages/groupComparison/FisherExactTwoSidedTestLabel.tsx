@@ -5,8 +5,7 @@ import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMa
 import { ComparisonGroup } from './GroupComparisonUtils';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 import _ from 'lodash';
-import { getTwoTailedPValue } from 'shared/lib/FisherExactTestCalculator';
-import { formatPercentValue } from 'cbioportal-utils';
+import { getTwoTailedPValue } from 'shared/lib/calculation/FisherExactTestCalculator';
 import intersect from 'fast_array_intersect';
 import InfoIcon from 'shared/components/InfoIcon';
 import { MutationOverlapOverlay } from 'shared/components/mutationTable/column/mutationOverlap/MutationOverlapOverlay';

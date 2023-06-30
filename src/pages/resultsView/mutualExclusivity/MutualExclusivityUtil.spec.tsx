@@ -265,11 +265,11 @@ describe('MutualExclusivityUtil', () => {
     });
 
     describe('#calculatePValue()', () => {
-        it('returns 0.3653846153846146 for 4, 3, 7, 2', () => {
+        it('returns 0.5961538461538457 for 4, 3, 7, 2', () => {
             assert.equal(calculatePValue(4, 3, 7, 2), 0.5961538461538457);
         });
 
-        it('returns 0.07706146926536687 for 13, 7, 3, 7', () => {
+        it('returns 0.12163918040979466 for 13, 7, 3, 7', () => {
             assert.equal(calculatePValue(13, 7, 3, 7), 0.12163918040979466);
         });
     });
