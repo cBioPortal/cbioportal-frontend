@@ -6,13 +6,17 @@ import LazyMobXTable, {
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { observable, makeObservable } from 'mobx';
 import { Radio } from 'react-bootstrap';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
 import {
     getSortedData,
     getSortedFilteredData,
     SimpleGetterLazyMobXTableApplicationDataStore,
 } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
 import { truncateGeneList } from './PathwayMapperHelpers';
+import { getServerConfig } from 'config/config';
 
 export interface IPathwayMapperTable {
     name: string;
@@ -217,6 +221,10 @@ export default class PathwayMapperTable extends React.Component<
                 initialSortDirection={'desc'}
                 paginationProps={{ itemsPerPageOptions: [10] }}
                 showColumnVisibility={false}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls !==
+                    DownloadControlOption.HIDE_ALL
+                }
             />
         );
     }

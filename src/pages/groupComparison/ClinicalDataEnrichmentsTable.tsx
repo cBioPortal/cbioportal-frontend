@@ -8,7 +8,10 @@ import { ClinicalDataEnrichmentStore } from './ClinicalData';
 import { ClinicalDataEnrichmentWithQ } from './GroupComparisonUtils';
 import { toConditionalPrecisionWithMinimum } from '../../shared/lib/FormatUtils';
 import { makeObservable, observable } from 'mobx';
-import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    toggleColumnVisibility,
+} from 'cbioportal-frontend-commons';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { getServerConfig } from 'config/config';
 
@@ -194,6 +197,10 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<
                 }
                 initialSortDirection="asc"
                 showColumnVisibility={true}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
                 columnVisibility={this.columnVisibility}
                 columnVisibilityProps={{
                     onColumnToggled: this.onColumnToggled,

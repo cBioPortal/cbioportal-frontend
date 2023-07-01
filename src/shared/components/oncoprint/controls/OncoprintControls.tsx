@@ -14,7 +14,11 @@ import {
     GenericAssayMeta,
 } from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { DefaultTooltip, EditableSpan } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+    EditableSpan,
+} from 'cbioportal-frontend-commons';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
 import './styles.scss';
@@ -35,11 +39,11 @@ import {
     IDriverAnnotationControlsState,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
-import { AppContext } from 'cbioportal-frontend-commons';
 import {
     ClinicalTrackConfig,
     ClinicalTrackConfigMap,
 } from 'shared/components/oncoprint/Oncoprint';
+import { getServerConfig } from 'config/config';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -1047,7 +1051,8 @@ export default class OncoprintControls extends React.Component<
     });
 
     private DownloadMenu = observer(() => {
-        return this.context.showDownloadControls === true ? (
+        return getServerConfig().skin_hide_download_controls !==
+            DownloadControlOption.HIDE_ALL ? (
             <CustomDropdown
                 bsStyle="default"
                 title="Download"
@@ -1085,24 +1090,28 @@ export default class OncoprintControls extends React.Component<
                         'Sample'}{' '}
                     order
                 </button>
-                {!this.props.oncoprinterMode && (
-                    <button
-                        className="btn btn-sm btn-default"
-                        name={EVENT_KEY.downloadTabular}
-                        onClick={this.onButtonClick}
-                    >
-                        Tabular
-                    </button>
-                )}
-                {!this.props.oncoprinterMode && (
-                    <button
-                        className="btn btn-sm btn-default"
-                        name={EVENT_KEY.downloadOncoprinter}
-                        onClick={this.onButtonClick}
-                    >
-                        Open in Oncoprinter
-                    </button>
-                )}
+                {!this.props.oncoprinterMode &&
+                    getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL && (
+                        <button
+                            className="btn btn-sm btn-default"
+                            name={EVENT_KEY.downloadTabular}
+                            onClick={this.onButtonClick}
+                        >
+                            Tabular
+                        </button>
+                    )}
+                {!this.props.oncoprinterMode &&
+                    getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL && (
+                        <button
+                            className="btn btn-sm btn-default"
+                            name={EVENT_KEY.downloadOncoprinter}
+                            onClick={this.onButtonClick}
+                        >
+                            Open in Oncoprinter
+                        </button>
+                    )}
             </CustomDropdown>
         ) : null;
     });
@@ -1220,5 +1229,3 @@ export default class OncoprintControls extends React.Component<
         );
     }
 }
-
-OncoprintControls.contextType = AppContext;

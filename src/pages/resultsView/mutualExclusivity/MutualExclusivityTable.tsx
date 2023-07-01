@@ -14,6 +14,9 @@ import {
 } from './MutualExclusivityUtil';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+
+import { getServerConfig } from 'config/config';
 
 export interface IMutualExclusivityTableProps {
     columns?: MutualExclusivityTableColumnType[];
@@ -247,6 +250,10 @@ export default class MutualExclusivityTable extends React.Component<
                 initialItemsPerPage={50}
                 initialSortColumn={this.props.initialSortColumn}
                 paginationProps={{ itemsPerPageOptions: [50] }}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls !==
+                    DownloadControlOption.HIDE_ALL
+                }
             />
         );
     }

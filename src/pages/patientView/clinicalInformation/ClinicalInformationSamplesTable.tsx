@@ -13,7 +13,8 @@ import {
 import styles from './style/sampleTable.module.scss';
 import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControls/PaginationControls';
 import { sortByClinicalAttributePriorityThenName } from '../../../shared/lib/SortUtils';
-import { isUrl } from 'cbioportal-frontend-commons';
+import { DownloadControlOption, isUrl } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 interface IClinicalInformationSamplesTableProps {
     samples?: ClinicalDataBySampleId[];
@@ -68,6 +69,10 @@ export default class ClinicalInformationSamplesTable extends React.Component<
                 showPagination={false}
                 initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
                 showColumnVisibility={false}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
             />
         );
     }

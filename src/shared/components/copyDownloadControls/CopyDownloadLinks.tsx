@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
-import { AppContext } from 'cbioportal-frontend-commons';
 import { computed } from 'mobx';
 
 export interface ICopyDownloadLinksProps extends ICopyDownloadInputsProps {
@@ -20,16 +19,11 @@ export class CopyDownloadLinks extends React.Component<
     };
 
     @computed get showDownload() {
-        return (
-            this.props.showDownload &&
-            this.context.showDownloadControls === true
-        );
+        return this.props.showDownload;
     }
 
     @computed get showCopy() {
-        return (
-            this.props.showCopy && this.context.showDownloadControls === true
-        );
+        return this.props.showCopy;
     }
 
     public render() {
@@ -69,5 +63,3 @@ export class CopyDownloadLinks extends React.Component<
         );
     }
 }
-
-CopyDownloadLinks.contextType = AppContext;
