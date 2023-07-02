@@ -4,9 +4,9 @@ import {
     DefaultMutationMapperDataStore,
     DefaultMutationMapperStore,
 } from 'react-mutation-mapper';
-import { computed, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 
-type SampleData = {
+export type SampleData = {
     sampleId: string;
     patientId: string;
     studyId: string;
@@ -16,14 +16,26 @@ type SampleData = {
 export default class StudyViewMutationMapperStore extends DefaultMutationMapperStore<
     Mutation
 > {
+    @observable private xAxisOnTop: boolean = false;
+
     constructor(
         public gene: { hugoGeneSymbol: string },
         protected config: DefaultMutationMapperStoreConfig,
         protected getMutations: () => Mutation[]
     ) {
         super(gene, config, getMutations);
-
         makeObservable(this);
+        this.xAxisOnTop = false;
+    }
+
+    @computed
+    get isXAxisOnTopSelected(): boolean {
+        return this.xAxisOnTop;
+    }
+
+    @action.bound
+    toggleXAxisOnTop(): void {
+        this.xAxisOnTop = this.xAxisOnTop === true ? false : true;
     }
 
     @computed

@@ -86,9 +86,6 @@ import {
     FilterResetPanel,
     LollipopMutationPlot,
 } from 'react-mutation-mapper';
-import { If } from 'react-if';
-import { studyViewLoadingIndicator } from '../styles.module.scss';
-import { Tooltip } from 'pages/resultsView/survival/styles.module.scss';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -358,6 +355,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.MUTATION_DIAGRAM: {
                 controls = {
                     showResultsPageButton: true,
+                    showXAxisAtTop: true,
                 };
                 break;
             }
@@ -1311,6 +1309,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             case ChartTypeEnum.MUTATION_DIAGRAM:
+                console.log(
+                    this.props.store.getMutationStore(
+                        this.props.chartMeta.uniqueKey
+                    ).isXAxisOnTopSelected
+                );
                 return () =>
                     this.props.promise.isComplete ? (
                         <div>
@@ -1339,6 +1342,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 yAxisLabelFormatter={() => {
                                     return '';
                                 }}
+                                xAxisOnTop={
+                                    this.props.store.getMutationStore(
+                                        this.props.chartMeta.uniqueKey
+                                    ).isXAxisOnTopSelected
+                                }
                             />
                             {this.props.store.getMutationStore(
                                 this.props.chartMeta.uniqueKey
@@ -1424,6 +1432,16 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     placement={this.placement}
                     description={this.props.description}
                     isCompactSurvivalChart={this.showCompactSurvivalChart}
+                    toggleXAxisAtTop={
+                        this.props.store.getMutationStore(
+                            this.props.chartMeta.uniqueKey
+                        ).toggleXAxisOnTop
+                    }
+                    xAxisAtTop={
+                        this.props.store.getMutationStore(
+                            this.props.chartMeta.uniqueKey
+                        ).isXAxisOnTopSelected
+                    }
                 />
                 <div className={styles.chartInnerWrapper}>
                     {this.props.promise.isPending && (

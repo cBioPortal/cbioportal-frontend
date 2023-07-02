@@ -126,6 +126,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     loadingIndicator?: JSX.Element;
     collapsePtmTrack?: boolean;
     collapseUniprotTopologyTrack?: boolean;
+    xAxisOnTop?: boolean;
 };
 
 @observer
@@ -926,6 +927,7 @@ export default class LollipopMutationPlot<
                         bottomYAxisSymbol={this.props.bottomYAxisSymbol}
                         groups={this.groups}
                         yAxisLabelFormatter={this.props.yAxisLabelFormatter}
+                        xAxisOnTop={this.props.xAxisOnTop}
                     />
                     <TrackPanel
                         store={this.props.store}

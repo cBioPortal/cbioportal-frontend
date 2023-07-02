@@ -284,7 +284,9 @@ import {
     StudyViewFilterQueryExtractor,
     StudyViewQueryExtractor,
 } from './StudyViewQueryExtractor';
-import StudyViewMutationMapperStore from './charts/mutationPlot/StudyViewMutationMapperStore';
+import StudyViewMutationMapperStore, {
+    SampleData,
+} from './charts/mutationPlot/StudyViewMutationMapperStore';
 import {
     getAllowedSurvivalClinicalDataFilterId,
     isSurvivalAttributeId,
@@ -444,6 +446,7 @@ export class StudyViewPageStore
     @observable mutationPlotStore: {
         [hugoGeneSymbol: string]: StudyViewMutationMapperStore;
     } = {};
+    filteredMutationPlots = observable.map<string, number>();
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
     private getDataBinFilterSet(uniqueKey: string) {
@@ -2647,20 +2650,29 @@ export class StudyViewPageStore
         const filteredMutationPlotData = this.mutationPlotStore[hugoGeneSymbol]
             .samplesViaSelectedCodons;
 
-        console.log(this.visibleMutationPlotGenes);
-
         if (filteredMutationPlotData.length) {
-            const customChartData = {
-                data: filteredMutationPlotData,
-                datatype: 'STRING',
-                description: 'Mutation plot filtered data',
-                displayName: 'Mutation Plot',
-                patientAttribute: false,
-                origin: [''],
-                priority: 0,
-            };
+            if (!this.filteredMutationPlots.has(hugoGeneSymbol)) {
+                const filteredSamples: SampleIdentifier[] = this.getMutationStore(
+                    hugoGeneSymbol
+                ).samplesViaSelectedCodons.map<SampleIdentifier>(
+                    (val: SampleData) => {
+                        return {
+                            studyId: val.studyId,
+                            sampleId: val.sampleId,
+                        };
+                    }
+                );
 
-            this.updateCustomSelect(customChartData);
+                this.filteredMutationPlots.set(
+                    hugoGeneSymbol,
+                    this.getMutationStore(hugoGeneSymbol)
+                        .samplesViaSelectedCodons.length
+                );
+                this._chartSampleIdentifiersFilterSet.set(
+                    hugoGeneSymbol,
+                    filteredSamples
+                );
+            }
         }
     }
 
@@ -2753,6 +2765,8 @@ export class StudyViewPageStore
 
     @action.bound
     clearAllFilters(): void {
+        console.log(this._clinicalDataFilterSet);
+        console.log(this._customDataFilterSet);
         this._clinicalDataFilterSet.clear();
         this._customDataFilterSet.clear();
         this._geneFilterSet.clear();
@@ -2777,6 +2791,7 @@ export class StudyViewPageStore
         this.submittedPillStore = {};
         this.hesitantPillStore = {};
         this.resetClinicalEventTypeFilter();
+        this.removeAllMutationPlotFilters();
     }
 
     @computed
@@ -3531,6 +3546,17 @@ export class StudyViewPageStore
             SpecialChartsUniqueKeyEnum.CUSTOM_SELECT
         );
         this.numberOfSelectedSamplesInCustomSelection = 0;
+    }
+
+    @action.bound
+    removeMutationPlotFilters(hugoGeneSymbol: string): void {
+        this._chartSampleIdentifiersFilterSet.delete(hugoGeneSymbol);
+        this.filteredMutationPlots.delete(hugoGeneSymbol);
+    }
+
+    @action
+    removeAllMutationPlotFilters(): void {
+        this.filteredMutationPlots.clear();
     }
 
     @action
@@ -6140,6 +6166,7 @@ export class StudyViewPageStore
     @action.bound
     updateCustomSelect(newChart: CustomChartData): void {
         this.clearAllFilters();
+        console.log(newChart);
         const sampleIdentifiers = newChart.data.map(datum => ({
             studyId: datum.studyId,
             sampleId: datum.sampleId,

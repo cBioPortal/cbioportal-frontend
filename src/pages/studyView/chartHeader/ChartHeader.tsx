@@ -60,6 +60,8 @@ export interface IChartHeaderProps {
         treatmentUniqueKeys?: string[];
     }) => void;
     isCompactSurvivalChart?: boolean;
+    xAxisAtTop?: boolean;
+    toggleXAxisAtTop?: () => void;
 }
 
 export interface ChartControls {
@@ -83,6 +85,8 @@ export interface ChartControls {
     showResultsPageButton?: boolean;
     showSurvivalPlotLeftTruncationToggle?: boolean;
     survivalPlotLeftTruncationChecked?: boolean;
+    showXAxisAtTop?: boolean;
+    xAxisAtTop?: boolean;
 }
 
 @observer
@@ -627,6 +631,35 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     </a>
                 </li>
             );
+            if (
+                this.props.chartControls &&
+                this.props.chartControls.showXAxisAtTop &&
+                this.props.toggleXAxisAtTop
+            ) {
+                items.push(
+                    <li>
+                        <a
+                            className="dropdown-item logScaleCheckbox"
+                            onClick={this.props.toggleXAxisAtTop}
+                        >
+                            <FlexAlignedCheckbox
+                                checked={
+                                    !!(
+                                        this.props.chartControls &&
+                                        this.props.xAxisAtTop
+                                    )
+                                }
+                                label={
+                                    <span style={{ marginTop: -3 }}>
+                                        Axis at top
+                                    </span>
+                                }
+                                style={{ marginTop: 1, marginBottom: -3 }}
+                            />
+                        </a>
+                    </li>
+                );
+            }
         }
 
         if (this.showDownload) {

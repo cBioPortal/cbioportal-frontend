@@ -173,7 +173,6 @@ export class StudySummaryTab extends React.Component<
             setComparisonConfirmationModal: this.store
                 .setComparisonConfirmationModal,
         };
-        console.log('Re-render');
         switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART: {
                 //if the chart is one of the custom charts then get the appropriate promise
@@ -727,7 +726,6 @@ export class StudySummaryTab extends React.Component<
 
     @autobind
     onResize(newLayout: Layout[]) {
-        console.log(newLayout);
         newLayout
             .filter(l => {
                 const layout = this.store.chartsDimension.get(l.i as string);

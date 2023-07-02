@@ -166,6 +166,45 @@ export default class UserSelections extends React.Component<
             );
         }
 
+        if (this.props.store.filteredMutationPlots.size > 0) {
+            this.props.store.filteredMutationPlots.forEach(
+                (selectedSamples, gene) => {
+                    components.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
+                                    >
+                                        {gene}
+                                    </span>,
+                                    <PillTag
+                                        content={`${selectedSamples} sample${
+                                            selectedSamples > 1 ? 's' : ''
+                                        }`}
+                                        backgroundColor={
+                                            STUDY_VIEW_CONFIG.colors.theme
+                                                .clinicalFilterContent
+                                        }
+                                        onDelete={() =>
+                                            this.props.store.removeMutationPlotFilters(
+                                                gene
+                                            )
+                                        }
+                                        store={this.props.store}
+                                    />,
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
+            );
+        }
+
         // Show the filter for the comparison group selection
         if (this.props.comparisonGroupSelection.length > 0) {
             const numSamples = getSampleIdentifiers(
