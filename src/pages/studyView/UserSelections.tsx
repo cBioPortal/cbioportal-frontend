@@ -54,6 +54,10 @@ import {
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import classNames from 'classnames';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
+import {
+    getSurvivalChartMetaId,
+    isSurvivalAttributeId,
+} from './charts/survival/StudyViewSurvivalUtils';
 
 export interface IUserSelectionsProps {
     store: StudyViewPageStore;
@@ -547,9 +551,12 @@ export default class UserSelections extends React.Component<
         return _.reduce(
             filters || [],
             (acc, clinicalDataFilter) => {
-                const chartMeta = this.props.attributesMetaSet[
+                const attributeId = isSurvivalAttributeId(
                     clinicalDataFilter.attributeId
-                ];
+                )
+                    ? getSurvivalChartMetaId(clinicalDataFilter.attributeId)
+                    : clinicalDataFilter.attributeId;
+                const chartMeta = this.props.attributesMetaSet[attributeId];
                 if (chartMeta) {
                     const dataType = this.props.clinicalAttributeIdToDataType[
                         clinicalDataFilter.attributeId

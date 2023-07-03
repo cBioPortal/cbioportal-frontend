@@ -1936,7 +1936,7 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'searchTerm' ? : string,
-        'sortBy' ? : "clinicalAttributeId" | "value",
+        'sortBy' ? : string,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
@@ -1980,7 +1980,7 @@ export default class CBioPortalAPIInternal {
      * @param {integer} pageNumber - Page number of the result list
      * @param {integer} pageSize - Page size of the result list
      * @param {string} searchTerm - Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.
-     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} sortBy - sampleId, patientId, or the ATTR_ID to sorted by
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(parameters: {
@@ -1988,7 +1988,7 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'searchTerm' ? : string,
-        'sortBy' ? : "clinicalAttributeId" | "value",
+        'sortBy' ? : string,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -2054,7 +2054,7 @@ export default class CBioPortalAPIInternal {
      * @param {integer} pageNumber - Page number of the result list
      * @param {integer} pageSize - Page size of the result list
      * @param {string} searchTerm - Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.
-     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} sortBy - sampleId, patientId, or the ATTR_ID to sorted by
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataClinicalTableUsingPOST(parameters: {
@@ -2062,7 +2062,7 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'searchTerm' ? : string,
-        'sortBy' ? : "clinicalAttributeId" | "value",
+        'sortBy' ? : string,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
