@@ -120,7 +120,6 @@ export class StudySummaryTab extends React.Component<
                 );
             },
             onLayoutChange: (layout: ReactGridLayout.Layout[]) => {
-                console.log(layout);
                 this.store.updateCurrentGridLayout(layout);
                 this.onResize(layout);
             },

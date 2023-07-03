@@ -369,6 +369,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         } as ChartControls;
     }
 
+    get xAxisOnTop(): boolean | undefined {
+        if (this.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
+            return this.props.store.getMutationStore(
+                this.props.chartMeta.uniqueKey
+            ).isXAxisOnTopSelected;
+        }
+    }
+
     @action.bound
     changeChartType(chartType: ChartType): void {
         this.chartType = chartType;
@@ -1309,11 +1317,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             case ChartTypeEnum.MUTATION_DIAGRAM:
-                console.log(
-                    this.props.store.getMutationStore(
-                        this.props.chartMeta.uniqueKey
-                    ).isXAxisOnTopSelected
-                );
                 return () =>
                     this.props.promise.isComplete ? (
                         <div>
@@ -1433,15 +1436,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     description={this.props.description}
                     isCompactSurvivalChart={this.showCompactSurvivalChart}
                     toggleXAxisAtTop={
-                        this.props.store.getMutationStore(
-                            this.props.chartMeta.uniqueKey
-                        ).toggleXAxisOnTop
+                        this.chartType === ChartTypeEnum.MUTATION_DIAGRAM
+                            ? this.props.store.getMutationStore(
+                                  this.props.chartMeta.uniqueKey
+                              ).toggleXAxisOnTop
+                            : undefined
                     }
-                    xAxisAtTop={
-                        this.props.store.getMutationStore(
-                            this.props.chartMeta.uniqueKey
-                        ).isXAxisOnTopSelected
-                    }
+                    xAxisAtTop={this.xAxisOnTop}
                 />
                 <div className={styles.chartInnerWrapper}>
                     {this.props.promise.isPending && (
