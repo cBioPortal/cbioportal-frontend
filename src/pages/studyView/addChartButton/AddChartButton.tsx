@@ -1054,21 +1054,27 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         </div>
                     </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
+
+                    {this.showResetButton && (
+                        <MSKTab
+                            id={'clearCharts'}
+                            linkOverride={
+                                <button
+                                    className={'btn btn-primary btn-xs'}
+                                    style={{ marginTop: 3 }}
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        this.props.showResetPopup();
+                                    }}
+                                >
+                                    <i className={'fa fa-undo'}></i> Reset
+                                    charts
+                                </button>
+                            }
+                        ></MSKTab>
+                    )}
                 </MSKTabs>
-                {this.showResetButton && (
-                    <button
-                        style={{
-                            position: 'absolute',
-                            top: 10,
-                            right: 10,
-                            zIndex: 2,
-                        }}
-                        className="btn btn-primary btn-xs"
-                        onClick={this.props.showResetPopup}
-                    >
-                        Reset charts
-                    </button>
-                )}
                 {this.infoMessage && !this.savingCustomData && (
                     <SuccessBanner message={this.infoMessage} />
                 )}

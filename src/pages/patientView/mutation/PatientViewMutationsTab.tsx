@@ -335,6 +335,7 @@ export default class PatientViewMutationsTab extends React.Component<
                     enableHotspot={getServerConfig().show_hotspot}
                     enableMyCancerGenome={getServerConfig().mycancergenome_show}
                     enableCivic={getServerConfig().show_civic}
+                    enableRevue={getServerConfig().show_revue}
                     columnVisibility={this.props.mutationTableColumnVisibility}
                     columnVisibilityProps={{
                         onColumnToggled: this.props

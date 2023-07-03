@@ -277,6 +277,7 @@ export default class MutationTableWrapper extends React.Component<
                                     getServerConfig().mycancergenome_show
                                 }
                                 enableCivic={getServerConfig().show_civic}
+                                enableRevue={getServerConfig().show_revue}
                                 columnVisibility={this.props.columnVisibility}
                                 showGeneFilterMenu={
                                     this.pageStore
