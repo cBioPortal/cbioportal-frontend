@@ -19,7 +19,8 @@ export const RevueTooltipContent: React.FunctionComponent<{
             </a>
             <ul>
                 <li>
-                    Predicted Effect: <strong>{props.vue.defaultEffect}</strong>
+                    Predicted Effect*:{' '}
+                    <strong>{props.vue.defaultEffect}</strong>
                 </li>
                 <li>
                     Experimentally Validated Effect:{' '}
@@ -38,6 +39,14 @@ export const RevueTooltipContent: React.FunctionComponent<{
                     rel="noopener noreferrer"
                 >
                     reVUE <i className="fa fa-external-link" />
+                </a>
+                {', '}
+                <a
+                    href="https://useast.ensembl.org/info/docs/tools/vep/index.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    *VEP <i className="fa fa-external-link" />
                 </a>
             </div>
         </div>
