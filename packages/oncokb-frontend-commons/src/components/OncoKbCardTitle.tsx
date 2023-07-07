@@ -6,6 +6,7 @@ type OncoKbCardDefaultTitleProps = {
     hugoSymbol: string;
     variant: string;
     tumorType: string;
+    displayCancerTypeInTitle?: boolean;
 };
 
 export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProps> = (
@@ -22,7 +23,7 @@ export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProp
     if (props.variant) {
         titleContent.push(props.variant);
     }
-    if (props.tumorType) {
+    if (props.tumorType && props.displayCancerTypeInTitle) {
         if (titleContent.length > 0) {
             titleContent.push('in');
         }

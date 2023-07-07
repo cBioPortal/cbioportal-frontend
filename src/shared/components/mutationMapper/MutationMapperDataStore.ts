@@ -17,12 +17,14 @@ import {
     countDuplicateMutations,
     groupMutationsByGeneAndPatientAndProteinChange,
 } from 'shared/lib/MutationUtils';
+import { mergeMutations } from 'shared/lib/StoreUtils';
 
 type GroupedData = { group: string; data: Mutation[][] }[];
 
 export const PROTEIN_IMPACT_TYPE_FILTER_ID =
     '_cBioPortalProteinImpactTypeFilter_';
 export const MUTATION_STATUS_FILTER_ID = '_cBioPortalMutationStatusFilter_';
+export const PROTEIN_CHANGE_FILTER_ID = '_cBioPortalProteinChangeFilter_';
 
 export function findProteinImpactTypeFilter(dataFilters: DataFilter[]) {
     // there are two types of filters (with putative driver, without putative driver)
@@ -45,6 +47,7 @@ export default class MutationMapperDataStore
         group: string;
         filter: DataFilter;
     }[];
+    public isDataMerged: boolean = false;
 
     private lazyMobXTableFilter:
         | ((
@@ -63,7 +66,9 @@ export default class MutationMapperDataStore
     public get sortedFilteredGroupedData(): GroupedData {
         return groupDataByGroupFilters(
             this.groupFilters,
-            this.sortedFilteredData,
+            this.isDataMerged
+                ? _.flatten(this.sortedFilteredData).map(mutation => [mutation])
+                : this.sortedFilteredData,
             this.applyFilter
         );
     }
@@ -224,6 +229,7 @@ export default class MutationMapperDataStore
 
     constructor(
         data: Mutation[][],
+        isDataMerged?: boolean,
         customFilterApplier?: FilterApplier,
         dataFilters: DataFilter[] = [],
         selectionFilters: DataFilter[] = [],
@@ -243,6 +249,7 @@ export default class MutationMapperDataStore
         this.dataHighlighter = (d: Mutation[]) => this.dataHighlightFilter(d);
         this.customFilterApplier = customFilterApplier;
         this.setFilter();
+        this.isDataMerged = !!isDataMerged;
     }
 
     @autobind

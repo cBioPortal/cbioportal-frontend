@@ -74,6 +74,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         let filterInfo:
             | JSX.Element
             | string = `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
+        const shiftClickMessage: string =
+            dataStore.sortedFilteredSelectedData.length > 0
+                ? ' (Shift click to select multiple residues)'
+                : '';
         if (this.props.store.queriedStudies.isComplete) {
             const linkToFilteredStudyView = (
                 <a
@@ -104,12 +108,18 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             <FilterResetPanel
                 resetFilters={() => dataStore.resetFilters()}
                 filterInfo={filterInfo}
+                additionalInfo={shiftClickMessage}
                 className={classnames(
-                    'alert',
                     'alert-success',
+                    'small',
                     styles.filterResetPanel
                 )}
-                buttonClass="btn btn-default btn-xs"
+                buttonClass={classnames(
+                    'btn',
+                    'btn-default',
+                    'btn-xs',
+                    styles.removeFilterButton
+                )}
             />
         );
     }

@@ -2025,7 +2025,7 @@ export class PatientViewPageStore {
     );
 
     @computed get mergedMutationData(): Mutation[][] {
-        return mergeMutations(this.mutationData);
+        return mergeMutations(this.mutationData.result);
     }
 
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
