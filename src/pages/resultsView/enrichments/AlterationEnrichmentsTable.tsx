@@ -189,7 +189,7 @@ export default class AlterationEnrichmentTable extends React.Component<
                         Derived from{' '}
                         {_.values(this.props.data[0].groupsSet).length > 2
                             ? 'Chi-squared test'
-                            : 'one-sided Fisher Exact test'}
+                            : 'two-sided Fisher Exact test'}
                     </span>
                 ) : (
                     undefined

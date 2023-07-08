@@ -428,6 +428,21 @@ describe('group comparison page screenshot tests', function() {
             );
             assertScreenShotMatch(res);
         });
+
+        it('group comparison page mutations tab two groups', function() {
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/comparison/mutations?sessionId=5cf89323e4b0ab413787436c&selectedGene=AR`
+            );
+            $('.borderedChart svg').waitForDisplayed({ timeout: 20000 });
+            var res = browser.checkElement(
+                '[data-test="ComparisonPageMutationsTabPlot"]',
+                '',
+                {
+                    viewportChangePause: 4000,
+                }
+            ); // hide these things because the timing of data loading makes this test so flaky
+            assertScreenShotMatch(res);
+        });
     });
 
     describe('delete group from session', function() {

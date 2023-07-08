@@ -14,6 +14,7 @@ import { CategoricalFilterValue } from '../filter/CategoricalFilter';
 import DataStore from '../model/DataStore';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import { ApplyFilterFn } from '../model/FilterApplier';
+import { ProteinChangeFilter } from '../filter/ProteinChangeFilter';
 
 export const TEXT_INPUT_FILTER_ID = '_mutationTableTextInputFilter_';
 
@@ -149,6 +150,20 @@ export function applyDefaultProteinImpactTypeFilter(
 ) {
     return filter.values.includes(
         getProteinImpactType(mutation.mutationType || 'other')
+    );
+}
+
+export function applyDefaultProteinChangeFilter(
+    filter: ProteinChangeFilter,
+    mutation: Mutation
+) {
+    return (
+        mutation.proteinChange !== undefined &&
+        _.some(
+            filter.values,
+            value =>
+                value.toLowerCase() === mutation.proteinChange.toLowerCase()
+        )
     );
 }
 

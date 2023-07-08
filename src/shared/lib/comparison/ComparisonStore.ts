@@ -276,7 +276,6 @@ export default abstract class ComparisonStore extends AnalysisStore
     abstract _originalGroups: MobxPromise<ComparisonGroup[]>;
     abstract get overlapStrategy(): OverlapStrategy;
     abstract get usePatientLevelEnrichments(): boolean;
-    abstract get samples(): MobxPromise<Sample[]>;
     // < / >
 
     public get isLoggedIn() {

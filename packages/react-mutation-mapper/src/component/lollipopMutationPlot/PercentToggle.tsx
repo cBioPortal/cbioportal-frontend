@@ -26,7 +26,6 @@ export class PercentToggle extends React.Component<IPercentToggleProps, {}> {
                 <div
                     style={{
                         marginLeft: 10,
-                        marginRight: 10,
                     }}
                 >
                     <div style={{ textAlign: 'center' }}>Y-Axis:</div>
