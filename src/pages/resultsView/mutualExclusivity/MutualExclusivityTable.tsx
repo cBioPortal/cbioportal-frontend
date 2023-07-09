@@ -181,7 +181,7 @@ export default class MutualExclusivityTable extends React.Component<
             render: (d: MutualExclusivity) => (
                 <span>{formatPValue(d.pValue)}</span>
             ),
-            tooltip: <span>Derived from one-sided Fisher Exact Test</span>,
+            tooltip: <span>Derived from two-sided Fisher Exact Test</span>,
             sortBy: (d: MutualExclusivity) => d.pValue,
             download: (d: MutualExclusivity) => formatPValue(d.pValue),
         };

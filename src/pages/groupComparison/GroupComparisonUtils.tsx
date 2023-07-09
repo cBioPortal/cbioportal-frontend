@@ -1,10 +1,9 @@
 import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
 import {
-    MolecularProfile,
+    Mutation,
     PatientIdentifier,
     Sample,
     SampleIdentifier,
-    SampleMolecularIdentifier,
 } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
@@ -45,6 +44,9 @@ import {
     GroupData,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
+import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
+import { getTwoTailedPValue } from 'shared/lib/calculation/FisherExactTestCalculator';
+import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -1063,3 +1065,104 @@ const AlterationMenuHeader: React.FunctionComponent<{
         );
     }
 );
+
+// Benjamini-Hochberg procedure q-value, used to show significant association of mutations enriched in a group
+export const SIGNIFICANT_QVALUE_THRESHOLD = 0.05;
+
+export function getProteinChangeToMutationRowData(
+    tableData: Mutation[][],
+    mutationsGroupedByProteinChangeForGroup: (
+        groupIndex: number
+    ) => _.Dictionary<{
+        group: string;
+        data: any[];
+    }>,
+    profiledPatientsCounts: number[],
+    groups: ComparisonGroup[]
+): {
+    [proteinChange: string]: GroupComparisonMutation;
+} {
+    let rowData = tableData.map(proteinChangeRow => {
+        const groupAMutatedCount: number =
+            getCountsByAttributeForGroup(
+                mutationsGroupedByProteinChangeForGroup,
+                0
+            )[proteinChangeRow[0].proteinChange] || 0;
+        const groupBMutatedCount: number =
+            getCountsByAttributeForGroup(
+                mutationsGroupedByProteinChangeForGroup,
+                1
+            )[proteinChangeRow[0].proteinChange] || 0;
+        const groupAMutatedPercentage: number =
+            (groupAMutatedCount / profiledPatientsCounts[0]) * 100;
+        const groupBMutatedPercentage: number =
+            (groupBMutatedCount / profiledPatientsCounts[1]) * 100;
+        const logRatio: number = Math.log2(
+            groupAMutatedPercentage / groupBMutatedPercentage
+        );
+        const pValue: number = getTwoTailedPValue(
+            groupAMutatedCount,
+            profiledPatientsCounts[0] - groupAMutatedCount,
+            groupBMutatedCount,
+            profiledPatientsCounts[1] - groupBMutatedCount
+        );
+        const enrichedGroup: string =
+            logRatio > 0
+                ? groups[0].nameWithOrdinal
+                : groups[1].nameWithOrdinal;
+
+        return {
+            proteinChange: proteinChangeRow[0].proteinChange,
+            groupAMutatedCount,
+            groupBMutatedCount,
+            groupAMutatedPercentage,
+            groupBMutatedPercentage,
+            logRatio,
+            pValue,
+            qValue: 0,
+            enrichedGroup,
+        };
+    });
+
+    rowData = _.sortBy(rowData, r => r.pValue);
+    const qValues = calculateQValues(_.map(rowData, d => d.pValue));
+    rowData.forEach((d, i) => {
+        d.qValue = qValues[i];
+    });
+
+    return _.keyBy(rowData, d => d.proteinChange);
+}
+
+export function getCountsByAttributeForGroup(
+    getMutationsGroupedByAttributeForGroup: (
+        groupIndex: number
+    ) => _.Dictionary<{
+        group: string;
+        data: any[];
+    }>,
+    groupIndex: number,
+    mutationCounts?: boolean
+): {
+    [attribute: string]: number;
+} {
+    const map: { [attribute: string]: number } = {};
+
+    // if true get mutation counts, else get mutated counts
+    mutationCounts
+        ? _.forIn(
+              getMutationsGroupedByAttributeForGroup(groupIndex),
+              (v, k) => {
+                  map[v.group] = v.data.length;
+              }
+          )
+        : _.forIn(
+              getMutationsGroupedByAttributeForGroup(groupIndex),
+              (v, k) => {
+                  // mutations are unique by gene, protein change, patientId. mutations by gene and protein change are already grouped
+                  const uniqueMutations = _.uniqBy(v.data, d => d[0].patientId);
+                  map[v.group] = uniqueMutations.length;
+              }
+          );
+
+    return map;
+}

@@ -7,6 +7,7 @@ import styles from './filterResetPanel.module.scss';
 type FilterResetPanelProps = {
     resetFilters: () => void;
     filterInfo?: JSX.Element | string;
+    additionalInfo?: JSX.Element | string;
     className?: string;
     buttonText?: string;
     buttonClass?: string;
@@ -34,7 +35,7 @@ export class FilterResetPanel extends React.Component<
                 data-test="filter-reset-panel"
             >
                 <span style={{ verticalAlign: 'middle' }}>
-                    {this.props.filterInfo}
+                    <strong>{this.props.filterInfo}</strong>
                     <button
                         className={this.props.buttonClass}
                         style={{ cursor: 'pointer', marginLeft: 6 }}
@@ -42,6 +43,8 @@ export class FilterResetPanel extends React.Component<
                     >
                         {this.props.buttonText}
                     </button>
+                    <br />
+                    {this.props.additionalInfo}
                 </span>
             </div>
         );

@@ -12,12 +12,17 @@ import {
     ONCOKB_DEFAULT_INFO,
     ApplyFilterFn,
     DataFilter,
+    ONCOKB_DEFAULT_DATA,
 } from 'react-mutation-mapper';
 import {
     groupOncoKbIndicatorDataByMutations,
     defaultOncoKbIndicatorFilter,
 } from 'oncokb-frontend-commons';
-import { IHotspotIndex, getMutationsByTranscriptId } from 'cbioportal-utils';
+import {
+    IHotspotIndex,
+    getMutationsByTranscriptId,
+    IOncoKbData,
+} from 'cbioportal-utils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
@@ -34,6 +39,7 @@ import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
 import {
     fetchPdbAlignmentData,
     indexPdbAlignmentData,
+    mergeMutations,
 } from 'shared/lib/StoreUtils';
 import { IPdbChain, PdbAlignmentIndex } from 'shared/model/Pdb';
 import {
@@ -54,6 +60,7 @@ import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
+import _ from 'lodash';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
@@ -64,6 +71,10 @@ export interface IMutationMapperStoreConfig {
         filter: DataFilter<any>;
     }[];
     countUniqueMutations?: (mutations: Mutation[], group?: string) => number;
+    mergeMutationsBy?: (m: Mutation) => string;
+    uniqueSampleKeyToTumorType?: {
+        [uniqueSampleKey: string]: string;
+    };
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
@@ -218,7 +229,11 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
 
     @autobind
     protected getDefaultTumorType(mutation: Mutation): string {
-        return this.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey];
+        return this.mutationMapperStoreConfig.uniqueSampleKeyToTumorType
+            ? this.mutationMapperStoreConfig.uniqueSampleKeyToTumorType[
+                  mutation.uniqueSampleKey
+              ]
+            : this.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey];
     }
 
     @autobind
@@ -279,7 +294,12 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
 
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]
-        return (this.mutationData.result || []).map(mutation => [mutation]);
+        return this.mutationMapperStoreConfig.mergeMutationsBy
+            ? mergeMutations(
+                  _.flatten(this.mutationData.result),
+                  this.mutationMapperStoreConfig.mergeMutationsBy
+              )
+            : (this.mutationData.result || []).map(mutation => [mutation]);
     }
 
     @computed get mergedAlignmentData(): IPdbChain[] {
@@ -311,6 +331,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     protected getDataStore: () => MutationMapperDataStore = () => {
         return new MutationMapperDataStore(
             this.processedMutationData,
+            !!this.mutationMapperStoreConfig.mergeMutationsBy,
             this.filterApplier,
             this.config.dataFilters,
             this.config.selectionFilters,
@@ -342,4 +363,41 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     @cached @computed get residueMappingCache() {
         return new ResidueMappingCache();
     }
+
+    @computed
+    get isCanonicalTranscript(): boolean {
+        if (this.canonicalTranscript.result && this.activeTranscript.result) {
+            // if transcript dropdown is enabled, return true for canonical transcript
+            return (
+                this.activeTranscript.result ===
+                this.canonicalTranscript.result.transcriptId
+            );
+        }
+        // return true if transcript dropdown is disabled
+        return true;
+    }
+
+    readonly oncoKbDataForUnknownPrimary: MobxPromise<
+        IOncoKbData | Error
+    > = remoteData(
+        {
+            await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
+            invoke: () => {
+                return this.config.enableOncoKb
+                    ? this.dataFetcher.fetchOncoKbData(
+                          this.mutations,
+                          this.oncoKbAnnotatedGenes.result!,
+                          () => {
+                              return 'Cancer of Unknown Primary';
+                          },
+                          this.getDefaultEntrezGeneId
+                      )
+                    : Promise.resolve(ONCOKB_DEFAULT_DATA);
+            },
+            onError: () => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        },
+        ONCOKB_DEFAULT_DATA
+    );
 }
