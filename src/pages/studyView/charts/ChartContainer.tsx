@@ -49,6 +49,7 @@ import {
     DownloadControlsButton,
     EditableSpan,
     EllipsisTextTooltip,
+    pluralize,
 } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
@@ -187,6 +188,8 @@ export interface IChartContainerProps {
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private chartHeaderHeight = 20;
     private mutationPlotRef: LollipopMutationPlot<any>;
+    private mutationPlotHeightConstant = 140;
+    private mutationPlotWidthConstant = 165;
 
     private handlers: any;
     private plot: AbstractChart;
@@ -371,7 +374,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     get xAxisOnTop(): boolean | undefined {
         if (this.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
-            return this.props.store.getMutationStore(
+            return this.props.store.getOrInitMutationStore(
                 this.props.chartMeta.uniqueKey
             ).isXAxisOnTopSelected;
         }
@@ -492,9 +495,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     getMutationPlotControls() {
-        const length = this.props.store.getMutationStore(
+        const length = this.props.store.getOrInitMutationStore(
             this.props.chartMeta.uniqueKey
-        ).samplesViaSelectedCodons.length;
+        ).samplesByPosition.length;
 
         return (
             <div
@@ -518,7 +521,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             : () => {}
                     }
                 >
-                    {`Select ${length} ${length == 1 ? 'sample' : 'samples'}`}
+                    {`Select ${length} ${pluralize('sample', length)}`}
                 </button>
                 <DefaultTooltip
                     overlay={<p>Press shift to select more lollipops.</p>}
@@ -1321,7 +1324,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     this.props.promise.isComplete ? (
                         <div>
                             <LollipopMutationPlot
-                                store={this.props.store.getMutationStore(
+                                store={this.props.store.getOrInitMutationStore(
                                     this.props.chartMeta.uniqueKey
                                 )}
                                 autoHideControls={false}
@@ -1332,12 +1335,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 geneWidth={
                                     this.props.store.chartsDimension.get(
                                         this.props.chartMeta.uniqueKey
-                                    )!.w * 165
+                                    )!.w * this.mutationPlotWidthConstant
                                 }
                                 vizHeight={
                                     this.props.store.chartsDimension.get(
                                         this.props.chartMeta.uniqueKey
-                                    )!.h * 140
+                                    )!.h * this.mutationPlotHeightConstant
                                 }
                                 onRef={(ref: any) => {
                                     this.mutationPlotRef = ref;
@@ -1346,18 +1349,18 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     return '';
                                 }}
                                 xAxisOnTop={
-                                    this.props.store.getMutationStore(
+                                    this.props.store.getOrInitMutationStore(
                                         this.props.chartMeta.uniqueKey
                                     ).isXAxisOnTopSelected
                                 }
                             />
-                            {this.props.store.getMutationStore(
+                            {this.props.store.getOrInitMutationStore(
                                 this.props.chartMeta.uniqueKey
-                            ).samplesViaSelectedCodons.length > 0 &&
+                            ).samplesByPosition.length > 0 &&
                                 this.getMutationPlotControls()}
                         </div>
                     ) : (
-                        <p>Loading...</p>
+                        <LoadingIndicator isLoading={true}></LoadingIndicator>
                     );
 
             default:
@@ -1437,7 +1440,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     isCompactSurvivalChart={this.showCompactSurvivalChart}
                     toggleXAxisAtTop={
                         this.chartType === ChartTypeEnum.MUTATION_DIAGRAM
-                            ? this.props.store.getMutationStore(
+                            ? this.props.store.getOrInitMutationStore(
                                   this.props.chartMeta.uniqueKey
                               ).toggleXAxisOnTop
                             : undefined

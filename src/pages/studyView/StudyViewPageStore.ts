@@ -1,4 +1,4 @@
-import _, { uniq } from 'lodash';
+import _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -185,10 +185,7 @@ import {
     toPromise,
 } from 'cbioportal-frontend-commons';
 import request from 'superagent';
-import {
-    trackEvent,
-    trackStudyViewFilterEvent,
-} from '../../shared/lib/tracking';
+import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import {
     finalizeStudiesAttr,
@@ -274,10 +271,6 @@ import intersect from 'fast_array_intersect';
 import { PillStore } from 'shared/components/PillTag/PillTag';
 import { toast, cssTransition } from 'react-toastify';
 import {
-    DefaultMutationMapperDataStore,
-    DefaultMutationMapperStore,
-} from 'react-mutation-mapper';
-import {
     ClinicalAttributeQueryExtractor,
     SharedGroupsAndCustomDataQueryExtractor,
     StudyIdQueryExtractor,
@@ -289,7 +282,6 @@ import StudyViewMutationMapperStore, {
 } from './charts/mutationPlot/StudyViewMutationMapperStore';
 import {
     getAllowedSurvivalClinicalDataFilterId,
-    isSurvivalAttributeId,
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
 
@@ -2577,29 +2569,31 @@ export class StudyViewPageStore
             .join(' ');
 
         // trigger an update to mutation plot for the selected gene.
-        if (selectedTable == FreqColumnTypeEnum.MUTATION)
+        if (selectedTable == FreqColumnTypeEnum.MUTATION) {
             this.addMutationPlot(hugoGeneSymbol);
+        }
     }
 
     @action.bound
     addMutationPlot(hugoGeneSymbol: string): void {
         if (!this.visibleMutationPlotByGene(hugoGeneSymbol)) {
-            let mutationPlotSpecs = [
+            const mutationPlotSpecs = [
                 {
                     hugoGeneSymbol,
                 },
             ];
 
             this.addMutationPlotAsChart(mutationPlotSpecs);
-            const chartAddedMessage = `Mutation Plot for ${hugoGeneSymbol} added.`;
-            this.launchToastMessage(chartAddedMessage);
+            this.launchToastMessage(
+                `Mutation Plot for ${hugoGeneSymbol} added.`
+            );
         } else {
             this.changeChartVisibility(hugoGeneSymbol, false);
             _.pull(this.visibleMutationPlotGenes, hugoGeneSymbol);
 
-            const chartRemovedMessage = `Mutation Plot for ${hugoGeneSymbol} removed.`;
-
-            this.launchToastMessage(chartRemovedMessage);
+            this.launchToastMessage(
+                `Mutation Plot for ${hugoGeneSymbol} removed.`
+            );
         }
     }
 
@@ -2646,27 +2640,27 @@ export class StudyViewPageStore
         this.mutationPlotStore[hugoGeneSymbol] = store;
     }
 
-    async updateStudyViewFilter(hugoGeneSymbol: string) {
+    @action
+    updateStudyViewFilter(hugoGeneSymbol: string) {
         const filteredMutationPlotData = this.mutationPlotStore[hugoGeneSymbol]
-            .samplesViaSelectedCodons;
+            .samplesByPosition;
 
         if (filteredMutationPlotData.length) {
             if (!this.filteredMutationPlots.has(hugoGeneSymbol)) {
-                const filteredSamples: SampleIdentifier[] = this.getMutationStore(
+                const filteredSamples: SampleIdentifier[] = this.getOrInitMutationStore(
                     hugoGeneSymbol
-                ).samplesViaSelectedCodons.map<SampleIdentifier>(
-                    (val: SampleData) => {
-                        return {
-                            studyId: val.studyId,
-                            sampleId: val.sampleId,
-                        };
-                    }
-                );
+                ).samplesByPosition.map<SampleIdentifier>((val: SampleData) => {
+                    return {
+                        studyId: val.studyId,
+                        sampleId: val.sampleId,
+                    };
+                });
 
+                trackStudyViewFilterEvent('mutationPlotFilter', this);
                 this.filteredMutationPlots.set(
                     hugoGeneSymbol,
-                    this.getMutationStore(hugoGeneSymbol)
-                        .samplesViaSelectedCodons.length
+                    this.getOrInitMutationStore(hugoGeneSymbol)
+                        .samplesByPosition.length
                 );
                 this._chartSampleIdentifiersFilterSet.set(
                     hugoGeneSymbol,
@@ -2676,7 +2670,7 @@ export class StudyViewPageStore
         }
     }
 
-    public getMutationStore(
+    public getOrInitMutationStore(
         hugoGeneSymbol: string
     ): StudyViewMutationMapperStore {
         if (!this.mutationPlotStore[hugoGeneSymbol]) {
@@ -2765,8 +2759,6 @@ export class StudyViewPageStore
 
     @action.bound
     clearAllFilters(): void {
-        console.log(this._clinicalDataFilterSet);
-        console.log(this._customDataFilterSet);
         this._clinicalDataFilterSet.clear();
         this._customDataFilterSet.clear();
         this._geneFilterSet.clear();
@@ -6038,7 +6030,7 @@ export class StudyViewPageStore
             } else {
                 const newChartName =
                     'Mutation Plot - ' + newChart.hugoGeneSymbol;
-                let chartMeta: ChartMeta = {
+                const chartMeta: ChartMeta = {
                     uniqueKey: uniqueKey,
                     displayName: newChartName,
                     description: newChart.description || newChartName,
@@ -6166,7 +6158,6 @@ export class StudyViewPageStore
     @action.bound
     updateCustomSelect(newChart: CustomChartData): void {
         this.clearAllFilters();
-        console.log(newChart);
         const sampleIdentifiers = newChart.data.map(datum => ({
             studyId: datum.studyId,
             sampleId: datum.sampleId,
@@ -9647,7 +9638,7 @@ export class StudyViewPageStore
         submitToPage(url, formOps, '_blank');
     }
 
-    onVisualizingMutationPlot(hugoGeneSymbol: string): void {
+    onShowMutationsInResultsView(hugoGeneSymbol: string): void {
         let formOps = this.getQueryData();
 
         let url = '/results';

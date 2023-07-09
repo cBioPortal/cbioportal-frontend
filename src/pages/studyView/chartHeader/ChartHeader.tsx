@@ -614,7 +614,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <a
                         className="dropdown-item"
                         onClick={() =>
-                            this.props.store.onVisualizingMutationPlot(
+                            this.props.store.onShowMutationsInResultsView(
                                 this.props.chartMeta.uniqueKey
                             )
                         }

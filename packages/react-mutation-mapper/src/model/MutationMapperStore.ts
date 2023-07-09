@@ -83,7 +83,6 @@ export interface MutationMapperStore<T extends Mutation> {
     getTranscriptId?: () => string | undefined;
     selectedTranscript?: string | undefined;
     ptmSources?: string[];
-    sampleDataByCodon?: any[];
 }
 
 export default MutationMapperStore;

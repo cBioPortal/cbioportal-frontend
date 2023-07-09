@@ -1,10 +1,12 @@
 import { Mutation } from 'cbioportal-ts-api-client';
-import { DefaultMutationMapperStoreConfig } from '../../../../../packages/react-mutation-mapper/dist/store/DefaultMutationMapperStore';
+import {} from 'react-mutation-mapper';
 import {
     DefaultMutationMapperDataStore,
     DefaultMutationMapperStore,
+    DefaultMutationMapperStoreConfig,
 } from 'react-mutation-mapper';
 import { action, computed, makeObservable, observable } from 'mobx';
+import _ from 'lodash';
 
 export type SampleData = {
     sampleId: string;
@@ -39,28 +41,20 @@ export default class StudyViewMutationMapperStore extends DefaultMutationMapperS
     }
 
     @computed
-    get samplesViaSelectedCodons(): SampleData[] {
+    get samplesByPosition(): SampleData[] {
         const dataStore = this.dataStore as DefaultMutationMapperDataStore;
         const selectedPositions = dataStore.selectedPositions;
-        const mutationsByPosition = this.mutationsByPosition;
+        const mutationsGroupedBySelectedPostions = this.mutationsByPosition;
 
         const mutationData = Object.values(selectedPositions).map(
-            key => mutationsByPosition[key.position]
+            key => mutationsGroupedBySelectedPostions[key.position]
         );
 
-        const samplesViaSelectedCodons: SampleData[] = [];
-
-        mutationData.map(val => {
-            val.map(m => {
-                samplesViaSelectedCodons.push({
-                    patientId: m.patientId,
-                    studyId: m.studyId,
-                    sampleId: m.sampleId,
-                    value: m.keyword,
-                });
-            });
-        });
-
-        return samplesViaSelectedCodons;
+        return _.flatten(mutationData).map(m => ({
+            patientId: m.patientId,
+            studyId: m.studyId,
+            sampleId: m.sampleId,
+            value: m.keyword,
+        }));
     }
 }
