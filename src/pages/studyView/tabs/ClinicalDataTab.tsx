@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
     Column,
     default as LazyMobXTable,
+    SortDirection,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
@@ -13,6 +14,7 @@ import {
     ChartMeta,
     SpecialChartsUniqueKeyEnum,
     DataType,
+    getAllClinicalDataByStudyViewFilter,
 } from '../StudyViewUtils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
@@ -29,6 +31,7 @@ import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import { getServerConfig } from 'config/config';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
+import { makeObservable, observable, runInAction } from 'mobx';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -38,11 +41,18 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
     [id: string]: string;
 }> {}
 
+const CLINICAL_DATA_RECORD_LIMIT = 500;
+
 @observer
 export class ClinicalDataTab extends React.Component<
     IClinicalDataTabTable,
     {}
 > {
+    constructor(props: IClinicalDataTabTable) {
+        super(props);
+        makeObservable(this);
+    }
+
     getDefaultColumnConfig(
         key: string,
         columnName: string,
@@ -81,6 +91,56 @@ export class ClinicalDataTab extends React.Component<
             ) => (data[key] || '').toUpperCase().includes(filterStringUpper),
         };
     }
+
+    @observable clinicalDataTabSearchTerm: string | undefined = undefined;
+
+    @observable clinicalDataSortCriteria: {
+        field: string | undefined;
+        direction: SortDirection | undefined;
+    } = {
+        field: undefined,
+        direction: undefined,
+    };
+
+    readonly getDataForClinicalDataTab = remoteData({
+        await: () => [
+            this.props.store.clinicalAttributes,
+            this.props.store.selectedSamples,
+            this.props.store.sampleSetByKey,
+        ],
+        onError: () => {},
+        invoke: async () => {
+            if (this.props.store.selectedSamples.result.length === 0) {
+                return Promise.resolve({ totalItems: 0, data: [] });
+            }
+            let sampleClinicalDataResp = await getAllClinicalDataByStudyViewFilter(
+                this.props.store.filters,
+                this.clinicalDataTabSearchTerm,
+                this.clinicalDataSortCriteria,
+                CLINICAL_DATA_RECORD_LIMIT
+            );
+
+            const sampleClinicalDataArray = _.mapValues(
+                sampleClinicalDataResp.data,
+                (attrs, uniqueSampleId) => {
+                    const sample = this.props.store.sampleSetByKey.result![
+                        uniqueSampleId
+                    ];
+                    return {
+                        studyId: sample.studyId,
+                        patientId: sample.patientId,
+                        sampleId: sample.sampleId,
+                        ...attrs,
+                    };
+                }
+            );
+
+            return {
+                totalItems: sampleClinicalDataResp.totalItems,
+                data: _.values(sampleClinicalDataArray),
+            };
+        },
+    });
 
     readonly columns = remoteData({
         invoke: async () => {
@@ -173,7 +233,7 @@ export class ClinicalDataTab extends React.Component<
                 label:
                     'Loading clinical data' +
                     (elapsedSecs > 2 ? ' - this can take several seconds' : ''),
-                promises: [this.props.store.getDataForClinicalDataTab],
+                promises: [this.getDataForClinicalDataTab],
             },
         ];
     }
@@ -242,63 +302,89 @@ export class ClinicalDataTab extends React.Component<
                                     .{' '}
                                 </Then>
                                 <Else>
-                                    <If
-                                        condition={
-                                            this.columns.isPending ||
-                                            this.props.store
-                                                .getDataForClinicalDataTab
+                                    <ClinicalDataTabTableComponent
+                                        initialItemsPerPage={20}
+                                        headerComponent={
+                                            <div className={'positionAbsolute'}>
+                                                <strong>
+                                                    {
+                                                        this
+                                                            .getDataForClinicalDataTab
+                                                            .result?.totalItems
+                                                    }{' '}
+                                                    results
+                                                </strong>
+                                            </div>
+                                        }
+                                        showCopyDownload={
+                                            getServerConfig()
+                                                .skin_hide_download_controls ===
+                                            DownloadControlOption.SHOW_ALL
+                                        }
+                                        showCountHeader={false}
+                                        showColumnVisibility={false}
+                                        onFilterTextChange={searchTerm =>
+                                            (this.clinicalDataTabSearchTerm = searchTerm)
+                                        }
+                                        onSortDirectionChange={(
+                                            field,
+                                            sortDirection
+                                        ) => {
+                                            this.clinicalDataSortCriteria = {
+                                                field: field,
+                                                direction: sortDirection,
+                                            };
+                                        }}
+                                        data={
+                                            this.getDataForClinicalDataTab
+                                                .result?.data || []
+                                        }
+                                        showLoading={
+                                            this.getDataForClinicalDataTab
                                                 .isPending
                                         }
-                                    >
-                                        <Then>
+                                        loadingComponent={
                                             <LoadingIndicator
-                                                isLoading={
-                                                    this.columns.isPending ||
-                                                    this.props.store
-                                                        .getDataForClinicalDataTab
-                                                        .isPending
-                                                }
+                                                isLoading={true}
                                                 size={'big'}
                                                 center={true}
-                                            >
-                                                <ProgressIndicator
-                                                    getItems={
-                                                        this.getProgressItems
-                                                    }
-                                                    show={
-                                                        this.columns
-                                                            .isPending ||
-                                                        this.props.store
-                                                            .getDataForClinicalDataTab
-                                                            .isPending
-                                                    }
-                                                />
-                                            </LoadingIndicator>
-                                        </Then>
-                                        <Else>
-                                            <ClinicalDataTabTableComponent
-                                                initialItemsPerPage={20}
-                                                showCopyDownload={
-                                                    getServerConfig()
-                                                        .skin_hide_download_controls ===
-                                                    DownloadControlOption.SHOW_ALL
-                                                }
-                                                showColumnVisibility={false}
-                                                data={
-                                                    this.props.store
-                                                        .getDataForClinicalDataTab
-                                                        .result || []
-                                                }
-                                                columns={this.columns.result}
-                                                copyDownloadProps={{
-                                                    showCopy: false,
-                                                    downloadFilename: this.props
-                                                        .store
-                                                        .clinicalDataDownloadFilename,
-                                                }}
                                             />
-                                        </Else>
-                                    </If>
+                                        }
+                                        columns={this.columns.result}
+                                        copyDownloadProps={{
+                                            showCopy: false,
+                                            downloadFilename: this.props.store
+                                                .clinicalDataDownloadFilename,
+                                        }}
+                                        initialFilterString={
+                                            this.clinicalDataTabSearchTerm
+                                        }
+                                        initialSortDirection={
+                                            this.clinicalDataSortCriteria
+                                                ?.direction
+                                        }
+                                        initialSortColumn={
+                                            this.clinicalDataSortCriteria?.field
+                                        }
+                                        downloadDataFetcher={() =>
+                                            Promise.resolve(['moo'])
+                                        }
+                                        // result limited mode will show a message when user reaches maximum
+                                        // allowed result and explain to them they can use filtering or sorting
+                                        // to find more specific results
+                                        // this should only engage when the total matching items reported by server
+                                        // exceeds the allowed limit
+                                        // this allows us to limit the number of results without introducing the complication
+                                        // of server side pagination
+                                        isResultLimited={
+                                            !!this.getDataForClinicalDataTab
+                                                .result?.totalItems
+                                                ? this.getDataForClinicalDataTab
+                                                      .result?.totalItems >
+                                                  CLINICAL_DATA_RECORD_LIMIT
+                                                : false
+                                        }
+                                    />
                                 </Else>
                             </If>
                         </Else>
