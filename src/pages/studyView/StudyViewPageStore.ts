@@ -371,6 +371,7 @@ import {
     PlotsColoringParam,
     PlotsSelectionParam,
 } from 'pages/resultsView/ResultsViewURLWrapper';
+import { SortDirection } from 'shared/components/lazyMobXTable/LazyMobXTable';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -9241,39 +9242,6 @@ export class StudyViewPageStore
         default: {},
     });
 
-    readonly getDataForClinicalDataTab = remoteData({
-        await: () => [
-            this.clinicalAttributes,
-            this.selectedSamples,
-            this.sampleSetByKey,
-        ],
-        onError: () => {},
-        invoke: async () => {
-            if (this.selectedSamples.result.length === 0) {
-                return Promise.resolve([]);
-            }
-            let sampleClinicalDataMap = await getAllClinicalDataByStudyViewFilter(
-                this.filters
-            );
-
-            const sampleClinicalDataArray = _.mapValues(
-                sampleClinicalDataMap,
-                (attrs, uniqueSampleId) => {
-                    const sample = this.sampleSetByKey.result![uniqueSampleId];
-                    return {
-                        studyId: sample.studyId,
-                        patientId: sample.patientId,
-                        sampleId: sample.sampleId,
-                        ...attrs,
-                    };
-                }
-            );
-
-            return _.values(sampleClinicalDataArray);
-        },
-        default: [],
-    });
-
     readonly clinicalAttributeProduct = remoteData({
         await: () => [this.clinicalAttributes, this.selectedSamples],
         invoke: async () => {
@@ -9815,8 +9783,10 @@ export class StudyViewPageStore
         if (this.selectedSamples.result.length === 0) {
             return Promise.resolve('');
         }
-        let sampleClinicalDataMap = await getAllClinicalDataByStudyViewFilter(
-            this.filters
+        let sampleClinicalDataResp = await getAllClinicalDataByStudyViewFilter(
+            this.filters,
+            undefined,
+            undefined
         );
 
         let clinicalAttributesNameSet = _.reduce(
@@ -9840,7 +9810,8 @@ export class StudyViewPageStore
                     studyId: next.studyId,
                     patientId: next.patientId,
                     sampleId: next.sampleId,
-                    ...(sampleClinicalDataMap[next.uniqueSampleKey] || {}),
+                    ...(sampleClinicalDataResp.data[next.uniqueSampleKey] ||
+                        {}),
                 };
 
                 acc.push(

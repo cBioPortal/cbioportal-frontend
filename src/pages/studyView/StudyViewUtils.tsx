@@ -3158,39 +3158,49 @@ export function updateSavedUserPreferenceChartIds(
 }
 
 export async function getAllClinicalDataByStudyViewFilter(
-    studyViewFilter: StudyViewFilter
-): Promise<{ [sampleId: string]: { [attributeId: string]: string } }> {
+    studyViewFilter: StudyViewFilter,
+    searchTerm: string | undefined = undefined,
+    sortCriteria: any,
+    pageSize: number = 500
+): Promise<{
+    totalItems: number;
+    data: { [sampleId: string]: { [attributeId: string]: string } };
+}> {
     const localClinicalDataCollection: ClinicalDataCollection = {
         sampleClinicalData: [],
         patientClinicalData: [],
     };
-    let remoteClinicalDataCollection: ClinicalDataCollection = {
-        sampleClinicalData: [],
-        patientClinicalData: [],
-    };
-    const maxPageSize = 500000;
-    let pageNumber = 0;
-    do {
-        const remoteClinicalDataCollection = await internalClient.fetchClinicalDataClinicalTableUsingPOST(
-            {
-                studyViewFilter,
-                pageSize: maxPageSize,
-                pageNumber: pageNumber,
-                searchTerm: undefined,
-                sortBy: undefined,
-                direction: 'ASC',
-            }
-        );
-        localClinicalDataCollection.sampleClinicalData = localClinicalDataCollection.sampleClinicalData.concat(
-            remoteClinicalDataCollection.sampleClinicalData
-        );
-        localClinicalDataCollection.patientClinicalData = localClinicalDataCollection.patientClinicalData.concat(
-            remoteClinicalDataCollection.patientClinicalData
-        );
-        pageNumber++;
-    } while (remoteClinicalDataCollection.sampleClinicalData.length > 0);
 
-    return mergeClinicalDataCollection(localClinicalDataCollection);
+    const [remoteClinicalDataCollection, totalItems]: [
+        ClinicalDataCollection,
+        number
+    ] = await internalClient
+        .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
+            studyViewFilter,
+            pageSize,
+            pageNumber: 0,
+            searchTerm: searchTerm,
+            sortBy: sortCriteria?.field,
+            direction: sortCriteria?.direction?.toUpperCase() || 'ASC',
+        })
+        .then(response => {
+            return [
+                response.body,
+                parseInt(response.header['total-count'] || 0),
+            ];
+        });
+
+    localClinicalDataCollection.sampleClinicalData = localClinicalDataCollection.sampleClinicalData.concat(
+        remoteClinicalDataCollection.sampleClinicalData
+    );
+    localClinicalDataCollection.patientClinicalData = localClinicalDataCollection.patientClinicalData.concat(
+        remoteClinicalDataCollection.patientClinicalData
+    );
+
+    return {
+        totalItems,
+        data: mergeClinicalDataCollection(localClinicalDataCollection),
+    };
 }
 
 export function mergeClinicalDataCollection(
