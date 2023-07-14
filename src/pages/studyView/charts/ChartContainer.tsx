@@ -358,7 +358,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.MUTATION_DIAGRAM: {
                 controls = {
                     showResultsPageButton: true,
-                    showXAxisAtTop: true,
                 };
                 break;
             }
@@ -1438,14 +1437,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     placement={this.placement}
                     description={this.props.description}
                     isCompactSurvivalChart={this.showCompactSurvivalChart}
-                    toggleXAxisAtTop={
-                        this.chartType === ChartTypeEnum.MUTATION_DIAGRAM
-                            ? this.props.store.getOrInitMutationStore(
-                                  this.props.chartMeta.uniqueKey
-                              ).toggleXAxisOnTop
-                            : undefined
-                    }
-                    xAxisAtTop={this.xAxisOnTop}
                 />
                 <div className={styles.chartInnerWrapper}>
                     {this.props.promise.isPending && (
