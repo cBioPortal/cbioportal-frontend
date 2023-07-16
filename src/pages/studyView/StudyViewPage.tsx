@@ -144,9 +144,9 @@ export default class StudyViewPage extends React.Component<
             this.props.appStore,
             ServerConfigHelpers.sessionServiceIsEnabled(),
             this.urlWrapper,
-            this.props.routing.query.columnStore === '1'
-                ? internalClientColumnStore
-                : internalClient
+            this.props.routing.query.legacy === '1'
+                ? internalClient
+                : internalClientColumnStore
         );
 
         // this.store_column_store = new StudyViewPageStore(
