@@ -11,7 +11,10 @@ import classnames from 'classnames';
 import { IProteinImpactTypeColors } from 'react-mutation-mapper';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
 import { ResidueMapping } from 'genome-nexus-ts-api-client';
 import { CacheData } from 'shared/lib/LazyMobXCache';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
@@ -35,7 +38,7 @@ import {
 import PyMolScriptGenerator from './PyMolScriptGenerator';
 
 import styles from './structureViewer.module.scss';
-import { AppContext } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface IStructureViewerPanelProps extends IProteinImpactTypeColors {
     pdbChainDataStore: ILazyMobXTableApplicationDataStore<IPdbChain>;
@@ -415,7 +418,8 @@ export default class StructureViewerPanel extends React.Component<
         return (
             <div className="row">
                 <div className="col col-sm-6">
-                    {this.context.showDownloadControls === true && (
+                    {getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL && (
                         <ButtonGroup>
                             <DefaultTooltip
                                 overlay={<span>Download PyMol script</span>}
@@ -934,5 +938,3 @@ export default class StructureViewerPanel extends React.Component<
         return this.proteinScheme !== ProteinScheme.SPACE_FILLING;
     }
 }
-
-StructureViewerPanel.contextType = AppContext;

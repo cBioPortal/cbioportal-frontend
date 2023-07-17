@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
 import { Button, ButtonGroup, ButtonToolbar } from 'react-bootstrap';
 var ClipboardButton = require('react-clipboard.js');
 var Clipboard = require('clipboard');
@@ -15,7 +18,7 @@ import {
     ColumnVisibilityControls,
 } from '../columnVisibilityControls/ColumnVisibilityControls';
 import { computed } from 'mobx';
-import { AppContext } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface ITableHeaderControlsProps {
     tableData?: Array<any>;
@@ -108,10 +111,7 @@ export default class TableHeaderControls extends React.Component<
 
     @computed
     get showCopyAndDownload() {
-        return (
-            this.props.showCopyAndDownload &&
-            this.context.showDownloadControls === true
-        );
+        return this.props.showCopyAndDownload;
     }
 
     public handleInput(evt: any) {
@@ -244,5 +244,3 @@ export default class TableHeaderControls extends React.Component<
         }
     };
 }
-
-TableHeaderControls.contextType = AppContext;

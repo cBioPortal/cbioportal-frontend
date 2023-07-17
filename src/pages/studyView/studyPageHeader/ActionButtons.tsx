@@ -13,7 +13,9 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import classNames from 'classnames';
 import { AppStore } from '../../../AppStore';
 import { serializeEvent } from '../../../shared/lib/tracking';
-import { AppContext } from 'cbioportal-frontend-commons';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
+
 export interface ActionButtonsProps {
     loadingComplete: boolean;
     store: StudyViewPageStore;
@@ -185,7 +187,8 @@ export default class ActionButtons extends React.Component<
                         </button>
                     </DefaultTooltip>
                 </DefaultTooltip>
-                {this.context.showDownloadControls === true && (
+                {getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL && (
                     <DefaultTooltip
                         trigger={['hover']}
                         placement={'top'}
@@ -217,5 +220,3 @@ export default class ActionButtons extends React.Component<
         );
     }
 }
-
-ActionButtons.contextType = AppContext;
