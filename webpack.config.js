@@ -109,6 +109,7 @@ var config = {
         minimizer: [
             new TerserPlugin({
                 parallel: false,
+                exclude: /jupyterlite|jupyter/,
             }),
         ],
     },
@@ -186,6 +187,10 @@ var config = {
                 {
                     from: './src/globalStyles/prefixed-bootstrap.min.css.map',
                     to: 'reactapp/prefixed-bootstrap.min.css.map',
+                },
+                {
+                    from: './jupyterlite/_output',
+                    to: 'reactapp/jupyter',
                 },
             ],
         }), // destination is relative to dist directory

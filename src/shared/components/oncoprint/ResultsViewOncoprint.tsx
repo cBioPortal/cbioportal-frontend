@@ -89,6 +89,7 @@ import '../../../globalStyles/oncoprintStyles.scss';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import { toDirectionString } from './SortUtils';
 import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
+import fileDownloadToJupyter from 'cbioportal-frontend-commons/src/lib/jupyterfileDownload';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -906,6 +907,44 @@ export default class ResultsViewOncoprint extends React.Component<
                             }
                         );
                         break;
+
+                    case 'jupyter':
+                        onMobxPromise(
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any
+                            ) => {
+                                // tabularDownload(
+                                //     this.geneticTracks.result,
+                                //     this.clinicalTracks.result,
+                                //     this.heatmapTracks.result,
+                                //     this.genericAssayHeatmapTracks.result,
+                                //     this.genesetHeatmapTracks.result,
+                                //     this.oncoprintJs.getIdOrder(),
+                                //     this.oncoprintAnalysisCaseType ===
+                                //     OncoprintAnalysisCaseType.SAMPLE
+                                //         ? (key: string) =>
+                                //             sampleKeyToSample[key].sampleId
+                                //         : (key: string) =>
+                                //             patientKeyToPatient[key]
+                                //                 .patientId,
+                                //     this.oncoprintAnalysisCaseType,
+                                //     this.distinguishDrivers
+                                // );
+
+                                fileDownloadToJupyter(
+                                    JSON.stringify(this.geneticTracks.result),
+                                    `monkeys.text`
+                                );
+                            }
+                        );
+                        break;
                     case 'tabular':
                         onMobxPromise(
                             [
@@ -1011,11 +1050,13 @@ export default class ResultsViewOncoprint extends React.Component<
                                 const oncoprinterWindow = window.open(
                                     buildCBioPortalPageUrl('/oncoprinter')
                                 ) as any;
-                                oncoprinterWindow.clientPostedData = {
+                                const postData = {
                                     genetic: geneticInput,
                                     clinical: clinicalInput,
                                     heatmap: heatmapInput,
                                 };
+
+                                oncoprinterWindow.clientPostedData = postData;
                             }
                         );
                         break;

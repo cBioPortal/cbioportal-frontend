@@ -81,7 +81,7 @@ export default class OncoprinterTool extends React.Component<
                 this.clinicalDataInput,
                 this.heatmapDataInput
             );
-            getBrowserWindow().clientPostedData = null;
+            //getBrowserWindow().clientPostedData = null;
         }
     }
 

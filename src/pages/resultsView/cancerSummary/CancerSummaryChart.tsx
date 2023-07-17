@@ -887,7 +887,7 @@ export class CancerSummaryChart extends React.Component<
                     filename="cancer_types_summary"
                     dontFade={true}
                     type="button"
-                    buttons={['SVG', 'PNG', 'PDF', 'Data']}
+                    buttons={['SVG', 'PNG', 'PDF', 'Data', 'Jupyter']}
                     style={{ position: 'absolute', top: 10, right: 10 }}
                 />
             </div>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="cbioportal-frontend">
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+
+        <link rel="icon" href="/images/cbioportal_icon.png" />
+        <title>cBioPortal for Cancer Genomics</title>
+
+        <script>
+            var postData = { param1: 'value1', param2: 'value2' };
+
+            window.frontendConfig = {
+                configurationServiceUrl:
+                    '//' + 'www.cbioportal.org' + '/config_service.jsp',
+                appVersion: '20220322-1522',
+                apiRoot: '//' + 'www.cbioportal.org/',
+                baseUrl: 'www.cbioportal.org',
+                basePath: '',
+            };
+
+            // an empty string means the property is listed but not assigned to in portal.props
+            // a null value means it was entirely missing
+
+            // this jsp can either be included in index.jsp or called as a jsonp service (by decoupled frontends not using jsps)
+            // if there is a callback url param, we respond as jsonp callback(data), otherwise, we assign to variable
+
+            window.rawServerConfig = {
+                skin_data_sets_header:
+                    'The table below lists the number of available samples per cancer study and data type. It also provides links to download the data for each study. For alternative ways of downloading, see the <a href="https:\/\/docs.cbioportal.org\/5.2-datasets\/downloads#introduction">Download Documentation<\/a>.',
+                digitalslidearchive_iframe_url:
+                    'http:\/\/cancer.digitalslidearchive.net\/index_mskcc.php?slide_name=',
+                mskWholeSlideViewerToken: null,
+                skin_custom_header_tabs: null,
+                oncoprint_custom_driver_annotation_binary_default: null,
+                skin_email_contact: 'cbioportal@googlegroups.com',
+                enable_persistent_cache: null,
+                saml_logout_local: null,
+                skin_blurb: '',
+                bitly_api_key: null,
+                skin_hide_logout_button: null,
+                comparison_categorical_na_values: null,
+                default_cross_cancer_study_list: null,
+                oncoKbTokenDefined: true,
+                skin_show_data_tab: true,
+                digitalslidearchive_meta_url:
+                    'http:\/\/cancer.digitalslidearchive.net\/local_php\/get_slide_list_from_db_groupid_not_needed.php?slide_name_filter=',
+                skin_show_gsva: null,
+                show_civic: true,
+                skin_example_study_queries:
+                    'tcga pancancer atlas\ntcga -legacy -pancancer\ntcga or icgc\nmsk-impact\n-"cell line"\nbreast\nesophageal OR stomach\nprostate msk\nserous',
+                mdacc_heatmap_study_meta_url: null,
+                skin_documentation_about: 'About-Us.md',
+                skin_citation_rule_text: null,
+                installation_map_url: 'https:\/\/installationmap.netlify.app\/',
+                skin_login_contact_html:
+                    'If you think you have received this message in error, please contact us at <a style="color:#FF0000" href="mailto:cbioportal-access@cbio.mskcc.org">cbioportal-access@cbio.mskcc.org<\/a>',
+                civic_url: null,
+                oncokb_merge_icons_by_default: null,
+                skin_geneset_hierarchy_default_p_value: null,
+                query_product_limit: null,
+                default_cross_cancer_study_list_name: null,
+                bitly_access_token: '7fdf316a43437f8a6291b99963b371d0229d4b2e',
+                mdacc_heatmap_meta_url: null,
+                show_mdacc_heatmap: true,
+                skin_show_news_tab: true,
+                skin_authorization_message:
+                    'Welcome to cBioPortal - sign in with your Google or Microsoft account to store your <a href="https:\/\/www.cbioportal.org\/tutorials#virtual-studies" target="_blank">virtual studies<\/a> and <a href="https:\/\/www.cbioportal.org\/tutorials#group-comparison" target="_blank">groups<\/a>. This will allow you to access your studies and groups from any computer, and cBioPortal will also remember your study view charts preferences for each study (i.e. order of the charts, type of charts and visibility). Login is optional and not required to access any of the other features of cBioPortal.',
+                survival_min_group_threshold: null,
+                enable_darwin: false,
+                skin_documentation_baseurl:
+                    'https:\/\/raw.githubusercontent.com\/cBioPortal\/cbioportal\/master\/docs\/',
+                skin_query_max_tree_depth: null,
+                oncoprint_custom_driver_annotation_tiers_default: null,
+                skin_right_nav_show_twitter: null,
+                skin_home_page_unauthorized_studies_global_message: null,
+                oncoprint_clinical_tracks_show_by_default: null,
+                survival_show_p_q_values_in_survival_type_table: null,
+                frontendConfigOverride: null,
+                dat_method: 'none',
+                skin_patientview_filter_genes_profiled_all_samples: false,
+                google_analytics_profile_id: 'UA-17134933-1',
+                skin_data_sets_footer:
+                    'Data sets of published studies were curated from literature. Data sets of legacy TCGA studies were downloaded from the <a href="http:\/\/gdac.broadinstitute.org">Broad Institute Firehose<\/a>, last updated 1\/28\/2016.',
+                skin_home_page_show_unauthorized_studies: null,
+                show_genomenexus: null,
+                base_url: 'www.cbioportal.org',
+                skin_mutation_table_namespace_column_show_by_default: null,
+                skin_show_tools_tab: true,
+                skin_patientview_show_mskcc_slide_viewer: null,
+                app_name: 'public-portal',
+                mdacc_heatmap_study_url: null,
+                user_email_address: 'anonymousUser',
+                analytics_report_url: null,
+                skin_documentation_news: 'News.md',
+                oncoprint_custom_driver_annotation_tiers_menu_label: null,
+                show_cosmic: true,
+                skin_right_nav_whats_new_blurb: '',
+                show_transcript_dropdown: true,
+                enable_request_body_gzip_compression: true,
+                skin_documentation_oql: 'Onco-Query-Language.md',
+                mdacc_heatmap_patient_url: null,
+                app_version: null,
+                skin_show_settings_menu: null,
+                skin_title: 'cBioPortal for Cancer Genomics',
+                skin_right_logo: '',
+                session_url_length_threshold: null,
+                skin_footer: '',
+                oncokb_public_api_url: 'https:\/\/www.oncokb.org\/api\/v1',
+                survival_initial_x_axis_limit: null,
+                skin_right_nav_show_whats_new: true,
+                skin_description: null,
+                show_mutation_mappert_tool_grch38: null,
+                oncoprint_hotspots_default: true,
+                show_genomenexus_annotation_sources: '',
+                show_oncokb: true,
+                query_sets_of_genes: null,
+                show_signal: null,
+                skin_show_r_matlab_tab: true,
+                sessionServiceEnabled: true,
+                skin_documentation_markdown: true,
+                skin_quick_select_buttons:
+                    'TCGA PanCancer Atlas Studies#*pan_can_atlas*;Curated set of non-redundant studies|203 studies that are manually curated including TCGA and non-TCGA studies with no overlapping samples#acbc_mskcc_2015,acc_tcga_pan_can_atlas_2018,acyc_fmi_2014,acyc_mda_2015,acyc_mskcc_2013,acyc_sanger_2013,all_phase2_target_2018_pub,all_stjude_2016,aml_target_2018_pub,ampca_bcm_2016,angs_project_painter_2018,bfn_duke_nus_2015,blca_bgi,blca_cornell_2016,blca_dfarber_mskcc_2014,blca_mskcc_solit_2012,blca_mskcc_solit_2014,blca_tcga_pan_can_atlas_2018,brca_bccrc,brca_broad,brca_igr_2015,brca_mbcproject_wagle_2017,brca_metabric,brca_sanger,brca_tcga_pan_can_atlas_2018,ccrcc_irc_2014,ccrcc_utokyo_2013,cesc_tcga_pan_can_atlas_2018,chol_jhu_2013,chol_nccs_2013,chol_nus_2012,chol_tcga_pan_can_atlas_2018,cll_iuopa_2015,cllsll_icgc_2011,coadread_dfci_2016,coadread_genentech,coadread_mskcc,coadread_tcga_pan_can_atlas_2018,cscc_dfarber_2015,cscc_hgsc_bcm_2014,ctcl_columbia_2015,desm_broad_2015,dlbc_tcga_pan_can_atlas_2018,dlbcl_dfci_2018,dlbcl_duke_2017,egc_tmucih_2015,es_dfarber_broad_2014,es_iocurie_2014,esca_broad,esca_tcga_pan_can_atlas_2018,escc_icgc,escc_ucla_2014,gbc_shanghai_2014,gbm_tcga_pan_can_atlas_2018,glioma_msk_2018,hcc_inserm_fr_2015,hcc_msk_venturaa_2018,hnsc_broad,hnsc_jhu,hnsc_mdanderson_2013,hnsc_tcga_pan_can_atlas_2018,kich_tcga_pan_can_atlas_2018,kirc_bgi,kirc_tcga_pan_can_atlas_2018,kirp_tcga_pan_can_atlas_2018,laml_tcga_pan_can_atlas_2018,lcll_broad_2013,lgg_tcga_pan_can_atlas_2018,lgg_ucsf_2014,liad_inserm_fr_2014,lihc_amc_prv,lihc_riken,lihc_tcga_pan_can_atlas_2018,luad_broad,luad_tcga_pan_can_atlas_2018,luad_tsp,lusc_tcga_pan_can_atlas_2018,mbl_broad_2012,mbl_pcgp,mbl_sickkids_2016,mcl_idibips_2013,mds_tokyo_2011,mel_tsam_liang_2017,meso_tcga_pan_can_atlas_2018,mixed_allen_2018,mixed_pipseq_2017,mm_broad,mpnst_mskcc,mrt_bcgsc_2016,msk_impact_2017,nbl_amc_2012,nbl_target_2018_pub,nbl_ucologne_2015,nccrcc_genentech_2014,nepc_wcm_2016,nhl_bcgsc_2011,nhl_bcgsc_2013,npc_nusingapore,nsclc_unito_2016,ov_tcga_pan_can_atlas_2018,paac_jhu_2014,paad_qcmg_uq_2016,paad_tcga_pan_can_atlas_2018,paad_utsw_2015,pact_jhu_2011,panet_arcnet_2017,panet_jhu_2011,panet_shanghai_2013,pcnsl_mayo_2015,pcpg_tcga_pan_can_atlas_2018,pediatric_dkfz_2017,plmeso_nyu_2015,prad_broad,prad_eururol_2017,prad_fhcrc,prad_mich,prad_mpcproject_2018,prad_mskcc,prad_mskcc_cheny1_organoids_2014,prad_tcga_pan_can_atlas_2018,rms_nih_2014,rt_target_2018_pub,sarc_mskcc,sarc_tcga_pan_can_atlas_2018,scco_mskcc,sclc_cancercell_gardner_2017,sclc_jhu,sclc_ucologne_2015,skcm_broad,skcm_broad_brafresist_2012,skcm_tcga_pan_can_atlas_2018,skcm_vanderbilt_mskcc_2015,skcm_yale,stad_pfizer_uhongkong,stad_tcga_pan_can_atlas_2018,stad_utokyo,summit_2018,tet_nci_2014,tgct_tcga_pan_can_atlas_2018,thca_tcga_pan_can_atlas_2018,thym_tcga_pan_can_atlas_2018,uccc_nih_2017,ucec_tcga_pan_can_atlas_2018,ucs_jhu_2014,ucs_tcga_pan_can_atlas_2018,um_qimr_2016,urcc_mskcc_2016,utuc_mskcc_2015,uvm_tcga_pan_can_atlas_2018,vsc_cuk_2018,wt_target_2018_pub,acyc_jhu_2016,prostate_dkfz_2018,histiocytosis_cobi_msk_2019,utuc_cornell_baylor_mdacc_2019,prad_su2c_2019,cll_broad_2015,coad_cptac_2019,brca_mskcc_2019,acc_2019,pptc_2019,prad_msk_2019,ccrcc_dfci_2019,mpn_cimr_2013,nsclc_tracerx_2017,mnm_washu_2016,bcc_unige_2016,coad_caseccc_2015,metastatic_solid_tumors_mich_2017,aml_ohsu_2018,ihch_smmu_2014,nsclc_mskcc_2018,skcm_dfci_2015,skcm_mskcc_2014,mel_ucla_2016,utuc_msk_2019,gbm_columbia_2019,stad_oncosg_2018,brca_smc_2018,luad_oncosg_2020,angs_painter_2020,mel_dfci_2019,lung_smc_2016,utuc_igbmc_2021,cscc_ucsf_2021,chol_icgc_2017,hccihch_pku_2019,ihch_ismms_2015,mbl_dkfz_2017,pan_origimed_2020,crc_nigerian_2020,difg_glass_2019,pancan_pcawg_2020,ucec_cptac_2020,paad_cptac_2021,lusc_cptac_2021,luad_cptac_2020,gbm_cptac_2021,brca_cptac_2020,brain_cptac_2020,mpcproject_broad_2021,msk_met_2021,msk_ch_ped_2021',
+                oncoprintOncoKbHotspotsDefault: 'undefined',
+                mycancergenome_show: true,
+                skin_right_nav_show_examples: true,
+                skin_examples_right_column_html: null,
+                authenticationMethod:
+                    'social_auth_microsoft,social_auth_google',
+                quick_search_enabled: true,
+                oncoprint_custom_driver_annotation_binary_menu_label: null,
+                skin_show_web_api_tab: true,
+                skin_show_tutorials_tab: true,
+                skin_show_about_tab: true,
+                skin_show_faqs_tab: true,
+                skin_show_tweet_button: true,
+                skin_documentation_faq: 'FAQ.md',
+                default_cross_cancer_study_session_id:
+                    '5c8a7d55e4b046111fee2296',
+                genomenexus_url: 'https:\/\/v1.genomenexus.org',
+                bitly_user: null,
+                disabled_tabs: '',
+                show_cbioportal: true,
+                genomenexus_url_grch38: null,
+                skin_footer_show_dev: null,
+                enable_treatment_groups: null,
+                oncoprint_oncokb_default: true,
+                skin_geneset_hierarchy_default_gsva_score: null,
+                priority_studies:
+                    'PanCancer Studies#msk_impact_2017,metastatic_solid_tumors_mich_2017,mixed_allen_2018,summit_2018,tmb_mskcc_2018,ntrk_msk_2019,msk_ch_2020,pan_origimed_2020,pancan_pcawg_2020,msk_met_2021;Pediatric Cancer Studies#pptc_2019,all_phase2_target_2018_pub,rt_target_2018_pub,wt_target_2018_pub,aml_target_2018_pub,nbl_target_2018_pub,pediatric_dkfz_2017,mixed_pipseq_2017,all_stjude_2016,all_stjude_2015,es_dfarber_broad_2014,es_iocurie_2014,mbl_pcgp;Immunogenomic Studies#gbm_columbia_2019,skcm_dfci_2015,skcm_mskcc_2014,mel_ucla_2016,nsclc_mskcc_2018,nsclc_mskcc_2015,tmb_mskcc_2018,ccrcc_dfci_2019;Cell lines#ccle_broad_2019,cellline_ccle_broad,cellline_nci60',
+                ensembl_transcript_url: null,
+                skin_geneset_hierarchy_collapse_by_default: null,
+                patient_view_use_legacy_timeline: null,
+                skin_right_nav_show_testimonials: true,
+                oncoprint_hide_vus_default: null,
+                show_hotspot: true,
+                skin_login_saml_registration_html: 'Sign in with MSK',
+                skin_right_nav_show_data_sets: true,
+            };
+
+            if (/localdev=true/.test(window.location.href)) {
+                localStorage.setItem('localdev', 'true');
+            }
+            if (/localdist=true/.test(window.location.href)) {
+                localStorage.setItem('localdist', 'true');
+            }
+            window.localdev = localStorage.localdev === 'true';
+            window.localdist = localStorage.localdist === 'true';
+            window.netlify = localStorage.netlify;
+
+            if (window.localdev || window.localdist) {
+                window.frontendConfig.frontendUrl = '//localhost:3000/';
+                localStorage.setItem('e2etest', 'true');
+            } else if (window.netlify) {
+                window.frontendConfig.frontendUrl = [
+                    '//',
+                    localStorage.netlify,
+                    '.netlify.app',
+                    '/',
+                ].join('');
+                localStorage.setItem('e2etest', 'true');
+            } else if ('https://frontend.cbioportal.org/') {
+                window.frontendConfig.frontendUrl =
+                    'https://frontend.cbioportal.org/';
+            }
+
+            if (!window.frontendConfig.frontendUrl) {
+                window.frontendConfig.frontendUrl =
+                    '//' + 'www.cbioportal.org/';
+            }
+        </script>
+
+        <script
+            type="text/javascript"
+            src="https://www.cbioportal.org/js/src/load-frontend.js?20220322-1522"
+        ></script>
+
+        <script>
+            window.frontendConfig.customTabs &&
+                window.frontendConfig.customTabs.forEach(function(tab) {
+                    if (tab.pathsToJs) {
+                        tab.pathsToJs.forEach(function(src) {
+                            document.write(
+                                '<scr' +
+                                    'ipt type="text/javascript" src="' +
+                                    src +
+                                    '"></sc' +
+                                    'ript>'
+                            );
+                        });
+                    }
+                });
+        </script>
+
+        <script>
+            loadAppStyles(window.frontendConfig);
+        </script>
+
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"
+            rel="stylesheet"
+        />
+    </head>
+
+    <body>
+        <script>
+            loadReactApp(window.frontendConfig);
+        </script>
+
+        <div id="reactRoot"></div>
+    </body>
+</html>
