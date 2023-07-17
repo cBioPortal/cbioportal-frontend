@@ -8,48 +8,45 @@ export const RevueTooltipContent: React.FunctionComponent<{
     vue: VUE;
 }> = props => {
     return (
-        <div>
-            {props.vue.comment}{' '}
-            <a
-                href={`https://pubmed.ncbi.nlm.nih.gov/${props.vue.pubmedIds[0]}/`}
-                rel="noopener noreferrer"
-                target="_blank"
-            >
-                ({props.vue.referenceText})
-            </a>
-            <ul>
-                <li>
-                    Predicted Effect*:{' '}
-                    <strong>{props.vue.defaultEffect}</strong>
-                </li>
-                <li>
-                    Experimentally Validated Effect:{' '}
-                    <strong>{props.vue.variantClassification}</strong>
-                </li>
-                <li>
-                    Revised Protein Effect:{' '}
-                    <strong>{props.vue.revisedProteinEffect}</strong>
-                </li>
-            </ul>
-            <div>
-                Source:{' '}
-                <a
-                    href="https://cancerrevue.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    reVUE <i className="fa fa-external-link" />
-                </a>
-                {', '}
-                <a
-                    href="https://useast.ensembl.org/info/docs/tools/vep/index.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    *VEP <i className="fa fa-external-link" />
-                </a>
-            </div>
-        </div>
+        <ul>
+            <li>
+                Predicted Effect by{` `}
+                {
+                    <a
+                        href="https://useast.ensembl.org/info/docs/tools/vep/index.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        VEP
+                    </a>
+                }
+                : <strong>{props.vue.defaultEffect}</strong>
+            </li>
+            <li>
+                Revised Protein Effect by{` `}
+                {
+                    <a
+                        href="https://cancerrevue.org"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        reVUE
+                    </a>
+                }
+                {` (`}
+                {
+                    <a
+                        href={`https://pubmed.ncbi.nlm.nih.gov/${props.vue.pubmedId}/`}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                    >
+                        {props.vue.referenceText}
+                    </a>
+                }
+                {`): `}
+                <strong>{props.vue.revisedProteinEffect}</strong>
+            </li>
+        </ul>
     );
 };
 
