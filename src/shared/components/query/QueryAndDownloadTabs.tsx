@@ -6,13 +6,15 @@ import { QueryStore } from './QueryStore';
 import { observable, action, makeObservable, computed } from 'mobx';
 import { MSKTab, MSKTabs } from '../MSKTabs/MSKTabs';
 import QuickSearch from './quickSearch/QuickSearch';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    getBrowserWindow,
+} from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { trackEvent } from 'shared/lib/tracking';
 import { If } from 'react-if';
 import { getServerConfig } from 'config/config';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
-import { AppContext } from 'cbioportal-frontend-commons';
 
 const DOWNLOAD = 'download';
 const ADVANCED = 'advanced';
@@ -95,7 +97,8 @@ export default class QueryAndDownloadTabs extends React.Component<
     get hideDownloadTab() {
         return (
             !this.props.showDownloadTab ||
-            this.context.showDownloadControls === false
+            getServerConfig().skin_hide_download_controls ===
+                DownloadControlOption.HIDE_ALL
         );
     }
 
@@ -170,5 +173,3 @@ export default class QueryAndDownloadTabs extends React.Component<
         );
     }
 }
-
-QueryAndDownloadTabs.contextType = AppContext;

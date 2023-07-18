@@ -164,6 +164,7 @@ import {
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
 } from 'shared/lib/AnnotationColumnUtils';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
 export enum MutationTableColumnType {
@@ -1373,6 +1374,10 @@ export default class MutationTable<
                 }
                 deactivateColumnFilter={this.props.deactivateColumnFilter}
                 customControls={this.props.customControls}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
             />
         );
     }

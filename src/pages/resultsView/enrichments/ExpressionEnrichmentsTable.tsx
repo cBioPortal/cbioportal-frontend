@@ -14,6 +14,8 @@ import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import { ContinousDataPvalueTooltip } from './EnrichmentsUtil';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface IExpressionEnrichmentTableProps {
     visibleOrderedColumnNames?: string[];
@@ -184,6 +186,10 @@ export default class ExpressionEnrichmentTable extends React.Component<
                     this.props.onGeneNameClick ? this.onRowClick : undefined
                 }
                 dataStore={this.props.dataStore}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
             />
         );
     }

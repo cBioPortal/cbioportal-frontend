@@ -10,6 +10,8 @@ import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import { MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface IClinicalInformationMutationalSignatureTableProps {
     data: IMutationalSignature[];
@@ -151,6 +153,10 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                 showColumnVisibility={false}
                 initialSortColumn={this.uniqueSamples[0].id}
                 initialSortDirection="desc"
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
             />
         );
     }
