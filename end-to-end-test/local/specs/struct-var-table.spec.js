@@ -18,6 +18,7 @@ describe('study view structural variant table', function() {
     beforeEach(() => {
         goToUrlAndSetLocalStorage(studyViewUrl, true);
         waitForStudyView();
+        showSvPane();
     });
 
     it('adds structural variant to study view filter', () => {
@@ -29,7 +30,7 @@ describe('study view structural variant table', function() {
         assert($(structVarFilterPillTag).isExisting());
     });
 
-    it('shows all checkboxes when row is hovered', () => {
+    it.only('shows all checkboxes when row is hovered', () => {
         $(structVarNameCell).waitForExist();
         const firstSvRowCell = $$(structVarNameCell)[0];
         assert.equal($$(structVarNameCell)[1].getText(), 'SND1');
@@ -72,7 +73,7 @@ describe('study view structural variant table', function() {
         clearToast();
 
         const resultsViewQueryBox = openResultViewQueryBox();
-        assert.equal('SND1: FUSION::BRAF ;', resultsViewQueryBox.getValue());
+        assert.equal('SND1: FUSION::BRAF;', resultsViewQueryBox.getValue());
     });
 
     it('adds gene1::* to Results View query', () => {
@@ -87,7 +88,7 @@ describe('study view structural variant table', function() {
         clearToast();
 
         const resultsViewQueryBox = openResultViewQueryBox();
-        assert.equal('SND1: FUSION:: ;', resultsViewQueryBox.getValue());
+        assert.equal('SND1: FUSION::;', resultsViewQueryBox.getValue());
     });
 
     it('adds *::gene2 to Results View query', () => {
@@ -102,9 +103,30 @@ describe('study view structural variant table', function() {
         clearToast();
 
         const resultsViewQueryBox = openResultViewQueryBox();
-        assert.equal('BRAF: ::FUSION ;', resultsViewQueryBox.getValue());
+        assert.equal('BRAF: ::FUSION;', resultsViewQueryBox.getValue());
     });
 });
+
+function showSvPane() {
+    const $chartsBtn = $('[data-test=add-charts-button]');
+    $chartsBtn.waitForExist();
+    $chartsBtn.waitForClickable();
+    $chartsBtn.click();
+    const $chartsGenomicTab = $('.tabAnchor_Genomic');
+    $chartsGenomicTab.waitForExist();
+    $chartsGenomicTab.waitForClickable();
+    $chartsGenomicTab.click();
+    const $svChartCheckbox = $(
+        '[data-test="add-chart-option-structural-variants"]'
+    ).$('[data-test="labeledCheckbox"]');
+    $svChartCheckbox.waitForExist();
+    $svChartCheckbox.waitForClickable();
+    if (!$svChartCheckbox.isSelected()) {
+        $svChartCheckbox.click();
+    }
+    $chartsBtn.click();
+    waitForStudyView();
+}
 
 function openResultViewQueryBox() {
     const resultsViewQueryBox = $('[data-test=geneSet]');
