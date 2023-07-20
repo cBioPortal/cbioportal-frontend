@@ -3,7 +3,7 @@ const {
     goToUrlAndSetLocalStorageWithProperty,
     getElementByTestHandle,
 } = require('../../shared/specUtils');
-const { waitForTable } = require('./namespace-columns-utils.spec');
+const { waitForTable } = require('./namespace-columns-utils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
