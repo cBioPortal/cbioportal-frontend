@@ -2450,6 +2450,43 @@
         }
       }
     },
+    "/structuralvariant-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch structural variant genes by study view filter",
+        "operationId": "fetchStructuralVariantCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationCountByStructuralVariant"
+              }
+            }
+          }
+        }
+      }
+    },
     "/structuralvariant-genes/fetch": {
       "post": {
         "tags": [
@@ -3356,8 +3393,21 @@
           "type": "integer",
           "format": "int32"
         },
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
         "hugoGeneSymbol": {
           "type": "string"
+        },
+        "hugoGeneSymbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "matchingGenePanelIds": {
           "type": "array",
@@ -3380,9 +3430,67 @@
         "totalCount": {
           "type": "integer",
           "format": "int32"
+        },
+        "uniqueEventKey": {
+          "type": "string"
         }
       },
       "title": "AlterationCountByGene"
+    },
+    "AlterationCountByStructuralVariant": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "gene1EntrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gene1HugoGeneSymbol": {
+          "type": "string"
+        },
+        "gene2EntrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gene2HugoGeneSymbol": {
+          "type": "string"
+        },
+        "hugoGeneSymbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "matchingGenePanelIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "numberOfAlteredCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfProfiledCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uniqueEventKey": {
+          "type": "string"
+        }
+      },
+      "title": "AlterationCountByStructuralVariant"
     },
     "AlterationEnrichment": {
       "type": "object",
@@ -4044,8 +4152,21 @@
           "type": "integer",
           "format": "int32"
         },
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
         "hugoGeneSymbol": {
           "type": "string"
+        },
+        "hugoGeneSymbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "matchingGenePanelIds": {
           "type": "array",
@@ -4068,6 +4189,9 @@
         "totalCount": {
           "type": "integer",
           "format": "int32"
+        },
+        "uniqueEventKey": {
+          "type": "string"
         }
       },
       "title": "CopyNumberCountByGene"

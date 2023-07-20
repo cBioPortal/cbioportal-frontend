@@ -4,7 +4,11 @@ type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type AlterationCountByGene = {
     'entrezGeneId': number
 
+        'entrezGeneIds': Array < number >
+
         'hugoGeneSymbol': string
+
+        'hugoGeneSymbols': Array < string >
 
         'matchingGenePanelIds': Array < string >
 
@@ -15,6 +19,32 @@ export type AlterationCountByGene = {
         'qValue': number
 
         'totalCount': number
+
+        'uniqueEventKey': string
+
+};
+export type AlterationCountByStructuralVariant = {
+    'entrezGeneIds': Array < number >
+
+        'gene1EntrezGeneId': number
+
+        'gene1HugoGeneSymbol': string
+
+        'gene2EntrezGeneId': number
+
+        'gene2HugoGeneSymbol': string
+
+        'hugoGeneSymbols': Array < string >
+
+        'matchingGenePanelIds': Array < string >
+
+        'numberOfAlteredCases': number
+
+        'numberOfProfiledCases': number
+
+        'totalCount': number
+
+        'uniqueEventKey': string
 
 };
 export type AlterationEnrichment = {
@@ -306,7 +336,11 @@ export type CopyNumberCountByGene = {
 
         'entrezGeneId': number
 
+        'entrezGeneIds': Array < number >
+
         'hugoGeneSymbol': string
+
+        'hugoGeneSymbols': Array < string >
 
         'matchingGenePanelIds': Array < string >
 
@@ -317,6 +351,8 @@ export type CopyNumberCountByGene = {
         'qValue': number
 
         'totalCount': number
+
+        'uniqueEventKey': string
 
 };
 export type CopyNumberCountIdentifier = {
@@ -5802,6 +5838,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < StructuralVariant >
         > {
             return this.fetchStructuralVariantsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchStructuralVariantCountsUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/structuralvariant-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch structural variant genes by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchStructuralVariantCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchStructuralVariantCountsUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/structuralvariant-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch structural variant genes by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchStructuralVariantCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchStructuralVariantCountsUsingPOST(parameters: {
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < AlterationCountByStructuralVariant >
+        > {
+            return this.fetchStructuralVariantCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
