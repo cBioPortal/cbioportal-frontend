@@ -5,12 +5,12 @@ import WindowStore from '../window/WindowStore';
 import { action, computed, makeObservable } from 'mobx';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
-import autobind from 'autobind-decorator';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { ResourceData } from 'cbioportal-ts-api-client';
 import { buildPDFUrl, getFileExtension } from './ResourcesTableUtils';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
-import { getDigitalSlideArchiveIFrameUrl } from 'shared/api/urls';
+import { getServerConfig } from 'config/config';
+import { CUSTOM_URL_TRANSFORMERS } from 'shared/components/resources/customResourceHelpers';
 
 export interface IResourceTabProps {
     resourceData: ResourceData[];
@@ -93,6 +93,20 @@ export default class ResourceTab extends React.Component<
                 url = buildPDFUrl(this.currentResourceDatum.url);
                 break;
         }
+
+        try {
+            // apply instance specific transformation on url (e.g. to keep state)
+            CUSTOM_URL_TRANSFORMERS.forEach(config => {
+                if (config.test(this.currentResourceDatum) === true) {
+                    url = config.transformer(this.currentResourceDatum);
+                }
+            });
+        } catch (ex) {
+            console.error(ex);
+            // it's just some configuration failure so let things proceed
+            // with unprocessed url
+        }
+
         return url;
     }
 
