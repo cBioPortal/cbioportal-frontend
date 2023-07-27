@@ -1926,15 +1926,17 @@ export function calculateLayout(
     let layout: Layout[] = [];
     let availableChartLayoutsMap: { [chartId: string]: boolean } = {};
     let matrix = [new Array(cols).fill('')] as string[][];
-    // sort the visibleAttributes by priority
-    visibleAttributes.sort(chartMetaComparator);
+
     // look if we need to put the chart to a fixed position and add the position to the matrix
     if (currentGridLayout.length > 0) {
         if (currentFocusedChartByUser && currentFocusedChartByUserDimension) {
-            const currentChartLayout = currentGridLayout.find(
+            var currentFocusedChartIndex = currentGridLayout.findIndex(
                 layout => layout.i === currentFocusedChartByUser.uniqueKey
             )!;
-            if (currentChartLayout) {
+
+            if (currentFocusedChartIndex !== -1) {
+                const currentChartLayout =
+                    currentGridLayout[currentFocusedChartIndex];
                 const newChartLayout = calculateNewLayoutForFocusedChart(
                     currentChartLayout,
                     currentFocusedChartByUser,
@@ -1946,35 +1948,40 @@ export function calculateLayout(
                     currentFocusedChartByUser.uniqueKey
                 ] = true;
                 matrix = generateMatrixByLayout(newChartLayout, cols);
+
+                currentGridLayout[currentFocusedChartIndex] = newChartLayout;
             } else {
                 throw new Error(
                     'cannot find matching unique key in the grid layout'
                 );
             }
-        } else {
-            const chartOrderMap = _.keyBy(
-                currentGridLayout,
-                chartLayout => chartLayout.i
-            );
-            // order charts based on x and y (first order by y, if y is same for both then order by x)
-            // push all undefined charts to last
-            visibleAttributes.sort((a, b) => {
-                const chart1 = chartOrderMap[a.uniqueKey];
-                const chart2 = chartOrderMap[b.uniqueKey];
-                if (chart1 || chart2) {
-                    if (!chart2) {
-                        return -1;
-                    }
-                    if (!chart1) {
-                        return 1;
-                    }
-                    return chart1.y === chart2.y
-                        ? chart1.x - chart2.x
-                        : chart1.y - chart2.y;
-                }
-                return 0;
-            });
         }
+
+        const chartOrderMap = _.keyBy(
+            currentGridLayout,
+            chartLayout => chartLayout.i
+        );
+        // order charts based on x and y (first order by y, if y is same for both then order by x)
+        // push all undefined charts to last
+        visibleAttributes.sort((a, b) => {
+            const chart1 = chartOrderMap[a.uniqueKey];
+            const chart2 = chartOrderMap[b.uniqueKey];
+            if (chart1 || chart2) {
+                if (!chart2) {
+                    return -1;
+                }
+                if (!chart1) {
+                    return 1;
+                }
+                return chart1.y === chart2.y
+                    ? chart1.x - chart2.x
+                    : chart1.y - chart2.y;
+            }
+            return 0;
+        });
+    } else {
+        // sort the visibleAttributes by priority
+        visibleAttributes.sort(chartMetaComparator);
     }
 
     // filter out the fixed position chart then calculate layout
