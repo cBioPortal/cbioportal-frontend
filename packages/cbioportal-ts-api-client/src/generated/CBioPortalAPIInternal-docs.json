@@ -5690,6 +5690,45 @@
       },
       "title": "StructuralVariantFilter"
     },
+    "StructuralVariantFilterQuery": {
+      "type": "object",
+      "properties": {
+        "gene1Query": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "gene2Query": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
+        "tiersBooleanMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "title": "StructuralVariantFilterQuery"
+    },
     "StructuralVariantGeneSubQuery": {
       "type": "object",
       "properties": {
@@ -5806,6 +5845,12 @@
         "sampleTreatmentTargetFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
+        "structuralVariantFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StudyViewStructuralVariantFilter"
+          }
+        },
         "studyIds": {
           "type": "array",
           "items": {
@@ -5814,6 +5859,28 @@
         }
       },
       "title": "StudyViewFilter"
+    },
+    "StudyViewStructuralVariantFilter": {
+      "type": "object",
+      "properties": {
+        "molecularProfileIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "structVarQueries": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/StructuralVariantFilterQuery"
+            }
+          }
+        }
+      },
+      "title": "StudyViewStructuralVariantFilter"
     },
     "VariantCount": {
       "type": "object",
