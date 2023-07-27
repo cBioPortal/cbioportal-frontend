@@ -32,6 +32,8 @@ import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/Window
 import { getServerConfig } from 'config/config';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
 import { makeObservable, observable, runInAction } from 'mobx';
+import { Sample, StudyViewFilter } from 'cbioportal-ts-api-client';
+import { SortConfig } from 'oncoprintjs';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -42,6 +44,44 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
 }> {}
 
 const CLINICAL_DATA_RECORD_LIMIT = 500;
+
+type SortCriteria = {
+    field: string | undefined;
+    direction: SortDirection | undefined;
+};
+
+async function fetchClinicalDataForStudyViewClinicalDataTab(
+    filters: StudyViewFilter,
+    sampleSetByKey: { [sampleId: string]: Sample },
+    searchTerm: string | undefined,
+    sortCriteria: SortCriteria | undefined,
+    recordLimit: number
+) {
+    let sampleClinicalDataResp = await getAllClinicalDataByStudyViewFilter(
+        filters,
+        searchTerm,
+        sortCriteria,
+        recordLimit
+    );
+
+    const sampleMap = _.mapValues(
+        sampleClinicalDataResp.data,
+        (attrs, uniqueSampleId) => {
+            const sample = sampleSetByKey[uniqueSampleId];
+            return {
+                studyId: sample.studyId,
+                patientId: sample.patientId,
+                sampleId: sample.sampleId,
+                ...attrs,
+            };
+        }
+    );
+
+    return {
+        totalItems: sampleClinicalDataResp.totalItems,
+        data: _.values(sampleMap),
+    };
+}
 
 @observer
 export class ClinicalDataTab extends React.Component<
@@ -94,10 +134,7 @@ export class ClinicalDataTab extends React.Component<
 
     @observable clinicalDataTabSearchTerm: string | undefined = undefined;
 
-    @observable clinicalDataSortCriteria: {
-        field: string | undefined;
-        direction: SortDirection | undefined;
-    } = {
+    @observable clinicalDataSortCriteria: SortCriteria = {
         field: undefined,
         direction: undefined,
     };
@@ -113,31 +150,38 @@ export class ClinicalDataTab extends React.Component<
             if (this.props.store.selectedSamples.result.length === 0) {
                 return Promise.resolve({ totalItems: 0, data: [] });
             }
-            let sampleClinicalDataResp = await getAllClinicalDataByStudyViewFilter(
+            // let sampleClinicalDataResp = await getAllClinicalDataByStudyViewFilter(
+            //     this.props.store.filters,
+            //     this.clinicalDataTabSearchTerm,
+            //     this.clinicalDataSortCriteria,
+            //     CLINICAL_DATA_RECORD_LIMIT
+            // );
+            //
+            // const sampleClinicalDataArray = _.mapValues(
+            //     sampleClinicalDataResp.data,
+            //     (attrs, uniqueSampleId) => {
+            //         const sample = this.props.store.sampleSetByKey.result![
+            //             uniqueSampleId
+            //         ];
+            //         return {
+            //             studyId: sample.studyId,
+            //             patientId: sample.patientId,
+            //             sampleId: sample.sampleId,
+            //             ...attrs,
+            //         };
+            //     }
+            // );
+            const sampleClinicalDataResp = await fetchClinicalDataForStudyViewClinicalDataTab(
                 this.props.store.filters,
+                this.props.store.sampleSetByKey.result!,
                 this.clinicalDataTabSearchTerm,
                 this.clinicalDataSortCriteria,
                 CLINICAL_DATA_RECORD_LIMIT
             );
 
-            const sampleClinicalDataArray = _.mapValues(
-                sampleClinicalDataResp.data,
-                (attrs, uniqueSampleId) => {
-                    const sample = this.props.store.sampleSetByKey.result![
-                        uniqueSampleId
-                    ];
-                    return {
-                        studyId: sample.studyId,
-                        patientId: sample.patientId,
-                        sampleId: sample.sampleId,
-                        ...attrs,
-                    };
-                }
-            );
-
             return {
                 totalItems: sampleClinicalDataResp.totalItems,
-                data: _.values(sampleClinicalDataArray),
+                data: sampleClinicalDataResp.data,
             };
         },
     });
@@ -366,9 +410,18 @@ export class ClinicalDataTab extends React.Component<
                                         initialSortColumn={
                                             this.clinicalDataSortCriteria?.field
                                         }
-                                        downloadDataFetcher={() =>
-                                            Promise.resolve(['moo'])
-                                        }
+                                        downloadDataFetcher={() => {
+                                            return fetchClinicalDataForStudyViewClinicalDataTab(
+                                                this.props.store.filters,
+                                                this.props.store.sampleSetByKey
+                                                    .result!,
+                                                this.clinicalDataTabSearchTerm,
+                                                this.clinicalDataSortCriteria,
+                                                500
+                                            ).then(data => {
+                                                return data.data;
+                                            });
+                                        }}
                                         // result limited mode will show a message when user reaches maximum
                                         // allowed result and explain to them they can use filtering or sorting
                                         // to find more specific results
