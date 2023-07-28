@@ -1026,6 +1026,28 @@ export type StructuralVariantFilter = {
         'structuralVariantQueries': Array < StructuralVariantQuery >
 
 };
+export type StructuralVariantFilterQuery = {
+    'gene1Query': StructuralVariantGeneSubQuery
+
+        'gene2Query': StructuralVariantGeneSubQuery
+
+        'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
+
+        'tiersBooleanMap': {}
+
+};
 export type StructuralVariantGeneSubQuery = {
     'entrezId': number
 
@@ -1075,7 +1097,16 @@ export type StudyViewFilter = {
 
         'sampleTreatmentTargetFilters': AndedSampleTreatmentFilters
 
+        'structuralVariantFilters': Array < StudyViewStructuralVariantFilter >
+
         'studyIds': Array < string >
+
+};
+export type StudyViewStructuralVariantFilter = {
+    'molecularProfileIds': Array < string >
+
+        'structVarQueries': Array < Array < StructuralVariantFilterQuery >
+        >
 
 };
 export type VariantCount = {

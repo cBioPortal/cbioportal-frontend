@@ -413,11 +413,15 @@ export type HrdScore = {
 
 };
 export type Implication = {
-    'alterations': Array < string >
+    'abstracts': Array < ArticleAbstract >
+
+        'alterations': Array < string >
 
         'description': string
 
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'levelOfEvidence': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
+
+        'pmids': Array < string >
 
         'tumorType': TumorType
 
@@ -435,13 +439,15 @@ export type IndicatorQueryResp = {
 
         'geneSummary': string
 
-        'highestDiagnosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'highestDiagnosticImplicationLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
-        'highestPrognosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'highestFdaLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
-        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'highestPrognosticImplicationLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
-        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'highestResistanceLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
+
+        'highestSensitiveLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
         'hotspot': boolean
 
@@ -451,9 +457,9 @@ export type IndicatorQueryResp = {
 
         'oncogenic': string
 
-        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
+        'otherSignificantResistanceLevels': Array < "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO" >
 
-        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
+        'otherSignificantSensitiveLevels': Array < "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO" >
 
         'prognosticImplications': Array < Implication >
 
@@ -483,11 +489,13 @@ export type IndicatorQueryTreatment = {
 
         'drugs': Array < Drug >
 
-        'fdaApproved': boolean
+        'fdaLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'level': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
         'levelAssociatedCancerType': TumorType
+
+        'levelExcludedCancerTypes': Array < TumorType >
 
         'pmids': Array < string >
 
@@ -511,7 +519,7 @@ export type MainType = {
 
         'name': string
 
-        'tumorForm': "SOLID" | "LIQUID"
+        'tumorForm': "SOLID" | "LIQUID" | "MIXED"
 
 };
 export type MutationAssessor = {
@@ -724,11 +732,11 @@ export type Query = {
 
         'proteinStart': number
 
+        'referenceGenome': "GRCh37" | "GRCh38"
+
         'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN"
 
         'tumorType': string
-
-        'type': string
 
 };
 export type Rcv = {
@@ -944,7 +952,7 @@ export type TumorType = {
 
         'tissue': string
 
-        'tumorForm': "SOLID" | "LIQUID"
+        'tumorForm': "SOLID" | "LIQUID" | "MIXED"
 
 };
 export type UntranslatedRegion = {

@@ -2266,13 +2266,10 @@ export class StudyViewPageStore
             this.visibleAttributes,
             this.columns,
             _.fromPairs(this.chartsDimension.toJSON()),
-            this.useCurrentGridLayout ? this.currentGridLayout : [],
+            this.currentGridLayout,
             this.currentFocusedChartByUser,
             this.currentFocusedChartByUserDimension
         );
-        if (this.useCurrentGridLayout) {
-            this.useCurrentGridLayout = false;
-        }
     }
 
     // Minus the margin width
@@ -2291,9 +2288,6 @@ export class StudyViewPageStore
     updateCurrentGridLayout(newGridLayout: ReactGridLayout.Layout[]): void {
         this.currentGridLayout = newGridLayout;
     }
-
-    //this variable is acts as flag whether to use it as a currentGridLayout in updating layout
-    private useCurrentGridLayout = false;
 
     @observable.ref private currentGridLayout: ReactGridLayout.Layout[] = [];
     //@observable private currentGridLayoutUpdated = false;
@@ -6754,7 +6748,6 @@ export class StudyViewPageStore
                 }
             }
         });
-        this.useCurrentGridLayout = true;
     }
 
     @action.bound
@@ -7119,7 +7112,6 @@ export class StudyViewPageStore
         this.currentFocusedChartByUserDimension = this.chartsDimension.get(
             attr.uniqueKey
         );
-        this.useCurrentGridLayout = true;
     }
 
     readonly defaultVisibleAttributes = remoteData({
