@@ -98,7 +98,7 @@ export default class AnnotationColumnFormatter {
             annotationDownloadContent.push(
                 `reVUE: ${
                     annotationData.vue
-                        ? `${annotationData.vue.comment},PubmedId:${annotationData.vue.pubmedIds[0]},PredictedEffect:${annotationData.vue.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue.variantClassification},RevisedProteinEffect:${annotationData.vue.revisedProteinEffect}`
+                        ? `${annotationData.vue.comment},PubmedId:${annotationData.vue.pubmedId},PredictedEffect:${annotationData.vue.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue.revisedVariantClassification},RevisedProteinEffect:${annotationData.vue.revisedProteinEffect}`
                         : 'no'
                 }`
             );
