@@ -210,10 +210,6 @@ export type Drug = {
 
         'ncitCode': string
 
-        'synonyms': Array < string >
-
-        'uuid': string
-
 };
 export type EnsemblFilter = {
     'geneIds': Array < string >
