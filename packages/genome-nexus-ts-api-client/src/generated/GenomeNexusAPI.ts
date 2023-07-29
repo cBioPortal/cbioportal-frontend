@@ -210,10 +210,6 @@ export type Drug = {
 
         'ncitCode': string
 
-        'synonyms': Array < string >
-
-        'uuid': string
-
 };
 export type EnsemblFilter = {
     'geneIds': Array < string >
@@ -1064,6 +1060,10 @@ export type Version = {
 export type Vues = {
     'comment': string
 
+        'confirmed': boolean
+
+        'context': string
+
         'defaultEffect': string
 
         'genomicLocation': string
@@ -1072,17 +1072,21 @@ export type Vues = {
 
         'hugoGeneSymbol': string
 
-        'pubmedIds': Array < number >
+        'pubmedId': number
 
         'referenceText': string
 
         'revisedProteinEffect': string
 
+        'revisedVariantClassification': string
+
         'transcriptId': string
 
         'variant': string
 
-        'variantClassification': string
+        'vepPredictedProteinEffect': string
+
+        'vepPredictedVariantClassification': string
 
 };
 
