@@ -89,6 +89,7 @@ class GroupSelectorButton extends React.Component<
             sampleIdentifiers,
             this.props.sampleSet
         );
+        const textColor = getTextColor(group.color);
 
         const button = (
             <button
@@ -104,6 +105,7 @@ class GroupSelectorButton extends React.Component<
                 onMouseDown={this.onMouseDown}
                 style={{
                     backgroundColor: group.color,
+                    color: textColor,
                 }}
                 data-test={`groupSelectorButton${group.name}`}
             >
@@ -116,14 +118,13 @@ class GroupSelectorButton extends React.Component<
                             className="text-with-ellipsis"
                             style={{
                                 display: 'inline-block',
-                                color: getTextColor(group.color),
                                 maxWidth: 200,
                             }}
                         >
                             {renderGroupNameWithOrdinal(group)}
                         </div>
                         &nbsp;
-                        <span style={{ color: getTextColor(group.color) }}>
+                        <span>
                             (
                             {sampleIdentifiers.length ===
                             patientIdentifiers.length
@@ -148,7 +149,7 @@ class GroupSelectorButton extends React.Component<
                                 paddingLeft: 2,
                                 marginLeft: 5,
                                 marginRight: -3,
-                                borderLeft: '1px dashed white',
+                                borderLeft: '1px dashed',
                                 cursor: 'pointer',
                             }}
                             data-test="deleteButton"
