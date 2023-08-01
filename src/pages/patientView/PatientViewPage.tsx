@@ -514,6 +514,10 @@ export class PatientViewPageInner extends React.Component<
     onMutationalSignatureVersionChange(version: string) {
         this.pageStore.setMutationalSignaturesVersion(version);
     }
+    @action.bound
+    onSampleIdChange(sample: string) {
+        this.pageStore.setSampleMutationalSignatureData(sample);
+    }
 
     @computed get columns(): ExtendedMutationTableColumnType[] {
         const namespaceColumnNames = extractColumnNames(
