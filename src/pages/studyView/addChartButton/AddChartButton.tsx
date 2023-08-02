@@ -49,6 +49,7 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import ReactSelect from 'react-select';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
+import OQLTextArea from 'shared/components/GeneSelectionBox/OQLTextArea';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -1051,6 +1052,25 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 />
                             </div>
                             {this.addXvsYChartButton}
+                        </div>
+                    </MSKTab>
+                    <MSKTab
+                        id={'Mutation_Plots'}
+                        linkText={<span>Mutation Plot</span>}
+                        key={5}
+                    >
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
+                            <OQLTextArea
+                                callback={
+                                    this.props.store.handleMutationPlotQuery
+                                }
+                                submitButton={<button>Submit</button>}
+                            />
                         </div>
                     </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}

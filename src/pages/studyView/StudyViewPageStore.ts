@@ -438,6 +438,9 @@ export class StudyViewPageStore
     @observable mutationPlotStore: {
         [hugoGeneSymbol: string]: StudyViewMutationMapperStore;
     } = {};
+    // savedMutationPlotStoreData: {
+    //     [hugoGeneSymbol: string]: Mutation[];
+    // } = {};
     filteredMutationPlots = observable.map<string, number>();
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
@@ -2597,6 +2600,19 @@ export class StudyViewPageStore
         }
     }
 
+    @action.bound
+    handleMutationPlotQuery(q: {
+        query: SingleGeneQuery[];
+        error?: { start: number; end: number; message: string };
+    }): void {
+        console.log(q.error);
+        const geneList = q.query.map(g => {
+            return g.gene;
+        });
+
+        geneList.forEach(gene => this.addMutationPlot(gene));
+    }
+
     launchToastMessage(message: string): void {
         toast.success(message, {
             delay: 0,
@@ -2642,6 +2658,12 @@ export class StudyViewPageStore
 
     @action
     updateStudyViewFilter(hugoGeneSymbol: string) {
+        // Saving the present form of mutationstore
+        // this.savedMutationPlotStoreData = {};
+        // this.savedMutationPlotStoreData[hugoGeneSymbol] = [];
+        // const data = Object.assign(this.savedMutationPlotStoreData[hugoGeneSymbol], this.mutationPlotStore[hugoGeneSymbol].dataStore.allData);
+        // console.log(data);
+
         const filteredMutationPlotData = this.mutationPlotStore[hugoGeneSymbol]
             .samplesByPosition;
 
@@ -2677,6 +2699,26 @@ export class StudyViewPageStore
             this.createMutationStore(hugoGeneSymbol);
         }
         return this.mutationPlotStore[hugoGeneSymbol];
+    }
+
+    @action
+    public getMutationStoreBySavedData(
+        hugoGeneSymbol: string,
+        data: Mutation[]
+    ): StudyViewMutationMapperStore {
+        if (
+            data.length ===
+            this.mutationPlotStore[hugoGeneSymbol].dataStore.allData.length
+        ) {
+            return this.mutationPlotStore[hugoGeneSymbol];
+        }
+        const store = new StudyViewMutationMapperStore(
+            { hugoGeneSymbol },
+            {},
+            () => data
+        );
+
+        return (this.mutationPlotStore[hugoGeneSymbol] = store);
     }
 
     @action.bound
@@ -3549,6 +3591,10 @@ export class StudyViewPageStore
     @action
     removeAllMutationPlotFilters(): void {
         this.filteredMutationPlots.clear();
+    }
+
+    isMutationPlotFilteredByGene(hugoGeneSymbol: string): boolean {
+        return this.filteredMutationPlots.has(hugoGeneSymbol);
     }
 
     @action

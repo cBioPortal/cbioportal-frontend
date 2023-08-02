@@ -3,7 +3,6 @@ import {} from 'react-mutation-mapper';
 import {
     DefaultMutationMapperDataStore,
     DefaultMutationMapperStore,
-    DefaultMutationMapperStoreConfig,
 } from 'react-mutation-mapper';
 import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
@@ -15,11 +14,26 @@ export type SampleData = {
     value: string;
 };
 
+interface DefaultMutationMapperStoreConfig {
+    annotationFields?: string[];
+    isoformOverrideSource?: string;
+    ptmSources?: string[];
+    filterMutationsBySelectedTranscript?: boolean;
+    genomeNexusUrl?: string;
+    oncoKbUrl?: string;
+    enableCivic?: boolean;
+    enableOncoKb?: boolean;
+    enableRevue?: boolean;
+    cachePostMethodsOnClients?: boolean;
+    apiCacheLimit?: number;
+    getMutationCount?: (mutation: Partial<Mutation>) => number;
+    getTumorType?: (mutation: Partial<Mutation>) => string;
+    genomeBuild?: string;
+}
+
 export default class StudyViewMutationMapperStore extends DefaultMutationMapperStore<
     Mutation
 > {
-    @observable private xAxisOnTop: boolean = false;
-
     constructor(
         public gene: { hugoGeneSymbol: string },
         protected config: DefaultMutationMapperStoreConfig,
@@ -27,17 +41,6 @@ export default class StudyViewMutationMapperStore extends DefaultMutationMapperS
     ) {
         super(gene, config, getMutations);
         makeObservable(this);
-        this.xAxisOnTop = false;
-    }
-
-    @computed
-    get isXAxisOnTopSelected(): boolean {
-        return this.xAxisOnTop;
-    }
-
-    @action.bound
-    toggleXAxisOnTop(): void {
-        this.xAxisOnTop = this.xAxisOnTop === true ? false : true;
     }
 
     @computed

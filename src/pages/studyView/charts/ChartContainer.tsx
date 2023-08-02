@@ -182,6 +182,7 @@ export interface IChartContainerProps {
     patientSurvivalsWithoutLeftTruncation?: PatientSurvival[];
     onToggleSurvivalPlotLeftTruncation?: (chartMeta: ChartMeta) => void;
     survivalPlotLeftTruncationChecked?: boolean;
+    showResetIconMutationPlot?: boolean;
 }
 
 @observer
@@ -367,16 +368,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
         return {
             ...controls,
-            showResetIcon: this.props.filters && this.props.filters.length > 0,
+            showResetIcon:
+                (this.props.filters && this.props.filters.length > 0) ||
+                this.props.showResetIconMutationPlot,
         } as ChartControls;
-    }
-
-    get xAxisOnTop(): boolean | undefined {
-        if (this.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
-            return this.props.store.getOrInitMutationStore(
-                this.props.chartMeta.uniqueKey
-            ).isXAxisOnTopSelected;
-        }
     }
 
     @action.bound
@@ -571,6 +566,21 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get chart(): (() => JSX.Element) | null {
+        // if(this.chartType == ChartTypeEnum.MUTATION_DIAGRAM){
+        //     if(this.props.showResetIconMutationPlot){
+        //         console.log("Filtered, take from save one");
+        //         console.log(this.props.store.savedMutationPlotStoreData[this.props.chartMeta.uniqueKey]);
+
+        //         // console.log(this.props.store.savedMutationPlotStore[this.props.chartMeta.uniqueKey].dataStore.allData.length);
+        //     }
+        //     else{
+        //         console.log("Not filtered, create please1");
+        //         console.log(this.props.chartMeta.uniqueKey);
+        //         console.log(this.props.store.getOrInitMutationStore(
+        //             this.props.chartMeta.uniqueKey
+        //         ).dataStore.allData.length);
+        //     }
+        // }
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
                 return () => (
@@ -1347,11 +1357,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 yAxisLabelFormatter={() => {
                                     return '';
                                 }}
-                                xAxisOnTop={
-                                    this.props.store.getOrInitMutationStore(
-                                        this.props.chartMeta.uniqueKey
-                                    ).isXAxisOnTopSelected
-                                }
                             />
                             {this.props.store.getOrInitMutationStore(
                                 this.props.chartMeta.uniqueKey

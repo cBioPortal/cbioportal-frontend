@@ -692,6 +692,12 @@ export class StudySummaryTab extends React.Component<
                     hugoGeneSymbol: chartMeta.uniqueKey,
                 });
                 props.downloadTypes = ['SVG', 'PNG', 'PDF'];
+                props.showResetIconMutationPlot = this.store.isMutationPlotFilteredByGene(
+                    chartMeta.uniqueKey
+                );
+                props.onResetSelection = () => {
+                    this.store.removeMutationPlotFilters(chartMeta.uniqueKey);
+                };
                 break;
             }
             default:

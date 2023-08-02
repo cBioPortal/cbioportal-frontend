@@ -623,7 +623,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             )}
                             aria-hidden="true"
                         />
-                        Visualize
+                        Explore Gene
                     </a>
                 </li>
             );
