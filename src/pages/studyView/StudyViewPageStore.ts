@@ -388,6 +388,7 @@ export type GenomicChart = {
     description?: string;
     profileType: string;
     hugoGeneSymbol: string;
+    dataType?: string;
 };
 
 export type GenericAssayChart = {
@@ -6036,15 +6037,21 @@ export class StudyViewPageStore
 
                 this._geneSpecificChartMap.set(uniqueKey, newChart);
                 this.changeChartVisibility(uniqueKey, true);
-                this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
-                this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
 
-                this._genomicDataBinFilterSet.set(uniqueKey, {
-                    clinicalDataType: 'SAMPLE',
-                    disableLogScale: false,
-                    hugoGeneSymbol: newChart.hugoGeneSymbol,
-                    profileType: newChart.profileType,
-                } as any);
+                if (newChart.dataType === DataType.NUMBER) {
+                    this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
+
+                    this._genomicDataBinFilterSet.set(uniqueKey, {
+                        clinicalDataType: 'SAMPLE',
+                        disableLogScale: false,
+                        hugoGeneSymbol: newChart.hugoGeneSymbol,
+                        profileType: newChart.profileType,
+                    } as any);
+                } else {
+                    this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
+                }
+
+                this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
             }
 
             if (!loadedfromUserSettings) {
@@ -9153,17 +9160,12 @@ export class StudyViewPageStore
         ],
         invoke: async () => {
             return this.molecularProfiles.result.filter(molecularProfile => {
-                return (
-                    [
-                        AlterationTypeConstants.MRNA_EXPRESSION,
-                        AlterationTypeConstants.PROTEIN_LEVEL,
-                        AlterationTypeConstants.METHYLATION,
-                    ].includes(molecularProfile.molecularAlterationType) ||
-                    (molecularProfile.molecularAlterationType ===
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-                        molecularProfile.datatype ===
-                            DataTypeConstants.CONTINUOUS)
-                );
+                return [
+                    AlterationTypeConstants.MRNA_EXPRESSION,
+                    AlterationTypeConstants.PROTEIN_LEVEL,
+                    AlterationTypeConstants.METHYLATION,
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                ].includes(molecularProfile.molecularAlterationType);
             });
         },
         default: [],
@@ -9175,20 +9177,36 @@ export class StudyViewPageStore
             this.molecularProfileSampleCounts,
         ],
         invoke: async () => {
-            let filterProfileTypes = this.molecularProfileForGeneCharts.result.map(
-                molecularProfile =>
-                    getSuffixOfMolecularProfile(molecularProfile)
+            const profileTypeToDataTypeSet = this.molecularProfileForGeneCharts.result.reduce(
+                (acc, molecularProfile) => {
+                    const profileType = getSuffixOfMolecularProfile(
+                        molecularProfile
+                    );
+                    if (!acc.has(profileType)) {
+                        acc.set(
+                            profileType,
+                            DataTypeConstants.DISCRETE ===
+                                molecularProfile.datatype
+                                ? DataType.STRING
+                                : DataType.NUMBER
+                        );
+                    }
+                    return acc;
+                },
+                new Map<string, string>()
             );
 
             return this.molecularProfileSampleCounts.result
-                .filter(datum => filterProfileTypes.includes(datum.uniqueKey))
+                .filter(datum => profileTypeToDataTypeSet.has(datum.uniqueKey))
                 .map(datum => {
                     return {
                         value: datum.uniqueKey,
                         count: datum.numberOfAlteredCases,
                         label: datum.label,
                         description: datum.label,
-                        dataType: 'STRING',
+                        dataType:
+                            profileTypeToDataTypeSet.get(datum.uniqueKey) ||
+                            DataType.STRING,
                     };
                 });
         },
