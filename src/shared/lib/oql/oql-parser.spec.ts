@@ -4,7 +4,11 @@ import oql_parser, {
     SingleGeneQuery,
 } from './oql-parser';
 import { assert } from 'chai';
-import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
+import {
+    STUCTVARDownstreamFusionStr,
+    STUCTVARUpstreamFusionStr,
+    unparseOQLQueryLine,
+} from 'shared/lib/oql/oqlfilter';
 
 function testCallback(query: string, expectedParsedResult: OQLQuery) {
     try {
@@ -1182,7 +1186,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [],
                 },
@@ -1194,7 +1198,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: '*',
                     modifiers: [],
                 },
@@ -1206,7 +1210,7 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
+                    alteration_type: STUCTVARUpstreamFusionStr,
                     gene: '*',
                     modifiers: [],
                 },
@@ -1218,7 +1222,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'DRIVER' }],
                 },
@@ -1230,7 +1234,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: '*',
                     modifiers: [{ type: 'DRIVER' }],
                 },
@@ -1242,7 +1246,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: '*',
                     modifiers: [{ type: 'DRIVER' }],
                 },
@@ -1254,7 +1258,7 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
+                    alteration_type: STUCTVARUpstreamFusionStr,
                     gene: '*',
                     modifiers: [{ type: 'DRIVER' }],
                 },
@@ -1266,7 +1270,7 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
+                    alteration_type: STUCTVARUpstreamFusionStr,
                     gene: '*',
                     modifiers: [{ type: 'DRIVER' }],
                 },
@@ -1278,7 +1282,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'SOMATIC' }],
                 },
@@ -1290,7 +1294,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'GERMLINE' }],
                 },
@@ -1302,7 +1306,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'DRIVER' }, { type: 'SOMATIC' }],
                 },
@@ -1314,7 +1318,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                 },
@@ -1326,7 +1330,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [],
                 },
@@ -1345,7 +1349,7 @@ describe('OQL parser', () => {
                     gene: 'KIF5B',
                     alterations: [
                         {
-                            alteration_type: 'downstream_fusion',
+                            alteration_type: STUCTVARDownstreamFusionStr,
                             gene: 'RET',
                             modifiers: [],
                         },
@@ -1355,7 +1359,7 @@ describe('OQL parser', () => {
                     gene: 'RET',
                     alterations: [
                         {
-                            alteration_type: 'upstream_fusion',
+                            alteration_type: STUCTVARUpstreamFusionStr,
                             gene: '*',
                             modifiers: [],
                         },
@@ -1365,7 +1369,7 @@ describe('OQL parser', () => {
                     gene: 'KIF5B',
                     alterations: [
                         {
-                            alteration_type: 'downstream_fusion',
+                            alteration_type: STUCTVARDownstreamFusionStr,
                             gene: '*',
                             modifiers: [],
                         },
@@ -1381,7 +1385,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [],
                 },
@@ -1393,7 +1397,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: '*',
                     modifiers: [],
                 },
@@ -1405,8 +1409,8 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: '-',
                     modifiers: [],
                 },
             ],
@@ -1417,7 +1421,7 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
+                    alteration_type: STUCTVARUpstreamFusionStr,
                     gene: 'KIF5B',
                     modifiers: [],
                 },
@@ -1429,7 +1433,7 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
+                    alteration_type: STUCTVARUpstreamFusionStr,
                     gene: '*',
                     modifiers: [],
                 },
@@ -1441,8 +1445,8 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
                     modifiers: [],
                 },
             ],
@@ -1453,7 +1457,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'SOMATIC' }],
                 },
@@ -1465,7 +1469,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'SOMATIC' }],
                 },
@@ -1477,7 +1481,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'GERMLINE' }],
                 },
@@ -1489,7 +1493,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'DRIVER' }],
                 },
@@ -1501,7 +1505,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'SOMATIC' }, { type: 'DRIVER' }],
                 },
@@ -1513,7 +1517,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'DRIVER' }, { type: 'SOMATIC' }],
                 },
@@ -1525,7 +1529,7 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
+                    alteration_type: STUCTVARDownstreamFusionStr,
                     gene: 'RET',
                     modifiers: [{ type: 'DRIVER' }, { type: 'SOMATIC' }],
                 },
@@ -1537,8 +1541,8 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
@@ -1549,8 +1553,8 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
@@ -1561,8 +1565,8 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'GERMLINE' }, { type: 'DRIVER' }],
                 },
             ],
@@ -1573,8 +1577,8 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                 },
             ],
@@ -1585,8 +1589,8 @@ describe('OQL parser', () => {
             gene: 'KIF5B',
             alterations: [
                 {
-                    alteration_type: 'downstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                 },
             ],
@@ -1597,8 +1601,8 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
@@ -1609,8 +1613,8 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
@@ -1621,8 +1625,8 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                 },
             ],
@@ -1633,8 +1637,8 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                 },
             ],
@@ -1645,8 +1649,8 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
                     modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                 },
             ],
@@ -1657,7 +1661,7 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
+                    alteration_type: STUCTVARUpstreamFusionStr,
                     gene: '*',
                     modifiers: [],
                 },
@@ -1674,8 +1678,8 @@ describe('OQL parser', () => {
             gene: 'RET',
             alterations: [
                 {
-                    alteration_type: 'upstream_fusion',
-                    gene: undefined,
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
                     modifiers: [],
                 },
             ],
@@ -1698,8 +1702,8 @@ describe('OQL parser', () => {
                     gene: 'RET',
                     alterations: [
                         {
-                            alteration_type: 'upstream_fusion',
-                            gene: undefined,
+                            alteration_type: STUCTVARUpstreamFusionStr,
+                            gene: '-',
                             modifiers: [],
                         },
                     ],
@@ -1741,7 +1745,7 @@ describe('unparseOQLQueryLine', () => {
                 gene: 'KIF5B',
                 alterations: [
                     {
-                        alteration_type: 'downstream_fusion',
+                        alteration_type: STUCTVARDownstreamFusionStr,
                         gene: 'RET',
                         modifiers: [{ type: 'DRIVER' }, { type: 'SOMATIC' }],
                     },

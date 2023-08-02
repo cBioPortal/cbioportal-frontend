@@ -4,6 +4,9 @@ import { observer } from 'mobx-react';
 import { computed, makeObservable, runInAction } from 'mobx';
 import styles from './styles.module.scss';
 import {
+    OredPatientTreatmentFilters,
+    OredSampleTreatmentFilters,
+    DataFilter,
     DataFilterValue,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
@@ -11,7 +14,7 @@ import {
     PatientTreatmentFilter,
     SampleTreatmentFilter,
     ClinicalDataFilter,
-    DataFilter,
+    StructuralVariantFilterQuery,
 } from 'cbioportal-ts-api-client';
 import {
     DataType,
@@ -21,9 +24,6 @@ import {
     getGenericAssayChartUniqueKey,
     updateCustomIntervalFilter,
     SpecialChartsUniqueKeyEnum,
-} from 'pages/studyView/StudyViewUtils';
-import {
-    ChartMeta,
     geneFilterQueryToOql,
     getCNAColorByAlteration,
     getPatientIdentifiers,
@@ -31,6 +31,8 @@ import {
     getUniqueKeyFromMolecularProfileIds,
     intervalFiltersDisplayValue,
     StudyViewFilterWithSampleIdentifierFilters,
+    ChartMeta,
+    getUniqueKeyFromGeneFilterMolecularProfileIds,
 } from 'pages/studyView/StudyViewUtils';
 import { PillTag } from '../../shared/components/PillTag/PillTag';
 import { GroupLogic } from './filters/groupLogic/GroupLogic';
@@ -42,16 +44,13 @@ import {
     getSampleIdentifiers,
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
-import { DefaultTooltip, getBrowserWindow } from 'cbioportal-frontend-commons';
 import {
-    OredPatientTreatmentFilters,
-    OredSampleTreatmentFilters,
-} from 'cbioportal-ts-api-client';
-import {
-    STRUCTURAL_VARIANT_COLOR,
+    DefaultTooltip,
     MUT_COLOR_MISSENSE,
+    STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { structVarFilterQueryToOql } from 'pages/studyView/StructVarUtils';
 import classNames from 'classnames';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import {
@@ -72,6 +71,7 @@ export interface IUserSelectionsProps {
     ) => void;
     updateCustomChartFilter: (uniqueKey: string, values: string[]) => void;
     removeGeneFilter: (uniqueKey: string, oql: string) => void;
+    removeStructVarFilter: (uniqueKey: string, oql: string) => void;
     updateGenomicDataIntervalFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
@@ -364,7 +364,7 @@ export default class UserSelections extends React.Component<
         _.reduce(
             this.props.filter.geneFilters || [],
             (acc, geneFilter) => {
-                const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                const uniqueKey = getUniqueKeyFromGeneFilterMolecularProfileIds(
                     geneFilter.molecularProfileIds
                 );
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
@@ -377,6 +377,43 @@ export default class UserSelections extends React.Component<
                                         return (
                                             <GroupLogic
                                                 components={this.groupedGeneQueries(
+                                                    queries,
+                                                    chartMeta
+                                                )}
+                                                operation="or"
+                                                group={queries.length > 1}
+                                            />
+                                        );
+                                    }
+                                )}
+                                operation={'and'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
+                return acc;
+            },
+            components
+        );
+
+        _.reduce(
+            this.props.filter.structuralVariantFilters || [],
+            (acc, structuralVariantFilter) => {
+                const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                    structuralVariantFilter.molecularProfileIds,
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                );
+                const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                if (chartMeta) {
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={structuralVariantFilter.structVarQueries.map(
+                                    queries => {
+                                        return (
+                                            <GroupLogic
+                                                components={this.groupedStructVarQueries(
                                                     queries,
                                                     chartMeta
                                                 )}
@@ -802,35 +839,18 @@ export default class UserSelections extends React.Component<
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element[] {
         return geneQueries.map(geneQuery => {
-            let color = DEFAULT_NA_COLOR;
-            let displayGeneSymbol = geneQuery.hugoGeneSymbol;
-            switch (chartMeta.chartType) {
-                case ChartTypeEnum.MUTATED_GENES_TABLE:
-                    color = MUT_COLOR_MISSENSE;
-                    break;
-                case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
-                    color = STRUCTURAL_VARIANT_COLOR;
-                    break;
-                case ChartTypeEnum.CNA_GENES_TABLE: {
-                    if (geneQuery.alterations.length === 1) {
-                        let tagColor = getCNAColorByAlteration(
-                            geneQuery.alterations[0]
-                        );
-                        if (tagColor) {
-                            color = tagColor;
-                        }
-                    }
-                    break;
-                }
-            }
+            const color = this.getQueryFilterPillTagColor(
+                chartMeta,
+                geneQuery.alterations
+            );
             return (
                 <PillTag
-                    content={displayGeneSymbol}
+                    content={geneQuery.hugoGeneSymbol}
                     backgroundColor={color}
                     infoSection={
                         <FilterIconMessage
                             chartType={chartMeta.chartType}
-                            geneFilterQuery={geneQuery}
+                            annotatedFilterQuery={geneQuery}
                         />
                     }
                     onDelete={() =>
@@ -843,6 +863,61 @@ export default class UserSelections extends React.Component<
                 />
             );
         });
+    }
+
+    private groupedStructVarQueries(
+        structVarFilterQueries: StructuralVariantFilterQuery[],
+        chartMeta: ChartMeta & { chartType: ChartType }
+    ): JSX.Element[] {
+        return structVarFilterQueries.map(structVarQuery => {
+            let color = this.getQueryFilterPillTagColor(chartMeta);
+            const gene1 = structVarQuery.gene1Query.hugoSymbol || '';
+            const gene2 = structVarQuery.gene2Query.hugoSymbol || '';
+            let displayLabel = `${gene1}::${gene2}`;
+            return (
+                <PillTag
+                    content={displayLabel}
+                    backgroundColor={color}
+                    infoSection={
+                        <FilterIconMessage
+                            chartType={chartMeta.chartType}
+                            annotatedFilterQuery={structVarQuery}
+                        />
+                    }
+                    onDelete={() =>
+                        this.props.removeStructVarFilter(
+                            chartMeta.uniqueKey,
+                            structVarFilterQueryToOql(structVarQuery)
+                        )
+                    }
+                    store={this.props.store}
+                />
+            );
+        });
+    }
+
+    private getQueryFilterPillTagColor(
+        chartMeta: ChartMeta & { chartType: ChartType },
+        cnaAlterations?: string[]
+    ): string {
+        switch (chartMeta.chartType) {
+            case ChartTypeEnum.MUTATED_GENES_TABLE:
+                return MUT_COLOR_MISSENSE;
+            case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+            case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
+                return STRUCTURAL_VARIANT_COLOR;
+            case ChartTypeEnum.CNA_GENES_TABLE: {
+                if (cnaAlterations && cnaAlterations.length === 1) {
+                    const tagGColor = getCNAColorByAlteration(
+                        cnaAlterations[0]
+                    );
+                    return tagGColor || DEFAULT_NA_COLOR;
+                }
+                return DEFAULT_NA_COLOR;
+            }
+            default:
+                return DEFAULT_NA_COLOR;
+        }
     }
 
     private groupedGenomicProfiles(genomicProfiles: string[]): JSX.Element[] {
