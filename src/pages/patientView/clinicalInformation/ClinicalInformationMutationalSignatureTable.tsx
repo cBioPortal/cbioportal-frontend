@@ -83,7 +83,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
     IClinicalInformationMutationalSignatureTableProps,
     {}
 > {
-    @observable selectedSignature = '';
+    @observable selectedSignature: string;
 
     constructor(props: IClinicalInformationMutationalSignatureTableProps) {
         super(props);
