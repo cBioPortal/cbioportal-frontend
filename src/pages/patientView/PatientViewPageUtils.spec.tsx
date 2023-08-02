@@ -2,8 +2,12 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 import SampleManager from './SampleManager';
 import TumorColumnFormatter from './mutation/column/TumorColumnFormatter';
-import { checkNonProfiledGenesExist } from './PatientViewPageUtils';
+import {
+    checkNonProfiledGenesExist,
+    retrieveMutationalSignatureMap,
+} from './PatientViewPageUtils';
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
+import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 
 describe('PatientViewPageUtils', () => {
     describe('checkNonProfiledGenesExist()', () => {
@@ -51,6 +55,41 @@ describe('PatientViewPageUtils', () => {
                     {} as any
                 )
             );
+        });
+    });
+
+    describe('retrieveMutationalSignatureMap()', () => {
+        it('returns true if result is equal to the ground truth output', () => {
+            const genericAssayMetaData = [
+                {
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: { NAME: '1:Del:C:0' },
+                    stableId: 'mutational_signatures_matrix_1_Del_C_0',
+                },
+                {
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: { NAME: '1:Del:C:1' },
+                    stableId: 'mutational_signatures_matrix_1_Del_C_1',
+                },
+            ];
+
+            const output = [
+                {
+                    name: '1:Del:C:0',
+                    signatureClass: '',
+                    signatureLabel: '',
+                    stableId: 'mutational_signatures_matrix_1_Del_C_0',
+                },
+                {
+                    name: '1:Del:C:1',
+                    signatureClass: '',
+                    signatureLabel: '',
+                    stableId: 'mutational_signatures_matrix_1_Del_C_1',
+                },
+            ];
+
+            const result = retrieveMutationalSignatureMap(genericAssayMetaData);
+            assert.deepEqual(result, output);
         });
     });
 });
