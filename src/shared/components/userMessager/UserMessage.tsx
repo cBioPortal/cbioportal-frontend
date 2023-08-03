@@ -36,6 +36,14 @@ if (
         // ADD MESSAGE IN FOLLOWING FORMAT
         // UNIQUE ID IS IMPORTANT B/C WE REMEMBER A MESSAGE HAS BEEN SHOWN
         // BASED ON USERS LOCALSTORAGE
+
+        {
+            dateEnd: 100000000000000,
+            content: `1-sided Fisher exact test has been updated to a 2-sided test 
+                (<a href="https://docs.cbioportal.org/news/" target="_blank">Read more</a>).`,
+            showCondition: routingStore => true,
+            id: '2023_qval_change',
+        },
     ];
 }
 
