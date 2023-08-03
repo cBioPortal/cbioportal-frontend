@@ -26,18 +26,19 @@ import {
     PatientIdentifier,
     Sample,
     SampleIdentifier,
+    StructuralVariantFilterQuery,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
 import { BarDatum } from './charts/barChart/BarChart';
 import {
+    BinMethodOption,
     GenericAssayChart,
     GenomicChart,
-    XvsYScatterChart,
     XvsYChartSettings,
+    XvsYScatterChart,
     XvsYViolinChart,
-    BinMethodOption,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -84,6 +85,8 @@ import { getServerConfig } from 'config/config';
 import joinJsx from 'shared/lib/joinJsx';
 import { BoundType, NumberRange } from 'range-ts';
 import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
+import { toast } from 'react-toastify';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -524,13 +527,18 @@ export function getDescriptionOverlay(
     );
 }
 
+// This function acts as a toggle. If present in 'geneQueries',
+// the query is removed. If absent a query is added.
 export function updateGeneQuery(
     geneQueries: SingleGeneQuery[],
     selectedGene: string
 ): SingleGeneQuery[] {
+    // Remove any query that is already known for this gene.
     let updatedQueries = _.filter(
         geneQueries,
-        query => query.gene !== selectedGene
+        query =>
+            query.gene !== selectedGene ||
+            queryContainsStructVarAlteration(query)
     );
     if (updatedQueries.length === geneQueries.length) {
         updatedQueries.push({
@@ -786,11 +794,30 @@ export function getGenericAssayChartUniqueKey(
 }
 
 const UNIQUE_KEY_SEPARATOR = ':';
+const CHART_TYPE_SEPARATOR = ';';
 
-export function getUniqueKeyFromMolecularProfileIds(
+export function getUniqueKeyFromGeneFilterMolecularProfileIds(
     molecularProfileIds: string[]
 ) {
-    return _.sortBy(molecularProfileIds).join(UNIQUE_KEY_SEPARATOR);
+    const svChartType = molecularProfileIds[0]?.includes('structural_variants')
+        ? ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+        : undefined;
+    return getUniqueKeyFromMolecularProfileIds(
+        molecularProfileIds,
+        svChartType
+    );
+}
+
+export function getUniqueKeyFromMolecularProfileIds(
+    molecularProfileIds: string[],
+    chartType?: ChartTypeEnum
+) {
+    const returnValue = _(molecularProfileIds)
+        .sortBy(molecularProfileIds)
+        .join(UNIQUE_KEY_SEPARATOR);
+    return chartType
+        ? chartType + CHART_TYPE_SEPARATOR + returnValue
+        : returnValue;
 }
 
 export function calculateSampleCountForClinicalEventTypeCountTable(
@@ -811,8 +838,27 @@ export function calculateSampleCountForClinicalEventTypeCountTable(
     return sampleCount;
 }
 
+function startsWithSvChartType(chartType?: string) {
+    return (
+        chartType &&
+        [
+            ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
+            ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
+        ].some(ct => chartType.startsWith(ct))
+    );
+}
+
 export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
-    return uniqueKey.split(UNIQUE_KEY_SEPARATOR);
+    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
+    if (!startsWithSvChartType(parts[0])) {
+        return parts;
+    } else {
+        return _.map(
+            parts,
+            molecularProfileId =>
+                molecularProfileId.split(CHART_TYPE_SEPARATOR)[1]
+        );
+    }
 }
 
 export function getCurrentDate() {
@@ -988,6 +1034,7 @@ export function isFiltered(
         _.isEmpty(filter) ||
         (_.isEmpty(filter.clinicalDataFilters) &&
             _.isEmpty(filter.geneFilters) &&
+            _.isEmpty(filter.structuralVariantFilters) &&
             _.isEmpty(filter.genomicProfiles) &&
             _.isEmpty(filter.genomicDataFilters) &&
             _.isEmpty(filter.genericAssayDataFilters) &&
@@ -2371,6 +2418,7 @@ export function getSamplesByExcludingFiltersOnChart(
     let updatedFilter: StudyViewFilter = {
         clinicalDataFilters: filter.clinicalDataFilters,
         geneFilters: filter.geneFilters,
+        structuralVariantFilters: filter.structuralVariantFilters,
     } as any;
 
     let _sampleIdentifiers = _.reduce(
@@ -3418,25 +3466,26 @@ export function buildSelectedDriverTiersMap(
 
 export const FilterIconMessage: React.FunctionComponent<{
     chartType: ChartType;
-    geneFilterQuery: GeneFilterQuery;
-}> = observer(({ chartType, geneFilterQuery }) => {
+    annotatedFilterQuery: GeneFilterQuery | StructuralVariantFilterQuery;
+}> = observer(({ chartType, annotatedFilterQuery }) => {
     const annotationFilterIsActive = annotationFilterActive(
-        geneFilterQuery.includeDriver,
-        geneFilterQuery.includeVUS,
-        geneFilterQuery.includeUnknownOncogenicity
+        annotatedFilterQuery.includeDriver,
+        annotatedFilterQuery.includeVUS,
+        annotatedFilterQuery.includeUnknownOncogenicity
     );
     const tierFilterIsActive = driverTierFilterActive(
-        geneFilterQuery.tiersBooleanMap,
-        geneFilterQuery.includeUnknownTier
+        annotatedFilterQuery.tiersBooleanMap,
+        annotatedFilterQuery.includeUnknownTier
     );
     const statusFilterIsActive = statusFilterActive(
-        geneFilterQuery.includeGermline,
-        geneFilterQuery.includeSomatic,
-        geneFilterQuery.includeUnknownStatus
+        annotatedFilterQuery.includeGermline,
+        annotatedFilterQuery.includeSomatic,
+        annotatedFilterQuery.includeUnknownStatus
     );
     const isMutationType =
         chartType === ChartTypeEnum.MUTATED_GENES_TABLE ||
-        chartType === ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE;
+        chartType === ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE ||
+        chartType === ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE;
     if (
         !annotationFilterIsActive &&
         !tierFilterIsActive &&
@@ -3446,31 +3495,31 @@ export const FilterIconMessage: React.FunctionComponent<{
 
     const driverFilterTextElements: string[] = [];
     if (annotationFilterIsActive) {
-        geneFilterQuery.includeDriver &&
+        annotatedFilterQuery.includeDriver &&
             driverFilterTextElements.push('driver');
-        geneFilterQuery.includeVUS &&
+        annotatedFilterQuery.includeVUS &&
             driverFilterTextElements.push('passenger');
-        geneFilterQuery.includeUnknownOncogenicity &&
+        annotatedFilterQuery.includeUnknownOncogenicity &&
             driverFilterTextElements.push('unknown');
     }
 
     const statusFilterTextElements: string[] = [];
     if (statusFilterIsActive && isMutationType) {
-        geneFilterQuery.includeGermline &&
+        annotatedFilterQuery.includeGermline &&
             statusFilterTextElements.push('germline');
-        geneFilterQuery.includeSomatic &&
+        annotatedFilterQuery.includeSomatic &&
             statusFilterTextElements.push('somatic');
-        geneFilterQuery.includeUnknownStatus &&
+        annotatedFilterQuery.includeUnknownStatus &&
             statusFilterTextElements.push('unknown');
     }
 
     const tierNames = tierFilterIsActive
-        ? _(geneFilterQuery.tiersBooleanMap)
+        ? _(annotatedFilterQuery.tiersBooleanMap)
               .pickBy()
               .keys()
               .value()
         : [];
-    if (tierFilterIsActive && geneFilterQuery.includeUnknownTier)
+    if (tierFilterIsActive && annotatedFilterQuery.includeUnknownTier)
         tierNames.push('unknown');
 
     let driverFilterText = '';
@@ -3577,17 +3626,19 @@ export function findInvalidMolecularProfileIds(
     filters: StudyViewFilter,
     molecularProfiles: MolecularProfile[]
 ): string[] {
+    let geneFilters = filters.geneFilters;
     const molecularProfilesInFilters = _(
-        filters.geneFilters?.map(f => f.molecularProfileIds)
+        geneFilters?.map(f => f.molecularProfileIds)
     )
         .flatten()
         .uniq()
         .value();
-
-    return _.difference(
+    let result = _.difference(
         molecularProfilesInFilters,
         molecularProfiles.map(p => p.molecularProfileId)
     );
+    console.log({ geneFilters, result });
+    return result;
 }
 
 export function getFilteredMolecularProfilesByAlterationType(
@@ -3894,4 +3945,17 @@ export function transformSampleDataToSelectedSampleClinicalData(
         })
         .filter(item => item.uniqueSampleKey !== undefined);
     return clinicalDataSamples;
+}
+export function showQueryUpdatedToast(message: string) {
+    toast.success(message, {
+        delay: 0,
+        position: 'top-right',
+        autoClose: 1500,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'light',
+    } as any);
 }
