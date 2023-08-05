@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styles from './styles.module.scss';
 import { observer } from 'mobx-react';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, autorun, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import {
     ChartControls,
@@ -497,42 +497,34 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             <div
                 style={{
                     position: 'absolute',
-                    bottom: 5,
+                    zIndex: 2,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    bottom: '0 !important',
                     display: 'flex',
+                    border: '1px solid transparent',
+                    borderRadius: 4,
+                    padding: '1px 10px !important',
                 }}
             >
-                <button
-                    className={classnames(
-                        styles.controls,
-                        styles.controlsAtTop
-                    )}
-                    disabled={length == 0}
-                    onClick={_ =>
+                <FilterResetPanel
+                    filterInfo={`Selected ${length} ${pluralize(
+                        'sample',
+                        length
+                    )}.`}
+                    additionalInfo={
                         length > 0
-                            ? this.props.store.updateStudyViewFilter(
-                                  this.props.chartMeta.uniqueKey
-                              )
-                            : () => {}
+                            ? ' (Shift click to select multiple residues)'
+                            : ''
                     }
-                >
-                    {`Select ${length} ${pluralize('sample', length)}`}
-                </button>
-                <DefaultTooltip
-                    overlay={<p>Press shift to select more lollipops.</p>}
-                    trigger={['hover']}
-                    destroyTooltipOnHide={true}
-                    mouseEnterDelay={0}
-                >
-                    <div className={classnames('btn btn-xs btn-default')}>
-                        <i
-                            className={classnames(
-                                'fa fa-xs fa-fw',
-                                'fa-info-circle'
-                            )}
-                            aria-hidden="true"
-                        />
-                    </div>
-                </DefaultTooltip>
+                    resetFilters={() =>
+                        this.props.store.updateStudyViewFilter(
+                            this.props.chartMeta.uniqueKey
+                        )
+                    }
+                    buttonText="Apply Filter"
+                    buttonClass={classnames('btn', 'btn-default', 'btn-xs')}
+                />
             </div>
         );
     }
@@ -1329,39 +1321,43 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             case ChartTypeEnum.MUTATION_DIAGRAM:
-                return () =>
-                    this.props.promise.isComplete ? (
-                        <div>
-                            <LollipopMutationPlot
-                                store={this.props.store.getOrInitMutationStore(
-                                    this.props.chartMeta.uniqueKey
-                                )}
-                                autoHideControls={false}
-                                showLegendToggle={false}
-                                showDownloadControls={false}
-                                showTrackSelector={false}
-                                showYMaxSlider={false}
-                                geneWidth={
-                                    this.props.store.chartsDimension.get(
-                                        this.props.chartMeta.uniqueKey
-                                    )!.w * this.mutationPlotWidthConstant
-                                }
-                                vizHeight={
-                                    this.props.store.chartsDimension.get(
-                                        this.props.chartMeta.uniqueKey
-                                    )!.h * this.mutationPlotHeightConstant
-                                }
-                                onRef={(ref: any) => {
-                                    this.mutationPlotRef = ref;
-                                }}
-                                yAxisLabelFormatter={() => {
-                                    return '';
-                                }}
-                            />
-                            {this.props.store.getOrInitMutationStore(
+                const store = this.props.store.getOrInitMutationStore(
+                    this.props.chartMeta.uniqueKey
+                );
+
+                const element = (
+                    <LollipopMutationPlot
+                        store={store}
+                        autoHideControls={false}
+                        showLegendToggle={false}
+                        showDownloadControls={false}
+                        showTrackSelector={false}
+                        showYMaxSlider={false}
+                        geneWidth={
+                            this.props.store.chartsDimension.get(
                                 this.props.chartMeta.uniqueKey
-                            ).samplesByPosition.length > 0 &&
+                            )!.w * this.mutationPlotWidthConstant
+                        }
+                        vizHeight={
+                            this.props.store.chartsDimension.get(
+                                this.props.chartMeta.uniqueKey
+                            )!.h * this.mutationPlotHeightConstant
+                        }
+                        onRef={(ref: any) => {
+                            this.mutationPlotRef = ref;
+                        }}
+                        yAxisLabelFormatter={() => {
+                            return '';
+                        }}
+                    />
+                );
+
+                return () =>
+                    this.props.promise.isComplete && store.mutationData ? (
+                        <div>
+                            {store.samplesByPosition.length > 0 &&
                                 this.getMutationPlotControls()}
+                            {element}
                         </div>
                     ) : (
                         <LoadingIndicator isLoading={true}></LoadingIndicator>

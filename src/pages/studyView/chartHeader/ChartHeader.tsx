@@ -24,6 +24,7 @@ import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescrip
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 import { AppContext } from 'cbioportal-frontend-commons';
+import { DefaultLollipopPlotLegend } from 'react-mutation-mapper';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -848,6 +849,36 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     ></i>
                                 </button>
                             </DefaultTooltip>
+                            <If
+                                condition={
+                                    this.props.chartType ==
+                                    ChartTypeEnum.MUTATION_DIAGRAM
+                                }
+                            >
+                                <DefaultTooltip
+                                    mouseEnterDelay={0}
+                                    trigger={['hover']}
+                                    placement={this.tooltipPosition}
+                                    align={this.tooltipAlign}
+                                    overlay={<DefaultLollipopPlotLegend />}
+                                    destroyTooltipOnHide={false}
+                                >
+                                    <div
+                                        className={classnames(
+                                            'btn btn-xs btn-default',
+                                            styles.item
+                                        )}
+                                    >
+                                        <i
+                                            className={classnames(
+                                                'fa fa-xs fa-fw',
+                                                'fa-info-circle'
+                                            )}
+                                            aria-hidden="true"
+                                        />
+                                    </div>
+                                </DefaultTooltip>
+                            </If>
                             {this.menuItems.length > 0 && (
                                 <div
                                     onMouseEnter={this.openMenu}

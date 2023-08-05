@@ -1066,10 +1066,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             }}
                         >
                             <OQLTextArea
+                                inputGeneQuery={this.props.store.visibleMutationPlotGenes.join(
+                                    ' '
+                                )}
+                                validateInputGeneQuery={false}
                                 callback={
                                     this.props.store.handleMutationPlotQuery
                                 }
-                                submitButton={<button>Submit</button>}
                             />
                         </div>
                     </MSKTab>

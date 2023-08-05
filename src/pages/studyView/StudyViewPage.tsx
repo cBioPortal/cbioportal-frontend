@@ -368,6 +368,7 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get studyViewFullUrlWithFilter() {
+        console.log(this.store.filters);
         return `${window.location.protocol}//${window.location.host}${
             window.location.pathname
         }${window.location.search}#filterJson=${JSON.stringify(

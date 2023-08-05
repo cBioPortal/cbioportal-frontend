@@ -34,6 +34,7 @@ import {
     DataFilter,
     DataFilterValue,
     DensityPlotBin,
+    Gene,
     GeneFilter,
     GeneFilterQuery,
     GenePanel,
@@ -284,6 +285,7 @@ import {
     getAllowedSurvivalClinicalDataFilterId,
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
+import { GeneReplacement } from 'shared/components/query/QueryStore';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -2572,45 +2574,93 @@ export class StudyViewPageStore
             .join(' ');
 
         // trigger an update to mutation plot for the selected gene.
+        const isQueried = false;
         if (selectedTable == FreqColumnTypeEnum.MUTATION) {
-            this.addMutationPlot(hugoGeneSymbol);
+            this.addMutationPlotByChart(hugoGeneSymbol);
         }
     }
 
     @action.bound
-    addMutationPlot(hugoGeneSymbol: string): void {
+    addMutationPlotByChart(hugoGeneSymbol: string): void {
         if (!this.visibleMutationPlotByGene(hugoGeneSymbol)) {
-            const mutationPlotSpecs = [
-                {
-                    hugoGeneSymbol,
-                },
-            ];
-
-            this.addMutationPlotAsChart(mutationPlotSpecs);
-            this.launchToastMessage(
-                `Mutation Plot for ${hugoGeneSymbol} added.`
-            );
+            this.pushMutationChart(hugoGeneSymbol);
         } else {
-            this.changeChartVisibility(hugoGeneSymbol, false);
-            _.pull(this.visibleMutationPlotGenes, hugoGeneSymbol);
-
-            this.launchToastMessage(
-                `Mutation Plot for ${hugoGeneSymbol} removed.`
-            );
+            this.deleteMutationChart(hugoGeneSymbol);
         }
     }
 
+    pushMutationChart(hugoGeneSymbol: string) {
+        const mutationPlotSpecs = [
+            {
+                hugoGeneSymbol,
+            },
+        ];
+
+        this.addMutationPlotAsChart(mutationPlotSpecs);
+        this.launchToastMessage(`Mutation Plot for ${hugoGeneSymbol} added.`);
+    }
+
+    deleteMutationChart(hugoGeneSymbol: string) {
+        this.changeChartVisibility(hugoGeneSymbol, false);
+        _.pull(this.visibleMutationPlotGenes, hugoGeneSymbol);
+
+        this.launchToastMessage(`Mutation Plot for ${hugoGeneSymbol} removed.`);
+    }
+
+    deleteAllMutationChart() {
+        this.visibleMutationPlotGenes.forEach(gene => {
+            this.changeChartVisibility(gene, false);
+        });
+        this.visibleMutationPlotGenes = [];
+        this.launchToastMessage(`All mutation plots removed.`);
+    }
+
     @action.bound
-    handleMutationPlotQuery(q: {
-        query: SingleGeneQuery[];
-        error?: { start: number; end: number; message: string };
-    }): void {
-        console.log(q.error);
-        const geneList = q.query.map(g => {
-            return g.gene;
+    addMutationChartByQuery(geneList: string[]): void {
+        const newPlotsToAdd = geneList.filter(gene => {
+            return !this.visibleMutationPlotByGene(gene);
         });
 
-        geneList.forEach(gene => this.addMutationPlot(gene));
+        const plotsToRemove = this.visibleMutationPlotGenes.filter(gene => {
+            return !_.includes(geneList, gene);
+        });
+
+        newPlotsToAdd.forEach(hugoGeneSymbol => {
+            this.pushMutationChart(hugoGeneSymbol);
+        });
+
+        plotsToRemove.forEach(gene => {
+            this.deleteMutationChart(gene);
+        });
+    }
+
+    @action.bound
+    handleMutationPlotQuery(
+        q: {
+            query: SingleGeneQuery[];
+            error?: { start: number; end: number; message: string };
+        },
+        validationResult: {
+            found: Gene[];
+            suggestions: GeneReplacement[];
+        }
+    ): void {
+        if (
+            !validationResult.found.length &&
+            !q.query.length &&
+            this.visibleMutationPlotGenes.length > 0
+        ) {
+            this.deleteAllMutationChart();
+            return;
+        }
+
+        if (validationResult.found.length > 0) {
+            const geneList = validationResult.found.map(g => {
+                return g.hugoGeneSymbol;
+            });
+
+            this.addMutationChartByQuery(geneList);
+        }
     }
 
     launchToastMessage(message: string): void {
