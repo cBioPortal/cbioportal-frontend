@@ -459,6 +459,7 @@ export class StudySummaryTab extends React.Component<
                         'OS_SURVIVAL'
                     ]?.survivalDataWithoutLeftTruncation;
                 }
+                props.onDataBinSelection = this.handlers.onDataBinSelection;
                 /* end of left truncation adjustment related settings */
                 break;
             }

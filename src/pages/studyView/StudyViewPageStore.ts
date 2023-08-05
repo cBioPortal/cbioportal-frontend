@@ -280,6 +280,11 @@ import {
     StudyViewFilterQueryExtractor,
     StudyViewQueryExtractor,
 } from './StudyViewQueryExtractor';
+import {
+    getAllowedSurvivalClinicalDataFilterId,
+    isSurvivalAttributeId,
+    isSurvivalChart,
+} from './charts/survival/StudyViewSurvivalUtils';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -2772,10 +2777,12 @@ export class StudyViewPageStore
         if (this.chartMetaSet[chartUniqueKey]) {
             let chartMeta = this.chartMetaSet[chartUniqueKey];
             trackStudyViewFilterEvent('clinicalDataFilters', this);
-            this.updateClinicalAttributeFilterByValues(
-                chartMeta.clinicalAttribute!.clinicalAttributeId,
-                values
-            );
+
+            const attributeId: string = isSurvivalChart(chartMeta.uniqueKey)
+                ? getAllowedSurvivalClinicalDataFilterId(chartMeta.uniqueKey)
+                : chartMeta.clinicalAttribute!.clinicalAttributeId;
+
+            this.updateClinicalAttributeFilterByValues(attributeId, values);
         }
     }
     @action.bound
@@ -6026,6 +6033,7 @@ export class StudyViewPageStore
                     dataType: getChartMetaDataType(survivalPlot.id),
                     patientAttribute: true,
                     displayName: survivalPlot.title,
+                    clinicalAttribute: survivalPlot.survivalStatusAttribute,
                     // use survival status attribute's priority as KM plot's priority for non-reserved plots
                     priority:
                         STUDY_VIEW_CONFIG.priority[survivalPlot.id] ||
