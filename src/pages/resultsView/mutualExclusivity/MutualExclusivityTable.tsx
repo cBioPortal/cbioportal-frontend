@@ -14,6 +14,9 @@ import {
 } from './MutualExclusivityUtil';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+
+import { getServerConfig } from 'config/config';
 
 export interface IMutualExclusivityTableProps {
     columns?: MutualExclusivityTableColumnType[];
@@ -181,7 +184,7 @@ export default class MutualExclusivityTable extends React.Component<
             render: (d: MutualExclusivity) => (
                 <span>{formatPValue(d.pValue)}</span>
             ),
-            tooltip: <span>Derived from one-sided Fisher Exact Test</span>,
+            tooltip: <span>Derived from two-sided Fisher Exact Test</span>,
             sortBy: (d: MutualExclusivity) => d.pValue,
             download: (d: MutualExclusivity) => formatPValue(d.pValue),
         };
@@ -247,6 +250,10 @@ export default class MutualExclusivityTable extends React.Component<
                 initialItemsPerPage={50}
                 initialSortColumn={this.props.initialSortColumn}
                 paginationProps={{ itemsPerPageOptions: [50] }}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls !==
+                    DownloadControlOption.HIDE_ALL
+                }
             />
         );
     }

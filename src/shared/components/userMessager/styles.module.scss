@@ -14,5 +14,10 @@
 
     a {
         color: lightblue;
+
+        &:hover {
+            color: lightblue;
+            opacity: 0.6;
+        }
     }
 }

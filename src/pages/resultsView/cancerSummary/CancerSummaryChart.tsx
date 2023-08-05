@@ -29,6 +29,7 @@ import {
     DownloadControls,
     DataType,
     pluralize,
+    DownloadControlOption,
 } from 'cbioportal-frontend-commons';
 import {
     HORIZONTAL_OFFSET,
@@ -41,6 +42,7 @@ import URL from 'url';
 import { CANCER_SUMMARY_ALL_GENES } from './CancerSummaryContainer';
 import { ResultsViewURLQueryEnum } from 'pages/resultsView/ResultsViewURLWrapper';
 import ScrollWrapper from './ScrollWrapper';
+import { getServerConfig } from 'config/config';
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -889,6 +891,10 @@ export class CancerSummaryChart extends React.Component<
                     type="button"
                     buttons={['SVG', 'PNG', 'PDF', 'Data']}
                     style={{ position: 'absolute', top: 10, right: 10 }}
+                    showDownload={
+                        getServerConfig().skin_hide_download_controls !==
+                        DownloadControlOption.HIDE_ALL
+                    }
                 />
             </div>
         );

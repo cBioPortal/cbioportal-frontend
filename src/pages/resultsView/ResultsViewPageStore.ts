@@ -3808,23 +3808,6 @@ export class ResultsViewPageStore extends AnalysisStore
         }`;
     }
 
-    readonly clinicalDataForSamples = remoteData<ClinicalData[]>(
-        {
-            await: () => [this.studies, this.samples],
-            invoke: () =>
-                this.getClinicalData(
-                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
-                    this.studies.result!,
-                    this.samples.result,
-                    [
-                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE,
-                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED,
-                    ]
-                ),
-        },
-        []
-    );
-
     readonly ascnClinicalDataForSamples = remoteData<ClinicalData[]>(
         {
             await: () => [this.studies, this.samples],
@@ -3871,44 +3854,6 @@ export class ResultsViewPageStore extends AnalysisStore
         },
         {}
     );
-
-    private getClinicalData(
-        clinicalDataType: 'SAMPLE' | 'PATIENT',
-        studies: any[],
-        entities: any[],
-        attributeIds: string[]
-    ): Promise<Array<ClinicalData>> {
-        // single study query endpoint is optimal so we should use it
-        // when there's only one study
-        if (studies.length === 1) {
-            const study = this.studies.result[0];
-            const filter: ClinicalDataSingleStudyFilter = {
-                attributeIds: attributeIds,
-                ids: _.map(
-                    entities,
-                    clinicalDataType === 'SAMPLE' ? 'sampleId' : 'patientId'
-                ),
-            };
-            return client.fetchAllClinicalDataInStudyUsingPOST({
-                studyId: study.studyId,
-                clinicalDataSingleStudyFilter: filter,
-                clinicalDataType: clinicalDataType,
-            });
-        } else {
-            const filter: ClinicalDataMultiStudyFilter = {
-                attributeIds: attributeIds,
-                identifiers: entities.map((s: any) =>
-                    clinicalDataType === 'SAMPLE'
-                        ? { entityId: s.sampleId, studyId: s.studyId }
-                        : { entityId: s.patientId, studyId: s.studyId }
-                ),
-            };
-            return client.fetchClinicalDataUsingPOST({
-                clinicalDataType: clinicalDataType,
-                clinicalDataMultiStudyFilter: filter,
-            });
-        }
-    }
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>(
         {
@@ -4230,39 +4175,6 @@ export class ResultsViewPageStore extends AnalysisStore
         default: [],
     });
 
-    readonly samplesWithoutCancerTypeClinicalData = remoteData<Sample[]>(
-        {
-            await: () => [this.samples, this.clinicalDataForSamples],
-            invoke: () => {
-                const sampleHasData: { [sampleUid: string]: boolean } = {};
-                for (const data of this.clinicalDataForSamples.result) {
-                    sampleHasData[
-                        toSampleUuid(data.studyId, data.sampleId)
-                    ] = true;
-                }
-                return Promise.resolve(
-                    this.samples.result.filter(sample => {
-                        return !sampleHasData[
-                            toSampleUuid(sample.studyId, sample.sampleId)
-                        ];
-                    })
-                );
-            },
-        },
-        []
-    );
-
-    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData(
-        {
-            await: () => [this.samplesWithoutCancerTypeClinicalData],
-            invoke: async () =>
-                fetchStudiesForSamplesWithoutCancerTypeClinicalData(
-                    this.samplesWithoutCancerTypeClinicalData
-                ),
-        },
-        []
-    );
-
     readonly studies = remoteData(
         {
             await: () => [this.studyIds],
@@ -4281,18 +4193,6 @@ export class ResultsViewPageStore extends AnalysisStore
             throw new Error('Failed to get studies');
         }
         return getGenomeBuildFromStudies(this.studies.result);
-    }
-
-    @autobind
-    generateGenomeNexusHgvsgUrl(hgvsg: string) {
-        return getGenomeNexusHgvsgUrl(hgvsg, this.referenceGenomeBuild);
-    }
-
-    @computed get ensemblLink() {
-        return this.referenceGenomeBuild ===
-            getServerConfig().genomenexus_url_grch38
-            ? getServerConfig().ensembl_transcript_grch38_url
-            : getServerConfig().ensembl_transcript_url;
     }
 
     //this is only required to show study name and description on the results page
@@ -5342,26 +5242,6 @@ export class ResultsViewPageStore extends AnalysisStore
         undefined
     );
 
-    //OncoKb
-    readonly uniqueSampleKeyToTumorType = remoteData<{
-        [uniqueSampleKey: string]: string;
-    }>({
-        await: () => [
-            this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData,
-            this.samplesWithoutCancerTypeClinicalData,
-        ],
-        invoke: () => {
-            return Promise.resolve(
-                generateUniqueSampleKeyToTumorTypeMap(
-                    this.clinicalDataForSamples,
-                    this.studiesForSamplesWithoutCancerTypeClinicalData,
-                    this.samplesWithoutCancerTypeClinicalData
-                )
-            );
-        },
-    });
-
     readonly structuralVariantOncoKbDataForOncoprint = remoteData<
         IOncoKbData | Error
     >(
@@ -5524,10 +5404,6 @@ export class ResultsViewPageStore extends AnalysisStore
                 this.genomeNexusClient
             )
         );
-    }
-
-    @cached @computed get pubMedCache() {
-        return new PubMedCache();
     }
 
     @cached @computed get discreteCNACache() {

@@ -120,7 +120,7 @@ export interface IServerConfig {
     skin_title: string;
     skin_authorization_message: string | null;
     skin_patientview_filter_genes_profiled_all_samples: boolean;
-    skin_hide_download_controls: boolean;
+    skin_hide_download_controls: string;
     show_mdacc_heatmap: boolean;
     quick_search_enabled: boolean;
     default_cross_cancer_study_list: string; // this has a default
@@ -163,6 +163,7 @@ export interface IServerConfig {
     skin_mutation_table_namespace_column_show_by_default: boolean;
     skin_patient_view_mutation_table_columns_show_on_init: string;
     skin_results_view_mutation_table_columns_show_on_init: string;
+    skin_comparison_view_mutation_table_columns_show_on_init: string;
     skin_patient_view_copy_number_table_columns_show_on_init: string;
     skin_patient_view_structural_variant_table_columns_show_on_init: string;
     comparison_categorical_na_values: string;

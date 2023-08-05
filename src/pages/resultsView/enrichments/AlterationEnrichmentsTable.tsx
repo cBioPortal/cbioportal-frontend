@@ -13,7 +13,13 @@ import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
-import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
+import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_HOMDEL,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
+
+import { getServerConfig } from 'config/config';
 
 export interface IAlterationEnrichmentTableProps {
     visibleOrderedColumnNames?: string[];
@@ -189,7 +195,7 @@ export default class AlterationEnrichmentTable extends React.Component<
                         Derived from{' '}
                         {_.values(this.props.data[0].groupsSet).length > 2
                             ? 'Chi-squared test'
-                            : 'one-sided Fisher Exact test'}
+                            : 'two-sided Fisher Exact test'}
                     </span>
                 ) : (
                     undefined
@@ -249,6 +255,10 @@ export default class AlterationEnrichmentTable extends React.Component<
                     this.props.onGeneNameClick ? this.onRowClick : undefined
                 }
                 dataStore={this.props.dataStore}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
             />
         );
     }

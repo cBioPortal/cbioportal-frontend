@@ -22,6 +22,7 @@ import { CancerStudy, Mutation } from 'cbioportal-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import AnnotationHeader from './annotation/AnnotationHeader';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import _ from 'lodash';
 
 export interface IAnnotationColumnProps extends AnnotationProps {
     pubMedCache?: OncokbPubMedCache;
@@ -97,7 +98,7 @@ export default class AnnotationColumnFormatter {
             annotationDownloadContent.push(
                 `reVUE: ${
                     annotationData.vue
-                        ? `${annotationData.vue.comment},PubmedId:${annotationData.vue.pubmedIds[0]},PredictedEffect:${annotationData.vue.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue.variantClassification},RevisedProteinEffect:${annotationData.vue.revisedProteinEffect}`
+                        ? `${annotationData.vue.comment},PubmedId:${annotationData.vue.pubmedId},PredictedEffect:${annotationData.vue.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue.revisedVariantClassification},RevisedProteinEffect:${annotationData.vue.revisedProteinEffect}`
                         : 'no'
                 }`
             );
@@ -133,11 +134,13 @@ export default class AnnotationColumnFormatter {
 
     public static renderFunction(
         mutations: Mutation[],
-        columnProps: IAnnotationColumnProps
+        columnProps: IAnnotationColumnProps,
+        hasMultipleCancerTypes?: boolean
     ) {
         return (
             <Annotation
                 mutation={mutations ? mutations[0] : undefined}
+                hasMultipleCancerTypes={hasMultipleCancerTypes}
                 {...columnProps}
             />
         );

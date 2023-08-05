@@ -99,6 +99,17 @@ import { remoteData, toPromise } from 'cbioportal-frontend-commons';
 import { autorun, observable, runInAction } from 'mobx';
 
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import {
+    oqlQueryToStructVarGenePair,
+    updateStructuralVariantQuery,
+} from 'pages/studyView/StructVarUtils';
+import {
+    STRUCTVARAnyGeneStr,
+    STRUCTVARNullGeneStr,
+    STUCTVARDownstreamFusionStr,
+    STUCTVARUpstreamFusionStr,
+} from 'shared/lib/oql/oqlfilter';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -178,6 +189,90 @@ describe('StudyViewUtils', () => {
                 ]
             );
         });
+    });
+
+    describe('updateStructuralVariantQuery', () => {
+        it.each([
+            [
+                [
+                    {
+                        gene: 'A',
+                        alterations: [
+                            {
+                                alteration_type: STUCTVARDownstreamFusionStr,
+                                gene: 'B',
+                            },
+                        ],
+                    },
+                ] as SingleGeneQuery[],
+                'A',
+                'B',
+                [] as SingleGeneQuery[],
+            ],
+            [
+                [
+                    {
+                        gene: 'B',
+                        alterations: [
+                            {
+                                alteration_type: STUCTVARUpstreamFusionStr,
+                                gene: 'A',
+                            },
+                        ],
+                    },
+                ] as SingleGeneQuery[],
+                'A',
+                'B',
+                [] as SingleGeneQuery[],
+            ],
+            [
+                [] as SingleGeneQuery[],
+                'A',
+                'B',
+                [
+                    {
+                        gene: 'A',
+                        alterations: [
+                            {
+                                alteration_type: STUCTVARDownstreamFusionStr,
+                                gene: 'B',
+                                modifiers: [],
+                            },
+                        ],
+                    },
+                ] as SingleGeneQuery[],
+            ],
+            [
+                [{ gene: 'X' }] as SingleGeneQuery[],
+                'A',
+                'B',
+                [
+                    { gene: 'X' },
+                    {
+                        gene: 'A',
+                        alterations: [
+                            {
+                                alteration_type: STUCTVARDownstreamFusionStr,
+                                gene: 'B',
+                                modifiers: [],
+                            },
+                        ],
+                    },
+                ] as SingleGeneQuery[],
+            ],
+        ])(
+            'updates queries',
+            (input, selectedGene1, selectedGene2, expected) => {
+                assert.deepEqual(
+                    updateStructuralVariantQuery(
+                        input,
+                        selectedGene1,
+                        selectedGene2
+                    ),
+                    expected
+                );
+            }
+        );
     });
 
     describe('getVirtualStudyDescription', () => {
@@ -3461,16 +3556,17 @@ describe('StudyViewUtils', () => {
                 ['study1']
             )
                 .then(() => {
-                    assert.isTrue(
-                        fetchStub.calledWith({
-                            studyViewFilter: {
-                                ...emptyStudyViewFilter,
-                                sampleIdentifiers: [
-                                    { sampleId: 'sample1', studyId: 'study1' },
-                                ],
-                            },
-                        })
-                    );
+                    const expectedFilters = {
+                        studyViewFilter: {
+                            ...emptyStudyViewFilter,
+                            sampleIdentifiers: [
+                                { sampleId: 'sample1', studyId: 'study1' },
+                            ],
+                            structuralVariantFilters: undefined,
+                        },
+                    };
+                    const actualFilters = fetchStub.getCall(0).args[0];
+                    expect(actualFilters).toStrictEqual(expectedFilters);
                     done();
                 })
                 .catch(done);
@@ -3492,16 +3588,17 @@ describe('StudyViewUtils', () => {
                 ['study1']
             )
                 .then(() => {
-                    assert.isTrue(
-                        fetchStub.calledWith({
-                            studyViewFilter: {
-                                ...emptyStudyViewFilter,
-                                sampleIdentifiers: [
-                                    { sampleId: 'sample1', studyId: 'study1' },
-                                ],
-                            },
-                        })
-                    );
+                    const expectedFilters = {
+                        studyViewFilter: {
+                            ...emptyStudyViewFilter,
+                            sampleIdentifiers: [
+                                { sampleId: 'sample1', studyId: 'study1' },
+                            ],
+                            structuralVariantFilters: undefined,
+                        },
+                    };
+                    const actualFilters = fetchStub.getCall(0).args[0];
+                    expect(actualFilters).toStrictEqual(expectedFilters);
                     done();
                 })
                 .catch(done);
@@ -3516,14 +3613,15 @@ describe('StudyViewUtils', () => {
                 ['study1']
             )
                 .then(() => {
-                    assert.isTrue(
-                        fetchStub.calledWith({
-                            studyViewFilter: {
-                                ...emptyStudyViewFilter,
-                                studyIds: ['study1'],
-                            },
-                        })
-                    );
+                    const expectedFilters = {
+                        studyViewFilter: {
+                            ...emptyStudyViewFilter,
+                            studyIds: ['study1'],
+                            structuralVariantFilters: undefined,
+                        },
+                    };
+                    const actualFilters = fetchStub.getCall(0).args[0];
+                    expect(actualFilters).toStrictEqual(expectedFilters);
                     done();
                 })
                 .catch(done);
@@ -3542,16 +3640,17 @@ describe('StudyViewUtils', () => {
                 ['study1']
             )
                 .then(() => {
-                    assert.isTrue(
-                        fetchStub.calledWith({
-                            studyViewFilter: {
-                                ...emptyStudyViewFilter,
-                                sampleIdentifiers: [
-                                    { sampleId: 'sample1', studyId: 'study1' },
-                                ],
-                            },
-                        })
-                    );
+                    const expectedFilters = {
+                        studyViewFilter: {
+                            ...emptyStudyViewFilter,
+                            sampleIdentifiers: [
+                                { sampleId: 'sample1', studyId: 'study1' },
+                            ],
+                            structuralVariantFilters: undefined,
+                        },
+                    };
+                    const actualFilters = fetchStub.getCall(0).args[0];
+                    expect(actualFilters).toStrictEqual(expectedFilters);
                     done();
                 })
                 .catch(done);
@@ -4993,6 +5092,7 @@ describe('StudyViewUtils', () => {
             );
         });
     });
+
     describe('Create object for group comparison custom numerical data', () => {
         it('transform sample data to clinical data ', function() {
             const sampleData = [
@@ -5080,5 +5180,95 @@ describe('StudyViewUtils', () => {
             );
             assert.deepEqual(result, outputObject);
         });
+    });
+
+    describe('oqlQueryToGene1Gene2Representation', () => {
+        it.each([
+            [
+                {
+                    gene: 'A',
+                    alterations: [
+                        {
+                            alteration_type: STUCTVARDownstreamFusionStr,
+                            gene: 'B',
+                        },
+                    ],
+                } as SingleGeneQuery,
+                [{ gene1HugoSymbolOrOql: 'A', gene2HugoSymbolOrOql: 'B' }],
+            ],
+            [
+                {
+                    gene: 'A',
+                    alterations: [
+                        {
+                            alteration_type: STUCTVARUpstreamFusionStr,
+                            gene: 'B',
+                        },
+                    ],
+                } as SingleGeneQuery,
+                [{ gene1HugoSymbolOrOql: 'B', gene2HugoSymbolOrOql: 'A' }],
+            ],
+            [
+                {
+                    gene: 'A',
+                    alterations: [
+                        {
+                            alteration_type: STUCTVARDownstreamFusionStr,
+                            gene: 'B',
+                        },
+                        {
+                            alteration_type: STUCTVARUpstreamFusionStr,
+                            gene: 'B',
+                        },
+                    ],
+                } as SingleGeneQuery,
+                [
+                    { gene1HugoSymbolOrOql: 'A', gene2HugoSymbolOrOql: 'B' },
+                    { gene1HugoSymbolOrOql: 'B', gene2HugoSymbolOrOql: 'A' },
+                ],
+            ],
+            [
+                {
+                    gene: 'A',
+                    alterations: [
+                        {
+                            alteration_type: STUCTVARDownstreamFusionStr,
+                            gene: STRUCTVARAnyGeneStr,
+                        },
+                    ],
+                } as SingleGeneQuery,
+                [
+                    {
+                        gene1HugoSymbolOrOql: 'A',
+                        gene2HugoSymbolOrOql: STRUCTVARAnyGeneStr,
+                    },
+                ],
+            ],
+            [
+                {
+                    gene: 'A',
+                    alterations: [
+                        {
+                            alteration_type: STUCTVARDownstreamFusionStr,
+                            gene: STRUCTVARNullGeneStr,
+                        },
+                    ],
+                } as SingleGeneQuery,
+                [
+                    {
+                        gene1HugoSymbolOrOql: 'A',
+                        gene2HugoSymbolOrOql: STRUCTVARNullGeneStr,
+                    },
+                ],
+            ],
+        ])(
+            'should convert oql query to gene1/gene2 representation',
+            (oqlQuery, expected) => {
+                assert.deepEqual(
+                    expected,
+                    oqlQueryToStructVarGenePair(oqlQuery)
+                );
+            }
+        );
     });
 });

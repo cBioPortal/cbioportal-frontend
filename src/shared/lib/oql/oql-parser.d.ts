@@ -185,7 +185,7 @@ export declare type FUSIONCommand = {
 };
 
 export declare type FUSIONCommandOrientationBase = {
-    gene: string | undefined;
+    gene: string;
     modifiers: FusionModifier[];
 };
 

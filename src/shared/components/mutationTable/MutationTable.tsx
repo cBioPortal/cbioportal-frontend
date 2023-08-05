@@ -114,6 +114,7 @@ export interface IMutationTableProps {
     >;
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    oncoKbDataForUnknownPrimary?: RemoteData<IOncoKbData | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
@@ -153,6 +154,7 @@ export interface IMutationTableProps {
         column: Column<Mutation[]>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
+    customControls?: JSX.Element;
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
@@ -162,7 +164,7 @@ import {
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
 } from 'shared/lib/AnnotationColumnUtils';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
 export enum MutationTableColumnType {
@@ -209,6 +211,13 @@ export enum MutationTableColumnType {
     DBSNP = 'dbSNP',
     GENE_PANEL = 'Gene panel',
     SIGNAL = 'SIGNAL',
+    NUM_MUTATED_GROUP_A = '(A) Group',
+    NUM_MUTATED_GROUP_B = '(B) Group',
+    LOG_RATIO = 'Log2 Ratio',
+    ENRICHED_IN = 'Enriched in',
+    MUTATION_OVERLAP = 'Mutation Overlap',
+    P_VALUE = 'P_VALUE',
+    Q_VALUE = 'Q_VALUE',
 }
 
 export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
@@ -320,7 +329,7 @@ export default class MutationTable<
     }
 
     @autobind
-    private resolveTumorType(mutation: Mutation) {
+    protected resolveTumorType(mutation: Mutation) {
         // first, try to get it from uniqueSampleKeyToTumorType map
         if (this.props.uniqueSampleKeyToTumorType) {
             return this.props.uniqueSampleKeyToTumorType[
@@ -1364,6 +1373,11 @@ export default class MutationTable<
                     this.props.columnToHeaderFilterIconModal
                 }
                 deactivateColumnFilter={this.props.deactivateColumnFilter}
+                customControls={this.props.customControls}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
             />
         );
     }
