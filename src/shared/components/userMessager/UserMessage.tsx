@@ -39,9 +39,24 @@ if (
 
         {
             dateEnd: 100000000000000,
-            content: `1-sided Fisher exact test has been updated to a 2-sided test 
-                (<a href="https://docs.cbioportal.org/news/" target="_blank">Read more</a>).`,
-            showCondition: routingStore => true,
+            content: `P and q-values on this page have changed recently. The 1-sided Fisher exact test is now a 2-sided test  
+                (<a href="https://docs.cbioportal.org/news/#aug-1-2023" target="_blank">Read more</a>).`,
+            showCondition: routingStore => {
+                return _.some(
+                    [
+                        /comparison_subtab=alterations/i,
+                        /results\/mutualExclusivity/i,
+                        /comparison\/alterations/i,
+                        /comparison\/mutations/i,
+                    ],
+                    (re: RegExp) => {
+                        return re.test(
+                            routingStore.location.pathname +
+                                routingStore.location.search
+                        );
+                    }
+                );
+            },
             id: '2023_qval_change',
         },
     ];
