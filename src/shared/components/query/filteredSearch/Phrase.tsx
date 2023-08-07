@@ -1,4 +1,3 @@
-import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
 import {
     FullTextSearchFields,
     FullTextSearchNode,
@@ -8,7 +7,6 @@ import {
     FILTER_SEPARATOR,
     FILTER_VALUE_SEPARATOR,
 } from 'shared/components/query/filteredSearch/SearchClause';
-import { CancerStudy } from 'cbioportal-ts-api-client';
 
 /**
  * Phrase and associated fields
