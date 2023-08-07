@@ -1353,7 +1353,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 );
 
                 return () =>
-                    this.props.promise.isComplete && store.mutationData ? (
+                    this.props.promise.isComplete &&
+                    !store.activeTranscript.isPending ? (
                         <div>
                             {store.samplesByPosition.length > 0 &&
                                 this.getMutationPlotControls()}

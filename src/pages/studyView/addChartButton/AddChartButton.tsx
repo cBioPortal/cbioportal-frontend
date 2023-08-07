@@ -47,9 +47,11 @@ import styles from './styles.module.scss';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import ReactSelect from 'react-select';
-import { GenericAssayMeta } from 'cbioportal-ts-api-client';
+import { Gene, GenericAssayMeta } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
 import OQLTextArea from 'shared/components/GeneSelectionBox/OQLTextArea';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { GeneReplacement } from 'shared/components/query/QueryStore';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -699,6 +701,50 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     @observable private savingCustomData = false;
+    @observable private validQuery = false;
+    @observable private mutationPlotOQLData: {
+        q: {
+            query: SingleGeneQuery[];
+            error?: { start: number; end: number; message: string };
+        };
+        validationResult: {
+            found: Gene[];
+            suggestions: GeneReplacement[];
+        };
+        queryStr: String;
+    };
+
+    get geneButtonActive() {
+        // If the currently present plots and visible plots have a difference, the button should be enabled.
+        if (
+            !_.isUndefined(this.mutationPlotOQLData) &&
+            this.props.store.visibleMutationPlotGenes.length !==
+                this.mutationPlotOQLData.validationResult.found.length
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    @action.bound
+    private updateSelectedGenes(
+        q: {
+            query: SingleGeneQuery[];
+            error?: { start: number; end: number; message: string };
+        },
+        validationResult: {
+            found: Gene[];
+            suggestions: GeneReplacement[];
+        },
+        queryStr: string
+    ) {
+        this.mutationPlotOQLData = {
+            q,
+            validationResult,
+            queryStr,
+        };
+    }
 
     @computed private get addXvsYChartButton() {
         let disabled = false;
@@ -1069,9 +1115,27 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 inputGeneQuery={this.props.store.visibleMutationPlotGenes.join(
                                     ' '
                                 )}
-                                validateInputGeneQuery={false}
-                                callback={
-                                    this.props.store.handleMutationPlotQuery
+                                validateInputGeneQuery={true}
+                                callback={this.updateSelectedGenes}
+                                submitButton={
+                                    <button
+                                        className={'btn btn-primary btn-sm'}
+                                        disabled={!this.geneButtonActive}
+                                        style={{ marginLeft: 2 }}
+                                        onClick={() => {
+                                            this.props.store.handleMutationPlotQuery(
+                                                this.mutationPlotOQLData.q,
+                                                this.mutationPlotOQLData
+                                                    .validationResult
+                                            );
+
+                                            this.updateInfoMessage(
+                                                'Mutation plots updated!'
+                                            );
+                                        }}
+                                    >
+                                        Update Plots
+                                    </button>
                                 }
                             />
                         </div>
