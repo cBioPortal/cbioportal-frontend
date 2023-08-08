@@ -1897,7 +1897,15 @@ export class StudyViewPageStore
 
         const chartType = this.chartsType.get(chartMeta.uniqueKey);
         switch (chartType) {
-            case ChartTypeEnum.PIE_CHART:
+            // case ChartTypeEnum.PIE_CHART:
+            //     if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
+            //         comparisonId = await this.createCnaGeneComparisonSession(
+            //             chartMeta,
+            //             params.hugoGeneSymbols!,
+            //             statusCallback
+            //         );
+            //         break;
+            //     }
             case ChartTypeEnum.TABLE:
                 comparisonId = await this.createCategoricalAttributeComparisonSession(
                     chartMeta,
@@ -1905,7 +1913,6 @@ export class StudyViewPageStore
                     statusCallback
                 );
                 break;
-
             case ChartTypeEnum.MUTATED_GENES_TABLE:
                 comparisonId = await this.createMutatedGeneComparisonSession(
                     chartMeta,
@@ -2002,7 +2009,6 @@ export class StudyViewPageStore
         ChartUniqueKey,
         GenericAssayDataFilter
     >({}, { deep: false });
-
     @observable private _clinicalDataBinFilterSet = observable.map<
         ChartUniqueKey,
         ClinicalDataBinFilter & { showNA?: boolean }
@@ -2364,6 +2370,9 @@ export class StudyViewPageStore
     } = {};
     public genomicChartPromises: {
         [id: string]: MobxPromise<DataBin[]>;
+    } = {};
+    public genomicDataCountPromises: {
+        [id: string]: MobxPromise<ClinicalDataCountSummary[]>;
     } = {};
     public genericAssayChartPromises: {
         [id: string]: MobxPromise<DataBin[]>;
@@ -2996,6 +3005,22 @@ export class StudyViewPageStore
     }
 
     @action.bound
+    updateCategoricalGenomicDataFilters(
+        uniqueKey: string,
+        values: string[]
+    ): void {
+        trackStudyViewFilterEvent('genomicCategoricalData', this);
+
+        const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
+            values
+        );
+        this.updateGenomicDataIntervalFiltersByValues(
+            uniqueKey,
+            dataFilterValues
+        );
+    }
+
+    @action.bound
     updateGenericAssayDataFilters(
         uniqueKey: string,
         dataBins: Pick<GenericAssayDataBin, 'start' | 'end' | 'specialValue'>[]
@@ -3406,6 +3431,11 @@ export class StudyViewPageStore
                         );
                     } else if (this.isGenericAssayChart(chartUniqueKey)) {
                         this.updateGenericAssayDataFilters(chartUniqueKey, []);
+                    } else if (this.isGeneSpecificChart(chartUniqueKey)) {
+                        this.updateCategoricalGenomicDataFilters(
+                            chartUniqueKey,
+                            []
+                        );
                     } else {
                         this.updateClinicalDataFilterByValues(
                             chartUniqueKey,
@@ -3504,7 +3534,9 @@ export class StudyViewPageStore
                 }
             case ChartTypeEnum.BAR_CHART:
                 if (this.isGeneSpecificChart(chartUniqueKey)) {
-                    this._genomicDataIntervalFilterSet.has(chartUniqueKey);
+                    return this._genomicDataIntervalFilterSet.has(
+                        chartUniqueKey
+                    );
                 } else if (this.isUserDefinedCustomDataChart(chartUniqueKey)) {
                     return this._customDataFilterSet.has(chartUniqueKey);
                 } else {
@@ -4757,6 +4789,67 @@ export class StudyViewPageStore
         return this.genericAssayDataCountPromises[chartMeta.uniqueKey];
     }
 
+    public getGenomicChartDataCount(
+        chartMeta: ChartMeta
+    ): MobxPromise<ClinicalDataCountSummary[]> {
+        if (
+            !this.genomicDataCountPromises.hasOwnProperty(chartMeta.uniqueKey)
+        ) {
+            this.genomicDataCountPromises[chartMeta.uniqueKey] = remoteData<
+                ClinicalDataCountSummary[]
+            >({
+                await: () => [this.selectedSamples],
+                invoke: async () => {
+                    let res: ClinicalDataCountSummary[] = [];
+                    const chartInfo = this._geneSpecificChartMap.get(
+                        chartMeta.uniqueKey
+                    );
+                    //only invoke if there are filtered samples
+                    if (chartInfo && this.hasFilteredSamples) {
+                        const result = await internalClient.fetchGenomicDataCountsUsingPOST(
+                            {
+                                genomicDataCountFilter: {
+                                    genomicDataFilters: [
+                                        {
+                                            hugoGeneSymbol:
+                                                chartInfo.hugoGeneSymbol,
+                                            profileType: chartInfo.profileType,
+                                        },
+                                    ] as any,
+                                    studyViewFilter: this.filters,
+                                },
+                            }
+                        );
+
+                        let data = result.find(
+                            d =>
+                                d.hugoGeneSymbol === chartInfo.hugoGeneSymbol &&
+                                d.profileType === chartInfo.profileType
+                        );
+
+                        let counts: ClinicalDataCount[] = [];
+                        let profileType: string = '';
+                        if (data !== undefined) {
+                            counts = data.counts.map(c => {
+                                return {
+                                    count: c.count,
+                                    value: c.label,
+                                } as ClinicalDataCount;
+                            });
+                            profileType = data.profileType;
+                        }
+
+                        return this.addColorToCategories(counts, profileType);
+                    }
+                    return res;
+                },
+                onError: () => {},
+                default: [],
+            });
+        }
+        return this.genomicDataCountPromises[chartMeta.uniqueKey];
+    }
+
     private generateColorMapKey(id: string, value: string): string {
         return `${id}.${value}`;
     }
@@ -4874,6 +4967,7 @@ export class StudyViewPageStore
         }
         return this.clinicalDataBinPromises[uniqueKey];
     }
+
     @autobind
     public getGenomicChartDataBin(
         chartMeta: ChartMeta
@@ -5817,12 +5911,12 @@ export class StudyViewPageStore
                 )
                 .uniq()
                 .value();
-            if (newChart.datatype === 'STRING') {
+            if (newChart.datatype === DataType.STRING) {
                 this.setCustomChartCategoricalFilters(
                     chartMeta.uniqueKey,
                     filters
                 );
-            } else if (newChart.datatype === 'NUMBER') {
+            } else if (newChart.datatype === DataType.NUMBER) {
                 // Create a dummy filter with min and max values as start and end
                 const numericalValues = filters.map(item => Number(item));
                 const valueMin = _.min(numericalValues)! - 1;
@@ -6047,11 +6141,16 @@ export class StudyViewPageStore
                         hugoGeneSymbol: newChart.hugoGeneSymbol,
                         profileType: newChart.profileType,
                     } as any);
+                    this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
                 } else {
                     this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
+                    this.chartsDimension.set(
+                        uniqueKey,
+                        STUDY_VIEW_CONFIG.layout.dimensions[
+                            ChartTypeEnum.PIE_CHART
+                        ]
+                    );
                 }
-
-                this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
             }
 
             if (!loadedfromUserSettings) {
@@ -7353,9 +7452,12 @@ export class StudyViewPageStore
                 data = this.getCustomDataCount(attr);
             } else if (this.isGenericAssayChart(attr.uniqueKey)) {
                 data = this.getGenericAssayChartDataCount(attr);
+            } else if (this.isGeneSpecificChart(attr.uniqueKey)) {
+                data = this.getGenomicChartDataCount(attr);
             } else {
                 data = this.getClinicalDataCount(attr);
             }
+
             if (data !== undefined) {
                 this.chartsDimension.set(
                     attr.uniqueKey,
@@ -8433,6 +8535,11 @@ export class StudyViewPageStore
                 return this.getClinicalDataCountSummary(
                     chartMeta,
                     this.getGenericAssayChartDataCount(chartMeta).result!
+                );
+            } else if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
+                return this.getClinicalDataCountSummary(
+                    chartMeta,
+                    this.getGenomicChartDataCount(chartMeta).result!
                 );
             } else {
                 return this.getClinicalDataCountSummary(
