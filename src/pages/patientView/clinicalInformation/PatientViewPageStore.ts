@@ -755,6 +755,7 @@ export class PatientViewPageStore {
                 const signatureLabelMap = retrieveMutationalSignatureMap(
                     this.fetchAllMutationalSignatureCountMetaData.result!
                 );
+
                 const result: IMutationalCounts[] = createMutationalCountsObjects(
                     countData,
                     signatureLabelMap
