@@ -304,9 +304,9 @@ export default class RightBar extends React.Component<
             !this.studyStore.cancerTypes.isComplete ||
             !this.studyStore.cancerStudies.isComplete ||
             !this.studyStore.userVirtualStudies.isComplete;
-        return getServerConfig().skin_right_nav_show_testimonials ? (
+        return getServerConfig().skin_right_nav_show_web_tours ? (
             <div className="rightBarSection" style={{ minHeight: '70px' }}>
-                <h3>Web Tours</h3>
+                <h3>Interactive Tours</h3>
                 {!isLoading && (
                     <Tour
                         hideEntry={false}
@@ -323,8 +323,8 @@ export default class RightBar extends React.Component<
     render() {
         return (
             <div>
-                {this.getHomePageTour()}
                 {this.getWhatsNew()}
+                {this.getHomePageTour()}
                 {this.getExampleSection()}
                 {this.getInstallationMap()}
                 {this.getTestimonialsSection()}

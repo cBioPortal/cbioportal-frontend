@@ -13,7 +13,7 @@ const getSteps: GetSteps = ({
 }) => [
     // Step 0: Type “glioma” in the search box
     {
-        selector: '#cancer-study-search-box input',
+        selector: '[data-tour="cancer-study-search-box"] input',
         content: () => (
             <div className="step">
                 <p className="title">Search for the studies</p>
@@ -30,7 +30,7 @@ const getSteps: GetSteps = ({
     },
     // Step 1: Select two studies
     {
-        selector: '#cancer-study-list-container',
+        selector: '[data-tour="cancer-study-list-container"]',
         content: () => (
             <div className="step">
                 <p className="title">Select two studies</p>
@@ -47,7 +47,7 @@ const getSteps: GetSteps = ({
     },
     // Step 2: Click the “Explore Selected Studies” button
     {
-        selector: '#explore-studies-button',
+        selector: '[data-tour="explore-studies-button"]',
         content: () => (
             <div className="step">
                 <p className="title">Click the Explore button</p>
@@ -63,7 +63,7 @@ const getSteps: GetSteps = ({
     },
     // Step 3: Click the “+” icon
     {
-        selector: '#show-more-description-icon',
+        selector: '[data-tour="show-more-description-icon"]',
         content: () => (
             <div className="step">
                 <p className="title">See list of studies</p>
@@ -73,7 +73,7 @@ const getSteps: GetSteps = ({
     },
     // Step 4: Select samples in the Mutated Genes table
     {
-        selector: '#mutated-genes-table',
+        selector: '[data-tour="mutated-genes-table"]',
         content: () => (
             <div className="step">
                 <p className="title">Select samples</p>
@@ -104,7 +104,7 @@ const getSteps: GetSteps = ({
     },
     // Step 6: Click the bookmark icon
     {
-        selector: '#action-button-bookmark',
+        selector: '[data-tour="action-button-bookmark"]',
         content: () => (
             <div className="step">
                 <p className="title">Click the bookmark icon</p>
@@ -139,14 +139,15 @@ const getNotLoggedInSteps: GetSteps = ({
 }) => [
     // Step 7: Click on the Share button
     {
-        selector: '#virtual-study-summary-panel',
+        selector: '[data-tour="virtual-study-summary-panel"]',
         content: () => (
             <div className="step">
                 <p className="title">Click on the Share button</p>
                 <p>1. Enter a name for your virtual study (optional).</p>
-                2. Text box pre-filled with a description of the studies
-                contributing samples and filters applied to the samples. You can
-                edit this text
+                <p>
+                    2. Text box pre-filled with a description of the studies
+                    contributing samples and filters applied to the samples. You can edit this text
+                </p>
                 <p>
                     3. Check the list of studies contributing to samples with
                     links to the study summary for each.
@@ -159,14 +160,14 @@ const getNotLoggedInSteps: GetSteps = ({
         action: () => {
             // only after user clicked the share button, the tour will continue
             setGotoStep(null);
-            const shareButton = document.getElementById(
-                'virtual-study-summary-share-btn'
+            const shareButton = document.querySelector(
+                '[data-tour="virtual-study-summary-share-btn"]'
             );
             if (shareButton) {
                 const handleClick = () => {
                     setTimeout(() => {
                         setGotoStep(8);
-                    }, 400);
+                    }, 1000);
                     shareButton.removeEventListener('click', handleClick);
                 };
                 shareButton.addEventListener('click', handleClick);
@@ -175,7 +176,7 @@ const getNotLoggedInSteps: GetSteps = ({
     },
     // Step 8: Show the share link
     {
-        selector: '#virtual-study-summary-panel',
+        selector: '[data-tour="virtual-study-summary-panel"]',
         content: () => (
             <div className="step">
                 <p className="title">Share your virtual study</p>
@@ -202,7 +203,7 @@ const getNotLoggedInSteps: GetSteps = ({
 const getLoggedInSteps: GetSteps = ({ setLockTour, setGotoStep, endTour }) => [
     // Step 7: Click on the Save button
     {
-        selector: '#virtual-study-summary-panel',
+        selector: '[data-tour="virtual-study-summary-panel"]',
         content: () => (
             <div className="step">
                 <p className="title">Click on the Save button</p>
@@ -222,8 +223,8 @@ const getLoggedInSteps: GetSteps = ({ setLockTour, setGotoStep, endTour }) => [
         action: () => {
             // only after user clicked the save button, the tour will continue
             setGotoStep(null);
-            const shareButton = document.getElementById(
-                'virtual-study-summary-save-btn'
+            const shareButton = document.querySelector(
+                '[data-tour="virtual-study-summary-save-btn"]'
             );
             if (shareButton) {
                 const handleClick = () => {
@@ -238,7 +239,7 @@ const getLoggedInSteps: GetSteps = ({ setLockTour, setGotoStep, endTour }) => [
     },
     // Step 8: Show the share link
     {
-        selector: '#virtual-study-summary-panel',
+        selector: '[data-tour="virtual-study-summary-panel"]',
         content: () => (
             <div className="step">
                 <p className="title">Already saved</p>
@@ -272,8 +273,8 @@ const getLoggedInSteps: GetSteps = ({ setLockTour, setGotoStep, endTour }) => [
             // hide the original next step button
             setLockTour(true);
 
-            const queryButton = document.getElementById(
-                'virtual-study-summary-query-btn'
+            const queryButton = document.querySelector(
+                '[data-tour="virtual-study-summary-query-btn"]'
             );
             if (queryButton) {
                 const handleClick = () => {
@@ -298,7 +299,7 @@ const getLoggedInSteps: GetSteps = ({ setLockTour, setGotoStep, endTour }) => [
     },
     // Step 9: In homepage, Show the new virtual study pre-selected
     {
-        selector: '#my_virtual_studies_list',
+        selector: '[data-tour="my_virtual_studies_list"]',
         content: () => (
             <div className="step">
                 <p className="title">My Virtual Studies</p>
@@ -309,7 +310,7 @@ const getLoggedInSteps: GetSteps = ({ setLockTour, setGotoStep, endTour }) => [
         action: () => {
             setLockTour(false);
             // end the tour if user clicked the screen
-            const searchBox = document.querySelector("#cancer-study-search-box input");
+            const searchBox = document.querySelector('[data-tour="cancer-study-search-box"] input');
 
             if (searchBox && (searchBox as any).value !== '') {
                 searchBox.setAttribute('value', '');

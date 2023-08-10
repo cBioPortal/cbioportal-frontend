@@ -364,7 +364,7 @@ export default class GroupComparisonPage extends React.Component<
                     break;
                 case 1:
                     studyHeader = (
-                        <h3 id="single-study-group-comparison-header">
+                        <h3 data-tour="single-study-group-comparison-header">
                             <StudyLink studyId={studies[0].studyId}>
                                 {studies[0].name}
                             </StudyLink>
@@ -393,7 +393,7 @@ export default class GroupComparisonPage extends React.Component<
                     <span>
                         {studyHeader}Groups from{' '}
                         <span
-                            id="single-study-group-comparison-attribute"
+                            data-tour="single-study-group-comparison-attribute"
                             style={{ fontWeight: 'bold', fontStyle: 'italic' }}
                         >
                             {this.store.sessionClinicalAttributeName}

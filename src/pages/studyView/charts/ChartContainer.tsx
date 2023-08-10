@@ -468,7 +468,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             return {
                 content: (
                     <div
-                        id="mutated-genes-table-compare-btn"
+                        data-tour="mutated-genes-table-compare-btn"
                         style={{ display: 'flex', alignItems: 'center' }}
                     >
                         <ComparisonVsIcon

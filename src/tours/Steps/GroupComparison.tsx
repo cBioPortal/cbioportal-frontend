@@ -13,7 +13,7 @@ const getSteps: GetSteps = ({
 }) => [
     // Step 0: Type “glioma” in the search box
     {
-        selector: '#cancer-study-search-box input',
+        selector: '[data-tour="cancer-study-search-box"] input',
         content: () => (
             <div className="step">
                 <p className="title">Search for the studies</p>
@@ -30,7 +30,7 @@ const getSteps: GetSteps = ({
     },
     // Step 1: Click on “View study summary” button
     {
-        selector: '#cancer-study-list-container',
+        selector: '[data-tour="cancer-study-list-container"]',
         content: () => (
             <div className="step">
                 <p className="title">Click the button</p>
@@ -48,18 +48,15 @@ const getSteps: GetSteps = ({
     // Step 2:  Select more than one sample in the Mutated Genes table
     // TODO: must have overlap
     {
-        selector: '#mutated-genes-table',
+        selector: '[data-tour="mutated-genes-table"]',
         content: () => (
             <div className="step">
-                <p className="title">Select three samples</p>
+                <p className="title">Select two samples</p>
                 <p>We define groups by applying filters in study view. </p>
                 <p>In the Mutated Genes table, Click the check box in the {' '}
-                <strong>“#”</strong> column to select three samples such as {' '}
-                <strong>
-                    IDH1 mutations, TP53 mutant samples and EGFR amplified
-                    samples
-                </strong>
-                .</p>
+                <strong>“#”</strong> column to select samples with {' '}
+                <strong>e.g. IDH1 or TP53 mutations</strong>.
+                </p>
             </div>
         ),
         action: (node: any) => {
@@ -67,19 +64,19 @@ const getSteps: GetSteps = ({
             setLockTour(true);
             if (node) {
                 const findCompareBtn = () => {
-                    const compareBtn = document.getElementById('mutated-genes-table-compare-btn');
+                    const compareBtn = document.querySelector('[data-tour="mutated-genes-table-compare-btn"]');
                     if (compareBtn) {
                         setGotoStep(3);
-                        compareBtn.removeEventListener('click', findCompareBtn);
+                        document.removeEventListener('click', findCompareBtn);
                     }
                 };
-                node.addEventListener('click', findCompareBtn);
+                document.addEventListener('click', findCompareBtn);
             }
         },
     },
     // Step 3:  Click the “Compare” button
     {
-        selector: '#mutated-genes-table-compare-btn',
+        selector: '[data-tour="mutated-genes-table-compare-btn"]',
         content: () => (
             <div className="step">
                 <p className="title">Click the Compare button</p>
@@ -111,7 +108,7 @@ const getIntroductionTabsSteps: GetSteps = ({
 }) => [
     // Step 4: Show the header of the page
     {
-        selector: '#single-study-group-comparison-header',
+        selector: '[data-tour="single-study-group-comparison-header"]',
         content: () => (
             <div className="step">
                 <p className="title">The original study</p>
@@ -121,7 +118,7 @@ const getIntroductionTabsSteps: GetSteps = ({
     },
     // Step 5: Show the attribute
     {
-        selector: '#single-study-group-comparison-attribute',
+        selector: '[data-tour="single-study-group-comparison-attribute"]',
         content: () => (
             <div className="step">
                 <p className="title">The attribute</p>
@@ -131,7 +128,7 @@ const getIntroductionTabsSteps: GetSteps = ({
     },
     // Step 6: Show the available groups
     {
-        selector: '#single-study-group-comparison-groups',
+        selector: '[data-tour="single-study-group-comparison-groups"]',
         content: () => (
             <div className="step">
                 <p className="title">The available groups</p>
@@ -171,7 +168,7 @@ const getIntroductionTabsSteps: GetSteps = ({
     },
     // Step 8: Intro to the Survival tab
     {
-        selector: '#mainColumn',
+        selector: '[data-tour="mainColumn"]',
         content: () => (
             <div className="step">
                 <p className="title">The Survival tab</p>
@@ -198,7 +195,7 @@ const getIntroductionTabsSteps: GetSteps = ({
     },
      // Step 9: Intro to the Clinical tab
      {
-        selector: '#mainColumn',
+        selector: '[data-tour="mainColumn"]',
         content: () => (
             <div className="step">
                 <p className="title">The Clinical tab</p>
@@ -225,7 +222,7 @@ const getIntroductionTabsSteps: GetSteps = ({
     },
     // Step 10: Intro to the Genomic Alterations tab
     {
-        selector: '#mainColumn',
+        selector: '[data-tour="mainColumn"]',
         content: () => (
             <div className="step">
                 <p className="title">The Genomic Alterations tab</p>

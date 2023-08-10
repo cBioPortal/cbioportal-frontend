@@ -426,7 +426,7 @@ export default class QueryContainer extends React.Component<
                                     }
                                 >
                                     <a
-                                        id="explore-studies-button"
+                                        data-tour="explore-studies-button"
                                         onClick={() =>
                                             !this
                                                 .exploreCohortsButtonDisabled &&

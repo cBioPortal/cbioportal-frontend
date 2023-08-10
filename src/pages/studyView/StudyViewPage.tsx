@@ -368,6 +368,21 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
+    @computed get isLoading() {
+        return (
+            this.store.queriedSampleIdentifiers.isPending ||
+            this.store.invalidSampleIds.isPending ||
+            this.body.isPending
+        );
+    }
+
+    @computed get isAnySampleSelected() {
+        return this.store.selectedSamples.result.length !==
+            this.store.samples.result.length
+            ? 1
+            : 0;
+    }
+
     @computed get studyViewFullUrlWithFilter() {
         return `${window.location.protocol}//${window.location.host}${
             window.location.pathname
@@ -1017,15 +1032,6 @@ export default class StudyViewPage extends React.Component<
     }
 
     render() {
-        const isLoading =
-            this.store.queriedSampleIdentifiers.isPending ||
-            this.store.invalidSampleIds.isPending ||
-            this.body.isPending;
-        const studies =
-            this.store.selectedSamples.result.length !==
-            this.store.samples.result.length
-                ? 1
-                : 0;
         return (
             <PageLayout
                 noMargin={true}
@@ -1034,13 +1040,13 @@ export default class StudyViewPage extends React.Component<
             >
                 <LoadingIndicator
                     size={'big'}
-                    isLoading={isLoading}
+                    isLoading={this.isLoading}
                     center={true}
                 />
                 {this.body.component}
-                {!isLoading && (
+                {!this.isLoading && (
                     <Tour
-                        studies={studies}
+                        studies={this.isAnySampleSelected}
                         isLoggedIn={this.props.appStore.isLoggedIn}
                     />
                 )}

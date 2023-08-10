@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Tour from 'reactour';
+import _ from 'lodash';
 import {
     getGroupComparisonSteps,
     getVirtualStudySteps,
@@ -7,21 +8,25 @@ import {
     virtualStudyId,
 } from '../Steps';
 import { TourProps, TourMapProps } from './types';
-import './styles.scss';
+import './styles.css';
 
+const TOUR_LOCAL_STORAGE_ID = 'web-tour';
 export const setTourLocalStorage = (id: string, value: string) => {
-    localStorage.setItem('web-tour', id);
+    localStorage.setItem(TOUR_LOCAL_STORAGE_ID, id);
     localStorage.setItem(id, value);
 };
 
 export const setTourLocalStorageFromURL = () => {
     /**
-     * If the url contains a query param 'webtour', set the localStorage
+     * If the url contains a query param 'web-tour', set the localStorage
+     *
+     * e.g. https://www.cbioportal.org/?web-tour=virtual-study-tour
+     *      https://deploy-preview-4687--cbioportalfrontend.netlify.app/?web-tour=virtual-study-tour
      */
-    const urlStr = window.location.href.split('?')[1];
+    const urlStr = (window as any).routingStore.location.search;
     if (urlStr) {
         const urlSearchParams = new URLSearchParams(urlStr);
-        const webTour = urlSearchParams.get('webtour');
+        const webTour = urlSearchParams.get(TOUR_LOCAL_STORAGE_ID);
         if (webTour && [groupComparisonId, virtualStudyId].includes(webTour)) {
             setTourLocalStorage(webTour, '0');
         }
@@ -54,9 +59,9 @@ export default function WebTour({
          * 1. the tourType prop passed from the parent component
          * 2. the localStorage (when load to another page)
          */
-        const tourContinued = localStorage.getItem('web-tour');
+        const tourContinued = localStorage.getItem(TOUR_LOCAL_STORAGE_ID);
         if (tourContinued) {
-            localStorage.removeItem('web-tour');
+            localStorage.removeItem(TOUR_LOCAL_STORAGE_ID);
             const currentStep = localStorage.getItem(tourContinued);
             if (currentStep) {
                 localStorage.removeItem(tourContinued);
@@ -90,18 +95,16 @@ export default function WebTour({
     return (
         <div>
             {!hideEntry &&
-                Object.keys(toursMap).map(tourType => {
-                    return (
-                        <div
-                            className="interactive-tour"
-                            key={tourType}
-                            data-type={tourType}
-                            onClick={handleClick}
-                        >
-                            {toursMap[tourType].title}
-                        </div>
-                    );
-                })}
+                _.map(toursMap, ({ title }, tourType) => (
+                    <div
+                        className="interactive-tour"
+                        key={tourType}
+                        data-type={tourType}
+                        onClick={handleClick}
+                    >
+                        {title}
+                    </div>
+                ))}
             {currentTour && (
                 <Tour
                     rounded={16}
