@@ -18,6 +18,10 @@ const oncoprintTabUrlStructVar =
     CBIOPORTAL_URL +
     '/results/oncoprint?Action=Submit&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cstructural_variants%2Cgistic&case_set_id=study_es_0_cnaseq&gene_list=TMPRSS2&geneset_list=%20&tab_index=tab_visualize';
 
+const oncoprintTabUrlMRna =
+    CBIOPORTAL_URL +
+    '/results/oncoprint?cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mrna_median_Zscores%2Cmutations%2Cstructural_variants%2Cgistic&case_set_id=study_es_0_all&gene_list=ERCC5&geneset_list=%20&tab_index=tab_visualize';
+
 describe('custom driver annotations feature in result view', function() {
     describe('oncoprint tab - mutations', () => {
         beforeEach(() => {
@@ -228,5 +232,167 @@ describe('custom driver annotations feature in result view', function() {
             assert(topCheckBox.isSelected());
             assert(tiersCheckboxes[0].isSelected());
         });
+    });
+
+    describe('oncoprint tab - mRNA', () => {
+        beforeEach(() => {
+            goToUrlAndSetLocalStorage(oncoprintTabUrlMRna, true);
+            waitForOncoprint();
+        });
+
+        it('shows mRNA profiles in oncoprint', () => {
+            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+            showsEnabledAndSelectedAnnotationCheckboxes();
+
+            itShowsMrnaInLegend();
+        });
+
+        /**
+         * In this case, mRNA data is VUS data,
+         * so mRNA should also be filtered out
+         */
+        it('filters mRNA out when VUS are excluded', () => {
+            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+            excludeGenomicAlterations();
+
+            itHidesMrnaInLegend();
+        });
+
+        /**
+         * When no genomic alteration profiles present,
+         * mRNA data should not be filtered by genomic alteration filters like VUS
+         */
+        it('shows mRNA when VUS are excluded AND genomic alteration profiles are excluded', () => {
+            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+            excludeGenomicAlterations();
+            excludeAllGeneticAlterationProfilesInQuery();
+
+            itShowsMrnaInLegend();
+        });
+
+        /**
+         * In this case, mRNA data is not germline mutation data,
+         * so mRNA should not be filtered out
+         */
+        it('shows mRNA when germline mutations are excluded', () => {
+            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+            excludeGermlineMutations();
+
+            itShowsMrnaInLegend();
+        });
+
+        it('hides and disables annotation menu checkboxes when genomic alteration profiles are excluded', () => {
+            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+            excludeGenomicAlterations();
+            excludeAllGeneticAlterationProfilesInQuery();
+            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+
+            itShowsDisabledAndDeselectedAnnotationCheckboxes();
+            itHidesCustomTiersCheckboxes();
+            itUnchecksAndDisablesGenomicAlterationFilter();
+        });
+
+        function itUnchecksAndDisablesGenomicAlterationFilter() {
+            assert($('input[data-test=HideVUS]').isDisplayed());
+            assert(!$('input[data-test=HideVUS]').isEnabled());
+            assert(!$('input[data-test=HideVUS]').isSelected());
+        }
+
+        function deselectMolecularProfile(profile) {
+            assert($(`input[data-test=${profile}]`).isSelected());
+            $(`input[data-test=${profile}]`).click();
+            assert(!$(`input[data-test=${profile}]`).isSelected());
+        }
+
+        function itShowsMrnaInLegend() {
+            assert(
+                $('.oncoprint-legend-div')
+                    .getText()
+                    .includes('mRNA High')
+            );
+            assert(
+                $('.oncoprint-legend-div')
+                    .getText()
+                    .includes('mRNA Low')
+            );
+        }
+
+        function itHidesMrnaInLegend() {
+            assert(
+                !$('.oncoprint-legend-div')
+                    .getText()
+                    .includes('mRNA High')
+            );
+            assert(
+                !$('.oncoprint-legend-div')
+                    .getText()
+                    .includes('mRNA Low')
+            );
+        }
+
+        function excludeGenomicAlterations() {
+            assert($('input[data-test=HideVUS]').isDisplayed());
+            assert(!$('input[data-test=HideVUS]').isSelected());
+            $('input[data-test=HideVUS]').click();
+            assert($('input[data-test=HideVUS]').isSelected());
+            waitForOncoprint();
+        }
+
+        function excludeGermlineMutations() {
+            assert($('input[data-test=HideGermline]').isDisplayed());
+            assert(!$('input[data-test=HideGermline]').isSelected());
+            $('input[data-test=HideGermline]').click();
+            assert($('input[data-test=HideGermline]').isSelected());
+            waitForOncoprint();
+        }
+
+        function excludeAllGeneticAlterationProfilesInQuery() {
+            openModifyQueryPane();
+            deselectMolecularProfile('MUTATION_EXTENDED');
+            deselectMolecularProfile('STRUCTURAL_VARIANT');
+            deselectMolecularProfile('COPY_NUMBER_ALTERATION');
+            $('button[data-test=queryButton]').click();
+            waitForOncoprint();
+        }
+
+        function openModifyQueryPane() {
+            $('#modifyQueryBtn').click();
+            $('div[data-test=molecularProfileSelector]').waitForDisplayed();
+        }
+
+        function showsEnabledAndSelectedAnnotationCheckboxes() {
+            assert($('input[data-test=ColorByDriver]').isSelected());
+            assert($('input[data-test=annotateOncoKb]').isSelected());
+            assert($('input[data-test=annotateHotspots]').isSelected());
+            assert($('input[data-test=annotateCustomBinary]').isSelected());
+            assert($('input[data-test=ColorByDriver]').isEnabled());
+            assert($('input[data-test=annotateOncoKb]').isEnabled());
+            assert($('input[data-test=annotateHotspots]').isEnabled());
+            assert($('input[data-test=annotateCustomBinary]').isEnabled());
+            assert($('span[data-test=annotateCustomTiers]').isDisplayed());
+        }
+        function itShowsDisabledAndDeselectedAnnotationCheckboxes() {
+            assert(!$('input[data-test=ColorByDriver]').isSelected());
+            assert(!$('input[data-test=annotateOncoKb]').isSelected());
+            assert(!$('input[data-test=annotateHotspots]').isSelected());
+            assert(!$('input[data-test=ColorByDriver]').isEnabled());
+            assert(!$('input[data-test=annotateOncoKb]').isEnabled());
+            assert(!$('input[data-test=annotateHotspots]').isEnabled());
+        }
+
+        function itHidesCustomTiersCheckboxes() {
+            assert(
+                $('input[data-test=annotateCustomBinary]').waitForExist({
+                    timeout: 500,
+                    reverse: true,
+                })
+            );
+            assert(
+                $('span[data-test=annotateCustomTiers]').waitForExist({
+                    timeout: 500,
+                    reverse: true,
+                })
+            );
+        }
     });
 });

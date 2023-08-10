@@ -32,6 +32,7 @@ export interface DriverAnnotationSettings {
     hotspots: boolean;
     oncoKb: boolean;
     driversAnnotated: boolean;
+    isGenomicAlterationProfileSelected: boolean;
 }
 
 export interface IDriverAnnotationControlsState {
@@ -50,6 +51,7 @@ export interface IDriverAnnotationControlsState {
     selectedCustomDriverAnnotationTiers?: ObservableMap<string, boolean>;
     anyCustomDriverAnnotationTiersSelected?: boolean;
     annotateCustomDriverBinary?: boolean;
+    isGenomicAlterationProfileSelected: boolean;
 }
 
 export interface IDriverAnnotationControlsHandlers {
@@ -67,7 +69,8 @@ export interface IDriverAnnotationReport {
 
 export function buildDriverAnnotationSettings(
     didOncoKbFailInOncoprint: () => boolean,
-    config = getServerConfig()
+    config = getServerConfig(),
+    isGenomicAlterationProfileSelected: () => boolean = () => true
 ): DriverAnnotationSettings {
     return observable({
         driverTiers: observable.map<string, boolean>({}, { deep: true }),
@@ -84,11 +87,12 @@ export function buildDriverAnnotationSettings(
         set hotspots(val: boolean) {
             this._hotspots = val;
         },
-        get hotspots() {
+        get hotspots(): boolean {
             return (
                 !!config.show_hotspot &&
                 this._hotspots &&
-                !didOncoKbFailInOncoprint()
+                !didOncoKbFailInOncoprint() &&
+                isGenomicAlterationProfileSelected()
             );
         },
         set oncoKb(val: boolean) {
@@ -98,50 +102,60 @@ export function buildDriverAnnotationSettings(
             return (
                 config.show_oncokb &&
                 this._oncoKb &&
-                !didOncoKbFailInOncoprint()
+                !didOncoKbFailInOncoprint() &&
+                isGenomicAlterationProfileSelected()
             );
         },
-        get includeDriver() {
-            return this._includeDriver;
+        get includeDriver(): boolean {
+            return this._includeDriver || !isGenomicAlterationProfileSelected();
         },
         set includeDriver(val: boolean) {
             this._includeDriver = val;
         },
-        get includeVUS() {
-            return this._includeVUS;
+        get includeVUS(): boolean {
+            return this._includeVUS || !isGenomicAlterationProfileSelected();
         },
         set includeVUS(val: boolean) {
             this._includeVUS = val;
         },
-        get includeUnknownOncogenicity() {
-            return this._includeUnknownOncogenicity;
+        get includeUnknownOncogenicity(): boolean {
+            return (
+                this._includeUnknownOncogenicity ||
+                !isGenomicAlterationProfileSelected()
+            );
         },
         set includeUnknownOncogenicity(val: boolean) {
             this._includeUnknownOncogenicity = val;
         },
-        get driversAnnotated() {
+        get driversAnnotated(): boolean {
             const anySelected =
                 this.oncoKb ||
                 this.hotspots ||
                 this.customBinary ||
                 _.some(this.driverTiers.entries(), entry => entry[1]);
-            return anySelected;
+            return anySelected && isGenomicAlterationProfileSelected();
         },
 
         set customBinary(val: boolean) {
             this._customBinary = val;
         },
-        get customBinary() {
-            return this._customBinary;
+        get customBinary(): boolean {
+            return this._customBinary || !isGenomicAlterationProfileSelected();
         },
         get customTiersDefault() {
             return config.oncoprint_custom_driver_annotation_tiers_default;
         },
-        get includeUnknownTier() {
-            return this._includeUnknownTier;
+        get includeUnknownTier(): boolean {
+            return (
+                this._includeUnknownTier ||
+                !isGenomicAlterationProfileSelected()
+            );
         },
         set includeUnknownTier(val: boolean) {
             this._includeUnknownTier = val;
+        },
+        get isGenomicAlterationProfileSelected(): boolean {
+            return isGenomicAlterationProfileSelected();
         },
     });
 }
@@ -213,12 +227,15 @@ export function buildDriverAnnotationControlsHandlers(
 
 export function buildDriverAnnotationControlsState(
     driverAnnotationSettings: DriverAnnotationSettings,
-    customDriverAnnotationReport: IDriverAnnotationReport | undefined,
+    customDriverAnnotationReport: MobxPromiseUnionType<IDriverAnnotationReport>,
     didOncoKbFailInOncoprint?: boolean,
     didHotspotFailInOncoprint?: boolean,
     config = getServerConfig()
 ): IDriverAnnotationControlsState {
     return observable({
+        get isGenomicAlterationProfileSelected() {
+            return driverAnnotationSettings.isGenomicAlterationProfileSelected;
+        },
         get distinguishDrivers() {
             return driverAnnotationSettings.driversAnnotated;
         },
@@ -256,7 +273,7 @@ export function buildDriverAnnotationControlsState(
                 if (
                     label &&
                     customDriverAnnotationReport &&
-                    customDriverAnnotationReport.hasBinary
+                    customDriverAnnotationReport.result?.hasBinary
                 )
                     return label;
             }
@@ -269,7 +286,7 @@ export function buildDriverAnnotationControlsState(
                 if (
                     label &&
                     customDriverAnnotationReport &&
-                    customDriverAnnotationReport.tiers.length
+                    customDriverAnnotationReport?.result?.tiers?.length
                 )
                     return label;
             } else {
@@ -279,9 +296,9 @@ export function buildDriverAnnotationControlsState(
         get customDriverAnnotationTiers() {
             if (
                 customDriverAnnotationReport &&
-                customDriverAnnotationReport.tiers.length
+                customDriverAnnotationReport.result?.tiers.length
             ) {
-                return customDriverAnnotationReport.tiers;
+                return customDriverAnnotationReport.result?.tiers;
             } else {
                 return undefined;
             }

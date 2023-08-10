@@ -611,6 +611,9 @@ export default class ResultsViewOncoprint extends React.Component<
             get isSessionServiceEnabled() {
                 return self.props.store.pageUserSession.isSessionServiceEnabled;
             },
+            get isGenomicAlterationProfileSelected() {
+                return self.props.store.isGenomicAlterationProfileSelected;
+            },
         });
 
         this.configureClinicalTracks();

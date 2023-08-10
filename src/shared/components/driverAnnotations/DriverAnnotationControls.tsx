@@ -78,6 +78,8 @@ export default class DriverAnnotationControls extends React.Component<
     }
 
     render() {
+        const hasGenomicProfile = this.props.state
+            .isGenomicAlterationProfileSelected;
         return (
             <div>
                 <div className="checkbox">
@@ -88,6 +90,7 @@ export default class DriverAnnotationControls extends React.Component<
                             value={EVENT_KEY.distinguishDrivers}
                             checked={this.props.state.distinguishDrivers}
                             onClick={this.onInputClick}
+                            disabled={!hasGenomicProfile}
                         />
                         Putative drivers vs VUS:
                     </label>
@@ -110,7 +113,8 @@ export default class DriverAnnotationControls extends React.Component<
                                             data-test="annotateOncoKb"
                                             disabled={
                                                 this.props.state
-                                                    .annotateDriversOncoKbError
+                                                    .annotateDriversOncoKbError ||
+                                                !hasGenomicProfile
                                             }
                                         />
                                         {this.props.state
@@ -165,7 +169,8 @@ export default class DriverAnnotationControls extends React.Component<
                                                 data-test="annotateHotspots"
                                                 disabled={
                                                     this.props.state
-                                                        .annotateDriversHotspotsError
+                                                        .annotateDriversHotspotsError ||
+                                                    !hasGenomicProfile
                                                 }
                                             />
                                             {this.props.state
@@ -235,39 +240,45 @@ export default class DriverAnnotationControls extends React.Component<
                                 )}
                         </span>
                     )}
-                    {!!this.props.state
-                        .customDriverAnnotationBinaryMenuLabel && (
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={
+                    {!!this.props.state.customDriverAnnotationBinaryMenuLabel &&
+                        /**
+                         * Hide when there is no genomic profile present: without any genomic alteration profiles
+                         * the driver tiers list will always be empty because it is generated on the fly
+                         * using genomic alteration data
+                         */
+                        hasGenomicProfile && (
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={
+                                            this.props.state
+                                                .annotateCustomDriverBinary
+                                        }
+                                        value={
+                                            EVENT_KEY.customDriverBinaryAnnotation
+                                        }
+                                        onClick={this.onInputClick}
+                                        data-test="annotateCustomBinary"
+                                        disabled={!hasGenomicProfile}
+                                    />{' '}
+                                    {
                                         this.props.state
-                                            .annotateCustomDriverBinary
+                                            .customDriverAnnotationBinaryMenuLabel
                                     }
-                                    value={
-                                        EVENT_KEY.customDriverBinaryAnnotation
-                                    }
-                                    onClick={this.onInputClick}
-                                    data-test="annotateCustomBinary"
-                                />{' '}
-                                {
-                                    this.props.state
-                                        .customDriverAnnotationBinaryMenuLabel
-                                }
-                                <img
-                                    src={require('../../../rootImages/driver.svg')}
-                                    alt="driver filter"
-                                    style={{
-                                        height: '15px',
-                                        width: '15px',
-                                        cursor: 'pointer',
-                                        marginLeft: '5px',
-                                    }}
-                                />
-                            </label>
-                        </div>
-                    )}
+                                    <img
+                                        src={require('../../../rootImages/driver.svg')}
+                                        alt="driver filter"
+                                        style={{
+                                            height: '15px',
+                                            width: '15px',
+                                            cursor: 'pointer',
+                                            marginLeft: '5px',
+                                        }}
+                                    />
+                                </label>
+                            </div>
+                        )}
                     {!!this.props.state
                         .customDriverAnnotationTiersMenuLabel && (
                         <span data-test="annotateCustomTiers">
@@ -313,6 +324,7 @@ export default class DriverAnnotationControls extends React.Component<
                                                     this
                                                         .onCustomDriverTierCheckboxClick
                                                 }
+                                                disabled={!hasGenomicProfile}
                                             />{' '}
                                             {tier}
                                         </label>

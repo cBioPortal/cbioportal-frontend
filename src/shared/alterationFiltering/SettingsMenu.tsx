@@ -49,7 +49,7 @@ export default class SettingsMenu extends React.Component<
         });
         this.driverSettingsState = buildDriverAnnotationControlsState(
             props.store.driverAnnotationSettings,
-            props.store.customDriverAnnotationReport.result,
+            props.store.customDriverAnnotationReport,
             props.store.didOncoKbFailInOncoprint,
             props.store.didHotspotFailInOncoprint
         );
@@ -100,6 +100,8 @@ export default class SettingsMenu extends React.Component<
                 </div>
             );
         }
+        const noGenomicAlterations = !this.props.store.driverAnnotationSettings
+            .isGenomicAlterationProfileSelected;
         return (
             <div
                 data-test="GlobalSettingsDropdown"
@@ -140,7 +142,8 @@ export default class SettingsMenu extends React.Component<
                                         onClick={this.onInputClick}
                                         disabled={
                                             !this.driverSettingsState
-                                                .distinguishDrivers
+                                                .distinguishDrivers ||
+                                            noGenomicAlterations
                                         }
                                     />{' '}
                                     Exclude alterations (mutations, structural
@@ -159,6 +162,7 @@ export default class SettingsMenu extends React.Component<
                                                 .includeGermlineMutations
                                         }
                                         onClick={this.onInputClick}
+                                        disabled={noGenomicAlterations}
                                     />{' '}
                                     Exclude germline mutations
                                 </label>

@@ -226,6 +226,7 @@ import {
     DataTypeConstants,
     GENETIC_PROFILE_FIELD_ENUM,
     GENOME_NEXUS_ARG_FIELD_ENUM,
+    genomicAlterationProfiles,
     REQUEST_ARG_ENUM,
     SAMPLE_CANCER_TYPE_UNKNOWN,
 } from 'shared/constants';
@@ -457,7 +458,9 @@ export class ResultsViewPageStore extends AnalysisStore
         const store = this;
 
         this.driverAnnotationSettings = buildDriverAnnotationSettings(
-            () => store.didHotspotFailInOncoprint
+            () => store.didHotspotFailInOncoprint,
+            undefined,
+            () => store.isGenomicAlterationProfileSelected
         );
 
         this.pageUserSession = new PageUserSession<ResultPageSettings>(
@@ -472,10 +475,15 @@ export class ResultsViewPageStore extends AnalysisStore
 
         this.reactionDisposers.push(
             reaction(
-                () => this.urlWrapper.query.cancer_study_list,
+                () => [
+                    this.urlWrapper.query.cancer_study_list,
+                    this.selectedMolecularProfiles,
+                ],
                 () => {
                     this.driverAnnotationSettings = buildDriverAnnotationSettings(
-                        () => store.didHotspotFailInOncoprint
+                        () => store.didHotspotFailInOncoprint,
+                        undefined,
+                        () => store.isGenomicAlterationProfileSelected
                     );
                 },
                 { fireImmediately: true }
@@ -842,6 +850,16 @@ export class ResultsViewPageStore extends AnalysisStore
             }
         },
     });
+
+    @computed
+    public get isGenomicAlterationProfileSelected(): boolean {
+        if (!this.selectedMolecularProfiles.isComplete) {
+            return true;
+        }
+        return !!this.selectedMolecularProfiles.result.find(profile =>
+            genomicAlterationProfiles.includes(profile.molecularAlterationType)
+        );
+    }
 
     readonly clinicalAttributes_profiledIn = remoteData<
         (ClinicalAttribute & { molecularProfileIds: string[] })[]
@@ -4912,6 +4930,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 this.mutations,
                 this.discreteCNAMolecularData,
                 this.structuralVariants,
+                this.selectedMolecularProfiles,
             ],
             invoke: () => {
                 return Promise.resolve(

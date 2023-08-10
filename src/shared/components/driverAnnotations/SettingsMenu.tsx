@@ -54,7 +54,7 @@ export default class SettingsMenu extends React.Component<
         });
         this.driverSettingsState = buildDriverAnnotationControlsState(
             props.store.driverAnnotationSettings,
-            props.store.customDriverAnnotationReport.result,
+            props.store.customDriverAnnotationReport,
             props.store.didOncoKbFailInOncoprint,
             props.store.didHotspotFailInOncoprint
         );

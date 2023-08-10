@@ -114,6 +114,14 @@ export const AlterationTypeConstants = {
     RNA_EXPRESSION: 'RNA_EXPRESSION',
 };
 
+export const genomicAlterationProfiles = [
+    AlterationTypeConstants.MUTATION_EXTENDED,
+    AlterationTypeConstants.MUTATION_UNCALLED,
+    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+    AlterationTypeConstants.STRUCTURAL_VARIANT,
+    AlterationTypeConstants.FUSION,
+];
+
 export const DataTypeConstants = {
     DISCRETE: 'DISCRETE',
     CONTINUOUS: 'CONTINUOUS',
