@@ -14,6 +14,7 @@ export interface IColorDataBar extends IMutationalCounts {
 
 export interface ColorMapProps {
     name: string;
+    alternativeName: string;
     category: string;
     color: string;
     subcategory?: string;
@@ -47,190 +48,228 @@ export interface LegendEntriesType {
 export const colorMap: ColorMapProps[] = [
     {
         name: 'C>A',
+        alternativeName: '_C-A_',
         category: 'C>A',
         color: 'lightblue',
     },
     {
         name: 'C>G',
+        alternativeName: '_C-G_',
         category: 'C>G',
         color: 'darkblue',
     },
-    { name: 'C>T', category: 'C>T', color: 'red' },
-    { name: 'T>A', category: 'T>A', color: 'grey' },
-    { name: 'T>C', category: 'T>C', color: 'green' },
-    { name: 'T>G', category: 'T>G', color: 'pink' },
-    { name: 'reference', category: 'reference', color: '#1e97f3' },
+    { name: 'C>T', alternativeName: '_C-T_', category: 'C>T', color: 'red' },
+    { name: 'T>A', alternativeName: '_T-A_', category: 'T>A', color: 'grey' },
+    { name: 'T>C', alternativeName: '_T-C_', category: 'T>C', color: 'green' },
+    { name: 'T>G', alternativeName: '_T-G_', category: 'T>G', color: 'pink' },
+    {
+        name: 'reference',
+        alternativeName: 'reference',
+        category: 'reference',
+        color: '#1e97f3',
+    },
     {
         name: 'AC>',
+        alternativeName: 'AC-',
         category: 'AC>NN',
         color: 'skyblue',
     },
     {
         name: 'AT>',
+        alternativeName: 'AT-',
         category: 'AT>NN',
         color: 'blue',
     },
     {
         name: 'CC>',
+        alternativeName: 'CC-',
         category: 'CC>NN',
         color: 'lightgreen',
     },
     {
         name: 'CG>',
+        alternativeName: 'CG-',
         category: 'CG>NN',
         color: 'darkgreen',
     },
     {
         name: 'CT>',
+        alternativeName: 'CT-',
         category: 'CT>NN',
         color: 'pink',
     },
     {
         name: 'CG>',
+        alternativeName: 'CG-',
         category: 'CG>NN',
         color: 'darkred',
     },
     {
         name: 'TA>',
+        alternativeName: 'TA-',
         category: 'TA>NN',
         color: '#FF7F50',
     },
     {
         name: 'TC>',
+        alternativeName: 'TC-',
         category: 'TC>NN',
         color: 'orange',
     },
     {
         name: 'TG>',
+        alternativeName: 'TG-',
         category: 'TG>NN',
         color: '#ba55D3',
     },
     {
         name: 'TT>',
+        alternativeName: 'TT-',
         category: 'TT>NN',
         color: 'purple',
     },
     {
         name: 'GC>',
+        alternativeName: 'GC-',
         category: 'GC>NN',
         color: 'gold',
     },
     {
         name: '1:Del:C',
+        alternativeName: '1_Del_C_',
         category: '1bp deletion',
         subcategory: 'C',
         color: '#f39c12',
     },
     {
         name: '1:Del:T',
+        alternativeName: '1_Del_T_',
         category: '1bp deletion',
         subcategory: 'T',
         color: '#d68910',
     },
     {
         name: '2:Del:R',
+        alternativeName: '2_Del_R_',
         category: '>1bp deletion',
         subcategory: '2',
         color: '#f1948a',
     },
     {
         name: '2:Del:M',
+        alternativeName: '2_Del_M',
         category: 'Microhomology',
         subcategory: '2',
         color: '#D2B7F2',
     },
     {
         name: '3:Del:R',
+        alternativeName: '3_Del_R',
         category: '>1bp deletion',
         subcategory: '3',
         color: '#ec7063',
     },
     {
         name: '3:Del:M',
+        alternativeName: '3_Del_M',
         category: 'Microhomology',
         subcategory: '3',
         color: '#9b59b6',
     },
     {
         name: '4:Del:R',
+        alternativeName: '4_Del_R',
         category: '>1bp deletion',
         subcategory: '4',
         color: '#e74c3c',
     },
     {
         name: '4:Del:M',
+        alternativeName: '4_Del_M',
         category: 'Microhomology',
         subcategory: '4',
         color: '#7d3c98',
     },
     {
         name: '5:Del:R',
+        alternativeName: '5_Del_R',
         category: '>1bp deletion',
         subcategory: '5',
         color: '#cb4335',
     },
     {
         name: '5:Del:M',
+        alternativeName: '5_Del_M',
         category: 'Microhomology',
         subcategory: '5',
         color: '#4a235a',
     },
     {
         name: '1:Ins:T',
+        alternativeName: '1_Ins_T',
         category: '1bp insertion',
         subcategory: 'T',
         color: '#28b463',
     },
     {
         name: '1:Ins:C',
+        alternativeName: '1_Ins_C',
         category: '1bp insertion',
         subcategory: 'C',
         color: '#82e0aa',
     },
     {
         name: '2:Ins:M',
+        alternativeName: '2_Ins_M',
         category: 'Microhomology',
         subcategory: '2',
         color: '#aed6f1',
     },
     {
         name: '2:Ins:R',
+        alternativeName: '2_Ins_R',
         category: '>1bp insertion',
         subcategory: '2',
         color: '#33ffff',
     },
     {
         name: '3:Ins:M',
+        alternativeName: '3_Ins_M',
         category: 'Microhomology',
         subcategory: '3',
         color: '#85c1e9',
     },
     {
         name: '3:Ins:R',
+        alternativeName: '3_Ins_R',
         category: '>1bp insertion',
         subcategory: '3',
         color: '#aed6F1',
     },
     {
         name: '4:Ins:M',
+        alternativeName: '4_Ins_M',
         category: 'Microhomology',
         subcategory: '4',
         color: '#85c1e9',
     },
     {
         name: '4:Ins:R',
+        alternativeName: '4_Ins_R',
         category: '>1bp insertion',
         subcategory: '4',
         color: '#5dade2',
     },
     {
         name: '5:Ins:M',
+        alternativeName: '5_Ins_M',
         category: 'Microhomology',
         subcategory: '5',
         color: '#3498db',
     },
     {
         name: '5:Ins:R',
+        alternativeName: '5_Ins_R',
         category: '>1bp insertion',
         subcategory: '5',
         color: '#2874a6',
@@ -242,8 +281,21 @@ export function getColorsForSignatures(
     const colorTableData = dataset.map((obj: IMutationalCounts) => {
         if (obj.mutationalSignatureLabel !== '') {
             const colorIdentity = colorMap.filter(cmap => {
-                if (obj.mutationalSignatureLabel.match(cmap.name) !== null) {
-                    return cmap.color;
+                if (
+                    obj.mutationalSignatureLabel.indexOf('_') == -1 &&
+                    obj.mutationalSignatureLabel.indexOf('-') == -1
+                ) {
+                    if (obj.mutationalSignatureLabel.match(cmap.name) != null) {
+                        return cmap.color;
+                    }
+                } else {
+                    if (
+                        obj.mutationalSignatureLabel.match(
+                            cmap.alternativeName
+                        ) != null
+                    ) {
+                        return cmap.color;
+                    }
                 }
             });
             const label = obj.mutationalSignatureLabel;
