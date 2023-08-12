@@ -118,7 +118,9 @@ export function createMutationalCountsObjects(
         mutationalSignatureLabel:
             signatureLabelMap
                 .filter(obj => obj.stableId === count.stableId)
-                .map(obj => obj.name)[0] || '',
+                .map(obj => obj.name)[0] ||
+            count.stableId.split('_matrix_')[1] ||
+            '',
     }));
     return result;
 }

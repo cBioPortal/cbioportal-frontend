@@ -29,8 +29,6 @@ import {
     getCenterPositionLabelEntries,
 } from './MutationalSignatureBarChartUtils';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
-import { AxisScale } from 'react-mutation-mapper';
-import { scalePoint } from 'd3-scale';
 
 export interface IMutationalBarChartProps {
     signature: string;
@@ -52,26 +50,6 @@ theme.legend.style.data = {
     strokeWidth: 0,
     stroke: 'black',
 };
-
-export function formatLegendTopAxisPoints(data: IMutationalCounts[]) {
-    const constant_value = _.max(data.map(item => item.value)) || 0;
-    const groupedData = _.groupBy(getColorsForSignatures(data), g => g.group);
-    return getColorsForSignatures(data).map(entry => ({
-        x: entry.mutationalSignatureLabel,
-        y: constant_value + constant_value * 0.1,
-        color: entry.colorValue,
-    }));
-}
-
-export function transformMutationalSignatureData(dataset: IMutationalCounts[]) {
-    const transformedDataSet = dataset.map((obj: IMutationalCounts) => {
-        const transformedDataSet = dataset.map((obj: IMutationalCounts) => {
-            let referenceTransformed = -Math.abs(obj.value);
-            return { ...obj, referenceTransformed };
-        });
-        return transformedDataSet;
-    });
-}
 
 @observer
 export default class MutationalBarChart extends React.Component<
@@ -101,7 +79,11 @@ export default class MutationalBarChart extends React.Component<
     }
 
     @computed get getGroupedData() {
-        return _.groupBy(getColorsForSignatures(this.props.data), 'group');
+        if (this.props.data[0].mutationalSignatureLabel != '') {
+            return _.groupBy(getColorsForSignatures(this.props.data), 'group');
+        } else {
+            return this.props.data;
+        }
     }
     @computed get getMutationalSignaturesGroupLabels(): string[] {
         return Object.keys(this.getGroupedData);
@@ -336,9 +318,9 @@ export default class MutationalBarChart extends React.Component<
                                     tickLabels: {
                                         fontSize: '11',
                                         padding:
-                                            this.xTickLabels[0].length > 4
-                                                ? 50
-                                                : 30,
+                                            this.xTickLabels[0].length > 6
+                                                ? 55
+                                                : 40,
                                         angle: 270,
                                         textAnchor: 'start',
                                         verticalAnchor: 'middle',
