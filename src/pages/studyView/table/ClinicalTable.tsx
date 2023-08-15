@@ -1,18 +1,13 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import {
-    action,
-    computed,
-    observable,
-    toJS,
-    reaction,
-    IReactionDisposer,
-    makeObservable,
-} from 'mobx';
+import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
-import { ClinicalDataCountSummary } from 'pages/studyView/StudyViewUtils';
+import {
+    ChartMetaDataTypeEnum,
+    ClinicalDataCountSummary,
+} from 'pages/studyView/StudyViewUtils';
 import FixedHeaderTable from './FixedHeaderTable';
 import styles from './tables.module.scss';
 import {
@@ -21,7 +16,7 @@ import {
     getClinicalAttributeOverlay,
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
-    getFrequencyStr,
+    getCNAByAlteration,
 } from '../StudyViewUtils';
 import { SortDirection } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
@@ -40,6 +35,7 @@ export interface IClinicalTableProps {
     width?: number;
     height?: number;
     showAddRemoveAllButtons?: boolean;
+    dataType?: ChartMetaDataTypeEnum;
 }
 
 class ClinicalTableComponent extends FixedHeaderTable<
@@ -152,7 +148,15 @@ export default class ClinicalTable extends React.Component<
                                 </g>
                             </svg>
                             <EllipsisTextTooltip
-                                text={data.value}
+                                text={
+                                    this.props.dataType &&
+                                    this.props.dataType ===
+                                        ChartMetaDataTypeEnum.GENE_SPECIFIC
+                                        ? getCNAByAlteration(
+                                              Number(data.value)
+                                          ) || 'NA'
+                                        : data.value
+                                }
                             ></EllipsisTextTooltip>
                         </div>
                     );

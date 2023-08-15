@@ -4,6 +4,7 @@ import { If } from 'react-if';
 import {
     ChartType,
     NumericalGroupComparisonType,
+    getHugoSymbolByChartTitle,
 } from 'pages/studyView/StudyViewUtils';
 import classnames from 'classnames';
 import { action, computed, makeObservable, observable } from 'mobx';
@@ -249,6 +250,37 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         Compare Groups
                     </a>
                 );
+            case ChartTypeEnum.PIE_CHART:
+            case ChartTypeEnum.TABLE:
+                if (
+                    this.props.store.isGeneSpecificChart(
+                        this.props.chartMeta.uniqueKey
+                    )
+                ) {
+                    return (
+                        <a
+                            className="dropdown-item"
+                            onClick={() => {
+                                this.props.openComparisonPage({
+                                    hugoGeneSymbols: [
+                                        getHugoSymbolByChartTitle(
+                                            this.props.chartMeta.uniqueKey
+                                        ),
+                                    ],
+                                });
+                            }}
+                            style={{ display: 'flex', alignItems: 'center' }}
+                        >
+                            <ComparisonVsIcon
+                                className={classnames(
+                                    'fa fa-fw',
+                                    styles.menuItemIcon
+                                )}
+                            />
+                            Compare Groups
+                        </a>
+                    );
+                }
             default:
                 return (
                     <a

@@ -350,6 +350,22 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenericAssayChartDataCount(
                         chartMeta
                     );
+                } else if (
+                    this.store.isGeneSpecificChart(chartMeta.uniqueKey)
+                ) {
+                    props.promise = this.store.getGenomicChartDataCount(
+                        chartMeta
+                    );
+                    props.filters = this.store
+                        .getGenomicDataIntervalFiltersByUniqueKey(
+                            chartMeta.uniqueKey
+                        )
+                        .map(
+                            genomicDataFilterValue =>
+                                genomicDataFilterValue.value
+                        );
+                    props.onValueSelection = this.handlers.onGenomicDataCategoricalValueSelection;
+                    props.onResetSelection = this.handlers.onGenomicDataCategoricalValueSelection;
                 } else {
                     props.filters = this.store
                         .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)

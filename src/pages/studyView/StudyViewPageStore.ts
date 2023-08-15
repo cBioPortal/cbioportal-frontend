@@ -107,7 +107,6 @@ import {
     getChartMetaDataType,
     getChartSettingsMap,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getCNASamplesCount,
     getDataIntervalFilterValues,
@@ -245,6 +244,9 @@ import {
 } from 'pages/studyView/StudyViewComparisonUtils';
 import {
     CNA_AMP_VALUE,
+    CNA_DIPLOID_VALUE,
+    CNA_GAIN_VALUE,
+    CNA_HETLOSS_VALUE,
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
@@ -1529,6 +1531,7 @@ export class StudyViewPageStore
     private createCnaGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
+        alterationTypes: number[],
         statusCallback: (phase: LoadingPhase) => void
     ): Promise<string> {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
@@ -1549,11 +1552,7 @@ export class StudyViewPageStore
                         hugoGeneSymbols
                     );
                     const cnaByGeneAndAlteration = _.groupBy(
-                        cnaData.filter(
-                            d =>
-                                d.value === CNA_AMP_VALUE ||
-                                d.value === CNA_HOMDEL_VALUE
-                        ),
+                        cnaData.filter(d => alterationTypes.includes(d.value)),
                         (d: NumericGeneMolecularData) =>
                             `${d.gene.hugoGeneSymbol}:${getCNAByAlteration(
                                 d.value
@@ -1897,21 +1896,26 @@ export class StudyViewPageStore
 
         const chartType = this.chartsType.get(chartMeta.uniqueKey);
         switch (chartType) {
-            // case ChartTypeEnum.PIE_CHART:
-            //     if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
-            //         comparisonId = await this.createCnaGeneComparisonSession(
-            //             chartMeta,
-            //             params.hugoGeneSymbols!,
-            //             statusCallback
-            //         );
-            //         break;
-            //     }
+            case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
-                comparisonId = await this.createCategoricalAttributeComparisonSession(
-                    chartMeta,
-                    params.clinicalAttributeValues!,
-                    statusCallback
-                );
+                comparisonId = this.isGeneSpecificChart(chartMeta.uniqueKey)
+                    ? await this.createCnaGeneComparisonSession(
+                          chartMeta,
+                          params.hugoGeneSymbols!,
+                          [
+                              CNA_HOMDEL_VALUE,
+                              CNA_HETLOSS_VALUE,
+                              CNA_DIPLOID_VALUE,
+                              CNA_GAIN_VALUE,
+                              CNA_AMP_VALUE,
+                          ],
+                          statusCallback
+                      )
+                    : await this.createCategoricalAttributeComparisonSession(
+                          chartMeta,
+                          params.clinicalAttributeValues!,
+                          statusCallback
+                      );
                 break;
             case ChartTypeEnum.MUTATED_GENES_TABLE:
                 comparisonId = await this.createMutatedGeneComparisonSession(
@@ -1924,6 +1928,7 @@ export class StudyViewPageStore
                 comparisonId = await this.createCnaGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
+                    [CNA_AMP_VALUE, CNA_HOMDEL_VALUE],
                     statusCallback
                 );
                 break;
@@ -3014,9 +3019,10 @@ export class StudyViewPageStore
         const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
             values
         );
+        console.log(dataFilterValues);
         this.updateGenomicDataIntervalFiltersByValues(
             uniqueKey,
-            dataFilterValues
+            _.cloneDeep(dataFilterValues)
         );
     }
 
@@ -3173,6 +3179,7 @@ export class StudyViewPageStore
         uniqueKey: string,
         values: DataFilterValue[]
     ): void {
+        console.log(values);
         if (values.length > 0) {
             const chart = this._geneSpecificChartMap.get(uniqueKey);
             const genomicDataIntervalFilter: GenomicDataFilter = {
@@ -3404,6 +3411,15 @@ export class StudyViewPageStore
 
     public isGenericAssayChart(uniqueKey: string): boolean {
         return this._genericAssayChartMap.has(uniqueKey);
+    }
+
+    public getMolecularChartDataType(uniqueKey: string): string {
+        if (this.isGeneSpecificChart(uniqueKey)) {
+            return this._geneSpecificChartMap.get(uniqueKey)!.dataType!;
+        } else if (this.isGenericAssayChart(uniqueKey)) {
+            return this._genericAssayChartMap.get(uniqueKey)!.dataType!;
+        }
+        return DataType.NUMBER;
     }
 
     @action
@@ -3868,9 +3884,11 @@ export class StudyViewPageStore
         const filters: Partial<StudyViewFilter> = {};
 
         const genomicDataIntervalFilters = this.genomicDataIntervalFilters;
+
         if (genomicDataIntervalFilters.length > 0) {
             filters.genomicDataFilters = genomicDataIntervalFilters;
         }
+        console.log(filters.genomicDataFilters);
 
         const genericAssayDataFilters = this.genericAssayDataFilters;
         if (genericAssayDataFilters.length > 0) {
@@ -4833,7 +4851,7 @@ export class StudyViewPageStore
                             counts = data.counts.map(c => {
                                 return {
                                     count: c.count,
-                                    value: c.label,
+                                    value: c.value,
                                 } as ClinicalDataCount;
                             });
                             profileType = data.profileType;

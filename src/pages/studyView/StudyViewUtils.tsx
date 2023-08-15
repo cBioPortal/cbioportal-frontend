@@ -55,6 +55,9 @@ import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyVie
 import MobxPromise from 'mobxpromise';
 import {
     CNA_COLOR_AMP,
+    CNA_COLOR_DIPLOID,
+    CNA_COLOR_GAIN,
+    CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
     EditableSpan,
     getTextWidth,
@@ -87,6 +90,7 @@ import { BoundType, NumberRange } from 'range-ts';
 import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
 import { toast } from 'react-toastify';
+import { value } from 'numeral';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -194,6 +198,10 @@ export type DataBin = {
     end: number;
     specialValue: string;
     start: number;
+};
+
+export type DataFilterValueWithLabel = DataFilterValue & {
+    label?: string;
 };
 
 export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
@@ -972,10 +980,24 @@ export function getVirtualStudyDescription(
                     genomicDataFilter.profileType
                 );
                 const name = attributeNamesSet[uniqueKey];
+                const dataFilterValues = genomicDataFilter.values;
+                const dataType = getDataTypeByDataFilterValues(
+                    dataFilterValues
+                );
+
                 if (name) {
                     filterLines.push(
                         `- ${name}: ${intervalFiltersDisplayValue(
-                            genomicDataFilter.values,
+                            dataType === DataType.NUMBER
+                                ? dataFilterValues
+                                : _.map(dataFilterValues, d =>
+                                      _.assign(d, {
+                                          value:
+                                              getCNAByAlteration(
+                                                  Number(d.value)
+                                              ) || 'NA',
+                                      })
+                                  ),
                             () => {},
                             true
                         )}`
@@ -1843,6 +1865,12 @@ export function getCNAColorByAlteration(
     switch (alteration) {
         case 'HOMDEL':
             return CNA_COLOR_HOMDEL;
+        case 'HETLOSS':
+            return CNA_COLOR_HETLOSS;
+        case 'DIPLOID':
+            return CNA_COLOR_DIPLOID;
+        case 'GAIN':
+            return CNA_COLOR_GAIN;
         case 'AMP':
             return CNA_COLOR_AMP;
         default:
@@ -2492,6 +2520,10 @@ export async function getHugoSymbolByEntrezGeneId(
         geneId: entrezGeneId.toString(),
     });
     return gene.hugoGeneSymbol;
+}
+
+export function getHugoSymbolByChartTitle(title: string): string {
+    return title.substring(0, title.indexOf('_'));
 }
 
 // returns true when there is only one virtual study and no physical studies
@@ -3946,6 +3978,7 @@ export function transformSampleDataToSelectedSampleClinicalData(
         .filter(item => item.uniqueSampleKey !== undefined);
     return clinicalDataSamples;
 }
+
 export function showQueryUpdatedToast(message: string) {
     toast.success(message, {
         delay: 0,
@@ -3958,4 +3991,22 @@ export function showQueryUpdatedToast(message: string) {
         progress: undefined,
         theme: 'light',
     } as any);
+}
+
+export function getDataTypeByDataFilterValues(
+    dataFilterValues: DataFilterValue[]
+): DataType {
+    let valueCount = dataFilterValues.length;
+
+    _.map(dataFilterValues, (dataFilterValue: DataFilterValue) => {
+        const value = dataFilterValue.value;
+
+        if (_.isUndefined(value) || value === '') {
+            valueCount = valueCount - 1;
+        }
+    });
+
+    return valueCount === dataFilterValues.length
+        ? DataType.STRING
+        : DataType.NUMBER;
 }

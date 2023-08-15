@@ -24,7 +24,9 @@ import {
     getGenericAssayChartUniqueKey,
     updateCustomIntervalFilter,
     SpecialChartsUniqueKeyEnum,
+    DataFilterValueWithLabel,
     geneFilterQueryToOql,
+    getCNAByAlteration,
     getCNAColorByAlteration,
     getPatientIdentifiers,
     getSelectedGroupNames,
@@ -228,7 +230,49 @@ export default class UserSelections extends React.Component<
                     genomicDataIntervalFilter.profileType
                 );
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                const dataType = this.props.store.getMolecularChartDataType(
+                    uniqueKey
+                );
                 if (chartMeta) {
+                    let dataFilterComponent =
+                        dataType === DataType.STRING
+                            ? this.renderCategoricalDataFilter(
+                                  _.map(genomicDataIntervalFilter.values, d =>
+                                      _.assign(d, {
+                                          label:
+                                              getCNAByAlteration(
+                                                  Number(d.value)
+                                              ) || 'NA',
+                                      })
+                                  ),
+                                  this.props.updateGenomicDataIntervalFilter,
+                                  chartMeta
+                              )
+                            : this.renderDataBinFilter(
+                                  genomicDataIntervalFilter.values,
+                                  (
+                                      chartUniqueKey: string,
+                                      newRange: {
+                                          start?: number;
+                                          end?: number;
+                                      }
+                                  ) => {
+                                      updateCustomIntervalFilter(
+                                          newRange,
+                                          chartMeta,
+                                          this.props.store
+                                              .getGenomicChartDataBin,
+                                          this.props.store
+                                              .getGenomicDataIntervalFiltersByUniqueKey,
+                                          this.props.store.updateCustomBins,
+                                          this.props.store
+                                              .updateGenomicDataIntervalFilters
+                                      );
+                                  },
+                                  this.props.updateGenomicDataIntervalFilter,
+                                  chartMeta
+                              );
+
                     acc.push(
                         <div className={styles.parentGroupLogic}>
                             <GroupLogic
@@ -240,32 +284,7 @@ export default class UserSelections extends React.Component<
                                     >
                                         {chartMeta.displayName}
                                     </span>,
-                                    this.renderDataBinFilter(
-                                        genomicDataIntervalFilter.values,
-                                        (
-                                            chartUniqueKey: string,
-                                            newRange: {
-                                                start?: number;
-                                                end?: number;
-                                            }
-                                        ) => {
-                                            updateCustomIntervalFilter(
-                                                newRange,
-                                                chartMeta,
-                                                this.props.store
-                                                    .getGenomicChartDataBin,
-                                                this.props.store
-                                                    .getGenomicDataIntervalFiltersByUniqueKey,
-                                                this.props.store
-                                                    .updateCustomBins,
-                                                this.props.store
-                                                    .updateGenomicDataIntervalFilters
-                                            );
-                                        },
-                                        this.props
-                                            .updateGenomicDataIntervalFilter,
-                                        chartMeta
-                                    ),
+                                    dataFilterComponent,
                                 ]}
                                 operation={':'}
                                 group={false}
@@ -601,7 +620,7 @@ export default class UserSelections extends React.Component<
                     let dataFilterComponent =
                         dataType === DataType.STRING
                             ? this.renderCategoricalDataFilter(
-                                  clinicalDataFilter,
+                                  clinicalDataFilter.values,
                                   onDelete,
                                   chartMeta
                               )
@@ -682,37 +701,41 @@ export default class UserSelections extends React.Component<
 
     // Pie chart filter
     private renderCategoricalDataFilter(
-        clinicalDataFilter: ClinicalDataFilter,
+        dataFilterValues: DataFilterValueWithLabel[],
         onDelete: (chartUniqueKey: string, values: DataFilterValue[]) => void,
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element {
         return (
             <GroupLogic
-                components={clinicalDataFilter.values.map(
-                    clinicalDataFilterValue => {
-                        return (
-                            <PillTag
-                                content={clinicalDataFilterValue.value}
-                                backgroundColor={
-                                    STUDY_VIEW_CONFIG.colors.theme
-                                        .clinicalFilterContent
-                                }
-                                onDelete={() =>
-                                    onDelete(
-                                        chartMeta.uniqueKey,
-                                        _.remove(
-                                            clinicalDataFilter.values,
-                                            value =>
-                                                value.value !==
-                                                clinicalDataFilterValue.value
-                                        )
-                                    )
-                                }
-                                store={this.props.store}
-                            />
-                        );
-                    }
-                )}
+                components={dataFilterValues.map(dataFilterValue => {
+                    return (
+                        <PillTag
+                            content={
+                                dataFilterValue.label
+                                    ? dataFilterValue.label
+                                    : dataFilterValue.value
+                            }
+                            backgroundColor={
+                                STUDY_VIEW_CONFIG.colors.theme
+                                    .clinicalFilterContent
+                            }
+                            onDelete={() =>
+                                onDelete(
+                                    chartMeta.uniqueKey,
+                                    _.remove(
+                                        dataFilterValues,
+                                        value =>
+                                            value.value !==
+                                            dataFilterValue.value
+                                    ).map(
+                                        ({ label, ...rest }) => rest
+                                    ) as DataFilterValue[]
+                                )
+                            }
+                            store={this.props.store}
+                        />
+                    );
+                })}
                 operation={'or'}
                 group={false}
             />
