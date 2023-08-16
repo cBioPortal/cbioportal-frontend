@@ -15,6 +15,7 @@ import {
     SortConfig,
     TrackId,
     UserTrackSpec,
+    IGeneticAlterationRuleSetParams,
 } from 'oncoprintjs';
 import _ from 'lodash';
 import {
@@ -60,7 +61,8 @@ export function transition(
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     getMolecularProfileMap: () =>
         | { [molecularProfileId: string]: MolecularProfile }
-        | undefined
+        | undefined,
+    customRule?: IGeneticAlterationRuleSetParams
 ) {
     const notKeepingSorted = shouldNotKeepSortedForTransition(
         nextProps,
@@ -90,7 +92,8 @@ export function transition(
         prevProps,
         oncoprint,
         getTrackSpecKeyToTrackId,
-        getMolecularProfileMap
+        getMolecularProfileMap,
+        customRule
     );
     transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
@@ -587,7 +590,8 @@ function hasGeneticTrackRuleSetChanged(
             prevProps.distinguishMutationType ||
         nextProps.distinguishDrivers !== prevProps.distinguishDrivers ||
         nextProps.distinguishGermlineMutations !==
-            prevProps.distinguishGermlineMutations
+            prevProps.distinguishGermlineMutations ||
+        nextProps.test !== prevProps.test
     );
 }
 
@@ -598,7 +602,8 @@ function transitionTracks(
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     getMolecularProfileMap: () =>
         | { [molecularProfileId: string]: MolecularProfile }
-        | undefined
+        | undefined,
+    customRule?: IGeneticAlterationRuleSetParams
 ) {
     // Initialize tracks for rule set sharing
     const trackIdForRuleSetSharing = {
@@ -740,7 +745,9 @@ function transitionTracks(
             oncoprint,
             nextProps,
             prevProps,
-            trackIdForRuleSetSharing
+            trackIdForRuleSetSharing,
+            undefined,
+            customRule
         );
         delete prevGeneticTracks[track.key];
     }
@@ -756,7 +763,9 @@ function transitionTracks(
                 oncoprint,
                 nextProps,
                 prevProps,
-                trackIdForRuleSetSharing
+                trackIdForRuleSetSharing,
+                undefined,
+                customRule
             );
         }
     }
@@ -1093,13 +1102,26 @@ function transitionGeneticTrack(
     nextProps: IOncoprintProps,
     prevProps: Partial<IOncoprintProps>,
     trackIdForRuleSetSharing: { genetic?: TrackId },
-    expansionParentKey?: string
+    expansionParentKey?: string,
+    customRule?: IGeneticAlterationRuleSetParams
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (tryRemoveTrack(nextSpec, prevSpec, trackSpecKeyToTrackId, oncoprint)) {
         // Remove track
         return;
     } else if (nextSpec && !prevSpec) {
+        let rule = customRule
+            ? customRule
+            : getGeneticTrackRuleSetParams(
+                  nextProps.distinguishMutationType,
+                  nextProps.distinguishDrivers,
+                  nextProps.distinguishGermlineMutations
+              );
+        console.log(rule);
+        // if (rule.rule_params.conditional.disp_mut.inframe) {
+        //     console.log('hi')
+        //     rule.rule_params.conditional.disp_mut.inframe.shapes[0].fill = [153, 52, 4, 1]
+        // }
         // Add track
         const createCustomOncoprintTooltip = getCustomJsFunctions()
             .createCustomOncoprintTooltip;
@@ -1115,11 +1137,7 @@ function transitionGeneticTrack(
             );
         }
         const geneticTrackParams: UserTrackSpec<any> = {
-            rule_set_params: getGeneticTrackRuleSetParams(
-                nextProps.distinguishMutationType,
-                nextProps.distinguishDrivers,
-                nextProps.distinguishGermlineMutations
-            ),
+            rule_set_params: rule,
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
             track_label_color: nextSpec.labelColor || undefined,
@@ -1211,15 +1229,16 @@ function transitionGeneticTrack(
                     trackId
                 );
             } else {
+                let rule = customRule
+                    ? customRule
+                    : getGeneticTrackRuleSetParams(
+                          nextProps.distinguishMutationType,
+                          nextProps.distinguishDrivers,
+                          nextProps.distinguishGermlineMutations
+                      );
+                console.log(rule);
                 // otherwise, update ruleset
-                oncoprint.setRuleSet(
-                    trackId,
-                    getGeneticTrackRuleSetParams(
-                        nextProps.distinguishMutationType,
-                        nextProps.distinguishDrivers,
-                        nextProps.distinguishGermlineMutations
-                    )
-                );
+                oncoprint.setRuleSet(trackId, rule);
             }
         }
         // either way, use this one now

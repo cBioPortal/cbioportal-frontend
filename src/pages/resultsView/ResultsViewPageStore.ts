@@ -304,6 +304,7 @@ import {
     ONCOKB_DEFAULT_INFO,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
+import { RGBAColor } from 'oncoprintjs';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -573,6 +574,15 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable queryFormVisible: boolean = false;
 
+    @observable userAlterationColors: {
+        [alteration: string]: string | undefined;
+    } = {};
+
+    private _selectedComparisonGroupsWarningSigns = observable.map<
+        string,
+        boolean
+    >({}, { deep: false });
+
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
             this.nonSelectedDownloadableMolecularProfilesGroupByName.result &&
@@ -585,6 +595,52 @@ export class ResultsViewPageStore extends AnalysisStore
     @observable public modifyQueryParams:
         | ModifyQueryParams
         | undefined = undefined;
+
+    @action.bound
+    public onAlterationColorChange(
+        alteration: string,
+        color: string | undefined
+    ) {
+        if (color == undefined && this.userAlterationColors[alteration]) {
+            delete this.userAlterationColors[alteration];
+        } else this.userAlterationColors[alteration] = color;
+    }
+
+    @action public showAlterationWarningSign(
+        alteration: string,
+        markedValue: boolean
+    ) {
+        this._selectedComparisonGroupsWarningSigns.set(alteration, markedValue);
+    }
+
+    public flagDuplicateColorsForAlterations(
+        alteration: string,
+        color: string | undefined
+    ) {
+        let colors: { [color: string]: number } = {};
+
+        Object.keys(this.userAlterationColors).forEach(
+            (a: string, i: number) => {
+                let alterationColor =
+                    a === alteration ? color : this.userAlterationColors[a];
+                if (
+                    alterationColor == undefined ||
+                    colors[alterationColor] == undefined
+                ) {
+                    if (alterationColor != undefined)
+                        colors[alterationColor] = 1;
+                    this.showAlterationWarningSign(alteration, false);
+                } else {
+                    colors[alterationColor] = colors[alterationColor] + 1;
+                    this.showAlterationWarningSign(alteration, true);
+                }
+            }
+        );
+    }
+
+    public isAlterationMarkedWithWarningSign(alteration: string): boolean {
+        return !!this._selectedComparisonGroupsWarningSigns.get(alteration);
+    }
 
     @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {

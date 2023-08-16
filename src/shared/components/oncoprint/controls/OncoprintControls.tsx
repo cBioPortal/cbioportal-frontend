@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { Button, ButtonGroup } from 'react-bootstrap';
+import { Button, ButtonGroup, OverlayTrigger, Popover } from 'react-bootstrap';
 import CustomDropdown from './CustomDropdown';
 import ConfirmNgchmModal from './ConfirmNgchmModal';
 import ReactSelect from 'react-select1';
@@ -32,7 +32,9 @@ import {
 import OQLTextArea, { GeneBoxType } from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
-import TracksMenu from 'pages/resultsView/oncoprint/TracksMenu';
+import TracksMenu, {
+    MIN_DROPDOWN_WIDTH,
+} from 'pages/resultsView/oncoprint/TracksMenu';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import {
     IDriverAnnotationControlsHandlers,
@@ -44,6 +46,8 @@ import {
     ClinicalTrackConfigMap,
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
+import { IGeneticAlterationRuleSetParams, RGBAColor } from 'oncoprintjs';
+import OncoprintColors from './OncoprintColors';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -58,6 +62,8 @@ export interface IOncoprintControlsHandlers
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
+    onSelectTest?: (distinguish: boolean) => void;
+    onSetRule?: (rule: IGeneticAlterationRuleSetParams) => void;
 
     onSelectHideVUS: (hide: boolean) => void;
     onSelectHideGermlineMutations: (hide: boolean) => void;
@@ -101,6 +107,8 @@ export interface IOncoprintControlsState
     sortByCaseListDisabled: boolean;
     hidePutativePassengers: boolean;
     hideGermlineMutations: boolean;
+    test?: boolean;
+    rule?: IGeneticAlterationRuleSetParams;
 
     sortMode?: SortMode;
     clinicalAttributesPromise?: MobxPromise<ExtendedClinicalAttribute[]>;
@@ -136,6 +144,7 @@ export interface IOncoprintControlsProps {
     selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl?: {
         [genericAssayType: string]: string[];
     };
+    setRules?: (alteration: string, color: RGBAColor | undefined) => void;
 }
 
 export interface ISelectOption {
@@ -178,6 +187,8 @@ const EVENT_KEY = {
     downloadOncoprinter: '29.1',
     horzZoomSlider: '30',
     viewNGCHM: '31',
+    test: '32',
+    rule: '33',
 };
 
 @observer
@@ -319,7 +330,23 @@ export default class OncoprintControls extends React.Component<
                     this.props.handlers.onSelectDistinguishMutationType(
                         !this.props.state.distinguishMutationType
                     );
+                // this.props.test && this.props.test();
+                // this.props.handlers.onSetRule &&
+                //     this.props.handlers.onSetRule(
+                //         this.props.state.rule
+                //     );
                 break;
+            // case EVENT_KEY.rule:
+            //     this.props.handlers.onSelectTest &&
+            //         this.props.handlers.onSelectTest(
+            //             !this.props.state.test
+            //         );
+            //     this.props.test && this.props.test();
+            //     this.props.handlers.onSetRule &&
+            //         this.props.handlers.onSetRule(
+            //             this.props.state.rule
+            //         );
+            //     break;
             case EVENT_KEY.distinguishGermlineMutations:
                 this.props.handlers.onSelectDistinguishGermlineMutations(
                     !this.props.state.distinguishGermlineMutations
@@ -830,6 +857,70 @@ export default class OncoprintControls extends React.Component<
         }
     }
 
+    private ColorsMenuOncoprint = observer(() => {
+        return (
+            <CustomDropdown
+                bsStyle="default"
+                title="Color"
+                id="colorDropdown"
+                styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}
+            >
+                <div
+                    className="oncoprint__controls__color_menu"
+                    data-test="oncoprintColorDropdownMenu"
+                >
+                    {[
+                        'missense',
+                        'missense_rec',
+                        'trunc',
+                        'trunc_rec',
+                        'inframe',
+                        'inframe_rec',
+                        'splice',
+                        'splice_rec',
+                        'promoter',
+                        'promoter_rec',
+                        'other',
+                        'other_rec',
+                    ].map(alteration => (
+                        <OncoprintColors
+                            alteration={alteration}
+                            handlers={this.props.handlers}
+                            state={this.props.state}
+                            setRules={this.props.setRules}
+                            store={this.props.store}
+                            color={
+                                this.props.store?.userAlterationColors[
+                                    alteration
+                                ]
+                            }
+                            markedWithWarningSign={this.props.store!.isAlterationMarkedWithWarningSign(
+                                alteration
+                            )}
+                        />
+                    ))}
+                    {/* <h5>Color by Alteration</h5>
+                    <div style={{ marginLeft: '10px' }}>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="ColorByType"
+                                    type="checkbox"
+                                    value={EVENT_KEY.rule}
+                                    checked={
+                                        this.props.state.test
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Alteration
+                            </label>
+                        </div>
+                    </div> */}
+                </div>
+            </CustomDropdown>
+        );
+    });
+
     private MutationColorMenu = observer(() => {
         return (
             <CustomDropdown
@@ -1214,6 +1305,7 @@ export default class OncoprintControls extends React.Component<
                 <ButtonGroup>
                     <this.tracksMenu />
                     <this.SortMenu />
+                    <this.ColorsMenuOncoprint />
                     <this.MutationColorMenu />
                     <this.ViewMenu />
                     <this.DownloadMenu />
