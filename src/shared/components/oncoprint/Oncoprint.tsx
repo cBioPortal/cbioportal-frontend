@@ -7,6 +7,7 @@ import {
     TrackSortDirection,
     InitParams,
     ColumnLabel,
+    IGeneticAlterationRuleSetParams,
 } from 'oncoprintjs';
 import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
@@ -275,6 +276,8 @@ export interface IOncoprintProps {
     alterationTypesInQuery?: string[];
 
     distinguishMutationType?: boolean;
+    test?: boolean;
+    rule?: IGeneticAlterationRuleSetParams;
     distinguishDrivers?: boolean;
     distinguishGermlineMutations?: boolean;
 
@@ -386,7 +389,8 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
                 () => this.trackSpecKeyToTrackId,
                 () => {
                     return this.props.molecularProfileIdToMolecularProfile;
-                }
+                },
+                this.props.rule
             );
             this.lastTransitionProps = _.clone(props);
         }

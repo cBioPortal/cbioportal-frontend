@@ -42,6 +42,7 @@ import { AlterationTypeConstants } from 'shared/constants';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     getAlteredUids,
+    getGeneticTrackRuleSetParams,
     getUnalteredUids,
     makeClinicalTracksMobxPromise,
     makeGenericAssayProfileCategoricalTracksMobxPromise,
@@ -55,7 +56,13 @@ import _ from 'lodash';
 import { onMobxPromise, toPromise } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { OncoprintJS, TrackGroupIndex, TrackId } from 'oncoprintjs';
+import {
+    IGeneticAlterationRuleSetParams,
+    OncoprintJS,
+    RGBAColor,
+    TrackGroupIndex,
+    TrackId,
+} from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
@@ -90,6 +97,7 @@ import '../../../globalStyles/oncoprintStyles.scss';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import { toDirectionString } from './SortUtils';
 import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
+import { hexToRGBA } from 'shared/lib/Colors';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -253,6 +261,15 @@ export default class ResultsViewOncoprint extends React.Component<
     @observable mouseInsideBounds: boolean = false;
 
     @observable renderingComplete = false;
+
+    @observable
+    rule: IGeneticAlterationRuleSetParams = getGeneticTrackRuleSetParams(
+        this.distinguishMutationType,
+        this.distinguishDrivers,
+        this.distinguishGermlineMutations
+    );
+
+    @observable test: boolean = false;
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
@@ -486,8 +503,14 @@ export default class ResultsViewOncoprint extends React.Component<
             get sortByCaseListDisabled() {
                 return !self.caseListSortPossible;
             },
+            get rule() {
+                return self.rule;
+            },
             get distinguishMutationType() {
                 return self.distinguishMutationType;
+            },
+            get test() {
+                return self.test;
             },
             get distinguishDrivers() {
                 return self.distinguishDrivers;
@@ -705,6 +728,12 @@ export default class ResultsViewOncoprint extends React.Component<
             },
             onSelectDistinguishMutationType: (s: boolean) => {
                 this.distinguishMutationType = s;
+            },
+            onSelectTest: (s: boolean) => {
+                this.test = s;
+            },
+            onSetRule: (rule: IGeneticAlterationRuleSetParams) => {
+                this.rule = rule;
             },
             onSelectDistinguishDrivers: action((s: boolean) => {
                 if (!s) {
@@ -1691,6 +1720,7 @@ export default class ResultsViewOncoprint extends React.Component<
                             this
                                 .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl
                         }
+                        setRules={this.setRules}
                     />
                 </FadeInteraction>
             );
@@ -1794,6 +1824,53 @@ export default class ResultsViewOncoprint extends React.Component<
         return WindowStore.size.width - 75;
     }
 
+    @action.bound
+    public setRules(alteration: string, color: RGBAColor | undefined) {
+        if (color == undefined) {
+            this.rule = getGeneticTrackRuleSetParams(
+                this.distinguishMutationType,
+                this.distinguishDrivers,
+                this.distinguishGermlineMutations
+            );
+            for (alteration in this.props.store.userAlterationColors) {
+                if (
+                    this.props.store.userAlterationColors[alteration] !==
+                    undefined
+                ) {
+                    this.rule.rule_params.conditional.disp_mut[
+                        alteration
+                    ].shapes[0].fill = hexToRGBA(
+                        this.props.store.userAlterationColors[alteration]!
+                    );
+                }
+            }
+        } else {
+            // const rules = getGeneticTrackRuleSetParams(this.distinguishMutationType,
+            //     this.distinguishDrivers,
+            //     this.distinguishGermlineMutations
+            // );
+            // if (rules.rule_params.conditional.disp_mut.missense && this.test) {
+            //     rules.rule_params.conditional.disp_mut.missense.shapes[0].fill = [0, 128, 0, 1]
+            // }
+            // else if (rules.rule_params.conditional.disp_mut.missense && !this.test) {
+            //     rules.rule_params.conditional.disp_mut.missense.shapes[0].fill = [83, 212, 0, 1]
+            // }
+            if (this.rule.rule_params.conditional.disp_mut[alteration]) {
+                this.rule.rule_params.conditional.disp_mut[
+                    alteration
+                ].shapes[0].fill = color;
+            }
+            // else if (rules.rule_params.conditional.disp_mut['splice,missense,inframe,trunc,promoter,other'] && this.test) {
+            //     rules.rule_params.conditional.disp_mut['splice,missense,inframe,trunc,promoter,other'].shapes[0].fill = [0, 128, 0, 1]
+            // }
+            // else if (rules.rule_params.conditional.disp_mut['splice,missense,inframe,trunc,promoter,other'] && !this.test) {
+            //     rules.rule_params.conditional.disp_mut['splice,missense,inframe,trunc,promoter,other'].shapes[0].fill = [83, 212, 0, 1]
+            // }
+            // this.rule = rules;
+        }
+        console.log(this.rule);
+    }
+
     public render() {
         getBrowserWindow().donk = this;
         return (
@@ -1895,6 +1972,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 distinguishMutationType={
                                     this.distinguishMutationType
                                 }
+                                test={this.test}
                                 distinguishDrivers={this.distinguishDrivers}
                                 distinguishGermlineMutations={
                                     this.distinguishGermlineMutations
@@ -1918,6 +1996,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 initParams={{
                                     max_height: Number.POSITIVE_INFINITY,
                                 }}
+                                rule={this.rule}
                             />
                         </div>
                     </div>
