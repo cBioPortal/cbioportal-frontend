@@ -395,9 +395,13 @@ describe('crc_msk_2017 study tests', () => {
         $(ADD_CHART_BUTTON).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_BUTTON).waitForEnabled({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
+        browser.waitUntil(
+            () =>
+                !$(ADD_CHART_BUTTON)
+                    .getAttribute('class')
+                    .includes('disabled'),
+            { timeout: WAIT_FOR_VISIBLE_TIMEOUT }
+        );
         setDropdownOpen(
             true,
             ADD_CHART_BUTTON,
@@ -723,9 +727,13 @@ describe('submit genes to results view query', () => {
         });
         it('generic assay chart should be added in the summary tab', function() {
             this.retries(0);
-            $(ADD_CHART_BUTTON).waitForEnabled({
-                timeout: 60000,
-            });
+            browser.waitUntil(
+                () =>
+                    !$(ADD_CHART_BUTTON)
+                        .getAttribute('class')
+                        .includes('disabled'),
+                { timeout: 60000 }
+            );
             $(ADD_CHART_BUTTON).click();
 
             // Change to GENERIC ASSAY tab
