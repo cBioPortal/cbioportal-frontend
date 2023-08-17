@@ -55,33 +55,42 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGeneric
 
     const genericAssayProfilesGroupedByGenericAssayType = _.groupBy(
         genericAssayProfiles,
-        'genericAssayType'
-    );
-    const genericAssayTypes = _.keys(
-        genericAssayProfilesGroupedByGenericAssayType
+        profile => profile.genericAssayType
     );
 
-    const genericAssayMetaGroupedByGenericAssayType: {
-        [genericAssayType: string]: GenericAssayMeta[];
+    const idByGenericAssayType: {
+        [genericAssayType: string]: string[];
     } = {};
 
+    const allGenericAssayMetaMap = _.keyBy(
+        await fetchGenericAssayMetaByProfileIds(
+            genericAssayProfiles.map(profile => profile.molecularProfileId)
+        ),
+        meta => meta.stableId
+    );
+
     await Promise.all(
-        genericAssayTypes.map(genericAssayType =>
-            fetchGenericAssayMetaByProfileIds(
-                _.map(
-                    genericAssayProfilesGroupedByGenericAssayType[
+        _.keys(genericAssayProfilesGroupedByGenericAssayType).map(
+            genericAssayType =>
+                fetchGenericAssayMetaByProfileIds(
+                    _.map(
+                        genericAssayProfilesGroupedByGenericAssayType[
+                            genericAssayType
+                        ],
+                        profile => profile.molecularProfileId
+                    ),
+                    'ID'
+                ).then(genericAssayMeta => {
+                    idByGenericAssayType[
                         genericAssayType
-                    ],
-                    profile => profile.molecularProfileId
-                )
-            ).then(genericAssayMeta => {
-                genericAssayMetaGroupedByGenericAssayType[
-                    genericAssayType
-                ] = genericAssayMeta;
-            })
+                    ] = genericAssayMeta.map(meta => meta.stableId);
+                })
         )
     );
-    return genericAssayMetaGroupedByGenericAssayType;
+
+    return _.mapValues(idByGenericAssayType, ids => {
+        return _.map(ids, id => allGenericAssayMetaMap[id]);
+    });
 }
 
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
@@ -91,26 +100,38 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
         return profile.molecularAlterationType === 'GENERIC_ASSAY';
     });
 
-    const genericAssayMetaGroupByMolecularProfileId: {
-        [molecularProfileId: string]: GenericAssayMeta[];
+    const idByMolecularProfileId: {
+        [molecularProfileId: string]: string[];
     } = {};
+
+    const allGenericAssayMetaMap = _.keyBy(
+        await fetchGenericAssayMetaByProfileIds(
+            genericAssayProfiles.map(profile => profile.molecularProfileId)
+        ),
+        meta => meta.stableId
+    );
 
     await Promise.all(
         genericAssayProfiles.map(profile =>
-            fetchGenericAssayMetaByProfileIds([
-                profile.molecularProfileId,
-            ]).then(genericAssayMeta => {
-                genericAssayMetaGroupByMolecularProfileId[
+            fetchGenericAssayMetaByProfileIds(
+                [profile.molecularProfileId],
+                'ID'
+            ).then(genericAssayMeta => {
+                idByMolecularProfileId[
                     profile.molecularProfileId
-                ] = genericAssayMeta;
+                ] = genericAssayMeta.map(meta => meta.stableId);
             })
         )
     );
-    return genericAssayMetaGroupByMolecularProfileId;
+
+    return _.mapValues(idByMolecularProfileId, ids => {
+        return _.map(ids, id => allGenericAssayMetaMap[id]);
+    });
 }
 
 export function fetchGenericAssayMetaByProfileIds(
-    genericAssayProfileIds: string[]
+    genericAssayProfileIds: string[],
+    projection?: 'DETAILED' | 'ID' | 'META' | 'SUMMARY'
 ) {
     if (genericAssayProfileIds.length > 0) {
         return client.fetchGenericAssayMetaUsingPOST({
@@ -120,6 +141,7 @@ export function fetchGenericAssayMetaByProfileIds(
                 // incorrectly requires both molecularProfileIds and genericAssayStableIds;
                 // use 'as' to tell TypeScript that this object really does fit.
             } as GenericAssayMetaFilter,
+            projection: projection || 'SUMMARY',
         });
     }
     return Promise.resolve([]);
