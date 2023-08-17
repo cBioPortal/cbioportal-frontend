@@ -4234,6 +4234,8 @@ export class ResultsViewPageStore extends AnalysisStore
                     } as MolecularProfileFilter,
                 });
 
+                let ret: MolecularProfile[] = profiles;
+
                 // expression profiles are not allowed
                 // under some circumstances
                 if (
@@ -4243,9 +4245,9 @@ export class ResultsViewPageStore extends AnalysisStore
                         false
                     )
                 ) {
-                    return profiles;
+                    ret = profiles;
                 } else {
-                    return profiles.filter(
+                    ret = profiles.filter(
                         p =>
                             ![
                                 AlterationTypeConstants.MRNA_EXPRESSION,
@@ -4256,6 +4258,9 @@ export class ResultsViewPageStore extends AnalysisStore
                             ].includes(p.molecularAlterationType)
                     );
                 }
+                return ret.filter(
+                    p => /450/.test(p.molecularProfileId) === false
+                );
             },
         },
         []
