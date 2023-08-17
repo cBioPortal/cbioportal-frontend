@@ -40,7 +40,9 @@ export function makeGenePanelPopupLink(
 ) {
     let anchor = $(
         `<span class="nobreak"><a href="#" ${
-            !profiled ? 'style="color:red;"' : ''
+            !profiled
+                ? 'style="text-decoration:line-through;" title="gene not profiled"'
+                : ''
         } oncontextmenu="return false;">${gene_panel_id}</a>${
             numSamples ? ` (${numSamples})` : ''
         }</span>`
