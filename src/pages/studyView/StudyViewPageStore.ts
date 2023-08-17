@@ -3019,7 +3019,6 @@ export class StudyViewPageStore
         const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
             values
         );
-        console.log(dataFilterValues);
         this.updateGenomicDataIntervalFiltersByValues(
             uniqueKey,
             _.cloneDeep(dataFilterValues)
@@ -3179,7 +3178,6 @@ export class StudyViewPageStore
         uniqueKey: string,
         values: DataFilterValue[]
     ): void {
-        console.log(values);
         if (values.length > 0) {
             const chart = this._geneSpecificChartMap.get(uniqueKey);
             const genomicDataIntervalFilter: GenomicDataFilter = {
@@ -3888,7 +3886,6 @@ export class StudyViewPageStore
         if (genomicDataIntervalFilters.length > 0) {
             filters.genomicDataFilters = genomicDataIntervalFilters;
         }
-        console.log(filters.genomicDataFilters);
 
         const genericAssayDataFilters = this.genericAssayDataFilters;
         if (genericAssayDataFilters.length > 0) {

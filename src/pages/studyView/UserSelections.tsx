@@ -237,14 +237,15 @@ export default class UserSelections extends React.Component<
                     let dataFilterComponent =
                         dataType === DataType.STRING
                             ? this.renderCategoricalDataFilter(
-                                  _.map(genomicDataIntervalFilter.values, d =>
-                                      _.assign(d, {
+                                  _.map(genomicDataIntervalFilter.values, d => {
+                                      return {
                                           label:
                                               getCNAByAlteration(
                                                   Number(d.value)
                                               ) || 'NA',
-                                      })
-                                  ),
+                                          ...d,
+                                      };
+                                  }),
                                   this.props.updateGenomicDataIntervalFilter,
                                   chartMeta
                               )
