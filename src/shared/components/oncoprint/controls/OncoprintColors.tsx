@@ -12,6 +12,7 @@ import {
     CLI_NO_COLOR,
     CLI_YES_COLOR,
     DARK_GREY,
+    rgbaToHex,
 } from 'shared/lib/Colors';
 import { COLORS } from 'pages/studyView/StudyViewUtils';
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
@@ -23,29 +24,65 @@ import { RGBAColor } from 'oncoprintjs';
 
 export interface IGroupCheckboxProps {
     alteration: string;
+    type: string;
     store?: ResultsViewPageStore;
     handlers: IOncoprintControlsHandlers;
     state: IOncoprintControlsState;
-    setRules?: (alteration: string, color: RGBAColor | undefined) => void;
-    color?: string;
+    setRules?: (
+        alteration: string,
+        type: string,
+        color: RGBAColor | undefined
+    ) => void;
+    color: RGBAColor;
     markedWithWarningSign: boolean;
 }
 
 const COLOR_UNDEFINED = '#FFFFFF';
 
-const alterationToLabel: { [alteration: string]: string } = {
-    missense: 'Missense Mutation (unknown significance)',
-    missense_rec: 'Missense Mutation (putative driver)',
-    trunc: 'Truncating Mutation (unknown significance)',
-    trunc_rec: 'Truncating Mutation (putative driver)',
-    inframe: 'Inframe Mutation (unknown significance)',
-    inframe_rec: 'Inframe Mutation (putative driver)',
-    splice: 'Splice Mutation (unknown significance)',
-    splice_rec: 'Splice Mutation (putative driver)',
-    promoter: 'Promoter Mutation (unknown significance)',
-    promoter_rec: 'Promoter Mutation (putative driver)',
-    other: 'Other Mutation (unknown significance)',
-    other_rec: 'Other Mutation (putative driver)',
+export const alterationToTypeToLabel: {
+    [alteration: string]: { [type: string]: string };
+} = {
+    // disp_cna
+    disp_cna: {
+        'amp_rec,amp': 'Amplification',
+        'gain_rec,gain': 'Gain',
+        'hetloss_rec,hetloss': 'Shallow Deletion',
+        'homdel_rec,homdel': 'Deep Deletion',
+    },
+    // disp_germ
+    disp_germ: {
+        true: 'Germline Mutation',
+    },
+    // disp_mrna
+    disp_mrna: {
+        high: 'mRNA High',
+        low: 'mRNA Low',
+    },
+    // disp_mut
+    disp_mut: {
+        missense: 'Missense Mutation (unknown significance)',
+        missense_rec: 'Missense Mutation (putative driver)',
+        trunc: 'Truncating Mutation (unknown significance)',
+        trunc_rec: 'Truncating Mutation (putative driver)',
+        inframe: 'Inframe Mutation (unknown significance)',
+        inframe_rec: 'Inframe Mutation (putative driver)',
+        splice: 'Splice Mutation (unknown significance)',
+        splice_rec: 'Splice Mutation (putative driver)',
+        promoter: 'Promoter Mutation (unknown significance)',
+        promoter_rec: 'Promoter Mutation (putative driver)',
+        other: 'Other Mutation (unknown significance)',
+        other_rec: 'Other Mutation (putative driver)',
+    },
+    // disp_prot
+    disp_prot: {
+        high: 'Protein High',
+        low: 'Protein Low',
+    },
+    // disp_structuralVariant
+    disp_structuralVariant: {
+        sv: 'Structural Variant (unknown significance)',
+        sv_rec: 'Structural Variant (putative driver)',
+    },
 };
 
 @observer
@@ -61,38 +98,24 @@ export default class OncoprintColors extends React.Component<
     @action.bound
     handleChangeComplete = (color: any, event: any) => {
         // if same color is select, unselect it (go back to no color)
-        if (color.hex === this.props.color) {
-            this.props.store?.onAlterationColorChange(
-                this.props.alteration,
-                undefined
-            );
+        if (color.hex === rgbaToHex(this.props.color)) {
             this.props.setRules &&
-                this.props.setRules(this.props.alteration, undefined);
-            this.props.store!.flagDuplicateColorsForAlterations(
-                this.props.alteration,
-                undefined
-            );
+                this.props.setRules(
+                    this.props.alteration,
+                    this.props.type,
+                    undefined
+                );
         } else {
-            this.props.store?.onAlterationColorChange(
-                this.props.alteration,
-                color.hex
-            );
             this.props.setRules &&
-                this.props.setRules(this.props.alteration, [
+                this.props.setRules(this.props.alteration, this.props.type, [
                     color.rgb.r,
                     color.rgb.g,
                     color.rgb.b,
                     color.rgb.a,
                 ]);
-            this.props.store!.flagDuplicateColorsForAlterations(
-                this.props.alteration,
-                color.hex
-            );
         }
         this.props.handlers.onSelectTest &&
             this.props.handlers.onSelectTest(!this.props.state.test!);
-        this.props.handlers.onSetRule &&
-            this.props.handlers.onSetRule(this.props.state.rule!);
     };
 
     @computed get colorList() {
@@ -119,7 +142,7 @@ export default class OncoprintColors extends React.Component<
                     circleSize={20}
                     circleSpacing={3}
                     onChangeComplete={this.handleChangeComplete}
-                    color={this.props.color}
+                    color={rgbaToHex(this.props.color)}
                     width="140px"
                 />
             </div>
@@ -129,7 +152,11 @@ export default class OncoprintColors extends React.Component<
     render() {
         return (
             <div>
-                {alterationToLabel[this.props.alteration]}
+                {
+                    alterationToTypeToLabel[this.props.alteration][
+                        this.props.type
+                    ]
+                }
                 <DefaultTooltip
                     overlay={
                         'You have selected identical colors for some alterations.'
@@ -164,13 +191,14 @@ export default class OncoprintColors extends React.Component<
                     >
                         <span
                             style={{
-                                // marginTop: 2,
-                                // marginRight: 2,
                                 float: 'right',
                             }}
                         >
                             <ColorPickerIcon
-                                color={this.props.color || COLOR_UNDEFINED}
+                                color={
+                                    rgbaToHex(this.props.color) ||
+                                    COLOR_UNDEFINED
+                                }
                             />
                         </span>
                     </DefaultTooltip>

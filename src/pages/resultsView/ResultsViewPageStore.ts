@@ -304,7 +304,7 @@ import {
     ONCOKB_DEFAULT_INFO,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
-import { RGBAColor } from 'oncoprintjs';
+import { IGeneticAlterationRuleSetParams, RGBAColor } from 'oncoprintjs';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -575,7 +575,9 @@ export class ResultsViewPageStore extends AnalysisStore
     @observable queryFormVisible: boolean = false;
 
     @observable userAlterationColors: {
-        [alteration: string]: string | undefined;
+        [alteration: string]: {
+            [type: string]: RGBAColor | undefined;
+        };
     } = {};
 
     private _selectedComparisonGroupsWarningSigns = observable.map<
@@ -599,44 +601,63 @@ export class ResultsViewPageStore extends AnalysisStore
     @action.bound
     public onAlterationColorChange(
         alteration: string,
-        color: string | undefined
+        type: string,
+        color: RGBAColor
     ) {
-        if (color == undefined && this.userAlterationColors[alteration]) {
-            delete this.userAlterationColors[alteration];
-        } else this.userAlterationColors[alteration] = color;
+        this.userAlterationColors[alteration][type] = color;
     }
 
-    @action public showAlterationWarningSign(
-        alteration: string,
-        markedValue: boolean
+    @action.bound
+    public setDefaultUserAlterationColors(
+        rule: IGeneticAlterationRuleSetParams
     ) {
-        this._selectedComparisonGroupsWarningSigns.set(alteration, markedValue);
-    }
-
-    public flagDuplicateColorsForAlterations(
-        alteration: string,
-        color: string | undefined
-    ) {
-        let colors: { [color: string]: number } = {};
-
-        Object.keys(this.userAlterationColors).forEach(
-            (a: string, i: number) => {
-                let alterationColor =
-                    a === alteration ? color : this.userAlterationColors[a];
-                if (
-                    alterationColor == undefined ||
-                    colors[alterationColor] == undefined
-                ) {
-                    if (alterationColor != undefined)
-                        colors[alterationColor] = 1;
-                    this.showAlterationWarningSign(alteration, false);
+        for (let alteration in rule.rule_params.conditional) {
+            this.userAlterationColors[alteration] = {};
+            for (let type in rule.rule_params.conditional[alteration]) {
+                if (alteration === 'disp_mrna') {
+                    this.userAlterationColors[alteration][type] = rule
+                        .rule_params.conditional[alteration][type].shapes[0]
+                        .stroke as RGBAColor;
                 } else {
-                    colors[alterationColor] = colors[alterationColor] + 1;
-                    this.showAlterationWarningSign(alteration, true);
+                    this.userAlterationColors[alteration][type] = rule
+                        .rule_params.conditional[alteration][type].shapes[0]
+                        .fill as RGBAColor;
                 }
             }
-        );
+        }
     }
+
+    // @action public showAlterationWarningSign(
+    //     alteration: string,
+    //     markedValue: boolean
+    // ) {
+    //     this._selectedComparisonGroupsWarningSigns.set(alteration, markedValue);
+    // }
+
+    // public flagDuplicateColorsForAlterations(
+    //     alteration: string,
+    //     color: string | undefined
+    // ) {
+    //     let colors: { [color: string]: number } = {};
+
+    //     Object.keys(this.userAlterationColors).forEach(
+    //         (a: string, i: number) => {
+    //             let alterationColor =
+    //                 a === alteration ? color : this.userAlterationColors[a];
+    //             if (
+    //                 alterationColor == undefined ||
+    //                 colors[alterationColor] == undefined
+    //             ) {
+    //                 if (alterationColor != undefined)
+    //                     colors[alterationColor] = 1;
+    //                 this.showAlterationWarningSign(alteration, false);
+    //             } else {
+    //                 colors[alterationColor] = colors[alterationColor] + 1;
+    //                 this.showAlterationWarningSign(alteration, true);
+    //             }
+    //         }
+    //     );
+    // }
 
     public isAlterationMarkedWithWarningSign(alteration: string): boolean {
         return !!this._selectedComparisonGroupsWarningSigns.get(alteration);
