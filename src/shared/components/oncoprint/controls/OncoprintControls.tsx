@@ -47,7 +47,7 @@ import {
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
 import { IGeneticAlterationRuleSetParams, RGBAColor } from 'oncoprintjs';
-import OncoprintColors from './OncoprintColors';
+import OncoprintColors, { alterationToTypeToLabel } from './OncoprintColors';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -144,7 +144,11 @@ export interface IOncoprintControlsProps {
     selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl?: {
         [genericAssayType: string]: string[];
     };
-    setRules?: (alteration: string, color: RGBAColor | undefined) => void;
+    setRules?: (
+        alteration: string,
+        type: string,
+        color: RGBAColor | undefined
+    ) => void;
 }
 
 export interface ISelectOption {
@@ -330,23 +334,7 @@ export default class OncoprintControls extends React.Component<
                     this.props.handlers.onSelectDistinguishMutationType(
                         !this.props.state.distinguishMutationType
                     );
-                // this.props.test && this.props.test();
-                // this.props.handlers.onSetRule &&
-                //     this.props.handlers.onSetRule(
-                //         this.props.state.rule
-                //     );
                 break;
-            // case EVENT_KEY.rule:
-            //     this.props.handlers.onSelectTest &&
-            //         this.props.handlers.onSelectTest(
-            //             !this.props.state.test
-            //         );
-            //     this.props.test && this.props.test();
-            //     this.props.handlers.onSetRule &&
-            //         this.props.handlers.onSetRule(
-            //             this.props.state.rule
-            //         );
-            //     break;
             case EVENT_KEY.distinguishGermlineMutations:
                 this.props.handlers.onSelectDistinguishGermlineMutations(
                     !this.props.state.distinguishGermlineMutations
@@ -869,53 +857,28 @@ export default class OncoprintControls extends React.Component<
                     className="oncoprint__controls__color_menu"
                     data-test="oncoprintColorDropdownMenu"
                 >
-                    {[
-                        'missense',
-                        'missense_rec',
-                        'trunc',
-                        'trunc_rec',
-                        'inframe',
-                        'inframe_rec',
-                        'splice',
-                        'splice_rec',
-                        'promoter',
-                        'promoter_rec',
-                        'other',
-                        'other_rec',
-                    ].map(alteration => (
-                        <OncoprintColors
-                            alteration={alteration}
-                            handlers={this.props.handlers}
-                            state={this.props.state}
-                            setRules={this.props.setRules}
-                            store={this.props.store}
-                            color={
-                                this.props.store?.userAlterationColors[
+                    {Object.keys(alterationToTypeToLabel).map(alteration =>
+                        Object.keys(
+                            alterationToTypeToLabel[alteration]
+                        ).map(type => (
+                            <OncoprintColors
+                                alteration={alteration}
+                                type={type}
+                                handlers={this.props.handlers}
+                                state={this.props.state}
+                                setRules={this.props.setRules}
+                                store={this.props.store}
+                                color={
+                                    this.props.store?.userAlterationColors[
+                                        alteration
+                                    ][type]!
+                                }
+                                markedWithWarningSign={this.props.store!.isAlterationMarkedWithWarningSign(
                                     alteration
-                                ]
-                            }
-                            markedWithWarningSign={this.props.store!.isAlterationMarkedWithWarningSign(
-                                alteration
-                            )}
-                        />
-                    ))}
-                    {/* <h5>Color by Alteration</h5>
-                    <div style={{ marginLeft: '10px' }}>
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="ColorByType"
-                                    type="checkbox"
-                                    value={EVENT_KEY.rule}
-                                    checked={
-                                        this.props.state.test
-                                    }
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Alteration
-                            </label>
-                        </div>
-                    </div> */}
+                                )}
+                            />
+                        ))
+                    )}
                 </div>
             </CustomDropdown>
         );

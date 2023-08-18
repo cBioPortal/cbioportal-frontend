@@ -97,7 +97,6 @@ import '../../../globalStyles/oncoprintStyles.scss';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import { toDirectionString } from './SortUtils';
 import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
-import { hexToRGBA } from 'shared/lib/Colors';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -424,6 +423,7 @@ export default class ResultsViewOncoprint extends React.Component<
         super(props);
 
         makeObservable(this);
+        this.props.store.setDefaultUserAlterationColors(this.rule);
         this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
@@ -1825,50 +1825,65 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @action.bound
-    public setRules(alteration: string, color: RGBAColor | undefined) {
+    public setRules(
+        alteration: string,
+        type: string,
+        color: RGBAColor | undefined
+    ) {
         if (color == undefined) {
             this.rule = getGeneticTrackRuleSetParams(
                 this.distinguishMutationType,
                 this.distinguishDrivers,
                 this.distinguishGermlineMutations
             );
-            for (alteration in this.props.store.userAlterationColors) {
-                if (
-                    this.props.store.userAlterationColors[alteration] !==
-                    undefined
-                ) {
-                    this.rule.rule_params.conditional.disp_mut[
-                        alteration
-                    ].shapes[0].fill = hexToRGBA(
-                        this.props.store.userAlterationColors[alteration]!
-                    );
+            for (let a in this.props.store.userAlterationColors) {
+                for (let t in this.props.store.userAlterationColors[a]) {
+                    if (a === 'disp_mrna') {
+                        if (a !== alteration && t !== type) {
+                            this.rule.rule_params.conditional[a][
+                                t
+                            ].shapes[0].stroke = this.props.store.userAlterationColors[
+                                a
+                            ][t];
+                        } else {
+                            this.props.store.onAlterationColorChange(
+                                alteration,
+                                type,
+                                this.rule.rule_params.conditional[a][t]
+                                    .shapes[0].stroke as RGBAColor
+                            );
+                        }
+                    } else {
+                        if (a !== alteration || t !== type) {
+                            this.rule.rule_params.conditional[a][
+                                t
+                            ].shapes[0].fill = this.props.store.userAlterationColors[
+                                a
+                            ][t];
+                        } else {
+                            this.props.store.onAlterationColorChange(
+                                alteration,
+                                type,
+                                this.rule.rule_params.conditional[a][t]
+                                    .shapes[0].fill as RGBAColor
+                            );
+                        }
+                    }
                 }
             }
         } else {
-            // const rules = getGeneticTrackRuleSetParams(this.distinguishMutationType,
-            //     this.distinguishDrivers,
-            //     this.distinguishGermlineMutations
-            // );
-            // if (rules.rule_params.conditional.disp_mut.missense && this.test) {
-            //     rules.rule_params.conditional.disp_mut.missense.shapes[0].fill = [0, 128, 0, 1]
-            // }
-            // else if (rules.rule_params.conditional.disp_mut.missense && !this.test) {
-            //     rules.rule_params.conditional.disp_mut.missense.shapes[0].fill = [83, 212, 0, 1]
-            // }
-            if (this.rule.rule_params.conditional.disp_mut[alteration]) {
-                this.rule.rule_params.conditional.disp_mut[
-                    alteration
+            if (alteration === 'disp_mrna') {
+                this.rule.rule_params.conditional[alteration][
+                    type
+                ].shapes[0].stroke = color;
+            } else {
+                this.rule.rule_params.conditional[alteration][
+                    type
                 ].shapes[0].fill = color;
             }
-            // else if (rules.rule_params.conditional.disp_mut['splice,missense,inframe,trunc,promoter,other'] && this.test) {
-            //     rules.rule_params.conditional.disp_mut['splice,missense,inframe,trunc,promoter,other'].shapes[0].fill = [0, 128, 0, 1]
-            // }
-            // else if (rules.rule_params.conditional.disp_mut['splice,missense,inframe,trunc,promoter,other'] && !this.test) {
-            //     rules.rule_params.conditional.disp_mut['splice,missense,inframe,trunc,promoter,other'].shapes[0].fill = [83, 212, 0, 1]
-            // }
-            // this.rule = rules;
+            this.props.store.onAlterationColorChange(alteration, type, color);
         }
-        console.log(this.rule);
+        // console.log(this.rule);
     }
 
     public render() {
