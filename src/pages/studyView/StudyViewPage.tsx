@@ -178,6 +178,10 @@ export default class StudyViewPage extends React.Component<
         let hashString: string = hash || getBrowserWindow().studyPageFilter;
         delete (window as any).studyPageFilter;
 
+        this.store.mutationMapperFF = query['test']
+            ? query['test'] == 'true'
+            : false;
+
         if (hashString) {
             const params = parse(hashString) as Partial<StudyViewURLQuery>;
 
@@ -368,7 +372,6 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get studyViewFullUrlWithFilter() {
-        console.log(this.store.filters);
         return `${window.location.protocol}//${window.location.host}${
             window.location.pathname
         }${window.location.search}#filterJson=${JSON.stringify(

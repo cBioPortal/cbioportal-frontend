@@ -30,6 +30,7 @@ export type IGeneCellProps = {
         tableType: FreqColumnTypeEnum
     ) => void;
     selectedMutationPlotGenes?: string[];
+    mutationMapperFF?: boolean;
 };
 
 @observer
@@ -107,21 +108,22 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         >
                             <i className="fa fa-search"></i>
                         </div>
-                        {this.props.selectedMutationPlotGenes && (
-                            <div
-                                className={classnames({
-                                    [styles.addGeneUI]: true,
-                                    [styles.selected]: this.props.selectedMutationPlotGenes.includes(
-                                        this.props.hugoGeneSymbol
-                                    ),
-                                })}
-                            >
-                                <i
-                                    className="fa fa-line-chart"
-                                    style={{ paddingLeft: 4 }}
-                                ></i>
-                            </div>
-                        )}
+                        {this.props.selectedMutationPlotGenes &&
+                            this.props.mutationMapperFF && (
+                                <div
+                                    className={classnames({
+                                        [styles.addGeneUI]: true,
+                                        [styles.selected]: this.props.selectedMutationPlotGenes.includes(
+                                            this.props.hugoGeneSymbol
+                                        ),
+                                    })}
+                                >
+                                    <i
+                                        className="fa fa-line-chart"
+                                        style={{ paddingLeft: 4 }}
+                                    ></i>
+                                </div>
+                            )}
                     </div>
                 </DefaultTooltip>
             </div>

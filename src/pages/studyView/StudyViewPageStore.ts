@@ -67,6 +67,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
+    filterAndAnnotateMutations,
     getAlterationTypesInOql,
     getDefaultProfilesForOql,
     getSurvivalClinicalAttributesPrefix,
@@ -210,7 +211,11 @@ import {
 } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+    REQUEST_ARG_ENUM,
+} from 'shared/constants';
 import {
     createSurvivalAttributeIdsDict,
     generateStudyViewSurvivalPlotTitle,
@@ -286,6 +291,13 @@ import {
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
+import { getGeneData } from './StudyViewMutationPlotUtils';
+import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import {
+    compileMutations,
+    FilteredAndAnnotatedMutationsReport,
+} from 'shared/lib/comparison/AnalysisStoreUtils';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -337,6 +349,7 @@ export type StudyViewURLQuery = {
     filterValues?: string;
     sharedGroups?: string;
     sharedCustomData?: string;
+    test?: string;
 };
 
 export type XvsYScatterChart = {
@@ -414,7 +427,7 @@ enum CustomDataTypeEnum {
     NUMERICAL = 'NUMERICAL',
 }
 
-export class StudyViewPageStore
+export class StudyViewPageStore extends AnalysisStore
     implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
@@ -422,10 +435,6 @@ export class StudyViewPageStore
     private chartToUsedColors: Map<string, Set<string>>;
 
     public studyViewQueryFilter: StudyViewURLQuery;
-    @observable
-    driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
-        () => false
-    );
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
@@ -440,11 +449,15 @@ export class StudyViewPageStore
     @observable mutationPlotStore: {
         [hugoGeneSymbol: string]: StudyViewMutationMapperStore;
     } = {};
-    // savedMutationPlotStoreData: {
-    //     [hugoGeneSymbol: string]: Mutation[];
-    // } = {};
     filteredMutationPlots = observable.map<string, number>();
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
+    @observable mutationGeneDataCache: {
+        [hugoGeneSymbol: string]: Gene;
+    } = {};
+    @observable annotatedDataCache: {
+        [hugoGeneSymbol: string]: AnnotatedMutation[];
+    };
+    driverAnnotationSettings = buildDriverAnnotationSettings(() => false);
 
     private getDataBinFilterSet(uniqueKey: string) {
         if (this.isGenericAssayChart(uniqueKey)) {
@@ -494,11 +507,11 @@ export class StudyViewPageStore
         private sessionServiceIsEnabled: boolean,
         private urlWrapper: StudyViewURLWrapper
     ) {
+        super();
         makeObservable(this);
 
         this.chartItemToColor = new Map();
         this.chartToUsedColors = new Map();
-
         /*
         Note for future refactoring:
         We should not have to put a check here because ideally this would never be called unless we have valid studies.
@@ -2532,9 +2545,64 @@ export class StudyViewPageStore
         );
     }
 
+    mutationMapperFF = true;
+
     visibleMutationPlotByGene(hugoGeneSymbol: string): Boolean {
         return this.visibleMutationPlotGenes.includes(hugoGeneSymbol);
     }
+
+    readonly studies = remoteData(
+        {
+            await: () => [this.allStudies],
+            invoke: async () => {
+                return client.fetchStudiesUsingPOST({
+                    studyIds: this.studyIds,
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                });
+            },
+        },
+        []
+    );
+
+    readonly genes = remoteData<Gene[]>({
+        await: () => [],
+        invoke: async () => {
+            let geneData: Gene[] = [];
+
+            if (this.visibleMutationPlotGenes.length > 0) {
+                this.visibleMutationPlotGenes.map(async gene => {
+                    if (this.mutationGeneDataCache[gene]) {
+                        geneData.push(this.mutationGeneDataCache[gene]);
+                    } else {
+                        const data = await getGeneData([gene]);
+                        this.mutationGeneDataCache[gene] = data[0];
+                        geneData.push(this.mutationGeneDataCache[gene]);
+                    }
+                });
+
+                return geneData;
+            }
+
+            return [];
+        },
+    });
+
+    readonly mutations = remoteData<Mutation[]>({
+        await: () => [],
+        invoke: async () => {
+            let mutations: Mutation[] = [];
+
+            this.visibleMutationPlotGenes.map(gene => {
+                this.mutationPlotData
+                    .get({ hugoGeneSymbol: gene })
+                    .result!.data.forEach(d => {
+                        mutations.push(d);
+                    });
+            });
+
+            return mutations;
+        },
+    });
 
     @action.bound
     async onCheckGene(
@@ -2574,8 +2642,10 @@ export class StudyViewPageStore
             .join(' ');
 
         // trigger an update to mutation plot for the selected gene.
-        const isQueried = false;
-        if (selectedTable == FreqColumnTypeEnum.MUTATION) {
+        if (
+            this.mutationMapperFF &&
+            selectedTable == FreqColumnTypeEnum.MUTATION
+        ) {
             this.addMutationPlotByChart(hugoGeneSymbol);
         }
     }
@@ -2686,34 +2756,89 @@ export class StudyViewPageStore
         }
     >(q => ({
         await: () => [this.selectedSamples, this.mutationProfiles],
-        invoke: async () => ({
-            data: await getMutationData(
-                this.selectedSamples.result,
-                this.mutationProfiles.result,
-                [q.hugoGeneSymbol]
-            ),
-        }),
+        invoke: async () => {
+            return {
+                data: await getMutationData(
+                    this.selectedSamples.result,
+                    this.mutationProfiles.result,
+                    [q.hugoGeneSymbol]
+                ),
+            };
+        },
     }));
 
-    public createMutationStore(hugoGeneSymbol: string): void {
-        const data = this.mutationPlotData.get({ hugoGeneSymbol });
-        const store = new StudyViewMutationMapperStore(
-            { hugoGeneSymbol },
-            {},
-            () => data.result!.data
-        );
+    readonly filteredMutationAnnotationsReport = new MobxPromiseCache<
+        {
+            hugoGeneSymbol: string;
+        },
+        {
+            data: FilteredAndAnnotatedMutationsReport<AnnotatedMutation>;
+        }
+    >(q => ({
+        await: () => [
+            this.mutationPlotData.get({ hugoGeneSymbol: q.hugoGeneSymbol }),
+            this.getMutationPutativeDriverInfo,
+        ],
+        invoke: async () => {
+            if (!this.mutationGeneDataCache[q.hugoGeneSymbol]) {
+                const data = await getGeneData([q.hugoGeneSymbol]);
+                this.mutationGeneDataCache[q.hugoGeneSymbol] = data[0];
+            }
 
-        this.mutationPlotStore[hugoGeneSymbol] = store;
+            return {
+                data: filterAndAnnotateMutations(
+                    this.mutationPlotData.get({
+                        hugoGeneSymbol: q.hugoGeneSymbol,
+                    }).result!.data,
+                    this.getMutationPutativeDriverInfo.result!,
+                    this.mutationGeneDataCache[q.hugoGeneSymbol]
+                ),
+            };
+        },
+    }));
+
+    public annotatedDataForGene = new MobxPromiseCache<
+        {
+            hugoGeneSymbol: string;
+        },
+        {
+            data: AnnotatedMutation[];
+        }
+    >(q => ({
+        await: () => [
+            this.filteredMutationAnnotationsReport.get({
+                hugoGeneSymbol: q.hugoGeneSymbol,
+            }),
+            this.mutations,
+            this.studies,
+        ],
+        invoke: async () => {
+            const p = this.filteredMutationAnnotationsReport.get({
+                hugoGeneSymbol: q.hugoGeneSymbol,
+            });
+
+            return {
+                data: compileMutations(p.result!.data, false, false),
+            };
+        },
+    }));
+
+    public async createMutationStore(hugoGeneSymbol: string): Promise<void> {
+        const annotatedData = this.annotatedDataForGene.get({ hugoGeneSymbol });
+
+        if (annotatedData.isComplete) {
+            const store = new StudyViewMutationMapperStore(
+                { hugoGeneSymbol },
+                {},
+                () => annotatedData.result!.data
+            );
+
+            this.mutationPlotStore[hugoGeneSymbol] = store;
+        }
     }
 
     @action
     updateStudyViewFilter(hugoGeneSymbol: string) {
-        // Saving the present form of mutationstore
-        // this.savedMutationPlotStoreData = {};
-        // this.savedMutationPlotStoreData[hugoGeneSymbol] = [];
-        // const data = Object.assign(this.savedMutationPlotStoreData[hugoGeneSymbol], this.mutationPlotStore[hugoGeneSymbol].dataStore.allData);
-        // console.log(data);
-
         const filteredMutationPlotData = this.mutationPlotStore[hugoGeneSymbol]
             .samplesByPosition;
 
@@ -2749,26 +2874,6 @@ export class StudyViewPageStore
             this.createMutationStore(hugoGeneSymbol);
         }
         return this.mutationPlotStore[hugoGeneSymbol];
-    }
-
-    @action
-    public getMutationStoreBySavedData(
-        hugoGeneSymbol: string,
-        data: Mutation[]
-    ): StudyViewMutationMapperStore {
-        if (
-            data.length ===
-            this.mutationPlotStore[hugoGeneSymbol].dataStore.allData.length
-        ) {
-            return this.mutationPlotStore[hugoGeneSymbol];
-        }
-        const store = new StudyViewMutationMapperStore(
-            { hugoGeneSymbol },
-            {},
-            () => data
-        );
-
-        return (this.mutationPlotStore[hugoGeneSymbol] = store);
     }
 
     @action.bound
@@ -6147,6 +6252,7 @@ export class StudyViewPageStore
                     minH: 2,
                 });
                 this.visibleMutationPlotGenes.push(uniqueKey);
+                this.getOrInitMutationStore(uniqueKey);
             }
         });
     }
@@ -7719,6 +7825,7 @@ export class StudyViewPageStore
     public readonly sampleSet = remoteData({
         await: () => [this.samples],
         invoke: () => {
+            console.log(this.samples);
             const sampleSet = new ComplexKeyMap<Sample>();
             for (const sample of this.samples.result!) {
                 sampleSet.set(

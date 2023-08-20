@@ -63,3 +63,13 @@
     align-items: center;
     justify-content: center;
 }
+
+.filterResetPanelContainer {
+    height: '3rem';
+    position: 'relative';
+    display: 'flex';
+    align-items: 'center';
+    justify-content: 'center';
+    padding-top: '10px';
+    width: '100%';
+}

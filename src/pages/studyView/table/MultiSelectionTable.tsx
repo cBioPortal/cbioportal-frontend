@@ -98,6 +98,7 @@ export type MultiSelectionTableProps = {
     columns: MultiSelectionTableColumn[];
     setOperationsButtonText: string;
     selectedMutationPlotGenes?: string[];
+    mutationMapperFF?: boolean;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {
@@ -189,6 +190,7 @@ export class MultiSelectionTable extends React.Component<
                             selectedMutationPlotGenes={
                                 this.props.selectedMutationPlotGenes
                             }
+                            mutationMapperFF={this.props.mutationMapperFF}
                         />
                     );
                 },

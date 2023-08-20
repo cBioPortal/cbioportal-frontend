@@ -688,7 +688,7 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.MUTATION_DIAGRAM: {
-                props.promise = this.store.mutationPlotData.get({
+                props.promise = this.store.annotatedDataForGene.get({
                     hugoGeneSymbol: chartMeta.uniqueKey,
                 });
                 props.downloadTypes = ['SVG', 'PNG', 'PDF'];
@@ -698,6 +698,7 @@ export class StudySummaryTab extends React.Component<
                 props.onResetSelection = () => {
                     this.store.removeMutationPlotFilters(chartMeta.uniqueKey);
                 };
+
                 break;
             }
             default:

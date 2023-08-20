@@ -549,10 +549,13 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     }
 
     public render() {
+        console.log(this.options);
+        console.log(this.driverVsVusOptions);
+        console.log(this.props.counts);
         return (
             <div style={{ display: 'inline-flex' }}>
                 <div className={styles.legendPanel}>
-                    <table style={{ height: 149 }}>
+                    <thead style={{ height: 149 }}>
                         <BadgeSelector
                             options={this.driverVsVusOptions}
                             getOptionLabel={this.getDriverVsVusOptionLabel}
@@ -572,7 +575,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                             onBadgeSelect={this.onProteinBadgeSelect}
                             onOnlySelect={this.onProteinOnlySelect}
                             badgeLabelFormat={badgeLabelFormat}
-                            useOnlyFeature={true}
+                            useOnlyFeature={this.props.useOnlyFeature}
                         />
                         <BadgeSelector
                             options={this.options}
@@ -584,9 +587,9 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                             onBadgeSelect={this.onProteinBadgeSelect}
                             onOnlySelect={this.onProteinOnlySelect}
                             badgeLabelFormat={badgeLabelFormat}
-                            useOnlyFeature={true}
+                            useOnlyFeature={this.props.useOnlyFeature}
                         />
-                    </table>
+                    </thead>
                 </div>
                 <div
                     style={{

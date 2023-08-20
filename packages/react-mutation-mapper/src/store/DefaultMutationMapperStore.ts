@@ -363,6 +363,8 @@ class DefaultMutationMapperStore<T extends Mutation>
             }
         );
 
+        console.log(map);
+
         return map;
     }
 

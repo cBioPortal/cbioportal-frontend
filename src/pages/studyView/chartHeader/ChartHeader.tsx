@@ -24,7 +24,10 @@ import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescrip
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 import { AppContext } from 'cbioportal-frontend-commons';
-import { DefaultLollipopPlotLegend } from 'react-mutation-mapper';
+import DriverAnnotationProteinImpactTypeBadgeSelector from 'shared/components/mutationMapper/DriverAnnotationProteinImpactTypeBadgeSelector';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE } from 'shared/lib/MutationUtils';
+import _ from 'lodash';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -851,7 +854,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             </DefaultTooltip>
                             <If
                                 condition={
-                                    this.props.chartType ==
+                                    this.props.chartType ===
                                     ChartTypeEnum.MUTATION_DIAGRAM
                                 }
                             >
@@ -860,8 +863,32 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     trigger={['hover']}
                                     placement={this.tooltipPosition}
                                     align={this.tooltipAlign}
-                                    overlay={<DefaultLollipopPlotLegend />}
-                                    destroyTooltipOnHide={false}
+                                    overlay={
+                                        this.props.store.mutationPlotStore[
+                                            this.props.chartMeta.uniqueKey
+                                        ] &&
+                                        this.props.store.mutationPlotStore[
+                                            this.props.chartMeta.uniqueKey
+                                        ].activeTranscript.isComplete ? (
+                                            <div>
+                                                <DriverAnnotationProteinImpactTypeBadgeSelector
+                                                    counts={
+                                                        this.props.store
+                                                            .mutationPlotStore[
+                                                            this.props.chartMeta
+                                                                .uniqueKey
+                                                        ]
+                                                            .tooltipDriverAnnotationImpactTypeBadgeCounts
+                                                    }
+                                                />
+                                            </div>
+                                        ) : (
+                                            <LoadingIndicator
+                                                isLoading={true}
+                                            />
+                                        )
+                                    }
+                                    destroyTooltipOnHide={true}
                                 >
                                     <div
                                         className={classnames(

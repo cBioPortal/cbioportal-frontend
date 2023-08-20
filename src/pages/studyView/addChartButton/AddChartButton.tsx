@@ -711,15 +711,17 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             found: Gene[];
             suggestions: GeneReplacement[];
         };
-        queryStr: String;
+        queryStr: string;
     };
 
     get geneButtonActive() {
-        // If the currently present plots and visible plots have a difference, the button should be enabled.
+        // If the query is different from the previous request, and a valid one activate the button, and update the previous query.
+        const presQuery = this.props.store.visibleMutationPlotGenes.join(' ');
         if (
             !_.isUndefined(this.mutationPlotOQLData) &&
-            this.props.store.visibleMutationPlotGenes.length !==
-                this.mutationPlotOQLData.validationResult.found.length
+            this.mutationPlotOQLData.queryStr.toUpperCase() !== presQuery &&
+            !this.mutationPlotOQLData.validationResult.suggestions.length &&
+            !this.mutationPlotOQLData.q.error
         ) {
             return true;
         }
@@ -1100,46 +1102,48 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             {this.addXvsYChartButton}
                         </div>
                     </MSKTab>
-                    <MSKTab
-                        id={'Mutation_Plots'}
-                        linkText={<span>Mutation Plot</span>}
-                        key={5}
-                    >
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
+                    {this.props.store.mutationMapperFF && (
+                        <MSKTab
+                            id={'Mutation_Plots'}
+                            linkText={<span>Mutation Plot</span>}
+                            key={5}
                         >
-                            <OQLTextArea
-                                inputGeneQuery={this.props.store.visibleMutationPlotGenes.join(
-                                    ' '
-                                )}
-                                validateInputGeneQuery={true}
-                                callback={this.updateSelectedGenes}
-                                submitButton={
-                                    <button
-                                        className={'btn btn-primary btn-sm'}
-                                        disabled={!this.geneButtonActive}
-                                        style={{ marginLeft: 2 }}
-                                        onClick={() => {
-                                            this.props.store.handleMutationPlotQuery(
-                                                this.mutationPlotOQLData.q,
-                                                this.mutationPlotOQLData
-                                                    .validationResult
-                                            );
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                }}
+                            >
+                                <OQLTextArea
+                                    inputGeneQuery={this.props.store.visibleMutationPlotGenes
+                                        .join(' ')
+                                        .toUpperCase()}
+                                    validateInputGeneQuery={true}
+                                    callback={this.updateSelectedGenes}
+                                    submitButton={
+                                        <button
+                                            className={'btn btn-primary btn-sm'}
+                                            disabled={!this.geneButtonActive}
+                                            style={{ marginLeft: 2 }}
+                                            onClick={() => {
+                                                this.props.store.handleMutationPlotQuery(
+                                                    this.mutationPlotOQLData.q,
+                                                    this.mutationPlotOQLData
+                                                        .validationResult
+                                                );
 
-                                            this.updateInfoMessage(
-                                                'Mutation plots updated!'
-                                            );
-                                        }}
-                                    >
-                                        Update Plots
-                                    </button>
-                                }
-                            />
-                        </div>
-                    </MSKTab>
+                                                this.updateInfoMessage(
+                                                    'Mutation plots updated!'
+                                                );
+                                            }}
+                                        >
+                                            Update Plots
+                                        </button>
+                                    }
+                                />
+                            </div>
+                        </MSKTab>
+                    )}
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
 
                     {this.showResetButton && (

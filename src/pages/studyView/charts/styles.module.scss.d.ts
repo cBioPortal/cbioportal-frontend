@@ -9,6 +9,7 @@ declare const styles: {
   readonly "chartWidthTwo": string;
   readonly "controls": string;
   readonly "controlsAtTop": string;
+  readonly "filterResetPanelContainer": string;
   readonly "highlight": string;
 };
 export = styles;

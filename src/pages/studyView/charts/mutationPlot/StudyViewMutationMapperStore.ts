@@ -1,11 +1,25 @@
 import { Mutation } from 'cbioportal-ts-api-client';
-import {} from 'react-mutation-mapper';
 import {
+    ApplyFilterFn,
+    DataFilterType,
     DefaultMutationMapperDataStore,
     DefaultMutationMapperStore,
+    FilterApplier,
+    applyDataFilters,
+    groupDataByGroupFilters,
+    groupDataByProteinImpactType,
 } from 'react-mutation-mapper';
 import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
+import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
+import {
+    ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
+    createAnnotatedProteinImpactTypeFilter,
+    isPutativeDriver,
+} from 'shared/lib/MutationUtils';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { convertPatientsStudiesAttrToSamples } from 'pages/groupComparison/GroupComparisonUtils';
+import { ProteinImpactType } from 'cbioportal-frontend-commons';
 
 export type SampleData = {
     sampleId: string;
@@ -20,6 +34,7 @@ interface DefaultMutationMapperStoreConfig {
     ptmSources?: string[];
     filterMutationsBySelectedTranscript?: boolean;
     genomeNexusUrl?: string;
+    filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
     oncoKbUrl?: string;
     enableCivic?: boolean;
     enableOncoKb?: boolean;
@@ -29,6 +44,7 @@ interface DefaultMutationMapperStoreConfig {
     getMutationCount?: (mutation: Partial<Mutation>) => number;
     getTumorType?: (mutation: Partial<Mutation>) => string;
     genomeBuild?: string;
+    filterApplier?: FilterApplier;
 }
 
 export default class StudyViewMutationMapperStore extends DefaultMutationMapperStore<
@@ -41,6 +57,50 @@ export default class StudyViewMutationMapperStore extends DefaultMutationMapperS
     ) {
         super(gene, config, getMutations);
         makeObservable(this);
+    }
+
+    @computed
+    get tooltipDriverAnnotationImpactTypeBadgeValues(): any {
+        const dataStore = this.dataStore as DefaultMutationMapperDataStore;
+        const filters = Object.values(ProteinImpactType).map(value => ({
+            group: value,
+            filter: {
+                type: DataFilterType.PROTEIN_IMPACT_TYPE,
+                values: [value],
+            },
+        }));
+
+        console.log(filters);
+
+        // Use customized filter for putative driver annotation
+        const groupedData = groupDataByGroupFilters(
+            filters,
+            dataStore.allData,
+            createAnnotatedProteinImpactTypeFilter(isPutativeDriver)
+        );
+
+        return _.keyBy(groupedData, d => d.group);
+    }
+
+    @computed
+    public get tooltipDriverAnnotationImpactTypeBadgeCounts():
+        | undefined
+        | {
+              [proteinImpactType: string]: number;
+          } {
+        const map: { [proteinImpactType: string]: number } = {};
+
+        Object.keys(this.tooltipDriverAnnotationImpactTypeBadgeValues).forEach(
+            proteinImpactType => {
+                const g = this.tooltipDriverAnnotationImpactTypeBadgeValues[
+                    proteinImpactType
+                ];
+                map[g.group] = g.data.length;
+            }
+        );
+
+        console.log(map);
+        return map;
     }
 
     @computed

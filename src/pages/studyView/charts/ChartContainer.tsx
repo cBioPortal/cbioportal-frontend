@@ -87,6 +87,7 @@ import {
     FilterResetPanel,
     LollipopMutationPlot,
 } from 'react-mutation-mapper';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -189,7 +190,7 @@ export interface IChartContainerProps {
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private chartHeaderHeight = 20;
     private mutationPlotRef: LollipopMutationPlot<any>;
-    private mutationPlotHeightConstant = 140;
+    private mutationPlotHeightConstant = 120;
     private mutationPlotWidthConstant = 165;
 
     private handlers: any;
@@ -496,11 +497,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return (
             <div
                 style={{
-                    position: 'absolute',
+                    position: 'relative',
                     zIndex: 2,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    bottom: '0 !important',
                     display: 'flex',
                     border: '1px solid transparent',
                     borderRadius: 4,
@@ -558,21 +556,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get chart(): (() => JSX.Element) | null {
-        // if(this.chartType == ChartTypeEnum.MUTATION_DIAGRAM){
-        //     if(this.props.showResetIconMutationPlot){
-        //         console.log("Filtered, take from save one");
-        //         console.log(this.props.store.savedMutationPlotStoreData[this.props.chartMeta.uniqueKey]);
-
-        //         // console.log(this.props.store.savedMutationPlotStore[this.props.chartMeta.uniqueKey].dataStore.allData.length);
-        //     }
-        //     else{
-        //         console.log("Not filtered, create please1");
-        //         console.log(this.props.chartMeta.uniqueKey);
-        //         console.log(this.props.store.getOrInitMutationStore(
-        //             this.props.chartMeta.uniqueKey
-        //         ).dataStore.allData.length);
-        //     }
-        // }
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
                 return () => (
@@ -668,6 +651,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             selectedMutationPlotGenes={
                                 this.props.store.visibleMutationPlotGenes
                             }
+                            mutationMapperFF={this.props.store.mutationMapperFF}
                             filters={this.props.filters}
                             onSubmitSelection={this.handlers.onValueSelection}
                             onChangeSelectedRows={
@@ -1321,44 +1305,58 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             case ChartTypeEnum.MUTATION_DIAGRAM:
-                const store = this.props.store.getOrInitMutationStore(
-                    this.props.chartMeta.uniqueKey
-                );
+                const gene = this.props.chartMeta.uniqueKey;
+                const store = this.props.store.getOrInitMutationStore(gene);
 
-                const element = (
-                    <LollipopMutationPlot
-                        store={store}
-                        autoHideControls={false}
-                        showLegendToggle={false}
-                        showDownloadControls={false}
-                        showTrackSelector={false}
-                        showYMaxSlider={false}
-                        geneWidth={
-                            this.props.store.chartsDimension.get(
-                                this.props.chartMeta.uniqueKey
-                            )!.w * this.mutationPlotWidthConstant
-                        }
-                        vizHeight={
-                            this.props.store.chartsDimension.get(
-                                this.props.chartMeta.uniqueKey
-                            )!.h * this.mutationPlotHeightConstant
-                        }
-                        onRef={(ref: any) => {
-                            this.mutationPlotRef = ref;
-                        }}
-                        yAxisLabelFormatter={() => {
-                            return '';
-                        }}
-                    />
-                );
+                const plotSettings = {
+                    autoHideControls: false,
+                    showLegendToggle: false,
+                    showDownloadControls: false,
+                    showTrackSelector: false,
+                    showYMaxSlider: false,
+                    yAxisLabelFormatter: () => '',
+                };
+                const plotDimension = this.props.store.chartsDimension.get(
+                    gene
+                )!;
 
                 return () =>
                     this.props.promise.isComplete &&
+                    store &&
                     !store.activeTranscript.isPending ? (
                         <div>
-                            {store.samplesByPosition.length > 0 &&
-                                this.getMutationPlotControls()}
-                            {element}
+                            <div
+                                style={{
+                                    height: '3rem',
+                                    width: '100%',
+                                    position: 'relative',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    paddingTop: '10px',
+                                }}
+                            >
+                                {store.samplesByPosition.length > 0 &&
+                                    this.getMutationPlotControls()}
+                            </div>
+                            <LollipopMutationPlot
+                                store={store}
+                                geneWidth={
+                                    plotDimension.w *
+                                    this.mutationPlotWidthConstant
+                                }
+                                vizHeight={
+                                    plotDimension.h *
+                                    this.mutationPlotHeightConstant
+                                }
+                                onRef={(ref: any) => {
+                                    this.mutationPlotRef = ref;
+                                }}
+                                isPutativeDriver={(m: AnnotatedMutation) => {
+                                    return m.putativeDriver;
+                                }}
+                                {...plotSettings}
+                            />
                         </div>
                     ) : (
                         <LoadingIndicator isLoading={true}></LoadingIndicator>
@@ -1398,6 +1396,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     public render() {
+        if (this.chartType === ChartTypeEnum.MUTATION_DIAGRAM) {
+            console.log(this.props.promise);
+        }
         return (
             <div
                 className={classnames(styles.chart, {
