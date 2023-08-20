@@ -549,9 +549,6 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     }
 
     public render() {
-        console.log(this.options);
-        console.log(this.driverVsVusOptions);
-        console.log(this.props.counts);
         return (
             <div style={{ display: 'inline-flex' }}>
                 <div className={styles.legendPanel}>

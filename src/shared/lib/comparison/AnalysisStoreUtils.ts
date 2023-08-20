@@ -16,7 +16,6 @@ export function compileMutations<
     excludeVus: boolean,
     excludeGermline: boolean
 ) {
-    console.log(report);
     let mutations = report.data;
     if (!excludeVus) {
         mutations = mutations.concat(report.vus);

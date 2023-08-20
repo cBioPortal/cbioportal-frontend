@@ -454,9 +454,6 @@ export class StudyViewPageStore extends AnalysisStore
     @observable mutationGeneDataCache: {
         [hugoGeneSymbol: string]: Gene;
     } = {};
-    @observable annotatedDataCache: {
-        [hugoGeneSymbol: string]: AnnotatedMutation[];
-    };
     driverAnnotationSettings = buildDriverAnnotationSettings(() => false);
 
     private getDataBinFilterSet(uniqueKey: string) {
@@ -2659,6 +2656,7 @@ export class StudyViewPageStore extends AnalysisStore
         }
     }
 
+    @action.bound
     pushMutationChart(hugoGeneSymbol: string) {
         const mutationPlotSpecs = [
             {
@@ -2670,6 +2668,7 @@ export class StudyViewPageStore extends AnalysisStore
         this.launchToastMessage(`Mutation Plot for ${hugoGeneSymbol} added.`);
     }
 
+    @action.bound
     deleteMutationChart(hugoGeneSymbol: string) {
         this.changeChartVisibility(hugoGeneSymbol, false);
         _.pull(this.visibleMutationPlotGenes, hugoGeneSymbol);
@@ -2677,6 +2676,7 @@ export class StudyViewPageStore extends AnalysisStore
         this.launchToastMessage(`Mutation Plot for ${hugoGeneSymbol} removed.`);
     }
 
+    @action.bound
     deleteAllMutationChart() {
         this.visibleMutationPlotGenes.forEach(gene => {
             this.changeChartVisibility(gene, false);
@@ -2843,27 +2843,27 @@ export class StudyViewPageStore extends AnalysisStore
             .samplesByPosition;
 
         if (filteredMutationPlotData.length) {
-            if (!this.filteredMutationPlots.has(hugoGeneSymbol)) {
-                const filteredSamples: SampleIdentifier[] = this.getOrInitMutationStore(
-                    hugoGeneSymbol
-                ).samplesByPosition.map<SampleIdentifier>((val: SampleData) => {
-                    return {
-                        studyId: val.studyId,
-                        sampleId: val.sampleId,
-                    };
-                });
+            const filteredSamples: SampleIdentifier[] = this.getOrInitMutationStore(
+                hugoGeneSymbol
+            ).samplesByPosition.map<SampleIdentifier>((val: SampleData) => {
+                return {
+                    studyId: val.studyId,
+                    sampleId: val.sampleId,
+                };
+            });
 
-                trackStudyViewFilterEvent('mutationPlotFilter', this);
-                this.filteredMutationPlots.set(
-                    hugoGeneSymbol,
-                    this.getOrInitMutationStore(hugoGeneSymbol)
-                        .samplesByPosition.length
-                );
-                this._chartSampleIdentifiersFilterSet.set(
-                    hugoGeneSymbol,
-                    filteredSamples
-                );
-            }
+            // Analytics
+            trackStudyViewFilterEvent('mutationPlotFilter', this);
+
+            this.filteredMutationPlots.set(
+                hugoGeneSymbol,
+                this.getOrInitMutationStore(hugoGeneSymbol).samplesByPosition
+                    .length
+            );
+            this._chartSampleIdentifiersFilterSet.set(
+                hugoGeneSymbol,
+                filteredSamples
+            );
         }
     }
 

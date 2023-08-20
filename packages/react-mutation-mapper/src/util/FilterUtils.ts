@@ -234,8 +234,6 @@ export function groupDataByProteinImpactType(sortedFilteredData: any[]) {
         applyDefaultProteinImpactTypeFilter
     );
 
-    console.log(groupedData);
-
     return _.keyBy(groupedData, d => d.group);
 }
 

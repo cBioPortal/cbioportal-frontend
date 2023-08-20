@@ -1396,9 +1396,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     public render() {
-        if (this.chartType === ChartTypeEnum.MUTATION_DIAGRAM) {
-            console.log(this.props.promise);
-        }
         return (
             <div
                 className={classnames(styles.chart, {

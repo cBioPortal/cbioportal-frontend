@@ -5,20 +5,14 @@ import {
     DefaultMutationMapperDataStore,
     DefaultMutationMapperStore,
     FilterApplier,
-    applyDataFilters,
     groupDataByGroupFilters,
-    groupDataByProteinImpactType,
 } from 'react-mutation-mapper';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import _ from 'lodash';
-import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
 import {
-    ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
     createAnnotatedProteinImpactTypeFilter,
     isPutativeDriver,
 } from 'shared/lib/MutationUtils';
-import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
-import { convertPatientsStudiesAttrToSamples } from 'pages/groupComparison/GroupComparisonUtils';
 import { ProteinImpactType } from 'cbioportal-frontend-commons';
 
 export type SampleData = {
@@ -70,8 +64,6 @@ export default class StudyViewMutationMapperStore extends DefaultMutationMapperS
             },
         }));
 
-        console.log(filters);
-
         // Use customized filter for putative driver annotation
         const groupedData = groupDataByGroupFilters(
             filters,
@@ -84,10 +76,10 @@ export default class StudyViewMutationMapperStore extends DefaultMutationMapperS
 
     @computed
     public get tooltipDriverAnnotationImpactTypeBadgeCounts():
-        | undefined
         | {
               [proteinImpactType: string]: number;
-          } {
+          }
+        | undefined {
         const map: { [proteinImpactType: string]: number } = {};
 
         Object.keys(this.tooltipDriverAnnotationImpactTypeBadgeValues).forEach(
@@ -99,7 +91,6 @@ export default class StudyViewMutationMapperStore extends DefaultMutationMapperS
             }
         );
 
-        console.log(map);
         return map;
     }
 

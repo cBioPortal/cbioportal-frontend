@@ -304,8 +304,6 @@ export default class MutationMapper<
             },
         }));
 
-        console.log(filters);
-
         // Use customized filter for putative driver annotation
         const groupedData = groupDataByGroupFilters(
             filters,
@@ -319,7 +317,6 @@ export default class MutationMapper<
     @computed
     protected get sortedFilteredDataWithoutProteinImpactTypeFilter() {
         // there are two types of filters (with putative driver, without putative driver)
-        console.log(this.store.dataStore.dataFilters);
         const filtersWithoutProteinImpactTypeFilter = this.store.dataStore.dataFilters.filter(
             f =>
                 f.type !== DataFilterType.PROTEIN_IMPACT_TYPE &&
