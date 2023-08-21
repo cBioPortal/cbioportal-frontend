@@ -28,6 +28,8 @@ import DriverAnnotationProteinImpactTypeBadgeSelector from 'shared/components/mu
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE } from 'shared/lib/MutationUtils';
 import _ from 'lodash';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -278,7 +280,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             this.props.chartControls &&
             this.props.downloadTypes &&
             this.props.downloadTypes.length > 0 &&
-            this.context.showDownloadControls === true
+            getServerConfig().skin_hide_download_controls !==
+                DownloadControlOption.HIDE_ALL
         );
     }
 
@@ -686,6 +689,11 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     minWidth: downloadSubmenuWidth,
                                 }}
                                 dontFade={true}
+                                showDownload={
+                                    getServerConfig()
+                                        .skin_hide_download_controls ===
+                                    DownloadControlOption.SHOW_ALL
+                                }
                             />
                         )}
                     </div>
@@ -956,5 +964,3 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         );
     }
 }
-
-ChartHeader.contextType = AppContext;

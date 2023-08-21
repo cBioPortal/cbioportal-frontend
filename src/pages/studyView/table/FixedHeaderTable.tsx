@@ -423,6 +423,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                     <div className="btn-group" style={{ display: 'flex' }}>
                         <button
                             className="btn btn-default btn-xs"
+                            data-test={'selectSamplesButton'}
                             onClick={this.afterSelectingRows}
                         >
                             {this.props.setOperationsButtonText || ''}

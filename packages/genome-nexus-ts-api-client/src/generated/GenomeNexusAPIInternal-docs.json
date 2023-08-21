@@ -2376,6 +2376,12 @@
         "comment": {
           "type": "string"
         },
+        "confirmed": {
+          "type": "boolean"
+        },
+        "context": {
+          "type": "string"
+        },
         "defaultEffect": {
           "type": "string"
         },
@@ -2388,17 +2394,17 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "pubmedIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
+        "pubmedId": {
+          "type": "integer",
+          "format": "int32"
         },
         "referenceText": {
           "type": "string"
         },
         "revisedProteinEffect": {
+          "type": "string"
+        },
+        "revisedVariantClassification": {
           "type": "string"
         },
         "transcriptId": {
@@ -2407,7 +2413,10 @@
         "variant": {
           "type": "string"
         },
-        "variantClassification": {
+        "vepPredictedProteinEffect": {
+          "type": "string"
+        },
+        "vepPredictedVariantClassification": {
           "type": "string"
         }
       }

@@ -99,7 +99,10 @@ import {
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
 import MultipleCategoryBarPlot from '../../groupComparison/MultipleCategoryBarPlot';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
-import { onMobxPromise } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    onMobxPromise,
+} from 'cbioportal-frontend-commons';
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
 import Pluralize from 'pluralize';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
@@ -4828,6 +4831,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
+    @computed get showDownload() {
+        return (
+            getServerConfig().skin_hide_download_controls ===
+            DownloadControlOption.SHOW_ALL
+        );
+    }
+
     @computed get plot() {
         const promises: MobxPromise<any>[] = [
             this.plotType,
@@ -5407,26 +5417,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             <DownloadControls
                                                 getSvg={this.getSvg}
                                                 filename={this.downloadFilename}
-                                                additionalRightButtons={[
-                                                    {
-                                                        key: 'Data',
-                                                        content: (
-                                                            <span>
-                                                                Data{' '}
-                                                                <i
-                                                                    className="fa fa-cloud-download"
-                                                                    aria-hidden="true"
-                                                                />
-                                                            </span>
-                                                        ),
-                                                        onClick: this
-                                                            .downloadData,
-                                                        disabled: !this.props
-                                                            .store
-                                                            .entrezGeneIdToGene
-                                                            .isComplete,
-                                                    },
-                                                ]}
+                                                additionalRightButtons={
+                                                    this.showDownload
+                                                        ? [
+                                                              {
+                                                                  key: 'Data',
+                                                                  content: (
+                                                                      <span>
+                                                                          Data{' '}
+                                                                          <i
+                                                                              className="fa fa-cloud-download"
+                                                                              aria-hidden="true"
+                                                                          />
+                                                                      </span>
+                                                                  ),
+                                                                  onClick: this
+                                                                      .downloadData,
+                                                                  disabled: !this
+                                                                      .props
+                                                                      .store
+                                                                      .entrezGeneIdToGene
+                                                                      .isComplete,
+                                                              },
+                                                          ]
+                                                        : undefined
+                                                }
                                                 dontFade={true}
                                                 style={{
                                                     position: 'absolute',

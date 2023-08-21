@@ -5874,6 +5874,65 @@
       },
       "title": "ServerStatusMessage"
     },
+    "StructuralVariantFilterQuery": {
+      "type": "object",
+      "properties": {
+        "gene1Query": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "gene2Query": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
+        "tiersBooleanMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "title": "StructuralVariantFilterQuery"
+    },
+    "StructuralVariantGeneSubQuery": {
+      "type": "object",
+      "properties": {
+        "entrezId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "specialValue": {
+          "type": "string",
+          "enum": [
+            "ANY_GENE",
+            "NO_GENE"
+          ]
+        }
+      },
+      "title": "StructuralVariantGeneSubQuery"
+    },
     "StudyViewFilter": {
       "type": "object",
       "properties": {
@@ -5958,6 +6017,12 @@
         "sampleTreatmentTargetFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
+        "structuralVariantFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StudyViewStructuralVariantFilter"
+          }
+        },
         "studyIds": {
           "type": "array",
           "items": {
@@ -5966,6 +6031,28 @@
         }
       },
       "title": "StudyViewFilter"
+    },
+    "StudyViewStructuralVariantFilter": {
+      "type": "object",
+      "properties": {
+        "molecularProfileIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "structVarQueries": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/StructuralVariantFilterQuery"
+            }
+          }
+        }
+      },
+      "title": "StudyViewStructuralVariantFilter"
     },
     "TypeOfCancer": {
       "type": "object",

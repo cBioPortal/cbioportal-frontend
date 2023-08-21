@@ -31,6 +31,7 @@ import {
 import makeRoutes from 'routes';
 import { AppContext } from 'cbioportal-frontend-commons';
 import { IAppContext } from 'cbioportal-frontend-commons';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { ErrorAlert } from 'shared/components/errorScreen/ErrorAlert';
 import { ErrorInfo } from 'react';
 import { observable } from 'mobx';
@@ -69,8 +70,8 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
     get appContext(): IAppContext {
         return {
-            showDownloadControls: !getServerConfig()
-                .skin_hide_download_controls,
+            showDownloadControls: getServerConfig()
+                .skin_hide_download_controls as DownloadControlOption,
         };
     }
 

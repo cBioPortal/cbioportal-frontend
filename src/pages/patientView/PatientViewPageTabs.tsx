@@ -94,7 +94,6 @@ export function tabs(
     sampleManager: SampleManager | null
 ) {
     const tabs: JSX.Element[] = [];
-
     tabs.push(
         <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
             <LoadingIndicator
@@ -631,6 +630,19 @@ export function tabs(
                         pageComponent.patientViewPageStore
                             .selectedMutationalSignatureVersion
                     }
+                    dataCount={
+                        pageComponent.patientViewPageStore
+                            .mutationalSignatureCountDataGroupedByVersion.result
+                    }
+                    sample={
+                        pageComponent.patientViewPageStore
+                            .selectedSampleMutationalSignatureData
+                    }
+                    samples={
+                        pageComponent.patientViewPageStore
+                            .samplesWithCountDataAvailable
+                    }
+                    onSampleChange={pageComponent.onSampleIdChange}
                 />
             </MSKTab>
         );
