@@ -219,6 +219,12 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     studyview_max_samples_selected: 0,
 
     study_download_url: '',
+
+    oncoprint_clustered_default: true,
+
+    vaf_sequential_mode_default: false,
+
+    vaf_log_scale_default: false,
 };
 
 export default ServerConfigDefaults;

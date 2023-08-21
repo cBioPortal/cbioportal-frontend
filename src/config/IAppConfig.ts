@@ -168,7 +168,10 @@ export interface IServerConfig {
     skin_patient_view_structural_variant_table_columns_show_on_init: string;
     comparison_categorical_na_values: string;
     oncoprint_clinical_tracks_config_json: string;
+    oncoprint_clustered_default: boolean; // this has a default
     enable_cross_study_expression: string;
     studyview_max_samples_selected: number;
     study_download_url: string;
+    vaf_sequential_mode_default: boolean; // this has a default
+    vaf_log_scale_default: boolean; // this has a default
 }

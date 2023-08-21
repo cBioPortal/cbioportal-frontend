@@ -199,6 +199,16 @@ export default class PathwayMapperTable extends React.Component<
         };
     }
 
+    componentDidMount() {
+        // When the component mounts, we need to find the page number for the selected pathway.
+        // We can use the current data and data store to determine the page number.
+        this.dataStore.page = findPageOfSelectedPathway(
+            this.props.data,
+            this.dataStore,
+            this.props.selectedPathway
+        );
+    }
+
     componentWillUpdate(nextProps: Readonly<IPathwayMapperTableProps>): void {
         // we need to know on which page the selected pathway will fall after Ranking option is updated.
         // there is a chance that selected pathway might be on another page than currently visible one.
