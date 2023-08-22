@@ -238,6 +238,7 @@ export default class CancerStudySelector extends React.Component<
 
                             return (
                                 <div
+                                    data-tour="cancer-study-search-box"
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -268,6 +269,7 @@ export default class CancerStudySelector extends React.Component<
                             </Then>
                         </If>
                         <div
+                            data-tour="cancer-study-list-container"
                             className={styles.cancerStudyListContainer}
                             data-test="cancerTypeListContainer"
                         >

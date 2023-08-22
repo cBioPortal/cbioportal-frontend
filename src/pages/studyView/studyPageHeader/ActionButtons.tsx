@@ -180,6 +180,7 @@ export default class ActionButtons extends React.Component<
                         overlay={<span>{this.virtualStudyButtonTooltip}</span>}
                     >
                         <button
+                            data-tour="action-button-bookmark"
                             className="btn btn-default btn-sm"
                             disabled={!this.props.loadingComplete}
                         >

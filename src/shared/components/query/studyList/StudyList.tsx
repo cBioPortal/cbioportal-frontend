@@ -149,7 +149,11 @@ export default class StudyList extends QueryStoreComponent<
             styles.Level(currentLevel)
         );
         return (
-            <ul key={arrayIndex} className={ulClassName}>
+            <ul
+                data-tour={cancerType.id}
+                key={arrayIndex}
+                className={ulClassName}
+            >
                 {heading}
                 {childStudies.map(this.renderCancerStudy)}
                 {childCancerTypes.map(this.renderCancerType)}
