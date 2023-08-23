@@ -172,7 +172,16 @@ export default class MiniScatterChart<
         };
     }
 
+    getReversedData() {
+        return this.props.data.map(dataPoint => ({
+            ...dataPoint,
+            x: -dataPoint.x, // Reverse the x-value
+        }));
+    }
+
     public render() {
+        const reversedData = this.getReversedData();
+
         return (
             <div className="posRelative">
                 <div
@@ -247,13 +256,13 @@ export default class MiniScatterChart<
                         />
                         <VictoryLabel
                             style={axisLabelStyles}
-                            text={'← ' + this.xAxisLeftLabel}
+                            text={'← ' + this.xAxisRightLabel}
                             x={60}
                             y={300}
                         />
                         <VictoryLabel
                             style={axisLabelStyles}
-                            text={this.xAxisRightLabel + ' →'}
+                            text={this.xAxisLeftLabel + ' →'}
                             textAnchor="end"
                             x={310}
                             y={300}
@@ -267,7 +276,7 @@ export default class MiniScatterChart<
                         />
                         <VictoryScatter
                             style={{ data: { fillOpacity: 0.4 } }}
-                            data={this.props.data}
+                            data={reversedData}
                             dataComponent={
                                 <HoverablePoint
                                     onMouseOver={this.onPointMouseOver}
