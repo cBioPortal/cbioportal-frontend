@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { buildCBioPortalPageUrl } from '../../api/urls';
 import { ResultsViewTab } from '../../../pages/resultsView/ResultsViewPageHelpers';
+import { Tour } from 'tours';
 import { mockOrder } from 'pages/patientView/vafPlot/mockData';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { sleep } from 'shared/lib/TimeUtils';
@@ -298,10 +299,32 @@ export default class RightBar extends React.Component<
         ) : null;
     }
 
+    getHomePageTour() {
+        const isLoading =
+            !this.studyStore.cancerTypes.isComplete ||
+            !this.studyStore.cancerStudies.isComplete ||
+            !this.studyStore.userVirtualStudies.isComplete;
+        return getServerConfig().skin_right_nav_show_web_tours ? (
+            <div className="rightBarSection" style={{ minHeight: '70px' }}>
+                <h3>Interactive Tours</h3>
+                {!isLoading && (
+                    <Tour
+                        hideEntry={false}
+                        isLoggedIn={this.studyStore.userLoggedIn}
+                        studies={
+                            this.studyStore.selectableSelectedStudyIds.length
+                        }
+                    />
+                )}
+            </div>
+        ) : null;
+    }
+
     render() {
         return (
             <div>
                 {this.getWhatsNew()}
+                {this.getHomePageTour()}
                 {this.getExampleSection()}
                 {this.getInstallationMap()}
                 {this.getTestimonialsSection()}

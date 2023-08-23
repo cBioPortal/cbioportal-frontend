@@ -108,6 +108,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
 ];
 
 export interface IChartContainerProps {
+    id?: string;
     chartMeta: ChartMeta;
     chartType: ChartType;
     store: StudyViewPageStore;
@@ -466,7 +467,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         if (this.selectedRowsKeys!.length >= 2) {
             return {
                 content: (
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div
+                        data-tour="mutated-genes-table-compare-btn"
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
                         <ComparisonVsIcon
                             className={classnames('fa fa-fw')}
                             style={{ marginRight: 4 }}

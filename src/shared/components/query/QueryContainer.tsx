@@ -426,6 +426,7 @@ export default class QueryContainer extends React.Component<
                                     }
                                 >
                                     <a
+                                        data-tour="explore-studies-button"
                                         onClick={() =>
                                             !this
                                                 .exploreCohortsButtonDisabled &&

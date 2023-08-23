@@ -208,6 +208,7 @@ export default class GroupSelector extends React.Component<
                 );
                 return (
                     <div
+                        data-tour="single-study-group-comparison-groups"
                         style={{
                             display: 'flex',
                             alignItems: 'center',

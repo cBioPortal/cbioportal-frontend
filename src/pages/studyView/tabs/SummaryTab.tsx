@@ -352,6 +352,7 @@ export class StudySummaryTab extends React.Component<
                     this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
+                props.id = 'mutated-genes-table';
                 props.title = this.store.getChartTitle(
                     ChartTypeEnum.MUTATED_GENES_TABLE,
                     props.title
@@ -728,7 +729,7 @@ export class StudySummaryTab extends React.Component<
         // 2.   The maintainer of RGL repo currently not actively accepts pull requests. So we don't know when the
         //      issue will be solved.
         return (
-            <div key={chartMeta.uniqueKey}>
+            <div key={chartMeta.uniqueKey} data-tour={props.id}>
                 <DelayedRender>
                     {/* Delay the render after a setTimeout, because synchronous rendering would jam UI updates
                     and make things laggy */}
