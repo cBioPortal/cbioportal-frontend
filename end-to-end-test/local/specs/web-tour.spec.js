@@ -403,6 +403,7 @@ describe('Group Comparison Tour', () => {
         assert.equal(cancerStudySearchBox.getValue(), 'glioma');
 
         // Click on the `Next Step` button, the tour should go to the next step
+        browser.pause(3000);
         nextStepBtn.click();
         step++;
     });
@@ -412,6 +413,7 @@ describe('Group Comparison Tour', () => {
         assert.equal(step, 1);
 
         // There should be a tour modal
+        browser.pause(3000);
         const tourModal = $(GROUP_COMPARISON_TOUR_MODAL);
         tourModal.waitForExist();
 
