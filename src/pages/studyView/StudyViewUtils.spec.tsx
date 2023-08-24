@@ -3034,13 +3034,15 @@ describe('StudyViewUtils', () => {
     describe('getCNAByAlteration', () => {
         it('return proper string from proper alteration', () => {
             assert.isTrue(getCNAByAlteration(-2) === 'HOMDEL');
+            assert.isTrue(getCNAByAlteration(-1) === 'HETLOSS');
+            assert.isTrue(getCNAByAlteration(0) === 'DIPLOID');
+            assert.isTrue(getCNAByAlteration(1) === 'GAIN');
             assert.isTrue(getCNAByAlteration(2) === 'AMP');
         });
 
-        it('return empty string when alteration is not 2 or -2', () => {
-            assert.isTrue(getCNAByAlteration(0) === '');
-            assert.isTrue(getCNAByAlteration(1) === '');
-            assert.isTrue(getCNAByAlteration(-1) === '');
+        it('return empty string when alteration is not valid', () => {
+            assert.isTrue(getCNAByAlteration(3) === '');
+            assert.isTrue(getCNAByAlteration(-1.2) === '');
         });
     });
 
