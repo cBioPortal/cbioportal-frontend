@@ -1531,8 +1531,8 @@ export class StudyViewPageStore
     private createCnaGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
-        alterationTypes: number[],
-        statusCallback: (phase: LoadingPhase) => void
+        statusCallback: (phase: LoadingPhase) => void,
+        alterationTypes?: number[]
     ): Promise<string> {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
 
@@ -1552,7 +1552,11 @@ export class StudyViewPageStore
                         hugoGeneSymbols
                     );
                     const cnaByGeneAndAlteration = _.groupBy(
-                        cnaData.filter(d => alterationTypes.includes(d.value)),
+                        alterationTypes
+                            ? cnaData.filter(d =>
+                                  alterationTypes.includes(d.value)
+                              )
+                            : cnaData,
                         (d: NumericGeneMolecularData) =>
                             `${d.gene.hugoGeneSymbol}:${getCNAByAlteration(
                                 d.value
@@ -1902,13 +1906,6 @@ export class StudyViewPageStore
                     ? await this.createCnaGeneComparisonSession(
                           chartMeta,
                           params.hugoGeneSymbols!,
-                          [
-                              CNA_HOMDEL_VALUE,
-                              CNA_HETLOSS_VALUE,
-                              CNA_DIPLOID_VALUE,
-                              CNA_GAIN_VALUE,
-                              CNA_AMP_VALUE,
-                          ],
                           statusCallback
                       )
                     : await this.createCategoricalAttributeComparisonSession(
@@ -1928,8 +1925,8 @@ export class StudyViewPageStore
                 comparisonId = await this.createCnaGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
-                    [CNA_AMP_VALUE, CNA_HOMDEL_VALUE],
-                    statusCallback
+                    statusCallback,
+                    [CNA_AMP_VALUE, CNA_HOMDEL_VALUE]
                 );
                 break;
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
@@ -2006,7 +2003,7 @@ export class StudyViewPageStore
         ChartUniqueKey,
         number[]
     >({}, { deep: false });
-    private _genomicDataIntervalFilterSet = observable.map<
+    private _genomicDataFilterSet = observable.map<
         ChartUniqueKey,
         GenomicDataFilter
     >({}, { deep: false });
@@ -2182,7 +2179,7 @@ export class StudyViewPageStore
                     genomicDataFilter.hugoGeneSymbol,
                     genomicDataFilter.profileType
                 );
-                this._genomicDataIntervalFilterSet.set(
+                this._genomicDataFilterSet.set(
                     uniqueKey,
                     _.clone(genomicDataFilter)
                 );
@@ -2734,7 +2731,7 @@ export class StudyViewPageStore
         this._customDataFilterSet.clear();
         this._geneFilterSet.clear();
         this._structVarFilterSet.clear();
-        this._genomicDataIntervalFilterSet.clear();
+        this._genomicDataFilterSet.clear();
         this._genericAssayDataFilterSet.clear();
         this._chartSampleIdentifiersFilterSet.clear();
         this.preDefinedCustomChartFilterSet.clear();
@@ -3185,12 +3182,12 @@ export class StudyViewPageStore
                 profileType: chart!.profileType,
                 values: values,
             };
-            this._genomicDataIntervalFilterSet.set(
+            this._genomicDataFilterSet.set(
                 uniqueKey,
                 genomicDataIntervalFilter
             );
         } else {
-            this._genomicDataIntervalFilterSet.delete(uniqueKey);
+            this._genomicDataFilterSet.delete(uniqueKey);
         }
     }
 
@@ -3523,7 +3520,7 @@ export class StudyViewPageStore
                         chartUniqueKey
                     );
                     this.preDefinedCustomChartFilterSet.delete(chartUniqueKey);
-                    this._genomicDataIntervalFilterSet.delete(chartUniqueKey);
+                    this._genomicDataFilterSet.delete(chartUniqueKey);
                     this._genericAssayDataFilterSet.delete(chartUniqueKey);
 
                     break;
@@ -3536,7 +3533,9 @@ export class StudyViewPageStore
         switch (this.chartsType.get(chartUniqueKey)) {
             case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
-                if (this.isUserDefinedCustomDataChart(chartUniqueKey)) {
+                if (this.isGeneSpecificChart(chartUniqueKey)) {
+                    return this._genomicDataFilterSet.has(chartUniqueKey);
+                } else if (this.isUserDefinedCustomDataChart(chartUniqueKey)) {
                     return (
                         this._customDataFilterSet.has(chartUniqueKey) ||
                         this.preDefinedCustomChartFilterSet.has(chartUniqueKey)
@@ -3548,9 +3547,7 @@ export class StudyViewPageStore
                 }
             case ChartTypeEnum.BAR_CHART:
                 if (this.isGeneSpecificChart(chartUniqueKey)) {
-                    return this._genomicDataIntervalFilterSet.has(
-                        chartUniqueKey
-                    );
+                    return this._genomicDataFilterSet.has(chartUniqueKey);
                 } else if (this.isUserDefinedCustomDataChart(chartUniqueKey)) {
                     return this._customDataFilterSet.has(chartUniqueKey);
                 } else {
@@ -3864,8 +3861,8 @@ export class StudyViewPageStore
         });
     }
 
-    @computed get genomicDataIntervalFilters(): GenomicDataFilter[] {
-        return Array.from(this._genomicDataIntervalFilterSet.values());
+    @computed get genomicDataFilters(): GenomicDataFilter[] {
+        return Array.from(this._genomicDataFilterSet.values());
     }
 
     @computed get genericAssayDataFilters(): GenericAssayDataFilter[] {
@@ -3881,10 +3878,10 @@ export class StudyViewPageStore
     get filtersProxy(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
-        const genomicDataIntervalFilters = this.genomicDataIntervalFilters;
+        const genomicDataFilters = this.genomicDataFilters;
 
-        if (genomicDataIntervalFilters.length > 0) {
-            filters.genomicDataFilters = genomicDataIntervalFilters;
+        if (genomicDataFilters.length > 0) {
+            filters.genomicDataFilters = genomicDataFilters;
         }
 
         const genericAssayDataFilters = this.genericAssayDataFilters;
@@ -4100,11 +4097,11 @@ export class StudyViewPageStore
     }
 
     @autobind
-    public getGenomicDataIntervalFiltersByUniqueKey(
+    public getGenomicDataFiltersByUniqueKey(
         uniqueKey: string
     ): DataFilterValue[] {
-        return this._genomicDataIntervalFilterSet.has(uniqueKey)
-            ? this._genomicDataIntervalFilterSet.get(uniqueKey)!.values
+        return this._genomicDataFilterSet.has(uniqueKey)
+            ? this._genomicDataFilterSet.get(uniqueKey)!.values
             : [];
     }
 

@@ -264,7 +264,7 @@ export default class UserSelections extends React.Component<
                                           this.props.store
                                               .getGenomicChartDataBin,
                                           this.props.store
-                                              .getGenomicDataIntervalFiltersByUniqueKey,
+                                              .getGenomicDataFiltersByUniqueKey,
                                           this.props.store.updateCustomBins,
                                           this.props.store
                                               .updateGenomicDataIntervalFilters

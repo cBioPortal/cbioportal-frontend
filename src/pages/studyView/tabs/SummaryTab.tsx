@@ -220,9 +220,7 @@ export class StudySummaryTab extends React.Component<
                         chartMeta
                     );
                     props.filters = this.store
-                        .getGenomicDataIntervalFiltersByUniqueKey(
-                            chartMeta.uniqueKey
-                        )
+                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
                         .map(
                             genomicDataFilterValue =>
                                 genomicDataFilterValue.value
@@ -257,7 +255,7 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenomicChartDataBin(
                         chartMeta
                     );
-                    props.filters = this.store.getGenomicDataIntervalFiltersByUniqueKey(
+                    props.filters = this.store.getGenomicDataFiltersByUniqueKey(
                         props.chartMeta!.uniqueKey
                     );
                     props.onDataBinSelection = this.handlers.onGenomicDataBinSelection;
@@ -357,9 +355,7 @@ export class StudySummaryTab extends React.Component<
                         chartMeta
                     );
                     props.filters = this.store
-                        .getGenomicDataIntervalFiltersByUniqueKey(
-                            chartMeta.uniqueKey
-                        )
+                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
                         .map(
                             genomicDataFilterValue =>
                                 genomicDataFilterValue.value
