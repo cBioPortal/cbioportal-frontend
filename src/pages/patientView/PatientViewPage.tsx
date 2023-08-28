@@ -3,13 +3,16 @@ import _ from 'lodash';
 import { DiscreteCopyNumberData, ResourceData } from 'cbioportal-ts-api-client';
 import { PaginationControls } from '../../shared/components/paginationControls/PaginationControls';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
-import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    toggleColumnVisibility,
+} from 'cbioportal-frontend-commons';
 import {
     PatientViewPageStore,
     buildCohortIdsFromNavCaseIds,
 } from './clinicalInformation/PatientViewPageStore';
 import { inject, observer } from 'mobx-react';
-import { action, computed, observable, makeObservable } from 'mobx';
+import { action, computed, observable, makeObservable, toJS } from 'mobx';
 import { default as PatientViewMutationTable } from './mutation/PatientViewMutationTable';
 import { MSKTab } from '../../shared/components/MSKTabs/MSKTabs';
 import ValidationAlert from 'shared/components/ValidationAlert';
@@ -18,7 +21,11 @@ import PatientViewCnaDataStore from './copyNumberAlterations/PatientViewCnaDataS
 
 import './patient.scss';
 
-import { getWholeSlideViewerUrl } from '../../shared/api/urls';
+import {
+    buildCBioPortalPageUrl,
+    getPatientViewUrl,
+    getWholeSlideViewerUrl,
+} from '../../shared/api/urls';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Helmet from 'react-helmet';
 import { getServerConfig } from '../../config/config';
@@ -55,11 +62,13 @@ import { prepareCustomTabConfigurations } from 'shared/lib/customTabs/customTabH
 import setWindowVariable from 'shared/lib/setWindowVariable';
 import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import PatientViewPageHeader from 'pages/patientView/PatientViewPageHeader';
+import { MAX_URL_LENGTH } from 'pages/studyView/studyPageHeader/ActionButtons';
 
 export interface IPatientViewPageProps {
     routing: any;
     appStore: AppStore;
     cohortIds?: string[];
+    onCohortIdsUpdate: (ids: string[]) => void;
 }
 
 export interface IGenePanelModal {
@@ -87,15 +96,14 @@ export default class PatientViewPage extends React.Component<
     IPatientViewPageProps,
     {}
 > {
-    cohortIds: string[] | undefined;
+    @observable cohortIds: string[] | undefined;
 
     constructor(props: IPatientViewPageProps) {
         super(props);
-
+        makeObservable(this);
         const postData = getBrowserWindow().clientPostedData;
 
         const urlData = getNavCaseIdsCache();
-
         if (postData && postData.navCaseIds) {
             this.cohortIds = buildCohortIdsFromNavCaseIds(postData.navCaseIds);
             getBrowserWindow().clientPostedData = null;
@@ -104,12 +112,18 @@ export default class PatientViewPage extends React.Component<
         }
     }
 
+    @action.bound
+    updateCohortIds(newCohortIds: string[]) {
+        this.cohortIds = newCohortIds;
+    }
+
     render() {
         return (
             <PatientViewPageInner
                 key={`${this.props.routing.query.caseId}-${this.props.routing.query.studyId}-${this.props.routing.query.sampleId}`}
                 {...this.props}
                 cohortIds={this.cohortIds}
+                onCohortIdsUpdate={this.updateCohortIds}
             />
         );
     }
@@ -544,6 +558,70 @@ export class PatientViewPageInner extends React.Component<
         return this.patientViewPageStore;
     }
 
+    @action.bound
+    private handleReturnToStudyView() {
+        const patientIdentifiers = this.pageStore.patientIdsInCohort.map(p => {
+            const patientIdParts = p.split(':');
+            return {
+                patientId: patientIdParts[1],
+                studyId: patientIdParts[0],
+            };
+        });
+        const queriedStudies: Set<string> = new Set(
+            patientIdentifiers.map(p => p.studyId)
+        );
+
+        // We need to do this because of url length limits. We post the data to the new window once it is opened.
+        const studyPage = window.open(
+            buildCBioPortalPageUrl(`study`, {
+                id: Array.from(queriedStudies).join(','),
+            }),
+            '_blank'
+        );
+        if (patientIdentifiers.length > 0) {
+            (studyPage as any).studyPageFilter = `filterJson=${JSON.stringify({
+                patientIdentifiers,
+            })}`;
+        }
+    }
+
+    @action.bound
+    private handleDeletePatient(deleteAtIndex: number) {
+        var newCohortIdList = toJS(this.pageStore.patientIdsInCohort);
+        newCohortIdList.splice(deleteAtIndex, 1);
+        let currentIndex =
+            deleteAtIndex > newCohortIdList.length - 1
+                ? deleteAtIndex - 1
+                : deleteAtIndex;
+
+        let navCaseIds = newCohortIdList.map(p => {
+            const patientIdParts = p.split(':');
+            return {
+                patientId: patientIdParts[1],
+                studyId: patientIdParts[0],
+            };
+        });
+        const url = getPatientViewUrl(
+            navCaseIds[currentIndex].studyId,
+            navCaseIds[currentIndex].patientId,
+            navCaseIds
+        );
+
+        // Because of url length limits, we can only maintain the list in the url hash for small sets of ids.
+        // TODO: adapt updateURL to allow for hash mutation so that we don't have manipulate window.location.hash directly
+        this.props.onCohortIdsUpdate(newCohortIdList);
+        if (url.length <= MAX_URL_LENGTH) {
+            getBrowserWindow().location.hash = url.substring(
+                url.indexOf('#') + 1
+            );
+        }
+        this.urlWrapper.updateURL({
+            studyId: navCaseIds[currentIndex].studyId,
+            caseId: navCaseIds[currentIndex].patientId,
+            sampleId: undefined,
+        });
+    }
+
     @computed
     public get cohortNav() {
         if (
@@ -554,58 +632,105 @@ export class PatientViewPageInner extends React.Component<
                 this.pageStore.studyId + ':' + this.pageStore.patientId
             );
             return (
-                <PaginationControls
-                    currentPage={indexInCohort + 1}
-                    showMoreButton={false}
-                    showItemsPerPageSelector={false}
-                    showFirstPage={true}
-                    showLastPage={true}
-                    textBetweenButtons={` of ${this.pageStore.patientIdsInCohort.length} patients`}
-                    firstPageDisabled={indexInCohort === 0}
-                    previousPageDisabled={indexInCohort === 0}
-                    nextPageDisabled={
-                        indexInCohort ===
-                        this.pageStore.patientIdsInCohort.length - 1
-                    }
-                    lastPageDisabled={
-                        indexInCohort ===
-                        this.pageStore.patientIdsInCohort.length - 1
-                    }
-                    onFirstPageClick={() =>
-                        this.handlePatientClick(
-                            this.pageStore.patientIdsInCohort[0]
-                        )
-                    }
-                    onPreviousPageClick={() =>
-                        this.handlePatientClick(
-                            this.pageStore.patientIdsInCohort[indexInCohort - 1]
-                        )
-                    }
-                    onNextPageClick={() =>
-                        this.handlePatientClick(
-                            this.pageStore.patientIdsInCohort[indexInCohort + 1]
-                        )
-                    }
-                    onLastPageClick={() =>
-                        this.handlePatientClick(
-                            this.pageStore.patientIdsInCohort[
-                                this.pageStore.patientIdsInCohort.length - 1
-                            ]
-                        )
-                    }
-                    onChangeCurrentPage={newPage => {
-                        if (
-                            newPage > 0 &&
-                            newPage <= this.pageStore.patientIdsInCohort.length
-                        ) {
-                            this.handlePatientClick(
-                                this.pageStore.patientIdsInCohort[newPage - 1]
-                            );
-                        }
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        alignItems: 'center',
                     }}
-                    pageNumberEditable={true}
-                    className="cohortNav"
-                />
+                >
+                    <PaginationControls
+                        currentPage={indexInCohort + 1}
+                        showMoreButton={false}
+                        showItemsPerPageSelector={false}
+                        showFirstPage={true}
+                        showLastPage={true}
+                        textBetweenButtons={
+                            <>
+                                <span> of </span>
+                                <DefaultTooltip
+                                    placement="bottom"
+                                    overlay="Open all patients in study view"
+                                >
+                                    <a
+                                        onClick={this.handleReturnToStudyView}
+                                        target={'_blank'}
+                                    >
+                                        {`${this.pageStore.patientIdsInCohort.length} patients`}
+                                    </a>
+                                </DefaultTooltip>
+                            </>
+                        }
+                        firstPageDisabled={indexInCohort === 0}
+                        previousPageDisabled={indexInCohort === 0}
+                        nextPageDisabled={
+                            indexInCohort ===
+                            this.pageStore.patientIdsInCohort.length - 1
+                        }
+                        lastPageDisabled={
+                            indexInCohort ===
+                            this.pageStore.patientIdsInCohort.length - 1
+                        }
+                        onFirstPageClick={() =>
+                            this.handlePatientClick(
+                                this.pageStore.patientIdsInCohort[0]
+                            )
+                        }
+                        onPreviousPageClick={() =>
+                            this.handlePatientClick(
+                                this.pageStore.patientIdsInCohort[
+                                    indexInCohort - 1
+                                ]
+                            )
+                        }
+                        onNextPageClick={() =>
+                            this.handlePatientClick(
+                                this.pageStore.patientIdsInCohort[
+                                    indexInCohort + 1
+                                ]
+                            )
+                        }
+                        onLastPageClick={() =>
+                            this.handlePatientClick(
+                                this.pageStore.patientIdsInCohort[
+                                    this.pageStore.patientIdsInCohort.length - 1
+                                ]
+                            )
+                        }
+                        onChangeCurrentPage={newPage => {
+                            if (
+                                newPage > 0 &&
+                                newPage <=
+                                    this.pageStore.patientIdsInCohort.length
+                            ) {
+                                this.handlePatientClick(
+                                    this.pageStore.patientIdsInCohort[
+                                        newPage - 1
+                                    ]
+                                );
+                            }
+                        }}
+                        pageNumberEditable={true}
+                        className="cohortNav"
+                    />
+                    <DefaultTooltip
+                        placement="bottom"
+                        overlay="Exclude the current patient"
+                    >
+                        <span
+                            style={{
+                                marginLeft: '5px',
+                                display: 'inline-block',
+                                cursor: 'pointer',
+                            }}
+                            onClick={() =>
+                                this.handleDeletePatient(indexInCohort)
+                            }
+                        >
+                            <i className={'fa fa-minus-circle'} />
+                        </span>
+                    </DefaultTooltip>
+                </div>
             );
         }
     }

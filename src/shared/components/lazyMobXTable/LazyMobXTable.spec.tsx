@@ -125,15 +125,6 @@ function getNumVisibleRows(table: ReactWrapper<any, any>): number {
     return getVisibleRows(table).length;
 }
 
-function getTextBetweenButtons(
-    table: ReactWrapper<any, any>
-): string | undefined {
-    return table
-        .find(PaginationControls)
-        .filterWhere(x => x.hasClass('topPagination'))
-        .props().textBetweenButtons;
-}
-
 function getTextBeforeButtons(
     table: ReactWrapper<any, any>
 ): string | undefined {
