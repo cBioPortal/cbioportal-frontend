@@ -5059,13 +5059,9 @@ export class ResultsViewPageStore extends AnalysisStore
             this.filteredSampleKeyToSample,
         ],
         invoke: () => {
-            let data = this._filteredAndAnnotatedMolecularDataReport.result!
-                .data;
-            if (this.driverAnnotationSettings.includeVUS) {
-                data = data.concat(
-                    this._filteredAndAnnotatedMolecularDataReport.result!.vus
-                );
-            }
+            const data = this._filteredAndAnnotatedMolecularDataReport.result!.data.concat(
+                this._filteredAndAnnotatedMolecularDataReport.result!.vus
+            );
             const filteredSampleKeyToSample = this.filteredSampleKeyToSample
                 .result!;
             return Promise.resolve(
