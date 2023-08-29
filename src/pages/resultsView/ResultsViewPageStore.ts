@@ -1285,6 +1285,13 @@ export class ResultsViewPageStore extends AnalysisStore
         {}
     );
 
+    /**
+     * All molecular data that is 'special', i.e. not a:
+     * - structural variant
+     * - mutation
+     * - generic essay
+     * See also {@link excludeSpecialMolecularProfiles}
+     */
     readonly molecularData = remoteData<NumericGeneMolecularData[]>({
         await: () => [
             this.sampleKeyToSample,
@@ -1785,7 +1792,8 @@ export class ResultsViewPageStore extends AnalysisStore
     readonly nonOqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedNonGenomicData,
+            this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
             this.selectedMolecularProfiles,
             this.entrezGeneIdToGene,
@@ -1797,7 +1805,8 @@ export class ResultsViewPageStore extends AnalysisStore
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let result = [
                 ...this.filteredAndAnnotatedMutations.result!,
-                ...this.filteredAndAnnotatedMolecularData.result!,
+                ...this.filteredAndAnnotatedNonGenomicData.result!,
+                ...this.filteredAndAnnotatedCnaData.result!,
                 ...this.filteredAndAnnotatedStructuralVariants.result!,
             ];
             return Promise.resolve(
@@ -1909,27 +1918,21 @@ export class ResultsViewPageStore extends AnalysisStore
     readonly oqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedNonGenomicData,
+            this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
         ],
         invoke: () => {
             if (this.oqlText.trim() != '') {
-                let data: (
-                    | AnnotatedMutation
-                    | AnnotatedNumericGeneMolecularData
-                )[] = [];
-                data = data.concat(this.filteredAndAnnotatedMutations.result!);
-                data = data.concat(
-                    this.filteredAndAnnotatedMolecularData.result!
-                );
                 return Promise.resolve(
                     filterCBioPortalWebServiceData(
                         this.oqlText,
                         [
                             ...this.filteredAndAnnotatedMutations.result!,
-                            ...this.filteredAndAnnotatedMolecularData.result!,
+                            ...this.filteredAndAnnotatedCnaData.result!,
+                            ...this.filteredAndAnnotatedNonGenomicData.result!,
                             ...this.filteredAndAnnotatedStructuralVariants
                                 .result!,
                         ],
@@ -1994,7 +1997,8 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedNonGenomicData,
+            this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
@@ -2004,7 +2008,8 @@ export class ResultsViewPageStore extends AnalysisStore
         invoke: () => {
             const data = [
                 ...this.filteredAndAnnotatedMutations.result!,
-                ...this.filteredAndAnnotatedMolecularData.result!,
+                ...this.filteredAndAnnotatedNonGenomicData.result!,
+                ...this.filteredAndAnnotatedCnaData.result!,
                 ...this.filteredAndAnnotatedStructuralVariants.result!,
             ];
             const accessorsInstance = new AccessorsForOqlFilter(
@@ -2099,7 +2104,8 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedNonGenomicData,
+            this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
@@ -2116,7 +2122,8 @@ export class ResultsViewPageStore extends AnalysisStore
                     this.oqlText,
                     [
                         ...this.filteredAndAnnotatedMutations.result!,
-                        ...this.filteredAndAnnotatedMolecularData.result!,
+                        ...this.filteredAndAnnotatedNonGenomicData.result!,
+                        ...this.filteredAndAnnotatedCnaData.result!,
                         ...this.filteredAndAnnotatedStructuralVariants.result!,
                     ],
                     new AccessorsForOqlFilter(
@@ -5051,7 +5058,16 @@ export class ResultsViewPageStore extends AnalysisStore
             ),
     });
 
-    readonly filteredAndAnnotatedMolecularData = remoteData<
+    /**
+     * All molecular data that is no
+     * - mutation
+     * - structural variant
+     * - copy number alteration
+     * - generic assay
+     *
+     * For example mRNA and Proteomic data
+     */
+    readonly filteredAndAnnotatedNonGenomicData = remoteData<
         AnnotatedNumericGeneMolecularData[]
     >({
         await: () => [
@@ -5064,9 +5080,53 @@ export class ResultsViewPageStore extends AnalysisStore
             );
             const filteredSampleKeyToSample = this.filteredSampleKeyToSample
                 .result!;
-            return Promise.resolve(
-                data.filter(d => d.uniqueSampleKey in filteredSampleKeyToSample)
+            const cnaProfiles = this.selectedMolecularProfiles
+                .result!.filter(
+                    v =>
+                        v.molecularAlterationType ===
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                )
+                .map(p => p.molecularProfileId);
+            const filteredData = data.filter(
+                d =>
+                    d.uniqueSampleKey in filteredSampleKeyToSample &&
+                    !cnaProfiles.includes(d.molecularProfileId)
             );
+            return Promise.resolve(filteredData);
+        },
+    });
+
+    readonly filteredAndAnnotatedCnaData = remoteData<
+        AnnotatedNumericGeneMolecularData[]
+    >({
+        await: () => [
+            this._filteredAndAnnotatedMolecularDataReport,
+            this.filteredSampleKeyToSample,
+            this.selectedMolecularProfiles,
+        ],
+        invoke: () => {
+            const cnaProfiles = this.selectedMolecularProfiles
+                .result!.filter(
+                    v =>
+                        v.molecularAlterationType ===
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                )
+                .map(p => p.molecularProfileId);
+            let data = this._filteredAndAnnotatedMolecularDataReport.result!
+                .data;
+            if (this.driverAnnotationSettings.includeVUS) {
+                data = data.concat(
+                    this._filteredAndAnnotatedMolecularDataReport.result!.vus
+                );
+            }
+            const filteredSampleKeyToSample = this.filteredSampleKeyToSample
+                .result!;
+            const filteredData = data.filter(
+                d =>
+                    d.uniqueSampleKey in filteredSampleKeyToSample &&
+                    cnaProfiles.includes(d.molecularProfileId)
+            );
+            return Promise.resolve(filteredData);
         },
     });
 
