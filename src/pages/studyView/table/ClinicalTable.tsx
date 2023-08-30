@@ -4,10 +4,7 @@ import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
-import {
-    ChartMetaDataTypeEnum,
-    ClinicalDataCountSummary,
-} from 'pages/studyView/StudyViewUtils';
+import { ClinicalDataCountSummary } from 'pages/studyView/StudyViewUtils';
 import FixedHeaderTable from './FixedHeaderTable';
 import styles from './tables.module.scss';
 import {
@@ -16,7 +13,6 @@ import {
     getClinicalAttributeOverlay,
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
-    getCNAByAlteration,
 } from '../StudyViewUtils';
 import { SortDirection } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
@@ -35,7 +31,6 @@ export interface IClinicalTableProps {
     width?: number;
     height?: number;
     showAddRemoveAllButtons?: boolean;
-    dataType?: ChartMetaDataTypeEnum;
 }
 
 class ClinicalTableComponent extends FixedHeaderTable<
@@ -148,15 +143,7 @@ export default class ClinicalTable extends React.Component<
                                 </g>
                             </svg>
                             <EllipsisTextTooltip
-                                text={
-                                    this.props.dataType &&
-                                    this.props.dataType ===
-                                        ChartMetaDataTypeEnum.GENE_SPECIFIC
-                                        ? getCNAByAlteration(
-                                              Number(data.value)
-                                          ) || 'NA'
-                                        : data.value
-                                }
+                                text={data.displayedValue || data.value}
                             ></EllipsisTextTooltip>
                         </div>
                     );

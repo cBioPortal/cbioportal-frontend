@@ -27,7 +27,6 @@ import {
     ClinicalDataCountSummary,
     DataBin,
     getHeightByDimension,
-    getHugoSymbolByChartTitle,
     getRangeFromDataBins,
     getTableHeightByDimension,
     getWidthByDimension,
@@ -512,7 +511,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         label={this.props.title}
                         labelDescription={this.props.chartMeta.description}
                         patientAttribute={this.props.chartMeta.patientAttribute}
-                        dataType={this.props.chartMeta.dataType}
                     />
                 );
             }
@@ -554,7 +552,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         labelDescription={this.props.chartMeta.description}
                         patientAttribute={this.props.chartMeta.patientAttribute}
                         showAddRemoveAllButtons={this.mouseInChart}
-                        dataType={this.props.chartMeta.dataType}
                     />
                 );
             }

@@ -4501,10 +4501,14 @@ export class StudyViewPageStore
 
     private addColorToCategories(
         counts: ClinicalDataCount[],
-        attributeId: string
+        attributeId: string,
+        getDisplayedValue?: (value: string) => string
     ): ClinicalDataCountSummary[] {
         return getClinicalDataCountWithColorByClinicalDataCount(counts).map(
             item => {
+                if (getDisplayedValue) {
+                    item.displayedValue = getDisplayedValue(item.value);
+                }
                 let colorMapKey = this.generateColorMapKey(
                     attributeId,
                     item.value
@@ -4859,7 +4863,11 @@ export class StudyViewPageStore
                             profileType = data.profileType;
                         }
 
-                        return this.addColorToCategories(counts, profileType);
+                        return this.addColorToCategories(
+                            counts,
+                            profileType,
+                            getCNAByAlteration
+                        );
                     }
                     return res;
                 },

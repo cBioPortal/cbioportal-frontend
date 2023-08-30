@@ -239,10 +239,7 @@ export default class UserSelections extends React.Component<
                             ? this.renderCategoricalDataFilter(
                                   _.map(genomicDataIntervalFilter.values, d => {
                                       return {
-                                          label:
-                                              getCNAByAlteration(
-                                                  Number(d.value)
-                                              ) || 'NA',
+                                          label: getCNAByAlteration(d.value),
                                           ...d,
                                       };
                                   }),

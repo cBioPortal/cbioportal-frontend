@@ -10,7 +10,6 @@ import {
 import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import _ from 'lodash';
 import {
-    ChartMetaDataTypeEnum,
     getFrequencyStr,
     toSvgDomNodeWithLegend,
 } from 'pages/studyView/StudyViewUtils';
@@ -38,7 +37,6 @@ export interface IPieChartProps {
     patientAttribute: boolean;
     label?: string;
     labelDescription?: string;
-    dataType?: ChartMetaDataTypeEnum;
 }
 
 @observer
@@ -323,7 +321,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
                         filters={this.filters}
                         highlightedRow={this.highlightedRow}
                         onUserSelection={this.props.onUserSelection}
-                        dataType={this.props.dataType}
                     />
                 }
                 destroyTooltipOnHide={true}
@@ -348,7 +345,9 @@ class CustomSlice extends React.Component<{}, {}> {
         return (
             <g>
                 <Slice {...this.props} />
-                <title>{`${d.datum.value}:${d.datum.count}`}</title>
+                <title>{`${d.datum.displayedValue || d.datum.value}:${
+                    d.datum.count
+                }`}</title>
             </g>
         );
     }

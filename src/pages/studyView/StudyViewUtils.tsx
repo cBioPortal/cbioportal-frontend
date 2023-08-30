@@ -980,24 +980,11 @@ export function getVirtualStudyDescription(
                     genomicDataFilter.profileType
                 );
                 const name = attributeNamesSet[uniqueKey];
-                const dataFilterValues = genomicDataFilter.values;
-                const dataType = getDataTypeByDataFilterValues(
-                    dataFilterValues
-                );
 
                 if (name) {
                     filterLines.push(
                         `- ${name}: ${intervalFiltersDisplayValue(
-                            dataType === DataType.NUMBER
-                                ? dataFilterValues
-                                : _.map(dataFilterValues, d =>
-                                      _.assign(d, {
-                                          value:
-                                              getCNAByAlteration(
-                                                  Number(d.value)
-                                              ) || 'NA',
-                                      })
-                                  ),
+                            genomicDataFilter.values,
                             () => {},
                             true
                         )}`
@@ -1855,8 +1842,12 @@ export function getExponent(value: number): number {
     return Number(Math.log10(Math.abs(value)).toFixed(fractionDigits));
 }
 
-export function getCNAByAlteration(alteration: number) {
-    return CNA_TO_ALTERATION[alteration] || '';
+export function getCNAByAlteration(value: string | number) {
+    const numberValue = Number(value);
+    if (isNaN(numberValue)) {
+        return value.toString();
+    }
+    return CNA_TO_ALTERATION[numberValue] || value.toString();
 }
 
 export function getCNAColorByAlteration(
@@ -2267,6 +2258,7 @@ export type ClinicalDataCountSummary = ClinicalDataCount & {
     color: string;
     percentage: number;
     freq: string;
+    displayedValue?: string;
 };
 
 export function getClinicalDataCountWithColorByClinicalDataCount(
@@ -2520,10 +2512,6 @@ export async function getHugoSymbolByEntrezGeneId(
         geneId: entrezGeneId.toString(),
     });
     return gene.hugoGeneSymbol;
-}
-
-export function getHugoSymbolByChartTitle(title: string): string {
-    return title.substring(0, title.indexOf('_'));
 }
 
 // returns true when there is only one virtual study and no physical studies
@@ -3991,22 +3979,4 @@ export function showQueryUpdatedToast(message: string) {
         progress: undefined,
         theme: 'light',
     } as any);
-}
-
-export function getDataTypeByDataFilterValues(
-    dataFilterValues: DataFilterValue[]
-): DataType {
-    let valueCount = dataFilterValues.length;
-
-    _.map(dataFilterValues, (dataFilterValue: DataFilterValue) => {
-        const value = dataFilterValue.value;
-
-        if (_.isUndefined(value) || value === '') {
-            valueCount = valueCount - 1;
-        }
-    });
-
-    return valueCount === dataFilterValues.length
-        ? DataType.STRING
-        : DataType.NUMBER;
 }
