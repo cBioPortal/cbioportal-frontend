@@ -1,7 +1,9 @@
+import * as React from 'react';
 import { pluralize } from 'cbioportal-frontend-commons';
 import { FilterResetPanel } from 'react-mutation-mapper';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import StudyViewMutationMapperStore from './StudyViewMutationMapperStore';
+import classnames from 'classnames';
 
 type StudyViewMutationMapperControlsProps = {
     store: StudyViewPageStore;
@@ -12,6 +14,8 @@ type StudyViewMutationMapperControlsProps = {
 const StudyViewMutationPlotControls = (
     props: StudyViewMutationMapperControlsProps
 ) => {
+    const length = props.mutationMapperStore.samplesByPosition.length;
+
     return (
         <div
             style={{
@@ -24,9 +28,10 @@ const StudyViewMutationPlotControls = (
             }}
         >
             <FilterResetPanel
-                filterInfo={`Selected ${
-                    props.mutationMapperStore.samplesByPosition.length
-                } ${pluralize('sample', length)}.`}
+                filterInfo={`Selected ${length} ${pluralize(
+                    'sample',
+                    length
+                )}.`}
                 additionalInfo={
                     length > 0
                         ? ' (Shift click to select multiple residues)'
@@ -36,7 +41,7 @@ const StudyViewMutationPlotControls = (
                     props.store.updateStudyViewFilter(props.gene)
                 }
                 buttonText="Apply Filter"
-                buttonClass={classNames('btn', 'btn-default', 'btn-xs')}
+                buttonClass={classnames('btn', 'btn-default', 'btn-xs')}
             />
         </div>
     );
