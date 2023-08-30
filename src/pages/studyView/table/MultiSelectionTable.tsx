@@ -71,17 +71,13 @@ export type MultiSelectionTableColumn = {
     columnTooltip?: JSX.Element;
 };
 
-export type MultiSelectionTableProps = {
+export type BaseMultiSelectionTableProps = {
     tableType: FreqColumnTypeEnum;
-    promise: MobxPromise<MultiSelectionTableRow[]>;
     width: number;
     height: number;
     filters: string[][];
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
-    extraButtons?: IFixedHeaderTableProps<
-        MultiSelectionTableRow
-    >['extraButtons'];
     selectedRowsKeys: string[];
     onGeneSelect: (
         hugoGeneSymbol: string,
@@ -94,11 +90,21 @@ export type MultiSelectionTableProps = {
     onChangeCancerGeneFilter: (filtered: boolean) => void;
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
+    setOperationsButtonText: string;
+};
+
+export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
     defaultSortBy: MultiSelectionTableColumnKey;
+    extraButtons?: IFixedHeaderTableProps<
+        MultiSelectionTableRow
+    >['extraButtons'];
+    selectedGenes: string[];
+    onGeneSelect: (hugoGeneSymbol: string) => void;
     columns: MultiSelectionTableColumn[];
     setOperationsButtonText: string;
     selectedMutationPlotGenes?: string[];
     enableMutationDiagramFlag?: boolean;
+    promise: MobxPromise<MultiSelectionTableRow[]>;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {

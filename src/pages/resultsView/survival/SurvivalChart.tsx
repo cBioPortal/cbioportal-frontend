@@ -34,7 +34,11 @@ import {
 } from './SurvivalUtil';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
-import { DefaultTooltip, DownloadControls } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControls,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { AnalysisGroup, DataBin } from '../../studyView/StudyViewUtils';
 import { AbstractChart } from '../../studyView/charts/ChartContainer';
@@ -676,6 +680,10 @@ export default class SurvivalChart
                         getData={this.getData}
                         style={{ position: 'absolute', zIndex: 10, right: 10 }}
                         type="button"
+                        showDownload={
+                            getServerConfig().skin_hide_download_controls ===
+                            DownloadControlOption.SHOW_ALL
+                        }
                     />
                 )}
 

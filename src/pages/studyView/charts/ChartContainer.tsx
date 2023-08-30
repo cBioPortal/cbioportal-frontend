@@ -23,7 +23,6 @@ import SurvivalChart, {
 import BarChart from './barChart/BarChart';
 import {
     ChartMeta,
-    ChartMetaDataTypeEnum,
     ChartType,
     ClinicalDataCountSummary,
     DataBin,
@@ -31,7 +30,6 @@ import {
     getRangeFromDataBins,
     getTableHeightByDimension,
     getWidthByDimension,
-    logScalePossible,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
 } from '../StudyViewUtils';
@@ -89,6 +87,12 @@ import {
 } from 'react-mutation-mapper';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import StudyViewMutationPlotControls from './mutationPlot/StudyViewMutationPlotControls';
+import {
+    StructuralVariantMultiSelectionTable,
+    StructVarMultiSelectionTableColumn,
+    StructVarMultiSelectionTableColumnKey,
+} from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
+import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -114,6 +118,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE,
     ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE,
     ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
+    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
 ];
 
 export interface IChartContainerProps {
@@ -166,6 +171,8 @@ export interface IChartContainerProps {
     selectedGenes?: any;
     cancerGenes: number[];
     onGeneSelect?: any;
+    selectedStructuralVariants?: StructVarGenePair[];
+    onStructuralVariantSelect?: any;
     isNewlyAdded: (uniqueKey: string) => boolean;
     cancerGeneFilterEnabled: boolean;
     filterByCancerGenes?: boolean;
@@ -739,6 +746,101 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 },
                             ]}
                             defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                            setOperationsButtonText={
+                                this.props.store.hesitateUpdate
+                                    ? 'Add Filters '
+                                    : 'Select Samples '
+                            }
+                        />
+                    );
+                };
+            }
+            case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
+                return () => {
+                    const numColumn: StructVarMultiSelectionTableColumn = {
+                        columnKey: StructVarMultiSelectionTableColumnKey.NUMBER,
+                    };
+                    if (this.props.store.isGlobalMutationFilterActive) {
+                        numColumn.columnTooltip = (
+                            <span data-test="hidden-fusion-alterations">
+                                Total number of fusions
+                                <br />
+                                This table is filtered based on selections in
+                                the <i>Alteration Filter</i> menu.
+                            </span>
+                        );
+                    }
+                    return (
+                        <StructuralVariantMultiSelectionTable
+                            tableType={
+                                FreqColumnTypeEnum.STRUCTURAL_VARIANT_PAIR
+                            }
+                            promise={this.props.promise}
+                            width={getWidthByDimension(
+                                this.props.dimension,
+                                this.borderWidth
+                            )}
+                            height={getTableHeightByDimension(
+                                this.props.dimension,
+                                this.chartHeaderHeight
+                            )}
+                            filters={this.props.filters}
+                            onSubmitSelection={this.handlers.onValueSelection}
+                            onChangeSelectedRows={
+                                this.handlers.onChangeSelectedRows
+                            }
+                            extraButtons={
+                                this.comparisonButtonForTables && [
+                                    this.comparisonButtonForTables,
+                                ]
+                            }
+                            selectedRowsKeys={this.selectedRowsKeys}
+                            onStructuralVariantSelect={
+                                this.props.onStructuralVariantSelect
+                            }
+                            selectedStructVars={
+                                this.props.selectedStructuralVariants || []
+                            }
+                            genePanelCache={this.props.genePanelCache}
+                            cancerGeneFilterEnabled={
+                                this.props.cancerGeneFilterEnabled
+                            }
+                            filterByCancerGenes={
+                                this.props.filterByCancerGenes!
+                            }
+                            onChangeCancerGeneFilter={
+                                this.props.onChangeCancerGeneFilter!
+                            }
+                            alterationFilterEnabled={
+                                this.props.alterationFilterEnabled
+                            }
+                            filterAlterations={this.props.filterAlterations}
+                            columns={[
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT,
+                                },
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.GENE1,
+                                },
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.GENE2,
+                                },
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS,
+                                },
+                                numColumn,
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.FREQ,
+                                },
+                            ]}
+                            defaultSortBy={
+                                StructVarMultiSelectionTableColumnKey.FREQ
+                            }
                             setOperationsButtonText={
                                 this.props.store.hesitateUpdate
                                     ? 'Add Filters '

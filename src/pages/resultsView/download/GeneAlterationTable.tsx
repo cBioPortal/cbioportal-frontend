@@ -2,6 +2,8 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface IGeneAlteration {
     gene: string;
@@ -102,7 +104,10 @@ export default class GeneAlterationTable extends React.Component<
                 initialItemsPerPage={10}
                 showColumnVisibility={true}
                 showFilter={true}
-                showCopyDownload={true}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls !==
+                    DownloadControlOption.HIDE_ALL
+                }
                 copyDownloadProps={{
                     downloadFilename: 'gene_alteration_frequency.tsv',
                 }}

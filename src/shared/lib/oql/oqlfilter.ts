@@ -89,6 +89,8 @@ export type OQLLineFilterOutput<T> = {
 
 export const STRUCTVARAnyGeneStr = '*';
 export const STRUCTVARNullGeneStr = '-';
+export const STUCTVARDownstreamFusionStr = 'downstream_fusion';
+export const STUCTVARUpstreamFusionStr = 'upstream_fusion';
 
 export type MergedTrackLineFilterOutput<T> = {
     list: OQLLineFilterOutput<T>[];
@@ -364,7 +366,7 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
                     })
                     .join('')
             );
-        case 'downstream_fusion':
+        case STUCTVARDownstreamFusionStr:
             const downstreamGene =
                 alteration.gene === undefined
                     ? STRUCTVARNullGeneStr
@@ -380,7 +382,7 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
                     })
                     .join('')
             );
-        case 'upstream_fusion':
+        case STUCTVARUpstreamFusionStr:
             const upstreamGene =
                 alteration.gene === undefined
                     ? STRUCTVARNullGeneStr
@@ -411,10 +413,85 @@ export function unparseOQLQueryLine(parsed_oql_line: SingleGeneQuery): string {
     return ret;
 }
 
+// Convert structural variants in OQL SingleGeneQuery to 'GeneA::GeneB' notations.
+export function convertToGene1Gene2String(
+    parsed_oql_line: SingleGeneQuery
+): string[] {
+    const representativeGene = parsed_oql_line.gene;
+    if (!queryContainsStructVarAlteration(parsed_oql_line)) {
+        return [representativeGene];
+    }
+    return _(parsed_oql_line.alterations || [])
+        .filter(alteration => alterationIsStructVar(alteration))
+        .map((alteration: FUSIONCommandDownstream | FUSIONCommandUpstream) => {
+            const otherGene = alteration.gene;
+            return alteration.alteration_type === STUCTVARUpstreamFusionStr
+                ? otherGene + '::' + representativeGene
+                : representativeGene + '::' + otherGene;
+        })
+        .value();
+}
+
+// Convert 'GeneA::GeneB' notation to OQL SingleGeneQuery.
+export function convertGene1Gene2RepresentationToOQL(
+    gene1Gene2Representation: string
+): SingleGeneQuery {
+    if (!gene1Gene2Representation.match('::')) {
+        throw new Error(
+            "Stuct var representation is not of format 'GeneA::GeneB'. Passed value: " +
+                gene1Gene2Representation
+        );
+    }
+    const [
+        gene1HugoSymbol,
+        gene2HugoSymbol,
+    ]: string[] = gene1Gene2Representation.split('::');
+    if (!gene1HugoSymbol && !gene2HugoSymbol) {
+        throw new Error(
+            'Both Gene1 and Gene2 are falsy. Passed value: ' +
+                gene1Gene2Representation
+        );
+    }
+    const representativeGene = gene1HugoSymbol || gene2HugoSymbol;
+    if (representativeGene === gene1HugoSymbol) {
+        return {
+            gene: gene1HugoSymbol,
+            alterations: [
+                {
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: gene2HugoSymbol,
+                },
+            ],
+        } as SingleGeneQuery;
+    } else {
+        return {
+            gene: gene2HugoSymbol,
+            alterations: [
+                {
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: gene1HugoSymbol,
+                },
+            ],
+        } as SingleGeneQuery;
+    }
+}
+
+export function queryContainsStructVarAlteration(
+    parsed_oql_line: SingleGeneQuery
+): boolean {
+    if (!parsed_oql_line.alterations) {
+        return false;
+    }
+    return _.some(parsed_oql_line.alterations, alteration =>
+        alterationIsStructVar(alteration)
+    );
+}
+
 export function alterationIsStructVar(alteration: Alteration): boolean {
     return (
-        alteration.alteration_type === 'upstream_fusion' ||
-        alteration.alteration_type === 'downstream_fusion'
+        (alteration as FUSIONCommandOrientationBase).gene !== undefined &&
+        (alteration.alteration_type === STUCTVARUpstreamFusionStr ||
+            alteration.alteration_type === STUCTVARDownstreamFusionStr)
     );
 }
 
@@ -525,14 +602,14 @@ function isDatumWantedByOQLAlterationCommand<T>(
             );
         case 'fusion':
             return isDatumWantedByFUSIONCommand(alt_cmd, datum, accessors);
-        case 'upstream_fusion':
+        case STUCTVARUpstreamFusionStr:
             return isDatumWantedByFUSIONCommandUpstream(
                 alt_cmd,
                 datum,
                 accessors,
                 query_line.gene
             );
-        case 'downstream_fusion':
+        case STUCTVARDownstreamFusionStr:
             return isDatumWantedByFUSIONCommandDownstream(
                 alt_cmd,
                 datum,
@@ -1239,7 +1316,7 @@ export const getSecondGene = (query: SingleGeneQuery) => {
 function isDownstream(q: SingleGeneQuery) {
     return (
         (q.alterations as FUSIONCommandUpDownAny[])[0].alteration_type ===
-        'downstream_fusion'
+        STUCTVARDownstreamFusionStr
     );
 }
 
@@ -1292,7 +1369,10 @@ export const getGenesFromSingleGeneQuery = (q: SingleGeneQuery) => {
 };
 
 // Legacy 'fusion' command only contains a single gene:
-const upDownFusionCommands = ['downstream_fusion', 'upstream_fusion'];
+const upDownFusionCommands = [
+    STUCTVARDownstreamFusionStr,
+    STUCTVARUpstreamFusionStr,
+];
 const isUpOrDownstreamFusion = (q: SingleGeneQuery): boolean => {
     return (
         q.alterations &&

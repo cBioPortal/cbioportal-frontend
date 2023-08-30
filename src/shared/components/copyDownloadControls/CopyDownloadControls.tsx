@@ -10,7 +10,6 @@ const Clipboard = require('clipboard');
 import copyDownloadStyles from './copyDownloadControls.module.scss';
 import { CopyDownloadButtons } from './CopyDownloadButtons';
 import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
-import { AppContext } from 'cbioportal-frontend-commons';
 
 export interface IAsyncCopyDownloadControlsProps
     extends ICopyDownloadControlsProps {
@@ -81,7 +80,7 @@ export class CopyDownloadControls extends React.Component<
     }
 
     public render() {
-        return this.context.showDownloadControls === true ? (
+        return (
             <span>
                 <CopyDownloadButtons
                     className={this.props.className}
@@ -100,7 +99,7 @@ export class CopyDownloadControls extends React.Component<
                 {this.copyIndicatorModal()}
                 {this.downloadErrorModal()}
             </span>
-        ) : null;
+        );
     }
 
     public downloadIndicatorModal(): JSX.Element {
@@ -275,5 +274,3 @@ export class CopyDownloadControls extends React.Component<
         }, this.props.copyMessageDuration);
     }
 }
-
-CopyDownloadControls.contextType = AppContext;

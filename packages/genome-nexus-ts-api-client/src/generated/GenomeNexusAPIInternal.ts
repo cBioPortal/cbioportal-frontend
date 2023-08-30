@@ -618,6 +618,10 @@ export type Vcf = {
 export type Vues = {
     'comment': string
 
+        'confirmed': boolean
+
+        'context': string
+
         'defaultEffect': string
 
         'genomicLocation': string
@@ -626,17 +630,21 @@ export type Vues = {
 
         'hugoGeneSymbol': string
 
-        'pubmedIds': Array < number >
+        'pubmedId': number
 
         'referenceText': string
 
         'revisedProteinEffect': string
 
+        'revisedVariantClassification': string
+
         'transcriptId': string
 
         'variant': string
 
-        'variantClassification': string
+        'vepPredictedProteinEffect': string
+
+        'vepPredictedVariantClassification': string
 
 };
 

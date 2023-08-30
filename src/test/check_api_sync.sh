@@ -13,8 +13,14 @@ run_and_check_diff() {
 
     eval "$cmd"
     for f in $files; do
-        git diff --quiet $f || (git checkout -- $f && echo -e "${RED}$f $msg${NC}" && exit 1)
-        return_code=$(($return_code + $?))
+        f_exit_code=0
+        git diff --quiet $f || f_exit_code=1
+        if [[ $f_exit_code -gt 0 ]]; then
+          echo -e "${RED}$f $msg${NC}:"
+          git --no-pager diff $f
+          git checkout -- $f
+        fi
+        return_code=$(($return_code + $f_exit_code))
     done
 
     return $return_code

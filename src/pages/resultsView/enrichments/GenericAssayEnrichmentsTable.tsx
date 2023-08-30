@@ -17,6 +17,8 @@ import {
     formatGenericAssayCompactLabelByNameAndId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { ContinousDataPvalueTooltip } from './EnrichmentsUtil';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface IGenericAssayEnrichmentTableProps {
     genericAssayType: string;
@@ -160,6 +162,10 @@ export default class GenericAssayEnrichmentsTable extends React.Component<
                     this.props.onEntityClick ? this.onRowClick : undefined
                 }
                 dataStore={this.props.dataStore}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
             />
         );
     }

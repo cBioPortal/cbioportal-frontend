@@ -36,6 +36,29 @@ if (
         // ADD MESSAGE IN FOLLOWING FORMAT
         // UNIQUE ID IS IMPORTANT B/C WE REMEMBER A MESSAGE HAS BEEN SHOWN
         // BASED ON USERS LOCALSTORAGE
+
+        {
+            dateEnd: 100000000000000,
+            content: `P and q-values on this page have changed recently. The 1-sided Fisher exact test is now a 2-sided test  
+                (<a href="https://docs.cbioportal.org/news/#aug-1-2023" target="_blank">Read more</a>).`,
+            showCondition: routingStore => {
+                return _.some(
+                    [
+                        /comparison_subtab=alterations/i,
+                        /results\/mutualExclusivity/i,
+                        /comparison\/alterations/i,
+                        /comparison\/mutations/i,
+                    ],
+                    (re: RegExp) => {
+                        return re.test(
+                            routingStore.location.pathname +
+                                routingStore.location.search
+                        );
+                    }
+                );
+            },
+            id: '2023_qval_change',
+        },
     ];
 }
 

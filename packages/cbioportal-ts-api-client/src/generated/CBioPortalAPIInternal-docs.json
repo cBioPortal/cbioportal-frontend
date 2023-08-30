@@ -2450,6 +2450,43 @@
         }
       }
     },
+    "/structuralvariant-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch structural variant genes by study view filter",
+        "operationId": "fetchStructuralVariantCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationCountByStructuralVariant"
+              }
+            }
+          }
+        }
+      }
+    },
     "/structuralvariant-genes/fetch": {
       "post": {
         "tags": [
@@ -3356,8 +3393,21 @@
           "type": "integer",
           "format": "int32"
         },
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
         "hugoGeneSymbol": {
           "type": "string"
+        },
+        "hugoGeneSymbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "matchingGenePanelIds": {
           "type": "array",
@@ -3380,9 +3430,67 @@
         "totalCount": {
           "type": "integer",
           "format": "int32"
+        },
+        "uniqueEventKey": {
+          "type": "string"
         }
       },
       "title": "AlterationCountByGene"
+    },
+    "AlterationCountByStructuralVariant": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "gene1EntrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gene1HugoGeneSymbol": {
+          "type": "string"
+        },
+        "gene2EntrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gene2HugoGeneSymbol": {
+          "type": "string"
+        },
+        "hugoGeneSymbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "matchingGenePanelIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "numberOfAlteredCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfProfiledCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uniqueEventKey": {
+          "type": "string"
+        }
+      },
+      "title": "AlterationCountByStructuralVariant"
     },
     "AlterationEnrichment": {
       "type": "object",
@@ -4044,8 +4152,21 @@
           "type": "integer",
           "format": "int32"
         },
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
         "hugoGeneSymbol": {
           "type": "string"
+        },
+        "hugoGeneSymbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "matchingGenePanelIds": {
           "type": "array",
@@ -4068,6 +4189,9 @@
         "totalCount": {
           "type": "integer",
           "format": "int32"
+        },
+        "uniqueEventKey": {
+          "type": "string"
         }
       },
       "title": "CopyNumberCountByGene"
@@ -5566,6 +5690,45 @@
       },
       "title": "StructuralVariantFilter"
     },
+    "StructuralVariantFilterQuery": {
+      "type": "object",
+      "properties": {
+        "gene1Query": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "gene2Query": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
+        "tiersBooleanMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "title": "StructuralVariantFilterQuery"
+    },
     "StructuralVariantGeneSubQuery": {
       "type": "object",
       "properties": {
@@ -5682,6 +5845,12 @@
         "sampleTreatmentTargetFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
+        "structuralVariantFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StudyViewStructuralVariantFilter"
+          }
+        },
         "studyIds": {
           "type": "array",
           "items": {
@@ -5690,6 +5859,28 @@
         }
       },
       "title": "StudyViewFilter"
+    },
+    "StudyViewStructuralVariantFilter": {
+      "type": "object",
+      "properties": {
+        "molecularProfileIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "structVarQueries": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/StructuralVariantFilterQuery"
+            }
+          }
+        }
+      },
+      "title": "StudyViewStructuralVariantFilter"
     },
     "VariantCount": {
       "type": "object",

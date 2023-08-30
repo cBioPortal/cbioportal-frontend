@@ -78,19 +78,19 @@ export default class OQLTextArea extends React.Component<
     // Need to record the textarea value due to SyntheticEvent restriction due to debounce
     private currentTextAreaValue = '';
 
-    @observable private _geneQuery = '';
-    @computed get geneQuery() {
+    @observable private _geneQueryStr = '';
+    @computed get geneQueryStr() {
         if (this.queryStore) {
             return this.queryStore.geneQuery;
         } else {
-            return this._geneQuery;
+            return this._geneQueryStr;
         }
     }
-    set geneQuery(q: string) {
+    set geneQueryStr(q: string) {
         if (this.queryStore) {
             this.queryStore.geneQuery = q;
         } else {
-            this._geneQuery = q;
+            this._geneQueryStr = q;
         }
     }
     @observable private geneQueryIsValid = true;
@@ -107,12 +107,12 @@ export default class OQLTextArea extends React.Component<
         // When the text is empty, it will be skipped from oql and further no validation will be done.
         // Need to set the geneQuery here
         if (this.currentTextAreaValue === '') {
-            this.geneQuery = '';
+            this.geneQueryStr = '';
             if (this.props.callback) {
                 this.props.callback(
                     getOQL(''),
                     getEmptyGeneValidationResult(),
-                    this.geneQuery
+                    this.geneQueryStr
                 );
             }
         }
@@ -125,8 +125,8 @@ export default class OQLTextArea extends React.Component<
     constructor(props: IGeneSelectionBoxProps) {
         super(props);
         makeObservable(this);
-        this.geneQuery = this.props.inputGeneQuery || '';
-        this.queryToBeValidated = this.geneQuery;
+        this.geneQueryStr = this.props.inputGeneQuery || '';
+        this.queryToBeValidated = this.geneQueryStr;
         if (!this.props.validateInputGeneQuery) {
             this.skipGenesValidation = true;
         }
@@ -140,13 +140,13 @@ export default class OQLTextArea extends React.Component<
                 inputGeneQuery => {
                     if (
                         (inputGeneQuery || '').toUpperCase() !==
-                        this.geneQuery.toUpperCase()
+                        this.geneQueryStr.toUpperCase()
                     ) {
                         if (!this.props.validateInputGeneQuery) {
                             this.skipGenesValidation = true;
                         }
-                        this.geneQuery = (inputGeneQuery || '').trim();
-                        this.queryToBeValidated = this.geneQuery;
+                        this.geneQueryStr = (inputGeneQuery || '').trim();
+                        this.queryToBeValidated = this.geneQueryStr;
                     }
                     this.updateTextAreaRefValue();
                 }
@@ -168,7 +168,7 @@ export default class OQLTextArea extends React.Component<
 
     @action.bound
     private updateGeneQuery(value: string) {
-        this.geneQuery = value;
+        this.geneQueryStr = value;
         // at the time gene query is updated, the queryToBeValidated should be set to the same
         this.queryToBeValidated = value;
 
@@ -181,7 +181,7 @@ export default class OQLTextArea extends React.Component<
 
     private getTextAreaValue() {
         if (this.showFullText) {
-            return this.geneQuery;
+            return this.geneQueryStr;
         } else {
             return this.getFocusOutValue();
         }
@@ -194,7 +194,7 @@ export default class OQLTextArea extends React.Component<
 
     private getFocusOutValue() {
         return getFocusOutText(
-            getOQL(this.geneQuery).query.map(query => query.gene)
+            getOQL(this.geneQueryStr).query.map(query => query.gene)
         );
     }
 
@@ -215,7 +215,7 @@ export default class OQLTextArea extends React.Component<
                 classNames.push(styles.default);
                 break;
         }
-        if (!this.geneQuery) {
+        if (!this.geneQueryStr) {
             classNames.push(styles.empty);
         }
         return classNames;
@@ -238,7 +238,7 @@ export default class OQLTextArea extends React.Component<
         this.geneQueryIsValid = validQuery;
 
         if (this.props.callback) {
-            this.props.callback(oql, validationResult, this.geneQuery);
+            this.props.callback(oql, validationResult, this.geneQueryStr);
         }
     }
 
@@ -260,7 +260,7 @@ export default class OQLTextArea extends React.Component<
 
     @bind onChange(event: any) {
         this.currentTextAreaValue = event.currentTarget.value;
-        this.geneQuery = this.currentTextAreaValue;
+        this.geneQueryStr = this.currentTextAreaValue;
         this.updateQueryToBeValidateDebounce();
     }
 

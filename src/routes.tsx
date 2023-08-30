@@ -377,7 +377,7 @@ export const makeRoutes = () => {
                     })}
                 />
                 <Route
-                    path="/results/:tab?"
+                    path="/results/:tab"
                     component={LocationValidationWrapper(
                         ResultsViewPage,
                         tabParamValidator(ResultsViewTab),
@@ -403,7 +403,7 @@ export const makeRoutes = () => {
                     )}
                 />
                 <Route
-                    path="/comparison/:tab?"
+                    path="/comparison/:tab"
                     component={ScrollToTop(
                         LocationValidationWrapper(
                             GroupComparisonPage,

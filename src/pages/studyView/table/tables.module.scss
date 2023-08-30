@@ -63,10 +63,13 @@ $study-view-table-icon-size: 10px;
         display: none;
     }
 
+    %addGeneUIHover {
+        display: flex !important;
+        opacity: 0.5;
+    }
     &:hover {
         .addGeneUI {
-            display: flex !important;
-            opacity: 0.5;
+            @extend %addGeneUIHover;
         }
     }
     .addGeneUI {
@@ -74,6 +77,9 @@ $study-view-table-icon-size: 10px;
         &.selected {
             display: flex !important;
             opacity: 1 !important;
+        }
+        &.hover {
+            @extend %addGeneUIHover;
         }
         padding-left: 3px;
         font-size: 12px;
