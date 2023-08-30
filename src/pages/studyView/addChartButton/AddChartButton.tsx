@@ -1102,7 +1102,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             {this.addXvsYChartButton}
                         </div>
                     </MSKTab>
-                    {this.props.store.mutationMapperFF && (
+                    {this.props.store.enableMutationDiagramFlag && (
                         <MSKTab
                             id={'Mutation_Plots'}
                             linkText={<span>Mutation Plot</span>}

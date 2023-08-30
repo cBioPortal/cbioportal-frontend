@@ -178,7 +178,7 @@ export default class StudyViewPage extends React.Component<
         let hashString: string = hash || getBrowserWindow().studyPageFilter;
         delete (window as any).studyPageFilter;
 
-        this.store.mutationMapperFF = query['test']
+        this.store.enableMutationDiagramFlag = query['test']
             ? query['test'] == 'true'
             : false;
 

@@ -84,7 +84,7 @@ export interface ChartControls {
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
     showSwapAxes?: boolean;
-    showResultsPageButton?: boolean;
+    showMutationDiagramResultsPageButton?: boolean;
     showSurvivalPlotLeftTruncationToggle?: boolean;
     survivalPlotLeftTruncationChecked?: boolean;
 }
@@ -829,29 +829,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     </button>
                                 </DefaultTooltip>
                             </If>
-                            <DefaultTooltip
-                                placement={this.tooltipPosition}
-                                align={this.tooltipAlign}
-                                overlay={<span>Delete chart</span>}
-                            >
-                                <button
-                                    className={classnames(
-                                        'btn btn-xs btn-default',
-                                        styles.item
-                                    )}
-                                    data-test={'deleteChart'}
-                                    onClick={this.props.deleteChart}
-                                >
-                                    <i
-                                        className={classnames(
-                                            'fa fa-xs fa-fw',
-                                            'fa-times',
-                                            styles.clickable
-                                        )}
-                                        aria-hidden="true"
-                                    ></i>
-                                </button>
-                            </DefaultTooltip>
                             <If
                                 condition={
                                     this.props.chartType ===
@@ -899,13 +876,36 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         <i
                                             className={classnames(
                                                 'fa fa-xs fa-fw',
-                                                'fa-info-circle'
+                                                'fa-edit'
                                             )}
                                             aria-hidden="true"
                                         />
                                     </div>
                                 </DefaultTooltip>
                             </If>
+                            <DefaultTooltip
+                                placement={this.tooltipPosition}
+                                align={this.tooltipAlign}
+                                overlay={<span>Delete chart</span>}
+                            >
+                                <button
+                                    className={classnames(
+                                        'btn btn-xs btn-default',
+                                        styles.item
+                                    )}
+                                    data-test={'deleteChart'}
+                                    onClick={this.props.deleteChart}
+                                >
+                                    <i
+                                        className={classnames(
+                                            'fa fa-xs fa-fw',
+                                            'fa-times',
+                                            styles.clickable
+                                        )}
+                                        aria-hidden="true"
+                                    ></i>
+                                </button>
+                            </DefaultTooltip>
                             {this.menuItems.length > 0 && (
                                 <div
                                     onMouseEnter={this.openMenu}

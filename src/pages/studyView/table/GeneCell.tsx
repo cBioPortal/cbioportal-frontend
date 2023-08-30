@@ -30,7 +30,7 @@ export type IGeneCellProps = {
         tableType: FreqColumnTypeEnum
     ) => void;
     selectedMutationPlotGenes?: string[];
-    mutationMapperFF?: boolean;
+    enableMutationDiagramFlag?: boolean;
 };
 
 @observer
@@ -109,7 +109,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                             <i className="fa fa-search"></i>
                         </div>
                         {this.props.selectedMutationPlotGenes &&
-                            this.props.mutationMapperFF && (
+                            this.props.enableMutationDiagramFlag && (
                                 <div
                                     className={classnames({
                                         [styles.addGeneUI]: true,

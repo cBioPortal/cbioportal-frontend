@@ -88,6 +88,7 @@ import {
     LollipopMutationPlot,
 } from 'react-mutation-mapper';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import StudyViewMutationPlotControls from './mutationPlot/StudyViewMutationPlotControls';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -359,7 +360,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.MUTATION_DIAGRAM: {
                 controls = {
-                    showResultsPageButton: true,
+                    showMutationDiagramResultsPageButton: true,
                 };
                 break;
             }
@@ -489,44 +490,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return false;
     }
 
-    getMutationPlotControls() {
-        const length = this.props.store.getOrInitMutationStore(
-            this.props.chartMeta.uniqueKey
-        ).samplesByPosition.length;
-
-        return (
-            <div
-                style={{
-                    position: 'relative',
-                    zIndex: 2,
-                    display: 'flex',
-                    border: '1px solid transparent',
-                    borderRadius: 4,
-                    padding: '1px 10px !important',
-                }}
-            >
-                <FilterResetPanel
-                    filterInfo={`Selected ${length} ${pluralize(
-                        'sample',
-                        length
-                    )}.`}
-                    additionalInfo={
-                        length > 0
-                            ? ' (Shift click to select multiple residues)'
-                            : ''
-                    }
-                    resetFilters={() =>
-                        this.props.store.updateStudyViewFilter(
-                            this.props.chartMeta.uniqueKey
-                        )
-                    }
-                    buttonText="Apply Filter"
-                    buttonClass={classnames('btn', 'btn-default', 'btn-xs')}
-                />
-            </div>
-        );
-    }
-
     @computed get comparisonButtonForTables() {
         if (this.selectedRowsKeys!.length >= 2) {
             return {
@@ -651,7 +614,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             selectedMutationPlotGenes={
                                 this.props.store.visibleMutationPlotGenes
                             }
-                            mutationMapperFF={this.props.store.mutationMapperFF}
+                            enableMutationDiagramFlag={
+                                this.props.store.enableMutationDiagramFlag
+                            }
                             filters={this.props.filters}
                             onSubmitSelection={this.handlers.onValueSelection}
                             onChangeSelectedRows={
@@ -1336,8 +1301,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     paddingTop: '10px',
                                 }}
                             >
-                                {store.samplesByPosition.length > 0 &&
-                                    this.getMutationPlotControls()}
+                                {store.samplesByPosition.length > 0 && (
+                                    <StudyViewMutationPlotControls
+                                        store={this.props.store}
+                                        gene={gene}
+                                        mutationMapperStore={store}
+                                    />
+                                )}
                             </div>
                             <LollipopMutationPlot
                                 store={store}

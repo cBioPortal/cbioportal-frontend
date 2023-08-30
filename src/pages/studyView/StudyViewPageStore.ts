@@ -67,6 +67,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
+    fetchGenes,
     filterAndAnnotateMutations,
     getAlterationTypesInOql,
     getDefaultProfilesForOql,
@@ -2542,7 +2543,7 @@ export class StudyViewPageStore extends AnalysisStore
         );
     }
 
-    mutationMapperFF = true;
+    enableMutationDiagramFlag = true;
 
     visibleMutationPlotByGene(hugoGeneSymbol: string): Boolean {
         return this.visibleMutationPlotGenes.includes(hugoGeneSymbol);
@@ -2564,40 +2565,25 @@ export class StudyViewPageStore extends AnalysisStore
     readonly genes = remoteData<Gene[]>({
         await: () => [],
         invoke: async () => {
-            let geneData: Gene[] = [];
-
-            if (this.visibleMutationPlotGenes.length > 0) {
-                this.visibleMutationPlotGenes.map(async gene => {
-                    if (this.mutationGeneDataCache[gene]) {
-                        geneData.push(this.mutationGeneDataCache[gene]);
-                    } else {
-                        const data = await getGeneData([gene]);
-                        this.mutationGeneDataCache[gene] = data[0];
-                        geneData.push(this.mutationGeneDataCache[gene]);
-                    }
-                });
-
-                return geneData;
-            }
-
-            return [];
+            return await fetchGenes(this.visibleMutationPlotGenes);
+        },
+        onResult: (genes: Gene[]) => {
+            this.geneCache.addData(genes);
+        },
+        onError: err => {
+            throw err;
         },
     });
 
     readonly mutations = remoteData<Mutation[]>({
         await: () => [],
         invoke: async () => {
-            let mutations: Mutation[] = [];
-
-            this.visibleMutationPlotGenes.map(gene => {
-                this.mutationPlotData
-                    .get({ hugoGeneSymbol: gene })
-                    .result!.data.forEach(d => {
-                        mutations.push(d);
-                    });
-            });
-
-            return mutations;
+            return _.flatten(
+                this.visibleMutationPlotGenes.map<Mutation[]>(gene => {
+                    return this.mutationPlotData.get({ hugoGeneSymbol: gene })
+                        .result!.data;
+                })
+            );
         },
     });
 
@@ -2640,7 +2626,7 @@ export class StudyViewPageStore extends AnalysisStore
 
         // trigger an update to mutation plot for the selected gene.
         if (
-            this.mutationMapperFF &&
+            this.enableMutationDiagramFlag &&
             selectedTable == FreqColumnTypeEnum.MUTATION
         ) {
             this.addMutationPlotByChart(hugoGeneSymbol);
@@ -6252,7 +6238,6 @@ export class StudyViewPageStore extends AnalysisStore
                     minH: 2,
                 });
                 this.visibleMutationPlotGenes.push(uniqueKey);
-                this.getOrInitMutationStore(uniqueKey);
             }
         });
     }

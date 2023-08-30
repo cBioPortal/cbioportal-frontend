@@ -74,7 +74,7 @@ import { DefaultMutationMapperDataFetcher } from './DefaultMutationMapperDataFet
 import { DefaultMutationMapperFilterApplier } from './DefaultMutationMapperFilterApplier';
 import { get } from 'superagent';
 
-interface DefaultMutationMapperStoreConfig {
+export interface DefaultMutationMapperStoreConfig {
     annotationFields?: string[];
     isoformOverrideSource?: string;
     ptmSources?: string[];

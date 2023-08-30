@@ -171,3 +171,4 @@ export { default as DefaultMutationMapperDataStore } from './store/DefaultMutati
 export { default as DefaultMutationMapperFilterApplier } from './store/DefaultMutationMapperFilterApplier';
 export { default as DefaultMutationMapperStore } from './store/DefaultMutationMapperStore';
 export { default as DefaultLollipopPlotLegend } from '../src/component/lollipopMutationPlot/DefaultLollipopPlotLegend';
+export { DefaultMutationMapperStoreConfig } from '../src/store/DefaultMutationMapperStore';
