@@ -10,7 +10,10 @@ export const CANCER_TYPE_ROOT = 'tissue';
 export const VIRTUAL_STUDY_NAME = 'My Virtual Studies';
 export const PHYSICAL_STUDY_NAME = 'Studies';
 
-export type CancerTypeWithVisibility = CancerType & { alwaysVisible?: boolean };
+export type CancerTypeWithVisibility = CancerType & {
+    alwaysVisible?: boolean;
+    id?: string;
+};
 
 export type CancerTreeNode = CancerTypeWithVisibility | CancerStudy;
 
@@ -51,6 +54,7 @@ export default class CancerStudyTreeData {
     };
 
     virtualStudyCategory: CancerTypeWithVisibility = {
+        id: 'my_virtual_studies_list',
         dedicatedColor: '',
         name: VIRTUAL_STUDY_NAME,
         parent: CANCER_TYPE_ROOT,
@@ -169,6 +173,7 @@ export default class CancerStudyTreeData {
                     allStudyTags.find(
                         t => t.studyId === (node as CancerStudy).studyId
                     );
+
                 let studyTags =
                     foundStudyByTags && foundStudyByTags?.tags
                         ? stringifyTags(JSON.parse(foundStudyByTags.tags))

@@ -51,6 +51,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import GroupComparisonPathwayMapper from './pathwayMapper/GroupComparisonPathwayMapper';
 import GroupComparisonMutationsTab from './GroupComparisonMutationsTab';
 import GroupComparisonPathwayMapperUserSelectionStore from './pathwayMapper/GroupComparisonPathwayMapperUserSelectionStore';
+import { Tour } from 'tours';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -363,7 +364,7 @@ export default class GroupComparisonPage extends React.Component<
                     break;
                 case 1:
                     studyHeader = (
-                        <h3>
+                        <h3 data-tour="single-study-group-comparison-header">
                             <StudyLink studyId={studies[0].studyId}>
                                 {studies[0].name}
                             </StudyLink>
@@ -392,6 +393,7 @@ export default class GroupComparisonPage extends React.Component<
                     <span>
                         {studyHeader}Groups from{' '}
                         <span
+                            data-tour="single-study-group-comparison-attribute"
                             style={{ fontWeight: 'bold', fontStyle: 'italic' }}
                         >
                             {this.store.sessionClinicalAttributeName}
@@ -506,6 +508,7 @@ export default class GroupComparisonPage extends React.Component<
                         </div>
                     </div>
                     <div>{this.tabs.component}</div>
+                    {this.tabs.isComplete && <Tour />}
                 </div>
             </PageLayout>
         );
