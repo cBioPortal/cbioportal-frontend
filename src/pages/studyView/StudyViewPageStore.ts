@@ -1902,17 +1902,25 @@ export class StudyViewPageStore
         switch (chartType) {
             case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
-                comparisonId = this.isGeneSpecificChart(chartMeta.uniqueKey)
-                    ? await this.createCnaGeneComparisonSession(
-                          chartMeta,
-                          params.hugoGeneSymbols!,
-                          statusCallback
-                      )
-                    : await this.createCategoricalAttributeComparisonSession(
-                          chartMeta,
-                          params.clinicalAttributeValues!,
-                          statusCallback
-                      );
+                const isGeneSpecificChart = this.isGeneSpecificChart(
+                    chartMeta.uniqueKey
+                );
+                if (isGeneSpecificChart) {
+                    const chartInfo = this._geneSpecificChartMap.get(
+                        chartMeta.uniqueKey
+                    )!;
+                    comparisonId = await this.createCnaGeneComparisonSession(
+                        chartMeta,
+                        [chartInfo.hugoGeneSymbol],
+                        statusCallback
+                    );
+                } else {
+                    comparisonId = await this.createCategoricalAttributeComparisonSession(
+                        chartMeta,
+                        params.clinicalAttributeValues!,
+                        statusCallback
+                    );
+                }
                 break;
             case ChartTypeEnum.MUTATED_GENES_TABLE:
                 comparisonId = await this.createMutatedGeneComparisonSession(
@@ -7627,8 +7635,8 @@ export class StudyViewPageStore
     initializeGeneSpecificCharts(): void {
         if (!_.isEmpty(this.initialFilters.genomicDataFilters)) {
             const molecularProfileOptionByTypeMap = _.keyBy(
-                this.molecularProfileSampleCounts.result,
-                molecularProfileOption => molecularProfileOption.uniqueKey
+                this.molecularProfileOptions.result,
+                molecularProfileOption => molecularProfileOption.value
             );
             _.each(
                 this.initialFilters.genomicDataFilters,
@@ -7650,6 +7658,7 @@ export class StudyViewPageStore
                                     profileType: genomicDataFilter.profileType,
                                     hugoGeneSymbol:
                                         genomicDataFilter.hugoGeneSymbol,
+                                    dataType: molecularProfileOption.dataType,
                                 },
                             ],
                             true
@@ -9290,13 +9299,10 @@ export class StudyViewPageStore
         default: [],
     });
 
-    readonly molecularProfileOptions = remoteData<MolecularProfileOption[]>({
-        await: () => [
-            this.molecularProfileForGeneCharts,
-            this.molecularProfileSampleCounts,
-        ],
+    readonly molecularProfileTypeToDataType = remoteData({
+        await: () => [this.molecularProfileForGeneCharts],
         invoke: async () => {
-            const profileTypeToDataTypeSet = this.molecularProfileForGeneCharts.result.reduce(
+            return this.molecularProfileForGeneCharts.result.reduce(
                 (acc, molecularProfile) => {
                     const profileType = getSuffixOfMolecularProfile(
                         molecularProfile
@@ -9314,6 +9320,18 @@ export class StudyViewPageStore
                 },
                 new Map<string, string>()
             );
+        },
+        default: new Map(),
+    });
+
+    readonly molecularProfileOptions = remoteData<MolecularProfileOption[]>({
+        await: () => [
+            this.molecularProfileTypeToDataType,
+            this.molecularProfileSampleCounts,
+        ],
+        invoke: async () => {
+            const profileTypeToDataTypeSet = this.molecularProfileTypeToDataType
+                .result;
 
             return this.molecularProfileSampleCounts.result
                 .filter(datum => profileTypeToDataTypeSet.has(datum.uniqueKey))

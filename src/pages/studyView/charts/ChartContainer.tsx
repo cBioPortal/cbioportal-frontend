@@ -387,24 +387,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             switch (this.props.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
-                    const openComparison = this.props.store.isGeneSpecificChart(
-                        this.props.chartMeta.uniqueKey
-                    )
-                        ? () =>
-                              this.props.store.openComparisonPage(
-                                  this.props.chartMeta,
-                                  params || {}
-                              )
-                        : () =>
-                              this.props.store.openComparisonPage(
-                                  this.props.chartMeta,
-                                  {
-                                      clinicalAttributeValues: this.props
-                                          .promise
-                                          .result! as ClinicalDataCountSummary[],
-                                  }
-                              );
-                    openComparison();
+                    this.props.store.openComparisonPage(this.props.chartMeta, {
+                        clinicalAttributeValues: this.props.promise
+                            .result! as ClinicalDataCountSummary[],
+                    });
                     break;
                 default:
                     this.props.store.openComparisonPage(
@@ -519,20 +505,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         )}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onValueSelection}
-                        openComparisonPage={
-                            this.props.store.isGeneSpecificChart(
-                                this.props.chartMeta.uniqueKey
-                            )
-                                ? () =>
-                                      this.openComparisonPage({
-                                          hugoGeneSymbols: [
-                                              getHugoSymbolByChartTitle(
-                                                  this.props.chartMeta.uniqueKey
-                                              ),
-                                          ],
-                                      })
-                                : this.openComparisonPage
-                        }
+                        openComparisonPage={this.openComparisonPage}
                         filters={this.props.filters}
                         data={this.props.promise.result}
                         placement={this.placement}
