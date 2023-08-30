@@ -1840,7 +1840,7 @@ export function getExponent(value: number): number {
 
 export function getCNAByAlteration(alteration: string | number) {
     const numberValue = Number(alteration);
-    return !isNaN(numberValue) ? CNA_TO_ALTERATION[numberValue] || '' : '';
+    return !isNaN(numberValue) ? CNA_TO_ALTERATION[numberValue] || '' : 'NA';
 }
 
 export function getCNAColorByAlteration(

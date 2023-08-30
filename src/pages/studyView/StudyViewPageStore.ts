@@ -6660,7 +6660,7 @@ export class StudyViewPageStore
             pending = pending || this.userSavedCustomData.isPending;
         }
         if (!_.isEmpty(this.initialFilters.genomicDataFilters)) {
-            pending = pending || this.molecularProfileSampleCounts.isPending;
+            pending = pending || this.molecularProfileOptions.isPending;
         }
         if (!_.isEmpty(this.initialFilters.genericAssayDataFilters)) {
             pending =
