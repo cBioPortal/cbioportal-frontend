@@ -24,7 +24,6 @@ import {
     getGenericAssayChartUniqueKey,
     updateCustomIntervalFilter,
     SpecialChartsUniqueKeyEnum,
-    DataFilterValueWithLabel,
     geneFilterQueryToOql,
     getCNAByAlteration,
     getCNAColorByAlteration,
@@ -74,7 +73,7 @@ export interface IUserSelectionsProps {
     updateCustomChartFilter: (uniqueKey: string, values: string[]) => void;
     removeGeneFilter: (uniqueKey: string, oql: string) => void;
     removeStructVarFilter: (uniqueKey: string, oql: string) => void;
-    updateGenomicDataIntervalFilter: (
+    updateGenomicDataFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
     ) => void;
@@ -224,10 +223,10 @@ export default class UserSelections extends React.Component<
         // Genomic Bar chart filters
         _.reduce(
             this.props.filter.genomicDataFilters || [],
-            (acc, genomicDataIntervalFilter) => {
+            (acc, genomicDataFilter) => {
                 const uniqueKey = getGenomicChartUniqueKey(
-                    genomicDataIntervalFilter.hugoGeneSymbol,
-                    genomicDataIntervalFilter.profileType
+                    genomicDataFilter.hugoGeneSymbol,
+                    genomicDataFilter.profileType
                 );
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
                 const dataType = this.props.store.getMolecularChartDataType(
@@ -237,13 +236,13 @@ export default class UserSelections extends React.Component<
                     let dataFilterComponent =
                         dataType === DataType.STRING
                             ? this.renderCategoricalDataFilter(
-                                  genomicDataIntervalFilter.values,
-                                  this.props.updateGenomicDataIntervalFilter,
+                                  genomicDataFilter.values,
+                                  this.props.updateGenomicDataFilter,
                                   chartMeta,
                                   getCNAByAlteration
                               )
                             : this.renderDataBinFilter(
-                                  genomicDataIntervalFilter.values,
+                                  genomicDataFilter.values,
                                   (
                                       chartUniqueKey: string,
                                       newRange: {
@@ -263,7 +262,7 @@ export default class UserSelections extends React.Component<
                                               .updateGenomicDataIntervalFilters
                                       );
                                   },
-                                  this.props.updateGenomicDataIntervalFilter,
+                                  this.props.updateGenomicDataFilter,
                                   chartMeta
                               );
 

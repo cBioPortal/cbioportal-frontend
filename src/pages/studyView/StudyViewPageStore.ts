@@ -3008,7 +3008,7 @@ export class StudyViewPageStore
         trackStudyViewFilterEvent('genomicDataInterval', this);
 
         const values: DataFilterValue[] = getDataIntervalFilterValues(dataBins);
-        this.updateGenomicDataIntervalFiltersByValues(uniqueKey, values);
+        this.updateGenomicDataFiltersByValues(uniqueKey, values);
     }
 
     @action.bound
@@ -3021,7 +3021,7 @@ export class StudyViewPageStore
         const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
             values
         );
-        this.updateGenomicDataIntervalFiltersByValues(
+        this.updateGenomicDataFiltersByValues(
             uniqueKey,
             _.cloneDeep(dataFilterValues)
         );
@@ -3176,21 +3176,18 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    updateGenomicDataIntervalFiltersByValues(
+    updateGenomicDataFiltersByValues(
         uniqueKey: string,
         values: DataFilterValue[]
     ): void {
         if (values.length > 0) {
             const chart = this._geneSpecificChartMap.get(uniqueKey);
-            const genomicDataIntervalFilter: GenomicDataFilter = {
+            const genomicDataFilter: GenomicDataFilter = {
                 hugoGeneSymbol: chart!.hugoGeneSymbol,
                 profileType: chart!.profileType,
                 values: values,
             };
-            this._genomicDataFilterSet.set(
-                uniqueKey,
-                genomicDataIntervalFilter
-            );
+            this._genomicDataFilterSet.set(uniqueKey, genomicDataFilter);
         } else {
             this._genomicDataFilterSet.delete(uniqueKey);
         }
@@ -3414,7 +3411,6 @@ export class StudyViewPageStore
     }
 
     public getMolecularChartDataType(uniqueKey: string): string {
-        console.log(this.chartsType.get(uniqueKey));
         if (this.isGeneSpecificChart(uniqueKey)) {
             return this._geneSpecificChartMap.get(uniqueKey)!.dataType!;
         } else if (this.isGenericAssayChart(uniqueKey)) {

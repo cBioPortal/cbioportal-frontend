@@ -200,10 +200,6 @@ export type DataBin = {
     start: number;
 };
 
-export type DataFilterValueWithLabel = DataFilterValue & {
-    label?: string;
-};
-
 export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
     {
         uniqueKey: SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
