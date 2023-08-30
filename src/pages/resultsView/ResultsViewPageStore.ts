@@ -1792,9 +1792,9 @@ export class ResultsViewPageStore extends AnalysisStore
     readonly nonOqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedNonGenomicData,
             this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
+            this.filteredAndAnnotatedNonGenomicData,
             this.selectedMolecularProfiles,
             this.entrezGeneIdToGene,
         ],
@@ -1805,9 +1805,9 @@ export class ResultsViewPageStore extends AnalysisStore
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let result = [
                 ...this.filteredAndAnnotatedMutations.result!,
-                ...this.filteredAndAnnotatedNonGenomicData.result!,
                 ...this.filteredAndAnnotatedCnaData.result!,
                 ...this.filteredAndAnnotatedStructuralVariants.result!,
+                ...this.filteredAndAnnotatedNonGenomicData.result!,
             ];
             return Promise.resolve(
                 result.map(d => {
@@ -1932,9 +1932,9 @@ export class ResultsViewPageStore extends AnalysisStore
                         [
                             ...this.filteredAndAnnotatedMutations.result!,
                             ...this.filteredAndAnnotatedCnaData.result!,
-                            ...this.filteredAndAnnotatedNonGenomicData.result!,
                             ...this.filteredAndAnnotatedStructuralVariants
                                 .result!,
+                            ...this.filteredAndAnnotatedNonGenomicData.result!,
                         ],
                         new AccessorsForOqlFilter(
                             this.selectedMolecularProfiles.result!
@@ -1997,9 +1997,9 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedNonGenomicData,
             this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
+            this.filteredAndAnnotatedNonGenomicData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.samples,
@@ -2008,9 +2008,9 @@ export class ResultsViewPageStore extends AnalysisStore
         invoke: () => {
             const data = [
                 ...this.filteredAndAnnotatedMutations.result!,
-                ...this.filteredAndAnnotatedNonGenomicData.result!,
                 ...this.filteredAndAnnotatedCnaData.result!,
                 ...this.filteredAndAnnotatedStructuralVariants.result!,
+                ...this.filteredAndAnnotatedNonGenomicData.result!,
             ];
             const accessorsInstance = new AccessorsForOqlFilter(
                 this.selectedMolecularProfiles.result!
@@ -2104,9 +2104,9 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedNonGenomicData,
             this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
+            this.filteredAndAnnotatedNonGenomicData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.samples,
@@ -2122,9 +2122,9 @@ export class ResultsViewPageStore extends AnalysisStore
                     this.oqlText,
                     [
                         ...this.filteredAndAnnotatedMutations.result!,
-                        ...this.filteredAndAnnotatedNonGenomicData.result!,
                         ...this.filteredAndAnnotatedCnaData.result!,
                         ...this.filteredAndAnnotatedStructuralVariants.result!,
+                        ...this.filteredAndAnnotatedNonGenomicData.result!,
                     ],
                     new AccessorsForOqlFilter(
                         this.selectedMolecularProfiles.result!
