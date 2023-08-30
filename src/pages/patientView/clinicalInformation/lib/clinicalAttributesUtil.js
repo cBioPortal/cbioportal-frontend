@@ -132,6 +132,18 @@ function derive(clinicalData) {
                     caseTypeNormalized = 'cfDNA';
                 } else if (caseTypeLower.indexOf('prim') >= 0) {
                     caseTypeNormalized = 'Primary';
+                } else if (caseTypeLower.indexOf('ctdna') >= 0) {
+                    caseTypeNormalized = 'ctDNA';
+                } else if (caseTypeLower.indexOf('plasma') >= 0) {
+                    caseTypeNormalized = 'Plasma';
+                } else if (caseTypeLower.indexOf('urine') >= 0) {
+                    caseTypeNormalized = 'Urine';
+                } else if (caseTypeLower.indexOf('exosome') >= 0) {
+                    caseTypeNormalized = 'Exosome';
+                } else if (caseTypeLower.indexOf('total') >= 0) {
+                    caseTypeNormalized = 'total RNA';
+                } else if (caseTypeLower.indexOf('tissue') >= 0) {
+                    caseTypeNormalized = 'Tissue';
                 }
                 if (
                     caseTypeNormalized !== null &&

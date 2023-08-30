@@ -236,6 +236,31 @@ class SampleManager {
                     .DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
             ) {
                 color = styles.sampleColorXenograft;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'Plasma'
+            ) {
+                color = styles.sampleColorPlasma;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'ctDNA'
+            ) {
+                color = styles.sampleColorCtdna;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'Urine'
+            ) {
+                color = styles.sampleColorUrine;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'Exosome'
+            ) {
+                color = styles.sampleColorExosome;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'total RNA'
+            ) {
+                color = styles.sampleColorRna;
             }
 
             this.sampleColors[sample.id] = color;
