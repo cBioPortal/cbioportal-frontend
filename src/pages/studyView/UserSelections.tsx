@@ -237,14 +237,10 @@ export default class UserSelections extends React.Component<
                     let dataFilterComponent =
                         dataType === DataType.STRING
                             ? this.renderCategoricalDataFilter(
-                                  _.map(genomicDataIntervalFilter.values, d => {
-                                      return {
-                                          label: getCNAByAlteration(d.value),
-                                          ...d,
-                                      };
-                                  }),
+                                  genomicDataIntervalFilter.values,
                                   this.props.updateGenomicDataIntervalFilter,
-                                  chartMeta
+                                  chartMeta,
+                                  getCNAByAlteration
                               )
                             : this.renderDataBinFilter(
                                   genomicDataIntervalFilter.values,
@@ -699,9 +695,10 @@ export default class UserSelections extends React.Component<
 
     // Pie chart filter
     private renderCategoricalDataFilter(
-        dataFilterValues: DataFilterValueWithLabel[],
+        dataFilterValues: DataFilterValue[],
         onDelete: (chartUniqueKey: string, values: DataFilterValue[]) => void,
-        chartMeta: ChartMeta & { chartType: ChartType }
+        chartMeta: ChartMeta & { chartType: ChartType },
+        transformLabel?: (value: string) => string
     ): JSX.Element {
         return (
             <GroupLogic
@@ -709,8 +706,8 @@ export default class UserSelections extends React.Component<
                     return (
                         <PillTag
                             content={
-                                dataFilterValue.label
-                                    ? dataFilterValue.label
+                                transformLabel
+                                    ? transformLabel(dataFilterValue.value)
                                     : dataFilterValue.value
                             }
                             backgroundColor={
@@ -725,9 +722,7 @@ export default class UserSelections extends React.Component<
                                         value =>
                                             value.value !==
                                             dataFilterValue.value
-                                    ).map(
-                                        ({ label, ...rest }) => rest
-                                    ) as DataFilterValue[]
+                                    )
                                 )
                             }
                             store={this.props.store}

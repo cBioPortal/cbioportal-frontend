@@ -1842,12 +1842,9 @@ export function getExponent(value: number): number {
     return Number(Math.log10(Math.abs(value)).toFixed(fractionDigits));
 }
 
-export function getCNAByAlteration(value: string | number) {
-    const numberValue = Number(value);
-    if (isNaN(numberValue)) {
-        return value.toString();
-    }
-    return CNA_TO_ALTERATION[numberValue] || value.toString();
+export function getCNAByAlteration(alteration: string | number) {
+    const numberValue = Number(alteration);
+    return !isNaN(numberValue) ? CNA_TO_ALTERATION[numberValue] || '' : '';
 }
 
 export function getCNAColorByAlteration(

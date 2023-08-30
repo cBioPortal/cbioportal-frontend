@@ -244,9 +244,6 @@ import {
 } from 'pages/studyView/StudyViewComparisonUtils';
 import {
     CNA_AMP_VALUE,
-    CNA_DIPLOID_VALUE,
-    CNA_GAIN_VALUE,
-    CNA_HETLOSS_VALUE,
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
@@ -3417,6 +3414,7 @@ export class StudyViewPageStore
     }
 
     public getMolecularChartDataType(uniqueKey: string): string {
+        console.log(this.chartsType.get(uniqueKey));
         if (this.isGeneSpecificChart(uniqueKey)) {
             return this._geneSpecificChartMap.get(uniqueKey)!.dataType!;
         } else if (this.isGenericAssayChart(uniqueKey)) {
