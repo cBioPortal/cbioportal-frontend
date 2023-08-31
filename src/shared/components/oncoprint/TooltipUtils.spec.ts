@@ -1296,37 +1296,16 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.equal(tooltipOutput.text().match(/panel2/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel3/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/panel1 \(1\)/g)!.length,
+                    tooltipOutput.text().match(/panel1\s*\(1\)/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/panel2 \(1\)/g)!.length,
+                    tooltipOutput.text().match(/panel2\s*\(1\)/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/panel3 \(1\)/g)!.length,
+                    tooltipOutput.text().match(/panel3\s*\(1\)/g)!.length,
                     1
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel1")')
-                        .first()
-                        .css('color'),
-                    'red'
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel2")')
-                        .first()
-                        .css('color'),
-                    'red'
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel3")')
-                        .first()
-                        .css('color'),
-                    'red'
                 );
 
                 tooltipOutput = tooltip([datum1, datum3]);
@@ -1334,37 +1313,16 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.equal(tooltipOutput.text().match(/panel2/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel3/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/panel1 \(2\)/g)!.length,
+                    tooltipOutput.text().match(/panel1\s*\(2\)/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/panel2 \(2\)/g)!.length,
+                    tooltipOutput.text().match(/panel2\s*\(2\)/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/panel3 \(1\)/g)!.length,
+                    tooltipOutput.text().match(/panel3\s*\(1\)/g)!.length,
                     1
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel1")')
-                        .first()
-                        .css('color'),
-                    'red'
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel2")')
-                        .first()
-                        .css('color'),
-                    'red'
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel3")')
-                        .first()
-                        .css('color'),
-                    'red'
                 );
 
                 tooltipOutput = tooltip([datum3, datum2]);
@@ -1372,38 +1330,19 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.equal(tooltipOutput.text().match(/panel2/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel3/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/panel1 \(1\)/g)!.length,
+                    tooltipOutput.text().match(/panel1\s*\(1\)/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/panel2 \(1\)/g)!.length,
+                    tooltipOutput.text().match(/panel2\s*\(1\)/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/panel3 \(2\)/g)!.length,
+                    tooltipOutput
+                        .text()
+                        .match(/panel3\s*\(gene not on panel\)\s*\(2\)/g)!
+                        .length,
                     1
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel1")')
-                        .first()
-                        .css('color'),
-                    'red'
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel2")')
-                        .first()
-                        .css('color'),
-                    'red'
-                );
-                assert.equal(
-                    tooltipOutput
-                        .find('a:contains("panel3")')
-                        .first()
-                        .css('color'),
-                    'red',
-                    'red because Not profiled in that gene panel'
                 );
 
                 tooltipOutput = tooltip([datum3, datum1, datum2]);
@@ -1411,37 +1350,16 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.equal(tooltipOutput.text().match(/panel2/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel3/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/panel1 \(2\)/g)!.length,
+                    tooltipOutput.text().match(/panel1\s*\(2\)/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/panel2 \(2\)/g)!.length,
+                    tooltipOutput.text().match(/panel2\s*\(2\)/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/panel3 \(1\)/g)!.length,
+                    tooltipOutput.text().match(/panel3\s*\(1\)/g)!.length,
                     1
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel1")')
-                        .first()
-                        .css('color'),
-                    'red'
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel2")')
-                        .first()
-                        .css('color'),
-                    'red'
-                );
-                assert.notEqual(
-                    tooltipOutput
-                        .find('a:contains("panel3")')
-                        .first()
-                        .css('color'),
-                    'red'
                 );
             });
         });
