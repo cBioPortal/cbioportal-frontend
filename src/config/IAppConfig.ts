@@ -167,6 +167,7 @@ export interface IServerConfig {
     skin_comparison_view_mutation_table_columns_show_on_init: string;
     skin_patient_view_copy_number_table_columns_show_on_init: string;
     skin_patient_view_structural_variant_table_columns_show_on_init: string;
+    skin_patient_view_custom_sample_type_colors_json: string;
     comparison_categorical_na_values: string;
     oncoprint_clinical_tracks_config_json: string;
     oncoprint_clustered_default: boolean; // this has a default

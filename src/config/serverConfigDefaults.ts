@@ -217,6 +217,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_patient_view_structural_variant_table_columns_show_on_init: '',
 
+    skin_patient_view_custom_sample_type_colors_json: '',
+
     studyview_max_samples_selected: 0,
 
     study_download_url: '',
