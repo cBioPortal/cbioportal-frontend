@@ -1647,6 +1647,15 @@
         },
         "ncitCode": {
           "type": "string"
+        },
+        "synonyms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uuid": {
+          "type": "string"
         }
       }
     },
@@ -3628,6 +3637,9 @@
           "type": "integer",
           "format": "int32",
           "description": "End position"
+        },
+        "genomicLocationExplanation": {
+          "type": "string"
         },
         "hgvsg": {
           "type": "string"
