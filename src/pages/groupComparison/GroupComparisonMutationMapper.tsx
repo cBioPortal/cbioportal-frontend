@@ -16,7 +16,7 @@ import {
 import _ from 'lodash';
 import {
     ComparisonGroup,
-    getCountsByAttributeForGroup,
+    getCountsByAttribute,
     getProteinChangeToMutationRowData,
     SIGNIFICANT_QVALUE_THRESHOLD,
 } from './GroupComparisonUtils';
@@ -211,9 +211,10 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 {driversAnnotated ? (
                     <DriverAnnotationProteinImpactTypeBadgeSelector
                         filter={this.proteinImpactTypeFilter}
-                        counts={getCountsByAttributeForGroup(
-                            this.getMutationsGroupedByProteinImpactTypeForGroup,
-                            groupIndex,
+                        counts={getCountsByAttribute(
+                            this.getMutationsGroupedByProteinImpactTypeForGroup(
+                                groupIndex
+                            ),
                             true
                         )}
                         onSelect={this.onProteinImpactTypeSelect}
@@ -233,9 +234,10 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 ) : (
                     <ProteinImpactTypeBadgeSelector
                         filter={this.proteinImpactTypeFilter}
-                        counts={getCountsByAttributeForGroup(
-                            this.getMutationsGroupedByProteinImpactTypeForGroup,
-                            groupIndex,
+                        counts={getCountsByAttribute(
+                            this.getMutationsGroupedByProteinImpactTypeForGroup(
+                                groupIndex
+                            ),
                             true
                         )}
                         onSelect={this.onProteinImpactTypeSelect}
