@@ -652,6 +652,18 @@ export type GenomicDataCount = {
         'value': string
 
 };
+export type GenomicDataCountFilter = {
+    'genomicDataFilters':  Array < GenomicDataFilter >
+
+        'studyViewFilter': StudyViewFilter
+};
+export type GenomicDataCountItem = {
+    'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'counts': Array < GenomicDataCount >
+}
 export type GenomicDataFilter = {
     'hugoGeneSymbol': string
 
@@ -4632,6 +4644,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < GenomicDataBin >
         > {
             return this.fetchGenomicDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenomicDataCountsUsingPOSTURL(parameters: {
+        'genomicDataCountFilter': GenomicDataCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genomic-data-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch genomimc data counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenomicDataCountsUsingPOST
+     * @param {} genomicDataCountFilter - Genomic data count filter
+     */
+    fetchGenomicDataCountsUsingPOSTWithHttpInfo(parameters: {
+        'genomicDataCountFilter': GenomicDataCountFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genomic-data-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['genomicDataCountFilter'] !== undefined) {
+                body = parameters['genomicDataCountFilter'];
+            }
+
+            if (parameters['genomicDataCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genomicDataCountFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch genomic data counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenomicDataCountsUsingPOST
+     * @param {} genomicDataCountFilter - Genomic data count filter
+     */
+    fetchGenomicDataCountsUsingPOST(parameters: {
+            'genomicDataCountFilter': GenomicDataCountFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenomicDataCountItem >
+        > {
+            return this.fetchGenomicDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
