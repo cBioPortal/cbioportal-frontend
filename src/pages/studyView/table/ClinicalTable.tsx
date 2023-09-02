@@ -1,14 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import {
-    action,
-    computed,
-    observable,
-    toJS,
-    reaction,
-    IReactionDisposer,
-    makeObservable,
-} from 'mobx';
+import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
@@ -21,7 +13,6 @@ import {
     getClinicalAttributeOverlay,
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
-    getFrequencyStr,
 } from '../StudyViewUtils';
 import { SortDirection } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
@@ -152,7 +143,7 @@ export default class ClinicalTable extends React.Component<
                                 </g>
                             </svg>
                             <EllipsisTextTooltip
-                                text={data.value}
+                                text={data.displayedValue || data.value}
                             ></EllipsisTextTooltip>
                         </div>
                     );
