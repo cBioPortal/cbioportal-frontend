@@ -135,6 +135,15 @@ export class StudySummaryTab extends React.Component<
                     dataBins
                 );
             },
+            onGenomicDataCategoricalValueSelection: (
+                chartMeta: ChartMeta,
+                values: string[]
+            ) => {
+                this.store.updateCategoricalGenomicDataFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
             onGenericAssayDataBinSelection: (
                 chartMeta: ChartMeta,
                 dataBins: GenericAssayDataBin[]
@@ -203,6 +212,20 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenericAssayChartDataCount(
                         chartMeta
                     );
+                } else if (
+                    this.store.isGeneSpecificChart(chartMeta.uniqueKey)
+                ) {
+                    props.promise = this.store.getGenomicChartDataCount(
+                        chartMeta
+                    );
+                    props.filters = this.store
+                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            genomicDataFilterValue =>
+                                genomicDataFilterValue.value
+                        );
+                    props.onValueSelection = this.handlers.onGenomicDataCategoricalValueSelection;
+                    props.onResetSelection = this.handlers.onGenomicDataCategoricalValueSelection;
                 } else {
                     props.promise = this.store.getClinicalDataCount(chartMeta);
                     props.filters = this.store
@@ -231,7 +254,7 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenomicChartDataBin(
                         chartMeta
                     );
-                    props.filters = this.store.getGenomicDataIntervalFiltersByUniqueKey(
+                    props.filters = this.store.getGenomicDataFiltersByUniqueKey(
                         props.chartMeta!.uniqueKey
                     );
                     props.onDataBinSelection = this.handlers.onGenomicDataBinSelection;
@@ -324,6 +347,20 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenericAssayChartDataCount(
                         chartMeta
                     );
+                } else if (
+                    this.store.isGeneSpecificChart(chartMeta.uniqueKey)
+                ) {
+                    props.promise = this.store.getGenomicChartDataCount(
+                        chartMeta
+                    );
+                    props.filters = this.store
+                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            genomicDataFilterValue =>
+                                genomicDataFilterValue.value
+                        );
+                    props.onValueSelection = this.handlers.onGenomicDataCategoricalValueSelection;
+                    props.onResetSelection = this.handlers.onGenomicDataCategoricalValueSelection;
                 } else {
                     props.filters = this.store
                         .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
@@ -351,6 +388,7 @@ export class StudySummaryTab extends React.Component<
                     this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
+                props.id = 'mutated-genes-table';
                 props.title = this.store.getChartTitle(
                     ChartTypeEnum.MUTATED_GENES_TABLE,
                     props.title
@@ -741,7 +779,7 @@ export class StudySummaryTab extends React.Component<
         // 2.   The maintainer of RGL repo currently not actively accepts pull requests. So we don't know when the
         //      issue will be solved.
         return (
-            <div key={chartMeta.uniqueKey}>
+            <div key={chartMeta.uniqueKey} data-tour={props.id}>
                 <DelayedRender>
                     {/* Delay the render after a setTimeout, because synchronous rendering would jam UI updates
                     and make things laggy */}

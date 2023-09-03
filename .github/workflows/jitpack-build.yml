@@ -6,6 +6,7 @@ on:
   release:
     types:
       - created
+      - prereleased
 
 jobs:
   trigger_build:

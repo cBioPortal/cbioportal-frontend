@@ -1082,17 +1082,25 @@ export function getProteinChangeToMutationRowData(
 ): {
     [proteinChange: string]: GroupComparisonMutation;
 } {
+    const mutationsGroupedByProteinChangeForGroupA = mutationsGroupedByProteinChangeForGroup(
+        0
+    );
+    const mutationsGroupedByProteinChangeForGroupB = mutationsGroupedByProteinChangeForGroup(
+        1
+    );
+    const countsByProteinChangeForGroupA = getCountsByAttribute(
+        mutationsGroupedByProteinChangeForGroupA
+    );
+    const countsByProteinChangeForGroupB = getCountsByAttribute(
+        mutationsGroupedByProteinChangeForGroupB
+    );
     let rowData = tableData.map(proteinChangeRow => {
         const groupAMutatedCount: number =
-            getCountsByAttributeForGroup(
-                mutationsGroupedByProteinChangeForGroup,
-                0
-            )[proteinChangeRow[0].proteinChange] || 0;
+            countsByProteinChangeForGroupA[proteinChangeRow[0].proteinChange] ||
+            0;
         const groupBMutatedCount: number =
-            getCountsByAttributeForGroup(
-                mutationsGroupedByProteinChangeForGroup,
-                1
-            )[proteinChangeRow[0].proteinChange] || 0;
+            countsByProteinChangeForGroupB[proteinChangeRow[0].proteinChange] ||
+            0;
         const groupAMutatedPercentage: number =
             (groupAMutatedCount / profiledPatientsCounts[0]) * 100;
         const groupBMutatedPercentage: number =
@@ -1133,14 +1141,11 @@ export function getProteinChangeToMutationRowData(
     return _.keyBy(rowData, d => d.proteinChange);
 }
 
-export function getCountsByAttributeForGroup(
-    getMutationsGroupedByAttributeForGroup: (
-        groupIndex: number
-    ) => _.Dictionary<{
+export function getCountsByAttribute(
+    mutationsGroupedByAttribute: _.Dictionary<{
         group: string;
         data: any[];
     }>,
-    groupIndex: number,
     mutationCounts?: boolean
 ): {
     [attribute: string]: number;
@@ -1149,20 +1154,14 @@ export function getCountsByAttributeForGroup(
 
     // if true get mutation counts, else get mutated counts
     mutationCounts
-        ? _.forIn(
-              getMutationsGroupedByAttributeForGroup(groupIndex),
-              (v, k) => {
-                  map[v.group] = v.data.length;
-              }
-          )
-        : _.forIn(
-              getMutationsGroupedByAttributeForGroup(groupIndex),
-              (v, k) => {
-                  // mutations are unique by gene, protein change, patientId. mutations by gene and protein change are already grouped
-                  const uniqueMutations = _.uniqBy(v.data, d => d[0].patientId);
-                  map[v.group] = uniqueMutations.length;
-              }
-          );
+        ? _.forIn(mutationsGroupedByAttribute, (v, k) => {
+              map[v.group] = v.data.length;
+          })
+        : _.forIn(mutationsGroupedByAttribute, (v, k) => {
+              // mutations are unique by gene, protein change, patientId. mutations by gene and protein change are already grouped
+              const uniqueMutations = _.uniqBy(v.data, d => d[0].patientId);
+              map[v.group] = uniqueMutations.length;
+          });
 
     return map;
 }

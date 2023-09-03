@@ -55,6 +55,9 @@ import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyVie
 import MobxPromise from 'mobxpromise';
 import {
     CNA_COLOR_AMP,
+    CNA_COLOR_DIPLOID,
+    CNA_COLOR_GAIN,
+    CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
     EditableSpan,
     getTextWidth,
@@ -87,6 +90,7 @@ import { BoundType, NumberRange } from 'range-ts';
 import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
 import { toast } from 'react-toastify';
+import { value } from 'numeral';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -973,6 +977,7 @@ export function getVirtualStudyDescription(
                     genomicDataFilter.profileType
                 );
                 const name = attributeNamesSet[uniqueKey];
+
                 if (name) {
                     filterLines.push(
                         `- ${name}: ${intervalFiltersDisplayValue(
@@ -1834,8 +1839,9 @@ export function getExponent(value: number): number {
     return Number(Math.log10(Math.abs(value)).toFixed(fractionDigits));
 }
 
-export function getCNAByAlteration(alteration: number) {
-    return CNA_TO_ALTERATION[alteration] || '';
+export function getCNAByAlteration(alteration: string | number) {
+    const numberValue = Number(alteration);
+    return !isNaN(numberValue) ? CNA_TO_ALTERATION[numberValue] || '' : 'NA';
 }
 
 export function getCNAColorByAlteration(
@@ -1844,6 +1850,12 @@ export function getCNAColorByAlteration(
     switch (alteration) {
         case 'HOMDEL':
             return CNA_COLOR_HOMDEL;
+        case 'HETLOSS':
+            return CNA_COLOR_HETLOSS;
+        case 'DIPLOID':
+            return CNA_COLOR_DIPLOID;
+        case 'GAIN':
+            return CNA_COLOR_GAIN;
         case 'AMP':
             return CNA_COLOR_AMP;
         default:
@@ -2240,6 +2252,7 @@ export type ClinicalDataCountSummary = ClinicalDataCount & {
     color: string;
     percentage: number;
     freq: string;
+    displayedValue?: string;
 };
 
 export function getClinicalDataCountWithColorByClinicalDataCount(
@@ -3948,6 +3961,7 @@ export function transformSampleDataToSelectedSampleClinicalData(
         .filter(item => item.uniqueSampleKey !== undefined);
     return clinicalDataSamples;
 }
+
 export function showQueryUpdatedToast(message: string) {
     toast.success(message, {
         delay: 0,

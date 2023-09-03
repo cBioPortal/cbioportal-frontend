@@ -3,6 +3,11 @@ $sample-color-recurrence: orange;
 $sample-color-metastasis: red;
 $sample-color-cfdna: blue;
 $sample-color-xenograft: pink;
+$sample-color-plasma: gold;
+$sample-color-ctdna: lightblue;
+$sample-color-urine: yellow;
+$sample-color-exosome: purple;
+$sample-color-rna: grey;
 
 /* shared style and JS code variables */
 :export {
@@ -11,6 +16,11 @@ $sample-color-xenograft: pink;
     sampleColorMetastasis: $sample-color-metastasis;
     sampleColorCfdna: $sample-color-cfdna;
     sampleColorXenograft: $sample-color-xenograft;
+    sampleColorPlasma: $sample-color-plasma;
+    sampleColorCtdna: $sample-color-ctdna;
+    sampleColorUrine: $sample-color-urine;
+    sampleColorExosome: $sample-color-exosome;
+    sampleColorRna: $sample-color-rna;
 }
 
 .clinical-spans {

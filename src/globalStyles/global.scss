@@ -761,3 +761,38 @@ h2.divider {
 .marching-ants {
     @include marching-ants();
 }
+
+.newsContent {
+    height: 300px;
+    width: 300px;
+    padding: 10px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    border: 1px solid $borderColor;
+    > ul {
+        padding-inline-start: 0;
+    }
+    img {
+        max-width: 250px;
+        margin: 5px 0;
+    }
+    doc-anchor-trigger {
+        display: none;
+    }
+    h2 {
+        font-size: 14px;
+        border-top: 1px dashed $borderColor;
+        padding-top: 10px;
+    }
+    doc-anchor-target:first-of-type {
+        h2 {
+            padding-top: 0;
+            border: none;
+        }
+    }
+    .newsLoader {
+        position: relative;
+        top: 45%;
+        left: 40%;
+    }
+}

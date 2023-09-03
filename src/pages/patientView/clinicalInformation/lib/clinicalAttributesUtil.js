@@ -2,6 +2,7 @@ import * as $ from 'jquery';
 import _ from 'underscore';
 import * as React from 'react';
 import * as styleConsts from './clinicalAttributesStyleConsts.ts';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 
 /**
  * Functions for dealing with clinical attributes.
@@ -95,6 +96,13 @@ function getFirstKeyFound(object, keys) {
  * @param {object} clinicalData - key/value pairs of clinical data
  */
 function derive(clinicalData) {
+    const {
+        customSampleTypes,
+        customSampleTypesLower,
+    } = ServerConfigHelpers.parseCustomSampleTypeColors(
+        getServerConfig().skin_patient_view_custom_sample_type_colors_json
+    );
+
     const derivedClinicalAttributes = $.extend({}, clinicalData);
 
     /**
@@ -116,8 +124,12 @@ function derive(clinicalData) {
 
             if (caseType !== null && typeof caseType !== 'undefined') {
                 caseTypeLower = caseType.toLowerCase();
-
-                if (caseTypeLower.indexOf('metasta') >= 0) {
+                const foundCustomIndex = customSampleTypesLower.findIndex(
+                    type => caseTypeLower.indexOf(type) >= 0
+                );
+                if (foundCustomIndex >= 0) {
+                    caseTypeNormalized = customSampleTypes[foundCustomIndex];
+                } else if (caseTypeLower.indexOf('metasta') >= 0) {
                     caseTypeNormalized = 'Metastasis';
                 } else if (caseTypeLower.indexOf('recurr') >= 0) {
                     caseTypeNormalized = 'Recurrence';
@@ -132,6 +144,18 @@ function derive(clinicalData) {
                     caseTypeNormalized = 'cfDNA';
                 } else if (caseTypeLower.indexOf('prim') >= 0) {
                     caseTypeNormalized = 'Primary';
+                } else if (caseTypeLower.indexOf('ctdna') >= 0) {
+                    caseTypeNormalized = 'ctDNA';
+                } else if (caseTypeLower.indexOf('plasma') >= 0) {
+                    caseTypeNormalized = 'Plasma';
+                } else if (caseTypeLower.indexOf('urine') >= 0) {
+                    caseTypeNormalized = 'Urine';
+                } else if (caseTypeLower.indexOf('exosome') >= 0) {
+                    caseTypeNormalized = 'Exosome';
+                } else if (caseTypeLower.indexOf('total') >= 0) {
+                    caseTypeNormalized = 'total RNA';
+                } else if (caseTypeLower.indexOf('tissue') >= 0) {
+                    caseTypeNormalized = 'Tissue';
                 }
                 if (
                     caseTypeNormalized !== null &&

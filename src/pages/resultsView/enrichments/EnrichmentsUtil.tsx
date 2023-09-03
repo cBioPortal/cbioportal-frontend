@@ -52,9 +52,15 @@ export type ContinousDataPvalueTooltipProps = {
 };
 
 export const CNA_AMP_VALUE = 2;
+export const CNA_GAIN_VALUE = 1;
+export const CNA_DIPLOID_VALUE = 0;
+export const CNA_HETLOSS_VALUE = -1;
 export const CNA_HOMDEL_VALUE = -2;
 export const CNA_TO_ALTERATION: { [cna: number]: string } = {
     [CNA_AMP_VALUE]: 'AMP',
+    [CNA_GAIN_VALUE]: 'GAIN',
+    [CNA_DIPLOID_VALUE]: 'DIPLOID',
+    [CNA_HETLOSS_VALUE]: 'HETLOSS',
     [CNA_HOMDEL_VALUE]: 'HOMDEL',
 };
 export const PVALUE_TEST_GROUP_SIZE_THRESHOLD = 3;

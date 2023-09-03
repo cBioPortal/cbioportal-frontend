@@ -22,5 +22,6 @@ export const PROT_COLOR_HIGH = '#ff3df8';
 export const PROT_COLOR_LOW = '#00E1FF';
 export const CNA_COLOR_AMP = '#ff0000';
 export const CNA_COLOR_GAIN = '#ffb6c1';
+export const CNA_COLOR_DIPLOID = '#cbc3e3';
 export const CNA_COLOR_HETLOSS = '#8fd8d8';
 export const CNA_COLOR_HOMDEL = '#0000ff';

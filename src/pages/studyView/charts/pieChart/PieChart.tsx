@@ -345,7 +345,9 @@ class CustomSlice extends React.Component<{}, {}> {
         return (
             <g>
                 <Slice {...this.props} />
-                <title>{`${d.datum.value}:${d.datum.count}`}</title>
+                <title>{`${d.datum.displayedValue || d.datum.value}:${
+                    d.datum.count
+                }`}</title>
             </g>
         );
     }

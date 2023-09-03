@@ -3,13 +3,7 @@ import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-    action,
-    computed,
-    makeObservable,
-    observable,
-    runInAction,
-} from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -76,6 +70,7 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import { Tour } from 'tours';
 import QueryString from 'qs';
 
 export interface IStudyViewPageProps {
@@ -369,6 +364,21 @@ export default class StudyViewPage extends React.Component<
         } else {
             return false;
         }
+    }
+
+    @computed get isLoading() {
+        return (
+            this.store.queriedSampleIdentifiers.isPending ||
+            this.store.invalidSampleIds.isPending ||
+            this.body.isPending
+        );
+    }
+
+    @computed get isAnySampleSelected() {
+        return this.store.selectedSamples.result.length !==
+            this.store.samples.result.length
+            ? 1
+            : 0;
     }
 
     @computed get studyViewFullUrlWithFilter() {
@@ -1028,14 +1038,16 @@ export default class StudyViewPage extends React.Component<
             >
                 <LoadingIndicator
                     size={'big'}
-                    isLoading={
-                        this.store.queriedSampleIdentifiers.isPending ||
-                        this.store.invalidSampleIds.isPending ||
-                        this.body.isPending
-                    }
+                    isLoading={this.isLoading}
                     center={true}
                 />
                 {this.body.component}
+                {!this.isLoading && (
+                    <Tour
+                        studies={this.isAnySampleSelected}
+                        isLoggedIn={this.props.appStore.isLoggedIn}
+                    />
+                )}
             </PageLayout>
         );
     }

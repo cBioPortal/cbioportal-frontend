@@ -76,6 +76,10 @@
       "description": " "
     },
     {
+      "name": "Generic Assay Enrichment Data",
+      "description": " "
+    },
+    {
       "name": "Mutation Spectrums",
       "description": " "
     },
@@ -1289,6 +1293,110 @@
         }
       }
     },
+    "/generic-assay-binary-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Generic Assay Enrichment Data"
+        ],
+        "summary": "Fetch generic assay binary data enrichments in a molecular profile",
+        "operationId": "fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "PATIENT",
+              "SAMPLE"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groups",
+            "description": "List of groups containing sample and molecular profile identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayBinaryEnrichment"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generic-assay-categorical-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Generic Assay Enrichment Data"
+        ],
+        "summary": "Fetch generic assay categorical data enrichments in a molecular profile",
+        "operationId": "fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "PATIENT",
+              "SAMPLE"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groups",
+            "description": "List of groups containing sample and molecular profile identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayCategoricalEnrichment"
+              }
+            }
+          }
+        }
+      }
+    },
     "/generic-assay-data-bin-counts/fetch": {
       "post": {
         "tags": [
@@ -1833,6 +1941,43 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/GenomicDataBin"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/genomic-data-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch genomic data counts by GenomicDataCountFilter",
+        "operationId": "fetchGenomicDataCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genomicDataCountFilter",
+            "description": "Genomic data count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenomicDataCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenomicDataCountItem"
               }
             }
           }
@@ -4445,6 +4590,111 @@
       },
       "title": "GeneFilterQuery"
     },
+    "GenericAssayBinaryEnrichment": {
+      "type": "object",
+      "required": [
+        "counts",
+        "genericEntityMetaProperties",
+        "groupsStatistics",
+        "name",
+        "pValue",
+        "qValue",
+        "stableId"
+      ],
+      "properties": {
+        "counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenericAssayCountSummary"
+          }
+        },
+        "genericEntityMetaProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "groupsStatistics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupStatistics"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "stableId": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayBinaryEnrichment"
+    },
+    "GenericAssayCategoricalEnrichment": {
+      "type": "object",
+      "required": [
+        "genericEntityMetaProperties",
+        "groupsStatistics",
+        "name",
+        "pValue",
+        "qValue",
+        "stableId"
+      ],
+      "properties": {
+        "genericEntityMetaProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "groupsStatistics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupStatistics"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "stableId": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayCategoricalEnrichment"
+    },
+    "GenericAssayCountSummary": {
+      "type": "object",
+      "required": [
+        "count",
+        "name",
+        "totalCount"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "GenericAssayCountSummary"
+    },
     "GenericAssayDataBin": {
       "type": "object",
       "properties": {
@@ -4592,6 +4842,7 @@
         "groupsStatistics",
         "name",
         "pValue",
+        "qValue",
         "stableId"
       ],
       "properties": {
@@ -4611,6 +4862,9 @@
           "type": "string"
         },
         "pValue": {
+          "type": "number"
+        },
+        "qValue": {
           "type": "number"
         },
         "stableId": {
@@ -4852,6 +5106,39 @@
         }
       },
       "title": "GenomicDataCount"
+    },
+    "GenomicDataCountFilter": {
+      "type": "object",
+      "properties": {
+        "genomicDataFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenomicDataFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "GenomicDataCountFilter"
+    },
+    "GenomicDataCountItem": {
+      "type": "object",
+      "properties": {
+        "counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenomicDataCount"
+          }
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        }
+      },
+      "title": "GenomicDataCountItem"
     },
     "GenomicDataFilter": {
       "type": "object",
