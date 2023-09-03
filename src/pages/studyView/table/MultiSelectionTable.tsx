@@ -79,11 +79,11 @@ export type BaseMultiSelectionTableProps = {
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
     selectedRowsKeys: string[];
-    onGeneSelect: (
+    onGeneSelect?: (
         hugoGeneSymbol: string,
         chartType?: FreqColumnTypeEnum
     ) => void;
-    selectedGenes: string[];
+    selectedGenes?: string[];
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
