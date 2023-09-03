@@ -1775,7 +1775,8 @@ export default class ResultsViewOncoprint extends React.Component<
         ret.push({
             label: getAnnotatingProgressMessage(usingOncokb, usingHotspot),
             promises: [
-                this.props.store.filteredAndAnnotatedMolecularData,
+                this.props.store.filteredAndAnnotatedNonGenomicData,
+                this.props.store.filteredAndAnnotatedCnaData,
                 this.props.store.filteredAndAnnotatedMutations,
                 this.props.store.filteredAndAnnotatedStructuralVariants,
             ],

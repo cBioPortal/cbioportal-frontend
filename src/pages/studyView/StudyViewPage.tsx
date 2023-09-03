@@ -3,13 +3,7 @@ import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-    action,
-    computed,
-    makeObservable,
-    observable,
-    runInAction,
-} from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,

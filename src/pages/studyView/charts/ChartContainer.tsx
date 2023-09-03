@@ -411,7 +411,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     openComparisonPage(params?: {
         // for numerical clinical attributes
         categorizationType?: NumericalGroupComparisonType;
-        // for mutated genes table
+        // for mutated genes table and genomic data count chart
         hugoGeneSymbols?: string[];
         // for treatments tables
         treatmentUniqueKeys?: string[];
@@ -421,15 +421,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             switch (this.props.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
-                    const openComparison = () =>
-                        this.props.store.openComparisonPage(
-                            this.props.chartMeta,
-                            {
-                                clinicalAttributeValues: this.props.promise
-                                    .result! as ClinicalDataCountSummary[],
-                            }
-                        );
-                    openComparison();
+                    this.props.store.openComparisonPage(this.props.chartMeta, {
+                        clinicalAttributeValues: this.props.promise
+                            .result! as ClinicalDataCountSummary[],
+                    });
                     break;
                 default:
                     this.props.store.openComparisonPage(
