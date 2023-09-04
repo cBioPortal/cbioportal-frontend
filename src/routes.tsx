@@ -377,7 +377,7 @@ export const makeRoutes = () => {
                     })}
                 />
                 <Route
-                    path="/results/:tab"
+                    path="/results/:tab?"
                     component={LocationValidationWrapper(
                         ResultsViewPage,
                         tabParamValidator(ResultsViewTab),
