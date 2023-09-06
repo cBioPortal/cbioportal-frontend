@@ -44,7 +44,8 @@ export default class OncoprintTrackOptionsView {
             sortDirection: TrackSortDirection
         ) => void,
         private unexpandCallback: TrackCallback,
-        private showGapsCallback: (trackId: TrackId, showGaps: boolean) => void
+        private showGapsCallback: (trackId: TrackId, showGaps: boolean) => void,
+        private visible: boolean = true
     ) {
         const position = $div.css('position');
         if (position !== 'absolute' && position !== 'relative') {
@@ -557,6 +558,7 @@ export default class OncoprintTrackOptionsView {
         this.scroll(model.getVertScroll());
     }
     public getWidth() {
+        if (!this.visible) return 0;
         if (this.$buttons_ctr.is(':empty')) {
             return 0;
         } else {

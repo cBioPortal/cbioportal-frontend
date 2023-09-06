@@ -712,6 +712,8 @@ export function makeGeneticTrackWith({
         index: number,
         parentKey?: string
     ): GeneticTrackSpec {
+        debugger;
+
         const oql = caseData.oql;
         const geneSymbolArray = isMergedTrackFilter(oql)
             ? oql.list.map(({ gene }) => gene)
@@ -825,17 +827,28 @@ export function makeGeneticTracksMobxPromise(
             oncoprint.props.store.selectedMolecularProfiles,
         ],
         invoke: async () => {
+            const patients = oncoprint.props.store.filteredPatients.result!;
+
+            const patientMap = _.keyBy(patients, p => p.uniquePatientKey);
+
+            const sequencedPatient = _.mapValues(
+                oncoprint.props.store.filteredSequencedPatientKeysByGene
+                    .result!,
+                (val, key) => {
+                    return val.filter(id => id in patientMap);
+                }
+            );
+
             const trackFunction = makeGeneticTrackWith({
                 sampleMode,
                 oncoprint,
                 samples: oncoprint.props.store.filteredSamples.result!,
-                patients: oncoprint.props.store.filteredPatients.result!,
+                patients: patients,
                 coverageInformation: oncoprint.props.store.coverageInformation
                     .result!,
                 sequencedSampleKeysByGene: oncoprint.props.store
                     .filteredSequencedSampleKeysByGene.result!,
-                sequencedPatientKeysByGene: oncoprint.props.store
-                    .filteredSequencedPatientKeysByGene.result!,
+                sequencedPatientKeysByGene: sequencedPatient,
                 selectedMolecularProfiles: oncoprint.props.store
                     .selectedMolecularProfiles.result!,
                 expansionIndexMap: oncoprint.expansionsByGeneticTrackKey,

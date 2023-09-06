@@ -43,6 +43,7 @@ export type InitParams = {
     init_track_group_padding?: number;
     init_cell_padding_on?: boolean;
     max_height?: number;
+    showTrackControls?: boolean;
 };
 
 export type HorzZoomCallback = (zoom: number) => void;
@@ -137,7 +138,7 @@ export default class Oncoprint {
         const $ctr = $('<span></span>')
             .css({ position: 'relative', display: 'inline-block' })
             .appendTo(ctr_selector);
-        const $oncoprint_ctr = $('<div></div>')
+        const $oncoprint_ctr = $('<div class="john"></div>')
             .css({ position: 'absolute', display: 'inline-block' })
             .appendTo($ctr);
 
@@ -261,7 +262,7 @@ export default class Oncoprint {
 
         $label_canvas.appendTo($oncoprint_ctr);
         $cell_div.appendTo($oncoprint_ctr);
-        $track_options_div.appendTo($oncoprint_ctr);
+        //$track_options_div.appendTo($oncoprint_ctr);
         $track_info_div.appendTo($oncoprint_ctr);
         $header_div.appendTo($oncoprint_ctr); // this needs to go at the end because otherwise canvases cover it up
 
@@ -424,7 +425,8 @@ export default class Oncoprint {
             function(track_id: TrackId) {
                 self.removeExpansionTracksFor(track_id);
             },
-            self.setTrackShowGaps.bind(self)
+            self.setTrackShowGaps.bind(self),
+            false
         );
         this.track_info_view = new OncoprintTrackInfoView(
             $track_info_div,

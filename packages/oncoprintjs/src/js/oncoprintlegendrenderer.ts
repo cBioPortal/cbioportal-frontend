@@ -38,7 +38,8 @@ export default class OncoprintLegendView {
     constructor(
         private $div: JQuery,
         private base_width: number,
-        private base_height: number
+        private base_height: number,
+        public hidden = false
     ) {
         this.$svg = $(svgfactory.svg(200, 200)).appendTo(this.$div);
         this.width = $div.width();

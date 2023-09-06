@@ -1849,74 +1849,83 @@ export default class ResultsViewOncoprint extends React.Component<
 
                     <div style={{ position: 'relative', marginTop: 15 }}>
                         <div>
-                            <Oncoprint
-                                ref={this.oncoprintRef}
-                                broadcastOncoprintJsRef={this.oncoprintJsRef}
-                                clinicalTracks={this.clinicalTracks.result}
-                                geneticTracks={this.geneticTracks.result}
-                                genesetHeatmapTracks={
-                                    this.genesetHeatmapTracks.result
-                                }
-                                heatmapTracks={([] as IHeatmapTrackSpec[])
-                                    .concat(
-                                        this.genericAssayHeatmapTracks.result
-                                    )
-                                    .concat(this.heatmapTracks.result)}
-                                categoricalTracks={
-                                    this.genericAssayCategoricalTracks.result
-                                }
-                                divId={this.props.divId}
-                                width={this.width}
-                                caseLinkOutInTooltips={true}
-                                suppressRendering={this.isLoading}
-                                keepSorted={!this.isLoading}
-                                onSuppressRendering={this.onSuppressRendering}
-                                onReleaseRendering={this.onReleaseRendering}
-                                hiddenIds={
-                                    !this.showUnalteredColumns
-                                        ? this.unalteredKeys.result
-                                        : undefined
-                                }
-                                molecularProfileIdToMolecularProfile={
-                                    this.props.store
-                                        .molecularProfileIdToMolecularProfile
-                                        .result
-                                }
-                                alterationTypesInQuery={
-                                    this.alterationTypesInQuery.result
-                                }
-                                showSublabels={this.showOqlInLabels}
-                                additionalTrackGroupHeaders={
-                                    this.additionalTrackGroupHeaders.result!
-                                }
-                                horzZoomToFitIds={this.alteredKeys.result}
-                                distinguishMutationType={
-                                    this.distinguishMutationType
-                                }
-                                distinguishDrivers={this.distinguishDrivers}
-                                distinguishGermlineMutations={
-                                    this.distinguishGermlineMutations
-                                }
-                                sortConfig={this.oncoprintLibrarySortConfig}
-                                showClinicalTrackLegends={
-                                    this.showClinicalTrackLegends
-                                }
-                                showWhitespaceBetweenColumns={
-                                    this.showWhitespaceBetweenColumns
-                                }
-                                showMinimap={this.showMinimap}
-                                onMinimapClose={this.onMinimapClose}
-                                onDeleteClinicalTrack={
-                                    this.onDeleteClinicalTrack
-                                }
-                                onTrackSortDirectionChange={
-                                    this.onTrackSortDirectionChange
-                                }
-                                onTrackGapChange={this.onTrackGapChange}
-                                initParams={{
-                                    max_height: Number.POSITIVE_INFINITY,
-                                }}
-                            />
+                            {_.times(2, i => (
+                                <Oncoprint
+                                    ref={this.oncoprintRef}
+                                    showTrackLabels={false}
+                                    broadcastOncoprintJsRef={
+                                        this.oncoprintJsRef
+                                    }
+                                    clinicalTracks={this.clinicalTracks.result}
+                                    geneticTracks={this.geneticTracks.result}
+                                    genesetHeatmapTracks={
+                                        this.genesetHeatmapTracks.result
+                                    }
+                                    heatmapTracks={([] as IHeatmapTrackSpec[])
+                                        .concat(
+                                            this.genericAssayHeatmapTracks
+                                                .result
+                                        )
+                                        .concat(this.heatmapTracks.result)}
+                                    categoricalTracks={
+                                        this.genericAssayCategoricalTracks
+                                            .result
+                                    }
+                                    divId={this.props.divId + i}
+                                    width={300}
+                                    caseLinkOutInTooltips={true}
+                                    suppressRendering={this.isLoading}
+                                    keepSorted={!this.isLoading}
+                                    onSuppressRendering={
+                                        this.onSuppressRendering
+                                    }
+                                    onReleaseRendering={this.onReleaseRendering}
+                                    hiddenIds={
+                                        !this.showUnalteredColumns
+                                            ? this.unalteredKeys.result
+                                            : undefined
+                                    }
+                                    molecularProfileIdToMolecularProfile={
+                                        this.props.store
+                                            .molecularProfileIdToMolecularProfile
+                                            .result
+                                    }
+                                    alterationTypesInQuery={
+                                        this.alterationTypesInQuery.result
+                                    }
+                                    showSublabels={this.showOqlInLabels}
+                                    additionalTrackGroupHeaders={
+                                        this.additionalTrackGroupHeaders.result!
+                                    }
+                                    horzZoomToFitIds={this.alteredKeys.result}
+                                    distinguishMutationType={
+                                        this.distinguishMutationType
+                                    }
+                                    distinguishDrivers={this.distinguishDrivers}
+                                    distinguishGermlineMutations={
+                                        this.distinguishGermlineMutations
+                                    }
+                                    sortConfig={this.oncoprintLibrarySortConfig}
+                                    showClinicalTrackLegends={
+                                        this.showClinicalTrackLegends
+                                    }
+                                    showWhitespaceBetweenColumns={
+                                        this.showWhitespaceBetweenColumns
+                                    }
+                                    showMinimap={this.showMinimap}
+                                    onMinimapClose={this.onMinimapClose}
+                                    onDeleteClinicalTrack={
+                                        this.onDeleteClinicalTrack
+                                    }
+                                    onTrackSortDirectionChange={
+                                        this.onTrackSortDirectionChange
+                                    }
+                                    onTrackGapChange={this.onTrackGapChange}
+                                    initParams={{
+                                        max_height: Number.POSITIVE_INFINITY,
+                                    }}
+                                />
+                            ))}
                         </div>
                     </div>
                 </div>
