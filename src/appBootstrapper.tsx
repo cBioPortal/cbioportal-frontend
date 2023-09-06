@@ -9,6 +9,7 @@ import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {
     fetchServerConfig,
     getLoadConfig,
+    getServerConfig,
     initializeAPIClients,
     initializeAppStore,
     initializeLoadConfiguration,
@@ -35,6 +36,7 @@ import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';
 import eventBus from 'shared/events/eventBus';
 import { SiteError } from 'shared/model/appMisc';
+import load from 'little-loader';
 
 export interface ICBioWindow {
     globalStores: {
@@ -235,6 +237,27 @@ if (__DEBUG__ && module.hot) {
     module.hot.accept('./routes', () => render());
 }
 
+async function loadCustomJs() {
+    if (!getServerConfig().custom_js_urls) {
+        return Promise.resolve();
+    }
+    const customJsFiles = getServerConfig().custom_js_urls.split(',');
+    return Promise.all(
+        Object.values(customJsFiles).map(
+            (customJsFileUrl: string) =>
+                new Promise((resolve, reject) => {
+                    load(customJsFileUrl, (err: any) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve();
+                        }
+                    });
+                })
+        )
+    );
+}
+
 $(document).ready(async () => {
     // we show blank page if the window.name is "blank"
     if (window.name === 'blank') {
@@ -254,6 +277,8 @@ $(document).ready(async () => {
     initializeAPIClients();
 
     initializeAppStore(stores.appStore);
+
+    await loadCustomJs();
 
     render();
 
