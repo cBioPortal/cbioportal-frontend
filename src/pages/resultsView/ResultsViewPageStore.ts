@@ -574,9 +574,15 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable queryFormVisible: boolean = false;
 
-    @observable userAlterationColors: {
-        [alteration: string]: {
-            [type: string]: RGBAColor | undefined;
+    @observable userSelectedAlterationColors: {
+        [alterationType: string]: {
+            [type: string]: RGBAColor;
+        };
+    } = {};
+
+    @observable _defaultAlterationColors: {
+        [alterationType: string]: {
+            [type: string]: RGBAColor;
         };
     } = {};
 
@@ -600,31 +606,57 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @action.bound
     public onAlterationColorChange(
-        alteration: string,
+        alterationType: string,
         type: string,
-        color: RGBAColor
+        color: RGBAColor | undefined
     ) {
-        this.userAlterationColors[alteration][type] = color;
+        if (
+            !color &&
+            this.userSelectedAlterationColors[alterationType] &&
+            this.userSelectedAlterationColors[alterationType][type]
+        ) {
+            delete this.userSelectedAlterationColors[alterationType][type];
+        } else if (color) {
+            if (!this.userSelectedAlterationColors[alterationType]) {
+                this.userSelectedAlterationColors[alterationType] = {};
+            }
+            this.userSelectedAlterationColors[alterationType][type] = color;
+        }
+    }
+
+    @computed get defaultAlterationColors() {
+        return this._defaultAlterationColors;
     }
 
     @action.bound
-    public setDefaultUserAlterationColors(
-        rule: IGeneticAlterationRuleSetParams
-    ) {
-        for (let alteration in rule.rule_params.conditional) {
-            this.userAlterationColors[alteration] = {};
-            for (let type in rule.rule_params.conditional[alteration]) {
-                if (alteration === 'disp_mrna') {
-                    this.userAlterationColors[alteration][type] = rule
-                        .rule_params.conditional[alteration][type].shapes[0]
-                        .stroke as RGBAColor;
-                } else {
-                    this.userAlterationColors[alteration][type] = rule
-                        .rule_params.conditional[alteration][type].shapes[0]
-                        .fill as RGBAColor;
-                }
+    public setDefaultAlterationColors(rule: IGeneticAlterationRuleSetParams) {
+        let alterationColors: {
+            [alterationType: string]: {
+                [type: string]: RGBAColor;
+            };
+        } = {};
+        _.forIn(
+            Object.keys(rule.rule_params.conditional),
+            (alterationType: string) => {
+                alterationColors[alterationType] = {};
+                _.forIn(
+                    Object.keys(rule.rule_params.conditional[alterationType]),
+                    (type: string) => {
+                        if (alterationType === 'disp_mrna') {
+                            alterationColors[alterationType][type] = rule
+                                .rule_params.conditional[alterationType][type]
+                                .shapes[0].stroke as RGBAColor;
+                        } else {
+                            alterationColors[alterationType][type] = rule
+                                .rule_params.conditional[alterationType][type]
+                                .shapes[0].fill as RGBAColor;
+                        }
+                    }
+                );
             }
-        }
+        );
+        this._defaultAlterationColors = alterationColors;
+        this.userSelectedAlterationColors = {};
     }
 
     // @action public showAlterationWarningSign(
