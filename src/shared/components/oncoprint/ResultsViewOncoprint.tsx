@@ -139,6 +139,37 @@ export type AdditionalTrackGroupRecord = {
     molecularProfile: MolecularProfile;
 };
 
+export function editRule(
+    color: RGBAColor | undefined,
+    alteration: string,
+    type: string,
+    store: ResultsViewPageStore,
+    currentRule: IGeneticAlterationRuleSetParams
+) {
+    let rule: IGeneticAlterationRuleSetParams = currentRule;
+    if (color == undefined) {
+        if (alteration === 'disp_mrna') {
+            rule.rule_params.conditional[alteration][type].shapes[0].stroke =
+                store.defaultAlterationColors[alteration][type];
+        } else {
+            rule.rule_params.conditional[alteration][type].shapes[0].fill =
+                store.defaultAlterationColors[alteration][type];
+        }
+    } else {
+        if (alteration === 'disp_mrna') {
+            rule.rule_params.conditional[alteration][
+                type
+            ].shapes[0].stroke = color;
+        } else {
+            rule.rule_params.conditional[alteration][
+                type
+            ].shapes[0].fill = color;
+        }
+    }
+    store.onAlterationColorChange(alteration, type, color);
+    return rule;
+}
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
@@ -268,7 +299,7 @@ export default class ResultsViewOncoprint extends React.Component<
         this.distinguishGermlineMutations
     );
 
-    @observable test: boolean = false;
+    @observable changeRule: boolean = false;
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
@@ -423,7 +454,7 @@ export default class ResultsViewOncoprint extends React.Component<
         super(props);
 
         makeObservable(this);
-        this.props.store.setDefaultUserAlterationColors(this.rule);
+        this.props.store.setDefaultAlterationColors(this.rule);
         this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
@@ -509,8 +540,8 @@ export default class ResultsViewOncoprint extends React.Component<
             get distinguishMutationType() {
                 return self.distinguishMutationType;
             },
-            get test() {
-                return self.test;
+            get changeRule() {
+                return self.changeRule;
             },
             get distinguishDrivers() {
                 return self.distinguishDrivers;
@@ -729,11 +760,8 @@ export default class ResultsViewOncoprint extends React.Component<
             onSelectDistinguishMutationType: (s: boolean) => {
                 this.distinguishMutationType = s;
             },
-            onSelectTest: (s: boolean) => {
-                this.test = s;
-            },
-            onSetRule: (rule: IGeneticAlterationRuleSetParams) => {
-                this.rule = rule;
+            onChangeRule: (s: boolean) => {
+                this.changeRule = s;
             },
             onSelectDistinguishDrivers: action((s: boolean) => {
                 if (!s) {
@@ -1720,7 +1748,7 @@ export default class ResultsViewOncoprint extends React.Component<
                             this
                                 .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl
                         }
-                        setRules={this.setRules}
+                        setRule={this.setRule}
                     />
                 </FadeInteraction>
             );
@@ -1825,65 +1853,18 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @action.bound
-    public setRules(
+    public setRule(
         alteration: string,
         type: string,
         color: RGBAColor | undefined
     ) {
-        if (color == undefined) {
-            this.rule = getGeneticTrackRuleSetParams(
-                this.distinguishMutationType,
-                this.distinguishDrivers,
-                this.distinguishGermlineMutations
-            );
-            for (let a in this.props.store.userAlterationColors) {
-                for (let t in this.props.store.userAlterationColors[a]) {
-                    if (a === 'disp_mrna') {
-                        if (a !== alteration && t !== type) {
-                            this.rule.rule_params.conditional[a][
-                                t
-                            ].shapes[0].stroke = this.props.store.userAlterationColors[
-                                a
-                            ][t];
-                        } else {
-                            this.props.store.onAlterationColorChange(
-                                alteration,
-                                type,
-                                this.rule.rule_params.conditional[a][t]
-                                    .shapes[0].stroke as RGBAColor
-                            );
-                        }
-                    } else {
-                        if (a !== alteration || t !== type) {
-                            this.rule.rule_params.conditional[a][
-                                t
-                            ].shapes[0].fill = this.props.store.userAlterationColors[
-                                a
-                            ][t];
-                        } else {
-                            this.props.store.onAlterationColorChange(
-                                alteration,
-                                type,
-                                this.rule.rule_params.conditional[a][t]
-                                    .shapes[0].fill as RGBAColor
-                            );
-                        }
-                    }
-                }
-            }
-        } else {
-            if (alteration === 'disp_mrna') {
-                this.rule.rule_params.conditional[alteration][
-                    type
-                ].shapes[0].stroke = color;
-            } else {
-                this.rule.rule_params.conditional[alteration][
-                    type
-                ].shapes[0].fill = color;
-            }
-            this.props.store.onAlterationColorChange(alteration, type, color);
-        }
-        // console.log(this.rule);
+        this.rule = editRule(
+            color,
+            alteration,
+            type,
+            this.props.store,
+            this.rule
+        );
     }
 
     public render() {
@@ -1987,7 +1968,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 distinguishMutationType={
                                     this.distinguishMutationType
                                 }
-                                test={this.test}
+                                changeRule={this.changeRule}
                                 distinguishDrivers={this.distinguishDrivers}
                                 distinguishGermlineMutations={
                                     this.distinguishGermlineMutations

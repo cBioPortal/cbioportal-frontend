@@ -28,7 +28,7 @@ export interface IGroupCheckboxProps {
     store?: ResultsViewPageStore;
     handlers: IOncoprintControlsHandlers;
     state: IOncoprintControlsState;
-    setRules?: (
+    setRule?: (
         alteration: string,
         type: string,
         color: RGBAColor | undefined
@@ -99,23 +99,23 @@ export default class OncoprintColors extends React.Component<
     handleChangeComplete = (color: any, event: any) => {
         // if same color is select, unselect it (go back to no color)
         if (color.hex === rgbaToHex(this.props.color)) {
-            this.props.setRules &&
-                this.props.setRules(
+            this.props.setRule &&
+                this.props.setRule(
                     this.props.alteration,
                     this.props.type,
                     undefined
                 );
         } else {
-            this.props.setRules &&
-                this.props.setRules(this.props.alteration, this.props.type, [
+            this.props.setRule &&
+                this.props.setRule(this.props.alteration, this.props.type, [
                     color.rgb.r,
                     color.rgb.g,
                     color.rgb.b,
                     color.rgb.a,
                 ]);
         }
-        this.props.handlers.onSelectTest &&
-            this.props.handlers.onSelectTest(!this.props.state.test!);
+        this.props.handlers.onChangeRule &&
+            this.props.handlers.onChangeRule(!this.props.state.changeRule!);
     };
 
     @computed get colorList() {

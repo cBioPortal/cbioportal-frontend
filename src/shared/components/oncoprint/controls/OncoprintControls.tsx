@@ -46,7 +46,7 @@ import {
     ClinicalTrackConfigMap,
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
-import { IGeneticAlterationRuleSetParams, RGBAColor } from 'oncoprintjs';
+import { RGBAColor } from 'oncoprintjs';
 import OncoprintColors, { alterationToTypeToLabel } from './OncoprintColors';
 
 export interface IOncoprintControlsHandlers
@@ -62,8 +62,7 @@ export interface IOncoprintControlsHandlers
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
-    onSelectTest?: (distinguish: boolean) => void;
-    onSetRule?: (rule: IGeneticAlterationRuleSetParams) => void;
+    onChangeRule?: (changed: boolean) => void;
 
     onSelectHideVUS: (hide: boolean) => void;
     onSelectHideGermlineMutations: (hide: boolean) => void;
@@ -107,8 +106,7 @@ export interface IOncoprintControlsState
     sortByCaseListDisabled: boolean;
     hidePutativePassengers: boolean;
     hideGermlineMutations: boolean;
-    test?: boolean;
-    rule?: IGeneticAlterationRuleSetParams;
+    changeRule?: boolean;
 
     sortMode?: SortMode;
     clinicalAttributesPromise?: MobxPromise<ExtendedClinicalAttribute[]>;
@@ -144,7 +142,7 @@ export interface IOncoprintControlsProps {
     selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl?: {
         [genericAssayType: string]: string[];
     };
-    setRules?: (
+    setRule?: (
         alteration: string,
         type: string,
         color: RGBAColor | undefined
@@ -191,9 +189,20 @@ const EVENT_KEY = {
     downloadOncoprinter: '29.1',
     horzZoomSlider: '30',
     viewNGCHM: '31',
-    test: '32',
-    rule: '33',
 };
+
+export function getOncoprintColor(
+    alteration: string,
+    type: string,
+    store?: ResultsViewPageStore
+): RGBAColor {
+    return store
+        ? !store.userSelectedAlterationColors[alteration] ||
+          !store.userSelectedAlterationColors[alteration][type]
+            ? store.defaultAlterationColors[alteration][type]
+            : store.userSelectedAlterationColors[alteration][type]
+        : ([255, 255, 255, 1] as RGBAColor);
+}
 
 @observer
 export default class OncoprintControls extends React.Component<
@@ -866,13 +875,13 @@ export default class OncoprintControls extends React.Component<
                                 type={type}
                                 handlers={this.props.handlers}
                                 state={this.props.state}
-                                setRules={this.props.setRules}
+                                setRule={this.props.setRule}
                                 store={this.props.store}
-                                color={
-                                    this.props.store?.userAlterationColors[
-                                        alteration
-                                    ][type]!
-                                }
+                                color={getOncoprintColor(
+                                    alteration,
+                                    type,
+                                    this.props.store
+                                )}
                                 markedWithWarningSign={this.props.store!.isAlterationMarkedWithWarningSign(
                                     alteration
                                 )}

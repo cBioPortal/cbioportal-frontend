@@ -591,7 +591,7 @@ function hasGeneticTrackRuleSetChanged(
         nextProps.distinguishDrivers !== prevProps.distinguishDrivers ||
         nextProps.distinguishGermlineMutations !==
             prevProps.distinguishGermlineMutations ||
-        nextProps.test !== prevProps.test
+        nextProps.changeRule !== prevProps.changeRule
     );
 }
 
@@ -1117,11 +1117,6 @@ function transitionGeneticTrack(
                   nextProps.distinguishDrivers,
                   nextProps.distinguishGermlineMutations
               );
-        console.log(rule);
-        // if (rule.rule_params.conditional.disp_mut.inframe) {
-        //     console.log('hi')
-        //     rule.rule_params.conditional.disp_mut.inframe.shapes[0].fill = [153, 52, 4, 1]
-        // }
         // Add track
         const createCustomOncoprintTooltip = getCustomJsFunctions()
             .createCustomOncoprintTooltip;

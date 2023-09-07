@@ -276,7 +276,7 @@ export interface IOncoprintProps {
     alterationTypesInQuery?: string[];
 
     distinguishMutationType?: boolean;
-    test?: boolean;
+    changeRule?: boolean;
     rule?: IGeneticAlterationRuleSetParams;
     distinguishDrivers?: boolean;
     distinguishGermlineMutations?: boolean;
