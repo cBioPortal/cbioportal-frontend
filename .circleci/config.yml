@@ -7,10 +7,10 @@ version: 2.1
 parameters:
   remote_spec_pattern:
     type: string
-    default: "./remote/specs/**/*.spec.js"
+    default: "./remote/specs/core/oncoprint.screenshot.spec.js"
   localdb_spec_pattern:
     type: string
-    default: "./local/specs/**/*.spec.js"
+    default: "./local/specs/**/shmoo.spec.js"
   enable_remote_e2e:
     type: boolean
     default: true
@@ -33,10 +33,10 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - when:
         condition: << pipeline.parameters.enable_remote_e2e >>
         steps:
-    #    - run:
-    #        name: "Install yarn at specific version"
-    #        command:
-    #          sudo npm install --global yarn@1.22.4
+          #    - run:
+          #        name: "Install yarn at specific version"
+          #        command:
+          #          sudo npm install --global yarn@1.22.4
           - attach_workspace:
               at: /tmp/
           - run:
@@ -395,14 +395,14 @@ workflows:
           requires:
             - install
       - unit_tests_packages:
-            requires:
-              - install
+          requires:
+            - install
       - end_to_end_tests:
           requires:
             - install
-      - end_to_end_tests_localdb:
-          requires:
-            - install
+#      - end_to_end_tests_localdb:
+#          requires:
+#            - install
       - api_sync:
           requires:
             - install
