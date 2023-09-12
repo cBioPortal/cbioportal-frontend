@@ -24,16 +24,17 @@ import {
     remoteData,
 } from 'cbioportal-frontend-commons';
 import { Else, If, Then } from 'react-if';
-import ProgressIndicator, {
-    IProgressIndicatorItem,
-} from '../../../shared/components/progressIndicator/ProgressIndicator';
+import { IProgressIndicatorItem } from '../../../shared/components/progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import { getServerConfig } from 'config/config';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
-import { makeObservable, observable, runInAction } from 'mobx';
-import { Sample, StudyViewFilter } from 'cbioportal-ts-api-client';
-import { SortConfig } from 'oncoprintjs';
+import { makeObservable, observable } from 'mobx';
+import {
+    ClinicalData,
+    Sample,
+    StudyViewFilter,
+} from 'cbioportal-ts-api-client';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -57,29 +58,33 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
     sortCriteria: SortCriteria | undefined,
     recordLimit: number
 ) {
-    let sampleClinicalDataResp = await getAllClinicalDataByStudyViewFilter(
+    let sampleClinicalData = await getAllClinicalDataByStudyViewFilter(
         filters,
         searchTerm,
         sortCriteria,
         recordLimit
     );
 
-    const sampleMap = _.mapValues(
-        sampleClinicalDataResp.data,
+    const aggregatedSampleClinicalData = _.mapValues(
+        sampleClinicalData,
         (attrs, uniqueSampleId) => {
             const sample = sampleSetByKey[uniqueSampleId];
-            return {
+            const sampleData = {
                 studyId: sample.studyId,
                 patientId: sample.patientId,
                 sampleId: sample.sampleId,
-                ...attrs,
-            };
+            } as { [attributeId: string]: string };
+            attrs.forEach(
+                attr =>
+                    (sampleData[attr['clinicalAttributeId']] = attr['value'])
+            );
+            return sampleData;
         }
     );
 
     return {
-        totalItems: sampleClinicalDataResp.totalItems,
-        data: _.values(sampleMap),
+        totalItems: _.keys(sampleClinicalData).length,
+        data: _.values(aggregatedSampleClinicalData),
     };
 }
 
@@ -150,28 +155,8 @@ export class ClinicalDataTab extends React.Component<
             if (this.props.store.selectedSamples.result.length === 0) {
                 return Promise.resolve({ totalItems: 0, data: [] });
             }
-            // let sampleClinicalDataResp = await getAllClinicalDataByStudyViewFilter(
-            //     this.props.store.filters,
-            //     this.clinicalDataTabSearchTerm,
-            //     this.clinicalDataSortCriteria,
-            //     CLINICAL_DATA_RECORD_LIMIT
-            // );
-            //
-            // const sampleClinicalDataArray = _.mapValues(
-            //     sampleClinicalDataResp.data,
-            //     (attrs, uniqueSampleId) => {
-            //         const sample = this.props.store.sampleSetByKey.result![
-            //             uniqueSampleId
-            //         ];
-            //         return {
-            //             studyId: sample.studyId,
-            //             patientId: sample.patientId,
-            //             sampleId: sample.sampleId,
-            //             ...attrs,
-            //         };
-            //     }
-            // );
-            const sampleClinicalDataResp = await fetchClinicalDataForStudyViewClinicalDataTab(
+
+            const sampleClinicalData = await fetchClinicalDataForStudyViewClinicalDataTab(
                 this.props.store.filters,
                 this.props.store.sampleSetByKey.result!,
                 this.clinicalDataTabSearchTerm,
@@ -179,10 +164,7 @@ export class ClinicalDataTab extends React.Component<
                 CLINICAL_DATA_RECORD_LIMIT
             );
 
-            return {
-                totalItems: sampleClinicalDataResp.totalItems,
-                data: sampleClinicalDataResp.data,
-            };
+            return sampleClinicalData;
         },
     });
 
