@@ -9791,7 +9791,7 @@ export class StudyViewPageStore
         if (this.selectedSamples.result.length === 0) {
             return Promise.resolve('');
         }
-        let sampleClinicalDataResp = await getAllClinicalDataByStudyViewFilter(
+        let sampleClinicalData = await getAllClinicalDataByStudyViewFilter(
             this.filters,
             undefined,
             undefined
@@ -9814,14 +9814,18 @@ export class StudyViewPageStore
         let dataRows = _.reduce(
             this.selectedSamples.result,
             (acc, next) => {
-                let sampleData: { [attributeId: string]: string } = {
+                const sampleData = {
                     studyId: next.studyId,
                     patientId: next.patientId,
                     sampleId: next.sampleId,
-                    ...(sampleClinicalDataResp.data[next.uniqueSampleKey] ||
-                        {}),
-                };
-
+                } as { [attributeId: string]: string };
+                const clinicalData = sampleClinicalData[next.uniqueSampleKey];
+                _.forEach(
+                    clinicalData,
+                    (attr: ClinicalData) =>
+                        (sampleData[attr['clinicalAttributeId']] =
+                            attr['value'])
+                );
                 acc.push(
                     _.map(
                         Object.keys(clinicalAttributesNameSet),

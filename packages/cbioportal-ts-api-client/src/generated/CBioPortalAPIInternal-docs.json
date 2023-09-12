@@ -607,7 +607,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ClinicalDataCollection"
+              "$ref": "#/definitions/SampleClinicalDataCollection"
             }
           }
         }
@@ -3939,24 +3939,6 @@
       },
       "title": "ClinicalDataBinFilter"
     },
-    "ClinicalDataCollection": {
-      "type": "object",
-      "properties": {
-        "patientClinicalData": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ClinicalData"
-          }
-        },
-        "sampleClinicalData": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ClinicalData"
-          }
-        }
-      },
-      "title": "ClinicalDataCollection"
-    },
     "ClinicalDataCount": {
       "type": "object",
       "properties": {
@@ -5734,6 +5716,21 @@
         }
       },
       "title": "Sample"
+    },
+    "SampleClinicalDataCollection": {
+      "type": "object",
+      "properties": {
+        "byUniqueSampleKey": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/ClinicalData"
+            }
+          }
+        }
+      },
+      "title": "SampleClinicalDataCollection"
     },
     "SampleIdentifier": {
       "type": "object",

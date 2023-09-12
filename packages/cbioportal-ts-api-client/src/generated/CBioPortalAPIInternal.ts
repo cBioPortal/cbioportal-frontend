@@ -187,12 +187,6 @@ export type ClinicalDataBinFilter = {
         'start': number
 
 };
-export type ClinicalDataCollection = {
-    'patientClinicalData': Array < ClinicalData >
-
-        'sampleClinicalData': Array < ClinicalData >
-
-};
 export type ClinicalDataCount = {
     'count': number
 
@@ -950,6 +944,10 @@ export type Sample = {
         'uniquePatientKey': string
 
         'uniqueSampleKey': string
+
+};
+export type SampleClinicalDataCollection = {
+    'byUniqueSampleKey': {}
 
 };
 export type SampleIdentifier = {
@@ -2187,7 +2185,7 @@ export default class CBioPortalAPIInternal {
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < ClinicalDataCollection > {
+    }): Promise < SampleClinicalDataCollection > {
         return this.fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
