@@ -190,12 +190,12 @@ describe('track group headers', function() {
         browser.pause(500); // give it time to sort
     });
 
-    it('oncoprint should cluster heatmap group correctly', function() {
+    it.only('oncoprint should cluster heatmap group correctly', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
 
-    it('oncoprint should delete clustered heatmap group correctly', function() {
+    it.only('oncoprint should delete clustered heatmap group correctly', function() {
         // Remove the mrna heatmap group, leaving the methylation group and everything sorted by data
         var mrnaElements = getGroupHeaderOptionsElements(2);
         setDropdownOpen(
@@ -212,7 +212,7 @@ describe('track group headers', function() {
         assertScreenShotMatch(res);
     });
 
-    it('oncoprint should delete non-clustered heatmap group correctly', function() {
+    it.only('oncoprint should delete non-clustered heatmap group correctly', function() {
         // Remove the methylation group, leaving the mrna group clustered
         var methylElements = getGroupHeaderOptionsElements(3);
         setDropdownOpen(

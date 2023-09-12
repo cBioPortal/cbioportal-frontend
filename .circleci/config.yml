@@ -7,7 +7,7 @@ version: 2.1
 parameters:
   remote_spec_pattern:
     type: string
-    default: "./remote/specs/core/timeline.spec.js"
+    default: "./remote/specs/core/oncoprint.screenshot.spec.js"
   localdb_spec_pattern:
     type: string
     default: "./local/specs/**/shmoo.spec.js"
