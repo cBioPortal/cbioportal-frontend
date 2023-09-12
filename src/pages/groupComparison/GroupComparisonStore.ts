@@ -166,14 +166,6 @@ export default class GroupComparisonStore extends ComparisonStore {
                     .map(study => study.id)
                     .uniq()
                     .value();
-                trackEvent({
-                    category: 'groupComparison',
-                    action: 'comparisonSessionViewed',
-                    label: studies.join(',') + ',',
-                    fieldsObject: {
-                        [GACustomFieldsEnum.GroupCount]: data.groups.length,
-                    },
-                });
             } catch (ex) {
                 throw 'Failure to track comparisonSessionViewed';
             }
