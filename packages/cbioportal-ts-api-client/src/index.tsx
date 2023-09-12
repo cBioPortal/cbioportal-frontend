@@ -13,7 +13,7 @@ export {
     BinsGeneratorConfig,
     ClinicalDataBinFilter,
     ClinicalDataBinCountFilter,
-    ClinicalDataCollection,
+    SampleClinicalDataCollection,
     ClinicalDataCount,
     ClinicalDataCountFilter,
     ClinicalDataCountItem,

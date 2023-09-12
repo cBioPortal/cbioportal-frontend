@@ -7,7 +7,6 @@ import {
     ClinicalData,
     ClinicalDataBin,
     ClinicalDataBinFilter,
-    ClinicalDataCollection,
     ClinicalDataCount,
     ClinicalDataMultiStudyFilter,
     DataFilterValue,
@@ -3162,88 +3161,19 @@ export async function getAllClinicalDataByStudyViewFilter(
     searchTerm: string | undefined = undefined,
     sortCriteria: any,
     pageSize: number = 500
-): Promise<{
-    totalItems: number;
-    data: { [sampleId: string]: { [attributeId: string]: string } };
-}> {
-    const localClinicalDataCollection: ClinicalDataCollection = {
-        sampleClinicalData: [],
-        patientClinicalData: [],
-    };
-
-    const [remoteClinicalDataCollection, totalItems]: [
-        ClinicalDataCollection,
-        number
-    ] = await internalClient
-        .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
+): Promise<{ [uniqueSampleKey: string]: ClinicalData[] }> {
+    const response = await internalClient.fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(
+        {
             studyViewFilter,
             pageSize,
             pageNumber: 0,
             searchTerm: searchTerm,
             sortBy: sortCriteria?.field,
             direction: sortCriteria?.direction?.toUpperCase() || 'ASC',
-        })
-        .then(response => {
-            return [
-                response.body,
-                parseInt(response.header['total-count'] || 0),
-            ];
-        });
-
-    localClinicalDataCollection.sampleClinicalData = localClinicalDataCollection.sampleClinicalData.concat(
-        remoteClinicalDataCollection.sampleClinicalData
-    );
-    localClinicalDataCollection.patientClinicalData = localClinicalDataCollection.patientClinicalData.concat(
-        remoteClinicalDataCollection.patientClinicalData
-    );
-
-    return {
-        totalItems,
-        data: mergeClinicalDataCollection(localClinicalDataCollection),
-    };
-}
-
-export function mergeClinicalDataCollection(
-    clinicalDataCollection: ClinicalDataCollection
-): { [sampleId: string]: { [attributeId: string]: string } } {
-    const patientKeyedSampleData = _.groupBy(
-        clinicalDataCollection.sampleClinicalData,
-        d => d.uniquePatientKey
-    );
-    let patientKeyedSampleKeyedData = _.mapValues(
-        patientKeyedSampleData,
-        sampleData => _.groupBy(sampleData, d => d.uniqueSampleKey)
-    );
-    const patientKeyedPatientData = _.groupBy(
-        clinicalDataCollection.patientClinicalData,
-        d => d.uniquePatientKey
-    );
-    // Add patient level clinical data to sample clinical data.
-    patientKeyedSampleKeyedData = _.mapValues(
-        patientKeyedSampleKeyedData,
-        (sampleKeyedData, patientId) =>
-            _.mapValues(sampleKeyedData, (attrs, sampleId) =>
-                attrs.concat(patientKeyedPatientData[patientId] || [])
-            )
-    );
-    // Remove patient id levels (only keep sample id keys).
-    const sampleKeyedData = _.assign(
-        {},
-        ..._.values(patientKeyedSampleKeyedData)
-    );
-    // Put all clinical attributes in one object.
-    const sampleCollapsedAttributes = _.mapValues(
-        sampleKeyedData,
-        clinicalData => {
-            const data = _.map(clinicalData, (datum: ClinicalData) => {
-                const obj: { [attrId: string]: string } = {};
-                obj[datum.clinicalAttributeId] = datum.value;
-                return obj;
-            });
-            return _.assign({}, ...data);
         }
     );
-    return sampleCollapsedAttributes;
+
+    return response.body.byUniqueSampleKey;
 }
 
 export function convertClinicalDataBinsToDataBins(
