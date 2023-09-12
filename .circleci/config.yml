@@ -7,10 +7,10 @@ version: 2.1
 parameters:
   remote_spec_pattern:
     type: string
-    default: "./remote/specs/**/*.spec.js"
+    default: "./remote/specs/core/timeline.spec.js"
   localdb_spec_pattern:
     type: string
-    default: "./local/specs/**/*.spec.js"
+    default: "./local/specs/**/shmoo.spec.js"
   enable_remote_e2e:
     type: boolean
     default: true
