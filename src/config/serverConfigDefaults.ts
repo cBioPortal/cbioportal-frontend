@@ -78,7 +78,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_right_nav_show_web_tours: false,
     skin_right_nav_show_twitter: false,
     skin_citation_rule_text:
-        'Please cite: <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract" target="_blank">Cerami et al., 2012</a> &amp; <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210" target="_blank">Gao et al., 2013</a>',
+        'Please cite: <a href="https://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract" target="_blank">Cerami et al., 2012</a> &amp; <a href="https://www.ncbi.nlm.nih.gov/pubmed/23550210" target="_blank">Gao et al., 2013</a> &amp; <a href="https://pubmed.ncbi.nlm.nih.gov/37668528" target="_blank">Bruijn et al., 2023</a>',
     skin_show_about_tab: true,
     skin_show_data_tab: true,
     skin_show_faqs_tab: true,
