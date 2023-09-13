@@ -102,67 +102,61 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
         return (
             <AppContext.Provider value={this.appContext}>
-                <ErrorBoundary>
-                    <div>
-                        <ToastContainer />
-                        <Helmet>
-                            <meta charSet="utf-8" />
-                            <title>{getServerConfig().skin_title}</title>
-                            <meta
-                                name="description"
-                                content={getServerConfig().skin_description}
-                            />
-                        </Helmet>
+                <div>
+                    <ToastContainer />
+                    <Helmet>
+                        <meta charSet="utf-8" />
+                        <title>{getServerConfig().skin_title}</title>
+                        <meta
+                            name="description"
+                            content={getServerConfig().skin_description}
+                        />
+                    </Helmet>
 
-                        <div id="pageTopContainer" className="pageTopContainer">
-                            <UserMessager />
+                    <div id="pageTopContainer" className="pageTopContainer">
+                        <UserMessager />
 
-                            {shouldShowStudyViewWarning() && <StudyAgreement />}
+                        {shouldShowStudyViewWarning() && <StudyAgreement />}
 
-                            {shouldShowGenieWarning() && <GenieAgreement />}
+                        {shouldShowGenieWarning() && <GenieAgreement />}
 
-                            <div className="contentWidth">
-                                <PortalHeader appStore={this.appStore} />
-                            </div>
+                        <div className="contentWidth">
+                            <PortalHeader appStore={this.appStore} />
                         </div>
-                        <If condition={this.appStore.isErrorCondition}>
-                            <Then>
-                                <div className="contentWrapper">
-                                    <ErrorScreen
-                                        title={
-                                            formatErrorTitle(
-                                                this.appStore.siteErrors
-                                            ) ||
-                                            'Oops. There was an error retrieving data.'
-                                        }
-                                        body={
-                                            <a
-                                                href={buildCBioPortalPageUrl(
-                                                    '/'
-                                                )}
-                                            >
-                                                Return to homepage
-                                            </a>
-                                        }
-                                        errorLog={formatErrorLog(
-                                            this.appStore.siteErrors
-                                        )}
-                                        errorMessages={formatErrorMessages(
-                                            this.appStore.siteErrors
-                                        )}
-                                    />
-                                </div>
-                            </Then>
-                            <Else>
-                                <div className="contentWrapper">
-                                    <ErrorAlert appStore={this.appStore} />
-
-                                    {makeRoutes()}
-                                </div>
-                            </Else>
-                        </If>
                     </div>
-                </ErrorBoundary>
+                    <If condition={this.appStore.isErrorCondition}>
+                        <Then>
+                            <div className="contentWrapper">
+                                <ErrorScreen
+                                    title={
+                                        formatErrorTitle(
+                                            this.appStore.siteErrors
+                                        ) ||
+                                        'Oops. There was an error retrieving data.'
+                                    }
+                                    body={
+                                        <a href={buildCBioPortalPageUrl('/')}>
+                                            Return to homepage
+                                        </a>
+                                    }
+                                    errorLog={formatErrorLog(
+                                        this.appStore.siteErrors
+                                    )}
+                                    errorMessages={formatErrorMessages(
+                                        this.appStore.siteErrors
+                                    )}
+                                />
+                            </div>
+                        </Then>
+                        <Else>
+                            <div className="contentWrapper">
+                                <ErrorAlert appStore={this.appStore} />
+
+                                {makeRoutes()}
+                            </div>
+                        </Else>
+                    </If>
+                </div>
             </AppContext.Provider>
         );
     }
