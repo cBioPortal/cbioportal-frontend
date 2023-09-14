@@ -4,6 +4,7 @@ declare const styles: {
   readonly "fa-info-circle": string;
   readonly "globalSettingsDropdown": string;
   readonly "headerSection": string;
+  readonly "headerSubsection": string;
 };
 export = styles;
 

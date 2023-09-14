@@ -108,7 +108,7 @@ export function buildDriverAnnotationSettings(
             this._includeDriver = val;
         },
         get includeVUS() {
-            return this._includeVUS;
+            return this._includeVUS || !this.driversAnnotated;
         },
         set includeVUS(val: boolean) {
             this._includeVUS = val;
@@ -124,7 +124,7 @@ export function buildDriverAnnotationSettings(
                 this.oncoKb ||
                 this.hotspots ||
                 this.customBinary ||
-                _.some(this.driverTiers.entries(), entry => entry[1]);
+                _.some([...this.driverTiers.entries()], entry => entry[1]);
             return anySelected;
         },
 

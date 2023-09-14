@@ -12,6 +12,7 @@ import {
     buildDriverAnnotationControlsHandlers,
 } from './AnnotationFilteringSettings';
 import styles from 'shared/components/driverAnnotations/styles.module.scss';
+import InfoIcon from 'shared/components/InfoIcon';
 
 enum EVENT_KEY {
     hidePutativePassengers = '0',
@@ -110,22 +111,20 @@ export default class SettingsMenu extends React.Component<
                 style={{ padding: 5 }}
             >
                 {this.props.annotationTitleComponent}
-                <div style={{ marginLeft: 10 }}>
-                    <DriverAnnotationControls
-                        state={this.driverSettingsState}
-                        handlers={this.driverSettingsHandlers}
-                        showOnckbAnnotationControls={
-                            this.props.showOnckbAnnotationControls
-                        }
-                    />
-                </div>
+                <DriverAnnotationControls
+                    state={this.driverSettingsState}
+                    handlers={this.driverSettingsHandlers}
+                    showOnckbAnnotationControls={
+                        this.props.showOnckbAnnotationControls
+                    }
+                />
                 {this.props.showFilterControls && (
                     <>
                         <hr />
                         <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                             Filter Data
                         </h5>
-                        <div style={{ marginLeft: 10 }}>
+                        <div>
                             <div className="checkbox">
                                 <label>
                                     <input
@@ -143,9 +142,20 @@ export default class SettingsMenu extends React.Component<
                                                 .distinguishDrivers
                                         }
                                     />{' '}
-                                    Exclude alterations (mutations, structural
-                                    variants and copy number) of unknown
-                                    significance
+                                    Show only drivers
+                                    <InfoIcon
+                                        style={{ color: 'grey' }}
+                                        divStyle={{
+                                            display: 'inline-block',
+                                            marginLeft: 6,
+                                        }}
+                                        tooltip={
+                                            <>
+                                                Exclude VUS: Drivers are defined
+                                                through the options above
+                                            </>
+                                        }
+                                    />
                                 </label>
                             </div>
                             <div className="checkbox">
@@ -160,11 +170,21 @@ export default class SettingsMenu extends React.Component<
                                         }
                                         onClick={this.onInputClick}
                                     />{' '}
-                                    Exclude germline mutations
+                                    Show only somatic
+                                    <InfoIcon
+                                        style={{ color: 'grey' }}
+                                        divStyle={{
+                                            display: 'inline-block',
+                                            marginLeft: 6,
+                                        }}
+                                        tooltip={
+                                            <>Exclude germline mutations</>
+                                        }
+                                    />
                                 </label>
                             </div>
                             {this.props.showExcludeUnprofiledSamplesControl && (
-                                <div>
+                                <>
                                     <div className="checkbox">
                                         <label>
                                             <input
@@ -180,10 +200,28 @@ export default class SettingsMenu extends React.Component<
                                                 }
                                                 onClick={this.onInputClick}
                                             />{' '}
-                                            Exclude unprofiled samples
+                                            Show only profiled
+                                            <InfoIcon
+                                                style={{ color: 'grey' }}
+                                                divStyle={{
+                                                    display: 'inline-block',
+                                                    marginLeft: 6,
+                                                }}
+                                                tooltip={
+                                                    <>
+                                                        Exclude unprofiled
+                                                        samples
+                                                    </>
+                                                }
+                                            />
                                         </label>
                                     </div>
-                                    <div style={{ marginLeft: 10 }}>
+                                    <div
+                                        style={{
+                                            marginLeft: 10,
+                                            marginTop: -5,
+                                        }}
+                                    >
                                         <div className="radio">
                                             <label>
                                                 <input
@@ -198,9 +236,8 @@ export default class SettingsMenu extends React.Component<
                                                     }
                                                     onClick={this.onInputClick}
                                                 />
-                                                Exclude samples that are
-                                                unprofiled in any queried gene
-                                                or profile
+                                                Profiled in <strong>all</strong>{' '}
+                                                queried genes/profiles
                                             </label>
                                             <label>
                                                 <input
@@ -215,13 +252,12 @@ export default class SettingsMenu extends React.Component<
                                                     }
                                                     onClick={this.onInputClick}
                                                 />
-                                                Exclude samples that are
-                                                unprofiled in every queried gene
-                                                and profile.
+                                                Profiled in <strong>any</strong>{' '}
+                                                queried genes/profiles
                                             </label>
                                         </div>
                                     </div>
-                                </div>
+                                </>
                             )}
                         </div>
                     </>

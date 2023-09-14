@@ -67,8 +67,10 @@ export default class SettingsMenuButton extends React.Component<
                         style={{ color: 'rgb(54, 134, 194)' }}
                         tooltip={
                             <span>
-                                Putative driver vs VUS setings apply to every
-                                tab except{' '}
+                                This section defines which sources are
+                                considered to annotate driver variants in your
+                                data. Putative driver vs VUS setings apply to
+                                every tab except{' '}
                                 <BoldedSpanList
                                     words={['Co-expression', 'CN Segments']}
                                 />
