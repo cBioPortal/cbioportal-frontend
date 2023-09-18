@@ -3080,8 +3080,9 @@ export function updateSavedUserPreferenceChartIds(
 
 export async function getAllClinicalDataByStudyViewFilter(
     studyViewFilter: StudyViewFilter,
-    searchTerm: string | undefined = undefined,
-    sortCriteria: any,
+    searchTerm: string | undefined,
+    sortAttributeId: any,
+    sortDirection: any = 'asc',
     pageSize: number = 500
 ): Promise<{ [uniqueSampleKey: string]: ClinicalData[] }> {
     const response = await internalClient.fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(
@@ -3090,8 +3091,8 @@ export async function getAllClinicalDataByStudyViewFilter(
             pageSize,
             pageNumber: 0,
             searchTerm: searchTerm,
-            sortBy: sortCriteria?.field,
-            direction: sortCriteria?.direction?.toUpperCase() || 'ASC',
+            sortBy: sortAttributeId,
+            direction: sortDirection?.toUpperCase(),
         }
     );
 
