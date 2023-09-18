@@ -29,7 +29,7 @@ import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import { getServerConfig } from 'config/config';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
-import { makeObservable, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import {
     ClinicalData,
     Sample,
@@ -55,13 +55,15 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
     filters: StudyViewFilter,
     sampleSetByKey: { [sampleId: string]: Sample },
     searchTerm: string | undefined,
-    sortCriteria: SortCriteria | undefined,
+    sortAttributeId: string | undefined,
+    sortDirection: 'asc' | 'desc' | undefined,
     recordLimit: number
 ) {
     let sampleClinicalData = await getAllClinicalDataByStudyViewFilter(
         filters,
         searchTerm,
-        sortCriteria,
+        sortAttributeId,
+        sortDirection,
         recordLimit
     );
 
@@ -144,11 +146,27 @@ export class ClinicalDataTab extends React.Component<
         direction: undefined,
     };
 
+    @computed
+    get clinicalDataSortAttributeId(): string | undefined {
+        return this.clinicalDataSortCriteria?.field
+            ? this.props.store.clinicalAttributeDisplayNameToClinicalAttribute
+                  .result![this.clinicalDataSortCriteria.field][
+                  'clinicalAttributeId'
+              ]
+            : undefined;
+    }
+
+    @computed
+    get clinicalDataSortDirection(): 'asc' | 'desc' | undefined {
+        return this.clinicalDataSortCriteria?.direction;
+    }
+
     readonly getDataForClinicalDataTab = remoteData({
         await: () => [
             this.props.store.clinicalAttributes,
             this.props.store.selectedSamples,
             this.props.store.sampleSetByKey,
+            this.props.store.clinicalAttributeDisplayNameToClinicalAttribute,
         ],
         onError: () => {},
         invoke: async () => {
@@ -160,7 +178,8 @@ export class ClinicalDataTab extends React.Component<
                 this.props.store.filters,
                 this.props.store.sampleSetByKey.result!,
                 this.clinicalDataTabSearchTerm,
-                this.clinicalDataSortCriteria,
+                this.clinicalDataSortAttributeId,
+                this.clinicalDataSortDirection,
                 CLINICAL_DATA_RECORD_LIMIT
             );
 
@@ -398,7 +417,9 @@ export class ClinicalDataTab extends React.Component<
                                                 this.props.store.sampleSetByKey
                                                     .result!,
                                                 this.clinicalDataTabSearchTerm,
-                                                this.clinicalDataSortCriteria,
+                                                this
+                                                    .clinicalDataSortAttributeId,
+                                                this.clinicalDataSortDirection,
                                                 500
                                             ).then(data => {
                                                 return data.data;
