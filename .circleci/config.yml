@@ -112,10 +112,10 @@ jobs:
       - run:
           name: "Concatenate all source files to use as hash key for caching dist folder"
           command: "cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
-      - restore_cache:
-          keys:
-            - v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-            - v10-dependencies-{{ checksum "yarn.lock" }}
+#      - restore_cache:
+#          keys:
+#            - v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+#            - v10-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
       - run: yarn buildModules
@@ -267,11 +267,11 @@ jobs:
                 name: Check build whether custom backend is needed
                 command: |
                   echo "$CUSTOM_BACKEND" > /tmp/repo/custom_backend_switch
-            - restore_cache:
-                # when custom_backend_switch file has '1' a custom backend
-                # is used and the more extended set of maven repo's will be attached
-                keys:
-                  - maven-repo-v1-{{ checksum "custom_backend_switch" }}
+#            - restore_cache:
+#                # when custom_backend_switch file has '1' a custom backend
+#                # is used and the more extended set of maven repo's will be attached
+#                keys:
+#                  - maven-repo-v1-{{ checksum "custom_backend_switch" }}
             - run:
                 name: Build custom backend
                 command: |
@@ -295,9 +295,9 @@ jobs:
                 name: Create MySQL data directory
                 command: |
                   docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
-            - restore_cache:
-                keys:
-                  - v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+#            - restore_cache:
+#                keys:
+#                  - v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
             - run:
                 name: Init database
                 command: |
