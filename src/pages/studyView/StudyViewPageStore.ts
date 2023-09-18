@@ -5626,6 +5626,13 @@ export class StudyViewPageStore
         },
     });
 
+    readonly clinicalAttributeDisplayNameToClinicalAttribute = remoteData({
+        await: () => [this.clinicalAttributes],
+        invoke: async () => {
+            return _.keyBy(this.clinicalAttributes.result!, 'displayName');
+        },
+    });
+
     readonly clinicalAttributeIdToDataType = remoteData({
         await: () => [this.clinicalAttributes],
         invoke: async () => {
