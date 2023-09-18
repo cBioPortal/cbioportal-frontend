@@ -596,6 +596,7 @@ export default class Oncoprint {
             return;
         }
         const self = this;
+        // this is noting
         setTimeout(function() {
             self.resizeAndOrganize(onComplete);
         }, 0);
