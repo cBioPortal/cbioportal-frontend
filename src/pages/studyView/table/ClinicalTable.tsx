@@ -194,7 +194,9 @@ export default class ClinicalTable extends React.Component<
                 render: (data: ClinicalDataCountSummary) => (
                     <LabeledCheckbox
                         checked={_.includes(this.props.filters, data.value)}
-                        onChange={event => this.onUserSelection(data.value)}
+                        onChange={event => {
+                            this.onUserSelection(data.value);
+                        }}
                         labelProps={{
                             style: {
                                 display: 'flex',
@@ -267,7 +269,7 @@ export default class ClinicalTable extends React.Component<
         if (_.includes(filters, filter)) {
             filters = _.filter(filters, obj => obj !== filter);
         } else {
-            filters.push(filter);
+            filters = filters.concat([filter]);
         }
         this.props.onUserSelection(filters);
     }
