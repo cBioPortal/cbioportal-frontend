@@ -10,7 +10,7 @@ import _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import GenericAssayBinaryEnrichmentsContainer from 'pages/resultsView/enrichments/GenericAssayBinaryEnrichmentsContainer';
 import EnrichmentsDataSetDropdown from 'pages/resultsView/enrichments/EnrichmentsDataSetDropdown';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import GenericAssayEnrichmentsContainer from 'pages/resultsView/enrichments/GenericAssayEnrichmentsContainer';
 import GenericAssayCategoricalEnrichmentsContainer from 'pages/resultsView/enrichments/GenericAssayCategoricalEnrichmentsContainer';
 
@@ -25,6 +25,11 @@ export default class GenericAssayEnrichmentCollections extends React.Component<
     IGenericAssayEnrichmentCollectionsProps,
     {}
 > {
+    constructor(props: IGenericAssayEnrichmentCollectionsProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @observable isBinary: boolean | undefined = false;
     @observable isCategorical: boolean | undefined = false;
     @observable isNumerical: boolean | undefined = false;
