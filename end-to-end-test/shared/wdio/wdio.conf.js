@@ -457,18 +457,18 @@ exports.config = {
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
-    afterTest: function(
-        test,
-        context,
-        { error, result, duration, passed, retries }
-    ) {
-        saveErrorImage(
-            test,
-            context,
-            { error, result, duration, passed, retries },
-            this.networkLog
-        );
-    },
+    // afterTest: function(
+    //     test,
+    //     context,
+    //     { error, result, duration, passed, retries }
+    // ) {
+    //     saveErrorImage(
+    //         test,
+    //         context,
+    //         { error, result, duration, passed, retries },
+    //         this.networkLog
+    //     );
+    // },
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
