@@ -36,7 +36,6 @@ import styles from './styles.module.scss';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
-import GenericAssayEnrichments from './GenericAssayEnrichments';
 import _ from 'lodash';
 import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
@@ -46,12 +45,13 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
-import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { getSortedGenericAssayAllTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import GroupComparisonPathwayMapper from './pathwayMapper/GroupComparisonPathwayMapper';
 import GroupComparisonMutationsTab from './GroupComparisonMutationsTab';
 import GroupComparisonPathwayMapperUserSelectionStore from './pathwayMapper/GroupComparisonPathwayMapperUserSelectionStore';
 import { Tour } from 'tours';
+import GenericAssayEnrichmentCollections from './GenericAssayEnrichmentCollections';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -135,6 +135,8 @@ export default class GroupComparisonPage extends React.Component<
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
+            this.store
+                .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType,
             this.store.alterationsEnrichmentData,
             this.store.alterationsEnrichmentAnalysisGroups,
             this.store.genesSortedByMutationFrequency,
@@ -313,34 +315,39 @@ export default class GroupComparisonPage extends React.Component<
                             <MethylationEnrichments store={this.store} />
                         </MSKTab>
                     )}
-                    {this.store.showGenericAssayTab &&
-                        getSortedGenericAssayTabSpecs(
+                    {(this.store.showGenericAssayCategoricalTab ||
+                        this.store.showGenericAssayBinaryTab ||
+                        this.store.showGenericAssayTab) &&
+                        getSortedGenericAssayAllTabSpecs(
                             this.store
-                                .genericAssayEnrichmentProfilesGroupedByGenericAssayType
+                                .genericAssayAllEnrichmentProfilesGroupedByGenericAssayType
                                 .result
-                        ).map(genericAssayTabSpecs => {
+                        ).map(genericAssayAllTabSpecs => {
                             return (
                                 <MSKTab
                                     id={`${
                                         GroupComparisonTab.GENERIC_ASSAY_PREFIX
-                                    }_${genericAssayTabSpecs.genericAssayType.toLowerCase()}`}
-                                    linkText={genericAssayTabSpecs.linkText}
+                                    }_${genericAssayAllTabSpecs.genericAssayType.toLowerCase()}`}
+                                    linkText={genericAssayAllTabSpecs.linkText}
                                     anchorClassName={
+                                        this.store
+                                            .genericAssayCategoricalTabUnavailable &&
+                                        this.store
+                                            .genericAssayBinaryTabUnavailable &&
                                         this.store.genericAssayTabUnavailable
                                             ? 'greyedOut'
                                             : ''
                                     }
                                 >
-                                    <GenericAssayEnrichments
+                                    <GenericAssayEnrichmentCollections
                                         store={this.store}
                                         genericAssayType={
-                                            genericAssayTabSpecs.genericAssayType
+                                            genericAssayAllTabSpecs.genericAssayType
                                         }
                                     />
                                 </MSKTab>
                             );
                         })}
-
                     {buildCustomTabs(this.customTabs)}
                 </MSKTabs>
             );
