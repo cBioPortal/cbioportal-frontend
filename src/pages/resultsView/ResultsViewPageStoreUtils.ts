@@ -4,6 +4,8 @@ import {
     ClinicalData,
     DiscreteCopyNumberData,
     GenericAssayEnrichment,
+    GenericAssayBinaryEnrichment,
+    GenericAssayCategoricalEnrichment,
     MolecularProfile,
     Mutation,
     NumericGeneMolecularData,
@@ -742,6 +744,61 @@ export function makeGenericAssayEnrichmentDataPromise(params: {
                     data,
                     sortGenericAssayEnrichmentData
                 );
+            } else {
+                return [];
+            }
+        },
+    });
+}
+
+export function makeGenericAssayBinaryEnrichmentDataPromise(params: {
+    resultViewPageStore?: ResultsViewPageStore;
+    await: MobxPromise_await;
+    getSelectedProfileMap: () => { [studyId: string]: MolecularProfile };
+    fetchData: () => Promise<GenericAssayBinaryEnrichment[]>;
+}): MobxPromise<GenericAssayBinaryEnrichment[]> {
+    return remoteData({
+        await: () => {
+            const ret = params.await();
+            if (params.resultViewPageStore) {
+                ret.push(params.resultViewPageStore.selectedMolecularProfiles);
+            }
+            return ret;
+        },
+        invoke: async () => {
+            const profileMap = params.getSelectedProfileMap();
+            if (profileMap) {
+                let data = await params.fetchData();
+                return calculateQValuesAndSortEnrichmentData(
+                    data,
+                    sortGenericAssayEnrichmentData
+                );
+            } else {
+                return [];
+            }
+        },
+    });
+}
+
+export function makeGenericAssayCategoricalEnrichmentDataPromise(params: {
+    resultViewPageStore?: ResultsViewPageStore;
+    await: MobxPromise_await;
+    getSelectedProfileMap: () => { [studyId: string]: MolecularProfile };
+    fetchData: () => Promise<GenericAssayCategoricalEnrichment[]>;
+}): MobxPromise<GenericAssayCategoricalEnrichment[]> {
+    return remoteData({
+        await: () => {
+            const ret = params.await();
+            if (params.resultViewPageStore) {
+                ret.push(params.resultViewPageStore.selectedMolecularProfiles);
+            }
+            return ret;
+        },
+        invoke: async () => {
+            const profileMap = params.getSelectedProfileMap();
+            if (profileMap) {
+                let data = await params.fetchData();
+                return data;
             } else {
                 return [];
             }
