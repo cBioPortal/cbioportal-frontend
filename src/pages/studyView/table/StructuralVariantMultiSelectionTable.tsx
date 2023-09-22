@@ -232,7 +232,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     filterStringUpper: string
                 ) => {
                     return data.label1
-                        .toUpperCase()
+                        ?.toUpperCase()
                         .includes(filterStringUpper);
                 },
                 width: columnWidth,
@@ -276,7 +276,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     filterStringUpper: string
                 ) => {
                     return data.label2
-                        .toUpperCase()
+                        ?.toUpperCase()
                         .includes(filterStringUpper);
                 },
                 width: columnWidth,
