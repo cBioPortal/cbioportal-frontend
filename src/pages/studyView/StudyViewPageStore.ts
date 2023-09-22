@@ -6977,6 +6977,13 @@ export class StudyViewPageStore
                 chartUserSettings.hugoGeneSymbol &&
                 chartUserSettings.profileType
             ) {
+                const molecularProfileOption = _.find(
+                    this.molecularProfileOptions.result,
+                    molecularProfileOption =>
+                        molecularProfileOption.value ===
+                        chartUserSettings.profileType
+                );
+
                 this.addGeneSpecificCharts(
                     [
                         {
@@ -6984,6 +6991,9 @@ export class StudyViewPageStore
                             description: chartUserSettings.description,
                             profileType: chartUserSettings.profileType,
                             hugoGeneSymbol: chartUserSettings.hugoGeneSymbol,
+                            dataType:
+                                molecularProfileOption?.dataType ||
+                                DataType.NUMBER,
                         },
                     ],
                     true
