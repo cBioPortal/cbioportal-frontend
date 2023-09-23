@@ -40,7 +40,12 @@ import {
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from 'shared/constants';
 import ifNotDefined from '../../lib/ifNotDefined';
-import { makeGeneticTrackTooltip } from 'shared/components/oncoprint/makeGeneticTrackTooltip';
+import {
+    DataUnderMouse,
+    makeGeneticTrackTooltip,
+} from 'shared/components/oncoprint/makeGeneticTrackTooltip';
+import $ from 'jquery';
+import getCustomJsFunctions from 'shared/getCustomJsFunctions';
 
 // This file implements functions that call imperative OncoprintJS library
 //  methods in order to keep the oncoprint in a state consistent with the
@@ -1096,6 +1101,19 @@ function transitionGeneticTrack(
         return;
     } else if (nextSpec && !prevSpec) {
         // Add track
+        const createCustomOncoprintTooltip = getCustomJsFunctions()
+            .createCustomOncoprintTooltip;
+        let tooltipFn;
+        if (createCustomOncoprintTooltip) {
+            tooltipFn = (dataUnderMouse: DataUnderMouse) =>
+                createCustomOncoprintTooltip(nextProps, dataUnderMouse);
+        } else {
+            tooltipFn = makeGeneticTrackTooltip(
+                nextProps.caseLinkOutInTooltips,
+                getMolecularProfileMap,
+                nextProps.alterationTypesInQuery
+            );
+        }
         const geneticTrackParams: UserTrackSpec<any> = {
             rule_set_params: getGeneticTrackRuleSetParams(
                 nextProps.distinguishMutationType,
@@ -1113,11 +1131,7 @@ function transitionGeneticTrack(
             description: nextSpec.oql,
             data_id_key: 'uid',
             data: nextSpec.data,
-            tooltipFn: makeGeneticTrackTooltip(
-                nextProps.caseLinkOutInTooltips,
-                getMolecularProfileMap,
-                nextProps.alterationTypesInQuery
-            ),
+            tooltipFn,
             track_info: nextSpec.info,
             $track_info_tooltip_elt: nextSpec.infoTooltip
                 ? $('<div>' + nextSpec.infoTooltip + '</div>')

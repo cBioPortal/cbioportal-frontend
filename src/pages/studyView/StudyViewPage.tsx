@@ -211,13 +211,12 @@ export default class StudyViewPage extends React.Component<
             (strArr: string[]) => {
                 this.store.initializeReaction();
                 trackEvent({
-                    category: 'studyPage',
-                    action: 'studyPageLoad',
-                    label: strArr.join(',') + ',',
-                    fieldsObject: {
-                        [GACustomFieldsEnum.VirtualStudy]: (
-                            this.store.filteredVirtualStudies.result!.length > 0
-                        ).toString(),
+                    eventName: 'studyPageLoad',
+                    parameters: {
+                        studies:
+                            this.store.queriedPhysicalStudies.result
+                                .map(s => s.studyId)
+                                .join(',') + ',',
                     },
                 });
             }

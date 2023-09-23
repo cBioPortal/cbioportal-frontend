@@ -4,13 +4,17 @@ export interface ISelectOption {
 }
 
 export function doesOptionMatchSearchText(text: string, option: ISelectOption) {
-    let result = false;
-    if (
-        !text ||
-        RegExp(text, 'i').test(option.label) ||
-        RegExp(text, 'i').test(option.value)
-    ) {
-        result = true;
+    try {
+        let result = false;
+        if (
+            !text ||
+            RegExp(text, 'i').test(option.label) ||
+            RegExp(text, 'i').test(option.value)
+        ) {
+            result = true;
+        }
+        return result;
+    } catch {
+        return false;
     }
-    return result;
 }

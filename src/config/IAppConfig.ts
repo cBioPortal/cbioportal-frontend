@@ -42,6 +42,7 @@ export interface IServerConfig {
     oncoprint_custom_driver_annotation_binary_menu_label: string | null; // default:
     disabled_tabs: string | null;
     custom_tabs: any[];
+    custom_js_urls: string; // comma delimited string
     oncoprint_custom_driver_annotation_binary_default: boolean;
     oncoprint_custom_driver_annotation_tiers_default: boolean;
     oncoprint_oncokb_default: boolean;

@@ -51,7 +51,7 @@ export const RevueTooltipContent: React.FunctionComponent<{
 };
 
 export function sortValue(vue: VUE | undefined): number {
-    return vue ? 1 : 0;
+    return 0;
 }
 
 export const RevueCell: React.FunctionComponent<{

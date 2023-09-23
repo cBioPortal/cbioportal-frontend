@@ -44,7 +44,10 @@ import _ from 'lodash';
 import {
     compareByAlterationPercentage,
     getAlterationRowData,
+    pickAllGenericAssayEnrichmentProfiles,
     pickCopyNumberEnrichmentProfiles,
+    pickGenericAssayBinaryEnrichmentProfiles,
+    pickGenericAssayCategoricalEnrichmentProfiles,
     pickGenericAssayEnrichmentProfiles,
     pickMethylationEnrichmentProfiles,
     pickMRNAEnrichmentProfiles,
@@ -55,6 +58,8 @@ import {
 import {
     makeEnrichmentDataPromise,
     makeGenericAssayEnrichmentDataPromise,
+    makeGenericAssayBinaryEnrichmentDataPromise,
+    makeGenericAssayCategoricalEnrichmentDataPromise,
 } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import autobind from 'autobind-decorator';
@@ -107,6 +112,7 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import AnalysisStore from './AnalysisStore';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { compileMutations } from './AnalysisStoreUtils';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -174,6 +180,12 @@ export default abstract class ComparisonStore extends AnalysisStore
                     !!this.tabHasBeenShown.get(
                         GroupComparisonTab.GENERIC_ASSAY_PREFIX
                     ) || this.showGenericAssayTab
+                );
+                this.tabHasBeenShown.set(
+                    GroupComparisonTab.GENERIC_ASSAY_BINARY_PREFIX,
+                    !!this.tabHasBeenShown.get(
+                        GroupComparisonTab.GENERIC_ASSAY_BINARY_PREFIX
+                    ) || this.showGenericAssayBinaryTab
                 );
                 this.tabHasBeenShown.set(
                     GroupComparisonTab.ALTERATIONS,
@@ -596,6 +608,28 @@ export default abstract class ComparisonStore extends AnalysisStore
             ),
     });
 
+    public readonly genericAssayAllEnrichmentProfilesGroupedByGenericAssayType = remoteData(
+        {
+            await: () => [this.molecularProfilesInActiveStudies],
+            invoke: () => {
+                const availableProfiles = this.appStore.featureFlagStore.has(
+                    FeatureFlagEnum.GENERIC_ASSAY_GROUP_COMPARISON
+                )
+                    ? this.molecularProfilesInActiveStudies.result!
+                    : pickGenericAssayEnrichmentProfiles(
+                          this.molecularProfilesInActiveStudies.result!
+                      );
+                return Promise.resolve(
+                    _.groupBy(
+                        pickAllGenericAssayEnrichmentProfiles(
+                            availableProfiles
+                        ),
+                        profile => profile.genericAssayType
+                    )
+                );
+            },
+        }
+    );
     public readonly genericAssayEnrichmentProfilesGroupedByGenericAssayType = remoteData(
         {
             await: () => [this.molecularProfilesInActiveStudies],
@@ -603,6 +637,36 @@ export default abstract class ComparisonStore extends AnalysisStore
                 Promise.resolve(
                     _.groupBy(
                         pickGenericAssayEnrichmentProfiles(
+                            this.molecularProfilesInActiveStudies.result!
+                        ),
+                        profile => profile.genericAssayType
+                    )
+                ),
+        }
+    );
+
+    public readonly genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType = remoteData(
+        {
+            await: () => [this.molecularProfilesInActiveStudies],
+            invoke: () =>
+                Promise.resolve(
+                    _.groupBy(
+                        pickGenericAssayBinaryEnrichmentProfiles(
+                            this.molecularProfilesInActiveStudies.result!
+                        ),
+                        profile => profile.genericAssayType
+                    )
+                ),
+        }
+    );
+
+    public readonly genericAssayCategoricalEnrichmentProfilesGroupedByGenericAssayType = remoteData(
+        {
+            await: () => [this.molecularProfilesInActiveStudies],
+            invoke: () =>
+                Promise.resolve(
+                    _.groupBy(
+                        pickGenericAssayCategoricalEnrichmentProfiles(
                             this.molecularProfilesInActiveStudies.result!
                         ),
                         profile => profile.genericAssayType
@@ -630,12 +694,29 @@ export default abstract class ComparisonStore extends AnalysisStore
         [studyId: string]: MolecularProfile;
     } = {};
     @observable.ref
+    private _selectedAllGenericAssayEnrichmentProfileMapGroupedByGenericAssayType: {
+        [geneircAssayType: string]: {
+            [studyId: string]: MolecularProfile;
+        };
+    } = {};
+    @observable.ref
     private _selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType: {
         [geneircAssayType: string]: {
             [studyId: string]: MolecularProfile;
         };
     } = {};
-
+    @observable.ref
+    private _selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType: {
+        [geneircAssayType: string]: {
+            [studyId: string]: MolecularProfile;
+        };
+    } = {};
+    @observable.ref
+    private _selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType: {
+        [geneircAssayType: string]: {
+            [studyId: string]: MolecularProfile;
+        };
+    } = {};
     readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
         await: () => [this.mutationEnrichmentProfiles],
         invoke: () => {
@@ -797,7 +878,45 @@ export default abstract class ComparisonStore extends AnalysisStore
             }
         },
     });
-
+    readonly selectedAllGenericAssayEnrichmentProfileMapGroupedByGenericAssayType = remoteData(
+        {
+            await: () => [
+                this.genericAssayAllEnrichmentProfilesGroupedByGenericAssayType,
+            ],
+            invoke: () => {
+                if (
+                    _.isEmpty(
+                        this
+                            ._selectedAllGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
+                    )
+                ) {
+                    return Promise.resolve(
+                        _.mapValues(
+                            this
+                                .genericAssayAllEnrichmentProfilesGroupedByGenericAssayType
+                                .result!,
+                            genericAssayEnrichmentProfiles => {
+                                const molecularProfilesbyStudyId = _.groupBy(
+                                    genericAssayEnrichmentProfiles,
+                                    profile => profile.studyId
+                                );
+                                // Select only one molecular profile for each study
+                                return _.mapValues(
+                                    molecularProfilesbyStudyId,
+                                    molecularProfiles => molecularProfiles[0]
+                                );
+                            }
+                        )
+                    );
+                } else {
+                    return Promise.resolve(
+                        this
+                            ._selectedAllGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
+                    );
+                }
+            },
+        }
+    );
     readonly selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType = remoteData(
         {
             await: () => [
@@ -838,6 +957,87 @@ export default abstract class ComparisonStore extends AnalysisStore
         }
     );
 
+    readonly selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType = remoteData(
+        {
+            await: () => [
+                this
+                    .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType,
+            ],
+            invoke: () => {
+                if (
+                    _.isEmpty(
+                        this
+                            ._selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType
+                    )
+                ) {
+                    return Promise.resolve(
+                        _.mapValues(
+                            this
+                                .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType
+                                .result!,
+                            genericAssayEnrichmentProfiles => {
+                                const molecularProfilesbyStudyId = _.groupBy(
+                                    genericAssayEnrichmentProfiles,
+                                    profile => profile.studyId
+                                );
+                                // Select only one molecular profile for each study
+                                return _.mapValues(
+                                    molecularProfilesbyStudyId,
+                                    molecularProfiles => molecularProfiles[0]
+                                );
+                            }
+                        )
+                    );
+                } else {
+                    return Promise.resolve(
+                        this
+                            ._selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType
+                    );
+                }
+            },
+        }
+    );
+
+    readonly selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType = remoteData(
+        {
+            await: () => [
+                this
+                    .genericAssayCategoricalEnrichmentProfilesGroupedByGenericAssayType,
+            ],
+            invoke: () => {
+                if (
+                    _.isEmpty(
+                        this
+                            ._selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType
+                    )
+                ) {
+                    return Promise.resolve(
+                        _.mapValues(
+                            this
+                                .genericAssayCategoricalEnrichmentProfilesGroupedByGenericAssayType
+                                .result!,
+                            genericAssayEnrichmentProfiles => {
+                                const molecularProfilesbyStudyId = _.groupBy(
+                                    genericAssayEnrichmentProfiles,
+                                    profile => profile.studyId
+                                );
+                                // Select only one molecular profile for each study
+                                return _.mapValues(
+                                    molecularProfilesbyStudyId,
+                                    molecularProfiles => molecularProfiles[0]
+                                );
+                            }
+                        )
+                    );
+                } else {
+                    return Promise.resolve(
+                        this
+                            ._selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType
+                    );
+                }
+            },
+        }
+    );
     @action
     public setMutationEnrichmentProfileMap(profileMap: {
         [studyId: string]: MolecularProfile;
@@ -878,6 +1078,23 @@ export default abstract class ComparisonStore extends AnalysisStore
         [studyId: string]: MolecularProfile;
     }) {
         this._methylationEnrichmentProfileMap = profileMap;
+    }
+
+    @action
+    public setAllGenericAssayEnrichmentProfileMap(
+        profileMap: {
+            [studyId: string]: MolecularProfile;
+        },
+        genericAssayType: string
+    ) {
+        const clonedMap = _.clone(
+            this
+                .selectedAllGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
+                .result!
+        );
+        clonedMap[genericAssayType] = profileMap;
+        // trigger the function to recompute
+        this._selectedAllGenericAssayEnrichmentProfileMapGroupedByGenericAssayType = clonedMap;
     }
 
     @action
@@ -1532,6 +1749,106 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
+    readonly gaBinaryEnrichmentGroupsByAssayType = remoteData({
+        await: () => [
+            this
+                .selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType,
+            this.enrichmentAnalysisGroups,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this
+                        .selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType
+                        .result!,
+                    selectedGenericAssayBinaryEnrichmentProfileMap => {
+                        let studyIds = Object.keys(
+                            selectedGenericAssayBinaryEnrichmentProfileMap
+                        );
+                        // assumes single study for now
+                        if (studyIds.length === 1) {
+                            return this.enrichmentAnalysisGroups.result!.reduce(
+                                (
+                                    acc: EnrichmentAnalysisComparisonGroup[],
+                                    group
+                                ) => {
+                                    // filter samples having mutation profile
+                                    const filteredSamples = group.samples.filter(
+                                        sample =>
+                                            selectedGenericAssayBinaryEnrichmentProfileMap[
+                                                sample.studyId
+                                            ] !== undefined
+                                    );
+                                    if (filteredSamples.length > 0) {
+                                        acc.push({
+                                            ...group,
+                                            samples: filteredSamples,
+                                            description: `samples in ${group.name}`,
+                                        });
+                                    }
+                                    return acc;
+                                },
+                                []
+                            );
+                        } else {
+                            return [];
+                        }
+                    }
+                )
+            );
+        },
+    });
+
+    readonly gaCategoricalEnrichmentGroupsByAssayType = remoteData({
+        await: () => [
+            this
+                .selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType,
+            this.enrichmentAnalysisGroups,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this
+                        .selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType
+                        .result!,
+                    selectedGenericAssayCategoricalEnrichmentProfileMap => {
+                        let studyIds = Object.keys(
+                            selectedGenericAssayCategoricalEnrichmentProfileMap
+                        );
+                        // assumes single study for now
+                        if (studyIds.length === 1) {
+                            return this.enrichmentAnalysisGroups.result!.reduce(
+                                (
+                                    acc: EnrichmentAnalysisComparisonGroup[],
+                                    group
+                                ) => {
+                                    // filter samples having mutation profile
+                                    const filteredSamples = group.samples.filter(
+                                        sample =>
+                                            selectedGenericAssayCategoricalEnrichmentProfileMap[
+                                                sample.studyId
+                                            ] !== undefined
+                                    );
+                                    if (filteredSamples.length > 0) {
+                                        acc.push({
+                                            ...group,
+                                            samples: filteredSamples,
+                                            description: `samples in ${group.name}`,
+                                        });
+                                    }
+                                    return acc;
+                                },
+                                []
+                            );
+                        } else {
+                            return [];
+                        }
+                    }
+                )
+            );
+        },
+    });
+
     readonly gaEnrichmentDataQueryByAssayType = remoteData({
         await: () => [
             this.gaEnrichmentGroupsByAssayType,
@@ -1570,6 +1887,81 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
+    readonly gaBinaryEnrichmentDataQueryByAssayType = remoteData({
+        await: () => [
+            this.gaBinaryEnrichmentGroupsByAssayType,
+            this
+                .selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this.gaBinaryEnrichmentGroupsByAssayType.result!,
+                    (
+                        genericAssayEnrichmentAnalysisGroups,
+                        genericAssayType
+                    ) => {
+                        return genericAssayEnrichmentAnalysisGroups.map(
+                            group => {
+                                const molecularProfileCaseIdentifiers = group.samples.map(
+                                    sample => ({
+                                        caseId: sample.sampleId,
+                                        molecularProfileId: this
+                                            .selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType
+                                            .result![genericAssayType][
+                                            sample.studyId
+                                        ].molecularProfileId,
+                                    })
+                                );
+                                return {
+                                    name: group.name,
+                                    molecularProfileCaseIdentifiers,
+                                };
+                            }
+                        );
+                    }
+                )
+            );
+        },
+    });
+
+    readonly gaCategoricalEnrichmentDataQueryByAssayType = remoteData({
+        await: () => [
+            this.gaCategoricalEnrichmentGroupsByAssayType,
+            this
+                .selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this.gaCategoricalEnrichmentGroupsByAssayType.result!,
+                    (
+                        genericAssayEnrichmentAnalysisGroups,
+                        genericAssayType
+                    ) => {
+                        return genericAssayEnrichmentAnalysisGroups.map(
+                            group => {
+                                const molecularProfileCaseIdentifiers = group.samples.map(
+                                    sample => ({
+                                        caseId: sample.sampleId,
+                                        molecularProfileId: this
+                                            .selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType
+                                            .result![genericAssayType][
+                                            sample.studyId
+                                        ].molecularProfileId,
+                                    })
+                                );
+                                return {
+                                    name: group.name,
+                                    molecularProfileCaseIdentifiers,
+                                };
+                            }
+                        );
+                    }
+                )
+            );
+        },
+    });
     readonly gaEnrichmentDataByAssayType = remoteData({
         await: () => [this.gaEnrichmentDataQueryByAssayType],
         invoke: () => {
@@ -1603,6 +1995,86 @@ export default abstract class ComparisonStore extends AnalysisStore
                                 }
                             },
                         });
+                    }
+                )
+            );
+        },
+    });
+
+    readonly gaBinaryEnrichmentDataByAssayType = remoteData({
+        await: () => [this.gaBinaryEnrichmentDataQueryByAssayType],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this.gaBinaryEnrichmentDataQueryByAssayType.result!,
+                    (
+                        genericAssayEnrichmentDataRequestGroups,
+                        genericAssayType
+                    ) => {
+                        return makeGenericAssayBinaryEnrichmentDataPromise({
+                            await: () => [],
+                            getSelectedProfileMap: () =>
+                                this
+                                    .selectedGenericAssayBinaryEnrichmentProfileMapGroupedByGenericAssayType
+                                    .result![genericAssayType], // returns an empty array if the selected study doesn't have any generic assay profiles
+                            fetchData: () => {
+                                if (
+                                    genericAssayEnrichmentDataRequestGroups &&
+                                    genericAssayEnrichmentDataRequestGroups.length >
+                                        1
+                                ) {
+                                    return internalClient.fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOST(
+                                        {
+                                            enrichmentType: 'SAMPLE',
+                                            groups: genericAssayEnrichmentDataRequestGroups,
+                                        }
+                                    );
+                                } else {
+                                    return Promise.resolve([]);
+                                }
+                            },
+                        });
+                    }
+                )
+            );
+        },
+    });
+
+    readonly gaCategoricalEnrichmentDataByAssayType = remoteData({
+        await: () => [this.gaCategoricalEnrichmentDataQueryByAssayType],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this.gaCategoricalEnrichmentDataQueryByAssayType.result!,
+                    (
+                        genericAssayEnrichmentDataRequestGroups,
+                        genericAssayType
+                    ) => {
+                        return makeGenericAssayCategoricalEnrichmentDataPromise(
+                            {
+                                await: () => [],
+                                getSelectedProfileMap: () =>
+                                    this
+                                        .selectedGenericAssayCategoricalEnrichmentProfileMapGroupedByGenericAssayType
+                                        .result![genericAssayType], // returns an empty array if the selected study doesn't have any generic assay profiles
+                                fetchData: () => {
+                                    if (
+                                        genericAssayEnrichmentDataRequestGroups &&
+                                        genericAssayEnrichmentDataRequestGroups.length >
+                                            1
+                                    ) {
+                                        return internalClient.fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOST(
+                                            {
+                                                enrichmentType: 'SAMPLE',
+                                                groups: genericAssayEnrichmentDataRequestGroups,
+                                            }
+                                        );
+                                    } else {
+                                        return Promise.resolve([]);
+                                    }
+                                },
+                            }
+                        );
                     }
                 )
             );
@@ -1780,6 +2252,31 @@ export default abstract class ComparisonStore extends AnalysisStore
         );
     }
 
+    @computed get genericAssayBinaryTabShowable() {
+        return (
+            this.genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType
+                .isComplete &&
+            _.size(
+                this
+                    .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType
+                    .result!
+            ) > 0
+        );
+    }
+
+    @computed get genericAssayCategoricalTabShowable() {
+        return (
+            this
+                .genericAssayCategoricalEnrichmentProfilesGroupedByGenericAssayType
+                .isComplete &&
+            _.size(
+                this
+                    .genericAssayCategoricalEnrichmentProfilesGroupedByGenericAssayType
+                    .result!
+            ) > 0
+        );
+    }
+
     @computed get showGenericAssayTab() {
         return !!(
             this.genericAssayTabShowable ||
@@ -1791,6 +2288,28 @@ export default abstract class ComparisonStore extends AnalysisStore
         );
     }
 
+    @computed get showGenericAssayBinaryTab() {
+        return !!(
+            this.genericAssayBinaryTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(
+                    GroupComparisonTab.GENERIC_ASSAY_BINARY_PREFIX
+                ))
+        );
+    }
+
+    @computed get showGenericAssayCategoricalTab() {
+        return !!(
+            this.genericAssayCategoricalTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(
+                    GroupComparisonTab.GENERIC_ASSAY_CATEGORICAL_PREFIX
+                ))
+        );
+    }
+
     @computed get genericAssayTabUnavailable() {
         return (
             (this.activeGroups.isComplete &&
@@ -1798,6 +2317,26 @@ export default abstract class ComparisonStore extends AnalysisStore
             (this.activeStudyIds.isComplete &&
                 this.activeStudyIds.result.length > 1) || //more than one active study
             !this.genericAssayTabShowable
+        );
+    }
+
+    @computed get genericAssayBinaryTabUnavailable() {
+        return (
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result.length < 2) || //less than two active groups
+            (this.activeStudyIds.isComplete &&
+                this.activeStudyIds.result.length > 1) || //more than one active study
+            !this.genericAssayBinaryTabShowable
+        );
+    }
+
+    @computed get genericAssayCategoricalTabUnavailable() {
+        return (
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result.length < 2) || //less than two active groups
+            (this.activeStudyIds.isComplete &&
+                this.activeStudyIds.result.length > 1) || //more than one active study
+            !this.genericAssayCategoricalTabShowable
         );
     }
 

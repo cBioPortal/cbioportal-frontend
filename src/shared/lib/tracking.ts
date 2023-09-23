@@ -22,9 +22,30 @@ export type GAEvent = {
     fieldsObject?: { [key: string]: string | number };
 };
 
+export type GA4Event = {
+    eventName: string;
+    parameters: { [key: string]: string | number };
+};
+
+function detectGA4() {
+    return (
+        true || /^G-/.test(getServerConfig().google_analytics_profile_id || '')
+    );
+}
+
 export function initializeTracking() {
     if (!_.isEmpty(getServerConfig().google_analytics_profile_id)) {
-        embedGoogleAnalytics(getServerConfig().google_analytics_profile_id!);
+        // Google Analaytics v4 replaced Universal Analytics in 2023 and we can detect the new
+        // implementation based on the prefix (G-) of the analytics id, e.g. "G-XXXXXXXX"
+        if (detectGA4()) {
+            embedGoogleAnalyticsVersion4(
+                getServerConfig().google_analytics_profile_id!
+            );
+        } else {
+            embedGoogleAnalytics(
+                getServerConfig().google_analytics_profile_id!
+            );
+        }
     }
 
     $('body').on('click', '[data-event]', el => {
@@ -37,18 +58,14 @@ export function initializeTracking() {
     });
 }
 
-export function trackEvent(event: GAEvent) {
+export function trackEvent(event: any) {
+    //
     // trackEvent is used to send custom UI events which may depend on custom configuration within GA
-    // for other installers, we want to shut these off, leaving them with bare-bones out-of-box GA implemenation
+    // for other installers, we want to shut these off, leaving them with bare-bones out-of-box GA implementaion
     if (/cbioportal\.org$|mskcc\.org$/.test(getBrowserWindow().location.host)) {
-        getGAInstance()(
-            'send',
-            'event',
-            event.category,
-            event.action,
-            event.label,
-            event.fieldsObject
-        );
+        if (detectGA4() && event.eventName) {
+            getGA4Instance()('event', event.eventName, event.parameters);
+        }
     }
 }
 
@@ -123,11 +140,41 @@ export function embedGoogleAnalytics(ga_code: string) {
     });
 }
 
+export function embedGoogleAnalyticsVersion4(ga_code: string) {
+    $(document).ready(function() {
+        $(
+            `<script async src="https://www.googletagmanager.com/gtag/js?id=${ga_code}"></script>`
+        ).appendTo('body');
+
+        getBrowserWindow().dataLayer = getBrowserWindow().dataLayer || [];
+
+        function gtag(...args: any[]) {
+            getBrowserWindow().dataLayer.push(arguments);
+        }
+
+        getBrowserWindow().gtag = gtag;
+
+        gtag('js', new Date());
+
+        gtag('config', ga_code);
+
+        sendToLoggly({ message: 'PAGE_VIEW' });
+    });
+}
+
 export function sendSentryMessage(msg: string) {
     log('sentry message', msg);
     if ((window as any).Sentry) {
         (window as any).Sentry.captureException(new Error(msg));
     }
+}
+
+export function getGA4Instance() {
+    return getBrowserWindow().gtag as (
+        command: string,
+        eventName: string,
+        parameters: any
+    ) => void;
 }
 
 export function getGAInstance(): UniversalAnalytics.ga {
@@ -139,13 +186,7 @@ export function getGAInstance(): UniversalAnalytics.ga {
 let queryCount = 0;
 
 export enum GACustomFieldsEnum {
-    QueryCount = 'metric1',
-    OQL = 'dimension1',
-    StudyCount = 'metric2',
-    Genes = 'dimension2',
-    VirtualStudy = 'dimension3',
-    StudyId = 'dimension4',
-    GroupCount = 'metric3',
+    Studies = 'studies',
 }
 
 export function trackQuery(
@@ -154,24 +195,13 @@ export function trackQuery(
     geneSymbols: string[],
     isVirtualStudy: boolean
 ) {
-    const qCount = queryCount++;
-
-    getGAInstance()('send', 'event', 'resultsView', 'queryCount', qCount);
-
-    getGAInstance()(
-        'send',
-        'event',
-        'resultsView',
-        'query',
-        cancerStudyIds.join(',') + ',',
-        {
-            [GACustomFieldsEnum.QueryCount]: qCount,
-            [GACustomFieldsEnum.OQL]: oql,
-            [GACustomFieldsEnum.StudyCount]: cancerStudyIds.length,
-            [GACustomFieldsEnum.Genes]: geneSymbols.join(',') + ',',
-            [GACustomFieldsEnum.VirtualStudy]: isVirtualStudy.toString(),
-        }
-    );
+    getGA4Instance()('event', 'resultsViewQuery', {
+        ['studies']: cancerStudyIds.join(',') + ',',
+        ['oql']: oql,
+        ['study count']: cancerStudyIds.length,
+        ['genes']: geneSymbols.join(',') + ',',
+        ['virtual study']: isVirtualStudy.toString(),
+    });
 }
 
 export function trackPatient(studyId: string): void {
@@ -191,7 +221,7 @@ export function trackStudyViewFilterEvent(
         action: 'addFilter',
         label: label,
         fieldsObject: {
-            [GACustomFieldsEnum.StudyId]:
+            [GACustomFieldsEnum.Studies]:
                 store.queriedPhysicalStudyIds.result.join(',') + ',',
         },
     });
