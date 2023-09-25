@@ -266,24 +266,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, dont color by driver vs VUS', function() {
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
-        $('.oncoprinterGeneticExampleData').waitForExist();
-        $('.oncoprinterClinicalExampleData').waitForExist();
-        $('.oncoprinterHeatmapExampleData').waitForExist();
-        $('.oncoprinterGeneticExampleData').click();
-        $('.oncoprinterClinicalExampleData').click();
-        $('.oncoprinterHeatmapExampleData').click();
-        $('.oncoprinterSubmit').click();
-        waitForOncoprint(TIMEOUT);
-        setOncoprintMutationsMenuOpen(true);
-        $('input[data-test="ColorByDriver"]').click();
-        waitForOncoprint(TIMEOUT);
-        setOncoprintMutationsMenuOpen(false); // get it out of the way for screenshot
 
-        var res = checkOncoprintElement();
-        assertScreenShotMatch(res);
-    });
     it('oncoprinter example data, hide VUS', function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();

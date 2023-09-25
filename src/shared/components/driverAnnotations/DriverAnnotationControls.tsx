@@ -6,12 +6,10 @@ import {
     IDriverAnnotationControlsState,
     IDriverAnnotationControlsHandlers,
 } from '../../alterationFiltering/AnnotationFilteringSettings';
-import {
-    EditableSpan,
-    DefaultTooltip,
-    getNCBIlink,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getNCBIlink } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
+import styles from './styles.module.scss';
+import InfoIcon from 'shared/components/InfoIcon';
 
 enum EVENT_KEY {
     distinguishDrivers = '0',
@@ -79,61 +77,54 @@ export default class DriverAnnotationControls extends React.Component<
 
     render() {
         return (
-            <div>
-                <div className="checkbox">
-                    <label>
-                        <input
-                            data-test="ColorByDriver"
-                            type="checkbox"
-                            value={EVENT_KEY.distinguishDrivers}
-                            checked={this.props.state.distinguishDrivers}
-                            onClick={this.onInputClick}
+            <>
+                <div>
+                    <p className={styles.headerSubsection}>
+                        Driver annotations:
+                        <InfoIcon
+                            style={{ color: 'grey' }}
+                            divStyle={{
+                                display: 'inline-block',
+                                marginLeft: 6,
+                            }}
+                            tooltip={<>Annotate drivers from these sources</>}
                         />
-                        Putative drivers vs VUS:
-                    </label>
-                </div>
-                <div style={{ marginLeft: '20px' }}>
-                    {this.props.showOnckbAnnotationControls && (
-                        <span>
-                            {!this.props.state
-                                .annotateDriversOncoKbDisabled && (
-                                <div className="checkbox">
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            value={EVENT_KEY.annotateOncoKb}
-                                            checked={
-                                                this.props.state
-                                                    .annotateDriversOncoKb
-                                            }
-                                            onClick={this.onInputClick}
-                                            data-test="annotateOncoKb"
-                                            disabled={
-                                                this.props.state
-                                                    .annotateDriversOncoKbError
-                                            }
-                                        />
-                                        {this.props.state
-                                            .annotateDriversOncoKbError && (
-                                            <ErrorIcon
-                                                style={{ marginRight: 4 }}
-                                                tooltip={
-                                                    <span>
-                                                        Error loading OncoKb
-                                                        data. Please refresh the
-                                                        page or try again later.
-                                                    </span>
+                    </p>
+                    <div style={{ marginLeft: '20px' }}>
+                        {this.props.showOnckbAnnotationControls && (
+                            <>
+                                {!this.props.state
+                                    .annotateDriversOncoKbDisabled && (
+                                    <div className="checkbox">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                value={EVENT_KEY.annotateOncoKb}
+                                                checked={
+                                                    this.props.state
+                                                        .annotateDriversOncoKb
+                                                }
+                                                onClick={this.onInputClick}
+                                                data-test="annotateOncoKb"
+                                                disabled={
+                                                    this.props.state
+                                                        .annotateDriversOncoKbError
                                                 }
                                             />
-                                        )}
-                                        <DefaultTooltip
-                                            overlay={
-                                                <span>
-                                                    Oncogenicity from OncoKB™
-                                                </span>
-                                            }
-                                            placement="top"
-                                        >
+                                            {this.props.state
+                                                .annotateDriversOncoKbError && (
+                                                <ErrorIcon
+                                                    style={{ marginRight: 4 }}
+                                                    tooltip={
+                                                        <span>
+                                                            Error loading OncoKb
+                                                            data. Please refresh
+                                                            the page or try
+                                                            again later.
+                                                        </span>
+                                                    }
+                                                />
+                                            )}
                                             <img
                                                 src={require('oncokb-styles/dist/images/logo/oncokb.svg')}
                                                 style={{
@@ -142,187 +133,218 @@ export default class DriverAnnotationControls extends React.Component<
                                                     marginRight: '5px',
                                                 }}
                                             />
-                                        </DefaultTooltip>
-                                        driver annotation
-                                    </label>
-                                </div>
-                            )}
-                            {this.props.handlers.onSelectAnnotateHotspots &&
-                                !this.props.state
-                                    .annotateDriversHotspotsDisabled && (
-                                    <div className="checkbox">
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                value={
-                                                    EVENT_KEY.annotateHotspots
-                                                }
-                                                checked={
-                                                    this.props.state
-                                                        .annotateDriversHotspots
-                                                }
-                                                onClick={this.onInputClick}
-                                                data-test="annotateHotspots"
-                                                disabled={
-                                                    this.props.state
-                                                        .annotateDriversHotspotsError
+                                            <InfoIcon
+                                                style={{ color: 'grey' }}
+                                                divStyle={{
+                                                    display: 'inline-block',
+                                                    marginLeft: 6,
+                                                }}
+                                                tooltip={
+                                                    <>
+                                                        Oncogenicity from
+                                                        OncoKB™
+                                                    </>
                                                 }
                                             />
-                                            {this.props.state
-                                                .annotateDriversHotspotsError && (
-                                                <ErrorIcon
-                                                    style={{ marginRight: 4 }}
-                                                    tooltip={
-                                                        <span>
-                                                            Error loading
-                                                            Hotspots data.
-                                                            Please refresh the
-                                                            page or try again
-                                                            later.
-                                                        </span>
-                                                    }
-                                                />
-                                            )}
-                                            Hotspots
-                                            <DefaultTooltip
-                                                overlay={
-                                                    <div
-                                                        style={{
-                                                            maxWidth: '400px',
-                                                        }}
-                                                    >
-                                                        Identified as a
-                                                        recurrent hotspot
-                                                        (statistically
-                                                        significant) in a
-                                                        population-scale cohort
-                                                        of tumor samples of
-                                                        various cancer types
-                                                        using methodology based
-                                                        in part on{' '}
-                                                        <a
-                                                            href={getNCBIlink(
-                                                                '/pubmed/26619011'
-                                                            )}
-                                                            target="_blank"
-                                                        >
-                                                            Chang et al., Nat
-                                                            Biotechnol, 2016.
-                                                        </a>
-                                                        Explore all mutations at{' '}
-                                                        <a
-                                                            href="https://www.cancerhotspots.org"
-                                                            target="_blank"
-                                                        >
-                                                            https://cancerhotspots.org
-                                                        </a>
-                                                    </div>
-                                                }
-                                                placement="top"
-                                            >
-                                                <img
-                                                    src={require('../../../rootImages/cancer-hotspots.svg')}
-                                                    style={{
-                                                        height: '15px',
-                                                        width: '15px',
-                                                        cursor: 'pointer',
-                                                        marginLeft: '5px',
-                                                    }}
-                                                />
-                                            </DefaultTooltip>
                                         </label>
                                     </div>
                                 )}
-                        </span>
-                    )}
-                    {!!this.props.state
-                        .customDriverAnnotationBinaryMenuLabel && (
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={
-                                        this.props.state
-                                            .annotateCustomDriverBinary
-                                    }
-                                    value={
-                                        EVENT_KEY.customDriverBinaryAnnotation
-                                    }
-                                    onClick={this.onInputClick}
-                                    data-test="annotateCustomBinary"
-                                />{' '}
-                                {
-                                    this.props.state
-                                        .customDriverAnnotationBinaryMenuLabel
-                                }
-                                <img
-                                    src={require('../../../rootImages/driver.svg')}
-                                    alt="driver filter"
-                                    style={{
-                                        height: '15px',
-                                        width: '15px',
-                                        cursor: 'pointer',
-                                        marginLeft: '5px',
-                                    }}
-                                />
-                            </label>
-                        </div>
-                    )}
-                    {!!this.props.state
-                        .customDriverAnnotationTiersMenuLabel && (
-                        <span data-test="annotateCustomTiers">
-                            <span className="caret" />
-                            &nbsp;&nbsp;
-                            <span>
-                                {
-                                    this.props.state
-                                        .customDriverAnnotationTiersMenuLabel
-                                }
-                            </span>
-                            &nbsp;
-                            <img
-                                src={require('../../../rootImages/driver_tiers.png')}
-                                alt="driver tiers filter"
-                                style={{
-                                    height: '15px',
-                                    width: '15px',
-                                    cursor: 'pointer',
-                                    marginLeft: '5px',
-                                }}
-                            />
-                            <div style={{ marginLeft: '30px' }}>
-                                {(
-                                    this.props.state
-                                        .customDriverAnnotationTiers || []
-                                ).map(tier => (
-                                    <div className="checkbox">
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                value={tier}
-                                                checked={
-                                                    !!(
+                                {this.props.handlers.onSelectAnnotateHotspots &&
+                                    !this.props.state
+                                        .annotateDriversHotspotsDisabled && (
+                                        <div className="checkbox">
+                                            <label>
+                                                <input
+                                                    type="checkbox"
+                                                    value={
+                                                        EVENT_KEY.annotateHotspots
+                                                    }
+                                                    checked={
                                                         this.props.state
-                                                            .selectedCustomDriverAnnotationTiers &&
-                                                        this.props.state.selectedCustomDriverAnnotationTiers.get(
-                                                            tier
-                                                        )
-                                                    )
-                                                }
-                                                onClick={
-                                                    this
-                                                        .onCustomDriverTierCheckboxClick
-                                                }
-                                            />{' '}
-                                            {tier}
-                                        </label>
-                                    </div>
-                                ))}
+                                                            .annotateDriversHotspots
+                                                    }
+                                                    onClick={this.onInputClick}
+                                                    data-test="annotateHotspots"
+                                                    disabled={
+                                                        this.props.state
+                                                            .annotateDriversHotspotsError
+                                                    }
+                                                />
+                                                {this.props.state
+                                                    .annotateDriversHotspotsError && (
+                                                    <ErrorIcon
+                                                        style={{
+                                                            marginRight: 4,
+                                                        }}
+                                                        tooltip={
+                                                            <span>
+                                                                Error loading
+                                                                Hotspots data.
+                                                                Please refresh
+                                                                the page or try
+                                                                again later.
+                                                            </span>
+                                                        }
+                                                    />
+                                                )}
+                                                Hotspots
+                                                <DefaultTooltip
+                                                    overlay={
+                                                        <div
+                                                            style={{
+                                                                maxWidth:
+                                                                    '400px',
+                                                            }}
+                                                        >
+                                                            Identified as a
+                                                            recurrent hotspot
+                                                            (statistically
+                                                            significant) in a
+                                                            population-scale
+                                                            cohort of tumor
+                                                            samples of various
+                                                            cancer types using
+                                                            methodology based in
+                                                            part on{' '}
+                                                            <a
+                                                                href={getNCBIlink(
+                                                                    '/pubmed/26619011'
+                                                                )}
+                                                                target="_blank"
+                                                            >
+                                                                Chang et al.,
+                                                                Nat Biotechnol,
+                                                                2016.
+                                                            </a>
+                                                            Explore all
+                                                            mutations at{' '}
+                                                            <a
+                                                                href="https://www.cancerhotspots.org"
+                                                                target="_blank"
+                                                            >
+                                                                https://cancerhotspots.org
+                                                            </a>
+                                                        </div>
+                                                    }
+                                                    placement="top"
+                                                >
+                                                    <img
+                                                        src={require('../../../rootImages/cancer-hotspots.svg')}
+                                                        style={{
+                                                            height: '15px',
+                                                            width: '15px',
+                                                            cursor: 'pointer',
+                                                            marginLeft: '5px',
+                                                        }}
+                                                    />
+                                                </DefaultTooltip>
+                                            </label>
+                                        </div>
+                                    )}
+                            </>
+                        )}
+                        {!!this.props.state
+                            .customDriverAnnotationBinaryMenuLabel && (
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={
+                                            this.props.state
+                                                .annotateCustomDriverBinary
+                                        }
+                                        value={
+                                            EVENT_KEY.customDriverBinaryAnnotation
+                                        }
+                                        onClick={this.onInputClick}
+                                        data-test="annotateCustomBinary"
+                                    />{' '}
+                                    {
+                                        this.props.state
+                                            .customDriverAnnotationBinaryMenuLabel
+                                    }
+                                    <img
+                                        src={require('../../../rootImages/driver.svg')}
+                                        alt="driver filter"
+                                        style={{
+                                            height: '15px',
+                                            width: '15px',
+                                            cursor: 'pointer',
+                                            marginLeft: '5px',
+                                        }}
+                                    />
+                                    <InfoIcon
+                                        style={{ color: 'grey' }}
+                                        divStyle={{
+                                            display: 'inline-block',
+                                            marginLeft: 6,
+                                        }}
+                                        tooltip={
+                                            <>
+                                                Use driver annotations from
+                                                source data
+                                            </>
+                                        }
+                                    />
+                                </label>
                             </div>
-                        </span>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
+                {!!this.props.state.customDriverAnnotationTiersMenuLabel && (
+                    <span data-test="annotateCustomTiers">
+                        <p className={styles.headerSubsection}>
+                            {
+                                this.props.state
+                                    .customDriverAnnotationTiersMenuLabel
+                            }
+                            :
+                            <InfoIcon
+                                style={{ color: 'grey' }}
+                                divStyle={{
+                                    display: 'inline-block',
+                                    marginLeft: 6,
+                                }}
+                                tooltip={
+                                    <>
+                                        Consider these annotation tiers as
+                                        driver
+                                    </>
+                                }
+                            />
+                        </p>
+                        <div style={{ marginLeft: '20px' }}>
+                            {(
+                                this.props.state.customDriverAnnotationTiers ||
+                                []
+                            ).map(tier => (
+                                <div className="checkbox">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            value={tier}
+                                            checked={
+                                                !!(
+                                                    this.props.state
+                                                        .selectedCustomDriverAnnotationTiers &&
+                                                    this.props.state.selectedCustomDriverAnnotationTiers.get(
+                                                        tier
+                                                    )
+                                                )
+                                            }
+                                            onClick={
+                                                this
+                                                    .onCustomDriverTierCheckboxClick
+                                            }
+                                        />{' '}
+                                        {tier}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </span>
+                )}
+            </>
         );
     }
 }
