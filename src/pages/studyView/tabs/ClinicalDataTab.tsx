@@ -59,7 +59,7 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
     sortDirection: 'asc' | 'desc' | undefined,
     recordLimit: number
 ) {
-    let sampleClinicalData = await getAllClinicalDataByStudyViewFilter(
+    let sampleClinicalDataResponse = await getAllClinicalDataByStudyViewFilter(
         filters,
         searchTerm,
         sortAttributeId,
@@ -68,7 +68,7 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
     );
 
     const aggregatedSampleClinicalData = _.mapValues(
-        sampleClinicalData,
+        sampleClinicalDataResponse.data,
         (attrs, uniqueSampleId) => {
             const sample = sampleSetByKey[uniqueSampleId];
             const sampleData = {
@@ -85,7 +85,7 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
     );
 
     return {
-        totalItems: _.keys(sampleClinicalData).length,
+        totalItems: sampleClinicalDataResponse.totalItems,
         data: _.values(aggregatedSampleClinicalData),
     };
 }
