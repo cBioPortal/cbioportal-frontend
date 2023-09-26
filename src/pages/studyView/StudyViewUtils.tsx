@@ -27,6 +27,7 @@ import {
     PatientIdentifier,
     PatientTreatmentRow,
     Sample,
+    SampleClinicalDataCollection,
     SampleIdentifier,
     SampleTreatmentRow,
     StructuralVariantFilterQuery,
@@ -3162,19 +3163,33 @@ export async function getAllClinicalDataByStudyViewFilter(
     sortAttributeId: any,
     sortDirection: any = 'asc',
     pageSize: number = 500
-): Promise<{ [uniqueSampleKey: string]: ClinicalData[] }> {
-    const response = await internalClient.fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(
-        {
+): Promise<{
+    totalItems: number;
+    data: { [uniqueSampleKey: string]: ClinicalData[] };
+}> {
+    const [remoteClinicalDataCollection, totalItems]: [
+        SampleClinicalDataCollection,
+        number
+    ] = await internalClient
+        .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
             studyViewFilter,
             pageSize,
             pageNumber: 0,
             searchTerm: searchTerm,
             sortBy: sortAttributeId,
             direction: sortDirection?.toUpperCase(),
-        }
-    );
+        })
+        .then(response => {
+            return [
+                response.body,
+                parseInt(response.header['total-count'] || 0),
+            ];
+        });
 
-    return response.body.byUniqueSampleKey;
+    return {
+        totalItems,
+        data: remoteClinicalDataCollection.byUniqueSampleKey,
+    };
 }
 
 export function convertClinicalDataBinsToDataBins(
