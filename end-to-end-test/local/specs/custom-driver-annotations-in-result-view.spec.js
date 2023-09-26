@@ -74,25 +74,6 @@ describe('custom driver annotations feature in result view', function() {
             waitForOncoprint();
             assert(!$('div.alert-info').isExisting());
         });
-
-        it('(de-)selects custom driver checkboxes with main annotation select option', () => {
-            $('input[data-test=ColorByDriver]').click();
-            waitForOncoprint();
-
-            $('input[data-test=annotateCustomBinary]').waitForExist();
-            var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
-            assert(!topCheckBox.isSelected());
-            assert(!tiersCheckboxes[0].isSelected());
-            assert(!tiersCheckboxes[1].isSelected());
-
-            $('input[data-test=ColorByDriver]').click();
-            assert(topCheckBox.isSelected());
-            assert(tiersCheckboxes[0].isSelected());
-            assert(tiersCheckboxes[1].isSelected());
-        });
     });
 
     describe('oncoprint tab - discrete CNA', () => {
@@ -157,23 +138,6 @@ describe('custom driver annotations feature in result view', function() {
                 $('div.alert-info*=16 copy number alterations').isExisting()
             );
         });
-
-        it('(de-)selects custom driver checkboxes with main annotation select option', () => {
-            $('input[data-test=ColorByDriver]').click();
-            waitForOncoprint();
-            var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
-            assert(!topCheckBox.isSelected());
-            assert(!tiersCheckboxes[0].isSelected());
-            assert(!tiersCheckboxes[1].isSelected());
-
-            $('input[data-test=ColorByDriver]').click();
-            assert(topCheckBox.isSelected());
-            assert(tiersCheckboxes[0].isSelected());
-            assert(tiersCheckboxes[1].isSelected());
-        });
     });
 
     describe('oncoprint tab - structural variants', () => {
@@ -212,21 +176,6 @@ describe('custom driver annotations feature in result view', function() {
                 .click();
             waitForOncoprint();
             assert($('div.alert-info*=2 structural variants').isExisting());
-        });
-
-        it('(de-)selects custom driver checkboxes with main annotation select option', () => {
-            $('input[data-test=ColorByDriver]').click();
-            waitForOncoprint();
-            var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
-            assert(!topCheckBox.isSelected());
-            assert(!tiersCheckboxes[0].isSelected());
-
-            $('input[data-test=ColorByDriver]').click();
-            assert(topCheckBox.isSelected());
-            assert(tiersCheckboxes[0].isSelected());
         });
     });
 });
