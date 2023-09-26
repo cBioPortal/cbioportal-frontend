@@ -66,7 +66,9 @@
     "e2e:spinup": "./scripts/e2e.sh",
     "e2e:local": "export RETRIES=0 && export CBIOPORTAL_URL=http://localhost:8080 && export && export SCREENSHOT_DIRECTORY=/local/screenshots/ && cd end-to-end-test && yarn run test-webdriver-manager-local",
     "e2e:remote": "export RETRIES=0 export CBIOPORTAL_URL=https://www.cbioportal.org && export RETRIES=0 && export SCREENSHOT_DIRECTORY=/remote/screenshots/ &&  rm -r -f end-to-end-test/shared/results && cd end-to-end-test && yarn run test-webdriver-manager-remote",
-    "e2e:report": "npx http-server end-to-end-test -o /shared/imageCompare.html -p 8089"
+    "e2e:report": "npx http-server end-to-end-test -o /shared/imageCompare.html -p 8089",
+    "prepare": "yarn run snyk-protect",
+    "snyk-protect": "snyk-protect"
   },
   "engines": {
     "node": "15.2.1",
@@ -203,7 +205,7 @@
     "jstree": "^3.3.4",
     "jszip": "^3.7.1",
     "lerna": "3.19.0",
-    "less": "^2.7.2",
+    "less": "^3.0.2",
     "linear-algebra": "^3.1.4",
     "little-loader": "^0.2.0",
     "loader-utils": "^1.0.2",
@@ -336,8 +338,9 @@
     "webpack": "^5.55.1",
     "webpack-cli": "^4.8.0",
     "webpack-raphael": "github:DmitryBaranovskiy/raphael#v2.3.0",
-    "word-wrap": "^1.2.3",
-    "xml2js": "^0.5.0"
+    "word-wrap": "^1.2.4",
+    "xml2js": "^0.5.0",
+    "@snyk/protect": "latest"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.23",
@@ -375,5 +378,6 @@
     "webpack-dev-server": "^4.1.0",
     "yargs": "^6.6.0"
   },
-  "packageManager": "yarn@1.22.5"
+  "packageManager": "yarn@1.22.5",
+  "snyk": true
 }
