@@ -210,7 +210,7 @@ import { LoadingPhase } from '../groupComparison/GroupComparisonLoading';
 import { sleepUntil } from '../../shared/lib/TimeUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import { CancerGene } from 'oncokb-ts-api-client';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 
 import { AppStore } from 'AppStore';
 import { FreqColumnTypeEnum, getGeneCNAOQL } from 'pages/studyView/TableUtils';
@@ -285,14 +285,9 @@ import { PageType } from 'shared/userSession/PageType';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
 import { Simulate } from 'react-dom/test-utils';
-import select = Simulate.select;
 import { StructVarMultiSelectionTableRow } from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
 import { PillStore } from 'shared/components/PillTag/PillTag';
-import { toast, cssTransition } from 'react-toastify';
-import {
-    PatientIdentifier,
-    PatientIdentifierFilter,
-} from 'shared/model/PatientIdentifierFilter';
+import { toast } from 'react-toastify';
 import {
     doesStructVarMatchSingleGeneQuery,
     generateStructVarTableCellKey,
@@ -318,12 +313,12 @@ import {
 } from './charts/survival/StudyViewSurvivalUtils';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
 import { getGeneData } from './StudyViewMutationPlotUtils';
-import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import {
     compileMutations,
     FilteredAndAnnotatedMutationsReport,
 } from 'shared/lib/comparison/AnalysisStoreUtils';
+import AnnotaterStore from './AnnotaterStore';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -465,7 +460,7 @@ enum CustomDataTypeEnum {
     NUMERICAL = 'NUMERICAL',
 }
 
-export class StudyViewPageStore extends AnalysisStore
+export class StudyViewPageStore
     implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
@@ -487,11 +482,11 @@ export class StudyViewPageStore extends AnalysisStore
     @observable mutationPlotStore: {
         [hugoGeneSymbol: string]: StudyViewMutationMapperStore;
     } = {};
+    annotaterStoreForGenes: {
+        [hugoGeneSymbol: string]: AnnotaterStore;
+    } = {};
     filteredMutationPlots = observable.map<string, number>();
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
-    @observable mutationGeneDataCache: {
-        [hugoGeneSymbol: string]: Gene;
-    } = {};
     driverAnnotationSettings = buildDriverAnnotationSettings(() => false);
 
     private getDataBinFilterSet(uniqueKey: string) {
@@ -542,7 +537,6 @@ export class StudyViewPageStore extends AnalysisStore
         private sessionServiceIsEnabled: boolean,
         private urlWrapper: StudyViewURLWrapper
     ) {
-        super();
         makeObservable(this);
 
         this.chartItemToColor = new Map();
@@ -2638,31 +2632,6 @@ export class StudyViewPageStore extends AnalysisStore
         []
     );
 
-    readonly genes = remoteData<Gene[]>({
-        await: () => [],
-        invoke: async () => {
-            return await fetchGenes(this.visibleMutationPlotGenes);
-        },
-        onResult: (genes: Gene[]) => {
-            this.geneCache.addData(genes);
-        },
-        onError: err => {
-            throw err;
-        },
-    });
-
-    readonly mutations = remoteData<Mutation[]>({
-        await: () => [],
-        invoke: async () => {
-            return _.flatten(
-                this.visibleMutationPlotGenes.map<Mutation[]>(gene => {
-                    return this.mutationPlotData.get({ hugoGeneSymbol: gene })
-                        .result!.data;
-                })
-            );
-        },
-    });
-
     @action.bound
     async onCheckGene(
         hugoGeneSymbol: string,
@@ -2796,21 +2765,45 @@ export class StudyViewPageStore extends AnalysisStore
         {
             hugoGeneSymbol: string;
         },
-        {
-            data: Mutation[];
-        }
+        Mutation[]
     >(q => ({
         await: () => [this.selectedSamples, this.mutationProfiles],
         invoke: async () => {
-            return {
-                data: await getMutationData(
-                    this.selectedSamples.result,
-                    this.mutationProfiles.result,
-                    [q.hugoGeneSymbol]
-                ),
-            };
+            return await getMutationData(
+                this.selectedSamples.result,
+                this.mutationProfiles.result,
+                [q.hugoGeneSymbol]
+            );
         },
     }));
+
+    public getGeneData = new MobxPromiseCache<
+        {
+            hugoGeneSymbol: string;
+        },
+        Gene[]
+    >(q => ({
+        await: () => [],
+        invoke: async () => {
+            const geneData = await getGeneData([q.hugoGeneSymbol]);
+
+            return geneData;
+        },
+    }));
+
+    getMutationPutativeDriverInfo(
+        hugoGeneSymbol: string
+    ): (
+        mutation: Mutation
+    ) => {
+        oncoKb: string;
+        hotspots: boolean;
+        customDriverBinary: boolean;
+        customDriverTier?: string | undefined;
+    } {
+        return this.annotaterStoreForGenes[hugoGeneSymbol]
+            .getMutationPutativeDriverInfo.result!;
+    }
 
     readonly filteredMutationAnnotationsReport = new MobxPromiseCache<
         {
@@ -2822,24 +2815,26 @@ export class StudyViewPageStore extends AnalysisStore
     >(q => ({
         await: () => [
             this.mutationPlotData.get({ hugoGeneSymbol: q.hugoGeneSymbol }),
-            this.getMutationPutativeDriverInfo,
         ],
         invoke: async () => {
-            if (!this.mutationGeneDataCache[q.hugoGeneSymbol]) {
-                const data = await getGeneData([q.hugoGeneSymbol]);
-                this.mutationGeneDataCache[q.hugoGeneSymbol] = data[0];
-            }
+            const mutationInfo = this.getMutationPutativeDriverInfo(
+                q.hugoGeneSymbol
+            );
+
+            const filteredAndAnnotatedReport = filterAndAnnotateMutations(
+                this.mutationPlotData.get({
+                    hugoGeneSymbol: q.hugoGeneSymbol,
+                }).result!,
+                mutationInfo,
+                this.getGeneData.get({ hugoGeneSymbol: q.hugoGeneSymbol })
+                    .result!
+            );
 
             return {
-                data: filterAndAnnotateMutations(
-                    this.mutationPlotData.get({
-                        hugoGeneSymbol: q.hugoGeneSymbol,
-                    }).result!.data,
-                    this.getMutationPutativeDriverInfo.result!,
-                    this.mutationGeneDataCache[q.hugoGeneSymbol]
-                ),
+                data: filteredAndAnnotatedReport,
             };
         },
+        onError: () => {},
     }));
 
     public annotatedDataForGene = new MobxPromiseCache<
@@ -2854,19 +2849,34 @@ export class StudyViewPageStore extends AnalysisStore
             this.filteredMutationAnnotationsReport.get({
                 hugoGeneSymbol: q.hugoGeneSymbol,
             }),
-            this.mutations,
+            this.mutationPlotData.get({ hugoGeneSymbol: q.hugoGeneSymbol }),
             this.studies,
         ],
         invoke: async () => {
-            const p = this.filteredMutationAnnotationsReport.get({
-                hugoGeneSymbol: q.hugoGeneSymbol,
-            });
-
             return {
-                data: compileMutations(p.result!.data, false, false),
+                data: compileMutations(
+                    this.filteredMutationAnnotationsReport.get({
+                        hugoGeneSymbol: q.hugoGeneSymbol,
+                    }).result!.data,
+                    false,
+                    false
+                ),
             };
         },
     }));
+
+    public createAnnotatorStore(hugoGeneSymbol: string) {
+        return (this.annotaterStoreForGenes[
+            hugoGeneSymbol
+        ] = new AnnotaterStore(
+            this.mutationPlotData.get({ hugoGeneSymbol }),
+            this.studies,
+            this.includeGermlineMutations,
+            [hugoGeneSymbol],
+            this.samples,
+            this.driverAnnotationSettings
+        ));
+    }
 
     public async createMutationStore(hugoGeneSymbol: string): Promise<void> {
         const annotatedData = this.annotatedDataForGene.get({ hugoGeneSymbol });
@@ -2875,7 +2885,7 @@ export class StudyViewPageStore extends AnalysisStore
             const store = new StudyViewMutationMapperStore(
                 { hugoGeneSymbol },
                 {},
-                () => annotatedData.result!.data
+                () => annotatedData.result?.data!
             );
 
             this.mutationPlotStore[hugoGeneSymbol] = store;
@@ -2916,6 +2926,7 @@ export class StudyViewPageStore extends AnalysisStore
         hugoGeneSymbol: string
     ): StudyViewMutationMapperStore {
         if (!this.mutationPlotStore[hugoGeneSymbol]) {
+            this.createAnnotatorStore(hugoGeneSymbol);
             this.createMutationStore(hugoGeneSymbol);
         }
         return this.mutationPlotStore[hugoGeneSymbol];
