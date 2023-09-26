@@ -462,7 +462,7 @@ export class LazyMobXTableStore<T> {
             this.sortColumn = column.name;
             this.onSortDirectionChange(
                 column.name,
-                this.sortAscending ? 'desc' : 'asc'
+                this.sortAscending ? 'asc' : 'desc'
             );
         } else {
             this.sortAscending = sortAscending;
