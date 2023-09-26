@@ -18,7 +18,7 @@ import ResourcesTab, {
 import PathologyReport from 'pages/patientView/pathologyReport/PathologyReport';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 import { getDigitalSlideArchiveIFrameUrl } from 'shared/api/urls';
-import TrialMatchTable from 'pages/patientView/trialMatch/TrialMatchTable';
+import TrialMatchTableNew from 'pages/patientView/trialMatch/TrialMatchTableNew';
 import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
@@ -635,11 +635,10 @@ export function tabs(
                 id={PatientViewPageTabs.TrialMatchTab}
                 linkText="Matched Trials"
             >
-                <TrialMatchTable
+                <TrialMatchTableNew
                     sampleManager={sampleManager}
-                    detailedTrialMatches={
-                        pageComponent.patientViewPageStore.detailedTrialMatches
-                            .result
+                    trialMatches={
+                        pageComponent.patientViewPageStore.trialMatches.result
                     }
                     containerWidth={WindowStore.size.width - 20}
                 />

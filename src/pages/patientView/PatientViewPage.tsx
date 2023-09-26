@@ -314,8 +314,8 @@ export class PatientViewPageInner extends React.Component<
     public get shouldShowTrialMatch(): boolean {
         return (
             getBrowserWindow().localStorage.trialmatch === 'true' &&
-            this.pageStore.detailedTrialMatches.isComplete &&
-            this.pageStore.detailedTrialMatches.result.length > 0
+            this.pageStore.trialMatches.isComplete &&
+            this.pageStore.trialMatches.result.length > 0
         );
     }
 

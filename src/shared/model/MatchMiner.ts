@@ -49,19 +49,21 @@ export interface ITrialMatch {
     id: string;
     nctId: string | '';
     protocolNo: string | '';
-    oncotreePrimaryDiagnosisName?: string;
-    gender?: string;
-    matchType: string;
-    armDescription?: string;
-    armType?: string;
+    shortTitle: string | '';
+    status: string | '';
+    oncotreePrimaryDiagnosisName: string | '';
+    gender: string | '';
+    matchType: string | '';
+    armDescription: string | '';
+    armType: string | '';
     sampleId: string;
     mrn: string;
-    trueHugoSymbol?: string;
-    trueProteinChange?: string;
-    vitalStatus?: string | null;
-    genomicAlteration?: string;
-    trialAgeNumerical?: string;
-    trialOncotreePrimaryDiagnosis?: string;
+    trueHugoSymbol: string | '';
+    trueProteinChange: string | '';
+    vitalStatus: string | '';
+    genomicAlteration: string | '';
+    trialAgeNumerical: string | '';
+    trialOncotreePrimaryDiagnosis: string | '';
 }
 
 export interface ITrialQuery {
