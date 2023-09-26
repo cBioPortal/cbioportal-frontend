@@ -6500,7 +6500,7 @@ export class StudyViewPageStore
                 renderWhenDataChange: true,
                 description: '',
             };
-            if (this.isStructVarFeatureFlagEnabled) {
+            if (this.isStructVarTableFeatureEnabled) {
                 const structVarGenesUniqueKey = getUniqueKeyFromMolecularProfileIds(
                     this.structuralVariantProfiles.result.map(
                         p => p.molecularProfileId
@@ -6575,11 +6575,8 @@ export class StudyViewPageStore
         );
     }
 
-    // TODO Remove feature flag after acceptance by product team.
-    get isStructVarFeatureFlagEnabled() {
-        return this.appStore.featureFlagStore.has(
-            FeatureFlagEnum.STUDY_VIEW_STRUCT_VAR_TABLE
-        );
+    get isStructVarTableFeatureEnabled() {
+        return getServerConfig().skin_study_view_show_sv_table;
     }
 
     @computed
@@ -7251,7 +7248,7 @@ export class StudyViewPageStore
                     ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
                 ]
             );
-            if (this.isStructVarFeatureFlagEnabled) {
+            if (this.isStructVarTableFeatureEnabled) {
                 const structVarUniqueKey = getUniqueKeyFromMolecularProfileIds(
                     this.structuralVariantProfiles.result.map(
                         p => p.molecularProfileId
@@ -7260,7 +7257,7 @@ export class StudyViewPageStore
                 );
                 const structuralVariantsMeta = _.find(
                     this.chartMetaSet,
-                    chartMeta => chartMeta.uniqueKey === uniqueKey
+                    chartMeta => chartMeta.uniqueKey === structVarUniqueKey
                 );
                 if (
                     structuralVariantsMeta &&

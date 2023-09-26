@@ -107,6 +107,7 @@ export class StructVarCell extends React.Component<IStructVarCellProps, {}> {
                                 })}
                             >
                                 <i
+                                    style={{ paddingTop: '3px' }}
                                     data-test={
                                         this.isCheckBoxChecked
                                             ? 'structVarQueryCheckboxChecked'

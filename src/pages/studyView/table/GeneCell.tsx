@@ -93,6 +93,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         </If>
 
                         <div
+                            style={{ paddingTop: '3px' }}
                             className={classnames({
                                 [styles.addGeneUI]: true,
                                 [styles.selected]: geneIsSelected,
