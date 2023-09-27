@@ -23,12 +23,15 @@ import {
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    ClinicalEventData,
     Group,
     MolecularProfile,
     MolecularProfileCasesGroupFilter,
     MolecularProfileFilter,
     ReferenceGenomeGene,
     Sample,
+    ClinicalEventRequestIdentifier,
+    SurvivalRequest,
 } from 'cbioportal-ts-api-client';
 import {
     action,
@@ -37,6 +40,7 @@ import {
     IReactionDisposer,
     makeObservable,
     observable,
+    toJS,
 } from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
@@ -119,6 +123,8 @@ export enum OverlapStrategy {
     EXCLUDE = 'Exclude',
 }
 
+export type ClinicalEventDataWithKey = ClinicalEventData & { label: string };
+
 export default abstract class ComparisonStore extends AnalysisStore
     implements IAnnotationFilterSettings {
     private tabHasBeenShown = observable.map<GroupComparisonTab, boolean>();
@@ -131,6 +137,10 @@ export default abstract class ComparisonStore extends AnalysisStore
     @observable includeUnknownStatusMutations = true;
 
     @observable public adjustForLeftTruncation = true;
+
+    public customSurvivalDataPromises: {
+        [id: string]: MobxPromise<ClinicalData[]>;
+    } = {};
 
     constructor(
         protected appStore: AppStore,
@@ -717,6 +727,13 @@ export default abstract class ComparisonStore extends AnalysisStore
             [studyId: string]: MolecularProfile;
         };
     } = {};
+
+    @observable customSurvivalPlots: {
+        [prefix: string]: Partial<SurvivalRequest>;
+    } = {};
+
+    @observable customClinicalAttributes: ClinicalAttribute[] = [];
+
     readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
         await: () => [this.mutationEnrichmentProfiles],
         invoke: () => {
@@ -2484,7 +2501,7 @@ export default abstract class ComparisonStore extends AnalysisStore
             ),
     });
 
-    readonly survivalClinicalData = remoteData<ClinicalData[]>(
+    readonly predefinedSurvivalClinicalData = remoteData<ClinicalData[]>(
         {
             await: () => [
                 this.activeSamplesNotOverlapRemoved,
@@ -2494,6 +2511,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                 if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
                     return Promise.resolve([]);
                 }
+
                 const attributeNames: string[] = _.reduce(
                     this.survivalClinicalAttributesPrefix.result!,
                     (attributeNames, prefix: string) => {
@@ -2525,7 +2543,108 @@ export default abstract class ComparisonStore extends AnalysisStore
         []
     );
 
-    readonly activeStudiesClinicalAttributes = remoteData<ClinicalAttribute[]>(
+    readonly survivalClinicalData = remoteData<ClinicalData[]>(
+        {
+            await: () => [
+                this.activeSamplesNotOverlapRemoved,
+                this.predefinedSurvivalClinicalData,
+                ..._.values(this.customSurvivalDataPromises),
+            ],
+            invoke: async () => {
+                if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
+                    return Promise.resolve([]);
+                }
+                let response: ClinicalData[] = [];
+                if (_.keys(this.customSurvivalPlots).length > 0) {
+                    response = _.chain(this.customSurvivalDataPromises)
+                        .values()
+                        .flatMap(x => x.result || [])
+                        .value();
+                }
+                return [
+                    ...this.predefinedSurvivalClinicalData.result,
+                    ...response,
+                ];
+            },
+        },
+        []
+    );
+
+    readonly clinicalEventOptions = remoteData<{
+        [key: string]: {
+            label: string;
+            value: string;
+            attributes: ClinicalEventDataWithKey[];
+        };
+    }>(
+        {
+            await: () => [this.activeSamplesNotOverlapRemoved],
+            invoke: async () => {
+                if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
+                    return Promise.resolve({});
+                }
+
+                const result = await internalClient.fetchClinicalEventsMetaUsingPOST(
+                    {
+                        clinicalEventAttributeRequest: {
+                            patientIdentifiers: this.activeSamplesNotOverlapRemoved.result!.map(
+                                (s: any) => ({
+                                    patientId: s.patientId,
+                                    studyId: s.studyId,
+                                })
+                            ),
+                            clinicalEventRequests: [],
+                        },
+                    }
+                );
+                return _.chain(result)
+                    .map(x => {
+                        switch (x.eventType.toUpperCase()) {
+                            case 'TREATMENT': {
+                                x.attributes = x.attributes.filter(y =>
+                                    [
+                                        'TREATMENT_TYPE',
+                                        'SUBTYPE',
+                                        'AGENT',
+                                    ].includes(y.key.toUpperCase())
+                                );
+                                break;
+                            }
+                            case 'LAB_TEST': {
+                                x.attributes = x.attributes.filter(
+                                    y => 'TEST' === y.key.toUpperCase()
+                                );
+                                break;
+                            }
+                            case 'DIAGNOSIS': {
+                                x.attributes = x.attributes.filter(
+                                    y => 'SUBTYPE' === y.key.toUpperCase()
+                                );
+                                break;
+                            }
+                            default: {
+                                x.attributes = [];
+                                break;
+                            }
+                        }
+                        return x;
+                    })
+                    .map(x => ({
+                        label: x.eventType,
+                        value: x.eventType,
+                        attributes: x.attributes.map(y => ({
+                            ...y,
+                            label: `${y.key}::${y.value}`,
+                        })),
+                    }))
+                    .keyBy(x => x.value)
+                    .value();
+            },
+        },
+        {}
+    );
+
+    readonly studiesSurvivalAttributes = remoteData<ClinicalAttribute[]>(
         {
             await: () => [this.activeStudyIds],
             invoke: () => {
@@ -2540,12 +2659,85 @@ export default abstract class ComparisonStore extends AnalysisStore
         []
     );
 
+    readonly activeStudiesSurvivalAttributes = remoteData<ClinicalAttribute[]>(
+        {
+            await: () => [this.studiesSurvivalAttributes, this.activeStudyIds],
+            invoke: () => {
+                const customAttributes = _.chain(this.customSurvivalPlots)
+                    .flatMap((x, y) => {
+                        return _.chain(this.activeStudyIds.result || [])
+                            .flatMap(studyId => {
+                                const startIdentifier =
+                                    x.startEventRequestIdentifier?.clinicalEventRequests[0].attributes
+                                        .map(x => x.key + '::' + x.value)
+                                        .sort((a, b) => a.localeCompare(b))
+                                        .join(' ') || '';
+                                const endIdentifier =
+                                    x.endEventRequestIdentifier?.clinicalEventRequests[0].attributes
+                                        .map(x => x.key + '::' + x.value)
+                                        .sort((a, b) => a.localeCompare(b))
+                                        .join(' ') || '';
+
+                                var title = `${
+                                    x.startEventRequestIdentifier?.position
+                                } of ${
+                                    x.startEventRequestIdentifier
+                                        ?.clinicalEventRequests[0].eventType
+                                }${
+                                    startIdentifier.length > 0
+                                        ? ' - ' + startIdentifier
+                                        : ''
+                                } till ${
+                                    x.endEventRequestIdentifier?.position
+                                } of ${
+                                    x.endEventRequestIdentifier
+                                        ?.clinicalEventRequests[0].eventType
+                                }${
+                                    endIdentifier.length > 0
+                                        ? ' - ' + endIdentifier
+                                        : ''
+                                }`;
+                                var months_attribute: ClinicalAttribute = {
+                                    clinicalAttributeId:
+                                        x.attributeIdPrefix + '_MONTHS',
+                                    datatype: 'NUMBER',
+                                    description: `Survival in months from ${title}`,
+                                    displayName: `Survival (Months) from ${title}`,
+                                    patientAttribute: true,
+                                    priority: '1',
+                                    studyId: studyId,
+                                };
+                                var status_attribute: ClinicalAttribute = {
+                                    clinicalAttributeId:
+                                        x.attributeIdPrefix + '_STATUS',
+                                    datatype: 'STRING',
+                                    description: `Survival status from ${title}`,
+                                    displayName: `Survival status from ${title}`,
+                                    patientAttribute: true,
+                                    priority: '1',
+                                    studyId: studyId,
+                                };
+                                return [months_attribute, status_attribute];
+                            })
+                            .value();
+                    })
+                    .value();
+
+                return Promise.resolve([
+                    ...this.studiesSurvivalAttributes.result!,
+                    ...customAttributes,
+                ]);
+            },
+        },
+        []
+    );
+
     readonly survivalClinicalAttributesPrefix = remoteData({
-        await: () => [this.activeStudiesClinicalAttributes],
+        await: () => [this.activeStudiesSurvivalAttributes],
         invoke: () => {
             return Promise.resolve(
                 getSurvivalClinicalAttributesPrefix(
-                    this.activeStudiesClinicalAttributes.result!
+                    this.activeStudiesSurvivalAttributes.result!
                 )
             );
         },
@@ -2655,6 +2847,7 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
+    //TODO
     readonly patientSurvivals = remoteData<{
         [prefix: string]: PatientSurvival[];
     }>({
@@ -2787,7 +2980,7 @@ export default abstract class ComparisonStore extends AnalysisStore
 
     readonly survivalXAxisLabelGroupByPrefix = remoteData({
         await: () => [
-            this.activeStudiesClinicalAttributes,
+            this.activeStudiesSurvivalAttributes,
             this.survivalClinicalAttributesPrefix,
         ],
         invoke: () => {
@@ -2796,7 +2989,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                 (acc, prefix) => {
                     const clinicalAttributeId = `${prefix}_MONTHS`;
                     const clinicalAttributes = _.filter(
-                        this.activeStudiesClinicalAttributes.result,
+                        this.activeStudiesSurvivalAttributes.result,
                         attr => attr.clinicalAttributeId === clinicalAttributeId
                     );
                     if (clinicalAttributes.length > 0) {
@@ -2817,7 +3010,7 @@ export default abstract class ComparisonStore extends AnalysisStore
 
     readonly survivalDescriptions = remoteData({
         await: () => [
-            this.activeStudiesClinicalAttributes,
+            this.activeStudiesSurvivalAttributes,
             this.activeStudyIdToStudy,
             this.survivalClinicalAttributesPrefix,
         ],
@@ -2827,7 +3020,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                 (acc, prefix) => {
                     const clinicalAttributeId = `${prefix}_STATUS`;
                     const clinicalAttributes = _.filter(
-                        this.activeStudiesClinicalAttributes.result,
+                        this.activeStudiesSurvivalAttributes.result,
                         attr => attr.clinicalAttributeId === clinicalAttributeId
                     );
                     if (clinicalAttributes.length > 0) {
@@ -3015,5 +3208,89 @@ export default abstract class ComparisonStore extends AnalysisStore
             this.structuralVariantEnrichmentProfiles.isComplete &&
             this.structuralVariantEnrichmentProfiles.result!.length > 0
         );
+    }
+
+    @action.bound
+    public addSurvivalRequest(
+        startClinicalEventType: string,
+        startEventPosition: 'FIRST' | 'LAST',
+        startClinicalEventAttributes: ClinicalEventDataWithKey[],
+        endClinicalEventType: string,
+        endEventPosition: 'FIRST' | 'LAST',
+        endClinicalEventAttributes: ClinicalEventDataWithKey[]
+    ) {
+        const startIdentifier = startClinicalEventAttributes
+            .sort((a, b) => a.label.localeCompare(b.label))
+            .map(x => x.label)
+            .join(' ');
+        const endIdentifier = startClinicalEventAttributes
+            .sort((a, b) => a.label.localeCompare(b.label))
+            .map(x => x.label)
+            .join(' ');
+
+        const title = `${startEventPosition} of ${startClinicalEventType}${
+            startIdentifier.length > 0 ? ' - ' + startIdentifier : ''
+        } and ${endEventPosition} of ${endClinicalEventType}${
+            endIdentifier.length > 0 ? ' - ' + endIdentifier : ''
+        }`;
+        const prefix = title.replace(/\s/g, '_');
+
+        this.customSurvivalPlots[prefix] = {
+            attributeIdPrefix: prefix,
+            endEventRequestIdentifier: {
+                clinicalEventRequests: [
+                    {
+                        attributes: endClinicalEventAttributes.map(x => ({
+                            key: x.key,
+                            value: x.value,
+                        })),
+                        eventType: endClinicalEventType,
+                    },
+                ],
+                position: endEventPosition,
+            },
+            startEventRequestIdentifier: {
+                clinicalEventRequests: [
+                    {
+                        attributes: startClinicalEventAttributes.map(x => ({
+                            key: x.key,
+                            value: x.value,
+                        })),
+                        eventType: startClinicalEventType,
+                    },
+                ],
+                position: startEventPosition,
+            },
+        };
+
+        if (!this.customSurvivalDataPromises.hasOwnProperty(prefix)) {
+            this.customSurvivalDataPromises[prefix] = remoteData<
+                ClinicalData[]
+            >({
+                await: () => {
+                    return [this.activeSamplesNotOverlapRemoved];
+                },
+                invoke: async () => {
+                    const attr = this.customSurvivalPlots[prefix];
+
+                    const survivalRequest = {
+                        attributeIdPrefix: prefix,
+                        startEventRequestIdentifier: attr.startEventRequestIdentifier!,
+                        endEventRequestIdentifier: attr.endEventRequestIdentifier!,
+                        patientIdentifiers: this.activeSamplesNotOverlapRemoved.result!.map(
+                            (s: any) => ({
+                                patientId: s.patientId,
+                                studyId: s.studyId,
+                            })
+                        ),
+                    };
+                    return await internalClient.fetchSurvivalDataUsingPOST({
+                        survivalRequest,
+                    });
+                },
+                onError: () => {},
+                default: [],
+            });
+        }
     }
 }

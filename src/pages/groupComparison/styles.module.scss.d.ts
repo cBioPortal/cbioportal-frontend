@@ -2,7 +2,11 @@ declare const styles: {
   readonly "buttonAlterationTypeSelectorMenu": string;
   readonly "buttonExcludedFromAnalysis": string;
   readonly "buttonUnselected": string;
+  readonly "clinicalEventSelection": string;
   readonly "comparisonGroupManager": string;
+  readonly "dashed-border-right": string;
+  readonly "event-attributes": string;
+  readonly "event-type": string;
   readonly "groupButtons": string;
   readonly "groupCheckboxes": string;
   readonly "groupItem": string;
@@ -14,8 +18,16 @@ declare const styles: {
   readonly "noGroupsMessage": string;
   readonly "noMutationsMessage": string;
   readonly "noPaddingLeftTruncationCheckbox": string;
+  readonly "rangeslider": string;
+  readonly "rangeslider-horizontal": string;
+  readonly "rangeslider__fill": string;
+  readonly "rangeslider__handle": string;
+  readonly "rangeslider__label": string;
+  readonly "rangeslider__label-list": string;
   readonly "settingsMenuButton": string;
   readonly "sharedGroup": string;
+  readonly "slider": string;
+  readonly "slider-holder": string;
   readonly "survivalPlotHeader": string;
   readonly "survivalPlotHeaderContainer": string;
   readonly "survivalTypeOptions": string;

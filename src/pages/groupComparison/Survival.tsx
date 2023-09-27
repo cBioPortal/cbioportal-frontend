@@ -21,6 +21,7 @@ import {
     SurvivalTabGroupLegendLabelComponent,
 } from './labelComponents/GroupLegendLabelComponent';
 import ComparisonStore, {
+    ClinicalEventDataWithKey,
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
 import {
@@ -34,7 +35,7 @@ import {
     sortPatientSurvivals,
     calculateNumberOfPatients,
 } from 'pages/resultsView/survival/SurvivalUtil';
-import { observable, action, makeObservable } from 'mobx';
+import { observable, action, makeObservable, computed } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
 import SurvivalPrefixTable, {
     SurvivalPrefixTableStore,
@@ -43,10 +44,16 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
+import { ControlLabel, FormControl, ButtonGroup, Radio } from 'react-bootstrap';
+import Select from 'react-select';
 
 export interface ISurvivalProps {
     store: ComparisonStore;
 }
+export const POSITIONS = [
+    { label: 'First', value: 'FIRST' },
+    { label: 'Last', value: 'LAST' },
+];
 
 @observer
 export default class Survival extends React.Component<ISurvivalProps, {}> {
@@ -60,6 +67,24 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     @observable
     private selectedSurvivalPlotPrefix: string | undefined = undefined;
 
+    @observable
+    private _selectedStartClinicalEventType: string | undefined = undefined;
+
+    @observable
+    private startEventPosition: 'FIRST' | 'LAST' = 'FIRST';
+
+    @observable
+    private endEventPosition: 'FIRST' | 'LAST' = 'LAST';
+
+    @observable
+    private selectedStartClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
+
+    @observable
+    private _selectedEndClinicalEventType: string | undefined = undefined;
+
+    @observable
+    private selectedEndClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
+
     constructor(props: ISurvivalProps) {
         super(props);
         makeObservable(this);
@@ -67,6 +92,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     @action.bound
     private setSurvivalPlotPrefix(prefix: string) {
+        //
         this.selectedSurvivalPlotPrefix = prefix;
     }
 
@@ -278,7 +304,44 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         },
     });
 
-    readonly tabUI = MakeMobxView({
+    @action.bound
+    private onStartClinicalEventSelection(option: any) {
+        this._selectedStartClinicalEventType = option.value;
+        this.selectedStartClinicalEventAttributes = [];
+    }
+
+    @computed get selectedStartClinicalEventType() {
+        if (this._selectedStartClinicalEventType !== undefined) {
+            return this.props.store.clinicalEventOptions.result[
+                this._selectedStartClinicalEventType
+            ];
+        }
+        return undefined;
+    }
+
+    @action.bound
+    private onEndClinicalEventSelection(option: any) {
+        this._selectedEndClinicalEventType = option.value;
+        this.selectedEndClinicalEventAttributes = [];
+    }
+
+    @computed get selectedEndClinicalEventType() {
+        if (this._selectedEndClinicalEventType !== undefined) {
+            return this.props.store.clinicalEventOptions.result[
+                this._selectedEndClinicalEventType
+            ];
+        }
+        return undefined;
+    }
+
+    @computed get isAddSurvivalPlotDisabled() {
+        return (
+            this._selectedStartClinicalEventType === undefined ||
+            this._selectedEndClinicalEventType === undefined
+        );
+    }
+
+    readonly mainTabUI = MakeMobxView({
         await: () => {
             if (
                 this.props.store._activeGroupsNotOverlapRemoved.isComplete &&
@@ -290,10 +353,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             } else {
                 return [
                     this.props.store._activeGroupsNotOverlapRemoved,
-                    this.survivalUI,
                     this.props.store.overlapComputations,
-                    this.survivalPrefixTable,
-                    this.props.store.isLeftTruncationAvailable,
+                    this.props.store.clinicalEventOptions,
                 ];
             }
         },
@@ -306,63 +367,238 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             } else if (numActiveGroups === 0) {
                 content = <span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
-                var isGenieBpcStudy = this.props.store.studies.result!.find(s =>
-                    s.studyId.includes('genie_bpc')
-                );
-
                 content = (
                     <>
                         <div
-                            className={'tabMessageContainer'}
-                            style={{ paddingBottom: 0 }}
+                            className={survivalPlotStyle.clinicalEventSelection}
                         >
-                            {getStatisticalCautionInfo()}
-                            {isGenieBpcStudy &&
-                                !this.props.store.isLeftTruncationAvailable
-                                    .result && (
-                                    <div className="alert alert-info">
-                                        <i
-                                            className="fa fa-md fa-info-circle"
-                                            style={{
-                                                verticalAlign:
-                                                    'middle !important',
-                                                marginRight: 6,
-                                                marginBottom: 1,
-                                            }}
+                            <table>
+                                <tr>
+                                    <td>
+                                        <ControlLabel>Start:</ControlLabel>
+                                    </td>
+                                    <td
+                                        className={
+                                            survivalPlotStyle['event-type']
+                                        }
+                                    >
+                                        <Select
+                                            placeholder="Select clinical event type"
+                                            name="clinical-event"
+                                            value={
+                                                this
+                                                    .selectedStartClinicalEventType
+                                            }
+                                            onChange={
+                                                this
+                                                    .onStartClinicalEventSelection
+                                            }
+                                            options={_.values(
+                                                this.props.store
+                                                    .clinicalEventOptions.result
+                                            )}
+                                            clearable={false}
+                                            searchable={false}
                                         />
-                                        Kaplan-Meier estimates do not account
-                                        for the lead time bias introduced by the
-                                        inclusion criteria for the GENIE BPC
-                                        Project.
-                                    </div>
-                                )}
-                            <OverlapExclusionIndicator
-                                store={this.props.store}
-                                only="patient"
-                                survivalTabMode={true}
-                            />
+                                    </td>
+                                    {this._selectedStartClinicalEventType !==
+                                        undefined &&
+                                        this.props.store.clinicalEventOptions
+                                            .result[
+                                            this._selectedStartClinicalEventType
+                                        ].attributes.length > 0 && (
+                                            <td
+                                                className={
+                                                    survivalPlotStyle[
+                                                        'event-attributes'
+                                                    ]
+                                                }
+                                            >
+                                                <Select
+                                                    placeholder="Select clinical event type attributes"
+                                                    name="clinical-event-attributes"
+                                                    closeMenuOnSelect={false}
+                                                    isMulti
+                                                    value={
+                                                        this
+                                                            .selectedStartClinicalEventAttributes
+                                                    }
+                                                    onChange={(
+                                                        selectedOptions: any
+                                                    ) => {
+                                                        this.selectedStartClinicalEventAttributes = selectedOptions;
+                                                    }}
+                                                    options={
+                                                        this.props.store
+                                                            .clinicalEventOptions
+                                                            .result[
+                                                            this
+                                                                ._selectedStartClinicalEventType
+                                                        ].attributes
+                                                    }
+                                                    isClearable={false}
+                                                    noOptionsMessage={() =>
+                                                        'No results'
+                                                    }
+                                                />
+                                            </td>
+                                        )}
+                                    <td>
+                                        <ButtonGroup>
+                                            {POSITIONS.map((option, i) => {
+                                                return (
+                                                    <Radio
+                                                        checked={
+                                                            option.value ===
+                                                            this
+                                                                .startEventPosition
+                                                        }
+                                                        onChange={e => {
+                                                            this.startEventPosition = $(
+                                                                e.target
+                                                            ).attr(
+                                                                'data-value'
+                                                            ) as any;
+                                                        }}
+                                                        inline
+                                                        data-value={
+                                                            option.value
+                                                        }
+                                                    >
+                                                        {option.label}
+                                                    </Radio>
+                                                );
+                                            })}
+                                        </ButtonGroup>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <ControlLabel>End:</ControlLabel>
+                                    </td>
+                                    <td
+                                        className={
+                                            survivalPlotStyle['event-type']
+                                        }
+                                    >
+                                        <Select
+                                            placeholder="Select clinical event type"
+                                            name="clinical-event"
+                                            value={
+                                                this
+                                                    .selectedEndClinicalEventType
+                                            }
+                                            onChange={
+                                                this.onEndClinicalEventSelection
+                                            }
+                                            options={_.values(
+                                                this.props.store
+                                                    .clinicalEventOptions.result
+                                            )}
+                                            clearable={false}
+                                            searchable={false}
+                                        />
+                                    </td>
+                                    {this._selectedEndClinicalEventType !==
+                                        undefined &&
+                                        this.props.store.clinicalEventOptions
+                                            .result[
+                                            this._selectedEndClinicalEventType
+                                        ].attributes.length > 0 && (
+                                            <td
+                                                className={
+                                                    survivalPlotStyle[
+                                                        'event-attributes'
+                                                    ]
+                                                }
+                                            >
+                                                <Select
+                                                    placeholder="Select clinical event type attributes"
+                                                    name="clinical-event-attributes"
+                                                    closeMenuOnSelect={false}
+                                                    isMulti
+                                                    value={
+                                                        this
+                                                            .selectedEndClinicalEventAttributes
+                                                    }
+                                                    onChange={(
+                                                        selectedOptions: any
+                                                    ) => {
+                                                        this.selectedEndClinicalEventAttributes = selectedOptions;
+                                                    }}
+                                                    options={
+                                                        this.props.store
+                                                            .clinicalEventOptions
+                                                            .result[
+                                                            this
+                                                                ._selectedEndClinicalEventType
+                                                        ].attributes
+                                                    }
+                                                    isClearable={false}
+                                                    noOptionsMessage={() =>
+                                                        'No results'
+                                                    }
+                                                />
+                                            </td>
+                                        )}
+                                    <td>
+                                        <ButtonGroup>
+                                            {POSITIONS.map((option, i) => {
+                                                return (
+                                                    <Radio
+                                                        checked={
+                                                            option.value ===
+                                                            this
+                                                                .endEventPosition
+                                                        }
+                                                        onChange={e => {
+                                                            this.endEventPosition = $(
+                                                                e.target
+                                                            ).attr(
+                                                                'data-value'
+                                                            ) as any;
+                                                        }}
+                                                        inline
+                                                        data-value={
+                                                            option.value
+                                                        }
+                                                    >
+                                                        {option.label}
+                                                    </Radio>
+                                                );
+                                            })}
+                                        </ButtonGroup>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button
+                                            className={'btn btn-primary btn-sm'}
+                                            disabled={
+                                                this.isAddSurvivalPlotDisabled
+                                            }
+                                            onClick={e => {
+                                                this.props.store.addSurvivalRequest(
+                                                    this
+                                                        ._selectedStartClinicalEventType!,
+                                                    this.startEventPosition,
+                                                    this
+                                                        .selectedStartClinicalEventAttributes,
+                                                    this
+                                                        ._selectedEndClinicalEventType!,
+                                                    this.endEventPosition,
+                                                    this
+                                                        .selectedEndClinicalEventAttributes
+                                                );
+                                            }}
+                                        >
+                                            Add survival plot
+                                        </button>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
-                        <div
-                            style={{
-                                display: 'flex',
-                            }}
-                        >
-                            {this.survivalPrefixTable.component && (
-                                <div
-                                    style={{
-                                        marginRight: 15,
-                                        marginTop: 15,
-                                        minWidth: 475,
-                                        maxWidth: 475,
-                                        height: 'fit-content',
-                                        overflowX: 'scroll',
-                                    }}
-                                >
-                                    {this.survivalPrefixTable.component}
-                                </div>
-                            )}
-                            {this.survivalUI.component}
-                        </div>
+                        {this.tabUI.component}
                     </>
                 );
             }
@@ -377,75 +613,167 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         showLastRenderWhenPending: true,
     });
 
-    readonly survivalPrefixes = remoteData({
-        await: () => [
-            this.survivalTitleText,
-            this.props.store.patientSurvivals,
-            this.pValuesByPrefix,
-            this.qValuesByPrefix,
-            this.analysisGroupsComputations,
-        ],
-        invoke: () => {
-            const patientSurvivals = this.props.store.patientSurvivals.result!;
-            const analysisGroups = this.analysisGroupsComputations.result!
-                .analysisGroups;
-            const uidToAnalysisGroup = _.keyBy(analysisGroups, g => g.value);
-            const patientToAnalysisGroups = this.analysisGroupsComputations
-                .result!.patientToAnalysisGroups;
-            const pValues = this.pValuesByPrefix.result!;
-            const qValues = this.qValuesByPrefix.result!;
-
-            const survivalPrefixes = _.map(
-                this.survivalTitleText.result! as Dictionary<string>,
-                (displayText, prefix) => {
-                    const patientSurvivalsPerGroup = _.mapValues(
-                        _.keyBy(analysisGroups, group => group.name),
-                        () => [] as PatientSurvival[] // initialize empty arrays
-                    );
-
-                    for (const s of patientSurvivals[prefix]) {
-                        // collect patient survivals by which groups the patient is in
-                        const groupUids =
-                            patientToAnalysisGroups[s.uniquePatientKey] || [];
-                        for (const uid of groupUids) {
-                            patientSurvivalsPerGroup[
-                                uidToAnalysisGroup[uid].name
-                            ].push(s);
-                        }
-                    }
-                    return {
-                        prefix,
-                        displayText,
-                        numPatients: calculateNumberOfPatients(
-                            patientSurvivals[prefix],
-                            patientToAnalysisGroups
-                        ),
-                        numPatientsPerGroup: _.mapValues(
-                            patientSurvivalsPerGroup,
-                            survivals => survivals.length
-                        ),
-                        medianPerGroup: _.mapValues(
-                            patientSurvivalsPerGroup,
-                            survivals => {
-                                const sorted = _.sortBy(
-                                    survivals,
-                                    s => s.months
-                                );
-                                return getMedian(
-                                    sorted,
-                                    getSurvivalSummaries(sorted)
-                                );
-                            }
-                        ),
-                        pValue: pValues[prefix],
-                        qValue: qValues[prefix],
-                    };
-                }
-            );
-
-            return Promise.resolve(survivalPrefixes);
+    readonly tabUI = MakeMobxView({
+        await: () => {
+            if (
+                this.props.store._activeGroupsNotOverlapRemoved.isComplete &&
+                this.props.store._activeGroupsNotOverlapRemoved.result.length >
+                    10
+            ) {
+                // dont bother loading data for and computing UI if its not valid situation for it
+                return [this.props.store._activeGroupsNotOverlapRemoved];
+            } else {
+                return [
+                    this.props.store._activeGroupsNotOverlapRemoved,
+                    this.survivalUI,
+                    this.survivalPrefixTable,
+                    this.props.store.isLeftTruncationAvailable,
+                ];
+            }
         },
+        render: () => {
+            var isGenieBpcStudy = this.props.store.studies.result!.find(s =>
+                s.studyId.includes('genie_bpc')
+            );
+            return (
+                <>
+                    <div
+                        className={'tabMessageContainer'}
+                        style={{ paddingBottom: 0 }}
+                    >
+                        {getStatisticalCautionInfo()}
+                        {isGenieBpcStudy &&
+                            !this.props.store.isLeftTruncationAvailable
+                                .result && (
+                                <div className="alert alert-info">
+                                    <i
+                                        className="fa fa-md fa-info-circle"
+                                        style={{
+                                            verticalAlign: 'middle !important',
+                                            marginRight: 6,
+                                            marginBottom: 1,
+                                        }}
+                                    />
+                                    Kaplan-Meier estimates do not account for
+                                    the lead time bias introduced by the
+                                    inclusion criteria for the GENIE BPC
+                                    Project.
+                                </div>
+                            )}
+                        <OverlapExclusionIndicator
+                            store={this.props.store}
+                            only="patient"
+                            survivalTabMode={true}
+                        />
+                    </div>
+                    <div
+                        style={{
+                            display: 'flex',
+                        }}
+                    >
+                        {this.survivalPrefixTable.component && (
+                            <div
+                                style={{
+                                    marginRight: 15,
+                                    marginTop: 15,
+                                    minWidth: 475,
+                                    maxWidth: 475,
+                                    height: 'fit-content',
+                                    overflowX: 'scroll',
+                                }}
+                            >
+                                {this.survivalPrefixTable.component}
+                            </div>
+                        )}
+                        {this.survivalUI.component}
+                    </div>
+                </>
+            );
+        },
+        renderPending: () => (
+            <LoadingIndicator center={true} isLoading={true} size={'big'} />
+        ),
+        renderError: () => <ErrorMessage message="WIP" />,
+        showLastRenderWhenPending: true,
     });
+
+    readonly survivalPrefixes = remoteData(
+        {
+            await: () => [
+                this.survivalTitleText,
+                this.props.store.patientSurvivals,
+                this.pValuesByPrefix,
+                this.qValuesByPrefix,
+                this.analysisGroupsComputations,
+            ],
+            invoke: () => {
+                const patientSurvivals = this.props.store.patientSurvivals
+                    .result!;
+                const analysisGroups = this.analysisGroupsComputations.result!
+                    .analysisGroups;
+                const uidToAnalysisGroup = _.keyBy(
+                    analysisGroups,
+                    g => g.value
+                );
+                const patientToAnalysisGroups = this.analysisGroupsComputations
+                    .result!.patientToAnalysisGroups;
+                const pValues = this.pValuesByPrefix.result!;
+                const qValues = this.qValuesByPrefix.result!;
+
+                const survivalPrefixes = _.map(
+                    this.survivalTitleText.result! as Dictionary<string>,
+                    (displayText, prefix) => {
+                        const patientSurvivalsPerGroup = _.mapValues(
+                            _.keyBy(analysisGroups, group => group.name),
+                            () => [] as PatientSurvival[] // initialize empty arrays
+                        );
+
+                        for (const s of patientSurvivals[prefix]) {
+                            // collect patient survivals by which groups the patient is in
+                            const groupUids =
+                                patientToAnalysisGroups[s.uniquePatientKey] ||
+                                [];
+                            for (const uid of groupUids) {
+                                patientSurvivalsPerGroup[
+                                    uidToAnalysisGroup[uid].name
+                                ].push(s);
+                            }
+                        }
+                        return {
+                            prefix,
+                            displayText,
+                            numPatients: calculateNumberOfPatients(
+                                patientSurvivals[prefix],
+                                patientToAnalysisGroups
+                            ),
+                            numPatientsPerGroup: _.mapValues(
+                                patientSurvivalsPerGroup,
+                                survivals => survivals.length
+                            ),
+                            medianPerGroup: _.mapValues(
+                                patientSurvivalsPerGroup,
+                                survivals => {
+                                    const sorted = _.sortBy(
+                                        survivals,
+                                        s => s.months
+                                    );
+                                    return getMedian(
+                                        sorted,
+                                        getSurvivalSummaries(sorted)
+                                    );
+                                }
+                            ),
+                            pValue: pValues[prefix],
+                            qValue: qValues[prefix],
+                        };
+                    }
+                );
+
+                return Promise.resolve(survivalPrefixes);
+            },
+        },
+        []
+    );
 
     readonly survivalPrefixTableDataStore = remoteData({
         await: () => [this.survivalPrefixes],
@@ -458,6 +786,41 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             );
         },
     });
+
+    // readonly survivalContent = MakeMobxView({
+    //     await: () => [
+    //         this.survivalTitleText,
+    //         this.analysisGroupsComputations,
+    //         this.survivalPrefixes,
+    //         this.survivalPrefixTableDataStore,
+    //     ],
+    //     render: () => {
+    //         const analysisGroups = this.analysisGroupsComputations.result!
+    //             .analysisGroups;
+    //             console.log(analysisGroups)
+    //         const survivalTitleText = this.survivalTitleText.result!;
+
+    //         if (Object.keys(survivalTitleText).length > 1) {
+    //             // only show table if there's more than one prefix option
+    //             return (
+    //                 <SurvivalPrefixTable
+    //                     groupNames={analysisGroups.map(g => g.name)}
+    //                     survivalPrefixes={this.survivalPrefixes.result!}
+    //                     getSelectedPrefix={() =>
+    //                         this.selectedSurvivalPlotPrefix
+    //                     }
+    //                     setSelectedPrefix={this.setSurvivalPlotPrefix}
+    //                     dataStore={this.survivalPrefixTableDataStore.result!}
+    //                 />
+    //             );
+    //         } else {
+    //             return null;
+    //         }
+    //     },
+    //     renderPending: () => (
+    //         <LoadingIndicator center={true} isLoading={true} size={'big'} />
+    //     ),
+    // });
 
     readonly survivalPrefixTable = MakeMobxView({
         await: () => [
@@ -488,30 +851,38 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 return null;
             }
         },
+        renderPending: () => (
+            <LoadingIndicator center={true} isLoading={true} size={'big'} />
+        ),
     });
 
-    readonly survivalTitleText = remoteData({
-        await: () => [
-            this.props.store.survivalClinicalAttributesPrefix,
-            this.props.store.survivalDescriptions,
-        ],
-        invoke: () =>
-            Promise.resolve(
-                this.props.store.survivalClinicalAttributesPrefix.result!.reduce(
-                    (map, prefix) => {
-                        // get survival plot titles
-                        // use first display name as title
-                        map[prefix] = generateSurvivalPlotTitleFromDisplayName(
-                            this.props.store.survivalDescriptions.result![
+    readonly survivalTitleText = remoteData(
+        {
+            await: () => [
+                this.props.store.survivalClinicalAttributesPrefix,
+                this.props.store.survivalDescriptions,
+            ],
+            invoke: () =>
+                Promise.resolve(
+                    this.props.store.survivalClinicalAttributesPrefix.result!.reduce(
+                        (map, prefix) => {
+                            // get survival plot titles
+                            // use first display name as title
+                            map[
                                 prefix
-                            ][0].displayName
-                        );
-                        return map;
-                    },
-                    {} as { [prefix: string]: string }
-                )
-            ),
-    });
+                            ] = generateSurvivalPlotTitleFromDisplayName(
+                                this.props.store.survivalDescriptions.result![
+                                    prefix
+                                ][0].displayName
+                            );
+                            return map;
+                        },
+                        {} as { [prefix: string]: string }
+                    )
+                ),
+        },
+        {}
+    );
 
     readonly survivalYLabel = remoteData({
         await: () => [
@@ -545,7 +916,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.survivalClinicalAttributesPrefix,
             this.props.store.patientSurvivals,
             this.props.store.patientSurvivalsWithoutLeftTruncation,
-            this.props.store.activeStudiesClinicalAttributes,
+            this.props.store.activeStudiesSurvivalAttributes,
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,
@@ -556,6 +927,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.isLeftTruncationAvailable,
             this.survivalPrefixTableDataStore,
             this.survivalPrefixTable,
+            this.props.store.clinicalEventOptions,
         ],
         render: () => {
             let content: any = null;
@@ -835,6 +1207,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     });
 
     render() {
-        return this.tabUI.component;
+        return this.mainTabUI.component;
     }
 }

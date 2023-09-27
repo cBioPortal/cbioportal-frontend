@@ -77,5 +77,8 @@ export {
     StructuralVariantFilter,
     StructuralVariantQuery,
     StructuralVariantGeneSubQuery,
+    ClinicalEventRequest,
+    ClinicalEventRequestIdentifier,
+    SurvivalRequest,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';
