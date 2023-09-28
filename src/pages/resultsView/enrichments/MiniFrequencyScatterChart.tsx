@@ -40,6 +40,7 @@ export interface IMiniFrequencyScatterChartProps {
     onSelection: (hugoGeneSymbols: string[]) => void;
     onSelectionCleared: () => void;
     selectedGenesSet: { [hugoGeneSymbol: string]: any };
+    yAxisLablePrefix?: string;
 }
 
 const MAX_DOT_SIZE = 10;
@@ -104,7 +105,8 @@ export default class MiniFrequencyScatterChart extends React.Component<
     }
 
     @computed get yLabel() {
-        return `Altered Frequency in ${truncateWithEllipsis(
+        const prefix = this.props.yAxisLablePrefix || 'Altered Frequency';
+        return `${prefix} in ${truncateWithEllipsis(
             this.props.yGroupName,
             this.maxLabelWidth,
             'Arial',
