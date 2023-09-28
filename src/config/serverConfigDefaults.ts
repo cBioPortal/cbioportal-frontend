@@ -140,6 +140,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
             MUTATION_COUNT_CNA_FRACTION: 200,
             MUTATED_GENES_TABLE: 90,
             STRUCTURAL_VARIANT_GENES_TABLE: 85,
+            STRUCTURAL_VARIANTS_TABLE: 85,
             CNA_GENES_TABLE: 80,
             PATIENT_TREATMENTS_TABLE: 75,
             PATIENT_TREATMENT_GROUPS_TABLE: 75,
@@ -228,6 +229,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     vaf_sequential_mode_default: false,
 
     vaf_log_scale_default: false,
+
+    skin_study_view_show_sv_table: false,
 };
 
 export default ServerConfigDefaults;
