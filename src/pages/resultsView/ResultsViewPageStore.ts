@@ -305,6 +305,7 @@ import {
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
 import { IGeneticAlterationRuleSetParams, RGBAColor } from 'oncoprintjs';
+import { hexToRGBA } from 'shared/lib/Colors';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -574,22 +575,22 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable queryFormVisible: boolean = false;
 
-    @observable userSelectedAlterationColors: {
-        [alterationType: string]: {
-            [type: string]: RGBAColor;
+    @observable _userSelectedClinicalAttributeColors: {
+        [label: string]: {
+            [value: string]: RGBAColor;
         };
     } = {};
 
-    @observable _defaultAlterationColors: {
-        [alterationType: string]: {
-            [type: string]: RGBAColor;
+    @observable _defaultClinicalAttributeColors: {
+        [label: string]: {
+            [value: string]: RGBAColor;
         };
     } = {};
 
-    private _selectedComparisonGroupsWarningSigns = observable.map<
-        string,
-        boolean
-    >({}, { deep: false });
+    // private _selectedComparisonGroupsWarningSigns = observable.map<
+    //     string,
+    //     boolean
+    // >({}, { deep: false });
 
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
@@ -605,58 +606,68 @@ export class ResultsViewPageStore extends AnalysisStore
         | undefined = undefined;
 
     @action.bound
-    public onAlterationColorChange(
-        alterationType: string,
-        type: string,
+    public onClinicalAttributeColorChange(
+        label: string,
+        value: string,
         color: RGBAColor | undefined
     ) {
+        // if color is undefined, delete color from userSelectedClinicalAttributeColors if exists
         if (
             !color &&
-            this.userSelectedAlterationColors[alterationType] &&
-            this.userSelectedAlterationColors[alterationType][type]
+            this._userSelectedClinicalAttributeColors[label] &&
+            this._userSelectedClinicalAttributeColors[label][value]
         ) {
-            delete this.userSelectedAlterationColors[alterationType][type];
+            delete this._userSelectedClinicalAttributeColors[label][value];
+            // else, set the color in userSelectedClinicalAttributeColors
         } else if (color) {
-            if (!this.userSelectedAlterationColors[alterationType]) {
-                this.userSelectedAlterationColors[alterationType] = {};
+            if (!this._userSelectedClinicalAttributeColors[label]) {
+                this._userSelectedClinicalAttributeColors[label] = {};
             }
-            this.userSelectedAlterationColors[alterationType][type] = color;
+            this._userSelectedClinicalAttributeColors[label][value] = color;
         }
     }
 
-    @computed get defaultAlterationColors() {
-        return this._defaultAlterationColors;
+    @computed get defaultClinicalAttributeColors() {
+        return this._defaultClinicalAttributeColors;
+    }
+
+    @computed get userSelectedClinicalAttributeColors() {
+        return this._userSelectedClinicalAttributeColors;
     }
 
     @action.bound
-    public setDefaultAlterationColors(rule: IGeneticAlterationRuleSetParams) {
-        let alterationColors: {
-            [alterationType: string]: {
-                [type: string]: RGBAColor;
-            };
-        } = {};
-        _.forIn(
-            Object.keys(rule.rule_params.conditional),
-            (alterationType: string) => {
-                alterationColors[alterationType] = {};
-                _.forIn(
-                    Object.keys(rule.rule_params.conditional[alterationType]),
-                    (type: string) => {
-                        if (alterationType === 'disp_mrna') {
-                            alterationColors[alterationType][type] = rule
-                                .rule_params.conditional[alterationType][type]
-                                .shapes[0].stroke as RGBAColor;
-                        } else {
-                            alterationColors[alterationType][type] = rule
-                                .rule_params.conditional[alterationType][type]
-                                .shapes[0].fill as RGBAColor;
-                        }
-                    }
+    public setDefaultClinicalAttributeColor(
+        label: string,
+        categoryToColor?: { [value: string]: string },
+        countsCategoryLabels?: string[],
+        countsCategoryFills?: RGBAColor[]
+    ) {
+        // if default for attribute doesn't already exist
+        if (!this._defaultClinicalAttributeColors[label]) {
+            // if categoryToColor given, use this mapping for colors
+            if (categoryToColor) {
+                this._defaultClinicalAttributeColors[label] = _.mapValues(
+                    categoryToColor,
+                    hexToRGBA
                 );
+                // sample type attributes have unique "Mixed" label with set color
+                if (label === 'Sample Type' || label === 'Sample type id') {
+                    this._defaultClinicalAttributeColors[label]['Mixed'] = [
+                        48,
+                        97,
+                        194,
+                        1,
+                    ];
+                }
+                // if labels and fills given, set each label with its corresponding color
+            } else if (countsCategoryLabels && countsCategoryFills) {
+                this._defaultClinicalAttributeColors[label] = {};
+                _.forEach(countsCategoryLabels, (value, i) => {
+                    this._defaultClinicalAttributeColors[label][value] =
+                        countsCategoryFills[i];
+                });
             }
-        );
-        this._defaultAlterationColors = alterationColors;
-        this.userSelectedAlterationColors = {};
+        }
     }
 
     // @action public showAlterationWarningSign(
@@ -691,9 +702,9 @@ export class ResultsViewPageStore extends AnalysisStore
     //     );
     // }
 
-    public isAlterationMarkedWithWarningSign(alteration: string): boolean {
-        return !!this._selectedComparisonGroupsWarningSigns.get(alteration);
-    }
+    // public isAlterationMarkedWithWarningSign(alteration: string): boolean {
+    //     return !!this._selectedComparisonGroupsWarningSigns.get(alteration);
+    // }
 
     @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {

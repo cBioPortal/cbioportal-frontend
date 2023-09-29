@@ -61,8 +61,7 @@ export function transition(
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     getMolecularProfileMap: () =>
         | { [molecularProfileId: string]: MolecularProfile }
-        | undefined,
-    customRule?: IGeneticAlterationRuleSetParams
+        | undefined
 ) {
     const notKeepingSorted = shouldNotKeepSortedForTransition(
         nextProps,
@@ -92,8 +91,7 @@ export function transition(
         prevProps,
         oncoprint,
         getTrackSpecKeyToTrackId,
-        getMolecularProfileMap,
-        customRule
+        getMolecularProfileMap
     );
     transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
@@ -590,8 +588,7 @@ function hasGeneticTrackRuleSetChanged(
             prevProps.distinguishMutationType ||
         nextProps.distinguishDrivers !== prevProps.distinguishDrivers ||
         nextProps.distinguishGermlineMutations !==
-            prevProps.distinguishGermlineMutations ||
-        nextProps.changeRule !== prevProps.changeRule
+            prevProps.distinguishGermlineMutations
     );
 }
 
@@ -602,8 +599,7 @@ function transitionTracks(
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     getMolecularProfileMap: () =>
         | { [molecularProfileId: string]: MolecularProfile }
-        | undefined,
-    customRule?: IGeneticAlterationRuleSetParams
+        | undefined
 ) {
     // Initialize tracks for rule set sharing
     const trackIdForRuleSetSharing = {
@@ -745,9 +741,7 @@ function transitionTracks(
             oncoprint,
             nextProps,
             prevProps,
-            trackIdForRuleSetSharing,
-            undefined,
-            customRule
+            trackIdForRuleSetSharing
         );
         delete prevGeneticTracks[track.key];
     }
@@ -763,9 +757,7 @@ function transitionTracks(
                 oncoprint,
                 nextProps,
                 prevProps,
-                trackIdForRuleSetSharing,
-                undefined,
-                customRule
+                trackIdForRuleSetSharing
             );
         }
     }
@@ -788,7 +780,8 @@ function transitionTracks(
             prevClinicalTracks[track.key],
             getTrackSpecKeyToTrackId,
             oncoprint,
-            nextProps
+            nextProps,
+            prevProps
         );
         delete prevClinicalTracks[track.key];
     }
@@ -800,7 +793,8 @@ function transitionTracks(
                 prevClinicalTracks[track.key],
                 getTrackSpecKeyToTrackId,
                 oncoprint,
-                nextProps
+                nextProps,
+                prevProps
             );
         }
     }
@@ -1102,21 +1096,13 @@ function transitionGeneticTrack(
     nextProps: IOncoprintProps,
     prevProps: Partial<IOncoprintProps>,
     trackIdForRuleSetSharing: { genetic?: TrackId },
-    expansionParentKey?: string,
-    customRule?: IGeneticAlterationRuleSetParams
+    expansionParentKey?: string
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (tryRemoveTrack(nextSpec, prevSpec, trackSpecKeyToTrackId, oncoprint)) {
         // Remove track
         return;
     } else if (nextSpec && !prevSpec) {
-        let rule = customRule
-            ? customRule
-            : getGeneticTrackRuleSetParams(
-                  nextProps.distinguishMutationType,
-                  nextProps.distinguishDrivers,
-                  nextProps.distinguishGermlineMutations
-              );
         // Add track
         const createCustomOncoprintTooltip = getCustomJsFunctions()
             .createCustomOncoprintTooltip;
@@ -1132,7 +1118,11 @@ function transitionGeneticTrack(
             );
         }
         const geneticTrackParams: UserTrackSpec<any> = {
-            rule_set_params: rule,
+            rule_set_params: getGeneticTrackRuleSetParams(
+                nextProps.distinguishMutationType,
+                nextProps.distinguishDrivers,
+                nextProps.distinguishGermlineMutations
+            ),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
             track_label_color: nextSpec.labelColor || undefined,
@@ -1224,16 +1214,15 @@ function transitionGeneticTrack(
                     trackId
                 );
             } else {
-                let rule = customRule
-                    ? customRule
-                    : getGeneticTrackRuleSetParams(
-                          nextProps.distinguishMutationType,
-                          nextProps.distinguishDrivers,
-                          nextProps.distinguishGermlineMutations
-                      );
-                console.log(rule);
                 // otherwise, update ruleset
-                oncoprint.setRuleSet(trackId, rule);
+                oncoprint.setRuleSet(
+                    trackId,
+                    getGeneticTrackRuleSetParams(
+                        nextProps.distinguishMutationType,
+                        nextProps.distinguishDrivers,
+                        nextProps.distinguishGermlineMutations
+                    )
+                );
             }
         }
         // either way, use this one now
@@ -1268,7 +1257,8 @@ function transitionClinicalTrack(
     prevSpec: ClinicalTrackSpec | undefined,
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     oncoprint: OncoprintJS,
-    nextProps: IOncoprintProps
+    nextProps: IOncoprintProps,
+    prevProps: Partial<IOncoprintProps>
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (tryRemoveTrack(nextSpec, prevSpec, trackSpecKeyToTrackId, oncoprint)) {
@@ -1336,6 +1326,21 @@ function transitionClinicalTrack(
         // set custom track options if they've shallow changed - its cheap
         if (prevSpec.custom_options !== nextSpec.custom_options) {
             oncoprint.setTrackCustomOptions(trackId, nextSpec.custom_options);
+        }
+
+        // update ruleset for changed track key
+        if (
+            nextProps.changedTrackKey &&
+            getTrackSpecKeyToTrackId()[nextProps.changedTrackKey] === trackId
+        ) {
+            let rule_set_params = getClinicalTrackRuleSetParams(nextSpec);
+            rule_set_params.legend_label = nextSpec.label;
+            rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
+            rule_set_params.na_legend_label = nextSpec.na_legend_label;
+            oncoprint.setRuleSet(trackId, rule_set_params);
+            // set changed track key back to none
+            nextProps.onSetChangedTrackKey &&
+                nextProps.onSetChangedTrackKey('');
         }
     }
 }

@@ -21,69 +21,26 @@ import {
     IOncoprintControlsState,
 } from './OncoprintControls';
 import { RGBAColor } from 'oncoprintjs';
+import { ClinicalTrackSpec } from '../Oncoprint';
+import _ from 'lodash';
 
 export interface IGroupCheckboxProps {
-    alteration: string;
-    type: string;
     store?: ResultsViewPageStore;
     handlers: IOncoprintControlsHandlers;
     state: IOncoprintControlsState;
-    setRule?: (
-        alteration: string,
-        type: string,
+    handleClinicalAttributeColorChange?: (
+        label: string,
+        value: string,
         color: RGBAColor | undefined
     ) => void;
+    clinicalAttributeLabel: string;
+    clinicalAttributeValue: any;
     color: RGBAColor;
-    markedWithWarningSign: boolean;
+    clinicalTrack: ClinicalTrackSpec;
+    // markedWithWarningSign: boolean;
 }
 
 const COLOR_UNDEFINED = '#FFFFFF';
-
-export const alterationToTypeToLabel: {
-    [alteration: string]: { [type: string]: string };
-} = {
-    // disp_cna
-    disp_cna: {
-        'amp_rec,amp': 'Amplification',
-        'gain_rec,gain': 'Gain',
-        'hetloss_rec,hetloss': 'Shallow Deletion',
-        'homdel_rec,homdel': 'Deep Deletion',
-    },
-    // disp_germ
-    disp_germ: {
-        true: 'Germline Mutation',
-    },
-    // disp_mrna
-    disp_mrna: {
-        high: 'mRNA High',
-        low: 'mRNA Low',
-    },
-    // disp_mut
-    disp_mut: {
-        missense: 'Missense Mutation (unknown significance)',
-        missense_rec: 'Missense Mutation (putative driver)',
-        trunc: 'Truncating Mutation (unknown significance)',
-        trunc_rec: 'Truncating Mutation (putative driver)',
-        inframe: 'Inframe Mutation (unknown significance)',
-        inframe_rec: 'Inframe Mutation (putative driver)',
-        splice: 'Splice Mutation (unknown significance)',
-        splice_rec: 'Splice Mutation (putative driver)',
-        promoter: 'Promoter Mutation (unknown significance)',
-        promoter_rec: 'Promoter Mutation (putative driver)',
-        other: 'Other Mutation (unknown significance)',
-        other_rec: 'Other Mutation (putative driver)',
-    },
-    // disp_prot
-    disp_prot: {
-        high: 'Protein High',
-        low: 'Protein Low',
-    },
-    // disp_structuralVariant
-    disp_structuralVariant: {
-        sv: 'Structural Variant (unknown significance)',
-        sv_rec: 'Structural Variant (putative driver)',
-    },
-};
 
 @observer
 export default class OncoprintColors extends React.Component<
@@ -99,23 +56,25 @@ export default class OncoprintColors extends React.Component<
     handleChangeComplete = (color: any, event: any) => {
         // if same color is select, unselect it (go back to no color)
         if (color.hex === rgbaToHex(this.props.color)) {
-            this.props.setRule &&
-                this.props.setRule(
-                    this.props.alteration,
-                    this.props.type,
+            this.props.handleClinicalAttributeColorChange &&
+                this.props.handleClinicalAttributeColorChange(
+                    this.props.clinicalAttributeLabel,
+                    this.props.clinicalAttributeValue,
                     undefined
                 );
         } else {
-            this.props.setRule &&
-                this.props.setRule(this.props.alteration, this.props.type, [
-                    color.rgb.r,
-                    color.rgb.g,
-                    color.rgb.b,
-                    color.rgb.a,
-                ]);
+            this.props.handleClinicalAttributeColorChange &&
+                this.props.handleClinicalAttributeColorChange(
+                    this.props.clinicalAttributeLabel,
+                    this.props.clinicalAttributeValue,
+                    [color.rgb.r, color.rgb.g, color.rgb.b, color.rgb.a]
+                );
         }
-        this.props.handlers.onChangeRule &&
-            this.props.handlers.onChangeRule(!this.props.state.changeRule!);
+        // set changed track key
+        this.props.handlers.onSetChangedTrackKey &&
+            this.props.handlers.onSetChangedTrackKey(
+                this.props.clinicalTrack.key
+            );
     };
 
     @computed get colorList() {
@@ -152,17 +111,13 @@ export default class OncoprintColors extends React.Component<
     render() {
         return (
             <div>
-                {
-                    alterationToTypeToLabel[this.props.alteration][
-                        this.props.type
-                    ]
-                }
-                <DefaultTooltip
+                {this.props.clinicalAttributeValue}
+                {/* <DefaultTooltip
                     overlay={
                         'You have selected identical colors for some alterations.'
                     }
-                >
-                    <span>
+                > */}
+                {/* <span>
                         {this.props.markedWithWarningSign && (
                             <i
                                 className="fa fa-warning"
@@ -175,8 +130,8 @@ export default class OncoprintColors extends React.Component<
                                 }}
                             />
                         )}
-                    </span>
-                </DefaultTooltip>
+                    </span> */}
+                {/* </DefaultTooltip> */}
                 <OverlayTrigger
                     containerPadding={40}
                     trigger="click"
