@@ -4,6 +4,7 @@ import { If } from 'react-if';
 import {
     ChartType,
     NumericalGroupComparisonType,
+    SpecialChartsUniqueKeyEnum,
 } from 'pages/studyView/StudyViewUtils';
 import classnames from 'classnames';
 import { action, computed, makeObservable, observable } from 'mobx';
@@ -22,6 +23,11 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
+import { AppContext } from 'cbioportal-frontend-commons';
+import DriverAnnotationProteinImpactTypeBadgeSelector from 'shared/components/mutationMapper/DriverAnnotationProteinImpactTypeBadgeSelector';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE } from 'shared/lib/MutationUtils';
+import _ from 'lodash';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
 
@@ -80,6 +86,7 @@ export interface ChartControls {
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
     showSwapAxes?: boolean;
+    showMutationDiagramResultsPageButton?: boolean;
     showSurvivalPlotLeftTruncationToggle?: boolean;
     survivalPlotLeftTruncationChecked?: boolean;
 }
@@ -604,6 +611,31 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             }
         }
 
+        if (this.props.chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item"
+                        onClick={() =>
+                            this.props.store.onShowMutationsInResultsView(
+                                this.props.chartMeta.uniqueKey
+                            )
+                        }
+                    >
+                        <i
+                            className={classnames(
+                                'fa fa-xs fa-fw',
+                                'fa-eye',
+                                styles.menuItemIcon
+                            )}
+                            aria-hidden="true"
+                        />
+                        Explore Gene
+                    </a>
+                </li>
+            );
+        }
+
         if (this.showDownload) {
             const downloadSubmenuWidth = 70;
             items.push(
@@ -803,6 +835,60 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                             aria-hidden="true"
                                         />
                                     </button>
+                                </DefaultTooltip>
+                            </If>
+                            <If
+                                condition={
+                                    this.props.chartType ===
+                                    ChartTypeEnum.MUTATION_DIAGRAM
+                                }
+                            >
+                                <DefaultTooltip
+                                    mouseEnterDelay={0}
+                                    trigger={['hover']}
+                                    placement={this.tooltipPosition}
+                                    align={this.tooltipAlign}
+                                    overlay={
+                                        this.props.store.mutationPlotStore[
+                                            this.props.chartMeta.uniqueKey
+                                        ] &&
+                                        this.props.store.mutationPlotStore[
+                                            this.props.chartMeta.uniqueKey
+                                        ].activeTranscript.isComplete ? (
+                                            <div>
+                                                <DriverAnnotationProteinImpactTypeBadgeSelector
+                                                    counts={
+                                                        this.props.store
+                                                            .mutationPlotStore[
+                                                            this.props.chartMeta
+                                                                .uniqueKey
+                                                        ]
+                                                            .tooltipDriverAnnotationImpactTypeBadgeCounts
+                                                    }
+                                                />
+                                            </div>
+                                        ) : (
+                                            <LoadingIndicator
+                                                isLoading={true}
+                                            />
+                                        )
+                                    }
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <div
+                                        className={classnames(
+                                            'btn btn-xs btn-default',
+                                            styles.item
+                                        )}
+                                    >
+                                        <i
+                                            className={classnames(
+                                                'fa fa-xs fa-fw',
+                                                'fa-edit'
+                                            )}
+                                            aria-hidden="true"
+                                        />
+                                    </div>
                                 </DefaultTooltip>
                             </If>
                             <DefaultTooltip

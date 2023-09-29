@@ -173,6 +173,10 @@ export default class StudyViewPage extends React.Component<
         let hashString: string = hash || getBrowserWindow().studyPageFilter;
         delete (window as any).studyPageFilter;
 
+        this.store.enableMutationDiagramFlag = query['test']
+            ? query['test'] == 'true'
+            : false;
+
         if (hashString) {
             const params = parse(hashString) as Partial<StudyViewURLQuery>;
 

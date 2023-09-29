@@ -181,7 +181,6 @@ export class StudySummaryTab extends React.Component<
             setComparisonConfirmationModal: this.store
                 .setComparisonConfirmationModal,
         };
-
         switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART: {
                 //if the chart is one of the custom charts then get the appropriate promise
@@ -748,6 +747,20 @@ export class StudySummaryTab extends React.Component<
                 props.onResetSelection = () => {
                     this.store.resetClinicalEventTypeFilter();
                 };
+                break;
+            }
+            case ChartTypeEnum.MUTATION_DIAGRAM: {
+                props.promise = this.store.annotatedDataForGene.get({
+                    hugoGeneSymbol: chartMeta.uniqueKey,
+                });
+                props.downloadTypes = ['SVG', 'PNG', 'PDF'];
+                props.showResetIconMutationPlot = this.store.isMutationPlotFilteredByGene(
+                    chartMeta.uniqueKey
+                );
+                props.onResetSelection = () => {
+                    this.store.removeMutationPlotFilters(chartMeta.uniqueKey);
+                };
+
                 break;
             }
             default:

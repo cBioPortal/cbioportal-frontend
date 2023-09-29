@@ -16,6 +16,21 @@
     height: 195px;
 }
 
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    font-size: 13px !important;
+    padding: 0 5px;
+
+    &.controlsAtTop {
+        button {
+            margin-right: 3px;
+        }
+    }
+}
+
 .chartHeightTwo {
     height: 400px;
 }
@@ -47,4 +62,14 @@
     flex-grow: 1;
     align-items: center;
     justify-content: center;
+}
+
+.filterResetPanelContainer {
+    height: '3rem';
+    position: 'relative';
+    display: 'flex';
+    align-items: 'center';
+    justify-content: 'center';
+    padding-top: '10px';
+    width: '100%';
 }

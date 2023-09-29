@@ -25,7 +25,12 @@ export type IGeneCellProps = {
     oncokbAnnotated: boolean;
     isOncogene: boolean;
     isTumorSuppressorGene: boolean;
-    onGeneSelect: (hugoGeneSymbol: string) => void;
+    onGeneSelect: (
+        hugoGeneSymbol: string,
+        tableType: FreqColumnTypeEnum
+    ) => void;
+    selectedMutationPlotGenes?: string[];
+    enableMutationDiagramFlag?: boolean;
 };
 
 @observer
@@ -63,7 +68,10 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         data-test="geneNameCell"
                         className={classnames(styles.displayFlex)}
                         onClick={() =>
-                            this.props.onGeneSelect(this.props.hugoGeneSymbol)
+                            this.props.onGeneSelect(
+                                this.props.hugoGeneSymbol,
+                                this.props.tableType
+                            )
                         }
                     >
                         <EllipsisTextTooltip
@@ -101,6 +109,22 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         >
                             <i className="fa fa-search"></i>
                         </div>
+                        {this.props.selectedMutationPlotGenes &&
+                            this.props.enableMutationDiagramFlag && (
+                                <div
+                                    className={classnames({
+                                        [styles.addGeneUI]: true,
+                                        [styles.selected]: this.props.selectedMutationPlotGenes.includes(
+                                            this.props.hugoGeneSymbol
+                                        ),
+                                    })}
+                                >
+                                    <i
+                                        className="fa fa-line-chart"
+                                        style={{ paddingLeft: 4 }}
+                                    ></i>
+                                </div>
+                            )}
                     </div>
                 </DefaultTooltip>
             </div>

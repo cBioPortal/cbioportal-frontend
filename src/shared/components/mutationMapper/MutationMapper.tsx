@@ -274,6 +274,7 @@ export default class MutationMapper<
                             annotatedProteinImpactTypeFilter={
                                 this.annotatedProteinImpactTypeFilter
                             }
+                            useOnlyFeature={true}
                         />
                     </div>
                 ) : (

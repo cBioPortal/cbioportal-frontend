@@ -39,6 +39,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
+import { ChartTypeEnum } from '../StudyViewConfig';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -78,6 +79,11 @@ export type BaseMultiSelectionTableProps = {
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
     selectedRowsKeys: string[];
+    onGeneSelect?: (
+        hugoGeneSymbol: string,
+        chartType?: FreqColumnTypeEnum
+    ) => void;
+    selectedGenes?: string[];
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
@@ -95,6 +101,9 @@ export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
     selectedGenes: string[];
     onGeneSelect: (hugoGeneSymbol: string) => void;
     columns: MultiSelectionTableColumn[];
+    setOperationsButtonText: string;
+    selectedMutationPlotGenes?: string[];
+    enableMutationDiagramFlag?: boolean;
     promise: MobxPromise<MultiSelectionTableRow[]>;
 };
 
@@ -184,6 +193,12 @@ export class MultiSelectionTable extends React.Component<
                                 data.isOncokbTumorSuppressorGene
                             }
                             onGeneSelect={this.props.onGeneSelect}
+                            selectedMutationPlotGenes={
+                                this.props.selectedMutationPlotGenes
+                            }
+                            enableMutationDiagramFlag={
+                                this.props.enableMutationDiagramFlag
+                            }
                         />
                     );
                 },

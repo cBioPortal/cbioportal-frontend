@@ -128,6 +128,7 @@ export enum SpecialChartsUniqueKeyEnum {
     SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
     SAMPLE_TREATMENT_TARGET = 'SAMPLE_TREATMENT_TARGET',
     CLINICAL_EVENT_TYPE_COUNTS = 'CLINICAL_EVENT_TYPE_COUNTS',
+    MUTATION_PLOT = 'MUTATION_PLOT',
 }
 
 export type AnalysisGroup = {
@@ -2639,6 +2640,7 @@ export function submitToPage(
                 'legacyStudySubmission',
                 JSON.stringify(params)
             );
+
             window.open(buildCBioPortalPageUrl(url), target);
         } catch (e) {
             // TODO - currenlty alerting user with message until we have a proper solution

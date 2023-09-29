@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styles from './styles.module.scss';
 import { observer } from 'mobx-react';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, autorun, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import {
     ChartControls,
@@ -41,7 +41,14 @@ import {
     STUDY_VIEW_CONFIG,
 } from '../StudyViewConfig';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { DataType, DownloadControlsButton } from 'cbioportal-frontend-commons';
+import {
+    DataType,
+    DefaultTooltip,
+    DownloadControlsButton,
+    EditableSpan,
+    EllipsisTextTooltip,
+    pluralize,
+} from 'cbioportal-frontend-commons';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
@@ -73,6 +80,13 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import ClinicalEventTypeCountTable, {
     ClinicalEventTypeCountColumnKey,
 } from 'pages/studyView/table/ClinicalEventTypeCountTable';
+import {
+    DefaultMutationMapperStore,
+    FilterResetPanel,
+    LollipopMutationPlot,
+} from 'react-mutation-mapper';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import StudyViewMutationPlotControls from './mutationPlot/StudyViewMutationPlotControls';
 import {
     StructuralVariantMultiSelectionTable,
     StructVarMultiSelectionTableColumn,
@@ -178,11 +192,15 @@ export interface IChartContainerProps {
     patientSurvivalsWithoutLeftTruncation?: PatientSurvival[];
     onToggleSurvivalPlotLeftTruncation?: (chartMeta: ChartMeta) => void;
     survivalPlotLeftTruncationChecked?: boolean;
+    showResetIconMutationPlot?: boolean;
 }
 
 @observer
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private chartHeaderHeight = 20;
+    private mutationPlotRef: LollipopMutationPlot<any>;
+    private mutationPlotHeightConstant = 120;
+    private mutationPlotWidthConstant = 165;
 
     private handlers: any;
     private plot: AbstractChart;
@@ -346,6 +364,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     survivalPlotLeftTruncationChecked: this.props
                         .survivalPlotLeftTruncationChecked,
                 };
+                break;
+            }
+            case ChartTypeEnum.MUTATION_DIAGRAM: {
+                controls = {
+                    showMutationDiagramResultsPageButton: true,
+                };
+                break;
             }
         }
         if (this.comparisonPagePossible) {
@@ -353,7 +378,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
         return {
             ...controls,
-            showResetIcon: this.props.filters && this.props.filters.length > 0,
+            showResetIcon:
+                (this.props.filters && this.props.filters.length > 0) ||
+                this.props.showResetIconMutationPlot,
         } as ChartControls;
     }
 
@@ -370,6 +397,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             this.props.promise.result!.length > 1 &&
             COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1
         );
+    }
+
+    svgHandler(chartType: ChartType): Promise<SVGElement> {
+        if (chartType == ChartTypeEnum.MUTATION_DIAGRAM) {
+            return Promise.resolve(this.mutationPlotRef.getSVG());
+        }
+
+        return Promise.resolve(this.toSVGDOMNode());
     }
 
     @action.bound
@@ -582,6 +617,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 this.props.dimension,
                                 this.chartHeaderHeight
                             )}
+                            selectedMutationPlotGenes={
+                                this.props.store.visibleMutationPlotGenes
+                            }
+                            enableMutationDiagramFlag={
+                                this.props.store.enableMutationDiagramFlag
+                            }
                             filters={this.props.filters}
                             onSubmitSelection={this.handlers.onValueSelection}
                             onChangeSelectedRows={
@@ -1329,7 +1370,69 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         />
                     );
                 };
-                break;
+            case ChartTypeEnum.MUTATION_DIAGRAM:
+                const gene = this.props.chartMeta.uniqueKey;
+                const store = this.props.store.getOrInitMutationStore(gene);
+
+                const plotSettings = {
+                    autoHideControls: false,
+                    showLegendToggle: false,
+                    showDownloadControls: false,
+                    showTrackSelector: false,
+                    showYMaxSlider: false,
+                    yAxisLabelFormatter: () => '',
+                };
+                const plotDimension = this.props.store.chartsDimension.get(
+                    gene
+                )!;
+
+                return () =>
+                    this.props.promise.isComplete &&
+                    store &&
+                    !store.activeTranscript.isPending ? (
+                        <div>
+                            <div
+                                style={{
+                                    height: '3rem',
+                                    width: '100%',
+                                    position: 'relative',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    paddingTop: '10px',
+                                }}
+                            >
+                                {store.samplesByPosition.length > 0 && (
+                                    <StudyViewMutationPlotControls
+                                        store={this.props.store}
+                                        gene={gene}
+                                        mutationMapperStore={store}
+                                    />
+                                )}
+                            </div>
+                            <LollipopMutationPlot
+                                store={store}
+                                geneWidth={
+                                    plotDimension.w *
+                                    this.mutationPlotWidthConstant
+                                }
+                                vizHeight={
+                                    plotDimension.h *
+                                    this.mutationPlotHeightConstant
+                                }
+                                onRef={(ref: any) => {
+                                    this.mutationPlotRef = ref;
+                                }}
+                                isPutativeDriver={(m: AnnotatedMutation) => {
+                                    return m.putativeDriver;
+                                }}
+                                {...plotSettings}
+                            />
+                        </div>
+                    ) : (
+                        <LoadingIndicator isLoading={true}></LoadingIndicator>
+                    );
+
             default:
                 return null;
         }
@@ -1338,6 +1441,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed
     get highlightChart() {
         return this.newlyAdded;
+    }
+
+    get chartTitle() {
+        return this.props.title;
     }
 
     componentDidMount() {
@@ -1374,7 +1481,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     chartMeta={this.props.chartMeta}
                     chartType={this.props.chartType}
                     store={this.props.store}
-                    title={this.props.title}
+                    title={this.chartTitle}
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
@@ -1394,7 +1501,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     toggleNAValue={this.handlers.onToggleNAValue}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
-                    getSVG={() => Promise.resolve(this.toSVGDOMNode())}
+                    getSVG={() => this.svgHandler(this.chartType)}
                     getData={this.props.getData}
                     downloadTypes={this.props.downloadTypes}
                     openComparisonPage={this.openComparisonPage}

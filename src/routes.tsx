@@ -403,7 +403,7 @@ export const makeRoutes = () => {
                     )}
                 />
                 <Route
-                    path="/comparison/:tab?"
+                    path="/comparison/:tab"
                     component={ScrollToTop(
                         LocationValidationWrapper(
                             GroupComparisonPage,

@@ -80,6 +80,7 @@ export enum ChartTypeEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'PATIENT_TREATMENT_GROUPS_TABLE',
     PATIENT_TREATMENT_TARGET_TABLE = 'PATIENT_TREATMENT_TARGET_TABLE',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'CLINICAL_EVENT_TYPE_COUNTS_TABLE',
+    MUTATION_DIAGRAM = 'MUTATION_DIAGRAM',
     NONE = 'NONE',
 }
 
@@ -103,6 +104,7 @@ export enum ChartTypeNameEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'table',
     PATIENT_TREATMENT_TARGET_TABLE = 'table',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'table',
+    MUTATION_DIAGRAM = 'lollipop diagram',
     NONE = 'none',
 }
 
@@ -265,6 +267,12 @@ const studyViewFrontEnd = {
                 w: 2,
                 h: 2,
                 minW: 2,
+            },
+            [ChartTypeEnum.MUTATION_DIAGRAM]: {
+                w: 5,
+                h: 2,
+                minW: 2,
+                minH: 2,
             },
             [ChartTypeEnum.NONE]: {
                 w: 0,

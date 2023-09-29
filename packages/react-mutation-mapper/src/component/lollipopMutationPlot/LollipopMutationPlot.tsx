@@ -97,6 +97,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     bottomYAxisDefaultMax?: number;
     bottomYAxisDefaultMin?: number;
     yAxisLabelPadding?: number;
+    onRef?: any;
     lollipopTooltipCountInfo?: (
         count: number,
         mutations?: Partial<T>[],
@@ -599,8 +600,20 @@ export default class LollipopMutationPlot<
         };
     }
 
+    componentDidMount(): void {
+        if (this.props?.onRef) {
+            this.props?.onRef(this);
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.props?.onRef) {
+            this.props?.onRef(undefined);
+        }
+    }
+
     @autobind
-    private getSVG(): SVGElement {
+    getSVG(): SVGElement {
         let lollipopSvg: SVGElement = $(this.divContainer).find(
             '.lollipop-svgnode'
         )[0] as any;
