@@ -188,10 +188,17 @@ export function retrieveMutationalSignatureVersionFromData(
         })
     );
     if (uniqueProfileVersion !== undefined) {
-        return uniqueProfileVersion.includes('v3') &&
+        if (
+            uniqueProfileVersion.includes('v3') &&
             uniqueProfileVersion.includes('v2')
-            ? 'v3'
-            : uniqueProfileVersion[0]!;
+        ) {
+            return 'v3';
+        } else if (uniqueProfileVersion.includes('SBS')) {
+            // if there is no explicit version, we want to prefer SBS
+            return 'SBS';
+        } else {
+            return uniqueProfileVersion[0]!;
+        }
     }
     return 'v2';
 }
