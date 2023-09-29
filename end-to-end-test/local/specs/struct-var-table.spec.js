@@ -1,11 +1,10 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorageWithProperty = require('../../../shared/specUtils')
+    .goToUrlAndSetLocalStorageWithProperty;
 var waitForStudyView = require('../../shared/specUtils').waitForStudyView;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-// TODO remove feature flag after merge.
-const studyViewUrl = `${CBIOPORTAL_URL}/study/summary?id=study_es_0&featureFlags=STUDY_VIEW_STRUCT_VAR_TABLE`;
+const studyViewUrl = `${CBIOPORTAL_URL}/study/summary?id=study_es_0`;
 const structVarTable = '//*[@data-test="structural variant pairs-table"]';
 const filterCheckBox = '[data-test=labeledCheckbox]';
 const structVarFilterPillTag = '[data-test=pill-tag]';
@@ -16,7 +15,9 @@ const toast = '.Toastify div[role=alert]';
 
 describe('study view structural variant table', function() {
     beforeEach(() => {
-        goToUrlAndSetLocalStorage(studyViewUrl, true);
+        goToUrlAndSetLocalStorageWithProperty(studyViewUrl, true, {
+            skin_study_view_show_sv_table: true,
+        });
         waitForStudyView();
         showSvPane();
     });
