@@ -491,8 +491,8 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
                 category_key: 'attr_val',
                 category_to_color: Object.assign(
                     {},
-                    track.category_to_color,
-                    _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA)
+                    _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA),
+                    track.category_to_color
                 ),
                 universal_rule_categories: track.universal_rule_categories,
             };
@@ -1071,6 +1071,10 @@ export function makeClinicalTracksMobxPromise(
                         dataAndColors.categoryToColor,
                         hexToRGBA
                     );
+                    oncoprint.props.store.setDefaultClinicalAttributeColor(
+                        attribute.displayName,
+                        dataAndColors.categoryToColor
+                    );
                 } else if (
                     attribute.clinicalAttributeId ===
                     SpecialAttribute.MutationSpectrum
@@ -1078,6 +1082,12 @@ export function makeClinicalTracksMobxPromise(
                     ret.datatype = 'counts';
                     (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
                     (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
+                    oncoprint.props.store.setDefaultClinicalAttributeColor(
+                        attribute.displayName,
+                        undefined,
+                        MUTATION_SPECTRUM_CATEGORIES,
+                        MUTATION_SPECTRUM_FILLS
+                    );
                 }
 
                 const trackConfig =

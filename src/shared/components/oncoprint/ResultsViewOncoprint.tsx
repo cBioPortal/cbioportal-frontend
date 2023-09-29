@@ -42,7 +42,6 @@ import { AlterationTypeConstants } from 'shared/constants';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     getAlteredUids,
-    getGeneticTrackRuleSetParams,
     getUnalteredUids,
     makeClinicalTracksMobxPromise,
     makeGenericAssayProfileCategoricalTracksMobxPromise,
@@ -56,13 +55,7 @@ import _ from 'lodash';
 import { onMobxPromise, toPromise } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import {
-    IGeneticAlterationRuleSetParams,
-    OncoprintJS,
-    RGBAColor,
-    TrackGroupIndex,
-    TrackId,
-} from 'oncoprintjs';
+import { OncoprintJS, RGBAColor, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
@@ -139,35 +132,64 @@ export type AdditionalTrackGroupRecord = {
     molecularProfile: MolecularProfile;
 };
 
-export function editRule(
+export function getClinicalAttributeValues(
+    attributeLabel: string,
+    clinicalTracks: ClinicalTrackSpec[]
+): any[] {
+    // find track that matches given label
+    let index = _.findIndex(clinicalTracks, i => i.label === attributeLabel);
+    // if the datatype is "counts", the attribute values are under countsCategoryLabels
+    if (clinicalTracks[index] && clinicalTracks[index].datatype === 'counts') {
+        return (clinicalTracks[index] as any).countsCategoryLabels;
+        // if the datatype is "string", get attribute values from the track data
+    } else if (
+        clinicalTracks[index] &&
+        clinicalTracks[index].datatype === 'string'
+    ) {
+        return _(clinicalTracks[index].data)
+            .map(d => d.attr_val)
+            .uniq()
+            .without(undefined)
+            .value();
+    }
+    return [];
+}
+
+export function setClinicalAttributeValueColorsInTrack(
+    attributeLabel: string,
+    attributeValue: string,
     color: RGBAColor | undefined,
-    alteration: string,
-    type: string,
-    store: ResultsViewPageStore,
-    currentRule: IGeneticAlterationRuleSetParams
+    track: ClinicalTrackSpec,
+    store: ResultsViewPageStore
 ) {
-    let rule: IGeneticAlterationRuleSetParams = currentRule;
-    if (color == undefined) {
-        if (alteration === 'disp_mrna') {
-            rule.rule_params.conditional[alteration][type].shapes[0].stroke =
-                store.defaultAlterationColors[alteration][type];
+    if (track.datatype === 'string') {
+        // set new color of attribute value in track's category_to_color
+        if (color) {
+            (track as any).category_to_color[attributeValue] = color;
+            // if undefined color, set attribute value's color in track's category_to_color back to its default
         } else {
-            rule.rule_params.conditional[alteration][type].shapes[0].fill =
-                store.defaultAlterationColors[alteration][type];
+            (track as any).category_to_color[attributeValue] =
+                store.defaultClinicalAttributeColors[attributeLabel][
+                    attributeValue
+                ];
         }
-    } else {
-        if (alteration === 'disp_mrna') {
-            rule.rule_params.conditional[alteration][
-                type
-            ].shapes[0].stroke = color;
+    } else if (track.datatype === 'counts') {
+        // get index of attribute value that corresponds with its color
+        let valueIndex = _.indexOf(
+            (track as any).countsCategoryLabels,
+            attributeValue
+        );
+        // set new color of attribute value in track's countsCategoryFills using valueIndex
+        if (color) {
+            (track as any).countsCategoryFills[valueIndex] = color;
+            // if undefined color, set attribute value's color in track's countsCategoryFills back to its default
         } else {
-            rule.rule_params.conditional[alteration][
-                type
-            ].shapes[0].fill = color;
+            (track as any).countsCategoryFills[valueIndex] =
+                store.defaultClinicalAttributeColors[attributeLabel][
+                    attributeValue
+                ];
         }
     }
-    store.onAlterationColorChange(alteration, type, color);
-    return rule;
 }
 
 /* fields and methods in the class below are ordered based on roughly
@@ -292,14 +314,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @observable renderingComplete = false;
 
-    @observable
-    rule: IGeneticAlterationRuleSetParams = getGeneticTrackRuleSetParams(
-        this.distinguishMutationType,
-        this.distinguishDrivers,
-        this.distinguishGermlineMutations
-    );
-
-    @observable changeRule: boolean = false;
+    @observable changedTrackKey: string = '';
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
@@ -454,7 +469,6 @@ export default class ResultsViewOncoprint extends React.Component<
         super(props);
 
         makeObservable(this);
-        this.props.store.setDefaultAlterationColors(this.rule);
         this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
@@ -534,14 +548,11 @@ export default class ResultsViewOncoprint extends React.Component<
             get sortByCaseListDisabled() {
                 return !self.caseListSortPossible;
             },
-            get rule() {
-                return self.rule;
-            },
             get distinguishMutationType() {
                 return self.distinguishMutationType;
             },
-            get changeRule() {
-                return self.changeRule;
+            get changedTrackKey() {
+                return self.changedTrackKey;
             },
             get distinguishDrivers() {
                 return self.distinguishDrivers;
@@ -760,8 +771,8 @@ export default class ResultsViewOncoprint extends React.Component<
             onSelectDistinguishMutationType: (s: boolean) => {
                 this.distinguishMutationType = s;
             },
-            onChangeRule: (s: boolean) => {
-                this.changeRule = s;
+            onSetChangedTrackKey: (s: string) => {
+                this.changedTrackKey = s;
             },
             onSelectDistinguishDrivers: action((s: boolean) => {
                 if (!s) {
@@ -1748,7 +1759,10 @@ export default class ResultsViewOncoprint extends React.Component<
                             this
                                 .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl
                         }
-                        setRule={this.setRule}
+                        handleClinicalAttributeColorChange={
+                            this.handleClinicalAttributeColorChange
+                        }
+                        clinicalTracks={this.clinicalTracks.result}
                     />
                 </FadeInteraction>
             );
@@ -1853,17 +1867,29 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @action.bound
-    public setRule(
-        alteration: string,
-        type: string,
+    public handleClinicalAttributeColorChange(
+        attributeLabel: string,
+        attributeValue: string,
         color: RGBAColor | undefined
     ) {
-        this.rule = editRule(
+        // find track that matches given label
+        let index = _.findIndex(
+            this.clinicalTracks.result,
+            i => i.label === attributeLabel
+        );
+        const track = this.clinicalTracks.result[index];
+
+        setClinicalAttributeValueColorsInTrack(
+            attributeLabel,
+            attributeValue,
             color,
-            alteration,
-            type,
-            this.props.store,
-            this.rule
+            track,
+            this.props.store
+        );
+        this.props.store.onClinicalAttributeColorChange(
+            attributeLabel,
+            attributeValue,
+            color
         );
     }
 
@@ -1968,7 +1994,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 distinguishMutationType={
                                     this.distinguishMutationType
                                 }
-                                changeRule={this.changeRule}
+                                changedTrackKey={this.changedTrackKey}
                                 distinguishDrivers={this.distinguishDrivers}
                                 distinguishGermlineMutations={
                                     this.distinguishGermlineMutations
@@ -1992,7 +2018,9 @@ export default class ResultsViewOncoprint extends React.Component<
                                 initParams={{
                                     max_height: Number.POSITIVE_INFINITY,
                                 }}
-                                rule={this.rule}
+                                onSetChangedTrackKey={
+                                    this.controlsHandlers.onSetChangedTrackKey
+                                }
                             />
                         </div>
                     </div>

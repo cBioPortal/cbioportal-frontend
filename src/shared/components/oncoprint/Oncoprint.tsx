@@ -276,8 +276,6 @@ export interface IOncoprintProps {
     alterationTypesInQuery?: string[];
 
     distinguishMutationType?: boolean;
-    changeRule?: boolean;
-    rule?: IGeneticAlterationRuleSetParams;
     distinguishDrivers?: boolean;
     distinguishGermlineMutations?: boolean;
 
@@ -300,6 +298,9 @@ export interface IOncoprintProps {
     onDeleteClinicalTrack?: (key: string) => void;
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
     onTrackGapChange?: (trackId: TrackId, gap: boolean) => void;
+
+    changedTrackKey?: string;
+    onSetChangedTrackKey?: (key: string) => void;
 
     suppressRendering?: boolean;
     onSuppressRendering?: () => void;
@@ -389,8 +390,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
                 () => this.trackSpecKeyToTrackId,
                 () => {
                     return this.props.molecularProfileIdToMolecularProfile;
-                },
-                this.props.rule
+                }
             );
             this.lastTransitionProps = _.clone(props);
         }

@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { Button, ButtonGroup, OverlayTrigger, Popover } from 'react-bootstrap';
+import { Button, ButtonGroup } from 'react-bootstrap';
 import CustomDropdown from './CustomDropdown';
 import ConfirmNgchmModal from './ConfirmNgchmModal';
 import ReactSelect from 'react-select1';
 import { MobxPromise } from 'mobxpromise';
 import { action, computed, observable, reaction, makeObservable } from 'mobx';
 import _ from 'lodash';
-import { SortMode } from '../ResultsViewOncoprint';
+import { getClinicalAttributeValues, SortMode } from '../ResultsViewOncoprint';
 import {
     Gene,
     MolecularProfile,
@@ -44,10 +44,11 @@ import DriverAnnotationControls from 'shared/components/driverAnnotations/Driver
 import {
     ClinicalTrackConfig,
     ClinicalTrackConfigMap,
+    ClinicalTrackSpec,
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
 import { RGBAColor } from 'oncoprintjs';
-import OncoprintColors, { alterationToTypeToLabel } from './OncoprintColors';
+import OncoprintColors from './OncoprintColors';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -62,7 +63,7 @@ export interface IOncoprintControlsHandlers
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
-    onChangeRule?: (changed: boolean) => void;
+    onSetChangedTrackKey?: (key: string) => void;
 
     onSelectHideVUS: (hide: boolean) => void;
     onSelectHideGermlineMutations: (hide: boolean) => void;
@@ -106,7 +107,7 @@ export interface IOncoprintControlsState
     sortByCaseListDisabled: boolean;
     hidePutativePassengers: boolean;
     hideGermlineMutations: boolean;
-    changeRule?: boolean;
+    changedTrackKey?: string;
 
     sortMode?: SortMode;
     clinicalAttributesPromise?: MobxPromise<ExtendedClinicalAttribute[]>;
@@ -142,11 +143,12 @@ export interface IOncoprintControlsProps {
     selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl?: {
         [genericAssayType: string]: string[];
     };
-    setRule?: (
-        alteration: string,
-        type: string,
+    handleClinicalAttributeColorChange?: (
+        label: string,
+        value: string,
         color: RGBAColor | undefined
     ) => void;
+    clinicalTracks?: ClinicalTrackSpec[];
 }
 
 export interface ISelectOption {
@@ -192,16 +194,22 @@ const EVENT_KEY = {
 };
 
 export function getOncoprintColor(
-    alteration: string,
-    type: string,
+    label: string,
+    value: string,
     store?: ResultsViewPageStore
 ): RGBAColor {
-    return store
-        ? !store.userSelectedAlterationColors[alteration] ||
-          !store.userSelectedAlterationColors[alteration][type]
-            ? store.defaultAlterationColors[alteration][type]
-            : store.userSelectedAlterationColors[alteration][type]
-        : ([255, 255, 255, 1] as RGBAColor);
+    if (store) {
+        if (
+            !store.userSelectedClinicalAttributeColors[label] ||
+            !store.userSelectedClinicalAttributeColors[label][value]
+        ) {
+            return store.defaultClinicalAttributeColors[label][value];
+        } else {
+            return store.userSelectedClinicalAttributeColors[label][value];
+        }
+    } else {
+        return [255, 255, 255, 1] as RGBAColor;
+    }
 }
 
 @observer
@@ -866,28 +874,38 @@ export default class OncoprintControls extends React.Component<
                     className="oncoprint__controls__color_menu"
                     data-test="oncoprintColorDropdownMenu"
                 >
-                    {Object.keys(alterationToTypeToLabel).map(alteration =>
-                        Object.keys(
-                            alterationToTypeToLabel[alteration]
-                        ).map(type => (
-                            <OncoprintColors
-                                alteration={alteration}
-                                type={type}
-                                handlers={this.props.handlers}
-                                state={this.props.state}
-                                setRule={this.props.setRule}
-                                store={this.props.store}
-                                color={getOncoprintColor(
-                                    alteration,
-                                    type,
-                                    this.props.store
-                                )}
-                                markedWithWarningSign={this.props.store!.isAlterationMarkedWithWarningSign(
-                                    alteration
-                                )}
-                            />
-                        ))
-                    )}
+                    {this.props.clinicalTracks!.map(track => {
+                        return (
+                            <div>
+                                <strong>{track.label}</strong>
+                                {getClinicalAttributeValues(
+                                    track.label,
+                                    this.props.clinicalTracks!
+                                ).map(value => (
+                                    <OncoprintColors
+                                        handlers={this.props.handlers}
+                                        state={this.props.state}
+                                        handleClinicalAttributeColorChange={
+                                            this.props
+                                                .handleClinicalAttributeColorChange
+                                        }
+                                        clinicalAttributeLabel={track.label}
+                                        clinicalAttributeValue={value}
+                                        store={this.props.store}
+                                        color={getOncoprintColor(
+                                            track.label,
+                                            value as string,
+                                            this.props.store
+                                        )}
+                                        clinicalTrack={track}
+                                        // markedWithWarningSign={this.props.store!.isAlterationMarkedWithWarningSign(
+                                        //     alteration
+                                        // )}
+                                    />
+                                ))}
+                            </div>
+                        );
+                    })}
                 </div>
             </CustomDropdown>
         );
