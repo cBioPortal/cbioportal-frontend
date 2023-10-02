@@ -99,6 +99,7 @@ export interface IServerConfig {
     skin_documentation_news: string | null;
     skin_documentation_oql: string | null;
     skin_query_max_tree_depth: string;
+    skin_left_logo: string | null;
     skin_right_logo: string | null;
     skin_right_nav_show_data_sets: boolean;
     skin_right_nav_show_examples: boolean;
