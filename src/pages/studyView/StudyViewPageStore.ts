@@ -9328,6 +9328,7 @@ export class StudyViewPageStore
                     AlterationTypeConstants.PROTEIN_LEVEL,
                     AlterationTypeConstants.METHYLATION,
                     AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    AlterationTypeConstants.MUTATION_EXTENDED,
                 ].includes(molecularProfile.molecularAlterationType);
             });
         },
@@ -9363,10 +9364,16 @@ export class StudyViewPageStore
         await: () => [
             this.molecularProfileTypeToDataType,
             this.molecularProfileSampleCounts,
+            this.molecularProfiles,
         ],
         invoke: async () => {
             const profileTypeToDataTypeSet = this.molecularProfileTypeToDataType
                 .result;
+            const profileTypeToAlterationTypeSet = _.keyBy(
+                this.molecularProfiles.result,
+                molecularProfile =>
+                    getSuffixOfMolecularProfile(molecularProfile)
+            );
 
             return this.molecularProfileSampleCounts.result
                 .filter(datum => profileTypeToDataTypeSet.has(datum.uniqueKey))
@@ -9379,6 +9386,9 @@ export class StudyViewPageStore
                         dataType:
                             profileTypeToDataTypeSet.get(datum.uniqueKey) ||
                             DataType.STRING,
+                        alterationType:
+                            profileTypeToAlterationTypeSet[datum.uniqueKey]
+                                .molecularAlterationType,
                     };
                 });
         },

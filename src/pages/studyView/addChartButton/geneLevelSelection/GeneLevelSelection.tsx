@@ -1,5 +1,5 @@
 import * as React from 'react';
-import _ from 'lodash';
+import _, { List } from 'lodash';
 import { GenomicChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
@@ -88,7 +88,7 @@ export default class GeneLevelSelection extends React.Component<
             return this._selectedProfileOption;
         }
         if (this.props.molecularProfileOptionsPromise.isComplete) {
-            return this.molecularProfileOptions[0];
+            return this.molecularProfileOptions[0].options[0];
         }
         return undefined;
     }
@@ -126,15 +126,37 @@ export default class GeneLevelSelection extends React.Component<
     @computed
     private get molecularProfileOptions() {
         if (this.props.molecularProfileOptionsPromise.isComplete) {
-            return this.props.molecularProfileOptionsPromise.result!.map(
-                option => {
-                    return {
-                        ...option,
-                        label: `${option.label} (${option.count} samples)`,
-                        profileName: option.label,
-                    };
-                }
+            let options: MolecularProfileOption[] = this.props
+                .molecularProfileOptionsPromise.result!;
+
+            options = options.map(option => {
+                return {
+                    ...option,
+                    label: `${option.label} (${option.count} samples)`,
+                    profileName: option.label,
+                };
+            });
+
+            const optionsMap = _.reduce(
+                options,
+                (acc, molecularProfileOption) => {
+                    if (!acc.has(molecularProfileOption.alterationType)) {
+                        acc.set(molecularProfileOption.alterationType, []);
+                    }
+                    let prevOptions = acc.get(
+                        molecularProfileOption.alterationType
+                    )!;
+                    prevOptions.push(molecularProfileOption);
+                    acc.set(molecularProfileOption.alterationType, prevOptions);
+                    return acc;
+                },
+                new Map<String, Array<any>>()
             );
+
+            return Array.from(optionsMap, ([label, options]) => ({
+                label,
+                options,
+            }));
         }
         return [];
     }

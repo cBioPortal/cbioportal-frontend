@@ -189,6 +189,7 @@ export type MolecularProfileOption = {
     label: string;
     description: string;
     dataType: string;
+    alterationType: string;
     patientLevel?: boolean;
 };
 
