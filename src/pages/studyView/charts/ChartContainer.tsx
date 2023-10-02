@@ -79,6 +79,7 @@ import {
     StructVarMultiSelectionTableColumnKey,
 } from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
 import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
+import { Modal } from 'react-bootstrap';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -196,6 +197,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable newlyAdded = false;
     @observable private selectedRowsKeys: string[] = [];
 
+    @observable alertContent: JSX.Element | string | null = null;
+
     constructor(props: IChartContainerProps) {
         super(props);
 
@@ -208,10 +211,31 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.plot = plot;
             },
             resetFilters: action(() => {
-                this.props.onResetSelection(this.props.chartMeta, []);
+                // in manual submit mode, we cannot have users REMOVE filters using the chart UI.
+                // filters can only be removed by using the filter tokens at the top of the page
+                // this limitation is due to shortcut taken to enable manual submit mode
+                // which was taken in order to avoid significant refactor
+                if (this.props.store.hesitateUpdate) {
+                    this.alertContent =
+                        'In manual submit mode, you can only clear filters using the filter tokens at the top of the page.';
+                } else {
+                    this.props.onResetSelection(this.props.chartMeta, []);
+                }
             }),
-            onValueSelection: action((values: any) => {
-                this.props.onValueSelection(this.props.chartMeta, values);
+            onValueSelection: action((values: string[]) => {
+                // in manual submit mode, we cannot have users REMOVE filters using the chart UI.
+                // filters can only be removed by using the filter tokens at the top of the page
+                // this limitation is due to shortcut taken to enable manual submit mode
+                // which was taken in order to avoid significant refactor
+                if (
+                    this.props.store.hesitateUpdate &&
+                    values.length < this.props.filters.length
+                ) {
+                    this.alertContent =
+                        'In manual submit mode, you can only remove filters using the filter tokens at the top of the page.';
+                } else {
+                    this.props.onValueSelection(this.props.chartMeta, values);
+                }
             }),
             onChangeSelectedRows: action((values: string[]) => {
                 this.selectedRowsKeys = values;
@@ -1340,6 +1364,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return this.newlyAdded;
     }
 
+    @action.bound
+    clearAlertContent() {
+        this.alertContent = null;
+    }
+
     componentDidMount() {
         if (this.props.isNewlyAdded(this.props.chartMeta.uniqueKey)) {
             this.newlyAdded = true;
@@ -1361,76 +1390,89 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     public render() {
         return (
-            <div
-                className={classnames(styles.chart, {
-                    [styles.highlight]: this.highlightChart,
-                })}
-                data-test={`chart-container-${this.props.chartMeta.uniqueKey}`}
-                onMouseEnter={this.handlers.onMouseEnterChart}
-                onMouseLeave={this.handlers.onMouseLeaveChart}
-            >
-                <ChartHeader
-                    height={this.chartHeaderHeight}
-                    chartMeta={this.props.chartMeta}
-                    chartType={this.props.chartType}
-                    store={this.props.store}
-                    title={this.props.title}
-                    active={this.mouseInChart}
-                    resetChart={this.handlers.resetFilters}
-                    deleteChart={this.handlers.onDeleteChart}
-                    selectedRowsKeys={this.selectedRowsKeys}
-                    toggleLogScale={this.handlers.onToggleLogScale}
-                    toggleLogScaleX={this.handlers.onToggleLogScaleX}
-                    toggleLogScaleY={this.handlers.onToggleLogScaleY}
-                    toggleBoxPlot={this.handlers.onToggleBoxPlot}
-                    toggleViolinPlot={this.handlers.onToggleViolinPlot}
-                    toggleSurvivalPlotLeftTruncation={
-                        this.handlers.onToggleSurvivalPlotLeftTruncation
-                    }
-                    isLeftTruncationAvailable={
-                        this.props.isLeftTruncationAvailable
-                    }
-                    swapAxes={this.handlers.onSwapAxes}
-                    toggleNAValue={this.handlers.onToggleNAValue}
-                    chartControls={this.chartControls}
-                    changeChartType={this.changeChartType}
-                    getSVG={() => Promise.resolve(this.toSVGDOMNode())}
-                    getData={this.props.getData}
-                    downloadTypes={this.props.downloadTypes}
-                    openComparisonPage={this.openComparisonPage}
-                    placement={this.placement}
-                    description={this.props.description}
-                    isCompactSurvivalChart={this.showCompactSurvivalChart}
-                />
-                <div className={styles.chartInnerWrapper}>
-                    {this.props.promise.isPending && (
-                        <LoadingIndicator
-                            isLoading={true}
-                            className={styles.chartLoader}
-                        />
-                    )}
-                    {this.props.promise.isError && (
-                        <div className={styles.chartError}>
-                            <i className="fa fa-warning" aria-hidden="true"></i>{' '}
-                            Error when loading data.
-                        </div>
-                    )}
+            <>
+                {this.alertContent && (
+                    <Modal show={true} onHide={this.clearAlertContent}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Alert</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>{this.alertContent}</Modal.Body>
+                    </Modal>
+                )}
+                <div
+                    className={classnames(styles.chart, {
+                        [styles.highlight]: this.highlightChart,
+                    })}
+                    data-test={`chart-container-${this.props.chartMeta.uniqueKey}`}
+                    onMouseEnter={this.handlers.onMouseEnterChart}
+                    onMouseLeave={this.handlers.onMouseLeaveChart}
+                >
+                    <ChartHeader
+                        height={this.chartHeaderHeight}
+                        chartMeta={this.props.chartMeta}
+                        chartType={this.props.chartType}
+                        store={this.props.store}
+                        title={this.props.title}
+                        active={this.mouseInChart}
+                        resetChart={this.handlers.resetFilters}
+                        deleteChart={this.handlers.onDeleteChart}
+                        selectedRowsKeys={this.selectedRowsKeys}
+                        toggleLogScale={this.handlers.onToggleLogScale}
+                        toggleLogScaleX={this.handlers.onToggleLogScaleX}
+                        toggleLogScaleY={this.handlers.onToggleLogScaleY}
+                        toggleBoxPlot={this.handlers.onToggleBoxPlot}
+                        toggleViolinPlot={this.handlers.onToggleViolinPlot}
+                        toggleSurvivalPlotLeftTruncation={
+                            this.handlers.onToggleSurvivalPlotLeftTruncation
+                        }
+                        isLeftTruncationAvailable={
+                            this.props.isLeftTruncationAvailable
+                        }
+                        swapAxes={this.handlers.onSwapAxes}
+                        toggleNAValue={this.handlers.onToggleNAValue}
+                        chartControls={this.chartControls}
+                        changeChartType={this.changeChartType}
+                        getSVG={() => Promise.resolve(this.toSVGDOMNode())}
+                        getData={this.props.getData}
+                        downloadTypes={this.props.downloadTypes}
+                        openComparisonPage={this.openComparisonPage}
+                        placement={this.placement}
+                        description={this.props.description}
+                        isCompactSurvivalChart={this.showCompactSurvivalChart}
+                    />
+                    <div className={styles.chartInnerWrapper}>
+                        {this.props.promise.isPending && (
+                            <LoadingIndicator
+                                isLoading={true}
+                                className={styles.chartLoader}
+                            />
+                        )}
+                        {this.props.promise.isError && (
+                            <div className={styles.chartError}>
+                                <i
+                                    className="fa fa-warning"
+                                    aria-hidden="true"
+                                ></i>{' '}
+                                Error when loading data.
+                            </div>
+                        )}
 
-                    {(!this.props.chartMeta.renderWhenDataChange ||
-                        this.props.promise.isComplete) && (
-                        <div
-                            style={{
-                                visibility: this.props.promise.isPending
-                                    ? 'hidden'
-                                    : 'visible',
-                                display: 'flex',
-                            }}
-                        >
-                            {this.chart && this.chart()}
-                        </div>
-                    )}
+                        {(!this.props.chartMeta.renderWhenDataChange ||
+                            this.props.promise.isComplete) && (
+                            <div
+                                style={{
+                                    visibility: this.props.promise.isPending
+                                        ? 'hidden'
+                                        : 'visible',
+                                    display: 'flex',
+                                }}
+                            >
+                                {this.chart && this.chart()}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </>
         );
     }
 }
