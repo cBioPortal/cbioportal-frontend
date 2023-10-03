@@ -25,6 +25,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import ifNotDefined from '../../../../shared/lib/ifNotDefined';
+import { getTextColor } from 'pages/groupComparison/OverlapUtils';
 
 export interface IPieChartProps {
     width: number;
@@ -207,6 +208,13 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
             : d.count.toLocaleString();
     }
 
+    @computed
+    get labelColor() {
+        return (d: ClinicalDataCountSummary) => {
+            return getTextColor(this.fill(d));
+        };
+    }
+
     // Pie charts should be circular, and thus should have a square container.
     // In instances where the pie chart is not in a square container, just
     // make the largest square you can in the container.
@@ -255,7 +263,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
                         cursor: 'pointer',
                     },
                     labels: {
-                        fill: 'white',
+                        fill: ifNotDefined(this.labelColor, '#000000'),
                         cursor: 'pointer',
                     },
                 }}
