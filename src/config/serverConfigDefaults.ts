@@ -78,7 +78,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_right_nav_show_web_tours: false,
     skin_right_nav_show_twitter: false,
     skin_citation_rule_text:
-        'Please cite: <a href="https://docs.cbioportal.org/user-guide/faq/#how-do-i-cite-the-cbioportal" target="_blank">cBioPortal</a>',
+        'Please cite <a href="https://docs.cbioportal.org/user-guide/faq/#how-do-i-cite-the-cbioportal" target="_blank">cBioPortal <i class="fa fa-book"></i></a>',
     skin_show_about_tab: true,
     skin_show_data_tab: true,
     skin_show_faqs_tab: true,
