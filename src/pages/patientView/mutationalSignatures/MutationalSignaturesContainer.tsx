@@ -8,6 +8,7 @@ import {
 import ClinicalInformationMutationalSignatureTable from '../clinicalInformation/ClinicalInformationMutationalSignatureTable';
 import Select from 'react-select';
 import autobind from 'autobind-decorator';
+import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 
 import {
     ClinicalDataBySampleId,
@@ -32,6 +33,7 @@ import {
     DownloadControls,
 } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
+import { MutationalSignatureTableDataStore } from 'pages/patientView/mutationalSignatures/MutationalSignaturesDataStore';
 
 export interface IMutationalSignaturesContainerProps {
     data: { [version: string]: IMutationalSignature[] };
@@ -43,6 +45,9 @@ export interface IMutationalSignaturesContainerProps {
     onSampleChange: (sample: string) => void;
     dataCount: { [version: string]: IMutationalCounts[] };
 }
+
+const CONTENT_TO_SHOW_ABOVE_TABLE =
+    'Click on mutational signature to open modal and update reference plot';
 
 interface IAxisScaleSwitchProps {
     onChange: (selectedScale: AxisScale) => void;
@@ -59,20 +64,32 @@ export default class MutationalSignaturesContainer extends React.Component<
     IMutationalSignaturesContainerProps,
     {}
 > {
-    @observable signatureProfile: string;
+    @observable signatureProfile: string = this.props.data[
+        this.props.version
+    ][0].meta.name;
     private plotSvg: SVGElement | null = null;
     @observable signatureURL: string;
     @observable signatureDescription: string;
     @observable isSignatureInformationToolTipVisible: boolean = false;
+    @observable updateReferencePlot: boolean = false;
     public static defaultProps: Partial<IAxisScaleSwitchProps> = {
         selectedScale: AxisScale.COUNT,
     };
 
     @observable
+    public mutationalSignatureDataStore: MutationalSignatureTableDataStore = new MutationalSignatureTableDataStore(
+        () => this.props.data[this.props.version].map(x => [x])
+    );
+    @observable
     selectedScale: string = AxisScale.COUNT;
 
-    mutationalProfileSelection = (childData: string, visibility: boolean) => {
+    mutationalProfileSelection = (
+        childData: string,
+        visibility: boolean,
+        updateReference: boolean
+    ) => {
         this.signatureProfile = childData;
+        this.updateReferencePlot = updateReference;
         this.isSignatureInformationToolTipVisible = visibility;
         this.signatureURL =
             this.props.data[this.props.version].filter(obj => {
@@ -203,7 +220,7 @@ export default class MutationalSignaturesContainer extends React.Component<
         this.isSignatureInformationToolTipVisible = false;
     }
 
-    @action.bound
+    @autobind
     private onSampleChange(sample: { label: string; value: string }): void {
         this.props.onSampleChange(sample.value);
     }
@@ -257,8 +274,8 @@ export default class MutationalSignaturesContainer extends React.Component<
                                     style={{
                                         float: 'left',
                                         width: 300,
-                                        paddingLeft: '10px',
-                                        marginLeft: '10px',
+                                        paddingLeft: 10,
+                                        marginLeft: 10,
                                         paddingBottom: 10,
                                     }}
                                 >
@@ -302,6 +319,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                                             style={{
                                                 float: 'left',
                                                 width: 100,
+                                                paddingLeft: 10,
                                             }}
                                         >
                                             Y-Axis:
@@ -342,7 +360,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                             <MutationalBarChart
                                 signature={this.signatureProfile}
                                 height={220}
-                                width={800}
+                                width={1200}
                                 refStatus={false}
                                 svgId={'MutationalBarChart'}
                                 svgRef={this.assignPlotSvgRef}
@@ -350,17 +368,32 @@ export default class MutationalSignaturesContainer extends React.Component<
                                 version={this.props.version}
                                 sample={this.props.sample}
                                 label={this.yAxisLabel}
+                                updateReference={this.updateReferencePlot}
+                                initialReference={
+                                    this.props.data[this.props.version][0].meta
+                                        .name
+                                }
                             />
                         )}
 
                         <div>
-                            <ClinicalInformationMutationalSignatureTable
-                                data={this.props.data[this.props.version]}
-                                parentCallback={this.mutationalProfileSelection}
-                                url={this.signatureURL}
-                                description={this.signatureDescription}
-                                signature={this.signatureProfile}
-                            />
+                            <FeatureInstruction
+                                content={CONTENT_TO_SHOW_ABOVE_TABLE}
+                            >
+                                <ClinicalInformationMutationalSignatureTable
+                                    data={this.props.data[this.props.version]}
+                                    parentCallback={
+                                        this.mutationalProfileSelection
+                                    }
+                                    dataStore={
+                                        this.mutationalSignatureDataStore
+                                    }
+                                    url={this.signatureURL}
+                                    description={this.signatureDescription}
+                                    signature={this.signatureProfile}
+                                    samples={this.props.samples}
+                                />
+                            </FeatureInstruction>
                         </div>
                     </div>
                 )}

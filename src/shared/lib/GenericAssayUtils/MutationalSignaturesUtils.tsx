@@ -74,7 +74,7 @@ export function getVersionOptions(versions: string[]) {
 
 export function getSampleOption(sample: string) {
     return {
-        label: 'Sample ' + sample,
+        label: sample,
         value: sample,
     };
 }

@@ -45,6 +45,8 @@ export interface LegendEntriesType {
     value: string;
 }
 
+export type DataToPlot = { mutationalSignatureLabel: string; value: number };
+
 export const colorMap: ColorMapProps[] = [
     {
         name: 'C>A',
@@ -367,6 +369,35 @@ export function getLegendEntriesBarChart(
         value: item.label,
         subcategory: item.subcategory,
     }));
+}
+
+export function addColorsForReferenceData(dataset: DataToPlot[]) {
+    const colors = dataset.map((entry: DataToPlot) => {
+        const colorIdentity = colorMap.filter(cmap => {
+            if (
+                entry.mutationalSignatureLabel.indexOf('_') == -1 &&
+                entry.mutationalSignatureLabel.indexOf('-') == -1
+            ) {
+                if (entry.mutationalSignatureLabel.match(cmap.name) != null) {
+                    return cmap.color;
+                }
+            } else {
+                if (
+                    entry.mutationalSignatureLabel.match(
+                        cmap.alternativeName
+                    ) != null
+                ) {
+                    return cmap.color;
+                }
+            }
+        });
+        const colorValue =
+            colorIdentity.length > 0
+                ? colorIdentity[colorIdentity.length - 1].color
+                : '#EE4B2B';
+        return { ...entry, colorValue };
+    });
+    return colors;
 }
 
 export function getCenterPositionLabelEntries(

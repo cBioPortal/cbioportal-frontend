@@ -10,21 +10,28 @@ import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
-import { DownloadControlOption } from 'cbioportal-frontend-commons';
-import { getServerConfig } from 'config/config';
 import Tooltip from 'rc-tooltip';
-
+import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
+import autobind from 'autobind-decorator';
+import { MutationalSignatureTableDataStore } from '../mutationalSignatures/MutationalSignaturesDataStore';
+import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
 export interface IClinicalInformationMutationalSignatureTableProps {
     data: IMutationalSignature[];
-    parentCallback: (childData: string, visibility: boolean) => void;
+    parentCallback: (
+        childData: string,
+        visibility: boolean,
+        updateReference: boolean
+    ) => void;
+    dataStore: MutationalSignatureTableDataStore;
     url: string;
     signature: string;
     description: string;
+    samples: string[];
 }
 
 class MutationalSignatureTable extends LazyMobXTable<IMutationalSignatureRow> {}
 
-interface IMutationalSignatureRow {
+export interface IMutationalSignatureRow {
     name: string;
     sampleValues: {
         [sampleId: string]: {
@@ -38,12 +45,12 @@ interface IMutationalSignatureRow {
 
 export function prepareMutationalSignatureDataForTable(
     mutationalSignatureData: IMutationalSignature[],
-    samples: { id: string }[]
+    samplesInData: string[]
 ): IMutationalSignatureRow[] {
     const tableData: IMutationalSignatureRow[] = [];
     //group data by mutational signature
     //[{id: mutationalsignatureid, samples: [{}, {}]}]
-    let sampleInvertedDataByMutationalSignature: Array<any> = _(
+    const sampleInvertedDataByMutationalSignature: Array<any> = _(
         mutationalSignatureData
     )
         .groupBy(
@@ -61,18 +68,43 @@ export function prepareMutationalSignatureDataForTable(
             sampleValues: {},
             url: '',
         };
+
         mutationalSignatureRowForTable.name = mutationalSignature.name;
         mutationalSignatureRowForTable.url = mutationalSignature.url;
-        for (const sample of mutationalSignature.samples) {
-            mutationalSignatureRowForTable.sampleValues[sample.sampleId] = {
-                value: sample.value,
-                confidence: sample.confidence,
-            };
-        }
         if (
-            Object.keys(mutationalSignatureRowForTable.sampleValues).length ===
-            samples.length
+            Object.keys(mutationalSignature.samples).length ===
+            samplesInData.length
         ) {
+            for (const sample of mutationalSignature.samples) {
+                mutationalSignatureRowForTable.sampleValues[sample.sampleId] = {
+                    value: sample.value,
+                    confidence: sample.confidence,
+                };
+            }
+            tableData.push(mutationalSignatureRowForTable);
+        } else {
+            for (const sampleId of samplesInData) {
+                if (
+                    mutationalSignature.samples.some(
+                        (obj: IMutationalSignature) => obj.sampleId === sampleId
+                    )
+                ) {
+                    // Sample exists and we can use the values
+                    for (const sample of mutationalSignature.samples) {
+                        mutationalSignatureRowForTable.sampleValues[
+                            sample.sampleId
+                        ] = {
+                            value: sample.value,
+                            confidence: sample.confidence,
+                        };
+                    }
+                } else {
+                    mutationalSignatureRowForTable.sampleValues[sampleId] = {
+                        value: 0,
+                        confidence: 1,
+                    };
+                }
+            }
             tableData.push(mutationalSignatureRowForTable);
         }
     }
@@ -84,7 +116,6 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
     {}
 > {
     @observable selectedSignature = '';
-
     constructor(props: IClinicalInformationMutationalSignatureTableProps) {
         super(props);
         makeObservable(this);
@@ -101,10 +132,30 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
         }));
     }
 
+    @autobind
+    onMutationalSignatureTableRowMouseLeave(d: IMutationalSignatureRow) {}
+    @autobind
+    onMutationalSignatureTableRowMouseEnter(d: IMutationalSignatureRow) {}
+    @autobind
+    onMutationalSignatureTableRowClick(d: IMutationalSignatureRow) {
+        const dSend = this.props.data.filter(x => x.meta.name === d.name);
+        // select mutation and toggle off previous selected
+        if (dSend.length) {
+            this.props.dataStore.setSelectedMutSig(dSend);
+            if (this.props.dataStore.selectedMutSig.length > 0) {
+                this.props.dataStore.toggleSelectedMutSig(
+                    this.props.dataStore.selectedMutSig[0]
+                );
+            }
+            //this.handleLocusChange(d[0].gene.hugoGeneSymbol);
+        }
+        this.props.parentCallback(d.name, false, true);
+    }
+
     @computed get tableData() {
         return prepareMutationalSignatureDataForTable(
             this.props.data,
-            this.uniqueSamples
+            this.props.samples
         );
     }
     @computed get tooltipInfo() {
@@ -115,21 +166,17 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
             >
                 <div>
                     <h4>
-                        <b>Signature:</b>
+                        <b>Signature: </b>
                         {this.props.signature}
                     </h4>
-                    <p>
+                    <p style={{ fontSize: '16px' }}>
                         <b>Description: </b>
                         {this.props.description}
                     </p>
-                    <p>
-                        {this.props.url != '' && (
-                            <a href={this.props.url} target="_blank">
-                                External link to signature (opens new tab)
-                            </a>
-                        )}
-                        {this.props.url == '' &&
-                            'No link to external website available'}
+                    <p style={{ fontSize: '16px' }}>
+                        <a href={this.props.url} target="_blank">
+                            External link to signature (opens new tab)
+                        </a>
                     </p>
                 </div>
             </div>
@@ -141,17 +188,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
             {
                 name: 'Mutational Signature',
                 render: (data: IMutationalSignatureRow) => (
-                    <Tooltip overlay={this.tooltipInfo}>
-                        {
-                            <span
-                                onMouseOver={() =>
-                                    this.props.parentCallback(data.name, false)
-                                }
-                            >
-                                {data[this.firstCol]}
-                            </span>
-                        }
-                    </Tooltip>
+                    <span>{data[this.firstCol]}</span>
                 ),
                 download: (data: IMutationalSignatureRow) =>
                     `${data[this.firstCol]}`,
@@ -215,19 +252,24 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
 
     public render() {
         return (
-            <MutationalSignatureTable
-                columns={this.columns}
-                data={this.tableData}
-                showPagination={false}
-                initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
-                showColumnVisibility={false}
-                initialSortColumn={this.uniqueSamples[0].id}
-                initialSortDirection="desc"
-                showCopyDownload={
-                    getServerConfig().skin_hide_download_controls ===
-                    DownloadControlOption.SHOW_ALL
-                }
-            />
+            <div>
+                <MutationalSignatureTable
+                    columns={this.columns}
+                    data={this.tableData}
+                    showPagination={false}
+                    initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
+                    showColumnVisibility={false}
+                    initialSortColumn={this.uniqueSamples[0].id}
+                    initialSortDirection="desc"
+                    onRowClick={this.onMutationalSignatureTableRowClick}
+                    onRowMouseEnter={
+                        this.onMutationalSignatureTableRowMouseEnter
+                    }
+                    onRowMouseLeave={
+                        this.onMutationalSignatureTableRowMouseLeave
+                    }
+                />
+            </div>
         );
     }
 }
