@@ -292,6 +292,7 @@ export interface IOncoprintProps {
     };
     showClinicalTrackLegends?: boolean;
     showWhitespaceBetweenColumns?: boolean;
+    enableWhiteBackgroundForGlyphs?: boolean;
     showMinimap?: boolean;
 
     onMinimapClose?: () => void;

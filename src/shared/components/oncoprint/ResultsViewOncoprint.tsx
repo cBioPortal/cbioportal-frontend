@@ -133,20 +133,14 @@ export type AdditionalTrackGroupRecord = {
 };
 
 export function getClinicalAttributeValues(
-    attributeLabel: string,
-    clinicalTracks: ClinicalTrackSpec[]
+    track: Partial<ClinicalTrackSpec>
 ): any[] {
-    // find track that matches given label
-    let index = _.findIndex(clinicalTracks, i => i.label === attributeLabel);
     // if the datatype is "counts", the attribute values are under countsCategoryLabels
-    if (clinicalTracks[index] && clinicalTracks[index].datatype === 'counts') {
-        return (clinicalTracks[index] as any).countsCategoryLabels;
-        // if the datatype is "string", get attribute values from the track data
-    } else if (
-        clinicalTracks[index] &&
-        clinicalTracks[index].datatype === 'string'
-    ) {
-        return _(clinicalTracks[index].data)
+    // else if the datatype is "string", get attribute values from the track data
+    if (track.datatype === 'counts') {
+        return (track as any).countsCategoryLabels;
+    } else if (track.datatype === 'string') {
+        return _(track.data)
             .map(d => d.attr_val)
             .uniq()
             .without(undefined)
@@ -293,6 +287,7 @@ export default class ResultsViewOncoprint extends React.Component<
     @observable showClinicalTrackLegends: boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
+    @observable enableWhiteBackgroundForGlyphs: boolean = false;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return (
@@ -536,6 +531,9 @@ export default class ResultsViewOncoprint extends React.Component<
             get showOqlInLabels() {
                 return self.showOqlInLabels;
             },
+            get enableWhiteBackgroundForGlyphs() {
+                return self.enableWhiteBackgroundForGlyphs;
+            },
             get showMinimap() {
                 return self.showMinimap;
             },
@@ -551,14 +549,14 @@ export default class ResultsViewOncoprint extends React.Component<
             get distinguishMutationType() {
                 return self.distinguishMutationType;
             },
-            get changedTrackKey() {
-                return self.changedTrackKey;
-            },
             get distinguishDrivers() {
                 return self.distinguishDrivers;
             },
             get distinguishGermlineMutations() {
                 return self.distinguishGermlineMutations;
+            },
+            get changedTrackKey() {
+                return self.changedTrackKey;
             },
             get annotateDriversOncoKb() {
                 return self.props.store.driverAnnotationSettings.oncoKb;
@@ -765,14 +763,14 @@ export default class ResultsViewOncoprint extends React.Component<
             onSelectShowOqlInLabels: (show: boolean) => {
                 this.showOqlInLabels = show;
             },
+            onSelectEnableWhiteBackgroundForGlyphs: (s: boolean) => {
+                this.enableWhiteBackgroundForGlyphs = s;
+            },
             onSelectShowMinimap: (show: boolean) => {
                 this.showMinimap = show;
             },
             onSelectDistinguishMutationType: (s: boolean) => {
                 this.distinguishMutationType = s;
-            },
-            onSetChangedTrackKey: (s: string) => {
-                this.changedTrackKey = s;
             },
             onSelectDistinguishDrivers: action((s: boolean) => {
                 if (!s) {
@@ -814,6 +812,9 @@ export default class ResultsViewOncoprint extends React.Component<
             }),
             onSelectDistinguishGermlineMutations: (s: boolean) => {
                 this.distinguishGermlineMutations = s;
+            },
+            onSetChangedTrackKey: (s: string) => {
+                this.changedTrackKey = s;
             },
             onSelectAnnotateOncoKb: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.oncoKb = s;
@@ -1994,17 +1995,20 @@ export default class ResultsViewOncoprint extends React.Component<
                                 distinguishMutationType={
                                     this.distinguishMutationType
                                 }
-                                changedTrackKey={this.changedTrackKey}
                                 distinguishDrivers={this.distinguishDrivers}
                                 distinguishGermlineMutations={
                                     this.distinguishGermlineMutations
                                 }
+                                changedTrackKey={this.changedTrackKey}
                                 sortConfig={this.oncoprintLibrarySortConfig}
                                 showClinicalTrackLegends={
                                     this.showClinicalTrackLegends
                                 }
                                 showWhitespaceBetweenColumns={
                                     this.showWhitespaceBetweenColumns
+                                }
+                                enableWhiteBackgroundForGlyphs={
+                                    this.enableWhiteBackgroundForGlyphs
                                 }
                                 showMinimap={this.showMinimap}
                                 onMinimapClose={this.onMinimapClose}

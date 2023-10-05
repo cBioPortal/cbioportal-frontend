@@ -276,7 +276,10 @@ import { ICBioData } from 'pathway-mapper';
 import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
 import { PageUserSession } from 'shared/userSession/PageUserSession';
 import { PageType } from 'shared/userSession/PageType';
-import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
+import {
+    ClinicalTrackConfig,
+    ClinicalTrackSpec,
+} from 'shared/components/oncoprint/Oncoprint';
 import eventBus from 'shared/events/eventBus';
 import { ErrorMessages } from 'shared/errorMessages';
 import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
@@ -304,8 +307,7 @@ import {
     ONCOKB_DEFAULT_INFO,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
-import { IGeneticAlterationRuleSetParams, RGBAColor } from 'oncoprintjs';
-import { hexToRGBA } from 'shared/lib/Colors';
+import { RGBAColor } from 'oncoprintjs';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -638,35 +640,33 @@ export class ResultsViewPageStore extends AnalysisStore
     @action.bound
     public setDefaultClinicalAttributeColor(
         label: string,
-        categoryToColor?: { [value: string]: string },
-        countsCategoryLabels?: string[],
+        values: any[],
+        categoryToColor?: {
+            [category: string]: [number, number, number, number];
+        },
         countsCategoryFills?: RGBAColor[]
     ) {
-        // if default for attribute doesn't already exist
-        if (!this._defaultClinicalAttributeColors[label]) {
-            // if categoryToColor given, use this mapping for colors
-            if (categoryToColor) {
-                this._defaultClinicalAttributeColors[label] = _.mapValues(
-                    categoryToColor,
-                    hexToRGBA
-                );
-                // sample type attributes have unique "Mixed" label with set color
-                if (label === 'Sample Type' || label === 'Sample type id') {
-                    this._defaultClinicalAttributeColors[label]['Mixed'] = [
-                        48,
-                        97,
-                        194,
-                        1,
-                    ];
-                }
-                // if labels and fills given, set each label with its corresponding color
-            } else if (countsCategoryLabels && countsCategoryFills) {
-                this._defaultClinicalAttributeColors[label] = {};
-                _.forEach(countsCategoryLabels, (value, i) => {
-                    this._defaultClinicalAttributeColors[label][value] =
-                        countsCategoryFills[i];
-                });
+        if (categoryToColor) {
+            this._defaultClinicalAttributeColors[label] = {};
+            _.forEach(values, value => {
+                this._defaultClinicalAttributeColors[label][value] =
+                    categoryToColor[value];
+            });
+            // sample type attributes have unique "Mixed" label with set color
+            if (label === 'Sample Type' || label === 'Sample type id') {
+                this._defaultClinicalAttributeColors[label]['Mixed'] = [
+                    48,
+                    97,
+                    194,
+                    1,
+                ];
             }
+        } else if (countsCategoryFills) {
+            this._defaultClinicalAttributeColors[label] = {};
+            _.forEach(values, (value, i) => {
+                this._defaultClinicalAttributeColors[label][value] =
+                    countsCategoryFills[i];
+            });
         }
     }
 

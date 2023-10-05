@@ -21,7 +21,6 @@ import {
     IOncoprintControlsState,
 } from './OncoprintControls';
 import { RGBAColor } from 'oncoprintjs';
-import { ClinicalTrackSpec } from '../Oncoprint';
 import _ from 'lodash';
 
 export interface IGroupCheckboxProps {
@@ -36,7 +35,7 @@ export interface IGroupCheckboxProps {
     clinicalAttributeLabel: string;
     clinicalAttributeValue: any;
     color: RGBAColor;
-    clinicalTrack: ClinicalTrackSpec;
+    clinicalTrackKey: string;
     // markedWithWarningSign: boolean;
 }
 
@@ -73,7 +72,7 @@ export default class OncoprintColors extends React.Component<
         // set changed track key
         this.props.handlers.onSetChangedTrackKey &&
             this.props.handlers.onSetChangedTrackKey(
-                this.props.clinicalTrack.key
+                this.props.clinicalTrackKey
             );
     };
 
