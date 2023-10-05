@@ -32,8 +32,10 @@ import {
     makeGeneticTrackData,
     makeHeatmapTrackData,
 } from './DataUtils';
-import ResultsViewOncoprint from './ResultsViewOncoprint';
 import _, { isNumber } from 'lodash';
+import ResultsViewOncoprint, {
+    getClinicalAttributeValues,
+} from './ResultsViewOncoprint';
 import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
 import { MobxPromise } from 'mobxpromise';
 import GenesetCorrelatedGeneCache from 'shared/cache/GenesetCorrelatedGeneCache';
@@ -54,7 +56,11 @@ import {
     MUTATION_SPECTRUM_FILLS,
     SpecialAttribute,
 } from '../../cache/ClinicalDataCache';
-import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
+import {
+    ASCN_WHITE,
+    hexToRGBA,
+    RESERVED_CLINICAL_VALUE_COLORS,
+} from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
 import ifNotDefined from '../../lib/ifNotDefined';
 import {
@@ -446,7 +452,8 @@ export function getGenesetHeatmapTrackRuleSetParams() {
 export function getGeneticTrackRuleSetParams(
     distinguishMutationType?: boolean,
     distinguishDrivers?: boolean,
-    distinguishGermlineMutations?: boolean
+    distinguishGermlineMutations?: boolean,
+    enableWhiteBackgroundForGlyphs?: boolean
 ): IGeneticAlterationRuleSetParams {
     let rule_set;
     if (!distinguishMutationType && !distinguishDrivers) {
@@ -461,6 +468,18 @@ export function getGeneticTrackRuleSetParams(
     rule_set = _.cloneDeep(rule_set);
     if (distinguishGermlineMutations) {
         Object.assign(rule_set.rule_params.conditional, germline_rule_params);
+    }
+    if (enableWhiteBackgroundForGlyphs) {
+        rule_set.legend_base_color = hexToRGBA(ASCN_WHITE);
+        if (rule_set.rule_params.always) {
+            rule_set.rule_params.always.shapes = [
+                {
+                    type: 'rectangle',
+                    fill: hexToRGBA(ASCN_WHITE),
+                    z: 1,
+                },
+            ];
+        }
     }
     return rule_set;
 }
@@ -1071,10 +1090,18 @@ export function makeClinicalTracksMobxPromise(
                         dataAndColors.categoryToColor,
                         hexToRGBA
                     );
-                    oncoprint.props.store.setDefaultClinicalAttributeColor(
-                        attribute.displayName,
-                        dataAndColors.categoryToColor
-                    );
+                    // if default for attribute doesn't already exist
+                    if (
+                        !oncoprint.props.store.defaultClinicalAttributeColors[
+                            attribute.displayName
+                        ]
+                    ) {
+                        oncoprint.props.store.setDefaultClinicalAttributeColor(
+                            attribute.displayName,
+                            getClinicalAttributeValues(ret),
+                            (ret as any).category_to_color
+                        );
+                    }
                 } else if (
                     attribute.clinicalAttributeId ===
                     SpecialAttribute.MutationSpectrum
@@ -1082,12 +1109,19 @@ export function makeClinicalTracksMobxPromise(
                     ret.datatype = 'counts';
                     (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
                     (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
-                    oncoprint.props.store.setDefaultClinicalAttributeColor(
-                        attribute.displayName,
-                        undefined,
-                        MUTATION_SPECTRUM_CATEGORIES,
-                        MUTATION_SPECTRUM_FILLS
-                    );
+                    // if default for attribute doesn't already exist
+                    if (
+                        !oncoprint.props.store.defaultClinicalAttributeColors[
+                            attribute.displayName
+                        ]
+                    ) {
+                        oncoprint.props.store.setDefaultClinicalAttributeColor(
+                            attribute.displayName,
+                            MUTATION_SPECTRUM_CATEGORIES,
+                            undefined,
+                            MUTATION_SPECTRUM_FILLS
+                        );
+                    }
                 }
 
                 const trackConfig =

@@ -588,7 +588,9 @@ function hasGeneticTrackRuleSetChanged(
             prevProps.distinguishMutationType ||
         nextProps.distinguishDrivers !== prevProps.distinguishDrivers ||
         nextProps.distinguishGermlineMutations !==
-            prevProps.distinguishGermlineMutations
+            prevProps.distinguishGermlineMutations ||
+        nextProps.enableWhiteBackgroundForGlyphs !==
+            prevProps.enableWhiteBackgroundForGlyphs
     );
 }
 
@@ -1121,7 +1123,8 @@ function transitionGeneticTrack(
             rule_set_params: getGeneticTrackRuleSetParams(
                 nextProps.distinguishMutationType,
                 nextProps.distinguishDrivers,
-                nextProps.distinguishGermlineMutations
+                nextProps.distinguishGermlineMutations,
+                nextProps.enableWhiteBackgroundForGlyphs
             ),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
@@ -1220,7 +1223,8 @@ function transitionGeneticTrack(
                     getGeneticTrackRuleSetParams(
                         nextProps.distinguishMutationType,
                         nextProps.distinguishDrivers,
-                        nextProps.distinguishGermlineMutations
+                        nextProps.distinguishGermlineMutations,
+                        nextProps.enableWhiteBackgroundForGlyphs
                     )
                 );
             }
