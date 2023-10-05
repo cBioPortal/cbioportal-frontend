@@ -47,7 +47,7 @@ export const RESERVED_MUTATIONAL_SIGNATURE_COLORS: {
     'defective dna mismatch repair': '#d92b45',
     tabacco: '#50136d',
     'tobacco chewing': '#50136d',
-    unknown: '#e8e8e8',
+    unknown: '#b03966',
     aflatoxin: '#e8e8e8',
     ighv: '#e8e8e8',
     'aristolochic acid': '#e8e8e8',
