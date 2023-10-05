@@ -133,10 +133,6 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
     }
 
     @autobind
-    onMutationalSignatureTableRowMouseLeave(d: IMutationalSignatureRow) {}
-    @autobind
-    onMutationalSignatureTableRowMouseEnter(d: IMutationalSignatureRow) {}
-    @autobind
     onMutationalSignatureTableRowClick(d: IMutationalSignatureRow) {
         const dSend = this.props.data.filter(x => x.meta.name === d.name);
         // select mutation and toggle off previous selected
@@ -162,7 +158,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
         return (
             <div
                 style={{ maxWidth: 450 }}
-                data-test="SignificantMutationalSignaturesTooltip"
+                data-test="SignificantMutationalSignaturesTableTooltip"
             >
                 <div>
                     <h4>
@@ -188,7 +184,21 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
             {
                 name: 'Mutational Signature',
                 render: (data: IMutationalSignatureRow) => (
-                    <span>{data[this.firstCol]}</span>
+                    <Tooltip overlay={this.tooltipInfo}>
+                        {
+                            <span
+                                onMouseOver={() =>
+                                    this.props.parentCallback(
+                                        data.name,
+                                        false,
+                                        false
+                                    )
+                                }
+                            >
+                                {data[this.firstCol]}
+                            </span>
+                        }
+                    </Tooltip>
                 ),
                 download: (data: IMutationalSignatureRow) =>
                     `${data[this.firstCol]}`,
@@ -262,12 +272,6 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                     initialSortColumn={this.uniqueSamples[0].id}
                     initialSortDirection="desc"
                     onRowClick={this.onMutationalSignatureTableRowClick}
-                    onRowMouseEnter={
-                        this.onMutationalSignatureTableRowMouseEnter
-                    }
-                    onRowMouseLeave={
-                        this.onMutationalSignatureTableRowMouseLeave
-                    }
                 />
             </div>
         );

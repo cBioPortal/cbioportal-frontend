@@ -376,7 +376,6 @@ export default class MutationalBarChart extends React.Component<
                             standalone={false}
                         />
                     </g>
-
                     <g transform={'translate(10,250)'}>
                         <VictoryAxis
                             dependentAxis
@@ -432,6 +431,7 @@ export default class MutationalBarChart extends React.Component<
                             standalone={false}
                         />
                     </g>
+
                     <g transform={'translate(10, 0)'}>
                         <VictoryBar
                             barRatio={1}

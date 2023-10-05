@@ -53,48 +53,50 @@ export default class SignificantMutationalSignatures extends React.Component<
     private makeTooltipContent(
         significantMutationalSignaturesForSample: IMutationalSignature[]
     ) {
+        const dataToShow =
+            significantMutationalSignaturesForSample.length <= 5
+                ? significantMutationalSignaturesForSample
+                : significantMutationalSignaturesForSample.slice(0, 5);
+        const numberSignatures =
+            significantMutationalSignaturesForSample.length <= 5
+                ? significantMutationalSignaturesForSample.length
+                : 5;
         return (
             <div
                 style={{ maxWidth: 250 }}
                 data-test="SignificantMutationalSignaturesTooltip"
             >
                 <div>
-                    {_.map(
-                        significantMutationalSignaturesForSample,
-                        significantSignature => (
-                            <div>
-                                <a href={significantSignature.meta.url}>
-                                    {significantSignature.meta.name}
-                                </a>
-                                :
-                                <span>
-                                    {significantSignature.meta.description}
-                                </span>
-                            </div>
-                        )
-                    )}
+                    <h5>Top {numberSignatures} signatures</h5>
+                    {_.map(dataToShow, significantSignature => (
+                        <div>
+                            <a href={significantSignature.meta.url}>
+                                {significantSignature.meta.name}
+                            </a>
+                            :
+                            <span>{significantSignature.meta.description}</span>
+                        </div>
+                    ))}
                 </div>
                 <hr style={{ marginTop: 10, marginBottom: 10 }} />
                 <table>
                     <th>Significant Mutational Signatures</th>
                     <th>Exposure</th>
-                    {significantMutationalSignaturesForSample.map(
-                        significantSignature => (
-                            <tr>
-                                <td style={{ paddingTop: 3 }}>
-                                    {significantSignature.meta.name}
-                                </td>
-                                <td style={{ paddingTop: 3 }}>
-                                    <SampleProgressBar
-                                        contribution={significantSignature.value.toString()}
-                                        color={getColorByMutationalSignatureCategory(
-                                            significantSignature.meta.category
-                                        )}
-                                    />
-                                </td>
-                            </tr>
-                        )
-                    )}
+                    {dataToShow.map(significantSignature => (
+                        <tr>
+                            <td style={{ paddingTop: 3 }}>
+                                {significantSignature.meta.name}
+                            </td>
+                            <td style={{ paddingTop: 3 }}>
+                                <SampleProgressBar
+                                    contribution={significantSignature.value.toString()}
+                                    color={getColorByMutationalSignatureCategory(
+                                        significantSignature.meta.category
+                                    )}
+                                />
+                            </td>
+                        </tr>
+                    ))}
                 </table>
             </div>
         );
