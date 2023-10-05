@@ -67,6 +67,8 @@ export default class MutationalSignaturesContainer extends React.Component<
     @observable signatureProfile: string = this.props.data[
         this.props.version
     ][0].meta.name;
+    @observable signatureToPlot: string = this.props.data[this.props.version][0]
+        .meta.name;
     private plotSvg: SVGElement | null = null;
     @observable signatureURL: string;
     @observable signatureDescription: string;
@@ -91,6 +93,9 @@ export default class MutationalSignaturesContainer extends React.Component<
         this.signatureProfile = childData;
         this.updateReferencePlot = updateReference;
         this.isSignatureInformationToolTipVisible = visibility;
+        this.signatureToPlot = updateReference
+            ? childData
+            : this.signatureToPlot;
         this.signatureURL =
             this.props.data[this.props.version].filter(obj => {
                 return childData === obj.meta.name;
@@ -217,6 +222,7 @@ export default class MutationalSignaturesContainer extends React.Component<
     private onVersionChange(option: { label: string; value: string }): void {
         this.props.onVersionChange(option.value);
         this.signatureProfile = this.props.data[option.value][0].meta.name;
+        this.signatureToPlot = this.props.data[option.value][0].meta.name;
         this.isSignatureInformationToolTipVisible = false;
     }
 
@@ -358,7 +364,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                     <div>
                         {!_.isEmpty(this.props.dataCount) && (
                             <MutationalBarChart
-                                signature={this.signatureProfile}
+                                signature={this.signatureToPlot}
                                 height={220}
                                 width={1200}
                                 refStatus={false}
