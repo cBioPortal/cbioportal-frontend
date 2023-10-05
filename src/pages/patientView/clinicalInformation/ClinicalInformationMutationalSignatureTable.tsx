@@ -4,27 +4,28 @@ import LazyMobXTable, {
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import styles from './style/mutationalSignatureTable.module.scss';
 import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControls/PaginationControls';
-import { IMutationalSignature } from '../../../shared/model/MutationalSignature';
 import { getMutationalSignaturePercentage } from '../../../shared/lib/FormatUtils';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
-import { DownloadControlOption } from 'cbioportal-frontend-commons';
-import { getServerConfig } from 'config/config';
 import Tooltip from 'rc-tooltip';
-
+import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 export interface IClinicalInformationMutationalSignatureTableProps {
-    data: IMutationalSignature[];
-    parentCallback: (childData: string, visibility: boolean) => void;
+    data: IMutationalSignatureRow[];
     url: string;
     signature: string;
     description: string;
+    samples: string[];
+    onRowClick: (d: IMutationalSignatureRow) => void;
+    onRowMouseEnter?: (d: IMutationalSignatureRow) => void;
+    onRowMouseLeave?: (d: IMutationalSignatureRow) => void;
+    dataStore: ILazyMobXTableApplicationDataStore<IMutationalSignatureRow>;
 }
 
 class MutationalSignatureTable extends LazyMobXTable<IMutationalSignatureRow> {}
 
-interface IMutationalSignatureRow {
+export interface IMutationalSignatureRow {
     name: string;
     sampleValues: {
         [sampleId: string]: {
@@ -36,55 +37,13 @@ interface IMutationalSignatureRow {
     url: string;
 }
 
-export function prepareMutationalSignatureDataForTable(
-    mutationalSignatureData: IMutationalSignature[],
-    samples: { id: string }[]
-): IMutationalSignatureRow[] {
-    const tableData: IMutationalSignatureRow[] = [];
-    //group data by mutational signature
-    //[{id: mutationalsignatureid, samples: [{}, {}]}]
-    let sampleInvertedDataByMutationalSignature: Array<any> = _(
-        mutationalSignatureData
-    )
-        .groupBy(
-            mutationalSignatureSample => mutationalSignatureSample.meta.name
-        )
-        .map((mutationalSignatureSampleData, name) => ({
-            name,
-            samples: mutationalSignatureSampleData,
-            url: mutationalSignatureSampleData[0].meta.url,
-        }))
-        .value();
-    for (const mutationalSignature of sampleInvertedDataByMutationalSignature) {
-        let mutationalSignatureRowForTable: IMutationalSignatureRow = {
-            name: '',
-            sampleValues: {},
-            url: '',
-        };
-        mutationalSignatureRowForTable.name = mutationalSignature.name;
-        mutationalSignatureRowForTable.url = mutationalSignature.url;
-        for (const sample of mutationalSignature.samples) {
-            mutationalSignatureRowForTable.sampleValues[sample.sampleId] = {
-                value: sample.value,
-                confidence: sample.confidence,
-            };
-        }
-        if (
-            Object.keys(mutationalSignatureRowForTable.sampleValues).length ===
-            samples.length
-        ) {
-            tableData.push(mutationalSignatureRowForTable);
-        }
-    }
-    return tableData;
-}
 @observer
 export default class ClinicalInformationMutationalSignatureTable extends React.Component<
     IClinicalInformationMutationalSignatureTableProps,
     {}
 > {
-    @observable selectedSignature = '';
-
+    @observable
+    selectedSignature: string;
     constructor(props: IClinicalInformationMutationalSignatureTableProps) {
         super(props);
         makeObservable(this);
@@ -96,40 +55,33 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
         this.selectedSignature = e.currentTarget.innerHTML;
     }
     @computed get uniqueSamples() {
-        return _.map(_.uniqBy(this.props.data, 'sampleId'), uniqSample => ({
-            id: uniqSample.sampleId,
-        }));
-    }
-
-    @computed get tableData() {
-        return prepareMutationalSignatureDataForTable(
-            this.props.data,
-            this.uniqueSamples
+        return _.map(
+            this.props.data.map(x => Object.keys(x.sampleValues))[0],
+            uniqSample => ({
+                id: uniqSample,
+            })
         );
     }
+
     @computed get tooltipInfo() {
         return (
             <div
-                style={{ maxWidth: 450 }}
-                data-test="SignificantMutationalSignaturesTooltip"
+                style={{ maxWidth: 400 }}
+                data-test="SignificantMutationalSignaturesTableTooltip"
             >
                 <div>
-                    <h4>
-                        <b>Signature:</b>
+                    <h5>
+                        <b>Signature: </b>
                         {this.props.signature}
-                    </h4>
-                    <p>
+                    </h5>
+                    <p style={{ fontSize: '12px' }}>
                         <b>Description: </b>
                         {this.props.description}
                     </p>
-                    <p>
-                        {this.props.url != '' && (
-                            <a href={this.props.url} target="_blank">
-                                External link to signature (opens new tab)
-                            </a>
-                        )}
-                        {this.props.url == '' &&
-                            'No link to external website available'}
+                    <p style={{ fontSize: '12px' }}>
+                        <a href={this.props.url} target="_blank">
+                            External link to signature (opens new tab)
+                        </a>
                     </p>
                 </div>
             </div>
@@ -141,17 +93,13 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
             {
                 name: 'Mutational Signature',
                 render: (data: IMutationalSignatureRow) => (
-                    <Tooltip overlay={this.tooltipInfo}>
-                        {
-                            <span
-                                onMouseOver={() =>
-                                    this.props.parentCallback(data.name, false)
-                                }
-                            >
-                                {data[this.firstCol]}
-                            </span>
-                        }
-                    </Tooltip>
+                    <span>
+                        <a target="_blank">{data[this.firstCol]}</a>
+                        {'   '}
+                        <Tooltip overlay={this.tooltipInfo}>
+                            {<i className="fa fa-info-circle"></i>}
+                        </Tooltip>
+                    </span>
                 ),
                 download: (data: IMutationalSignatureRow) =>
                     `${data[this.firstCol]}`,
@@ -174,20 +122,23 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                         MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD ? ( //if it's a significant signature, bold the contribution
                             // Based on significant pvalue the span is created with style.mutationalSignatureValue for bold (sign)
                             // or normal styling (not signficant)
-                            <span className={styles.mutationalSignatureValue}>
+                            <span
+                                className={styles.mutationalSignatureValue}
+                                style={{ float: 'right' }}
+                            >
                                 {getMutationalSignaturePercentage(
                                     data.sampleValues[col.id].value
                                 )}
                             </span>
                         ) : (
-                            <span>
+                            <span style={{ float: 'right' }}>
                                 {getMutationalSignaturePercentage(
                                     data.sampleValues[col.id].value
                                 )}
                             </span>
                         )
                     ) : (
-                        <span>
+                        <span style={{ float: 'right' }}>
                             {getMutationalSignaturePercentage(
                                 data.sampleValues[col.id].value
                             )}
@@ -209,25 +160,27 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                         .indexOf(filterStringUpper) > -1,
                 sortBy: (data: IMutationalSignatureRow) =>
                     data.sampleValues[col.id].value,
+                align: 'right' as 'right',
             })),
         ];
     }
 
     public render() {
         return (
-            <MutationalSignatureTable
-                columns={this.columns}
-                data={this.tableData}
-                showPagination={false}
-                initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
-                showColumnVisibility={false}
-                initialSortColumn={this.uniqueSamples[0].id}
-                initialSortDirection="desc"
-                showCopyDownload={
-                    getServerConfig().skin_hide_download_controls ===
-                    DownloadControlOption.SHOW_ALL
-                }
-            />
+            <div style={{ paddingTop: '0' }}>
+                <MutationalSignatureTable
+                    columns={this.columns}
+                    data={this.props.data}
+                    dataStore={this.props.dataStore}
+                    showPagination={false}
+                    initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
+                    showColumnVisibility={false}
+                    initialSortColumn={this.uniqueSamples[0].id}
+                    initialSortDirection="desc"
+                    onRowClick={this.props.onRowClick}
+                    onRowMouseEnter={this.props.onRowMouseEnter}
+                />
+            </div>
         );
     }
 }

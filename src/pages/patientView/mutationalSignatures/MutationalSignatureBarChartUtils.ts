@@ -1,6 +1,10 @@
 import _ from 'lodash';
-import { IMutationalCounts } from 'shared/model/MutationalSignature';
-import { scalePoint, scaleBand } from 'd3-scale';
+import {
+    IMutationalCounts,
+    IMutationalSignature,
+} from 'shared/model/MutationalSignature';
+import { scalePoint } from 'd3-scale';
+import { IMutationalSignatureRow } from 'pages/patientView/clinicalInformation/ClinicalInformationMutationalSignatureTable';
 export interface IColorLegend extends IColorDataBar {
     group: string;
     subcategory?: string;
@@ -10,6 +14,7 @@ export interface IColorDataBar extends IMutationalCounts {
     colorValue: string;
     label: string;
     subcategory?: string;
+    sublabel?: string;
 }
 
 export interface ColorMapProps {
@@ -18,6 +23,7 @@ export interface ColorMapProps {
     category: string;
     color: string;
     subcategory?: string;
+    sublabel?: string;
 }
 
 export interface LegendLabelsType {
@@ -25,6 +31,7 @@ export interface LegendLabelsType {
     label: string;
     color: string;
     subcategory?: string;
+    sublabel?: string;
 }
 export interface DrawRectInfo {
     color: string;
@@ -37,6 +44,7 @@ export interface LabelInfo {
     end: string;
     category: string;
     group: string;
+    sublabel: string;
 }
 export interface LegendEntriesType {
     group: string;
@@ -45,23 +53,40 @@ export interface LegendEntriesType {
     value: string;
 }
 
+export type DataToPlot = { mutationalSignatureLabel: string; value: number };
+
 export const colorMap: ColorMapProps[] = [
     {
         name: 'C>A',
         alternativeName: '_C-A_',
         category: 'C>A',
-        color: 'lightblue',
+        color: '#5DADE2',
     },
     {
         name: 'C>G',
         alternativeName: '_C-G_',
         category: 'C>G',
-        color: 'darkblue',
+        color: '#154360',
     },
     { name: 'C>T', alternativeName: '_C-T_', category: 'C>T', color: 'red' },
-    { name: 'T>A', alternativeName: '_T-A_', category: 'T>A', color: 'grey' },
-    { name: 'T>C', alternativeName: '_T-C_', category: 'T>C', color: 'green' },
-    { name: 'T>G', alternativeName: '_T-G_', category: 'T>G', color: 'pink' },
+    {
+        name: 'T>A',
+        alternativeName: '_T-A_',
+        category: 'T>A',
+        color: '#99A3A4',
+    },
+    {
+        name: 'T>C',
+        alternativeName: '_T-C_',
+        category: 'T>C',
+        color: '#2ECC71 ',
+    },
+    {
+        name: 'T>G',
+        alternativeName: '_T-G_',
+        category: 'T>G',
+        color: '#F5B7B1',
+    },
     {
         name: 'reference',
         alternativeName: 'reference',
@@ -139,6 +164,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '1_Del_C_',
         category: '1bp deletion',
         subcategory: 'C',
+        sublabel: 'Homopolymer length',
         color: '#f39c12',
     },
     {
@@ -146,6 +172,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '1_Del_T_',
         category: '1bp deletion',
         subcategory: 'T',
+        sublabel: 'Homopolymer length',
         color: '#d68910',
     },
     {
@@ -153,6 +180,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '2_Del_R_',
         category: '>1bp deletion',
         subcategory: '2',
+        sublabel: 'Number of Repeat Units',
         color: '#f1948a',
     },
     {
@@ -160,6 +188,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '2_Del_M',
         category: 'Microhomology',
         subcategory: '2',
+        sublabel: 'Microhomology length',
         color: '#D2B7F2',
     },
     {
@@ -167,6 +196,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '3_Del_R',
         category: '>1bp deletion',
         subcategory: '3',
+        sublabel: 'Number of Repeat Units',
         color: '#ec7063',
     },
     {
@@ -174,13 +204,15 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '3_Del_M',
         category: 'Microhomology',
         subcategory: '3',
-        color: '#9b59b6',
+        sublabel: 'Microhomology length',
+        color: '#E194EB',
     },
     {
         name: '4:Del:R',
         alternativeName: '4_Del_R',
         category: '>1bp deletion',
         subcategory: '4',
+        sublabel: 'Number of Repeat Units',
         color: '#e74c3c',
     },
     {
@@ -188,27 +220,31 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '4_Del_M',
         category: 'Microhomology',
         subcategory: '4',
-        color: '#7d3c98',
+        sublabel: 'Microhomology length',
+        color: '#DD75EA',
     },
     {
         name: '5:Del:R',
         alternativeName: '5_Del_R',
         category: '>1bp deletion',
         subcategory: '5',
-        color: '#cb4335',
+        sublabel: 'Number of Repeat Units',
+        color: '#F7406C',
     },
     {
         name: '5:Del:M',
         alternativeName: '5_Del_M',
         category: 'Microhomology',
         subcategory: '5',
-        color: '#4a235a',
+        sublabel: 'Microhomology length',
+        color: '#DB3AEE',
     },
     {
         name: '1:Ins:T',
         alternativeName: '1_Ins_T',
         category: '1bp insertion',
         subcategory: 'T',
+        sublabel: 'Homopolymer length',
         color: '#28b463',
     },
     {
@@ -216,6 +252,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '1_Ins_C',
         category: '1bp insertion',
         subcategory: 'C',
+        sublabel: 'Homopolymer length',
         color: '#82e0aa',
     },
     {
@@ -223,6 +260,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '2_Ins_M',
         category: 'Microhomology',
         subcategory: '2',
+        sublabel: 'Microhomology length',
         color: '#aed6f1',
     },
     {
@@ -230,6 +268,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '2_Ins_R',
         category: '>1bp insertion',
         subcategory: '2',
+        sublabel: 'Number of Repeat Units',
         color: '#33ffff',
     },
     {
@@ -237,6 +276,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '3_Ins_M',
         category: 'Microhomology',
         subcategory: '3',
+        sublabel: 'Microhomology length',
         color: '#85c1e9',
     },
     {
@@ -244,6 +284,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '3_Ins_R',
         category: '>1bp insertion',
         subcategory: '3',
+        sublabel: 'Number of Repeat Units',
         color: '#aed6F1',
     },
     {
@@ -251,6 +292,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '4_Ins_M',
         category: 'Microhomology',
         subcategory: '4',
+        sublabel: 'Microhomology length',
         color: '#85c1e9',
     },
     {
@@ -258,6 +300,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '4_Ins_R',
         category: '>1bp insertion',
         subcategory: '4',
+        sublabel: 'Number of Repeat Units',
         color: '#5dade2',
     },
     {
@@ -265,6 +308,7 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '5_Ins_M',
         category: 'Microhomology',
         subcategory: '5',
+        sublabel: 'Microhomology length',
         color: '#3498db',
     },
     {
@@ -272,11 +316,13 @@ export const colorMap: ColorMapProps[] = [
         alternativeName: '5_Ins_R',
         category: '>1bp insertion',
         subcategory: '5',
-        color: '#2874a6',
+        sublabel: 'Number of Repeat Units',
+        color: '#368BFD',
     },
 ];
 export function getColorsForSignatures(
-    dataset: IMutationalCounts[]
+    dataset: IMutationalCounts[],
+    yAxisSetting: string
 ): IColorLegend[] {
     const colorTableData = dataset.map((obj: IMutationalCounts) => {
         if (obj.mutationalSignatureLabel !== '') {
@@ -285,20 +331,28 @@ export function getColorsForSignatures(
                     obj.mutationalSignatureLabel.indexOf('_') == -1 &&
                     obj.mutationalSignatureLabel.indexOf('-') == -1
                 ) {
-                    if (obj.mutationalSignatureLabel.match(cmap.name) != null) {
+                    if (
+                        obj.mutationalSignatureLabel.match(cmap.name) !== null
+                    ) {
                         return cmap.color;
                     }
                 } else {
                     if (
                         obj.mutationalSignatureLabel.match(
                             cmap.alternativeName
-                        ) != null
+                        ) !== null
                     ) {
                         return cmap.color;
                     }
                 }
             });
-            const label = obj.mutationalSignatureLabel;
+            const label = formatTooltipLabelCosmicStyle(
+                obj.version,
+                obj.mutationalSignatureLabel,
+                colorIdentity,
+                yAxisSetting,
+                obj.value
+            );
             const group: string =
                 colorIdentity.length > 0
                     ? colorIdentity[colorIdentity.length - 1].category
@@ -311,18 +365,22 @@ export function getColorsForSignatures(
                 'subcategory' in colorIdentity[colorIdentity.length - 1]
                     ? colorIdentity[colorIdentity.length - 1].subcategory!
                     : ' ';
-            return { ...obj, colorValue, label, subcategory, group };
+            const sublabel: string =
+                'sublabel' in colorIdentity[colorIdentity.length - 1]
+                    ? colorIdentity[colorIdentity.length - 1].sublabel!
+                    : ' ';
+            return { ...obj, colorValue, label, subcategory, sublabel, group };
         } else {
             const label = obj.mutationalSignatureLabel;
             const colorValue = '#EE4B2B';
             const group = ' ';
             const subcategory: string = ' ';
-            return { ...obj, colorValue, label, subcategory, group };
+            const sublabel: string = '';
+            return { ...obj, colorValue, label, subcategory, sublabel, group };
         }
     });
     if (colorTableData[0].group !== ' ') {
-        const colorTableDataSorted = _.sortBy(colorTableData, 'group');
-        return colorTableDataSorted;
+        return _.sortBy(colorTableData, 'group');
     } else {
         return colorTableData;
     }
@@ -343,20 +401,21 @@ export function getPercentageOfMutationalCount(
             mutationalSignatureLabel: item.mutationalSignatureLabel,
             mutationalSignatureClass: item.mutationalSignatureClass,
             version: item.version,
-            value: count,
+            value: sumValue == 0 ? 0 : count,
         };
     });
 }
 
 export function getxScalePoint(
     labels: LegendLabelsType[],
-    xmin: number,
-    xmax: number
+    xMin: number,
+    xMax: number
 ) {
-    return scaleBand()
+    return scalePoint()
         .domain(labels.map((x: LegendLabelsType) => x.label))
-        .range([xmin, xmax]);
+        .range([xMin, xMax]);
 }
+
 export function getLegendEntriesBarChart(
     labels: LegendLabelsType[]
 ): LegendEntriesType[] {
@@ -367,6 +426,35 @@ export function getLegendEntriesBarChart(
         value: item.label,
         subcategory: item.subcategory,
     }));
+}
+
+export function addColorsForReferenceData(dataset: DataToPlot[]) {
+    const colors = dataset.map((entry: DataToPlot) => {
+        const colorIdentity = colorMap.filter(cmap => {
+            if (
+                entry.mutationalSignatureLabel.indexOf('_') == -1 &&
+                entry.mutationalSignatureLabel.indexOf('-') == -1
+            ) {
+                if (entry.mutationalSignatureLabel.match(cmap.name) != null) {
+                    return cmap.color;
+                }
+            } else {
+                if (
+                    entry.mutationalSignatureLabel.match(
+                        cmap.alternativeName
+                    ) != null
+                ) {
+                    return cmap.color;
+                }
+            }
+        });
+        const colorValue =
+            colorIdentity.length > 0
+                ? colorIdentity[colorIdentity.length - 1].color
+                : '#EE4B2B';
+        return { ...entry, colorValue };
+    });
+    return colors;
 }
 
 export function getCenterPositionLabelEntries(
@@ -395,22 +483,33 @@ export function createLegendLabelObjects(
     );
 }
 
+export function createXAxisAnnotation(
+    lengthObjects: number[],
+    objects: LegendEntriesType[],
+    labels: string[]
+) {
+    return labels.map(
+        (identifier: string, i: number) =>
+            _.groupBy(objects, 'sublabel')[identifier][lengthObjects[i] - 1]
+    );
+}
+
 export function formatLegendObjectsForRectangles(
     lengthLegendObjects: number[],
     legendEntries: LegendEntriesType[],
     labels: string[],
-    version: string
+    version: string,
+    groupByString: string
 ) {
     if (version != 'ID') {
-        const formatLegendRect = lengthLegendObjects.map((value, i) => ({
+        return lengthLegendObjects.map((value, i) => ({
             color: _.groupBy(legendEntries, 'group')[labels[i]][0].color,
             start: _.groupBy(legendEntries, 'group')[labels[i]][0].value,
             end: _.groupBy(legendEntries, 'group')[labels[i]][value - 1].value,
         }));
-        return formatLegendRect;
     } else {
         // Create a new object grouped by 'group' and 'subcategory
-        const dataGroupByCategory = _.groupBy(legendEntries, 'subcategory');
+        const dataGroupByCategory = _.groupBy(legendEntries, groupByString);
         const dataGroupByGroup = Object.keys(dataGroupByCategory).map(item =>
             _.groupBy(dataGroupByCategory[item], 'group')
         );
@@ -418,7 +517,7 @@ export function formatLegendObjectsForRectangles(
         dataGroupByGroup.map(item =>
             Object.keys(item).map(x => result.push(item[x]))
         );
-        const formatLegendRect = result.map(itemLegend => ({
+        return result.map(itemLegend => ({
             color: itemLegend[0].color,
             start: itemLegend[0].label,
             end:
@@ -428,6 +527,243 @@ export function formatLegendObjectsForRectangles(
             category: itemLegend[0].subcategory,
             group: itemLegend[0].group,
         }));
-        return formatLegendRect;
     }
+}
+
+export function prepareMutationalSignatureDataForTable(
+    mutationalSignatureData: IMutationalSignature[],
+    samplesInData: string[]
+): IMutationalSignatureRow[] {
+    const tableData: IMutationalSignatureRow[] = [];
+    const sampleInvertedDataByMutationalSignature: Array<any> = _(
+        mutationalSignatureData
+    )
+        .groupBy(
+            mutationalSignatureSample => mutationalSignatureSample.meta.name
+        )
+        .map((mutationalSignatureSampleData, name) => ({
+            name,
+            samples: mutationalSignatureSampleData,
+            url: mutationalSignatureSampleData[0].meta.url,
+        }))
+        .value();
+    for (const mutationalSignature of sampleInvertedDataByMutationalSignature) {
+        let mutationalSignatureRowForTable: IMutationalSignatureRow = {
+            name: '',
+            sampleValues: {},
+            url: '',
+        };
+
+        mutationalSignatureRowForTable.name = mutationalSignature.name;
+        mutationalSignatureRowForTable.url = mutationalSignature.url;
+        if (
+            Object.keys(mutationalSignature.samples).length ===
+            samplesInData.length
+        ) {
+            for (const sample of mutationalSignature.samples) {
+                mutationalSignatureRowForTable.sampleValues[sample.sampleId] = {
+                    value: sample.value,
+                    confidence: sample.confidence,
+                };
+            }
+            tableData.push(mutationalSignatureRowForTable);
+        } else {
+            for (const sampleId of samplesInData) {
+                if (
+                    mutationalSignature.samples.some(
+                        (obj: IMutationalSignature) => obj.sampleId === sampleId
+                    )
+                ) {
+                    // Sample exists and we can use the values
+                    for (const sample of mutationalSignature.samples) {
+                        mutationalSignatureRowForTable.sampleValues[
+                            sample.sampleId
+                        ] = {
+                            value: sample.value,
+                            confidence: sample.confidence,
+                        };
+                    }
+                } else {
+                    mutationalSignatureRowForTable.sampleValues[sampleId] = {
+                        value: 0,
+                        confidence: 1,
+                    };
+                }
+            }
+            tableData.push(mutationalSignatureRowForTable);
+        }
+    }
+    return tableData;
+}
+
+export function formatTooltipLabelCosmicStyle(
+    version: string,
+    label: string,
+    category: ColorMapProps[],
+    yAxisSetting: string,
+    value: number
+): string {
+    const valueLabel = yAxisSetting == '%' ? '%' : ' count(#)';
+    if (version == 'SBS') {
+        const labelSplit = label.split('_').map((x, i) => {
+            return i == 1 ? '[' + x.replace('-', '->') + ']' : x;
+        });
+        return labelSplit.length > 1
+            ? value +
+                  valueLabel +
+                  ' of SBS mutations (' +
+                  percentageToFraction(value) +
+                  ') are ' +
+                  '\n' +
+                  labelSplit[1] +
+                  ' at ' +
+                  labelSplit.join('') +
+                  ' trinucleotide'
+            : label;
+    } else if (version == 'DBS') {
+        const labelSplit = label.split('-');
+        return labelSplit.length > 1
+            ? value +
+                  valueLabel +
+                  ' of DBS mutations (' +
+                  percentageToFraction(value) +
+                  ') ' +
+                  '\n' +
+                  labelSplit[0] +
+                  ' to ' +
+                  labelSplit[1]
+            : label;
+    } else if (version == 'ID') {
+        const formattedLabel = formatIndelTooltipLabelsCosmicStyle(
+            label,
+            category,
+            value,
+            valueLabel
+        );
+        return formattedLabel !== '' ? formattedLabel : label;
+    } else {
+        return label;
+    }
+}
+
+function formatIndelTooltipLabelsCosmicStyle(
+    label: string,
+    information: ColorMapProps[],
+    value: number,
+    valueLabel: string
+): string {
+    if (information[0].category == 'Microhomology') {
+        return (
+            value +
+            ' of small indels (' +
+            percentageToFraction(value) +
+            ') ' +
+            ' ' +
+            information[0].category +
+            '\n' +
+            ' with microhomology length ' +
+            label.split('_')[3]
+        );
+    } else if (information[0].category == '>1bp insertion') {
+        return (
+            value +
+            ' of small indels (' +
+            percentageToFraction(value) +
+            ') ' +
+            ' ' +
+            information[0].category +
+            '\n' +
+            ' with number of repeat units ' +
+            label.split('_')[3]
+        );
+    } else if (information[0].category == '>1bp deletion') {
+        return (
+            value +
+            ' of small indels (' +
+            percentageToFraction(value) +
+            ') ' +
+            ' ' +
+            information[0].category +
+            '\n' +
+            ' with number of repeat units ' +
+            label.split('_')[3]
+        );
+    } else if (information[0].category == '1bp deletion') {
+        return (
+            value +
+            ' of small indels (' +
+            percentageToFraction(value) +
+            ') ' +
+            ' ' +
+            information[0].category +
+            '(' +
+            information[0].subcategory +
+            ')' +
+            '\n' +
+            ' with homopolymer length' +
+            '\n' +
+            'of ' +
+            label.split('_')[3]
+        );
+    } else if (information[0].category == '1bp insertion') {
+        return (
+            value +
+            ' of small indels (' +
+            percentageToFraction(value) +
+            ') ' +
+            ' ' +
+            information[0].category +
+            ' (' +
+            information[0].subcategory +
+            ')' +
+            '\n' +
+            ' with homopolymer length' +
+            '\n' +
+            'of ' +
+            label.split('_')[3]
+        );
+    } else {
+        return '';
+    }
+}
+
+export function formatMutationalSignatureLabel(label: string, version: string) {
+    if (version === 'SBS') {
+        return label.replace(/[\[\]]/g, '_').replace(/>/g, '-');
+    } else if (version === 'DBS') {
+        return label.replace(/>/g, '-');
+    } else if (version === 'ID') {
+        return label.replace(/:/g, '_');
+    } else {
+        return label;
+    }
+}
+
+function percentageToFraction(percentage: number): string {
+    // Function to find the greatest common divisor (GCD)
+    const findGCD = (a: number, b: number): number => {
+        while (b !== 0) {
+            const temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    };
+
+    const decimal: number = percentage / 100;
+
+    // Convert the decimal to a fraction
+    let numerator: number = decimal * 1000000;
+    let denominator: number = 1000000;
+
+    // Find the greatest common divisor
+    const gcd: number = findGCD(numerator, denominator);
+
+    // Simplify the fraction
+    numerator /= gcd;
+    denominator /= gcd;
+
+    const simplifiedFraction: string = `${numerator}/${denominator}`;
+
+    return simplifiedFraction;
 }
