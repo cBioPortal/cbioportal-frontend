@@ -238,6 +238,12 @@ export default class ResultsViewOncoprint extends React.Component<
         );
     }
 
+    @computed get enableWhiteBackgroundForGlyphs() {
+        return (
+            this.urlWrapper.query.enable_white_background_for_glyphs === 'true'
+        );
+    }
+
     @computed get genericAssayPromises() {
         if (this.props.store.studyIds.result.length === 1) {
             // we only support generic assay in oncoprint for single study,
@@ -287,7 +293,6 @@ export default class ResultsViewOncoprint extends React.Component<
     @observable showClinicalTrackLegends: boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
-    @observable enableWhiteBackgroundForGlyphs: boolean = false;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return (
@@ -764,7 +769,9 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.showOqlInLabels = show;
             },
             onSelectEnableWhiteBackgroundForGlyphs: (s: boolean) => {
-                this.enableWhiteBackgroundForGlyphs = s;
+                this.urlWrapper.updateURL({
+                    enable_white_background_for_glyphs: s.toString(),
+                });
             },
             onSelectShowMinimap: (show: boolean) => {
                 this.showMinimap = show;
