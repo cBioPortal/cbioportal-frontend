@@ -19,7 +19,11 @@ function makeColumns(data: string[][]) {
                 txt: string,
                 filterString: string,
                 filterStringUpper: string
-            ) => txt.toUpperCase().includes(filterStringUpper),
+            ) =>
+                txt
+                    ?.toString()
+                    .toUpperCase()
+                    .includes(filterStringUpper),
         };
     });
 }
