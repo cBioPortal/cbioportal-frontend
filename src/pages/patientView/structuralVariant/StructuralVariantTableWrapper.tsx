@@ -145,7 +145,9 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     filterString: string,
                     filterStringUpper: string
                 ) => {
-                    return d[0].site1HugoSymbol.indexOf(filterStringUpper) > -1;
+                    return (
+                        d[0].site1HugoSymbol?.indexOf(filterStringUpper) > -1
+                    );
                 },
                 download: (d: StructuralVariant[]) => d[0].site1HugoSymbol,
                 sortBy: (d: StructuralVariant[]) => d[0].site1HugoSymbol,
