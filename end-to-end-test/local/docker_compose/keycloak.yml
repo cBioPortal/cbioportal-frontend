@@ -2,11 +2,11 @@ version: '3'
 
 services:
   cbioportal:
+    image: cbioportal/cbioportal:demo-rfc72
     volumes:
       - $TEST_HOME/docker_compose/keycloak/samlKeystore.jks:/cbioportal-webapp/WEB-INF/classes/samlKeystore.jks:ro
       - $E2E_WORKSPACE/keycloak/idp-metadata.xml:/cbioportal-webapp/WEB-INF/classes/client-tailored-saml-idp-metadata.xml:ro
-    command: /bin/sh -c "java -Xms2g -Xmx4g -Dauthenticate=saml -Dsession.service.url=http://cbioportal-session:5000/api/sessions/my_portal/ -jar webapp-runner.jar -AmaxHttpHeaderSize=16384 -AconnectionTimeout=20000 --enable-compression /cbioportal-webapp"
-
+    command: /bin/sh -c "rm -rf /cbioportal-webapp/lib/servlet-api-2.5.jar && java -Xms2g -Xmx4g -Dauthenticate=saml -Dsession.service.url=http://cbioportal-session:5000/api/sessions/my_portal/ -cp '/cbioportal-webapp:/cbioportal-webapp/lib/*' org.cbioportal.PortalApplication"
   keycloak:
     networks:
     - cbio-net
