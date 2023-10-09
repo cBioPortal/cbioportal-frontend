@@ -440,6 +440,10 @@ export class ClinicalDataTab extends React.Component<
                                                   CLINICAL_DATA_RECORD_LIMIT
                                                 : false
                                         }
+                                        resultCountOverride={
+                                            this.getDataForClinicalDataTab
+                                                .result?.totalItems
+                                        }
                                     />
                                 </Else>
                             </If>
