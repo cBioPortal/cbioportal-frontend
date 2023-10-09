@@ -132,50 +132,36 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
         return _.sumBy(this.props.data, obj => obj.count);
     }
 
-    @computed
-    get fill() {
-        return (d: ClinicalDataCountSummary) => {
-            if (
-                !_.isEmpty(this.filters) &&
-                !_.includes(this.filters, d.value)
-            ) {
-                return DEFAULT_NA_COLOR;
-            }
-            return d.color;
-        };
+    @autobind
+    fill(d: ClinicalDataCountSummary) {
+        if (!_.isEmpty(this.filters) && !_.includes(this.filters, d.value)) {
+            return DEFAULT_NA_COLOR;
+        }
+        return d.color;
     }
 
-    @computed
-    get stroke() {
-        return (d: ClinicalDataCountSummary) => {
-            if (!_.isEmpty(this.filters) && _.includes(this.filters, d.value)) {
-                return '#cccccc';
-            }
-            return null;
-        };
+    @autobind
+    stroke(d: ClinicalDataCountSummary) {
+        if (!_.isEmpty(this.filters) && _.includes(this.filters, d.value)) {
+            return '#cccccc';
+        }
+        return null;
     }
 
-    @computed
-    get strokeWidth() {
-        return (d: ClinicalDataCountSummary) => {
-            if (!_.isEmpty(this.filters) && _.includes(this.filters, d.value)) {
-                return 3;
-            }
-            return 0;
-        };
+    @autobind
+    strokeWidth(d: ClinicalDataCountSummary) {
+        if (!_.isEmpty(this.filters) && _.includes(this.filters, d.value)) {
+            return 3;
+        }
+        return 0;
     }
 
-    @computed
-    get fillOpacity() {
-        return (d: ClinicalDataCountSummary) => {
-            if (
-                !_.isEmpty(this.filters) &&
-                !_.includes(this.filters, d.value)
-            ) {
-                return '0.5';
-            }
-            return 1;
-        };
+    @autobind
+    fillOpacity(d: ClinicalDataCountSummary) {
+        if (!_.isEmpty(this.filters) && !_.includes(this.filters, d.value)) {
+            return '0.5';
+        }
+        return 1;
     }
 
     @autobind
@@ -208,11 +194,9 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
             : d.count.toLocaleString();
     }
 
-    @computed
-    get labelColor() {
-        return (d: ClinicalDataCountSummary) => {
-            return getTextColor(this.fill(d));
-        };
+    @autobind
+    labelColor(d: ClinicalDataCountSummary) {
+        return getTextColor(this.fill(d));
     }
 
     // Pie charts should be circular, and thus should have a square container.
