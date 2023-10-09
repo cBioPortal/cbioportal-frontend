@@ -126,6 +126,7 @@ type LazyMobXTableProps<T> = {
     onFilterTextChange?: (filterString: string) => void;
     onSortDirectionChange?: (field: string, direction: SortDirection) => void;
     isResultLimited?: boolean;
+    resultCountOverride?: number;
     showLoading?: boolean;
     loadingComponent?: JSX.Element;
 };
@@ -293,6 +294,9 @@ export class LazyMobXTableStore<T> {
     @observable private onRowClick: ((d: T) => void) | undefined;
     @observable private onRowMouseEnter: ((d: T) => void) | undefined;
     @observable private onRowMouseLeave: ((d: T) => void) | undefined;
+
+    @observable resultCountOverride: number | undefined;
+    // now we need to use this in control if passed in. maybe call it override
 
     // this observable is intended to always refer to props.columnToHeaderFilterIconModal
     @observable private _columnToHeaderFilterIconModal:
@@ -644,7 +648,10 @@ export class LazyMobXTableStore<T> {
             itemsLabel = ` ${itemsLabel}`;
         }
 
-        return `Showing ${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.displayData.length}${itemsLabel}`;
+        // this allows us override the count for display purposes when we are in the
+        // result limited scenario
+        const total = this.resultCountOverride || this.displayData.length;
+        return `Showing ${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${total}${itemsLabel}`;
     }
 
     @computed get tds(): JSX.Element[][] {
@@ -792,6 +799,8 @@ export class LazyMobXTableStore<T> {
         this.onRowMouseEnter = props.onRowMouseEnter;
         this.onRowMouseLeave = props.onRowMouseLeave;
         this.onSortDirectionChange = props.onSortDirectionChange;
+
+        this.resultCountOverride = props.resultCountOverride;
 
         if (props.dataStore) {
             this.dataStore = props.dataStore;
@@ -1135,10 +1144,12 @@ export default class LazyMobXTable<T> extends React.Component<
                 this.props.paginationProps
             );
         }
-        return <PaginationControls {...paginationProps} />;
-        // } else {
-        //     return null;
-        // }
+
+        return this.store.displayData.length > 0 ? (
+            <PaginationControls {...paginationProps} />
+        ) : (
+            <></>
+        );
     }
 
     private get countHeader() {
