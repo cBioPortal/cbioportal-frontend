@@ -72,6 +72,7 @@ import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
+import OncoprintModel from 'oncoprintjs';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -787,8 +788,6 @@ export function makeGeneticTrackWith({
         }
         return {
             key: trackKey,
-            /* @ts-ignore */
-            skunk: 'sleep',
             label:
                 (parentKey !== undefined ? '  ' : '') +
                 formatGeneticTrackLabel(oql),
@@ -806,6 +805,27 @@ export function makeGeneticTrackWith({
                 {
                     label: 'Sort by genes',
                     onClick: oncoprint.clearSortDirectionsAndSortByData,
+                },
+                {
+                    gapLabelsFn: (model: any) => {
+                        model.data_groups.update(model);
+                        const groups = model.data_groups.get();
+
+                        debugger;
+
+                        const info = groups[0].map((groupData: any) => {
+                            const moo = alterationInfoForOncoprintTrackData(
+                                sampleMode,
+                                { trackData: groupData, oql: geneSymbolArray },
+                                sequencedSampleKeysByGene,
+                                sequencedPatientKeysByGene
+                            );
+                            return moo;
+                        });
+                        console.log(trackKey, info);
+
+                        return 'monkey';
+                    },
                 },
             ],
         };

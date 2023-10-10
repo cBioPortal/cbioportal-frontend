@@ -756,6 +756,7 @@ export default class Oncoprint {
         if (this.webgl_unavailable || this.destroyed) {
             return [];
         }
+
         // Update model
         const track_ids: TrackId[] = [];
         const library_params_list = (params_list as LibraryTrackSpec<

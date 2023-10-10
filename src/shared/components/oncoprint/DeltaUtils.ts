@@ -744,6 +744,7 @@ function transitionTracks(
         );
         delete prevGeneticTracks[track.key];
     }
+
     for (const track of prevProps.geneticTracks || []) {
         if (prevGeneticTracks.hasOwnProperty(track.key)) {
             // if its still there, then this track no longer exists, we need to remove it

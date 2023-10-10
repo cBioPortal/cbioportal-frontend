@@ -68,6 +68,7 @@ export type CustomTrackOption = {
     onClick?: (id: TrackId) => void;
     weight?: string;
     disabled?: boolean;
+    gapLabelsFn?: any;
 };
 export type CustomTrackGroupOption = {
     label?: string;
@@ -89,6 +90,7 @@ export type UserTrackSpec<D> = {
     onClickRemoveInTrackMenu?: (track_id: TrackId) => void;
     label?: string;
     sublabel?: string;
+    gapLabelFn?: (model: OncoprintModel) => string[];
     html_label?: string;
     track_label_color?: string;
     track_label_circle_color?: string;
@@ -335,7 +337,7 @@ export default class OncoprintModel {
     >;
     private ids_after_a_gap: CachedProperty<ColumnIdSet>;
 
-    private data_groups: CachedProperty<any>;
+    public data_groups: CachedProperty<any>;
 
     private column_indexes_after_a_gap: CachedProperty<number[]>;
 
@@ -579,7 +581,7 @@ export default class OncoprintModel {
             model: OncoprintModel
         ) {
             let groups: any[] = [];
-            const precomputedComparator = model.precomputed_comparator.get();
+
             const trackIdsWithGaps = model
                 .getTracks()
                 .filter(trackId => model.getTrackShowGaps(trackId));
@@ -589,7 +591,7 @@ export default class OncoprintModel {
 
             // we need to do this for each genomic track
             const keyedData = _.keyBy(model.track_data[4], m => m.uid);
-
+            debugger;
             // const data = model.id_order.map(d=>keyedData[d]);
             //
             // groups = model.column_indexes_after_a_gap.get().map((val, i, array)=>{

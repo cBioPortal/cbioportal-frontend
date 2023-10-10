@@ -748,6 +748,10 @@ export default class OncoprintWebGLCellView {
             const track_id = tracks[i];
             const cell_top = model.getCellTops(track_id);
             const cell_height = model.getCellHeight(track_id);
+            const custom = model.getTrackCustomOptions(track_id);
+
+            custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
+
             if (
                 cell_top / zoom_y >= window_bottom ||
                 (cell_top + cell_height) / zoom_y < window_top
