@@ -10,6 +10,7 @@ import {
 import {
     capitalize,
     FadeInteraction,
+    getBrowserWindow,
     mobxPromiseResolve,
     remoteData,
     svgToPdfDownload,
@@ -1794,6 +1795,7 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     public render() {
+        getBrowserWindow().donk = this;
         return (
             <div style={{ position: 'relative' }}>
                 <LoadingIndicator

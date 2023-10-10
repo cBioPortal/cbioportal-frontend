@@ -334,6 +334,9 @@ export default class OncoprintModel {
         TrackProp<PrecomputedComparator<Datum>>
     >;
     private ids_after_a_gap: CachedProperty<ColumnIdSet>;
+
+    private data_groups: CachedProperty<any>;
+
     private column_indexes_after_a_gap: CachedProperty<number[]>;
 
     private track_groups: TrackGroup[];
@@ -571,6 +574,55 @@ export default class OncoprintModel {
 
             return gapIds;
         });
+
+        this.data_groups = new CachedProperty([], function(
+            model: OncoprintModel
+        ) {
+            let groups: any[] = [];
+            const precomputedComparator = model.precomputed_comparator.get();
+            const trackIdsWithGaps = model
+                .getTracks()
+                .filter(trackId => model.getTrackShowGaps(trackId));
+
+            // what is visible mean? it should be all if we are going to calculate
+            const ids = model.visible_id_order.get();
+
+            // we need to do this for each genomic track
+            const keyedData = _.keyBy(model.track_data[4], m => m.uid);
+
+            // const data = model.id_order.map(d=>keyedData[d]);
+            //
+            // groups = model.column_indexes_after_a_gap.get().map((val, i, array)=>{
+            //     const start = i === 0 ? 0 : array[i-1];
+            //     return data.slice(start,val);
+            // });
+
+            // we really only need to this for the clinical track with the MOST groups
+            // groups = trackIdsWithGaps.map((id)=>{
+            //     // this is the data for the genomic tracks
+            //     //const keyedData = _.keyBy(model.track_data[4],(m)=>m.uid);
+            //     const data = model.id_order.map(d=>keyedData[d]);
+            //     return model.column_indexes_after_a_gap.get().map((val, i, array)=>{
+            //         const start = i === 0 ? 0 : array[i-1];
+            //         return data.slice(start,val);
+            //     });
+            // });
+
+            groups = trackIdsWithGaps.map(id => {
+                // this is the data for the genomic tracks
+                //const keyedData = _.keyBy(model.track_data[4],(m)=>m.uid);
+                const data = model.id_order.map(d => keyedData[d]);
+                return model.column_indexes_after_a_gap
+                    .get()
+                    .map((val, i, array) => {
+                        const start = i === 0 ? 0 : array[i - 1];
+                        return data.slice(start, val);
+                    });
+            });
+
+            return groups;
+        });
+
         this.visible_id_order.addBoundProperty(this.ids_after_a_gap);
         this.precomputed_comparator.addBoundProperty(this.ids_after_a_gap);
 

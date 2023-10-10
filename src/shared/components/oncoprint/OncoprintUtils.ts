@@ -738,6 +738,7 @@ export function makeGeneticTrackWith({
             sequencedSampleKeysByGene,
             sequencedPatientKeysByGene
         );
+
         const trackKey =
             parentKey === undefined
                 ? `GENETICTRACK_${index}`
@@ -786,6 +787,8 @@ export function makeGeneticTrackWith({
         }
         return {
             key: trackKey,
+            /* @ts-ignore */
+            skunk: 'sleep',
             label:
                 (parentKey !== undefined ? '  ' : '') +
                 formatGeneticTrackLabel(oql),
