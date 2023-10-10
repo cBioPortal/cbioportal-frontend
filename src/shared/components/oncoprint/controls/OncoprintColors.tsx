@@ -36,7 +36,6 @@ export interface IGroupCheckboxProps {
     clinicalAttributeValue: any;
     color: RGBAColor;
     clinicalTrackKey: string;
-    // markedWithWarningSign: boolean;
 }
 
 const COLOR_UNDEFINED = '#FFFFFF';
@@ -111,26 +110,6 @@ export default class OncoprintColors extends React.Component<
         return (
             <div>
                 {this.props.clinicalAttributeValue}
-                {/* <DefaultTooltip
-                    overlay={
-                        'You have selected identical colors for some alterations.'
-                    }
-                > */}
-                {/* <span>
-                        {this.props.markedWithWarningSign && (
-                            <i
-                                className="fa fa-warning"
-                                style={{
-                                    cursor: 'pointer',
-                                    color: '#fad201',
-                                    position: 'relative',
-                                    top: '1px',
-                                    right: '2px',
-                                }}
-                            />
-                        )}
-                    </span> */}
-                {/* </DefaultTooltip> */}
                 <OverlayTrigger
                     containerPadding={40}
                     trigger="click"
