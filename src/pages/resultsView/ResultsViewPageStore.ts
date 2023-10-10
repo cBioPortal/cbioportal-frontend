@@ -589,11 +589,6 @@ export class ResultsViewPageStore extends AnalysisStore
         };
     } = {};
 
-    // private _selectedComparisonGroupsWarningSigns = observable.map<
-    //     string,
-    //     boolean
-    // >({}, { deep: false });
-
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
             this.nonSelectedDownloadableMolecularProfilesGroupByName.result &&
@@ -669,42 +664,6 @@ export class ResultsViewPageStore extends AnalysisStore
             });
         }
     }
-
-    // @action public showAlterationWarningSign(
-    //     alteration: string,
-    //     markedValue: boolean
-    // ) {
-    //     this._selectedComparisonGroupsWarningSigns.set(alteration, markedValue);
-    // }
-
-    // public flagDuplicateColorsForAlterations(
-    //     alteration: string,
-    //     color: string | undefined
-    // ) {
-    //     let colors: { [color: string]: number } = {};
-
-    //     Object.keys(this.userAlterationColors).forEach(
-    //         (a: string, i: number) => {
-    //             let alterationColor =
-    //                 a === alteration ? color : this.userAlterationColors[a];
-    //             if (
-    //                 alterationColor == undefined ||
-    //                 colors[alterationColor] == undefined
-    //             ) {
-    //                 if (alterationColor != undefined)
-    //                     colors[alterationColor] = 1;
-    //                 this.showAlterationWarningSign(alteration, false);
-    //             } else {
-    //                 colors[alterationColor] = colors[alterationColor] + 1;
-    //                 this.showAlterationWarningSign(alteration, true);
-    //             }
-    //         }
-    //     );
-    // }
-
-    // public isAlterationMarkedWithWarningSign(alteration: string): boolean {
-    //     return !!this._selectedComparisonGroupsWarningSigns.get(alteration);
-    // }
 
     @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {

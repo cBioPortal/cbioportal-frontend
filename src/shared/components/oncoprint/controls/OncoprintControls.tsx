@@ -872,51 +872,102 @@ export default class OncoprintControls extends React.Component<
     }
 
     private ColorsMenuOncoprint = observer(() => {
-        return (
-            <CustomDropdown
-                bsStyle="default"
-                title="Color"
-                id="colorDropdown"
-                styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}
-            >
-                <div
-                    className="oncoprint__controls__color_menu"
-                    data-test="oncoprintColorDropdownMenu"
+        if (this.props.store) {
+            return (
+                <CustomDropdown
+                    bsStyle="default"
+                    title="Color"
+                    id="colorDropdown"
+                    styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}
                 >
-                    {this.props.clinicalTracks!.map(track => {
-                        return (
-                            <div>
-                                <strong>{track.label}</strong>
-                                {getClinicalAttributeValues(track).map(
-                                    value => (
-                                        <OncoprintColors
-                                            handlers={this.props.handlers}
-                                            state={this.props.state}
-                                            handleClinicalAttributeColorChange={
-                                                this.props
-                                                    .handleClinicalAttributeColorChange
-                                            }
-                                            clinicalAttributeLabel={track.label}
-                                            clinicalAttributeValue={value}
-                                            store={this.props.store}
-                                            color={getOncoprintColor(
-                                                track.label,
-                                                value as string,
-                                                this.props.store
+                    <div
+                        className="oncoprint__controls__color_menu"
+                        data-test="oncoprintColorDropdownMenu"
+                    >
+                        {this.props.clinicalTracks!.map(track => {
+                            if (track.datatype !== 'number') {
+                                return (
+                                    <div>
+                                        <strong>{track.label}</strong>
+                                        {getClinicalAttributeValues(track).map(
+                                            value => (
+                                                <OncoprintColors
+                                                    handlers={
+                                                        this.props.handlers
+                                                    }
+                                                    state={this.props.state}
+                                                    handleClinicalAttributeColorChange={
+                                                        this.props
+                                                            .handleClinicalAttributeColorChange
+                                                    }
+                                                    clinicalAttributeLabel={
+                                                        track.label
+                                                    }
+                                                    clinicalAttributeValue={
+                                                        value
+                                                    }
+                                                    store={this.props.store}
+                                                    color={getOncoprintColor(
+                                                        track.label,
+                                                        value as string,
+                                                        this.props.store
+                                                    )}
+                                                    clinicalTrackKey={track.key}
+                                                />
+                                            )
+                                        )}
+                                        <button
+                                            className="btn btn-default btn-xs"
+                                            style={{
+                                                width: 'fit-content',
+                                                marginBottom: 0,
+                                            }}
+                                            disabled={_.every(
+                                                getClinicalAttributeValues(
+                                                    track
+                                                ),
+                                                v =>
+                                                    getOncoprintColor(
+                                                        track.label,
+                                                        v as string,
+                                                        this.props.store
+                                                    ) ===
+                                                    this.props.store!
+                                                        .defaultClinicalAttributeColors[
+                                                        track.label
+                                                    ][v]
                                             )}
-                                            clinicalTrackKey={track.key}
-                                            // markedWithWarningSign={this.props.store!.isAlterationMarkedWithWarningSign(
-                                            //     alteration
-                                            // )}
-                                        />
-                                    )
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </CustomDropdown>
-        );
+                                            onClick={() => {
+                                                getClinicalAttributeValues(
+                                                    track
+                                                ).forEach(v => {
+                                                    this.props
+                                                        .handleClinicalAttributeColorChange &&
+                                                        this.props.handleClinicalAttributeColorChange(
+                                                            track.label,
+                                                            v,
+                                                            undefined
+                                                        );
+                                                    this.props.handlers
+                                                        .onSetChangedTrackKey &&
+                                                        this.props.handlers.onSetChangedTrackKey(
+                                                            track.key
+                                                        );
+                                                });
+                                            }}
+                                        >
+                                            Reset Colors
+                                        </button>
+                                    </div>
+                                );
+                            }
+                        })}
+                    </div>
+                </CustomDropdown>
+            );
+        } else {
+            return null;
+        }
     });
 
     private MutationColorMenu = observer(() => {
