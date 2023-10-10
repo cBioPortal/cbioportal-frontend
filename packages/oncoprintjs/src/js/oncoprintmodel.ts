@@ -19,6 +19,7 @@ import { ComputedShapeParams } from './oncoprintshape';
 import { CaseItem, EntityItem } from './workers/clustering-worker';
 import PrecomputedComparator from './precomputedcomparator';
 import { calculateHeaderTops, calculateTrackTops } from './modelutils';
+import { OncoprintGapConfig } from './oncoprintwebglcellview';
 
 export type ColumnId = string;
 export type ColumnIndex = number;
@@ -68,6 +69,7 @@ export type CustomTrackOption = {
     onClick?: (id: TrackId) => void;
     weight?: string;
     disabled?: boolean;
+    gapLabelsFn?: (model: OncoprintModel) => OncoprintGapConfig[];
 };
 export type CustomTrackGroupOption = {
     label?: string;
@@ -89,6 +91,7 @@ export type UserTrackSpec<D> = {
     onClickRemoveInTrackMenu?: (track_id: TrackId) => void;
     label?: string;
     sublabel?: string;
+    gapLabelFn?: (model: OncoprintModel) => string[];
     html_label?: string;
     track_label_color?: string;
     track_label_circle_color?: string;
@@ -235,6 +238,15 @@ export type TrackGroupProp<T> = { [trackGroupIndex: number]: T };
 export type ColumnProp<T> = { [columnId: string]: T };
 export type ColumnIdSet = { [columnId: string]: any };
 
+export type OncoprintDataGroupsByTrackId<T> = Record<
+    string,
+    OncoprintDataGroups<T>[]
+>;
+
+export type OncoprintDataGroups<T> = OncoprintDataGroup<T>[];
+
+export type OncoprintDataGroup<T> = T[];
+
 export default class OncoprintModel {
     // Global properties
     private sort_config: SortConfig;
@@ -333,7 +345,12 @@ export default class OncoprintModel {
     private precomputed_comparator: CachedProperty<
         TrackProp<PrecomputedComparator<Datum>>
     >;
-    private ids_after_a_gap: CachedProperty<ColumnIdSet>;
+    public ids_after_a_gap: CachedProperty<ColumnIdSet>;
+
+    public data_groups: CachedProperty<
+        OncoprintDataGroupsByTrackId<TrackProp<ColumnProp<Datum>>>
+    >;
+
     private column_indexes_after_a_gap: CachedProperty<number[]>;
 
     private track_groups: TrackGroup[];
@@ -571,6 +588,61 @@ export default class OncoprintModel {
 
             return gapIds;
         });
+
+        this.data_groups = new CachedProperty({}, function(
+            model: OncoprintModel
+        ) {
+            // multiple tracks can have gaps
+            // the groups will be segemented heirarchically
+            const trackIdsWithGaps = model
+                .getTracks()
+                .filter(trackId => model.getTrackShowGaps(trackId));
+
+            const data_groups = _.reduce(
+                model.track_label,
+                (
+                    agg: OncoprintDataGroupsByTrackId<
+                        TrackProp<ColumnProp<Datum>>
+                    >,
+                    label,
+                    trackId: number
+                ) => {
+                    // key the data by the datum UID
+                    const keyedData = _.keyBy(
+                        model.track_data[trackId],
+                        m => m.uid
+                    );
+                    const groups = trackIdsWithGaps.map(id => {
+                        // we need the datum in sorted order
+                        const data = model.id_order.map(d => keyedData[d]);
+
+                        const indexesAfterGap = model.column_indexes_after_a_gap.get();
+
+                        // the indexes come AFTER a gap, so we need to include zero up front
+                        // in order to get initial slice of data
+                        const groupStartIndexes = [0, ...indexesAfterGap];
+
+                        // using the group start indexes, slice the id data into corresponding groups
+                        return groupStartIndexes.map((n, i) => {
+                            if (i === groupStartIndexes.length - 1) {
+                                // we're at last one, so last group
+                                return data.slice(n);
+                            } else {
+                                return data.slice(n, groupStartIndexes[i + 1]);
+                            }
+                        });
+                    });
+
+                    agg[label.trim()] = groups;
+
+                    return agg;
+                },
+                {}
+            );
+
+            return data_groups;
+        });
+
         this.visible_id_order.addBoundProperty(this.ids_after_a_gap);
         this.precomputed_comparator.addBoundProperty(this.ids_after_a_gap);
 
@@ -1070,7 +1142,11 @@ export default class OncoprintModel {
     }
 
     public getGapSize() {
-        return this.getCellWidth(true);
+        if (this.showGaps()) {
+            return 50; // this creates enough space for 3 digit percentage
+        } else {
+            return this.getCellWidth(true);
+        }
     }
 
     public getCellWidth(base?: boolean) {
@@ -1804,7 +1880,16 @@ export default class OncoprintModel {
         const lastIdLeft = base
             ? this.getColumnLeft(lastId)
             : this.getZoomedColumnLeft(lastId);
-        return lastIdLeft + this.getCellWidth(base) + 1; // this fixes some edge case issues with scrolling
+
+        // when gaps are showing, we need to add space at the end of the
+        // oncoprint to accomodate the label
+        const lastGap = this.showGaps() ? this.getGapSize() : 0;
+
+        return lastIdLeft + this.getCellWidth(base) + lastGap + 1; // this fixes some edge case issues with scrolling
+    }
+
+    public showGaps() {
+        return _.some(this.track_show_gaps);
     }
 
     public getOncoprintWidthNoColumnPaddingNoGaps() {
@@ -2030,6 +2115,28 @@ export default class OncoprintModel {
         options: CustomTrackOption[] | undefined
     ) {
         this.track_custom_options[track_id] = options;
+    }
+
+    // get the pixel offset (from the grid origin) for the gaps based
+    public getGapOffsets(): any {
+        const offsets = _(this.ids_after_a_gap.get())
+            .keys()
+            .map(num => this.getZoomedColumnLeft(num))
+            .sort((a, b) => a - b)
+            .value();
+
+        // we only want to include this if gaps are on
+        if (this.showGaps) {
+            const last =
+                this.getZoomedColumnLeft(
+                    this.id_order[this.id_order.length - 1]
+                ) +
+                this.getGapSize() +
+                this.cell_width +
+                this.cell_padding;
+            offsets.push(last);
+        }
+        return offsets;
     }
 
     public setTrackInfoTooltip(
