@@ -688,7 +688,7 @@ export function tabs(
             pageComponent.patientViewPageStore.cnaOncoKbData.isError) &&
         tabs.push(
             <MSKTab
-                key={43}
+                key={44}
                 id={PatientViewPageTabs.FollowUp}
                 linkText="Follow-up"
                 unmountOnHide={false}
