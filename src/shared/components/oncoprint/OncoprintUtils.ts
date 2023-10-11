@@ -811,14 +811,40 @@ export function makeGeneticTrackWith({
                         model.data_groups.update(model);
                         const groups = model.data_groups.get();
 
-                        debugger;
+                        const sampleMode = oncoprint.columnMode === 'sample';
 
-                        const info = groups[0].map((groupData: any) => {
+                        // why are there more than one gene? what happens then?
+                        const gene = geneSymbolArray[0];
+                        const info = groups[gene][0].map((groupData: any) => {
+                            let sequencedPatientKeysForGroup: Record<
+                                string,
+                                any[]
+                            > = {};
+                            let sequencedSampleKeysForGroup: Record<
+                                string,
+                                any[]
+                            > = {};
+                            if (sampleMode) {
+                                sequencedSampleKeysForGroup = {
+                                    [gene]: _.intersection(
+                                        sequencedSampleKeysByGene[gene],
+                                        groupData.map((d: any) => d.uid)
+                                    ),
+                                };
+                            } else {
+                                sequencedPatientKeysForGroup = {
+                                    [gene]: _.intersection(
+                                        sequencedPatientKeysByGene[gene],
+                                        groupData.map((d: any) => d.uid)
+                                    ),
+                                };
+                            }
+
                             const moo = alterationInfoForOncoprintTrackData(
                                 sampleMode,
                                 { trackData: groupData, oql: geneSymbolArray },
-                                sequencedSampleKeysByGene,
-                                sequencedPatientKeysByGene
+                                sequencedSampleKeysForGroup,
+                                sequencedPatientKeysForGroup
                             );
                             return moo;
                         });
