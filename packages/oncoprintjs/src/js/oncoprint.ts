@@ -192,6 +192,11 @@ export default class Oncoprint {
             .css({ position: 'absolute', top: '0px', left: '0px' })
             .addClass('noselect') as JQuery<HTMLCanvasElement>;
 
+        const $gap_canvas = $('<canvas></canvas>')
+            .attr({ width: '0px', height: '0px' })
+            .css({ position: 'absolute', top: '0px', left: '0px' })
+            .addClass('noselect gap_canvas') as JQuery<HTMLCanvasElement>;
+
         const $dummy_scroll_div = $('<div>')
             .css({
                 position: 'absolute',
@@ -270,6 +275,7 @@ export default class Oncoprint {
         $minimap_div.appendTo($ctr);
 
         $cell_canvas.appendTo($cell_div);
+        $gap_canvas.appendTo($cell_div);
         $cell_overlay_canvas.appendTo($cell_div);
         $column_label_canvas.appendTo($cell_div); // column labels should show above the overlay canvas because the text should show over the highlights
         $dummy_scroll_div.appendTo($cell_div);
@@ -300,6 +306,7 @@ export default class Oncoprint {
             $cell_div,
             $cell_canvas,
             $cell_overlay_canvas,
+            $gap_canvas,
             $column_label_canvas,
             $dummy_scroll_div_contents,
             this.model,

@@ -87,6 +87,7 @@ export default class OncoprintWebGLCellView {
     private mouseMoveHandler: (evt: MouseMoveEvent) => void;
 
     private ctx: OncoprintWebGLContext | null;
+    private gap_ctx: CanvasRenderingContext2D | null;
     private ext: ANGLE_instanced_arrays | null;
     private overlay_ctx: CanvasRenderingContext2D | null;
     private column_label_ctx: CanvasRenderingContext2D | null;
@@ -129,6 +130,7 @@ export default class OncoprintWebGLCellView {
         private $container: JQuery,
         private $canvas: JQuery<HTMLCanvasElement>,
         private $overlay_canvas: JQuery<HTMLCanvasElement>,
+        private $gap_canvas: JQuery<HTMLCanvasElement>,
         private $column_label_canvas: JQuery<HTMLCanvasElement>,
         private $dummy_scroll_div_contents: JQuery,
         model: OncoprintModel,
@@ -353,6 +355,15 @@ export default class OncoprintWebGLCellView {
         });
     }
 
+    private drawGapLabel(txt: string, x: number, y: number) {
+        this.gap_ctx.font = '40pt Calibri';
+        this.gap_ctx.fillStyle = 'blue';
+
+        const origin_x = (150 - x) * this.supersampling_ratio;
+
+        this.gap_ctx.fillText('Hello World!!', origin_x, y);
+    }
+
     private getNewCanvas() {
         const old_canvas = this.$canvas[0];
         const new_canvas = old_canvas.cloneNode() as HTMLCanvasElement;
@@ -362,6 +373,27 @@ export default class OncoprintWebGLCellView {
         this.$canvas = $(new_canvas);
         this.ctx = null;
         this.ext = null;
+    }
+
+    private getGapContext() {
+        try {
+            const canvas = this.$gap_canvas[0];
+            const ctx = canvas.getContext('2d');
+            //ctx.clearColor(1.0, 1.0, 1.0, 1.0);
+            //ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
+            // ctx.viewportWidth = canvas.width;
+            // ctx.viewportHeight = canvas.height;
+            // ctx.viewport(0, 0, ctx.viewportWidth, ctx.viewportHeight);
+            //ctx.enable(ctx.DEPTH_TEST);
+            //ctx.enable(ctx.BLEND);
+            //ctx.blendEquation(ctx.FUNC_ADD);
+            //ctx.blendFunc(ctx.SRC_ALPHA, ctx.ONE_MINUS_SRC_ALPHA);
+            //ctx.depthMask(false);
+
+            return ctx;
+        } catch (e) {
+            return null;
+        }
     }
 
     private getWebGLCanvasContext() {
@@ -467,6 +499,7 @@ export default class OncoprintWebGLCellView {
             this.supersampling_ratio * width,
             this.supersampling_ratio * height
         );
+        console.log('sheep');
     }
 
     public clearOverlay() {
@@ -534,11 +567,34 @@ export default class OncoprintWebGLCellView {
                 highlightWidth,
                 highlightHeight
             );
+
             this.overlay_ctx.restore();
         }
     }
 
+    private get2DGapCanvasContextAndSetUp() {
+        const canvas = this.$gap_canvas[0];
+        const ctx =
+            this.gap_ctx ||
+            (canvas.getContext('2D', {
+                alpha: false,
+                antialias: this.antialias,
+            }) as CanvasRenderingContext2D);
+        //ctx.clearColor(1.0, 1.0, 1.0, 1.0);
+        //ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
+        //ctx. = canvas.width;
+        //ctx.viewportHeight = canvas.height;
+        //ctx.viewport(0, 0, ctx.viewportWidth, ctx.viewportHeight);
+        //ctx.enable(ctx.DEPTH_TEST);
+        //ctx.enable(ctx.BLEND);
+        //ctx.blendEquation(ctx.FUNC_ADD);
+        //ctx.blendFunc(ctx.SRC_ALPHA, ctx.ONE_MINUS_SRC_ALPHA);
+        //ctx.depthMask(false);
+    }
+
     private getWebGLContextAndSetUpMatrices() {
+        this.gap_ctx = this.getGapContext();
+
         this.ctx = this.getWebGLCanvasContext();
         if (this.ctx) {
             this.ext = this.ctx.getExtension('ANGLE_instanced_arrays');
@@ -681,6 +737,12 @@ export default class OncoprintWebGLCellView {
         this.dummy_scroll_div_client_size.update();
         this.$canvas[0].height = this.supersampling_ratio * height;
         this.$canvas[0].style.height = height + 'px';
+        this.$gap_canvas[0].height = this.supersampling_ratio * height;
+        this.$gap_canvas[0].style.height = height + 'px';
+        this.$gap_canvas[0].width =
+            this.supersampling_ratio * visible_area_width;
+        this.$gap_canvas[0].style.width = visible_area_width + 'px';
+
         this.$overlay_canvas[0].height = this.supersampling_ratio * height;
         this.$overlay_canvas[0].style.height = height + 'px';
         this.$column_label_canvas[0].height = this.supersampling_ratio * height;
@@ -743,14 +805,24 @@ export default class OncoprintWebGLCellView {
         this.ctx.clearColor(1.0, 1.0, 1.0, 1.0);
         this.ctx.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
 
+        this.gap_ctx.clearRect(
+            0,
+            0,
+            this.$gap_canvas[0].width,
+            this.$gap_canvas[0].height
+        );
+
         const tracks = model.getTracks();
         for (let i = 0; i < tracks.length; i++) {
             const track_id = tracks[i];
             const cell_top = model.getCellTops(track_id);
             const cell_height = model.getCellHeight(track_id);
             const custom = model.getTrackCustomOptions(track_id);
+            const gaps = custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
 
-            custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
+            //const trackGaps = gaps[track_id];
+            this.drawGapLabel('mooo', 100, 20);
+            //aaron here are we have the gaps!
 
             if (
                 cell_top / zoom_y >= window_bottom ||
@@ -760,6 +832,8 @@ export default class OncoprintWebGLCellView {
                 continue;
             }
             const buffers = this.getTrackBuffers(track_id);
+
+            console.log(buffers);
             if (buffers.position.numItems === 0) {
                 continue;
             }

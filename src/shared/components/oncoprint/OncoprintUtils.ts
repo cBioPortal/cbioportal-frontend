@@ -850,7 +850,7 @@ export function makeGeneticTrackWith({
                         });
                         console.log(trackKey, info);
 
-                        return 'monkey';
+                        return info;
                     },
                 },
             ],
