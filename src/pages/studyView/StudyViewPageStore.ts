@@ -108,6 +108,7 @@ import {
     getChartSettingsMap,
     getClinicalDataCountWithColorByClinicalDataCount,
     getCNAByAlteration,
+    getCNAColorByAlteration,
     getCNASamplesCount,
     getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
@@ -4496,13 +4497,22 @@ export class StudyViewPageStore
     private addColorToCategories(
         counts: ClinicalDataCount[],
         attributeId: string,
-        getDisplayedValue?: (value: string) => string
+        getDisplayedValue?: (value: string) => string,
+        getDisplayedColor?: (value: string) => string
     ): ClinicalDataCountSummary[] {
         return getClinicalDataCountWithColorByClinicalDataCount(counts).map(
             item => {
                 if (getDisplayedValue) {
                     item.displayedValue = getDisplayedValue(item.value);
                 }
+
+                if (getDisplayedColor) {
+                    return {
+                        ...item,
+                        color: getDisplayedColor(item.value),
+                    };
+                }
+
                 let colorMapKey = this.generateColorMapKey(
                     attributeId,
                     item.value
@@ -4860,7 +4870,11 @@ export class StudyViewPageStore
                         return this.addColorToCategories(
                             counts,
                             profileType,
-                            getCNAByAlteration
+                            getCNAByAlteration,
+                            value =>
+                                getCNAColorByAlteration(
+                                    getCNAByAlteration(value)
+                                )
                         );
                     }
                     return res;
