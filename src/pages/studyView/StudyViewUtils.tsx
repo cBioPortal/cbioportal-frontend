@@ -55,6 +55,7 @@ import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyVie
 import MobxPromise from 'mobxpromise';
 import {
     CNA_COLOR_AMP,
+    CNA_COLOR_DEFAULT,
     CNA_COLOR_DIPLOID,
     CNA_COLOR_GAIN,
     CNA_COLOR_HETLOSS,
@@ -1843,9 +1844,7 @@ export function getCNAByAlteration(alteration: string | number) {
     return !isNaN(numberValue) ? CNA_TO_ALTERATION[numberValue] || '' : 'NA';
 }
 
-export function getCNAColorByAlteration(
-    alteration: string
-): string | undefined {
+export function getCNAColorByAlteration(alteration: string): string {
     switch (alteration) {
         case 'HOMDEL':
             return CNA_COLOR_HOMDEL;
@@ -1858,7 +1857,7 @@ export function getCNAColorByAlteration(
         case 'AMP':
             return CNA_COLOR_AMP;
         default:
-            return undefined;
+            return CNA_COLOR_DEFAULT;
     }
 }
 
@@ -3650,7 +3649,6 @@ export function findInvalidMolecularProfileIds(
         molecularProfilesInFilters,
         molecularProfiles.map(p => p.molecularProfileId)
     );
-    console.log({ geneFilters, result });
     return result;
 }
 
