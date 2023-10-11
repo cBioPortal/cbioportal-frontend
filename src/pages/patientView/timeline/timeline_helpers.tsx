@@ -143,7 +143,9 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
         'Lab_test',
         'Status',
         'IMAGING',
+        'MEDONC',
         'Med Onc Assessment',
+        'Pathology',
     ];
 
     const legend: TimelineLegendItem[] = [
