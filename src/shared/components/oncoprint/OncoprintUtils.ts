@@ -34,7 +34,7 @@ import {
 } from './DataUtils';
 import _, { isNumber } from 'lodash';
 import ResultsViewOncoprint, {
-    getClinicalAttributeValues,
+    getClinicalTrackValues,
 } from './ResultsViewOncoprint';
 import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
 import { MobxPromise } from 'mobxpromise';
@@ -1092,16 +1092,24 @@ export function makeClinicalTracksMobxPromise(
                     );
                     // if default for attribute doesn't already exist
                     if (
-                        !oncoprint.props.store.defaultClinicalAttributeColors[
+                        !oncoprint.props.store.defaultClinicalTracksColors[
                             attribute.displayName
                         ]
                     ) {
-                        oncoprint.props.store.setDefaultClinicalAttributeColor(
+                        oncoprint.props.store.setDefaultClinicalTrackColors(
                             attribute.displayName,
-                            getClinicalAttributeValues(ret),
+                            getClinicalTrackValues(ret),
                             (ret as any).category_to_color
                         );
                     }
+                    // add option to open up color config modal
+                    ret.custom_options = [
+                        {
+                            label: 'Color',
+                            onClick: () =>
+                                oncoprint.setSelectedClinicalTrackKey(ret.key!),
+                        },
+                    ];
                 } else if (
                     attribute.clinicalAttributeId ===
                     SpecialAttribute.MutationSpectrum
@@ -1111,17 +1119,25 @@ export function makeClinicalTracksMobxPromise(
                     (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
                     // if default for attribute doesn't already exist
                     if (
-                        !oncoprint.props.store.defaultClinicalAttributeColors[
+                        !oncoprint.props.store.defaultClinicalTracksColors[
                             attribute.displayName
                         ]
                     ) {
-                        oncoprint.props.store.setDefaultClinicalAttributeColor(
+                        oncoprint.props.store.setDefaultClinicalTrackColors(
                             attribute.displayName,
                             MUTATION_SPECTRUM_CATEGORIES,
                             undefined,
                             MUTATION_SPECTRUM_FILLS
                         );
                     }
+                    // add options to open up color config modal
+                    ret.custom_options = [
+                        {
+                            label: 'Color',
+                            onClick: () =>
+                                oncoprint.setSelectedClinicalTrackKey(ret.key!),
+                        },
+                    ];
                 }
 
                 const trackConfig =

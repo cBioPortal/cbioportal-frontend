@@ -90,6 +90,8 @@ import '../../../globalStyles/oncoprintStyles.scss';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import { toDirectionString } from './SortUtils';
 import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
+import { Modal } from 'react-bootstrap';
+import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -132,11 +134,11 @@ export type AdditionalTrackGroupRecord = {
     molecularProfile: MolecularProfile;
 };
 
-export function getClinicalAttributeValues(
+export function getClinicalTrackValues(
     track: Partial<ClinicalTrackSpec>
 ): any[] {
-    // if the datatype is "counts", the attribute values are under countsCategoryLabels
-    // else if the datatype is "string", get attribute values from the track data
+    // if the datatype is "counts", the values are under countsCategoryLabels
+    // else if the datatype is "string", get values from the track data
     if (track.datatype === 'counts') {
         return (track as any).countsCategoryLabels;
     } else if (track.datatype === 'string') {
@@ -149,40 +151,51 @@ export function getClinicalAttributeValues(
     return [];
 }
 
-export function setClinicalAttributeValueColorsInTrack(
-    attributeLabel: string,
-    attributeValue: string,
-    color: RGBAColor | undefined,
+export function setClinicalTrackColor(
     track: ClinicalTrackSpec,
+    value: string,
+    color: RGBAColor | undefined,
     store: ResultsViewPageStore
 ) {
     if (track.datatype === 'string') {
-        // set new color of attribute value in track's category_to_color
+        // set new color of value in track's category_to_color
+        // if undefined color, set value's color in track's category_to_color back to its default
         if (color) {
-            (track as any).category_to_color[attributeValue] = color;
-            // if undefined color, set attribute value's color in track's category_to_color back to its default
+            (track as any).category_to_color[value] = color;
         } else {
-            (track as any).category_to_color[attributeValue] =
-                store.defaultClinicalAttributeColors[attributeLabel][
-                    attributeValue
-                ];
+            (track as any).category_to_color[value] =
+                store.defaultClinicalTracksColors[track.label][value];
         }
     } else if (track.datatype === 'counts') {
-        // get index of attribute value that corresponds with its color
-        let valueIndex = _.indexOf(
-            (track as any).countsCategoryLabels,
-            attributeValue
-        );
-        // set new color of attribute value in track's countsCategoryFills using valueIndex
+        // get index of value that corresponds with its color
+        let valueIndex = _.indexOf((track as any).countsCategoryLabels, value);
+        // set new color of value in track's countsCategoryFills using valueIndex
+        // if undefined color, set value's color in track's countsCategoryFills back to its default
         if (color) {
             (track as any).countsCategoryFills[valueIndex] = color;
-            // if undefined color, set attribute value's color in track's countsCategoryFills back to its default
         } else {
             (track as any).countsCategoryFills[valueIndex] =
-                store.defaultClinicalAttributeColors[attributeLabel][
-                    attributeValue
-                ];
+                store.defaultClinicalTracksColors[track.label][value];
         }
+    }
+}
+
+export function getClinicalTrackColor(
+    label: string,
+    value: string,
+    store?: ResultsViewPageStore
+): RGBAColor {
+    if (store) {
+        if (
+            !store.userSelectedClinicalTracksColors[label] ||
+            !store.userSelectedClinicalTracksColors[label][value]
+        ) {
+            return store.defaultClinicalTracksColors[label][value];
+        } else {
+            return store.userSelectedClinicalTracksColors[label][value];
+        }
+    } else {
+        return [255, 255, 255, 1] as RGBAColor;
     }
 }
 
@@ -1767,10 +1780,6 @@ export default class ResultsViewOncoprint extends React.Component<
                             this
                                 .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl
                         }
-                        handleClinicalAttributeColorChange={
-                            this.handleClinicalAttributeColorChange
-                        }
-                        clinicalTracks={this.clinicalTracks.result}
                     />
                 </FadeInteraction>
             );
@@ -1875,30 +1884,47 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @action.bound
-    public handleClinicalAttributeColorChange(
-        attributeLabel: string,
-        attributeValue: string,
+    public handleClinicalTrackColorChange(
+        value: string,
         color: RGBAColor | undefined
     ) {
-        // find track that matches given label
-        let index = _.findIndex(
-            this.clinicalTracks.result,
-            i => i.label === attributeLabel
-        );
-        const track = this.clinicalTracks.result[index];
-
-        setClinicalAttributeValueColorsInTrack(
-            attributeLabel,
-            attributeValue,
+        setClinicalTrackColor(
+            this.selectedClinicalTrack,
+            value,
             color,
-            track,
             this.props.store
         );
-        this.props.store.onClinicalAttributeColorChange(
-            attributeLabel,
-            attributeValue,
+        this.props.store.setUserSelectedClinicalTrackColor(
+            this.selectedClinicalTrack.label,
+            value,
             color
         );
+    }
+
+    @observable selectedClinicalTrackKey: string | null = null;
+
+    @action.bound
+    setSelectedClinicalTrackKey(key: string | null) {
+        this.selectedClinicalTrackKey = key;
+    }
+
+    @computed get selectedClinicalTrack() {
+        let index = _.findIndex(
+            this.clinicalTracks.result,
+            t => t.key === this.selectedClinicalTrackKey
+        );
+        return this.clinicalTracks.result[index];
+    }
+
+    @computed get selectedClinicalTrackValues() {
+        return getClinicalTrackValues(this.selectedClinicalTrack);
+    }
+
+    @observable clinicalTrackColorChanged: boolean = false;
+
+    @action.bound
+    setClinicalTrackColorChanged(changed: boolean) {
+        this.clinicalTrackColorChanged = changed;
     }
 
     public render() {
@@ -1937,6 +1963,74 @@ export default class ResultsViewOncoprint extends React.Component<
                         }
                     />
                 </div>
+
+                {this.selectedClinicalTrack && (
+                    <Modal
+                        show={true}
+                        onHide={() => this.setSelectedClinicalTrackKey(null)}
+                    >
+                        <Modal.Header closeButton>
+                            <Modal.Title>
+                                {this.selectedClinicalTrack.label}
+                            </Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div>
+                                {this.selectedClinicalTrackValues.map(value => (
+                                    <ClinicalTrackColorPicker
+                                        store={this.props.store}
+                                        handleClinicalTrackColorChange={
+                                            this.handleClinicalTrackColorChange
+                                        }
+                                        clinicalTrackValue={value}
+                                        color={getClinicalTrackColor(
+                                            this.selectedClinicalTrack.label,
+                                            value as string,
+                                            this.props.store
+                                        )}
+                                        setClinicalTrackColorChanged={
+                                            this.setClinicalTrackColorChanged
+                                        }
+                                    />
+                                ))}
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    style={{
+                                        width: 'fit-content',
+                                        marginBottom: 0,
+                                    }}
+                                    disabled={_.every(
+                                        this.selectedClinicalTrackValues,
+                                        v =>
+                                            getClinicalTrackColor(
+                                                this.selectedClinicalTrack
+                                                    .label,
+                                                v as string,
+                                                this.props.store
+                                            ) ===
+                                            this.props.store
+                                                .defaultClinicalTracksColors[
+                                                this.selectedClinicalTrack.label
+                                            ][v]
+                                    )}
+                                    onClick={() => {
+                                        this.selectedClinicalTrackValues.forEach(
+                                            v => {
+                                                this.handleClinicalTrackColorChange(
+                                                    v,
+                                                    undefined
+                                                );
+                                            }
+                                        );
+                                        this.setClinicalTrackColorChanged(true);
+                                    }}
+                                >
+                                    Reset Colors
+                                </button>
+                            </div>
+                        </Modal.Body>
+                    </Modal>
+                )}
 
                 <div
                     className={classNames('oncoprintContainer', {
@@ -2006,7 +2100,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                 distinguishGermlineMutations={
                                     this.distinguishGermlineMutations
                                 }
-                                changedTrackKey={this.changedTrackKey}
                                 sortConfig={this.oncoprintLibrarySortConfig}
                                 showClinicalTrackLegends={
                                     this.showClinicalTrackLegends
@@ -2029,8 +2122,14 @@ export default class ResultsViewOncoprint extends React.Component<
                                 initParams={{
                                     max_height: Number.POSITIVE_INFINITY,
                                 }}
-                                onSetChangedTrackKey={
-                                    this.controlsHandlers.onSetChangedTrackKey
+                                selectedClinicalTrackKey={
+                                    this.selectedClinicalTrackKey
+                                }
+                                clinicalTrackColorChanged={
+                                    this.clinicalTrackColorChanged
+                                }
+                                setClinicalTrackColorChanged={
+                                    this.setClinicalTrackColorChanged
                                 }
                             />
                         </div>

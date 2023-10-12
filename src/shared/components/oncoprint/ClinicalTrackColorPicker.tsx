@@ -16,32 +16,24 @@ import {
 } from 'shared/lib/Colors';
 import { COLORS } from 'pages/studyView/StudyViewUtils';
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
-import {
-    IOncoprintControlsHandlers,
-    IOncoprintControlsState,
-} from './OncoprintControls';
 import { RGBAColor } from 'oncoprintjs';
 import _ from 'lodash';
 
 export interface IGroupCheckboxProps {
-    store?: ResultsViewPageStore;
-    handlers: IOncoprintControlsHandlers;
-    state: IOncoprintControlsState;
-    handleClinicalAttributeColorChange?: (
-        label: string,
+    store: ResultsViewPageStore;
+    handleClinicalTrackColorChange?: (
         value: string,
         color: RGBAColor | undefined
     ) => void;
-    clinicalAttributeLabel: string;
-    clinicalAttributeValue: any;
+    clinicalTrackValue: any;
     color: RGBAColor;
-    clinicalTrackKey: string;
+    setClinicalTrackColorChanged: (changed: boolean) => void;
 }
 
 const COLOR_UNDEFINED = '#FFFFFF';
 
 @observer
-export default class OncoprintColors extends React.Component<
+export default class ClinicalTrackColorPicker extends React.Component<
     IGroupCheckboxProps,
     {}
 > {
@@ -52,27 +44,22 @@ export default class OncoprintColors extends React.Component<
 
     @action.bound
     handleChangeComplete = (color: any, event: any) => {
-        // if same color is select, unselect it (go back to no color)
+        // if same color is selected, unselect it (go back to default color)
         if (color.hex === rgbaToHex(this.props.color)) {
-            this.props.handleClinicalAttributeColorChange &&
-                this.props.handleClinicalAttributeColorChange(
-                    this.props.clinicalAttributeLabel,
-                    this.props.clinicalAttributeValue,
+            this.props.handleClinicalTrackColorChange &&
+                this.props.handleClinicalTrackColorChange(
+                    this.props.clinicalTrackValue,
                     undefined
                 );
         } else {
-            this.props.handleClinicalAttributeColorChange &&
-                this.props.handleClinicalAttributeColorChange(
-                    this.props.clinicalAttributeLabel,
-                    this.props.clinicalAttributeValue,
+            this.props.handleClinicalTrackColorChange &&
+                this.props.handleClinicalTrackColorChange(
+                    this.props.clinicalTrackValue,
                     [color.rgb.r, color.rgb.g, color.rgb.b, color.rgb.a]
                 );
         }
         // set changed track key
-        this.props.handlers.onSetChangedTrackKey &&
-            this.props.handlers.onSetChangedTrackKey(
-                this.props.clinicalTrackKey
-            );
+        this.props.setClinicalTrackColorChanged(true);
     };
 
     @computed get colorList() {
@@ -109,7 +96,7 @@ export default class OncoprintColors extends React.Component<
     render() {
         return (
             <div>
-                {this.props.clinicalAttributeValue}
+                {this.props.clinicalTrackValue}
                 <OverlayTrigger
                     containerPadding={40}
                     trigger="click"
@@ -119,7 +106,7 @@ export default class OncoprintColors extends React.Component<
                 >
                     <DefaultTooltip
                         overlay={
-                            'Optional: Select color for alteration to be used in oncoprint. If no color is selected, the default color will be applied.'
+                            'Optional: Select color for clinical track value to be used in oncoprint. If no color is selected, the default color will be applied.'
                         }
                     >
                         <span

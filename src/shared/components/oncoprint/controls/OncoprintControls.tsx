@@ -7,7 +7,7 @@ import ReactSelect from 'react-select1';
 import { MobxPromise } from 'mobxpromise';
 import { action, computed, observable, reaction, makeObservable } from 'mobx';
 import _ from 'lodash';
-import { getClinicalAttributeValues, SortMode } from '../ResultsViewOncoprint';
+import { SortMode } from '../ResultsViewOncoprint';
 import {
     Gene,
     MolecularProfile,
@@ -32,9 +32,7 @@ import {
 import OQLTextArea, { GeneBoxType } from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
-import TracksMenu, {
-    MIN_DROPDOWN_WIDTH,
-} from 'pages/resultsView/oncoprint/TracksMenu';
+import TracksMenu from 'pages/resultsView/oncoprint/TracksMenu';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import {
     IDriverAnnotationControlsHandlers,
@@ -44,11 +42,8 @@ import DriverAnnotationControls from 'shared/components/driverAnnotations/Driver
 import {
     ClinicalTrackConfig,
     ClinicalTrackConfigMap,
-    ClinicalTrackSpec,
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
-import { RGBAColor } from 'oncoprintjs';
-import OncoprintColors from './OncoprintColors';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -64,7 +59,6 @@ export interface IOncoprintControlsHandlers
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
     onSelectEnableWhiteBackgroundForGlyphs?: (use: boolean) => void;
-    onSetChangedTrackKey?: (key: string) => void;
 
     onSelectHideVUS: (hide: boolean) => void;
     onSelectHideGermlineMutations: (hide: boolean) => void;
@@ -109,7 +103,6 @@ export interface IOncoprintControlsState
     sortByCaseListDisabled: boolean;
     hidePutativePassengers: boolean;
     hideGermlineMutations: boolean;
-    changedTrackKey?: string;
 
     sortMode?: SortMode;
     clinicalAttributesPromise?: MobxPromise<ExtendedClinicalAttribute[]>;
@@ -145,12 +138,6 @@ export interface IOncoprintControlsProps {
     selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl?: {
         [genericAssayType: string]: string[];
     };
-    handleClinicalAttributeColorChange?: (
-        label: string,
-        value: string,
-        color: RGBAColor | undefined
-    ) => void;
-    clinicalTracks?: ClinicalTrackSpec[];
 }
 
 export interface ISelectOption {
@@ -195,25 +182,6 @@ const EVENT_KEY = {
     horzZoomSlider: '30',
     viewNGCHM: '31',
 };
-
-export function getOncoprintColor(
-    label: string,
-    value: string,
-    store?: ResultsViewPageStore
-): RGBAColor {
-    if (store) {
-        if (
-            !store.userSelectedClinicalAttributeColors[label] ||
-            !store.userSelectedClinicalAttributeColors[label][value]
-        ) {
-            return store.defaultClinicalAttributeColors[label][value];
-        } else {
-            return store.userSelectedClinicalAttributeColors[label][value];
-        }
-    } else {
-        return [255, 255, 255, 1] as RGBAColor;
-    }
-}
 
 @observer
 export default class OncoprintControls extends React.Component<
@@ -871,105 +839,6 @@ export default class OncoprintControls extends React.Component<
         }
     }
 
-    private ColorsMenuOncoprint = observer(() => {
-        if (this.props.store) {
-            return (
-                <CustomDropdown
-                    bsStyle="default"
-                    title="Color"
-                    id="colorDropdown"
-                    styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}
-                >
-                    <div
-                        className="oncoprint__controls__color_menu"
-                        data-test="oncoprintColorDropdownMenu"
-                    >
-                        {this.props.clinicalTracks!.map(track => {
-                            if (track.datatype !== 'number') {
-                                return (
-                                    <div>
-                                        <strong>{track.label}</strong>
-                                        {getClinicalAttributeValues(track).map(
-                                            value => (
-                                                <OncoprintColors
-                                                    handlers={
-                                                        this.props.handlers
-                                                    }
-                                                    state={this.props.state}
-                                                    handleClinicalAttributeColorChange={
-                                                        this.props
-                                                            .handleClinicalAttributeColorChange
-                                                    }
-                                                    clinicalAttributeLabel={
-                                                        track.label
-                                                    }
-                                                    clinicalAttributeValue={
-                                                        value
-                                                    }
-                                                    store={this.props.store}
-                                                    color={getOncoprintColor(
-                                                        track.label,
-                                                        value as string,
-                                                        this.props.store
-                                                    )}
-                                                    clinicalTrackKey={track.key}
-                                                />
-                                            )
-                                        )}
-                                        <button
-                                            className="btn btn-default btn-xs"
-                                            style={{
-                                                width: 'fit-content',
-                                                marginBottom: 0,
-                                            }}
-                                            disabled={_.every(
-                                                getClinicalAttributeValues(
-                                                    track
-                                                ),
-                                                v =>
-                                                    getOncoprintColor(
-                                                        track.label,
-                                                        v as string,
-                                                        this.props.store
-                                                    ) ===
-                                                    this.props.store!
-                                                        .defaultClinicalAttributeColors[
-                                                        track.label
-                                                    ][v]
-                                            )}
-                                            onClick={() => {
-                                                getClinicalAttributeValues(
-                                                    track
-                                                ).forEach(v => {
-                                                    this.props
-                                                        .handleClinicalAttributeColorChange &&
-                                                        this.props.handleClinicalAttributeColorChange(
-                                                            track.label,
-                                                            v,
-                                                            undefined
-                                                        );
-                                                    this.props.handlers
-                                                        .onSetChangedTrackKey &&
-                                                        this.props.handlers.onSetChangedTrackKey(
-                                                            track.key
-                                                        );
-                                                });
-                                            }}
-                                        >
-                                            Reset Colors
-                                        </button>
-                                    </div>
-                                );
-                            }
-                        })}
-                    </div>
-                </CustomDropdown>
-            );
-        } else {
-            return null;
-        }
-    });
-
     private MutationColorMenu = observer(() => {
         return (
             <CustomDropdown
@@ -1066,21 +935,6 @@ export default class OncoprintControls extends React.Component<
                             onClick={this.onInputClick}
                         />{' '}
                         Show legends for clinical tracks
-                    </label>
-                </div>
-                <div className="checkbox">
-                    <label>
-                        <input
-                            type="checkbox"
-                            value={EVENT_KEY.enableWhiteBackgroundForGlyphs}
-                            checked={
-                                this.props.state.enableWhiteBackgroundForGlyphs
-                            }
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Use white background (Caution: profiled and unprofiled
-                        samples look identical and germline mutations might be
-                        hidden)
                     </label>
                 </div>
             </CustomDropdown>
@@ -1384,7 +1238,6 @@ export default class OncoprintControls extends React.Component<
                 <ButtonGroup>
                     <this.tracksMenu />
                     <this.SortMenu />
-                    <this.ColorsMenuOncoprint />
                     <this.MutationColorMenu />
                     <this.ViewMenu />
                     <this.DownloadMenu />
