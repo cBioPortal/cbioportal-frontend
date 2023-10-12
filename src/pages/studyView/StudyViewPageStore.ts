@@ -3411,6 +3411,18 @@ export class StudyViewPageStore
         return DataType.NUMBER;
     }
 
+    public getChartMetaDataType(uniqueKey: string): ChartMetaDataTypeEnum {
+        if (this.isGeneSpecificChart(uniqueKey)) {
+            return ChartMetaDataTypeEnum.GENE_SPECIFIC;
+        } else if (this.isGenericAssayChart(uniqueKey)) {
+            return ChartMetaDataTypeEnum.GENERIC_ASSAY;
+        } else if (this.isUserDefinedCustomDataChart(uniqueKey)) {
+            return ChartMetaDataTypeEnum.CUSTOM_DATA;
+        } else {
+            return ChartMetaDataTypeEnum.CLINICAL;
+        }
+    }
+
     @action
     changeChartVisibility(uniqueKey: string, visible: boolean): void {
         if (visible) {
