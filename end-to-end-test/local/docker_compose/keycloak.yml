@@ -4,9 +4,9 @@ services:
   cbioportal:
     image: cbioportal/cbioportal:demo-rfc72
     volumes:
-      - $TEST_HOME/docker_compose/keycloak/samlKeystore.jks:/cbioportal-webapp/WEB-INF/classes/samlKeystore.jks:ro
-      - $E2E_WORKSPACE/keycloak/idp-metadata.xml:/cbioportal-webapp/WEB-INF/classes/client-tailored-saml-idp-metadata.xml:ro
-    command: /bin/sh -c "rm -rf /cbioportal-webapp/lib/servlet-api-2.5.jar && java -Xms2g -Xmx4g -Dauthenticate=saml -Dsession.service.url=http://cbioportal-session:5000/api/sessions/my_portal/ -cp '/cbioportal-webapp:/cbioportal-webapp/lib/*' org.cbioportal.PortalApplication"
+      - $TEST_HOME/docker_compose/keycloak/samlKeystore.jks:/cbioportal-/samlKeystore.jks:ro
+      - $E2E_WORKSPACE/keycloak/idp-metadata.xml:/cbioportal-webapp/client-tailored-saml-idp-metadata.xml:ro
+    command: /bin/sh -c "rm -rf /cbioportal-webapp/lib/servlet-api-2.5.jar && java -Xms2g -Xmx4g -Ddat.method=none -Dmultithread.core_pool_size=1 -Dauthenticate=saml -Dspring.security.saml2.relyingparty.registration.cbio-idp.identityprovider.metadata-uri=classpath://saml2-idp-metadata.xml -Dsession.service.url=http://cbioportal-session:5000/api/sessions/my_portal/ -cp '/cbioportal-webapp:/cbioportal-webapp/lib/*' org.cbioportal.PortalApplication"
   keycloak:
     networks:
     - cbio-net
