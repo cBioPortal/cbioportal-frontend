@@ -577,13 +577,13 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable queryFormVisible: boolean = false;
 
-    @observable _userSelectedClinicalAttributeColors: {
+    @observable _userSelectedClinicalTracksColors: {
         [label: string]: {
             [value: string]: RGBAColor;
         };
     } = {};
 
-    @observable _defaultClinicalAttributeColors: {
+    @observable _defaultClinicalTracksColors: {
         [label: string]: {
             [value: string]: RGBAColor;
         };
@@ -603,37 +603,37 @@ export class ResultsViewPageStore extends AnalysisStore
         | undefined = undefined;
 
     @action.bound
-    public onClinicalAttributeColorChange(
+    public setUserSelectedClinicalTrackColor(
         label: string,
         value: string,
         color: RGBAColor | undefined
     ) {
         // if color is undefined, delete color from userSelectedClinicalAttributeColors if exists
+        // else, set the color in userSelectedClinicalAttributeColors
         if (
             !color &&
-            this._userSelectedClinicalAttributeColors[label] &&
-            this._userSelectedClinicalAttributeColors[label][value]
+            this._userSelectedClinicalTracksColors[label] &&
+            this._userSelectedClinicalTracksColors[label][value]
         ) {
-            delete this._userSelectedClinicalAttributeColors[label][value];
-            // else, set the color in userSelectedClinicalAttributeColors
+            delete this._userSelectedClinicalTracksColors[label][value];
         } else if (color) {
-            if (!this._userSelectedClinicalAttributeColors[label]) {
-                this._userSelectedClinicalAttributeColors[label] = {};
+            if (!this._userSelectedClinicalTracksColors[label]) {
+                this._userSelectedClinicalTracksColors[label] = {};
             }
-            this._userSelectedClinicalAttributeColors[label][value] = color;
+            this._userSelectedClinicalTracksColors[label][value] = color;
         }
     }
 
-    @computed get defaultClinicalAttributeColors() {
-        return this._defaultClinicalAttributeColors;
+    @computed get defaultClinicalTracksColors() {
+        return this._defaultClinicalTracksColors;
     }
 
-    @computed get userSelectedClinicalAttributeColors() {
-        return this._userSelectedClinicalAttributeColors;
+    @computed get userSelectedClinicalTracksColors() {
+        return this._userSelectedClinicalTracksColors;
     }
 
     @action.bound
-    public setDefaultClinicalAttributeColor(
+    public setDefaultClinicalTrackColors(
         label: string,
         values: any[],
         categoryToColor?: {
@@ -642,14 +642,14 @@ export class ResultsViewPageStore extends AnalysisStore
         countsCategoryFills?: RGBAColor[]
     ) {
         if (categoryToColor) {
-            this._defaultClinicalAttributeColors[label] = {};
+            this._defaultClinicalTracksColors[label] = {};
             _.forEach(values, value => {
-                this._defaultClinicalAttributeColors[label][value] =
+                this._defaultClinicalTracksColors[label][value] =
                     categoryToColor[value];
             });
             // sample type attributes have unique "Mixed" label with set color
             if (label === 'Sample Type' || label === 'Sample type id') {
-                this._defaultClinicalAttributeColors[label]['Mixed'] = [
+                this._defaultClinicalTracksColors[label]['Mixed'] = [
                     48,
                     97,
                     194,
@@ -657,9 +657,9 @@ export class ResultsViewPageStore extends AnalysisStore
                 ];
             }
         } else if (countsCategoryFills) {
-            this._defaultClinicalAttributeColors[label] = {};
+            this._defaultClinicalTracksColors[label] = {};
             _.forEach(values, (value, i) => {
-                this._defaultClinicalAttributeColors[label][value] =
+                this._defaultClinicalTracksColors[label][value] =
                     countsCategoryFills[i];
             });
         }

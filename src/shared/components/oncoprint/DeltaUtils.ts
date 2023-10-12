@@ -782,8 +782,7 @@ function transitionTracks(
             prevClinicalTracks[track.key],
             getTrackSpecKeyToTrackId,
             oncoprint,
-            nextProps,
-            prevProps
+            nextProps
         );
         delete prevClinicalTracks[track.key];
     }
@@ -795,8 +794,7 @@ function transitionTracks(
                 prevClinicalTracks[track.key],
                 getTrackSpecKeyToTrackId,
                 oncoprint,
-                nextProps,
-                prevProps
+                nextProps
             );
         }
     }
@@ -1261,8 +1259,7 @@ function transitionClinicalTrack(
     prevSpec: ClinicalTrackSpec | undefined,
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     oncoprint: OncoprintJS,
-    nextProps: IOncoprintProps,
-    prevProps: Partial<IOncoprintProps>
+    nextProps: IOncoprintProps
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (tryRemoveTrack(nextSpec, prevSpec, trackSpecKeyToTrackId, oncoprint)) {
@@ -1332,19 +1329,20 @@ function transitionClinicalTrack(
             oncoprint.setTrackCustomOptions(trackId, nextSpec.custom_options);
         }
 
-        // update ruleset for changed track key
+        // update ruleset if color has changed for selected track
         if (
-            nextProps.changedTrackKey &&
-            getTrackSpecKeyToTrackId()[nextProps.changedTrackKey] === trackId
+            nextProps.clinicalTrackColorChanged &&
+            nextProps.selectedClinicalTrackKey &&
+            getTrackSpecKeyToTrackId()[nextProps.selectedClinicalTrackKey] ===
+                trackId
         ) {
             let rule_set_params = getClinicalTrackRuleSetParams(nextSpec);
             rule_set_params.legend_label = nextSpec.label;
             rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
             rule_set_params.na_legend_label = nextSpec.na_legend_label;
             oncoprint.setRuleSet(trackId, rule_set_params);
-            // set changed track key back to none
-            nextProps.onSetChangedTrackKey &&
-                nextProps.onSetChangedTrackKey('');
+            nextProps.setClinicalTrackColorChanged &&
+                nextProps.setClinicalTrackColorChanged(false);
         }
     }
 }

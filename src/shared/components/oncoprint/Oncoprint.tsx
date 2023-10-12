@@ -300,8 +300,9 @@ export interface IOncoprintProps {
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
     onTrackGapChange?: (trackId: TrackId, gap: boolean) => void;
 
-    changedTrackKey?: string;
-    onSetChangedTrackKey?: (key: string) => void;
+    selectedClinicalTrackKey?: string | null;
+    clinicalTrackColorChanged?: boolean;
+    setClinicalTrackColorChanged?: (changed: boolean) => void;
 
     suppressRendering?: boolean;
     onSuppressRendering?: () => void;
