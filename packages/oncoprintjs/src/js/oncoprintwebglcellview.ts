@@ -813,6 +813,7 @@ export default class OncoprintWebGLCellView {
         );
 
         const gapOffsets = model.getGapOffsets();
+        const orderedGaps = _.values(gapOffsets).sort();
 
         const tracks = model.getTracks();
         for (let i = 0; i < tracks.length; i++) {
@@ -823,11 +824,13 @@ export default class OncoprintWebGLCellView {
             const gaps = custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
 
             if (gaps) {
-                this.drawGapLabel(
-                    '89%',
-                    _.values(gapOffsets)[0] - scroll_x,
-                    model.getZoomedTrackTops()[track_id]
-                );
+                gaps.forEach((gap: any, i: number) => {
+                    this.drawGapLabel(
+                        gap.percent,
+                        orderedGaps[i] - scroll_x - model.getGapSize() + 5,
+                        model.getZoomedTrackTops()[track_id]
+                    );
+                });
             }
 
             //console.log(custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model));
