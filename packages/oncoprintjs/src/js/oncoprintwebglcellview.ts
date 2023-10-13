@@ -822,16 +822,18 @@ export default class OncoprintWebGLCellView {
             const custom = model.getTrackCustomOptions(track_id);
             const gaps = custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
 
-            console.log(scroll_x);
+            if (gaps) {
+                this.drawGapLabel(
+                    '89%',
+                    _.values(gapOffsets)[0] - scroll_x,
+                    model.getZoomedTrackTops()[track_id]
+                );
+            }
 
-            console.log(custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model));
+            //console.log(custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model));
 
             //const trackGaps = gaps[track_id];
-            this.drawGapLabel(
-                '89%',
-                _.values(gapOffsets)[0] - scroll_x,
-                cell_top
-            );
+
             //aaron here are we have the gaps!
 
             if (
