@@ -359,7 +359,7 @@ export default class OncoprintWebGLCellView {
         this.gap_ctx.font = '40pt Calibri';
         this.gap_ctx.fillStyle = 'blue';
 
-        const origin_x = (150 - x) * this.supersampling_ratio;
+        const origin_x = x * this.supersampling_ratio;
 
         this.gap_ctx.fillText('Hello World!!', origin_x, y);
     }
@@ -820,8 +820,10 @@ export default class OncoprintWebGLCellView {
             const custom = model.getTrackCustomOptions(track_id);
             const gaps = custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
 
+            console.log(scroll_x);
+
             //const trackGaps = gaps[track_id];
-            this.drawGapLabel('mooo', 100, 20);
+            this.drawGapLabel('mooo', 100 - scroll_x, 20);
             //aaron here are we have the gaps!
 
             if (
