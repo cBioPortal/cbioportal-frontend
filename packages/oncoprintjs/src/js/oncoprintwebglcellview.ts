@@ -824,6 +824,8 @@ export default class OncoprintWebGLCellView {
 
             console.log(scroll_x);
 
+            console.log(custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model));
+
             //const trackGaps = gaps[track_id];
             this.drawGapLabel(
                 '89%',
@@ -841,7 +843,6 @@ export default class OncoprintWebGLCellView {
             }
             const buffers = this.getTrackBuffers(track_id);
 
-            console.log(buffers);
             if (buffers.position.numItems === 0) {
                 continue;
             }
