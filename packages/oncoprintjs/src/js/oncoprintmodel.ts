@@ -2113,6 +2113,12 @@ export default class OncoprintModel {
         this.track_custom_options[track_id] = options;
     }
 
+    public getGapOffsets(): any {
+        return _.mapValues(this.ids_after_a_gap.get(), (v, k) => {
+            return this.getZoomedColumnLeft(k);
+        });
+    }
+
     public setTrackInfoTooltip(
         track_id: TrackId,
         $tooltip_elt: JQuery | undefined

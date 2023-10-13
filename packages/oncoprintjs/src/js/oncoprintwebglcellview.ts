@@ -356,12 +356,12 @@ export default class OncoprintWebGLCellView {
     }
 
     private drawGapLabel(txt: string, x: number, y: number) {
-        this.gap_ctx.font = '40pt Calibri';
-        this.gap_ctx.fillStyle = 'blue';
+        this.gap_ctx.font = '12pt Arial';
+        //this.gap_ctx.fillStyle = 'blue';
 
         const origin_x = x * this.supersampling_ratio;
 
-        this.gap_ctx.fillText('Hello World!!', origin_x, y);
+        this.gap_ctx.fillText(txt, origin_x, y);
     }
 
     private getNewCanvas() {
@@ -812,6 +812,8 @@ export default class OncoprintWebGLCellView {
             this.$gap_canvas[0].height
         );
 
+        const gapOffsets = model.getGapOffsets();
+
         const tracks = model.getTracks();
         for (let i = 0; i < tracks.length; i++) {
             const track_id = tracks[i];
@@ -823,7 +825,11 @@ export default class OncoprintWebGLCellView {
             console.log(scroll_x);
 
             //const trackGaps = gaps[track_id];
-            this.drawGapLabel('mooo', 100 - scroll_x, 20);
+            this.drawGapLabel(
+                '89%',
+                _.values(gapOffsets)[0] - scroll_x,
+                cell_top
+            );
             //aaron here are we have the gaps!
 
             if (
