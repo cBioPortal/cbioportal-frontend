@@ -1116,7 +1116,6 @@ export function toSvgDomNodeWithLegend(
         .find(params.legendGroupSelector)
         .get(0);
     const legendBBox = legend.getBoundingClientRect();
-
     if (params.selectorToHide) {
         $(svg)
             .find(params.selectorToHide)

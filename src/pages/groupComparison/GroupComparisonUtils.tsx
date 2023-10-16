@@ -931,7 +931,7 @@ export function getGroupsDownloadData(
     return lines.map(line => line.join('\t')).join('\n');
 }
 
-export function getStatisticalCautionInfo() {
+export const GetStatisticalCautionInfo: React.FunctionComponent = () => {
     return (
         <div className="alert alert-info">
             <i
@@ -947,7 +947,25 @@ export function getStatisticalCautionInfo() {
             analyses. Consider consulting a statistician.
         </div>
     );
-}
+};
+
+export const GetHazardRatioCautionInfo: React.FunctionComponent = () => {
+    return (
+        <div className="alert alert-info">
+            <i
+                className="fa fa-md fa-info-circle"
+                style={{
+                    verticalAlign: 'middle !important',
+                    marginRight: 6,
+                    marginBottom: 1,
+                }}
+            />
+            The log-rank test is used to test the null hypothesis that there is
+            no difference between the groups in the probability of an event at
+            any time point. Hazard ratios are derived from the log-rank test.
+        </div>
+    );
+};
 
 export const AlterationFilterMenuSection: React.FunctionComponent<{
     store: ComparisonStore;

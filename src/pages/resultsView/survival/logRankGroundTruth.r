@@ -43,3 +43,17 @@ chisqStat <- survdiff(Surv(exitTime, status) ~ group)$chisq
 pval <- (1 - pchisq(chisqStat, df=4))
 print("5 groups, different distributions:")
 print(pval)
+
+######################################################################################################################3
+# The ground truth for the confidence interval with 2 groups drawn from the same distribution`
+data.survdiff <- survdiff(Surv(exitTime, status) ~ group)
+p.val = 1 - pchisq(data.survdiff$chisq, length(data.survdiff$n) - 1)
+HR = (data.survdiff$obs[2]/data.survdiff$exp[2])/(data.survdiff$obs[1]/data.survdiff$exp[1])
+upperConfidenceInterval = exp(log(HR) + qnorm(0.975)*sqrt(1/data.survdiff$exp[2]+1/data.survdiff$exp[1]))
+lowerConfidenceInterval = exp(log(HR) - qnorm(0.975)*sqrt(1/data.survdiff$exp[2]+1/data.survdiff$exp[1]))
+# upperConfidenceInterval=2.457113
+# lowerConfidenceInterval=0.7531831
+
+# The ground truth for the confidence interval with 2 groups drawn from different distributions
+#upperConfidenceInterval=3.464072
+#lowerConfidenceInterval=1.150789
