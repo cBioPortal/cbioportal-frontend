@@ -816,7 +816,7 @@ export default class OncoprintWebGLCellView {
         );
 
         const gapOffsets = model.getGapOffsets();
-        const orderedGaps = _.values(gapOffsets).sort();
+        const orderedGaps = _.values(gapOffsets).sort((a, b) => a - b);
 
         const tracks = model.getTracks();
         for (let i = 0; i < tracks.length; i++) {
@@ -824,16 +824,21 @@ export default class OncoprintWebGLCellView {
             const cell_top = model.getCellTops(track_id);
             const cell_height = model.getCellHeight(track_id);
             const custom = model.getTrackCustomOptions(track_id);
-            const gaps = custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
 
-            if (gaps) {
-                gaps.forEach((gap: any, i: number) => {
-                    this.drawGapLabel(
-                        gap.percent,
-                        orderedGaps[i] - scroll_x - model.getGapSize() + 5,
-                        model.getZoomedTrackTops()[track_id] + cell_height
-                    );
-                });
+            if (orderedGaps[0]) {
+                const gaps = _.isEmpty(model.ids_after_a_gap.get())
+                    ? undefined
+                    : custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
+
+                if (gaps) {
+                    gaps.forEach((gap: any, i: number) => {
+                        this.drawGapLabel(
+                            gap.percent,
+                            orderedGaps[i] - scroll_x - model.getGapSize() + 5,
+                            model.getZoomedTrackTops()[track_id] + cell_height
+                        );
+                    });
+                }
             }
 
             //console.log(custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model));

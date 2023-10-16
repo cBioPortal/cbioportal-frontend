@@ -335,7 +335,7 @@ export default class OncoprintModel {
     private precomputed_comparator: CachedProperty<
         TrackProp<PrecomputedComparator<Datum>>
     >;
-    private ids_after_a_gap: CachedProperty<ColumnIdSet>;
+    public ids_after_a_gap: CachedProperty<ColumnIdSet>;
 
     public data_groups: CachedProperty<any>;
 
@@ -603,12 +603,25 @@ export default class OncoprintModel {
                         // this is the data for the genomic tracks
                         //const keyedData = _.keyBy(model.track_data[4],(m)=>m.uid);
                         const data = model.id_order.map(d => keyedData[d]);
-                        return model.column_indexes_after_a_gap
-                            .get()
-                            .map((val, i, array) => {
-                                const start = i === 0 ? 0 : array[i - 1];
-                                return data.slice(start, val);
-                            });
+
+                        const indexesAfterGap = model.column_indexes_after_a_gap.get();
+
+                        const gapStarts = [0, ...indexesAfterGap];
+
+                        return gapStarts.map((n, i) => {
+                            if (i === gapStarts.length - 1) {
+                                // we're at last one, so last group
+                                return data.slice(n);
+                            } else {
+                                return data.slice(n, gapStarts[i + 1]);
+                            }
+                        });
+                        // return model.column_indexes_after_a_gap
+                        //     .get()
+                        //     .map((val, i, array) => {
+                        //         const start = i === 0 ? 0 : array[i - 1];
+                        //         return data.slice(start, val);
+                        //     });
                     });
 
                     agg[label] = groups;
