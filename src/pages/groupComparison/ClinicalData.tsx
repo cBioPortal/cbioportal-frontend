@@ -34,7 +34,7 @@ import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
 import {
     CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
     ClinicalDataEnrichmentWithQ,
-    getStatisticalCautionInfo,
+    GetStatisticalCautionInfo,
 } from './GroupComparisonUtils';
 import ReactSelect from 'react-select1';
 import { MakeMobxView } from 'shared/components/MobxView';
@@ -170,7 +170,7 @@ export default class ClinicalData extends React.Component<
             } else {
                 content.push(
                     <div className={'tabMessageContainer'}>
-                        {getStatisticalCautionInfo()}
+                        <GetStatisticalCautionInfo />
                         <OverlapExclusionIndicator store={this.props.store} />
                     </div>
                 );
