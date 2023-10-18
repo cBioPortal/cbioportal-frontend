@@ -17,6 +17,10 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { Gene } from 'cbioportal-ts-api-client';
 import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
+import {
+    AlterationTypeConstants,
+    MutationOptionConstants,
+} from 'shared/constants';
 
 export interface IGeneLevelSelectionProps {
     molecularProfileOptionsPromise: MobxPromise<MolecularProfileOption[]>;
@@ -40,6 +44,12 @@ export default class GeneLevelSelection extends React.Component<
         profileName: string;
         description: string;
         dataType: string;
+        mutationOptionType: string;
+    };
+
+    @observable private _selectedSubProfileOption?: {
+        value: string;
+        label: string;
     };
 
     @observable private _oql?: {
@@ -69,6 +79,7 @@ export default class GeneLevelSelection extends React.Component<
                     profileType: this.selectedOption!.value,
                     hugoGeneSymbol: gene.hugoGeneSymbol,
                     dataType: this.selectedOption!.dataType,
+                    mutationOptionType: this.selectedOption!.mutationOptionType,
                 };
             });
             this.props.onSubmit(charts);
@@ -82,6 +93,19 @@ export default class GeneLevelSelection extends React.Component<
         }
     }
 
+    @action.bound
+    private handleSubSelect(option: any) {
+        if (option && option.value) {
+            this._selectedSubProfileOption = option;
+            if (
+                this._selectedProfileOption !== undefined &&
+                Object.keys(MutationOptionConstants).includes(option.value)
+            ) {
+                this._selectedProfileOption.mutationOptionType = option.value;
+            }
+        }
+    }
+
     @computed
     private get selectedOption() {
         if (this._selectedProfileOption !== undefined) {
@@ -89,6 +113,14 @@ export default class GeneLevelSelection extends React.Component<
         }
         if (this.props.molecularProfileOptionsPromise.isComplete) {
             return this.molecularProfileOptions[0].options[0];
+        }
+        return undefined;
+    }
+
+    @computed
+    private get selectedSubOption() {
+        if (this._selectedSubProfileOption !== undefined) {
+            return this._selectedSubProfileOption;
         }
         return undefined;
     }
@@ -121,6 +153,24 @@ export default class GeneLevelSelection extends React.Component<
             return this._genes!.found;
         }
         return [];
+    }
+
+    private get subOptions() {
+        return [
+            {
+                label: AlterationTypeConstants.MUTATION_EXTENDED,
+                options: [
+                    {
+                        value: MutationOptionConstants.MUTATED,
+                        label: 'Mutated',
+                    },
+                    {
+                        value: MutationOptionConstants.EVENT,
+                        label: 'Mutation Types',
+                    },
+                ],
+            },
+        ];
     }
 
     @computed
@@ -207,6 +257,20 @@ export default class GeneLevelSelection extends React.Component<
                                 isClearable={false}
                                 isSearchable={false}
                             />
+                            {this.selectedOption &&
+                                this.subOptions
+                                    .map(option => option.label)
+                                    .includes(
+                                        this.selectedOption.alterationType
+                                    ) && (
+                                    <ReactSelect
+                                        value={this.selectedSubOption}
+                                        onChange={this.handleSubSelect}
+                                        options={this.subOptions}
+                                        isClearable={false}
+                                        isSearchable={false}
+                                    />
+                                )}
                         </div>
                         <button
                             disabled={this.isQueryInvalid || this.hasOQL}

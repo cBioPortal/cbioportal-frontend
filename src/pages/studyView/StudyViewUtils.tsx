@@ -787,9 +787,12 @@ export function getUniqueKey(attribute: ClinicalAttribute): string {
 
 export function getGenomicChartUniqueKey(
     hugoGeneSymbol: string,
-    profileType: string
+    profileType: string,
+    mutationOptionType?: string
 ): string {
-    return hugoGeneSymbol + '_' + profileType;
+    return mutationOptionType
+        ? hugoGeneSymbol + '_' + profileType + '_' + mutationOptionType
+        : hugoGeneSymbol + '_' + profileType;
 }
 
 export function getGenericAssayChartUniqueKey(

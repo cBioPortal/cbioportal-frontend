@@ -380,6 +380,7 @@ export type GenomicChart = {
     profileType: string;
     hugoGeneSymbol: string;
     dataType?: string;
+    mutationOptionType?: string;
 };
 
 export type GenericAssayChart = {
@@ -6147,7 +6148,8 @@ export class StudyViewPageStore
         newCharts.forEach(newChart => {
             const uniqueKey = getGenomicChartUniqueKey(
                 newChart.hugoGeneSymbol,
-                newChart.profileType
+                newChart.profileType,
+                newChart.mutationOptionType
             );
 
             if (this._geneSpecificChartMap.has(uniqueKey)) {

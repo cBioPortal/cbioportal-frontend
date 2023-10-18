@@ -129,3 +129,8 @@ export const DataTypeConstants = {
 };
 
 export const SUPPORTED_DAT_METHODS = ['oauth2', 'uuid'];
+
+export const MutationOptionConstants = {
+    MUTATED: 'MUTATED',
+    EVENT: 'EVENT',
+};
