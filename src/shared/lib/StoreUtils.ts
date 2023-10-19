@@ -1152,21 +1152,6 @@ export function generateUniqueSampleKeyToTumorTypeMap(
                 }
             );
         }
-
-        // // first priority is CANCER_TYPE_DETAILED in clinical data
-        // _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-        //     if (clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
-        //         map[clinicalData.uniqueSampleKey] = clinicalData.value;
-        //     }
-        // });
-
-        // // second priority is CANCER_TYPE in clinical data
-        // _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-        //     // update map with CANCER_TYPE value only if it is not already updated
-        //     if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
-        //         map[clinicalData.uniqueSampleKey] = clinicalData.value;
-        //     }
-        // });
     }
 
     // last resort: fall back to the study cancer type
