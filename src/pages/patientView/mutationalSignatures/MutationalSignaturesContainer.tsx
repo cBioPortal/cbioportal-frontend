@@ -47,7 +47,7 @@ export interface IMutationalSignaturesContainerProps {
 }
 
 const CONTENT_TO_SHOW_ABOVE_TABLE =
-    'Click on mutational signature to open modal and update reference plot';
+    'Click on a mutational signature to update reference plot';
 
 interface IAxisScaleSwitchProps {
     onChange: (selectedScale: AxisScale) => void;

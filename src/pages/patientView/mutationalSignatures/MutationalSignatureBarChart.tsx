@@ -31,6 +31,7 @@ import {
     addColorsForReferenceData,
 } from './MutationalSignatureBarChartUtils';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
+import { transitionShowSublabels } from 'shared/components/oncoprint/DeltaUtils';
 
 export interface IMutationalBarChartProps {
     signature: string;
@@ -183,7 +184,7 @@ export default class MutationalBarChart extends React.Component<
                             ? xScale(item.end)! - xScale(item.start)!
                             : 6
                     }
-                    height="15"
+                    height="20"
                 />
             );
         });
@@ -232,12 +233,68 @@ export default class MutationalBarChart extends React.Component<
                     y={37}
                     width={this.props.width}
                     text={item.category}
-                    style={{ fontSize: '10px' }}
+                    style={{ fontSize: '15' }}
                     textAnchor={'middle'}
                 />
             );
         });
         return legendLabelsChart;
+    }
+
+    @computed get formatLabelsCosmicStyle(): string[] {
+        const labels = this.getLabels(this.props.data);
+        const cosmicLabel: string[] = [];
+        if (this.props.version == 'SBS') {
+            labels.map(label => {
+                const labelSplit = label
+                    .split('_')
+                    .map((x, i) => {
+                        return i == 1 ? '(' + x.split('-')[0] + ')' : x;
+                    })
+                    .join('');
+                cosmicLabel.push(labelSplit);
+            });
+        } else if (this.props.version == 'DBS') {
+            labels.map(label => {
+                const labelSplit: string = label.split('-')[1];
+                cosmicLabel.push(labelSplit);
+            });
+        } else if (this.props.version == 'ID') {
+            labels.map(label => {
+                const labelSplit = label.split('_');
+                cosmicLabel.push(labelSplit[3]);
+            });
+        }
+        console.log(this.formatTooltipLabelCosmicStyle);
+        return cosmicLabel;
+    }
+
+    @computed get formatTooltipLabelCosmicStyle(): string[] {
+        const labels: string[] = this.getLabels(this.props.data);
+        const cosmicTooltip: string[] = [];
+        if (this.props.version == 'SBS') {
+            labels.map(label => {
+                const labelSplit = label
+                    .split('_')
+                    .map((x, i) => {
+                        return i == 1 ? '[' + x.replace('-', '->') + ']' : x;
+                    })
+                    .join('');
+                console.log(labelSplit);
+                cosmicTooltip.push(labelSplit);
+            });
+        } else if (this.props.version == 'DBS') {
+            labels.map(label => {
+                const labelSplit: string = label.replace('-', '->');
+                cosmicTooltip.push(labelSplit);
+            });
+        } else {
+            labels.map(label => {
+                cosmicTooltip.push(label);
+            });
+        }
+        console.log(cosmicTooltip);
+        return cosmicTooltip;
     }
 
     @computed get getReferenceSignatureToPlot() {
@@ -292,7 +349,7 @@ export default class MutationalBarChart extends React.Component<
         ];
     }
 
-    @action getLabelsForTooltip(data: IMutationalCounts[]): string[] {
+    @action getLabels(data: IMutationalCounts[]): string[] {
         return getColorsForSignatures(data).map(item => item.label);
     }
 
@@ -333,7 +390,7 @@ export default class MutationalBarChart extends React.Component<
 
     public render() {
         return (
-            <div style={{ paddingTop: '10' }}>
+            <div style={{ paddingTop: '10', paddingLeft: '50' }}>
                 <svg
                     height={600}
                     width={WindowStore.size.width - 50}
@@ -393,7 +450,7 @@ export default class MutationalBarChart extends React.Component<
                                         this.props.label ==
                                         'Mutational count (value)'
                                             ? 25
-                                            : 20,
+                                            : 25,
                                     letterSpacing: 'normal',
                                 },
                                 ticks: { size: 5, stroke: 'black' },
@@ -411,7 +468,7 @@ export default class MutationalBarChart extends React.Component<
                     </g>
                     <g transform={'translate(10, 0)'}>
                         <VictoryAxis
-                            tickValues={this.xTickLabels}
+                            tickValues={this.formatLabelsCosmicStyle}
                             width={WindowStore.size.width - 100}
                             style={{
                                 axisLabel: {
@@ -419,9 +476,9 @@ export default class MutationalBarChart extends React.Component<
                                     padding: 20,
                                 },
                                 tickLabels: {
-                                    fontSize: '8px',
+                                    fontSize: '12px',
                                     padding: 40,
-                                    angle: 270,
+                                    angle: this.props.version == 'ID' ? 0 : 270,
                                     textAnchor: 'start',
                                     verticalAnchor: 'middle',
                                 },
@@ -435,10 +492,10 @@ export default class MutationalBarChart extends React.Component<
                     <g transform={'translate(10, 0)'}>
                         <VictoryBar
                             barRatio={1}
-                            barWidth={3}
+                            barWidth={8}
                             width={WindowStore.size.width - 100}
                             height={300}
-                            labels={this.getLabelsForTooltip(this.props.data)}
+                            labels={this.formatLabelsCosmicStyle}
                             labelComponent={
                                 <VictoryTooltip
                                     style={{ fontSize: '8px' }}
@@ -466,7 +523,7 @@ export default class MutationalBarChart extends React.Component<
                     <g transform={'translate(10, 250)'}>
                         <VictoryBar
                             barRatio={1}
-                            barWidth={3}
+                            barWidth={6}
                             width={WindowStore.size.width - 100}
                             height={300}
                             data={this.getReferenceSignatureToPlot}
@@ -478,7 +535,7 @@ export default class MutationalBarChart extends React.Component<
                                 },
                             }}
                             alignment="middle"
-                            labels={this.getLabelsForTooltip(this.props.data)}
+                            labels={this.formatLabelsCosmicStyle}
                             labelComponent={
                                 <VictoryTooltip
                                     style={{ fontSize: '8px' }}

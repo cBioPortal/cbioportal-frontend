@@ -187,6 +187,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                     <Tooltip overlay={this.tooltipInfo}>
                         {
                             <span
+                                style={{ color: 'blue' }}
                                 onMouseOver={() =>
                                     this.props.parentCallback(
                                         data.name,
