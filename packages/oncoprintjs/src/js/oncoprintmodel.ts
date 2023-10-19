@@ -1898,7 +1898,14 @@ export default class OncoprintModel {
         const lastIdLeft = base
             ? this.getColumnLeft(lastId)
             : this.getZoomedColumnLeft(lastId);
-        return lastIdLeft + this.getCellWidth(base) + 1; // this fixes some edge case issues with scrolling
+
+        const lastGap = this.showGaps() ? this.getGapSize() : 0;
+
+        return lastIdLeft + this.getCellWidth(base) + lastGap + 1; // this fixes some edge case issues with scrolling
+    }
+
+    public showGaps() {
+        return _.some(this.track_show_gaps);
     }
 
     public getOncoprintWidthNoColumnPaddingNoGaps() {
@@ -2126,6 +2133,20 @@ export default class OncoprintModel {
         this.track_custom_options[track_id] = options;
     }
 
+    // public getGapOffsets(): any {
+    //     const offsets = _(this.ids_after_a_gap.get())
+    //         .keys()
+    //         .map(num => this.getZoomedColumnLeft(num))
+    //         .sort((a, b) => a - b)
+    //         .value();
+    //
+    //     const last = this.getZoomedColumnLeft(
+    //         this.id_order[this.id_order.length - 1]
+    //     ) + this.getGapSize() + this.cell_width + this.cell_padding;
+    //
+    //     return [...offsets, last + 10];
+    // }
+
     public getGapOffsets(): any {
         const offsets = _(this.ids_after_a_gap.get())
             .keys()
@@ -2133,11 +2154,17 @@ export default class OncoprintModel {
             .sort((a, b) => a - b)
             .value();
 
-        const last = this.getZoomedColumnLeft(
-            this.id_order[this.id_order.length - 1]
-        );
-
-        return [...offsets, last + 10];
+        if (this.showGaps) {
+            const last =
+                this.getZoomedColumnLeft(
+                    this.id_order[this.id_order.length - 1]
+                ) +
+                this.getGapSize() +
+                this.cell_width +
+                this.cell_padding;
+            offsets.push(last);
+        }
+        return offsets;
     }
 
     public setTrackInfoTooltip(

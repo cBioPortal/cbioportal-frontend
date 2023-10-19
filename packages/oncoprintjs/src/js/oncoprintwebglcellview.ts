@@ -499,7 +499,6 @@ export default class OncoprintWebGLCellView {
             this.supersampling_ratio * width,
             this.supersampling_ratio * height
         );
-        console.log('sheep');
     }
 
     public clearOverlay() {

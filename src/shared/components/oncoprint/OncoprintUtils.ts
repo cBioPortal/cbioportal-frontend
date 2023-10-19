@@ -848,7 +848,6 @@ export function makeGeneticTrackWith({
                             );
                             return moo;
                         });
-                        console.log(trackKey, info);
 
                         return info;
                     },
