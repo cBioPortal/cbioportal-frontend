@@ -2127,9 +2127,17 @@ export default class OncoprintModel {
     }
 
     public getGapOffsets(): any {
-        return _.mapValues(this.ids_after_a_gap.get(), (v, k) => {
-            return this.getZoomedColumnLeft(k);
-        });
+        const offsets = _(this.ids_after_a_gap.get())
+            .keys()
+            .map(num => this.getZoomedColumnLeft(num))
+            .sort((a, b) => a - b)
+            .value();
+
+        const last = this.getZoomedColumnLeft(
+            this.id_order[this.id_order.length - 1]
+        );
+
+        return [...offsets, last + 10];
     }
 
     public setTrackInfoTooltip(
