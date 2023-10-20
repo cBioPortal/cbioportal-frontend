@@ -2133,20 +2133,6 @@ export default class OncoprintModel {
         this.track_custom_options[track_id] = options;
     }
 
-    // public getGapOffsets(): any {
-    //     const offsets = _(this.ids_after_a_gap.get())
-    //         .keys()
-    //         .map(num => this.getZoomedColumnLeft(num))
-    //         .sort((a, b) => a - b)
-    //         .value();
-    //
-    //     const last = this.getZoomedColumnLeft(
-    //         this.id_order[this.id_order.length - 1]
-    //     ) + this.getGapSize() + this.cell_width + this.cell_padding;
-    //
-    //     return [...offsets, last + 10];
-    // }
-
     public getGapOffsets(): any {
         const offsets = _(this.ids_after_a_gap.get())
             .keys()
