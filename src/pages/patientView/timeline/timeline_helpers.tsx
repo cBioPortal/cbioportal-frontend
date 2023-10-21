@@ -277,8 +277,8 @@ export function buildBaseConfig(
     let baseConfig: ITimelineConfig = {
         sortOrder: [
             'Specimen',
-            'Sequencing',
             'Sample Acquisition',
+            'Sequencing',
             'Surgery',
             'Med Onc',
             'Med Onc Assessment',
