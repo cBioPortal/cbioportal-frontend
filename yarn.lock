@@ -21700,10 +21700,10 @@ sass@^1.32.4:
   dependencies:
     chokidar ">=2.0.0 <4.0.0"
 
-save-svg-as-png@^1.4.6:
-  version "1.4.11"
-  resolved "https://registry.yarnpkg.com/save-svg-as-png/-/save-svg-as-png-1.4.11.tgz#b6a8d8c1d616716f0f1eb5fe303ca20badb75eea"
-  integrity sha512-NyMPYqdkyP6xX8pYh9rUJq/RmoZL6dlLrDeu9wmiziE9B3Kc1/c7TNCVZRMZa3snUz8M8K28eOSqzoOMKI79wA==
+save-svg-as-png@^1.4.17:
+  version "1.4.17"
+  resolved "https://registry.yarnpkg.com/save-svg-as-png/-/save-svg-as-png-1.4.17.tgz#294442002772a24f1db1bf8a2aaf7df4ab0cdc55"
+  integrity sha512-7QDaqJsVhdFPwviCxkgHiGm9omeaMBe1VKbHySWU6oFB2LtnGCcYS13eVoslUgq6VZC6Tjq/HddBd1K6p2PGpA==
 
 sax@>=0.6.0, sax@^1.1.4, sax@~1.2.1, sax@~1.2.4:
   version "1.2.4"

@@ -105,7 +105,7 @@ export default class DownloadControls extends React.Component<
 
     @autobind
     private download(
-        saveMethod: (svg: SVGElement, fileName: string) => void,
+        saveMethod: (svg: SVGElement, fileName: string, options?: any) => void,
         fileExtension: string
     ) {
         if (this.props.getSvg) {
@@ -116,14 +116,16 @@ export default class DownloadControls extends React.Component<
                         if (svg) {
                             saveMethod(
                                 svg,
-                                `${this.props.filename}.${fileExtension}`
+                                `${this.props.filename}.${fileExtension}`,
+                                { excludeCss: true }
                             );
                         }
                     });
                 } else {
                     saveMethod(
                         result,
-                        `${this.props.filename}.${fileExtension}`
+                        `${this.props.filename}.${fileExtension}`,
+                        { excludeCss: true }
                     );
                 }
             }
