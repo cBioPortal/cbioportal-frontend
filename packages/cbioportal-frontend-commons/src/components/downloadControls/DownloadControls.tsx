@@ -154,6 +154,16 @@ export default class DownloadControls extends React.Component<
         );
     }
 
+    private buildFileName(dataType?: string) {
+        return (
+            `${this.props.filename}${
+                typeof dataType === 'string' ? `.${dataType}` : ''
+            }` +
+            `.` +
+            `${this.props.dataExtension ? this.props.dataExtension : 'txt'}`
+        );
+    }
+
     @autobind
     private downloadData(dataType?: DataType) {
         if (this.props.getData) {
@@ -162,15 +172,7 @@ export default class DownloadControls extends React.Component<
                 if (isPromiseLike<string | null>(result)) {
                     result.then(data => {
                         if (data) {
-                            fileDownload(
-                                data,
-                                `${this.props.filename}.` +
-                                    `${
-                                        this.props.dataExtension
-                                            ? this.props.dataExtension
-                                            : 'txt'
-                                    }`
-                            );
+                            fileDownload(data, this.buildFileName(dataType));
                         }
                     });
                 } else {

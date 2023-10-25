@@ -240,7 +240,7 @@ export class StudySummaryTab extends React.Component<
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
                 props.getData = (dataType?: DataType) =>
-                    this.store.getPieChartDataDownload(chartMeta, dataType);
+                    this.store.getChartDownloadableData(chartMeta, dataType);
                 props.downloadTypes = [
                     'Summary Data',
                     'Full Data',
@@ -374,9 +374,9 @@ export class StudySummaryTab extends React.Component<
                     props.onResetSelection = this.handlers.onValueSelection;
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = () =>
-                    this.store.getChartDownloadableData(chartMeta);
-                props.downloadTypes = ['Data'];
+                props.getData = dataType =>
+                    this.store.getChartDownloadableData(chartMeta, dataType);
+                props.downloadTypes = ['Summary Data', 'Full Data'];
                 break;
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
