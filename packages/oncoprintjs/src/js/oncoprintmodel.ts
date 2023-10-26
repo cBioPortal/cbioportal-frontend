@@ -1163,7 +1163,7 @@ export default class OncoprintModel {
     }
 
     public getGapSize() {
-        return 50;
+        return 40;
         //return this.getCellWidth(true);
     }
 

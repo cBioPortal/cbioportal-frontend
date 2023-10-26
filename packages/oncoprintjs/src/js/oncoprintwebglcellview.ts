@@ -1989,9 +1989,13 @@ export default class OncoprintWebGLCellView {
         const tracks = model.getTracks();
         const zoomedColumnLeft = model.getZoomedColumnLeft();
         // add cell shapes
+
+        const gapOffsets = model.getGapOffsets();
+
         for (let i = 0; i < tracks.length; i++) {
             const track_id = tracks[i];
             const offset_y = cell_tops[track_id];
+            const cell_height = model.getCellHeight(track_id);
             const universal_shapes = model.getTrackUniversalShapes(
                 track_id,
                 false
@@ -2000,6 +2004,40 @@ export default class OncoprintWebGLCellView {
                 track_id,
                 false
             );
+
+            const custom = model.getTrackCustomOptions(track_id);
+            if (gapOffsets[0]) {
+                const gaps = _.isEmpty(model.ids_after_a_gap.get())
+                    ? undefined
+                    : custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
+
+                if (gaps) {
+                    gaps.forEach((gap: any, i: number) => {
+                        // this.drawGapLabel(
+                        //     gap.percent,
+                        //     gapOffsets[i] - model.getGapSize(),
+                        //     model.getZoomedTrackTops()[track_id] + cell_height
+                        // );
+
+                        const textElt = makeSvgElement('text', {
+                            x: gapOffsets[i] - model.getGapSize() + 2,
+                            y: offset_y + cell_height - 3,
+                            'font-size': '10',
+                            'font-family': 'Arial',
+                            'font-weight': 'normal',
+                            'text-anchor': 'start',
+                            'alignment-baseline': 'top',
+                        });
+
+                        textElt.textContent = gap.percent;
+                        root.appendChild(textElt);
+                    });
+                }
+            }
+
+            // aaron
+            // aaron
+
             for (let j = 0; j < identified_shape_list_list.length; j++) {
                 const id_sl = identified_shape_list_list[j];
                 const id = id_sl.id;
