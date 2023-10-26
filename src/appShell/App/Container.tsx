@@ -36,6 +36,7 @@ import { ErrorAlert } from 'shared/components/errorScreen/ErrorAlert';
 import { ErrorInfo } from 'react';
 import { observable } from 'mobx';
 import { sendToLoggly } from 'shared/lib/tracking';
+import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 
 interface IContainerProps {
     location: Location;
@@ -73,6 +74,17 @@ export default class Container extends React.Component<IContainerProps, {}> {
             showDownloadControls: getServerConfig()
                 .skin_hide_download_controls as DownloadControlOption,
         };
+    }
+
+    componentDidMount() {
+        window.addEventListener('message', (ev: MessageEvent<any>) => {
+            console.log(ev.data.url);
+            if (ev.data && ev.data.url && ev.data.url.length > 0) {
+                this.routingStore.replace(ev.data.url);
+            }
+            // window.history.pushState('', '', ev.data.url)
+            //window.location.href = ev.data.url;
+        });
     }
 
     render() {
@@ -154,10 +166,22 @@ export default class Container extends React.Component<IContainerProps, {}> {
                                 </div>
                             </Then>
                             <Else>
-                                <div className="contentWrapper">
-                                    <ErrorAlert appStore={this.appStore} />
+                                <div style={{ display: 'flex' }}>
+                                    <div
+                                        className="contentWrapper"
+                                        style={{ width: '80%' }}
+                                    >
+                                        <ErrorAlert appStore={this.appStore} />
 
-                                    {makeRoutes()}
+                                        {makeRoutes()}
+                                    </div>
+                                    <div style={{ width: '20%' }}>
+                                        <IFrameLoader
+                                            className="temp-iframe"
+                                            height={'calc(100vh - 100px)'}
+                                            url={'http://localhost/'}
+                                        />
+                                    </div>
                                 </div>
                             </Else>
                         </If>

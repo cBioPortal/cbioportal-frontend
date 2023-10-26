@@ -411,6 +411,12 @@ th.reactable-header-sort-asc:after {
     }
 
     .contentWrapper {
+        margin-left: 20px;
+    }
+
+    .temp-iframe {
+        height: calc(100vh - 100px);
+        min-height: 700px;
     }
 
     header {
@@ -420,6 +426,7 @@ th.reactable-header-sort-asc:after {
 
     &.twoColumn {
         .contentWrapper {
+            margin-left: 40px;
             //.contentWidth {
             //  padding-right: 0;
             //}
