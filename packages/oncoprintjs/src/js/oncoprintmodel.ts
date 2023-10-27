@@ -238,6 +238,15 @@ export type TrackGroupProp<T> = { [trackGroupIndex: number]: T };
 export type ColumnProp<T> = { [columnId: string]: T };
 export type ColumnIdSet = { [columnId: string]: any };
 
+export type OncoprintDataGroupsByTrackId<T> = Record<
+    string,
+    OncoprintDataGroups<T>[]
+>;
+
+export type OncoprintDataGroups<T> = OncoprintDataGroup<T>[];
+
+export type OncoprintDataGroup<T> = T[];
+
 export default class OncoprintModel {
     // Global properties
     private sort_config: SortConfig;
@@ -338,7 +347,9 @@ export default class OncoprintModel {
     >;
     public ids_after_a_gap: CachedProperty<ColumnIdSet>;
 
-    public data_groups: CachedProperty<any>;
+    public data_groups: CachedProperty<
+        OncoprintDataGroupsByTrackId<TrackProp<ColumnProp<Datum>>>
+    >;
 
     private column_indexes_after_a_gap: CachedProperty<number[]>;
 
@@ -583,15 +594,11 @@ export default class OncoprintModel {
         ) {
             let groups: any[] = [];
 
+            // multiple tracks can have gaps
+            // the groups will be segemented heirarchically
             const trackIdsWithGaps = model
                 .getTracks()
                 .filter(trackId => model.getTrackShowGaps(trackId));
-
-            // what is visible mean? it should be all if we are going to calculate
-            const ids = model.visible_id_order.get();
-
-            // we need to do this for each genomic track
-            const keyedData = _.keyBy(model.track_data[4], m => m.uid);
 
             const out = _.reduce(
                 model.track_label,
@@ -602,13 +609,13 @@ export default class OncoprintModel {
                     );
                     const groups = trackIdsWithGaps.map(id => {
                         // this is the data for the genomic tracks
-                        //const keyedData = _.keyBy(model.track_data[4],(m)=>m.uid);
                         const data = model.id_order.map(d => keyedData[d]);
 
                         const indexesAfterGap = model.column_indexes_after_a_gap.get();
 
                         const gapStarts = [0, ...indexesAfterGap];
 
+                        // using the gap start indexes, slice the id data into corresponding groups
                         return gapStarts.map((n, i) => {
                             if (i === gapStarts.length - 1) {
                                 // we're at last one, so last group
@@ -617,12 +624,6 @@ export default class OncoprintModel {
                                 return data.slice(n, gapStarts[i + 1]);
                             }
                         });
-                        // return model.column_indexes_after_a_gap
-                        //     .get()
-                        //     .map((val, i, array) => {
-                        //         const start = i === 0 ? 0 : array[i - 1];
-                        //         return data.slice(start, val);
-                        //     });
                     });
 
                     agg[label] = groups;
