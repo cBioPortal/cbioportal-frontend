@@ -19,6 +19,7 @@ import { ComputedShapeParams } from './oncoprintshape';
 import { CaseItem, EntityItem } from './workers/clustering-worker';
 import PrecomputedComparator from './precomputedcomparator';
 import { calculateHeaderTops, calculateTrackTops } from './modelutils';
+import { OncoprintGapConfig } from './oncoprintwebglcellview';
 
 export type ColumnId = string;
 export type ColumnIndex = number;
@@ -68,7 +69,7 @@ export type CustomTrackOption = {
     onClick?: (id: TrackId) => void;
     weight?: string;
     disabled?: boolean;
-    gapLabelsFn?: any;
+    gapLabelsFn?: (model: OncoprintModel) => OncoprintGapConfig[];
 };
 export type CustomTrackGroupOption = {
     label?: string;

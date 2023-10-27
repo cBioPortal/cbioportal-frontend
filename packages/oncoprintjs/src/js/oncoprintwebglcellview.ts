@@ -883,6 +883,8 @@ export default class OncoprintWebGLCellView {
             const custom = model.getTrackCustomOptions(track_id);
 
             if (gapOffsets[0]) {
+                // if there are gaps, we need to obtain the gap configuration for the tracks which
+                // have gap labels
                 const gaps = _.isEmpty(model.ids_after_a_gap.get())
                     ? undefined
                     : custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
