@@ -30,6 +30,17 @@ type ColumnIdIndex = number;
 type PositionVertex = [number, number, number];
 type ColorVertex = [number, number, number, number];
 
+type OncoprintGap = {
+    origin_x: number;
+    origin_y: number;
+    data: OncoprintGapConfig;
+};
+
+export type OncoprintGapConfig = {
+    labelFormatter: () => string;
+    tooltipFormatter: () => string;
+};
+
 export type OncoprintWebGLContext = WebGLRenderingContext & {
     viewportWidth: number;
     viewportHeight: number;
@@ -251,6 +262,7 @@ export default class OncoprintWebGLCellView {
                 const offset = self.$overlay_canvas.offset();
                 const mouseX = evt.pageX - offset.left;
                 const mouseY = evt.pageY - offset.top;
+
                 let overlapping_cells = model.getOverlappingCells(
                     mouseX + self.scroll_x,
                     mouseY + self.scroll_y
@@ -296,8 +308,42 @@ export default class OncoprintWebGLCellView {
                             )
                         );
                     } else {
-                        tooltip.hideIfNotAlreadyGoingTo(150);
                         overlapping_cells = null;
+                    }
+
+                    // find a gap which is in range of mouse position
+                    const overlappingGap = self.gapTooltipTargets.find(
+                        (t: any) => {
+                            return (
+                                _.inRange(mouseX - t.origin_x, 0, 20) &&
+                                _.inRange(t.origin_y - mouseY, -10, 15)
+                            );
+                        }
+                    );
+
+                    // if there is no gap, turn
+                    if (overlappingGap === undefined) {
+                        self.hoveredGap = undefined;
+                    } else if (self.hoveredGap === overlappingGap) {
+                        // tooltip should already be showing, so do nothing
+                    } else {
+                        // we have a new hovered gap, so show a tooltip
+                        const clientRect = self.$overlay_canvas[0].getBoundingClientRect();
+                        self.hoveredGap = overlappingGap;
+                        tooltip.center = false;
+                        tooltip.show(
+                            250,
+                            clientRect.left + overlappingGap.origin_x,
+                            clientRect.top + overlappingGap.origin_y - 20,
+                            $(
+                                `<span>${overlappingGap.data.tooltipFormatter()}</span>`
+                            ),
+                            false
+                        );
+                    }
+
+                    if (!overlapping_data && !overlappingGap) {
+                        tooltip.hideIfNotAlreadyGoingTo(150);
                     }
                 } else {
                     overlapping_cells = null;
@@ -359,13 +405,15 @@ export default class OncoprintWebGLCellView {
         this.gap_ctx.font = '15pt Arial';
         //this.gap_ctx.fillStyle = 'blue';
 
-        const origin_x = x * this.supersampling_ratio + 12;
+        const origin_x = x * this.supersampling_ratio + 6;
+        const origin_y = y * this.supersampling_ratio + 4;
 
-        this.gap_ctx.fillText(
-            txt,
-            origin_x - 6,
-            y * this.supersampling_ratio + 4
-        );
+        this.gap_ctx.fillText(txt, origin_x, origin_y);
+
+        return {
+            origin_x: x,
+            origin_y: y,
+        };
     }
 
     private getNewCanvas() {
@@ -769,6 +817,10 @@ export default class OncoprintWebGLCellView {
         this.getColumnLabelsContext();
     }
 
+    public gapTooltipTargets: OncoprintGap[] = [];
+
+    public hoveredGap: OncoprintGap;
+
     private renderAllTracks(model: OncoprintModel, dont_resize?: boolean) {
         if (this.rendering_suppressed) {
             return;
@@ -821,6 +873,9 @@ export default class OncoprintWebGLCellView {
         const gapOffsets = model.getGapOffsets();
 
         const tracks = model.getTracks();
+
+        this.gapTooltipTargets = [];
+
         for (let i = 0; i < tracks.length; i++) {
             const track_id = tracks[i];
             const cell_top = model.getCellTops(track_id);
@@ -833,21 +888,25 @@ export default class OncoprintWebGLCellView {
                     : custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
 
                 if (gaps) {
-                    gaps.forEach((gap: any, i: number) => {
-                        this.drawGapLabel(
-                            gap.percent,
-                            gapOffsets[i] - scroll_x - model.getGapSize(),
-                            model.getZoomedTrackTops()[track_id] + cell_height
+                    gaps.forEach((gap: OncoprintGapConfig, i: number) => {
+                        const x = gapOffsets[i] - scroll_x - model.getGapSize();
+                        const y =
+                            model.getZoomedTrackTops()[track_id] + cell_height;
+
+                        const offsets = this.drawGapLabel(
+                            gap.labelFormatter(),
+                            x,
+                            y
                         );
+
+                        this.gapTooltipTargets.push({
+                            origin_x: x,
+                            origin_y: y,
+                            data: gap,
+                        });
                     });
                 }
             }
-
-            //console.log(custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model));
-
-            //const trackGaps = gaps[track_id];
-
-            //aaron here are we have the gaps!
 
             if (
                 cell_top / zoom_y >= window_bottom ||

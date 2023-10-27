@@ -840,13 +840,21 @@ export function makeGeneticTrackWith({
                                 };
                             }
 
-                            const moo = alterationInfoForOncoprintTrackData(
+                            const info = alterationInfoForOncoprintTrackData(
                                 sampleMode,
                                 { trackData: groupData, oql: geneSymbolArray },
                                 sequencedSampleKeysForGroup,
                                 sequencedPatientKeysForGroup
                             );
-                            return moo;
+
+                            return {
+                                labelFormatter: function() {
+                                    return `${info.percent}`;
+                                },
+                                tooltipFormatter: function() {
+                                    return `altered / sequenced = ${info.altered} / ${info.sequenced}`;
+                                },
+                            };
                         });
 
                         return info;
