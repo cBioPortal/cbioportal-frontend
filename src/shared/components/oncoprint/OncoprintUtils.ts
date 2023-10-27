@@ -56,11 +56,6 @@ import {
 } from '../../cache/ClinicalDataCache';
 import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
-import {
-    COMMON_GENERIC_ASSAY_PROPERTY,
-    GenericAssayDataType,
-    getGenericAssayMetaPropertyOrDefault,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
 import {
     getGenericAssayTrackCacheQueries,
@@ -72,7 +67,6 @@ import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
-import OncoprintModel from 'oncoprintjs';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
