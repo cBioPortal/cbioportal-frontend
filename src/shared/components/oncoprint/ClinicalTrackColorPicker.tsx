@@ -71,37 +71,44 @@ export default class ClinicalTrackColorPicker extends React.Component<
         return colors;
     }
 
-    buildColorChooserWidget = () => (
-        <Popover>
-            <div
-                onMouseDown={e => {
-                    e.nativeEvent.stopImmediatePropagation();
-                }}
-                onClick={e => {
-                    e.nativeEvent.stopImmediatePropagation();
-                }}
-            >
-                <CirclePicker
-                    colors={this.colorList}
-                    circleSize={20}
-                    circleSpacing={3}
-                    onChangeComplete={this.handleChangeComplete}
-                    color={rgbaToHex(this.props.color)}
-                    width="140px"
-                />
-            </div>
-        </Popover>
-    );
+    @computed get colorChooserElement() {
+        return (
+            <Popover>
+                <div
+                    onMouseDown={e => {
+                        e.nativeEvent.stopImmediatePropagation();
+                    }}
+                    onClick={e => {
+                        e.nativeEvent.stopImmediatePropagation();
+                    }}
+                >
+                    <CirclePicker
+                        colors={this.colorList}
+                        circleSize={20}
+                        circleSpacing={3}
+                        onChangeComplete={this.handleChangeComplete}
+                        color={rgbaToHex(this.props.color)}
+                        width="140px"
+                    />
+                </div>
+            </Popover>
+        );
+    }
 
     render() {
         return (
-            <div>
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                }}
+            >
                 {this.props.clinicalTrackValue}
                 <OverlayTrigger
                     containerPadding={40}
                     trigger="click"
                     placement="bottom"
-                    overlay={this.buildColorChooserWidget()}
+                    overlay={this.colorChooserElement}
                     rootClose={true}
                 >
                     <DefaultTooltip
@@ -109,11 +116,7 @@ export default class ClinicalTrackColorPicker extends React.Component<
                             'Optional: Select color for clinical track value to be used in oncoprint. If no color is selected, the default color will be applied.'
                         }
                     >
-                        <span
-                            style={{
-                                float: 'right',
-                            }}
-                        >
+                        <span>
                             <ColorPickerIcon
                                 color={
                                     rgbaToHex(this.props.color) ||

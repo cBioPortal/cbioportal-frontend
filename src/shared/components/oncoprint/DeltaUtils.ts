@@ -15,7 +15,6 @@ import {
     SortConfig,
     TrackId,
     UserTrackSpec,
-    IGeneticAlterationRuleSetParams,
 } from 'oncoprintjs';
 import _ from 'lodash';
 import {
@@ -589,8 +588,8 @@ function hasGeneticTrackRuleSetChanged(
         nextProps.distinguishDrivers !== prevProps.distinguishDrivers ||
         nextProps.distinguishGermlineMutations !==
             prevProps.distinguishGermlineMutations ||
-        nextProps.enableWhiteBackgroundForGlyphs !==
-            prevProps.enableWhiteBackgroundForGlyphs
+        nextProps.isWhiteBackgroundForGlyphsEnabled !==
+            prevProps.isWhiteBackgroundForGlyphsEnabled
     );
 }
 
@@ -1122,7 +1121,7 @@ function transitionGeneticTrack(
                 nextProps.distinguishMutationType,
                 nextProps.distinguishDrivers,
                 nextProps.distinguishGermlineMutations,
-                nextProps.enableWhiteBackgroundForGlyphs
+                nextProps.isWhiteBackgroundForGlyphsEnabled
             ),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
@@ -1222,7 +1221,7 @@ function transitionGeneticTrack(
                         nextProps.distinguishMutationType,
                         nextProps.distinguishDrivers,
                         nextProps.distinguishGermlineMutations,
-                        nextProps.enableWhiteBackgroundForGlyphs
+                        nextProps.isWhiteBackgroundForGlyphsEnabled
                     )
                 );
             }
@@ -1301,7 +1300,22 @@ function transitionClinicalTrack(
             target_group: CLINICAL_TRACK_GROUP_INDEX,
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             onGapChange: nextProps.onTrackGapChange,
-            custom_track_options: nextSpec.custom_options,
+            custom_track_options:
+                (nextSpec.datatype === 'string' ||
+                    nextSpec.datatype === 'counts') &&
+                nextProps.setTrackKeySelectedForEdit
+                    ? // add edit color option that opens color config modal to custom options
+                      [
+                          {
+                              label: 'Edit Color',
+                              onClick: () =>
+                                  nextProps.setTrackKeySelectedForEdit!(
+                                      nextSpec.key
+                                  ),
+                          },
+                          ...(nextSpec.custom_options || []),
+                      ]
+                    : nextSpec.custom_options,
             track_can_show_gaps: nextSpec.datatype === 'string',
             show_gaps_on_init: nextSpec.gapOn,
         };
@@ -1332,8 +1346,8 @@ function transitionClinicalTrack(
         // update ruleset if color has changed for selected track
         if (
             nextProps.clinicalTrackColorChanged &&
-            nextProps.selectedClinicalTrackKey &&
-            getTrackSpecKeyToTrackId()[nextProps.selectedClinicalTrackKey] ===
+            nextProps.trackKeySelectedForEdit &&
+            getTrackSpecKeyToTrackId()[nextProps.trackKeySelectedForEdit] ===
                 trackId
         ) {
             let rule_set_params = getClinicalTrackRuleSetParams(nextSpec);

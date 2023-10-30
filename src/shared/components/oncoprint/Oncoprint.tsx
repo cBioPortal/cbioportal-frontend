@@ -7,7 +7,6 @@ import {
     TrackSortDirection,
     InitParams,
     ColumnLabel,
-    IGeneticAlterationRuleSetParams,
 } from 'oncoprintjs';
 import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
@@ -292,7 +291,7 @@ export interface IOncoprintProps {
     };
     showClinicalTrackLegends?: boolean;
     showWhitespaceBetweenColumns?: boolean;
-    enableWhiteBackgroundForGlyphs?: boolean;
+    isWhiteBackgroundForGlyphsEnabled?: boolean;
     showMinimap?: boolean;
 
     onMinimapClose?: () => void;
@@ -300,7 +299,8 @@ export interface IOncoprintProps {
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
     onTrackGapChange?: (trackId: TrackId, gap: boolean) => void;
 
-    selectedClinicalTrackKey?: string | null;
+    trackKeySelectedForEdit?: string | null;
+    setTrackKeySelectedForEdit?: (key: string | null) => void;
     clinicalTrackColorChanged?: boolean;
     setClinicalTrackColorChanged?: (changed: boolean) => void;
 

@@ -58,7 +58,7 @@ export interface IOncoprintControlsHandlers
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
-    onSelectEnableWhiteBackgroundForGlyphs?: (use: boolean) => void;
+    onSelectIsWhiteBackgroundForGlyphsEnabled?: (use: boolean) => void;
 
     onSelectHideVUS: (hide: boolean) => void;
     onSelectHideGermlineMutations: (hide: boolean) => void;
@@ -91,7 +91,7 @@ export interface IOncoprintControlsState
     showClinicalTrackLegends?: boolean;
     onlyShowClinicalLegendForAlteredCases?: boolean;
     showOqlInLabels?: boolean;
-    enableWhiteBackgroundForGlyphs?: boolean;
+    isWhiteBackgroundForGlyphsEnabled?: boolean;
     showMinimap: boolean;
     isClinicalTrackConfigDirty: boolean;
     isLoggedIn: boolean;
@@ -153,7 +153,7 @@ const EVENT_KEY = {
     showClinicalTrackLegends: '4',
     onlyShowClinicalLegendForAlteredCases: '4.1',
     showOqlInLabels: '4.2',
-    enableWhiteBackgroundForGlyphs: '4.3',
+    isWhiteBackgroundForGlyphsEnabled: '4.3',
     distinguishMutationType: '5',
     distinguishGermlineMutations: '5.1',
     sortByMutationType: '6',
@@ -279,10 +279,10 @@ export default class OncoprintControls extends React.Component<
                         !this.props.state.showOqlInLabels
                     );
                 break;
-            case EVENT_KEY.enableWhiteBackgroundForGlyphs:
-                this.props.handlers.onSelectEnableWhiteBackgroundForGlyphs &&
-                    this.props.handlers.onSelectEnableWhiteBackgroundForGlyphs(
-                        !this.props.state.enableWhiteBackgroundForGlyphs
+            case EVENT_KEY.isWhiteBackgroundForGlyphsEnabled:
+                this.props.handlers.onSelectIsWhiteBackgroundForGlyphsEnabled &&
+                    this.props.handlers.onSelectIsWhiteBackgroundForGlyphsEnabled(
+                        !this.props.state.isWhiteBackgroundForGlyphsEnabled
                     );
                 break;
             case EVENT_KEY.columnTypeSample:
@@ -1059,9 +1059,10 @@ export default class OncoprintControls extends React.Component<
                     <label>
                         <input
                             type="checkbox"
-                            value={EVENT_KEY.enableWhiteBackgroundForGlyphs}
+                            value={EVENT_KEY.isWhiteBackgroundForGlyphsEnabled}
                             checked={
-                                this.props.state.enableWhiteBackgroundForGlyphs
+                                this.props.state
+                                    .isWhiteBackgroundForGlyphsEnabled
                             }
                             onClick={this.onInputClick}
                         />{' '}

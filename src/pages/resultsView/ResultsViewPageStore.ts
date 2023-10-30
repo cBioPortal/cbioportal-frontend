@@ -276,10 +276,7 @@ import { ICBioData } from 'pathway-mapper';
 import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
 import { PageUserSession } from 'shared/userSession/PageUserSession';
 import { PageType } from 'shared/userSession/PageType';
-import {
-    ClinicalTrackConfig,
-    ClinicalTrackSpec,
-} from 'shared/components/oncoprint/Oncoprint';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import eventBus from 'shared/events/eventBus';
 import { ErrorMessages } from 'shared/errorMessages';
 import AnalysisStore from 'shared/lib/comparison/AnalysisStore';
@@ -583,12 +580,6 @@ export class ResultsViewPageStore extends AnalysisStore
         };
     } = {};
 
-    @observable _defaultClinicalTracksColors: {
-        [label: string]: {
-            [value: string]: RGBAColor;
-        };
-    } = {};
-
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
             this.nonSelectedDownloadableMolecularProfilesGroupByName.result &&
@@ -624,45 +615,8 @@ export class ResultsViewPageStore extends AnalysisStore
         }
     }
 
-    @computed get defaultClinicalTracksColors() {
-        return this._defaultClinicalTracksColors;
-    }
-
     @computed get userSelectedClinicalTracksColors() {
         return this._userSelectedClinicalTracksColors;
-    }
-
-    @action.bound
-    public setDefaultClinicalTrackColors(
-        label: string,
-        values: any[],
-        categoryToColor?: {
-            [category: string]: [number, number, number, number];
-        },
-        countsCategoryFills?: RGBAColor[]
-    ) {
-        if (categoryToColor) {
-            this._defaultClinicalTracksColors[label] = {};
-            _.forEach(values, value => {
-                this._defaultClinicalTracksColors[label][value] =
-                    categoryToColor[value];
-            });
-            // sample type attributes have unique "Mixed" label with set color
-            if (label === 'Sample Type' || label === 'Sample type id') {
-                this._defaultClinicalTracksColors[label]['Mixed'] = [
-                    48,
-                    97,
-                    194,
-                    1,
-                ];
-            }
-        } else if (countsCategoryFills) {
-            this._defaultClinicalTracksColors[label] = {};
-            _.forEach(values, (value, i) => {
-                this._defaultClinicalTracksColors[label][value] =
-                    countsCategoryFills[i];
-            });
-        }
     }
 
     @action.bound
