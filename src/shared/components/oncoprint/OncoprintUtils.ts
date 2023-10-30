@@ -453,7 +453,7 @@ export function getGeneticTrackRuleSetParams(
     distinguishMutationType?: boolean,
     distinguishDrivers?: boolean,
     distinguishGermlineMutations?: boolean,
-    enableWhiteBackgroundForGlyphs?: boolean
+    isWhiteBackgroundForGlyphsEnabled?: boolean
 ): IGeneticAlterationRuleSetParams {
     let rule_set;
     if (!distinguishMutationType && !distinguishDrivers) {
@@ -469,7 +469,7 @@ export function getGeneticTrackRuleSetParams(
     if (distinguishGermlineMutations) {
         Object.assign(rule_set.rule_params.conditional, germline_rule_params);
     }
-    if (enableWhiteBackgroundForGlyphs) {
+    if (isWhiteBackgroundForGlyphsEnabled) {
         rule_set.legend_base_color = hexToRGBA(ASCN_WHITE);
         if (rule_set.rule_params.always) {
             rule_set.rule_params.always.shapes = [
@@ -1086,58 +1086,37 @@ export function makeClinicalTracksMobxPromise(
                     }
                 } else if (attribute.datatype === 'STRING') {
                     ret.datatype = 'string';
-                    (ret as any).category_to_color = _.mapValues(
-                        dataAndColors.categoryToColor,
-                        hexToRGBA
-                    );
-                    // if default for attribute doesn't already exist
-                    if (
-                        !oncoprint.props.store.defaultClinicalTracksColors[
+                    (ret as any).category_to_color = Object.assign(
+                        {},
+                        _.mapValues(dataAndColors.categoryToColor, hexToRGBA),
+                        oncoprint.props.store.userSelectedClinicalTracksColors[
                             attribute.displayName
                         ]
-                    ) {
-                        oncoprint.props.store.setDefaultClinicalTrackColors(
-                            attribute.displayName,
-                            getClinicalTrackValues(ret),
-                            (ret as any).category_to_color
-                        );
-                    }
-                    // add option to open up color config modal
-                    ret.custom_options = [
-                        {
-                            label: 'Color',
-                            onClick: () =>
-                                oncoprint.setSelectedClinicalTrackKey(ret.key!),
-                        },
-                    ];
+                    );
                 } else if (
                     attribute.clinicalAttributeId ===
                     SpecialAttribute.MutationSpectrum
                 ) {
                     ret.datatype = 'counts';
                     (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
-                    (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
-                    // if default for attribute doesn't already exist
-                    if (
-                        !oncoprint.props.store.defaultClinicalTracksColors[
-                            attribute.displayName
-                        ]
-                    ) {
-                        oncoprint.props.store.setDefaultClinicalTrackColors(
-                            attribute.displayName,
-                            MUTATION_SPECTRUM_CATEGORIES,
-                            undefined,
-                            MUTATION_SPECTRUM_FILLS
-                        );
-                    }
-                    // add options to open up color config modal
-                    ret.custom_options = [
-                        {
-                            label: 'Color',
-                            onClick: () =>
-                                oncoprint.setSelectedClinicalTrackKey(ret.key!),
-                        },
-                    ];
+                    (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS.slice();
+                    _.forEach((ret as any).countsCategoryLabels, (label, i) => {
+                        if (
+                            oncoprint.props.store
+                                .userSelectedClinicalTracksColors[
+                                attribute.displayName
+                            ] &&
+                            oncoprint.props.store
+                                .userSelectedClinicalTracksColors[
+                                attribute.displayName
+                            ][label]
+                        ) {
+                            (ret as any).countsCategoryFills[i] =
+                                oncoprint.props.store.userSelectedClinicalTracksColors[
+                                    attribute.displayName
+                                ][label];
+                        }
+                    });
                 }
 
                 const trackConfig =

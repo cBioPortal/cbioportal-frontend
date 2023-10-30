@@ -61,6 +61,8 @@ import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
 import {
     clinicalAttributeIsLocallyComputed,
+    MUTATION_SPECTRUM_CATEGORIES,
+    MUTATION_SPECTRUM_FILLS,
     SpecialAttribute,
 } from '../../cache/ClinicalDataCache';
 import OqlStatusBanner from '../banners/OqlStatusBanner';
@@ -92,6 +94,7 @@ import { toDirectionString } from './SortUtils';
 import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
 import { Modal } from 'react-bootstrap';
 import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
+import { hexToRGBA } from 'shared/lib/Colors';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -134,66 +137,41 @@ export type AdditionalTrackGroupRecord = {
     molecularProfile: MolecularProfile;
 };
 
-export function getClinicalTrackValues(
-    track: Partial<ClinicalTrackSpec>
-): any[] {
+export function getClinicalTrackValues(track: ClinicalTrackSpec): any[] {
     // if the datatype is "counts", the values are under countsCategoryLabels
     // else if the datatype is "string", get values from the track data
     if (track.datatype === 'counts') {
-        return (track as any).countsCategoryLabels;
+        return track.countsCategoryLabels;
     } else if (track.datatype === 'string') {
-        return _(track.data)
+        const values = _(track.data)
             .map(d => d.attr_val)
             .uniq()
             .without(undefined)
             .value();
+        return values.sort((a: string, b: string) =>
+            a < b ? -1 : a > b ? 1 : 0
+        );
     }
     return [];
 }
 
-export function setClinicalTrackColor(
-    track: ClinicalTrackSpec,
-    value: string,
-    color: RGBAColor | undefined,
-    store: ResultsViewPageStore
-) {
-    if (track.datatype === 'string') {
-        // set new color of value in track's category_to_color
-        // if undefined color, set value's color in track's category_to_color back to its default
-        if (color) {
-            (track as any).category_to_color[value] = color;
-        } else {
-            (track as any).category_to_color[value] =
-                store.defaultClinicalTracksColors[track.label][value];
-        }
-    } else if (track.datatype === 'counts') {
-        // get index of value that corresponds with its color
-        let valueIndex = _.indexOf((track as any).countsCategoryLabels, value);
-        // set new color of value in track's countsCategoryFills using valueIndex
-        // if undefined color, set value's color in track's countsCategoryFills back to its default
-        if (color) {
-            (track as any).countsCategoryFills[valueIndex] = color;
-        } else {
-            (track as any).countsCategoryFills[valueIndex] =
-                store.defaultClinicalTracksColors[track.label][value];
-        }
-    }
-}
-
 export function getClinicalTrackColor(
-    label: string,
-    value: string,
-    store?: ResultsViewPageStore
+    track: ClinicalTrackSpec,
+    value: string
 ): RGBAColor {
-    if (store) {
+    if (track.datatype === 'counts') {
+        // get index of value that corresponds with its color
+        let valueIndex = _.indexOf(track.countsCategoryLabels, value);
+        return track.countsCategoryFills[valueIndex];
+    } else if (track.datatype === 'string' && track.category_to_color) {
         if (
-            !store.userSelectedClinicalTracksColors[label] ||
-            !store.userSelectedClinicalTracksColors[label][value]
+            (track.label === 'Sample Type' ||
+                track.label === 'Sample type id') &&
+            value === 'Mixed'
         ) {
-            return store.defaultClinicalTracksColors[label][value];
-        } else {
-            return store.userSelectedClinicalTracksColors[label][value];
+            return track.category_to_color[value] || [48, 97, 194, 1];
         }
+        return track.category_to_color[value];
     } else {
         return [255, 255, 255, 1] as RGBAColor;
     }
@@ -251,7 +229,7 @@ export default class ResultsViewOncoprint extends React.Component<
         );
     }
 
-    @computed get enableWhiteBackgroundForGlyphs() {
+    @computed get isWhiteBackgroundForGlyphsEnabled() {
         return (
             this.urlWrapper.query.enable_white_background_for_glyphs === 'true'
         );
@@ -326,8 +304,6 @@ export default class ResultsViewOncoprint extends React.Component<
     @observable mouseInsideBounds: boolean = false;
 
     @observable renderingComplete = false;
-
-    @observable changedTrackKey: string = '';
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
@@ -549,8 +525,8 @@ export default class ResultsViewOncoprint extends React.Component<
             get showOqlInLabels() {
                 return self.showOqlInLabels;
             },
-            get enableWhiteBackgroundForGlyphs() {
-                return self.enableWhiteBackgroundForGlyphs;
+            get isWhiteBackgroundForGlyphsEnabled() {
+                return self.isWhiteBackgroundForGlyphsEnabled;
             },
             get showMinimap() {
                 return self.showMinimap;
@@ -572,9 +548,6 @@ export default class ResultsViewOncoprint extends React.Component<
             },
             get distinguishGermlineMutations() {
                 return self.distinguishGermlineMutations;
-            },
-            get changedTrackKey() {
-                return self.changedTrackKey;
             },
             get annotateDriversOncoKb() {
                 return self.props.store.driverAnnotationSettings.oncoKb;
@@ -781,7 +754,7 @@ export default class ResultsViewOncoprint extends React.Component<
             onSelectShowOqlInLabels: (show: boolean) => {
                 this.showOqlInLabels = show;
             },
-            onSelectEnableWhiteBackgroundForGlyphs: (s: boolean) => {
+            onSelectIsWhiteBackgroundForGlyphsEnabled: (s: boolean) => {
                 this.urlWrapper.updateURL({
                     enable_white_background_for_glyphs: s.toString(),
                 });
@@ -832,9 +805,6 @@ export default class ResultsViewOncoprint extends React.Component<
             }),
             onSelectDistinguishGermlineMutations: (s: boolean) => {
                 this.distinguishGermlineMutations = s;
-            },
-            onSetChangedTrackKey: (s: string) => {
-                this.changedTrackKey = s;
             },
             onSelectAnnotateOncoKb: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.oncoKb = s;
@@ -1884,40 +1854,66 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @action.bound
-    public handleClinicalTrackColorChange(
+    public handleSelectedClinicalTrackColorChange(
         value: string,
         color: RGBAColor | undefined
     ) {
-        setClinicalTrackColor(
-            this.selectedClinicalTrack,
-            value,
-            color,
-            this.props.store
-        );
-        this.props.store.setUserSelectedClinicalTrackColor(
-            this.selectedClinicalTrack.label,
-            value,
-            color
-        );
+        if (this.selectedClinicalTrack) {
+            this.props.store.setUserSelectedClinicalTrackColor(
+                this.selectedClinicalTrack.label,
+                value,
+                color
+            );
+        }
     }
 
-    @observable selectedClinicalTrackKey: string | null = null;
+    @observable trackKeySelectedForEdit: string | null = null;
 
     @action.bound
-    setSelectedClinicalTrackKey(key: string | null) {
-        this.selectedClinicalTrackKey = key;
+    setTrackKeySelectedForEdit(key: string | null) {
+        this.trackKeySelectedForEdit = key;
     }
 
     @computed get selectedClinicalTrack() {
-        let index = _.findIndex(
+        return _.find(
             this.clinicalTracks.result,
-            t => t.key === this.selectedClinicalTrackKey
+            t => t.key === this.trackKeySelectedForEdit
         );
-        return this.clinicalTracks.result[index];
+    }
+
+    @autobind
+    private getDefaultSelectedClinicalTrackColor(value: string) {
+        if (!this.selectedClinicalTrack) {
+            return [255, 255, 255, 1];
+        }
+        if (this.selectedClinicalTrack.datatype === 'counts') {
+            return MUTATION_SPECTRUM_FILLS[
+                _.indexOf(MUTATION_SPECTRUM_CATEGORIES, value)
+            ];
+        } else if (this.selectedClinicalTrack.datatype === 'string') {
+            if (
+                (this.selectedClinicalTrack.label === 'Sample Type' ||
+                    this.selectedClinicalTrack.label === 'Sample type id') &&
+                value === 'Mixed'
+            ) {
+                return [48, 97, 194, 1];
+            } else {
+                return hexToRGBA(
+                    this.props.store.clinicalDataCache.get(
+                        this.props.store.clinicalAttributeIdToClinicalAttribute
+                            .result![this.selectedClinicalTrack!.attributeId]
+                    ).result!.categoryToColor![value]
+                );
+            }
+        }
+        return [255, 255, 255, 1];
     }
 
     @computed get selectedClinicalTrackValues() {
-        return getClinicalTrackValues(this.selectedClinicalTrack);
+        if (this.selectedClinicalTrack) {
+            return getClinicalTrackValues(this.selectedClinicalTrack);
+        }
+        return [];
     }
 
     @observable clinicalTrackColorChanged: boolean = false;
@@ -1967,10 +1963,11 @@ export default class ResultsViewOncoprint extends React.Component<
                 {this.selectedClinicalTrack && (
                     <Modal
                         show={true}
-                        onHide={() => this.setSelectedClinicalTrackKey(null)}
+                        onHide={() => this.setTrackKeySelectedForEdit(null)}
                     >
                         <Modal.Header closeButton>
                             <Modal.Title>
+                                Color Configuration:{' '}
                                 {this.selectedClinicalTrack.label}
                             </Modal.Title>
                         </Modal.Header>
@@ -1980,13 +1977,13 @@ export default class ResultsViewOncoprint extends React.Component<
                                     <ClinicalTrackColorPicker
                                         store={this.props.store}
                                         handleClinicalTrackColorChange={
-                                            this.handleClinicalTrackColorChange
+                                            this
+                                                .handleSelectedClinicalTrackColorChange
                                         }
                                         clinicalTrackValue={value}
                                         color={getClinicalTrackColor(
-                                            this.selectedClinicalTrack.label,
-                                            value as string,
-                                            this.props.store
+                                            this.selectedClinicalTrack!,
+                                            value as string
                                         )}
                                         setClinicalTrackColorChanged={
                                             this.setClinicalTrackColorChanged
@@ -1995,28 +1992,21 @@ export default class ResultsViewOncoprint extends React.Component<
                                 ))}
                                 <button
                                     className="btn btn-default btn-xs"
-                                    style={{
-                                        width: 'fit-content',
-                                        marginBottom: 0,
-                                    }}
                                     disabled={_.every(
                                         this.selectedClinicalTrackValues,
                                         v =>
                                             getClinicalTrackColor(
-                                                this.selectedClinicalTrack
-                                                    .label,
-                                                v as string,
-                                                this.props.store
+                                                this.selectedClinicalTrack!,
+                                                v as string
                                             ) ===
-                                            this.props.store
-                                                .defaultClinicalTracksColors[
-                                                this.selectedClinicalTrack.label
-                                            ][v]
+                                            this.getDefaultSelectedClinicalTrackColor(
+                                                v
+                                            )
                                     )}
                                     onClick={() => {
                                         this.selectedClinicalTrackValues.forEach(
                                             v => {
-                                                this.handleClinicalTrackColorChange(
+                                                this.handleSelectedClinicalTrackColorChange(
                                                     v,
                                                     undefined
                                                 );
@@ -2107,8 +2097,8 @@ export default class ResultsViewOncoprint extends React.Component<
                                 showWhitespaceBetweenColumns={
                                     this.showWhitespaceBetweenColumns
                                 }
-                                enableWhiteBackgroundForGlyphs={
-                                    this.enableWhiteBackgroundForGlyphs
+                                isWhiteBackgroundForGlyphsEnabled={
+                                    this.isWhiteBackgroundForGlyphsEnabled
                                 }
                                 showMinimap={this.showMinimap}
                                 onMinimapClose={this.onMinimapClose}
@@ -2122,8 +2112,11 @@ export default class ResultsViewOncoprint extends React.Component<
                                 initParams={{
                                     max_height: Number.POSITIVE_INFINITY,
                                 }}
-                                selectedClinicalTrackKey={
-                                    this.selectedClinicalTrackKey
+                                trackKeySelectedForEdit={
+                                    this.trackKeySelectedForEdit
+                                }
+                                setTrackKeySelectedForEdit={
+                                    this.setTrackKeySelectedForEdit
                                 }
                                 clinicalTrackColorChanged={
                                     this.clinicalTrackColorChanged
