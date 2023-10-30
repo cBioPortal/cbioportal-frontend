@@ -589,11 +589,9 @@ export default class OncoprintModel {
             return gapIds;
         });
 
-        this.data_groups = new CachedProperty([], function(
+        this.data_groups = new CachedProperty({}, function(
             model: OncoprintModel
         ) {
-            let groups: any[] = [];
-
             // multiple tracks can have gaps
             // the groups will be segemented heirarchically
             const trackIdsWithGaps = model
@@ -602,7 +600,13 @@ export default class OncoprintModel {
 
             const out = _.reduce(
                 model.track_label,
-                (agg: any, label, trackId: number) => {
+                (
+                    agg: OncoprintDataGroupsByTrackId<
+                        TrackProp<ColumnProp<Datum>>
+                    >,
+                    label,
+                    trackId: number
+                ) => {
                     const keyedData = _.keyBy(
                         model.track_data[trackId],
                         m => m.uid
@@ -626,44 +630,13 @@ export default class OncoprintModel {
                         });
                     });
 
-                    agg[label] = groups;
+                    agg[label.trim()] = groups;
                     return agg;
                 },
                 {}
             );
 
             return out;
-            // const data = model.id_order.map(d=>keyedData[d]);
-            //
-            // groups = model.column_indexes_after_a_gap.get().map((val, i, array)=>{
-            //     const start = i === 0 ? 0 : array[i-1];
-            //     return data.slice(start,val);
-            // });
-
-            // we really only need to this for the clinical track with the MOST groups
-            // groups = trackIdsWithGaps.map((id)=>{
-            //     // this is the data for the genomic tracks
-            //     //const keyedData = _.keyBy(model.track_data[4],(m)=>m.uid);
-            //     const data = model.id_order.map(d=>keyedData[d]);
-            //     return model.column_indexes_after_a_gap.get().map((val, i, array)=>{
-            //         const start = i === 0 ? 0 : array[i-1];
-            //         return data.slice(start,val);
-            //     });
-            // });
-            //
-            // groups = trackIdsWithGaps.map(id => {
-            //     // this is the data for the genomic tracks
-            //     //const keyedData = _.keyBy(model.track_data[4],(m)=>m.uid);
-            //     const data = model.id_order.map(d => keyedData[d]);
-            //     return model.column_indexes_after_a_gap
-            //         .get()
-            //         .map((val, i, array) => {
-            //             const start = i === 0 ? 0 : array[i - 1];
-            //             return data.slice(start, val);
-            //         });
-            // });
-            //
-            // return groups;
         });
 
         this.visible_id_order.addBoundProperty(this.ids_after_a_gap);
