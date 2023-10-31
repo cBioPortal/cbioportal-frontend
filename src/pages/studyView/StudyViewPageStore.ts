@@ -8562,41 +8562,34 @@ export class StudyViewPageStore
         default: [],
     });
 
-    public async getPieChartDataDownload(
+    public async getChartSummaryDataDownload(
         chartMeta: ChartMeta,
         dataType?: DownloadDataType
     ): Promise<string> {
         const isCustomChart = this.isUserDefinedCustomDataChart(
             chartMeta.uniqueKey
         );
-        if (dataType && dataType === 'summary') {
-            if (isCustomChart) {
-                return this.getClinicalDataCountSummary(
-                    chartMeta,
-                    this.getCustomDataCount(chartMeta).result!
-                );
-            } else if (this.isGenericAssayChart(chartMeta.uniqueKey)) {
-                return this.getClinicalDataCountSummary(
-                    chartMeta,
-                    this.getGenericAssayChartDataCount(chartMeta).result!
-                );
-            } else if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
-                return this.getClinicalDataCountSummary(
-                    chartMeta,
-                    this.getGenomicChartDataCount(chartMeta).result!
-                );
-            } else {
-                return this.getClinicalDataCountSummary(
-                    chartMeta,
-                    this.getClinicalDataCount(chartMeta).result!
-                );
-            }
+
+        if (isCustomChart) {
+            return this.getClinicalDataCountSummary(
+                chartMeta,
+                this.getCustomDataCount(chartMeta).result!
+            );
+        } else if (this.isGenericAssayChart(chartMeta.uniqueKey)) {
+            return this.getClinicalDataCountSummary(
+                chartMeta,
+                this.getGenericAssayChartDataCount(chartMeta).result!
+            );
+        } else if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
+            return this.getClinicalDataCountSummary(
+                chartMeta,
+                this.getGenomicChartDataCount(chartMeta).result!
+            );
         } else {
-            if (isCustomChart) {
-                return this.getCustomChartDownloadData(chartMeta);
-            } else {
-                return this.getChartDownloadableData(chartMeta);
-            }
+            return this.getClinicalDataCountSummary(
+                chartMeta,
+                this.getClinicalDataCount(chartMeta).result!
+            );
         }
     }
 
@@ -8623,9 +8616,15 @@ export class StudyViewPageStore
         return data.join('\n');
     }
 
-    public async getChartDownloadableData(
-        chartMeta: ChartMeta
-    ): Promise<string> {
+    // this returns all/full data as opposed to summary
+    // "summary" means the frequency of various values
+    // "full" means the underlying data rows which are then aggregated into summary
+    public async getChartAllDataDownload(chartMeta: ChartMeta) {
+        // handle custom chart
+        if (this.isUserDefinedCustomDataChart(chartMeta.uniqueKey)) {
+            return this.getCustomChartDownloadData(chartMeta);
+        }
+
         let clinicalDataList: ClinicalData[] = [];
         if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
             clinicalDataList = await getGenomicDataAsClinicalData(
@@ -8694,6 +8693,19 @@ export class StudyViewPageStore
         );
 
         return data.join('\n');
+    }
+
+    public async getChartDownloadableData(
+        chartMeta: ChartMeta,
+        dataType?: DownloadDataType
+    ): Promise<string> {
+        switch (dataType) {
+            case 'summary':
+                return this.getChartSummaryDataDownload(chartMeta, dataType);
+                break;
+            default:
+                return this.getChartAllDataDownload(chartMeta);
+        }
     }
 
     @computed get molecularProfileMapByType(): _.Dictionary<
