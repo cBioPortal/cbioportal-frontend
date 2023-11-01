@@ -155,7 +155,7 @@ function formatGeneticTrackSublabel(
     }
 }
 
-function formatGeneticTrackLabel(
+export function formatGeneticTrackLabel(
     oqlFilter: UnflattenedOQLLineFilterOutput<object>
 ): string {
     return isMergedTrackFilter(oqlFilter)

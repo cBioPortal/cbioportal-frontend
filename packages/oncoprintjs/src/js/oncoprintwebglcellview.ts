@@ -2074,12 +2074,6 @@ export default class OncoprintWebGLCellView {
 
                 if (gaps) {
                     gaps.forEach((gap: any, i: number) => {
-                        // this.drawGapLabel(
-                        //     gap.percent,
-                        //     gapOffsets[i] - model.getGapSize(),
-                        //     model.getZoomedTrackTops()[track_id] + cell_height
-                        // );
-
                         const textElt = makeSvgElement('text', {
                             x: gapOffsets[i] - model.getGapSize() + 2,
                             y: offset_y + cell_height - 3,
@@ -2090,7 +2084,7 @@ export default class OncoprintWebGLCellView {
                             'alignment-baseline': 'top',
                         });
 
-                        textElt.textContent = gap.percent;
+                        textElt.textContent = gap.labelFormatter();
                         root.appendChild(textElt);
                     });
                 }

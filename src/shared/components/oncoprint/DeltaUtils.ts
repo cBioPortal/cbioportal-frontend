@@ -958,7 +958,6 @@ function transitionHeatmapTrackOrder(
 
             if (!_.isEqual(nextOrder, prevOrder)) {
                 const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
-                // debugger;
                 oncoprint.setTrackGroupOrder(
                     parseInt(trackGroupIndex, 10),
                     nextOrder.map(key => trackSpecKeyToTrackId[key])
