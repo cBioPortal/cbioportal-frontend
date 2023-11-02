@@ -217,7 +217,11 @@ import {
 } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+    MutationOptionConstants,
+} from 'shared/constants';
 import {
     createSurvivalAttributeIdsDict,
     generateStudyViewSurvivalPlotTitle,
@@ -4838,22 +4842,46 @@ export class StudyViewPageStore
                     );
                     //only invoke if there are filtered samples
                     if (chartInfo && this.hasFilteredSamples) {
-                        const result = await internalClient.fetchGenomicDataCountsUsingPOST(
-                            {
-                                genomicDataCountFilter: {
-                                    genomicDataFilters: [
-                                        {
-                                            hugoGeneSymbol:
-                                                chartInfo.hugoGeneSymbol,
-                                            profileType: chartInfo.profileType,
-                                        },
-                                    ] as any,
-                                    studyViewFilter: this.filters,
-                                },
-                            }
-                        );
+                        let result = [];
+                        let getDisplayedValue;
+                        let params = {
+                            genomicDataCountFilter: {
+                                genomicDataFilters: [
+                                    {
+                                        hugoGeneSymbol:
+                                            chartInfo.hugoGeneSymbol,
+                                        profileType: chartInfo.profileType,
+                                    },
+                                ] as any,
+                                studyViewFilter: this.filters,
+                            },
+                        } as any;
 
-                        let data = result.find(
+                        if (
+                            chartInfo.profileType ===
+                            MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
+                        ) {
+                            params = {
+                                ...params,
+                                $queryParameters: {
+                                    projection:
+                                        chartInfo.mutationOptionType ===
+                                        MutationOptionConstants.MUTATED
+                                            ? 'SUMMARY'
+                                            : 'DETAILED',
+                                },
+                            };
+                            result = await internalClient.fetchMutationDataCountsUsingPOST(
+                                params
+                            );
+                        } else {
+                            result = await internalClient.fetchGenomicDataCountsUsingPOST(
+                                params
+                            );
+                            getDisplayedValue = getCNAByAlteration;
+                        }
+
+                        const data = result.find(
                             d =>
                                 d.hugoGeneSymbol === chartInfo.hugoGeneSymbol &&
                                 d.profileType === chartInfo.profileType
@@ -4874,11 +4902,7 @@ export class StudyViewPageStore
                         return this.addColorToCategories(
                             counts,
                             profileType,
-                            getCNAByAlteration,
-                            value =>
-                                getCNAColorByAlteration(
-                                    getCNAByAlteration(value)
-                                )
+                            getDisplayedValue
                         );
                     }
                     return res;
@@ -6166,6 +6190,9 @@ export class StudyViewPageStore
                     patientAttribute: false,
                     renderWhenDataChange: false,
                     priority: 0,
+                    ...(newChart.mutationOptionType
+                        ? { mutationOptionType: newChart.mutationOptionType }
+                        : {}),
                 };
 
                 this._geneSpecificCharts.set(uniqueKey, chartMeta);
@@ -6331,6 +6358,8 @@ export class StudyViewPageStore
             _.fromPairs(this._genericAssayCharts.toJSON()),
             _.fromPairs(this._XvsYCharts.toJSON())
         );
+
+        console.log(_chartMetaSet);
 
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
@@ -9360,8 +9389,10 @@ export class StudyViewPageStore
                     if (!acc.has(profileType)) {
                         acc.set(
                             profileType,
-                            DataTypeConstants.DISCRETE ===
-                                molecularProfile.datatype
+                            [
+                                DataTypeConstants.DISCRETE,
+                                DataTypeConstants.MAF,
+                            ].includes(molecularProfile.datatype)
                                 ? DataType.STRING
                                 : DataType.NUMBER
                         );

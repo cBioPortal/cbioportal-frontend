@@ -21,6 +21,7 @@ import {
     AlterationTypeConstants,
     MutationOptionConstants,
 } from 'shared/constants';
+import autobind from 'autobind-decorator';
 
 export interface IGeneLevelSelectionProps {
     molecularProfileOptionsPromise: MobxPromise<MolecularProfileOption[]>;
@@ -44,7 +45,6 @@ export default class GeneLevelSelection extends React.Component<
         profileName: string;
         description: string;
         dataType: string;
-        mutationOptionType: string;
     };
 
     @observable private _selectedSubProfileOption?: {
@@ -70,16 +70,14 @@ export default class GeneLevelSelection extends React.Component<
     private onAddChart() {
         if (this.selectedOption !== undefined) {
             const charts = this.validGenes.map(gene => {
+                console.log(this.getChartName(gene.hugoGeneSymbol));
                 return {
-                    name:
-                        gene.hugoGeneSymbol +
-                        ': ' +
-                        this.selectedOption!.profileName,
+                    name: this.getChartName(gene.hugoGeneSymbol),
                     description: this.selectedOption!.description,
                     profileType: this.selectedOption!.value,
                     hugoGeneSymbol: gene.hugoGeneSymbol,
                     dataType: this.selectedOption!.dataType,
-                    mutationOptionType: this.selectedOption!.mutationOptionType,
+                    mutationOptionType: this.selectedSubOption!.value,
                 };
             });
             this.props.onSubmit(charts);
@@ -97,13 +95,17 @@ export default class GeneLevelSelection extends React.Component<
     private handleSubSelect(option: any) {
         if (option && option.value) {
             this._selectedSubProfileOption = option;
-            if (
-                this._selectedProfileOption !== undefined &&
-                Object.keys(MutationOptionConstants).includes(option.value)
-            ) {
-                this._selectedProfileOption.mutationOptionType = option.value;
-            }
         }
+    }
+
+    @autobind
+    private getChartName(hugoGeneSymbol: string): string {
+        return (
+            hugoGeneSymbol +
+            ': ' +
+            this.selectedOption!.profileName +
+            (this.selectedSubOption ? ': ' + this.selectedSubOption!.value : '')
+        );
     }
 
     @computed
@@ -122,6 +124,16 @@ export default class GeneLevelSelection extends React.Component<
         if (this._selectedSubProfileOption !== undefined) {
             return this._selectedSubProfileOption;
         }
+
+        if (
+            this.selectedOption !== undefined &&
+            this.subOptions
+                .map(option => option.label)
+                .includes(this.selectedOption.alterationType)
+        ) {
+            return this.subOptions[0].options[0];
+        }
+
         return undefined;
     }
 

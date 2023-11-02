@@ -151,6 +151,7 @@ export enum ChartMetaDataTypeEnum {
 export type ChartMeta = {
     clinicalAttribute?: ClinicalAttribute;
     genericAssayType?: string;
+    mutationOptionType?: string;
     uniqueKey: string;
     displayName: string;
     description: string;
