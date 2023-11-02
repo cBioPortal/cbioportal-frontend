@@ -2871,12 +2871,23 @@ export function getGroupedClinicalDataByBins(
             // Check if the ClinicalData value is number
             if (!isNaN(datum.value as any)) {
                 //find if it belongs to any of numeric bins.
-                dataBin = _.find(
-                    numericDataBins,
-                    dataBin =>
-                        parseFloat(datum.value) > dataBin.start &&
-                        parseFloat(datum.value) <= dataBin.end
-                );
+                dataBin = _.find(numericDataBins, dataBin => {
+                    if (dataBin.start === dataBin.end) {
+                        // this is a special case where the buckets are single integers, end
+                        // is the same value as the start
+                        // ideally this would never be the case--it should be handled in bin creation
+                        // but this is simplest way to resolve problem
+                        return (
+                            parseFloat(datum.value) === dataBin.start ||
+                            parseFloat(datum.value) === dataBin.end
+                        );
+                    } else {
+                        return (
+                            parseFloat(datum.value) > dataBin.start &&
+                            parseFloat(datum.value) <= dataBin.end
+                        );
+                    }
+                });
             }
 
             //If ClinicalData value is not a number of does not belong to any number bins
