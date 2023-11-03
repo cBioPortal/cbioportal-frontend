@@ -1122,25 +1122,36 @@ export function findMrnaRankMolecularProfileId(
 export function generateUniqueSampleKeyToTumorTypeMap(
     clinicalDataForSamples: MobxPromise<ClinicalData[]>,
     studies?: MobxPromise<CancerStudy[]>,
-    samples?: MobxPromise<Sample[]>
+    samples?: MobxPromise<Sample[]>,
+    useCancerTypeAttribute?: boolean
 ): { [sampleId: string]: string } {
     const map: { [sampleId: string]: string } = {};
 
     if (clinicalDataForSamples.result) {
-        // first priority is CANCER_TYPE_DETAILED in clinical data
-        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-            if (clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
-                map[clinicalData.uniqueSampleKey] = clinicalData.value;
-            }
-        });
-
-        // // second priority is CANCER_TYPE in clinical data
-        // _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-        //     // update map with CANCER_TYPE value only if it is not already updated
-        //     if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
-        //         map[clinicalData.uniqueSampleKey] = clinicalData.value;
-        //     }
-        // });
+        // if useCancerTypeAttribute is true, use CANCER_TYPE in clinical data
+        // else, use CANCER_TYPE_DETAILED in clinical data
+        if (useCancerTypeAttribute) {
+            _.each(
+                clinicalDataForSamples.result,
+                (clinicalData: ClinicalData) => {
+                    if (clinicalData.clinicalAttributeId === 'CANCER_TYPE') {
+                        map[clinicalData.uniqueSampleKey] = clinicalData.value;
+                    }
+                }
+            );
+        } else {
+            _.each(
+                clinicalDataForSamples.result,
+                (clinicalData: ClinicalData) => {
+                    if (
+                        clinicalData.clinicalAttributeId ===
+                        'CANCER_TYPE_DETAILED'
+                    ) {
+                        map[clinicalData.uniqueSampleKey] = clinicalData.value;
+                    }
+                }
+            );
+        }
     }
 
     // last resort: fall back to the study cancer type

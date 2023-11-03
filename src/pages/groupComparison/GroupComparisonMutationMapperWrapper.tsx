@@ -54,6 +54,8 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                 filterMutationsBySelectedTranscript: true,
                 uniqueSampleKeyToTumorType: this.props.store
                     .uniqueSampleKeyToTumorType.result,
+                uniqueSampleKeyToCancerType: this.props.store
+                    .uniqueSampleKeyToCancerType.result,
             }
         );
         return store;
@@ -226,6 +228,10 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                             }
                             uniqueSampleKeyToTumorType={
                                 this.props.store.uniqueSampleKeyToTumorType
+                                    .result!
+                            }
+                            uniqueSampleKeyToCancerType={
+                                this.props.store.uniqueSampleKeyToCancerType
                                     .result!
                             }
                         />
