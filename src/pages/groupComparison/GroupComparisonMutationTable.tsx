@@ -57,15 +57,7 @@ export interface IGroupComparisonMutationTableProps
     };
 }
 
-export function hasMultipleCancerTypes(
-    data: Mutation[],
-    resolveTumorType: (mutation: Mutation) => string
-): boolean {
-    return !_.every(
-        data,
-        m => resolveTumorType(m) === resolveTumorType(data[0])
-    );
-}
+export type TumorTypeAttribute = 'CANCER_TYPE' | 'CANCER_TYPE_DETAILED';
 
 export default class GroupComparisonMutationTable extends MutationTable<
     IGroupComparisonMutationTableProps
@@ -90,6 +82,54 @@ export default class GroupComparisonMutationTable extends MutationTable<
 
     constructor(props: IGroupComparisonMutationTableProps) {
         super(props);
+    }
+
+    // determine what tumor type attribute is the same for data
+    protected getSameTumorTypeAttribute(
+        data: Mutation[]
+    ): TumorTypeAttribute | undefined {
+        // first, return CANCER_TYPE_DETAILED if the same in all mutations
+        if (
+            _.every(
+                data,
+                m => this.resolveTumorType(m) === this.resolveTumorType(data[0])
+            )
+        ) {
+            return 'CANCER_TYPE_DETAILED';
+        }
+        // if not, return CANCER_TYPE if the same in all mutations
+        if (
+            _.every(
+                data,
+                m =>
+                    this.resolveCancerType(m) ===
+                    this.resolveCancerType(data[0])
+            )
+        ) {
+            return 'CANCER_TYPE';
+        }
+    }
+
+    // determine what function to use to resolve tumor type based on what tumor type attribute is the same for data
+    protected getResolveTumorType(data: Mutation[]) {
+        if (this.getSameTumorTypeAttribute(data) === 'CANCER_TYPE_DETAILED') {
+            return this.resolveTumorType;
+        }
+        if (this.getSameTumorTypeAttribute(data) === 'CANCER_TYPE') {
+            return this.resolveCancerType;
+        }
+        return () => 'Cancer of Unknown Primary';
+    }
+
+    // determine what oncokb data to use
+    protected getOncoKbData(data: Mutation[]) {
+        if (this.getSameTumorTypeAttribute(data) === 'CANCER_TYPE_DETAILED') {
+            return this.props.oncoKbData;
+        }
+        if (this.getSameTumorTypeAttribute(data) === 'CANCER_TYPE') {
+            return this.props.oncoKbDataForCancerType;
+        }
+        return this.props.oncoKbDataForUnknownPrimary;
     }
 
     protected generateColumns() {
@@ -262,10 +302,6 @@ export default class GroupComparisonMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.ANNOTATION].render = (
             d: Mutation[]
         ) => {
-            const multipleCancerTypes = hasMultipleCancerTypes(
-                d,
-                this.resolveTumorType
-            );
             return (
                 <span id="mutation-annotation">
                     {AnnotationColumnFormatter.renderFunction(
@@ -273,9 +309,7 @@ export default class GroupComparisonMutationTable extends MutationTable<
                         {
                             hotspotData: this.props.hotspotData,
                             myCancerGenomeData: this.props.myCancerGenomeData,
-                            oncoKbData: multipleCancerTypes
-                                ? this.props.oncoKbDataForUnknownPrimary
-                                : this.props.oncoKbData,
+                            oncoKbData: this.getOncoKbData(d),
                             oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                             usingPublicOncoKbInstance: this.props
                                 .usingPublicOncoKbInstance,
@@ -297,11 +331,9 @@ export default class GroupComparisonMutationTable extends MutationTable<
                             userDisplayName: this.props.userDisplayName,
                             indexedVariantAnnotations: this.props
                                 .indexedVariantAnnotations,
-                            resolveTumorType: multipleCancerTypes
-                                ? () => 'Cancer of Unknown Primary'
-                                : this.resolveTumorType,
+                            resolveTumorType: this.getResolveTumorType(d),
                         },
-                        multipleCancerTypes
+                        !this.getSameTumorTypeAttribute(d)
                     )}
                 </span>
             );
