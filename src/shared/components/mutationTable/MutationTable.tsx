@@ -86,6 +86,7 @@ import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/m
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
     uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string };
+    uniqueSampleKeyToCancerType?: { [uniqueSampleKey: string]: string };
     molecularProfileIdToMolecularProfile?: {
         [molecularProfileId: string]: MolecularProfile;
     };
@@ -114,6 +115,7 @@ export interface IMutationTableProps {
     >;
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    oncoKbDataForCancerType?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataForUnknownPrimary?: RemoteData<IOncoKbData | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
@@ -333,6 +335,28 @@ export default class MutationTable<
         // first, try to get it from uniqueSampleKeyToTumorType map
         if (this.props.uniqueSampleKeyToTumorType) {
             return this.props.uniqueSampleKeyToTumorType[
+                mutation.uniqueSampleKey
+            ];
+        }
+
+        // second, try the study cancer type
+        if (this.props.studyIdToStudy) {
+            const studyMetaData = this.props.studyIdToStudy[mutation.studyId];
+
+            if (studyMetaData.cancerTypeId !== 'mixed') {
+                return studyMetaData.cancerType.name;
+            }
+        }
+
+        // return Unknown, this should not happen...
+        return 'Unknown';
+    }
+
+    @autobind
+    protected resolveCancerType(mutation: Mutation) {
+        // first, try to get it from uniqueSampleKeyToCancerType map
+        if (this.props.uniqueSampleKeyToCancerType) {
+            return this.props.uniqueSampleKeyToCancerType[
                 mutation.uniqueSampleKey
             ];
         }

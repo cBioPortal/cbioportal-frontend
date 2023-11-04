@@ -344,6 +344,26 @@ export default abstract class AnalysisStore {
         },
     });
 
+    readonly uniqueSampleKeyToCancerType = remoteData<{
+        [uniqueSampleKey: string]: string;
+    }>({
+        await: () => [
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.samplesWithoutCancerTypeClinicalData,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                generateUniqueSampleKeyToTumorTypeMap(
+                    this.clinicalDataForSamples,
+                    this.studiesForSamplesWithoutCancerTypeClinicalData,
+                    this.samplesWithoutCancerTypeClinicalData,
+                    true
+                )
+            );
+        },
+    });
+
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>(
         {
             await: () => [this.studies, this.samples],
