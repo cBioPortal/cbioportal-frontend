@@ -94,7 +94,7 @@ import { toDirectionString } from './SortUtils';
 import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
 import { Modal } from 'react-bootstrap';
 import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
-import { hexToRGBA } from 'shared/lib/Colors';
+import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1995,12 +1995,16 @@ export default class ResultsViewOncoprint extends React.Component<
                                     disabled={_.every(
                                         this.selectedClinicalTrackValues,
                                         v =>
-                                            getClinicalTrackColor(
-                                                this.selectedClinicalTrack!,
-                                                v as string
+                                            rgbaToHex(
+                                                getClinicalTrackColor(
+                                                    this.selectedClinicalTrack!,
+                                                    v as string
+                                                )
                                             ) ===
-                                            this.getDefaultSelectedClinicalTrackColor(
-                                                v
+                                            rgbaToHex(
+                                                this.getDefaultSelectedClinicalTrackColor(
+                                                    v
+                                                ) as RGBAColor
                                             )
                                     )}
                                     onClick={() => {

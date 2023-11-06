@@ -526,6 +526,10 @@ export class ResultsViewPageStore extends AnalysisStore
     get cancerStudyIds() {
         return this.urlWrapper.query.cancer_study_list.split(',');
     }
+    @computed
+    get cancerStudyListSorted() {
+        return this.cancerStudyIds.sort().join(',');
+    }
 
     @computed
     get rppaScoreThreshold() {
@@ -574,11 +578,15 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable queryFormVisible: boolean = false;
 
-    @observable _userSelectedClinicalTracksColors: {
-        [label: string]: {
-            [value: string]: RGBAColor;
+    @observable _userSelectedStudiesToClinicalTracksColors: {
+        [studies: string]: {
+            [label: string]: {
+                [value: string]: RGBAColor;
+            };
         };
-    } = {};
+    } = JSON.parse(
+        localStorage.getItem('clinicalTracksColorConfig') || '{"global":{}}'
+    );
 
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
@@ -603,20 +611,36 @@ export class ResultsViewPageStore extends AnalysisStore
         // else, set the color in userSelectedClinicalAttributeColors
         if (
             !color &&
-            this._userSelectedClinicalTracksColors[label] &&
-            this._userSelectedClinicalTracksColors[label][value]
+            this._userSelectedStudiesToClinicalTracksColors['global'][label] &&
+            this._userSelectedStudiesToClinicalTracksColors['global'][label][
+                value
+            ]
         ) {
-            delete this._userSelectedClinicalTracksColors[label][value];
+            delete this._userSelectedStudiesToClinicalTracksColors['global'][
+                label
+            ][value];
         } else if (color) {
-            if (!this._userSelectedClinicalTracksColors[label]) {
-                this._userSelectedClinicalTracksColors[label] = {};
+            if (
+                !this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ]
+            ) {
+                this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ] = {};
             }
-            this._userSelectedClinicalTracksColors[label][value] = color;
+            this._userSelectedStudiesToClinicalTracksColors['global'][label][
+                value
+            ] = color;
         }
+        localStorage.setItem(
+            'clinicalTracksColorConfig',
+            JSON.stringify(this._userSelectedStudiesToClinicalTracksColors)
+        );
     }
 
-    @computed get userSelectedClinicalTracksColors() {
-        return this._userSelectedClinicalTracksColors;
+    @computed get userSelectedStudiesToClinicalTracksColors() {
+        return this._userSelectedStudiesToClinicalTracksColors;
     }
 
     @action.bound

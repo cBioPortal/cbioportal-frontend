@@ -1050,6 +1050,11 @@ export function makeClinicalTracksMobxPromise(
                         Yes: true,
                     };
                 }
+                const userSelectedClinicalTracksColors =
+                    oncoprint.props.store
+                        .userSelectedStudiesToClinicalTracksColors['global'][
+                        attribute.displayName
+                    ];
                 if (attribute.datatype === 'NUMBER') {
                     ret.datatype = 'number';
                     if (
@@ -1089,9 +1094,7 @@ export function makeClinicalTracksMobxPromise(
                     (ret as any).category_to_color = Object.assign(
                         {},
                         _.mapValues(dataAndColors.categoryToColor, hexToRGBA),
-                        oncoprint.props.store.userSelectedClinicalTracksColors[
-                            attribute.displayName
-                        ]
+                        userSelectedClinicalTracksColors
                     );
                 } else if (
                     attribute.clinicalAttributeId ===
@@ -1102,19 +1105,11 @@ export function makeClinicalTracksMobxPromise(
                     (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS.slice();
                     _.forEach((ret as any).countsCategoryLabels, (label, i) => {
                         if (
-                            oncoprint.props.store
-                                .userSelectedClinicalTracksColors[
-                                attribute.displayName
-                            ] &&
-                            oncoprint.props.store
-                                .userSelectedClinicalTracksColors[
-                                attribute.displayName
-                            ][label]
+                            userSelectedClinicalTracksColors &&
+                            userSelectedClinicalTracksColors[label]
                         ) {
                             (ret as any).countsCategoryFills[i] =
-                                oncoprint.props.store.userSelectedClinicalTracksColors[
-                                    attribute.displayName
-                                ][label];
+                                userSelectedClinicalTracksColors[label];
                         }
                     });
                 }
