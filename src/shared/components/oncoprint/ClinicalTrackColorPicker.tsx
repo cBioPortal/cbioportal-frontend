@@ -97,36 +97,27 @@ export default class ClinicalTrackColorPicker extends React.Component<
 
     render() {
         return (
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                }}
+            <OverlayTrigger
+                containerPadding={40}
+                trigger="click"
+                placement="bottom"
+                overlay={this.colorChooserElement}
+                rootClose={true}
             >
-                {this.props.clinicalTrackValue}
-                <OverlayTrigger
-                    containerPadding={40}
-                    trigger="click"
-                    placement="bottom"
-                    overlay={this.colorChooserElement}
-                    rootClose={true}
+                <DefaultTooltip
+                    overlay={
+                        'Optional: Select color for clinical track value to be used in oncoprint. If no color is selected, the default color will be applied.'
+                    }
                 >
-                    <DefaultTooltip
-                        overlay={
-                            'Optional: Select color for clinical track value to be used in oncoprint. If no color is selected, the default color will be applied.'
-                        }
-                    >
-                        <span>
-                            <ColorPickerIcon
-                                color={
-                                    rgbaToHex(this.props.color) ||
-                                    COLOR_UNDEFINED
-                                }
-                            />
-                        </span>
-                    </DefaultTooltip>
-                </OverlayTrigger>
-            </div>
+                    <span>
+                        <ColorPickerIcon
+                            color={
+                                rgbaToHex(this.props.color) || COLOR_UNDEFINED
+                            }
+                        />
+                    </span>
+                </DefaultTooltip>
+            </OverlayTrigger>
         );
     }
 }

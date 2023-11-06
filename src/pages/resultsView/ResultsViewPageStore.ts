@@ -494,6 +494,15 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
             )
         );
+
+        const clinicalTracksColorConfig = localStorage.getItem(
+            'clinicalTracksColorConfig'
+        );
+        if (clinicalTracksColorConfig !== null) {
+            this._userSelectedStudiesToClinicalTracksColors = JSON.parse(
+                clinicalTracksColorConfig
+            );
+        }
     }
 
     destroy() {
@@ -584,9 +593,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 [value: string]: RGBAColor;
             };
         };
-    } = JSON.parse(
-        localStorage.getItem('clinicalTracksColorConfig') || '{"global":{}}'
-    );
+    } = { global: {} };
 
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (

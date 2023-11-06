@@ -1307,7 +1307,7 @@ function transitionClinicalTrack(
                     ? // add edit color option that opens color config modal to custom options
                       [
                           {
-                              label: 'Edit Color',
+                              label: 'Edit Colors',
                               onClick: () =>
                                   nextProps.setTrackKeySelectedForEdit!(
                                       nextSpec.key
