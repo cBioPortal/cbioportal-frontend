@@ -1972,56 +1972,69 @@ export default class ResultsViewOncoprint extends React.Component<
                             </Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
-                            <div>
+                            <table
+                                className="table"
+                                style={{
+                                    tableLayout: 'fixed',
+                                    textAlign: 'center',
+                                }}
+                            >
                                 {this.selectedClinicalTrackValues.map(value => (
-                                    <ClinicalTrackColorPicker
-                                        store={this.props.store}
-                                        handleClinicalTrackColorChange={
-                                            this
-                                                .handleSelectedClinicalTrackColorChange
-                                        }
-                                        clinicalTrackValue={value}
-                                        color={getClinicalTrackColor(
-                                            this.selectedClinicalTrack!,
-                                            value as string
-                                        )}
-                                        setClinicalTrackColorChanged={
-                                            this.setClinicalTrackColorChanged
-                                        }
-                                    />
-                                ))}
-                                <button
-                                    className="btn btn-default btn-xs"
-                                    disabled={_.every(
-                                        this.selectedClinicalTrackValues,
-                                        v =>
-                                            rgbaToHex(
-                                                getClinicalTrackColor(
+                                    <tr>
+                                        <td>{value}</td>
+                                        <td>
+                                            <ClinicalTrackColorPicker
+                                                store={this.props.store}
+                                                handleClinicalTrackColorChange={
+                                                    this
+                                                        .handleSelectedClinicalTrackColorChange
+                                                }
+                                                clinicalTrackValue={value}
+                                                color={getClinicalTrackColor(
                                                     this.selectedClinicalTrack!,
-                                                    v as string
-                                                )
-                                            ) ===
-                                            rgbaToHex(
-                                                this.getDefaultSelectedClinicalTrackColor(
-                                                    v
-                                                ) as RGBAColor
+                                                    value as string
+                                                )}
+                                                setClinicalTrackColorChanged={
+                                                    this
+                                                        .setClinicalTrackColorChanged
+                                                }
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </table>
+                            <button
+                                className="btn btn-default btn-sm"
+                                style={{ marginTop: 5 }}
+                                disabled={_.every(
+                                    this.selectedClinicalTrackValues,
+                                    v =>
+                                        rgbaToHex(
+                                            getClinicalTrackColor(
+                                                this.selectedClinicalTrack!,
+                                                v as string
                                             )
-                                    )}
-                                    onClick={() => {
-                                        this.selectedClinicalTrackValues.forEach(
-                                            v => {
-                                                this.handleSelectedClinicalTrackColorChange(
-                                                    v,
-                                                    undefined
-                                                );
-                                            }
-                                        );
-                                        this.setClinicalTrackColorChanged(true);
-                                    }}
-                                >
-                                    Reset Colors
-                                </button>
-                            </div>
+                                        ) ===
+                                        rgbaToHex(
+                                            this.getDefaultSelectedClinicalTrackColor(
+                                                v
+                                            ) as RGBAColor
+                                        )
+                                )}
+                                onClick={() => {
+                                    this.selectedClinicalTrackValues.forEach(
+                                        v => {
+                                            this.handleSelectedClinicalTrackColorChange(
+                                                v,
+                                                undefined
+                                            );
+                                        }
+                                    );
+                                    this.setClinicalTrackColorChanged(true);
+                                }}
+                            >
+                                Reset Colors
+                            </button>
                         </Modal.Body>
                     </Modal>
                 )}
