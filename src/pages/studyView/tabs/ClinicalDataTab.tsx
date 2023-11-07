@@ -183,9 +183,11 @@ export class ClinicalDataTab extends React.Component<
                 CLINICAL_DATA_RECORD_LIMIT
             );
 
-            return sampleClinicalData;
+            return Promise.resolve(sampleClinicalData);
         },
     });
+
+    // this problem is that the visible attributes are not yet populated.
 
     readonly columns = remoteData({
         invoke: async () => {
@@ -284,6 +286,11 @@ export class ClinicalDataTab extends React.Component<
     }
 
     public render() {
+        // not that the columns which are showing in the table
+        // are dependent on visible attributes.
+        // for this reason we need to wait for visible attributes to be populated
+        // this simplest way to await this is just no avoid rendering the table when there are
+        // no visibleAttributes
         return (
             <span data-test="clinical-data-tab-content">
                 <WindowWidthBox offset={60}>
@@ -293,18 +300,13 @@ export class ClinicalDataTab extends React.Component<
                                 .isPending ||
                             this.props.store.maxSamplesForClinicalTab
                                 .isPending ||
-                            this.props.store.selectedSamples.isPending
+                            this.props.store.selectedSamples.isPending ||
+                            this.props.store.visibleAttributes.length < 1
                         }
                     >
                         <Then>
                             <LoadingIndicator
-                                isLoading={
-                                    this.props.store.clinicalAttributeProduct
-                                        .isPending ||
-                                    this.props.store.maxSamplesForClinicalTab
-                                        .isPending ||
-                                    this.props.store.selectedSamples.isPending
-                                }
+                                isLoading={true}
                                 size={'big'}
                                 center={true}
                             />
@@ -386,7 +388,8 @@ export class ClinicalDataTab extends React.Component<
                                         }
                                         showLoading={
                                             this.getDataForClinicalDataTab
-                                                .isPending
+                                                .isPending ||
+                                            this.columns.isPending
                                         }
                                         loadingComponent={
                                             <LoadingIndicator
