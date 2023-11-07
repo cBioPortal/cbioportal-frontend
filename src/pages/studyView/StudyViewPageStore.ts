@@ -7529,7 +7529,11 @@ export class StudyViewPageStore
                 return attr;
             });
 
+            // by default we the first 20 charts which have priority greater than 0
+            // priority zero will be hidden by default, but appear in the add chart menu
+            // priorty negative
             let filterAttributes: ClinicalAttribute[] = queriedAttributes
+                .filter(attr => (parseInt(attr.priority) || 0) > 0)
                 .sort(clinicalAttributeComparator)
                 .slice(0, 20);
 
