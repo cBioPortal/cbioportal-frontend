@@ -1059,6 +1059,7 @@ export default class OncoprintControls extends React.Component<
                     <label>
                         <input
                             type="checkbox"
+                            data-test="toggleWhiteBackgroundForGlyphs"
                             value={EVENT_KEY.isWhiteBackgroundForGlyphsEnabled}
                             checked={
                                 this.props.state
