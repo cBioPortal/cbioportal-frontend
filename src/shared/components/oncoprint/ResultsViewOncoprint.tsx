@@ -2005,6 +2005,7 @@ export default class ResultsViewOncoprint extends React.Component<
                             </table>
                             <button
                                 className="btn btn-default btn-sm"
+                                data-test="resetColors"
                                 style={{ marginTop: 5 }}
                                 disabled={_.every(
                                     this.selectedClinicalTrackValues,
