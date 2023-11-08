@@ -92,6 +92,7 @@ import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
 import { toast } from 'react-toastify';
 import { value } from 'numeral';
+import { useCallback, useMemo } from 'react';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -3968,16 +3969,41 @@ export function transformSampleDataToSelectedSampleClinicalData(
     return clinicalDataSamples;
 }
 
+const TOAST_SUPPRESS_KEY = 'SV-update-query';
+
 export function showQueryUpdatedToast(message: string) {
-    toast.success(message, {
-        delay: 0,
-        position: 'top-right',
-        autoClose: 1500,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'light',
-    } as any);
+    if (localStorage.getItem(TOAST_SUPPRESS_KEY) === null) {
+        toast.success(
+            () => (
+                <ToastSuppressor
+                    message={message}
+                    toastKey={TOAST_SUPPRESS_KEY}
+                />
+            ),
+            {
+                delay: 0,
+                position: 'top-right',
+                autoClose: 4000,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: 'light',
+            } as any
+        );
+    }
+}
+
+function ToastSuppressor(props: any) {
+    const suppressToast = useCallback(() => {
+        localStorage.setItem(props.toastKey, 'true');
+    }, []);
+
+    return (
+        <>
+            <p>{props.message}</p>
+            <a onClick={suppressToast}>Don't show this again</a>
+        </>
+    );
 }
