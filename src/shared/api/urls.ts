@@ -265,7 +265,7 @@ export function getEncodedRedirectUrl(targetUrl: string) {
 export function getConfigurationServiceApiUrl() {
     return (
         getLoadConfig().configurationServiceUrl ||
-        buildCBioPortalAPIUrl('config_service.jsp')
+        buildCBioPortalAPIUrl('config_service')
     );
 }
 

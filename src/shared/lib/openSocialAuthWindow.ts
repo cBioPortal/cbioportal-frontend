@@ -6,7 +6,7 @@ import { IServerConfig } from '../../config/IAppConfig';
 
 export function openSocialAuthWindow(appStore: AppStore) {
     var _window = getBrowserWindow().open(
-        buildCBioPortalPageUrl('login.jsp'),
+        buildCBioPortalPageUrl('login'),
         'blank',
         'width=1000, height=800'
     )!;
@@ -17,7 +17,7 @@ export function openSocialAuthWindow(appStore: AppStore) {
             } else if (
                 _window.document.URL.includes(location.origin) &&
                 !_window.document.URL.includes(location.origin + '/auth') &&
-                !_window.document.URL.includes('login.jsp')
+                !_window.document.URL.includes('login')
             ) {
                 _window.close();
 
