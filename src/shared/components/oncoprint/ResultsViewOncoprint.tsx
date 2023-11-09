@@ -95,6 +95,7 @@ import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreCl
 import { Modal } from 'react-bootstrap';
 import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
+import classnames from 'classnames';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1972,56 +1973,70 @@ export default class ResultsViewOncoprint extends React.Component<
                             </Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
-                            <table
-                                className="table"
-                                style={{
-                                    tableLayout: 'fixed',
-                                    textAlign: 'center',
-                                }}
-                            >
-                                {this.selectedClinicalTrackValues.map(value => (
+                            <table className="table table-striped">
+                                <thead>
                                     <tr>
-                                        <td>{value}</td>
-                                        <td>
-                                            <ClinicalTrackColorPicker
-                                                store={this.props.store}
-                                                handleClinicalTrackColorChange={
-                                                    this
-                                                        .handleSelectedClinicalTrackColorChange
-                                                }
-                                                clinicalTrackValue={value}
-                                                color={getClinicalTrackColor(
-                                                    this.selectedClinicalTrack!,
-                                                    value as string
-                                                )}
-                                                setClinicalTrackColorChanged={
-                                                    this
-                                                        .setClinicalTrackColorChanged
-                                                }
-                                            />
-                                        </td>
+                                        <th>Value</th>
+                                        <th>Color</th>
                                     </tr>
-                                ))}
+                                </thead>
+                                <tbody>
+                                    {this.selectedClinicalTrackValues.map(
+                                        value => (
+                                            <tr>
+                                                <td>{value}</td>
+                                                <td>
+                                                    <ClinicalTrackColorPicker
+                                                        store={this.props.store}
+                                                        handleClinicalTrackColorChange={
+                                                            this
+                                                                .handleSelectedClinicalTrackColorChange
+                                                        }
+                                                        clinicalTrackValue={
+                                                            value
+                                                        }
+                                                        color={getClinicalTrackColor(
+                                                            this
+                                                                .selectedClinicalTrack!,
+                                                            value as string
+                                                        )}
+                                                        setClinicalTrackColorChanged={
+                                                            this
+                                                                .setClinicalTrackColorChanged
+                                                        }
+                                                    />
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
+                                </tbody>
                             </table>
                             <button
-                                className="btn btn-default btn-sm"
+                                className={classnames(
+                                    'btn',
+                                    'btn-default',
+                                    'btn-sm',
+                                    {
+                                        hidden: _.every(
+                                            this.selectedClinicalTrackValues,
+                                            v =>
+                                                rgbaToHex(
+                                                    getClinicalTrackColor(
+                                                        this
+                                                            .selectedClinicalTrack!,
+                                                        v as string
+                                                    )
+                                                ) ===
+                                                rgbaToHex(
+                                                    this.getDefaultSelectedClinicalTrackColor(
+                                                        v
+                                                    ) as RGBAColor
+                                                )
+                                        ),
+                                    }
+                                )}
                                 data-test="resetColors"
                                 style={{ marginTop: 5 }}
-                                disabled={_.every(
-                                    this.selectedClinicalTrackValues,
-                                    v =>
-                                        rgbaToHex(
-                                            getClinicalTrackColor(
-                                                this.selectedClinicalTrack!,
-                                                v as string
-                                            )
-                                        ) ===
-                                        rgbaToHex(
-                                            this.getDefaultSelectedClinicalTrackColor(
-                                                v
-                                            ) as RGBAColor
-                                        )
-                                )}
                                 onClick={() => {
                                     this.selectedClinicalTrackValues.forEach(
                                         v => {
