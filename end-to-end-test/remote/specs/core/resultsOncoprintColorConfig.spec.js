@@ -6,6 +6,8 @@ var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 var getNthOncoprintTrackOptionsElements = require('../../../shared/specUtils')
     .getNthOncoprintTrackOptionsElements;
+var getTextInOncoprintLegend = require('../../../shared/specUtils')
+    .getTextInOncoprintLegend;
 var {
     checkOncoprintElement,
     getElementByTestHandle,
@@ -27,10 +29,19 @@ describe('oncoprint colors', () => {
             // add "Mutation spectrum" track
             const $tracksDropdown = $('#addTracksDropdown');
             $tracksDropdown.click();
+            getElementByTestHandle(
+                'add-chart-option-mutation-spectrum'
+            ).waitForDisplayed();
             getElementByTestHandle('add-chart-option-mutation-spectrum')
                 .$('label')
                 .click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+            // check that mutation spectrum is added to the oncoprint
+            let legendText = getTextInOncoprintLegend();
+            assert(legendText.indexOf('Mutation spectrum') > -1);
+
+            $tracksDropdown.waitForDisplayed();
             $tracksDropdown.click();
 
             var trackOptionsElts = getNthOncoprintTrackOptionsElements(5);
@@ -39,28 +50,31 @@ describe('oncoprint colors', () => {
             $(trackOptionsElts.dropdown_selector).waitForDisplayed({
                 timeout: 1000,
             });
-            // click "Edit Colors"
+            // click "Edit Colors" to open modal
             $(trackOptionsElts.dropdown_selector + ' li:nth-child(8)').click();
-            $('[data-test="color-picker-icon"]').waitForDisplayed();
+            browser.pause(1000);
 
             // select new colors for track values
-            $('[data-test="color-picker-icon"]').click();
+            getElementByTestHandle('color-picker-icon').click();
+            $('.circle-picker').waitForDisplayed({ timeout: 1000 });
             $('.circle-picker [title="#990099"]').click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
-            $('[data-test="color-picker-icon"]').click();
+            getElementByTestHandle('color-picker-icon').waitForDisplayed();
+            getElementByTestHandle('color-picker-icon').click();
             $('.circle-picker').waitForDisplayed({ reverse: true });
 
             $$('[data-test="color-picker-icon"]')[1].click();
+            $('.circle-picker').waitForDisplayed({ timeout: 1000 });
             $('.circle-picker [title="#109618"]').click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
+            getElementByTestHandle('color-picker-icon').waitForDisplayed();
             $$('[data-test="color-picker-icon"]')[1].click();
             $('.circle-picker').waitForDisplayed({ reverse: true });
 
             $$('[data-test="color-picker-icon"]')[2].click();
+            $('.circle-picker').waitForDisplayed({ timeout: 1000 });
             $('.circle-picker [title="#8b0707"]').click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
-            $$('[data-test="color-picker-icon"]')[2].click();
-            $('.circle-picker').waitForDisplayed({ reverse: true });
 
             assert.strictEqual(
                 $('[data-test="color-picker-icon"] rect').getAttribute('fill'),
@@ -82,13 +96,13 @@ describe('oncoprint colors', () => {
 
         it('oncoprint reflects user selected colors', () => {
             // close modal
-            $('.modal-header [class="close"]').click();
+            $('a.tabAnchor_oncoprint').click();
             var res = checkOncoprintElement();
             assertScreenShotMatch(res);
         });
 
         it('reset colors button is visible when default colors not used', () => {
-            // check "Reset Colors" button in modal
+            // click "Edit Colors" to open modal and check "Reset Colors" button in modal
             var trackOptionsElts = getNthOncoprintTrackOptionsElements(5);
             $(trackOptionsElts.button_selector).click();
             $(trackOptionsElts.dropdown_selector).waitForDisplayed({
@@ -123,13 +137,13 @@ describe('oncoprint colors', () => {
 
         it('oncoprint reflects default colors', () => {
             // close modal
-            $('.modal-header [class="close"]').click();
+            $('a.tabAnchor_oncoprint').click();
             var res = checkOncoprintElement();
             assertScreenShotMatch(res);
         });
 
         it('reset colors button is hidden when default colors are used', () => {
-            // check "Reset Colors" button in modal
+            // click "Edit Colors" to open modal and check "Reset Colors" button in modal
             var trackOptionsElts = getNthOncoprintTrackOptionsElements(5);
             $(trackOptionsElts.button_selector).click();
             $(trackOptionsElts.dropdown_selector).waitForDisplayed({
