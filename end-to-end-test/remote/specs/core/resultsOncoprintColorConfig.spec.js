@@ -87,7 +87,7 @@ describe('oncoprint colors', () => {
             assertScreenShotMatch(res);
         });
 
-        it('reset colors button is enabled when default colors not used', () => {
+        it('reset colors button is visible when default colors not used', () => {
             // check "Reset Colors" button in modal
             var trackOptionsElts = getNthOncoprintTrackOptionsElements(5);
             $(trackOptionsElts.button_selector).click();
@@ -95,12 +95,7 @@ describe('oncoprint colors', () => {
                 timeout: 1000,
             });
             $(trackOptionsElts.dropdown_selector + ' li:nth-child(8)').click();
-            getElementByTestHandle('resetColors').waitForExist();
-
-            assert.strictEqual(
-                getElementByTestHandle('resetColors').isEnabled(),
-                true
-            );
+            getElementByTestHandle('resetColors').waitForDisplayed();
         });
 
         it('color configuration modal reflects default colors', () => {
@@ -133,7 +128,7 @@ describe('oncoprint colors', () => {
             assertScreenShotMatch(res);
         });
 
-        it('reset colors button is disabled when default colors are used', () => {
+        it('reset colors button is hidden when default colors are used', () => {
             // check "Reset Colors" button in modal
             var trackOptionsElts = getNthOncoprintTrackOptionsElements(5);
             $(trackOptionsElts.button_selector).click();
@@ -141,12 +136,9 @@ describe('oncoprint colors', () => {
                 timeout: 1000,
             });
             $(trackOptionsElts.dropdown_selector + ' li:nth-child(8)').click();
-            getElementByTestHandle('resetColors').waitForExist();
-
-            assert.strictEqual(
-                getElementByTestHandle('resetColors').isEnabled(),
-                false
-            );
+            getElementByTestHandle('resetColors').waitForDisplayed({
+                reverse: true,
+            });
         });
     });
 
