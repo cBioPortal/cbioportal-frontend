@@ -229,18 +229,18 @@ export default class OQLTextArea extends React.Component<
         );
     }
 
-    @action.bound
-    afterGeneSymbolValidation(
-        validQuery: boolean,
-        validationResult: GeneValidationResult,
-        oql: OQL
-    ) {
-        this.geneQueryIsValid = validQuery;
-
-        if (this.props.callback) {
-            this.props.callback(oql, validationResult, this.geneQueryStr);
-        }
-    }
+    // @action.bound
+    // afterGeneSymbolValidation(
+    //     validQuery: boolean,
+    //     validationResult: GeneValidationResult,
+    //     oql: OQL
+    // ) {
+    //     this.geneQueryIsValid = validQuery;
+    //
+    //     // if (this.props.callback) {
+    //     //     //this.props.callback(oql, validationResult, this.geneQueryStr);
+    //     // }
+    // }
 
     @autobind
     highlightError(oql: OQL) {
@@ -318,7 +318,6 @@ export default class OQLTextArea extends React.Component<
                         geneQuery={this.queryToBeValidated}
                         skipGeneValidation={this.skipGenesValidation}
                         updateGeneQuery={this.updateGeneQuery}
-                        afterValidation={this.afterGeneSymbolValidation}
                         replaceGene={this.replaceGene}
                         errorMessageOnly={
                             this.props.location === GeneBoxType.STUDY_VIEW_PAGE

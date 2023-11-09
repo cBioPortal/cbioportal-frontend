@@ -67,6 +67,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
         genes: { found: Gene[]; suggestions: GeneReplacement[] },
         queryStr: string
     ): void {
+        console.log('handling update');
         if (queryStr !== this.store.geneQuery) {
             this.store.geneQuery = queryStr;
             this.store.oql.error = oql.error;
