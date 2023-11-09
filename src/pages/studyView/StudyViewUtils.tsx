@@ -1048,6 +1048,7 @@ export function isFiltered(
             _.isEmpty(filter.structuralVariantFilters) &&
             _.isEmpty(filter.genomicProfiles) &&
             _.isEmpty(filter.genomicDataFilters) &&
+            _.isEmpty(filter.mutationDataFilters) &&
             _.isEmpty(filter.genericAssayDataFilters) &&
             _.isEmpty(filter.caseLists) &&
             _.isEmpty(filter.customDataFilters) &&

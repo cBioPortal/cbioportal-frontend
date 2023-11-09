@@ -220,7 +220,7 @@ export default class UserSelections extends React.Component<
             }
         );
 
-        // Genomic Bar chart filters
+        // Genomic chart filters
         _.reduce(
             this.props.filter.genomicDataFilters || [],
             (acc, genomicDataFilter) => {
@@ -265,6 +265,47 @@ export default class UserSelections extends React.Component<
                                   this.props.updateGenomicDataFilter,
                                   chartMeta
                               );
+
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
+                                    >
+                                        {chartMeta.displayName}
+                                    </span>,
+                                    dataFilterComponent,
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
+                return acc;
+            },
+            components
+        );
+
+        // Genomic chart filters
+        _.reduce(
+            this.props.filter.mutationDataFilters || [],
+            (acc, mutationDataFilter) => {
+                const uniqueKey = getGenomicChartUniqueKey(
+                    mutationDataFilter.hugoGeneSymbol,
+                    mutationDataFilter.profileType,
+                    mutationDataFilter.categorization
+                );
+                const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                if (chartMeta) {
+                    let dataFilterComponent = this.renderCategoricalDataFilter(
+                        mutationDataFilter.values,
+                        this.props.updateGenomicDataFilter,
+                        chartMeta
+                    );
 
                     acc.push(
                         <div className={styles.parentGroupLogic}>

@@ -70,7 +70,6 @@ export default class GeneLevelSelection extends React.Component<
     private onAddChart() {
         if (this.selectedOption !== undefined) {
             const charts = this.validGenes.map(gene => {
-                console.log(this.getChartName(gene.hugoGeneSymbol));
                 return {
                     name: this.getChartName(gene.hugoGeneSymbol),
                     description: this.selectedOption!.description,

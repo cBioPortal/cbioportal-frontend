@@ -50,6 +50,7 @@ import {
     GenomicDataFilter,
     MolecularProfile,
     MolecularProfileFilter,
+    MutationDataFilter,
     NumericGeneMolecularData,
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
@@ -3183,6 +3184,9 @@ export class StudyViewPageStore
                 hugoGeneSymbol: chart!.hugoGeneSymbol,
                 profileType: chart!.profileType,
                 values: values,
+                ...(chart!.mutationOptionType
+                    ? { categorization: chart!.mutationOptionType }
+                    : {}),
             };
             this._genomicDataFilterSet.set(uniqueKey, genomicDataFilter);
         } else {
@@ -3873,7 +3877,15 @@ export class StudyViewPageStore
     }
 
     @computed get genomicDataFilters(): GenomicDataFilter[] {
-        return Array.from(this._genomicDataFilterSet.values());
+        return Array.from(this._genomicDataFilterSet.values()).filter(
+            filter => !filter.hasOwnProperty('categorization')
+        );
+    }
+
+    @computed get mutationDataFilters(): MutationDataFilter[] {
+        return Array.from(this._genomicDataFilterSet.values()).filter(filter =>
+            filter.hasOwnProperty('categorization')
+        ) as MutationDataFilter[];
     }
 
     @computed get genericAssayDataFilters(): GenericAssayDataFilter[] {
@@ -3889,15 +3901,16 @@ export class StudyViewPageStore
     get filtersProxy(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
-        const genomicDataFilters = this.genomicDataFilters;
-
-        if (genomicDataFilters.length > 0) {
-            filters.genomicDataFilters = genomicDataFilters;
+        if (this.genomicDataFilters.length > 0) {
+            filters.genomicDataFilters = this.genomicDataFilters;
         }
 
-        const genericAssayDataFilters = this.genericAssayDataFilters;
-        if (genericAssayDataFilters.length > 0) {
-            filters.genericAssayDataFilters = genericAssayDataFilters;
+        if (this.mutationDataFilters.length > 0) {
+            filters.mutationDataFilters = this.mutationDataFilters;
+        }
+
+        if (this.genericAssayDataFilters.length > 0) {
+            filters.genericAssayDataFilters = this.genericAssayDataFilters;
         }
 
         if (this.clinicalDataFilters.length > 0) {
@@ -6359,8 +6372,6 @@ export class StudyViewPageStore
             _.fromPairs(this._XvsYCharts.toJSON())
         );
 
-        console.log(_chartMetaSet);
-
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(
@@ -6707,6 +6718,9 @@ export class StudyViewPageStore
             pending = pending || this.userSavedCustomData.isPending;
         }
         if (!_.isEmpty(this.initialFilters.genomicDataFilters)) {
+            pending = pending || this.molecularProfileOptions.isPending;
+        }
+        if (!_.isEmpty(this.initialFilters.mutationDataFilters)) {
             pending = pending || this.molecularProfileOptions.isPending;
         }
         if (!_.isEmpty(this.initialFilters.genericAssayDataFilters)) {
@@ -7725,6 +7739,43 @@ export class StudyViewPageStore
                                     hugoGeneSymbol:
                                         genomicDataFilter.hugoGeneSymbol,
                                     dataType: molecularProfileOption.dataType,
+                                },
+                            ],
+                            true
+                        );
+                    }
+                }
+            );
+        }
+
+        if (!_.isEmpty(this.initialFilters.mutationDataFilters)) {
+            const molecularProfileOptionByTypeMap = _.keyBy(
+                this.molecularProfileOptions.result,
+                molecularProfileOption => molecularProfileOption.value
+            );
+            _.each(
+                this.initialFilters.mutationDataFilters,
+                mutationDataFilter => {
+                    if (
+                        molecularProfileOptionByTypeMap[
+                            mutationDataFilter.profileType
+                        ] !== undefined
+                    ) {
+                        const molecularProfileOption =
+                            molecularProfileOptionByTypeMap[
+                                mutationDataFilter.profileType
+                            ];
+                        this.addGeneSpecificCharts(
+                            [
+                                {
+                                    name: `${mutationDataFilter.hugoGeneSymbol}: ${molecularProfileOption.label}`,
+                                    description: molecularProfileOption.label,
+                                    profileType: mutationDataFilter.profileType,
+                                    hugoGeneSymbol:
+                                        mutationDataFilter.hugoGeneSymbol,
+                                    dataType: molecularProfileOption.dataType,
+                                    mutationOptionType:
+                                        mutationDataFilter.categorization,
                                 },
                             ],
                             true
