@@ -1,4 +1,5 @@
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+import fetch from 'cross-fetch';
+import { ApolloClient, HttpLink, InMemoryCache, gql } from '@apollo/client';
 
 import {
     EvidenceLevel,
@@ -65,7 +66,7 @@ enum EvidenceDirection {
 }
 
 const client = new ApolloClient({
-    uri: 'https://civicdb.org/api/graphql',
+    link: new HttpLink({ uri: 'https://civicdb.org/api/graphql', fetch }),
     cache: new InMemoryCache(),
 });
 
