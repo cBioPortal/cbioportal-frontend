@@ -72,6 +72,7 @@ import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
 import { Tour } from 'tours';
 import QueryString from 'qs';
+import setWindowVariable from 'shared/lib/setWindowVariable';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -138,6 +139,9 @@ export default class StudyViewPage extends React.Component<
             ServerConfigHelpers.sessionServiceIsEnabled(),
             this.urlWrapper
         );
+
+        // Expose store to window for use in custom tabs.
+        setWindowVariable('studyViewPageStore', this.store);
 
         const openResourceId =
             this.urlWrapper.tabId &&
