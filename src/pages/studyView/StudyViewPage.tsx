@@ -73,6 +73,10 @@ import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSetting
 import { Tour } from 'tours';
 import QueryString from 'qs';
 import setWindowVariable from 'shared/lib/setWindowVariable';
+import {
+    buildCustomTabs,
+    prepareCustomTabConfigurations,
+} from 'shared/lib/customTabs/customTabHelpers';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -257,6 +261,13 @@ export default class StudyViewPage extends React.Component<
             }
         }
         return filterJson;
+    }
+
+    @computed get customTabsConfigs() {
+        return prepareCustomTabConfigurations(
+            getServerConfig().custom_tabs,
+            'STUDY_PAGE'
+        );
     }
 
     @autobind
@@ -539,6 +550,10 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
+    @computed get customTabs() {
+        return buildCustomTabs(this.customTabsConfigs);
+    }
+
     content() {
         return (
             <div className="studyView">
@@ -682,6 +697,7 @@ export default class StudyViewPage extends React.Component<
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
+                                    {this.customTabs}
                                 </MSKTabs>
 
                                 <div
