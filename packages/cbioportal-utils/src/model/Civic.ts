@@ -3,7 +3,7 @@ export interface ICivicGeneSummary {
     name: string;
     description: string;
     url: string;
-    variants: { [variantName: string]: number };
+    variants: { [variantName: string]: ICivicVariantSummary };
 }
 
 export interface ICivicVariantSummary {
@@ -29,7 +29,7 @@ export interface ICivicEvidenceSummary {
     type: string;
     clinicalSignificance: string;
     level: EvidenceLevel;
-    drugs: string[];
+    therapies: string[];
     disease?: string;
 }
 

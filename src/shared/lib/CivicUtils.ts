@@ -47,10 +47,7 @@ export function fetchCivicGenes(
         uncalledMutationData
     );
 
-    return fetchDefaultCivicGenes(
-        mutationDataResult,
-        (m: Mutation) => m.gene.entrezGeneId
-    );
+    return fetchDefaultCivicGenes(mutationDataResult);
 }
 
 export function fetchCivicVariants(
@@ -70,13 +67,13 @@ export function fetchCnaCivicGenes(
     discreteCNAData: MobxPromise<DiscreteCopyNumberData[]>
 ): Promise<ICivicGeneIndex> {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
-        let entrezGeneSymbols: Set<number> = new Set([]);
+        let entrezGeneSymbols: Set<string> = new Set([]);
 
         discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
-            entrezGeneSymbols.add(cna.gene.entrezGeneId);
+            entrezGeneSymbols.add(cna.gene.hugoGeneSymbol);
         });
 
-        let querySymbols: Array<number> = Array.from(entrezGeneSymbols);
+        let querySymbols: Array<string> = Array.from(entrezGeneSymbols);
 
         return getCivicGenes(querySymbols);
     } else {
