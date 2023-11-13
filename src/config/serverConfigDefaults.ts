@@ -230,7 +230,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     vaf_log_scale_default: false,
 
-    skin_study_view_show_sv_table: false,
+    skin_study_view_show_sv_table: true,
 };
 
 export default ServerConfigDefaults;
