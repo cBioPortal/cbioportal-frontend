@@ -67,13 +67,12 @@ export function fetchCnaCivicGenes(
     discreteCNAData: MobxPromise<DiscreteCopyNumberData[]>
 ): Promise<ICivicGeneIndex> {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
-        let entrezGeneSymbols: Set<string> = new Set([]);
-
+        let hugoGeneSymbols: Set<string> = new Set([]);
         discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
-            entrezGeneSymbols.add(cna.gene.hugoGeneSymbol);
+            hugoGeneSymbols.add(cna.gene.hugoGeneSymbol);
         });
 
-        let querySymbols: Array<string> = Array.from(entrezGeneSymbols);
+        let querySymbols: Array<string> = Array.from(hugoGeneSymbols);
 
         return getCivicGenes(querySymbols);
     } else {

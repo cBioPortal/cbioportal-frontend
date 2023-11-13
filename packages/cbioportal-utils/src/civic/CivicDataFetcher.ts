@@ -7,6 +7,7 @@ import {
     ICivicGeneSummary,
     ICivicVariantSummary,
 } from '../model/Civic';
+import _ from 'lodash';
 
 type CivicAPIGene = {
     id: number;
@@ -235,7 +236,7 @@ export class CivicAPI {
                 const response: CivicAPIGene = civicResponse.data.gene;
                 const result: CivicAPIGene[] =
                     response instanceof Array ? response : [response];
-                return result.map((record: CivicAPIGene) => ({
+                return _.compact(result).map((record: CivicAPIGene) => ({
                     id: record.id,
                     name: record.name,
                     description: record.description,
