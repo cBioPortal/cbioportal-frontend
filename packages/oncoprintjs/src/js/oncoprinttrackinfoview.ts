@@ -2,6 +2,7 @@ import svgfactory from './svgfactory';
 import $ from 'jquery';
 import OncoprintToolTip from './oncoprinttooltip';
 import OncoprintModel from './oncoprintmodel';
+import { isNumber } from 'lodash';
 
 export default class OncoprintTrackInfoView {
     private $ctr: JQuery;
@@ -25,7 +26,7 @@ export default class OncoprintTrackInfoView {
             })
             .appendTo(this.$div);
         this.$text_ctr = $('<div></div>')
-            .css({ position: 'absolute' })
+            .css({ position: 'absolute', overflow: 'visible', width: '100%' })
             .appendTo(this.$ctr);
     }
 
@@ -68,13 +69,29 @@ export default class OncoprintTrackInfoView {
                         'font-family': self.font_family,
                         'font-weight': self.font_weight,
                         'font-size': font_size,
+                        right: '11px',
                     })
                     .addClass('noselect');
                 const text = model.getTrackInfo(tracks[i]);
                 if (!text) {
                     return;
                 }
-                $new_label.text(text);
+
+                const float = parseFloat(text);
+                let formattedPercent = '';
+
+                if (isNaN(float)) {
+                    formattedPercent = 'N/P';
+                } else if (isNumber(float)) {
+                    formattedPercent =
+                        float < 1 && float > 0
+                            ? '<1%'
+                            : Math.round(float) + '%';
+                } else {
+                    // do nothing
+                }
+
+                $new_label.text(formattedPercent);
                 $new_label.appendTo(self.$text_ctr);
                 self.$label_elts.push($new_label);
                 setTimeout(function() {
