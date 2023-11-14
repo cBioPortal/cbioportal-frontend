@@ -28,28 +28,20 @@ export const CIVIC_NA_VALUE = 'NA';
  * Asynchronously return a map with Civic information from the genes given.
  */
 export function getCivicGenes(hugoSymbols: string[]): Promise<ICivicGeneIndex> {
-    // Assemble a list of promises, each of which will retrieve a batch of genes
-    let promises: Array<Promise<Array<ICivicGeneSummary>>> = [];
-
-    hugoSymbols.forEach(hugoSymbol =>
-        promises.push(civicClient.getCivicGenesBatch(hugoSymbol))
+    return Promise.resolve(civicClient.getCivicGeneSummaries(hugoSymbols)).then(
+        (responses: ICivicGeneSummary[]) => {
+            return responses.reduce(
+                (
+                    acc: { [name: string]: ICivicGeneSummary },
+                    civicGene: ICivicGeneSummary
+                ) => {
+                    acc[civicGene.name] = civicGene;
+                    return acc;
+                },
+                {}
+            );
+        }
     );
-
-    // We're waiting for all promises to finish, then return civicGenes
-    return Promise.all(promises).then((responses: ICivicGeneSummary[][]) => {
-        return responses.reduce(
-            (
-                acc: { [name: string]: ICivicGeneSummary },
-                civicGenes: ICivicGeneSummary[]
-            ) => {
-                civicGenes.forEach(
-                    civicGene => (acc[civicGene.name] = civicGene)
-                );
-                return acc;
-            },
-            {}
-        );
-    });
 }
 
 /**

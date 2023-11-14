@@ -9,6 +9,18 @@ import {
 } from '../model/Civic';
 import _ from 'lodash';
 
+type CivicAPIGenes = {
+    pageInfo: PageInfo;
+    nodes: Array<CivicAPIGene>;
+};
+
+type PageInfo = {
+    endCursor: string;
+    hasNextPage: boolean;
+    startCursor: string;
+    hasPreviousPage: boolean;
+};
+
 type CivicAPIGene = {
     id: number;
     name: string;
@@ -134,21 +146,6 @@ function summarizeEvidence(evidence: Evidence): ICivicEvidenceSummary {
     };
 }
 
-/**
- * Returns a map with the different variant names and their variant id.
- */
-function createVariantMap(
-    variantArray: CivicVariant[]
-): { [variantName: string]: number } {
-    let variantMap: { [variantName: string]: number } = {};
-    if (variantArray && variantArray.length > 0) {
-        variantArray.forEach(function(variant) {
-            variantMap[variant.name] = variant.id;
-        });
-    }
-    return variantMap;
-}
-
 function createCivicVariantSummaryMap(
     variantArray: CivicVariant[],
     civicId: number
@@ -183,44 +180,100 @@ function createCivicVariantSummaryMap(
  */
 export class CivicAPI {
     /**
-     * Retrieves the gene entries for the ids given, if they are in the Civic API.
+     * Retrieves the gene entries for the hugo symbols given, if they are in the Civic API.
      */
-    getCivicGenesBatch(hugoGeneSymbol: string): Promise<ICivicGeneSummary[]> {
+    async getCivicGeneSummaries(
+        hugoGeneSymbols: string[]
+    ): Promise<ICivicGeneSummary[]> {
+        let result: ICivicGeneSummary[] = [];
+        // civic genes api can return up to 50 civic genes in a single request (no limit on sending)
+        // if result contains more than 50 genes, the first 50 genes will be returned, other queries (genes after 50) will need to be sent again
+        // the next query will start from the last gene of previous query (by giving "after" parameter), which is the "endCursor" field returned in previous query
+        // set needToFetch to true to make sure the query will be sent at least for the first time
+        let needToFetch = true;
+        let after = null;
+        while (needToFetch) {
+            const civicGenes: CivicAPIGenes = await this.fetchCivicAPIGenes(
+                hugoGeneSymbols,
+                after
+            );
+            // hasNextPage is true means there are more than 50 genes in the return, and need to make another request
+            if (civicGenes.pageInfo?.hasNextPage) {
+                // Update endCursor when next page is available
+                after = civicGenes.pageInfo.endCursor;
+                // continue fetching data from the next page
+                needToFetch = true;
+            } else {
+                // set needToFetch to false if no next page
+                needToFetch = false;
+            }
+            // filter our null responses
+            const filteredCivicGenes = _.compact(civicGenes.nodes);
+            const geneSummaries = _.map(filteredCivicGenes, record => {
+                const geneSummary: ICivicGeneSummary = {
+                    id: record.id,
+                    name: record.name,
+                    description: record.description,
+                    url: 'https://civicdb.org/genes/' + record.id + '/summary',
+                    variants: createCivicVariantSummaryMap(
+                        record.variants.nodes,
+                        record.id
+                    ),
+                };
+                return geneSummary;
+            });
+            result.push(...geneSummaries);
+        }
+        return Promise.resolve(result);
+    }
+
+    fetchCivicAPIGenes(
+        hugoGeneSymbols: string[],
+        after: string | null = null
+    ): Promise<CivicAPIGenes> {
         return client
             .query({
                 query: gql`
-                    query gene($entrezSymbol: String, $id: Int) {
-                        gene(entrezSymbol: $entrezSymbol, id: $id) {
-                            id
-                            description
-                            link
-                            name
-                            variants {
-                                nodes {
-                                    name
-                                    id
-                                    singleVariantMolecularProfile {
-                                        description
-                                        evidenceItems {
-                                            nodes {
-                                                id
-                                                name
-                                                description
-                                                evidenceType
-                                                evidenceDirection
-                                                evidenceLevel
-                                                significance
-                                                disease {
-                                                    displayName
-                                                    name
+                    query genes($after: String, $entrezSymbols: [String!]) {
+                        genes(after: $after, entrezSymbols: $entrezSymbols) {
+                            pageInfo {
+                                endCursor
+                                hasNextPage
+                                startCursor
+                                hasPreviousPage
+                            }
+                            nodes {
+                                id
+                                description
+                                link
+                                name
+                                variants {
+                                    nodes {
+                                        name
+                                        id
+                                        singleVariantMolecularProfile {
+                                            description
+                                            evidenceItems {
+                                                nodes {
                                                     id
-                                                    link
-                                                }
-                                                therapies {
                                                     name
-                                                    id
-                                                    ncitId
-                                                    therapyAliases
+                                                    description
+                                                    evidenceType
+                                                    evidenceDirection
+                                                    evidenceLevel
+                                                    significance
+                                                    disease {
+                                                        displayName
+                                                        name
+                                                        id
+                                                        link
+                                                    }
+                                                    therapies {
+                                                        name
+                                                        id
+                                                        ncitId
+                                                        therapyAliases
+                                                    }
                                                 }
                                             }
                                         }
@@ -230,22 +283,10 @@ export class CivicAPI {
                         }
                     }
                 `,
-                variables: { entrezSymbol: hugoGeneSymbol },
+                variables: { after: after, entrezSymbols: hugoGeneSymbols },
             })
             .then(civicResponse => {
-                const response: CivicAPIGene = civicResponse.data.gene;
-                const result: CivicAPIGene[] =
-                    response instanceof Array ? response : [response];
-                return _.compact(result).map((record: CivicAPIGene) => ({
-                    id: record.id,
-                    name: record.name,
-                    description: record.description,
-                    url: 'https://civicdb.org/genes/' + record.id + '/summary',
-                    variants: createCivicVariantSummaryMap(
-                        record.variants.nodes,
-                        record.id
-                    ),
-                }));
+                return civicResponse.data.genes as CivicAPIGenes;
             });
     }
 }
