@@ -4,9 +4,14 @@ services:
   cbioportal:
     image: cbioportal/cbioportal:demo-rfc72
     volumes:
-      - $TEST_HOME/docker_compose/keycloak/samlKeystore.jks:/cbioportal-webapp/samlKeystore.jks:ro
+      - $TEST_HOME/docker_compose/keycloak/localdb.crt:/cbioportal-webapp/local.crt:ro
+      - $TEST_HOME/docker_compose/keycloak/localdb.key:/cbioportal-webapp/local.key
       - $E2E_WORKSPACE/keycloak/idp-metadata.xml:/cbioportal-webapp/client-tailored-saml-idp-metadata.xml:ro
-    command: /bin/sh -c "rm -rf /cbioportal-webapp/lib/servlet-api-2.5.jar && java -Xms2g -Xmx4g -Ddat.method=none -Dmultithread.core_pool_size=1 -Dauthenticate=saml -Dspring.security.saml2.relyingparty.registration.cbio-idp.identityprovider.metadata-uri=classpath://saml2-idp-metadata.xml -Dsession.service.url=http://cbioportal-session:5000/api/sessions/my_portal/ -cp '/cbioportal-webapp:/cbioportal-webapp/lib/*' org.cbioportal.PortalApplication"
+    command: > 
+      /bin/sh -c "java -Xms2g -Xmx4g  -cp '/cbioportal-webapp:/cbioportal-webapp/lib/*' org.cbioportal.PortalApplication --spring.config.location=cbioportal-webapp/application.properties --dat.method=none --multithread.core_pool_size=1 
+      --authenticate=saml --spring.security.saml2.relyingparty.registration.cbio-idp.assertingparty.metadata-uri=classpath:/client-tailored-saml-idp-metadata.xml --session.service.url=http://cbioportal-session:5000/api/sessions/my_portal/
+      --spring.security.saml2.relyingparty.registration.cbio-idp.entity-id=cbioportal --spring.security.saml2.relyingparty.registration.cbio-idp.signing.credentials[0].certificate-location=classpath:/local.crt
+      --spring.security.saml2.relyingparty.registration.cbio-idp.signing.credentials[0].private-key-location=classpath:/local.key"
   keycloak:
     networks:
     - cbio-net
