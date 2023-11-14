@@ -16637,6 +16637,18 @@ mobx@^6.0.0:
   dependencies:
     mobx "^6.0.0"
 
+"mobxpromise@github:cbioportal/mobxpromise#b6cf1d86a72644b2521463c4db428408dbcb35b1":
+  version "2.0.1"
+  resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/b6cf1d86a72644b2521463c4db428408dbcb35b1"
+  dependencies:
+    mobx "^6.0.0"
+
+"mobxpromise@github:cbioportal/mobxpromise#c3429672eb39be54e54ce14a8636e8d843729db3":
+  version "2.0.1"
+  resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/c3429672eb39be54e54ce14a8636e8d843729db3"
+  dependencies:
+    mobx "^6.0.0"
+
 modify-values@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/modify-values/-/modify-values-1.0.1.tgz#b3939fa605546474e3e3e3c63d64bd43b4ee6022"
