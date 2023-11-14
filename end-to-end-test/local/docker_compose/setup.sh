@@ -15,7 +15,9 @@ cd cbioportal-docker-compose
 # https://github.com/cBioPortal/cbioportal-docker-compose/pull/23
 git checkout demo-rfc72
 
-. "./config/init.sh"
+cd ./config
+. "./init.sh"
+cd ..
 
 # update keycloak config with permissions for test studies
 config_json="$(cat $TEST_HOME/docker_compose/keycloak/keycloak-config.json)"
