@@ -744,6 +744,7 @@ function transitionTracks(
         );
         delete prevGeneticTracks[track.key];
     }
+
     for (const track of prevProps.geneticTracks || []) {
         if (prevGeneticTracks.hasOwnProperty(track.key)) {
             // if its still there, then this track no longer exists, we need to remove it
@@ -957,7 +958,6 @@ function transitionHeatmapTrackOrder(
 
             if (!_.isEqual(nextOrder, prevOrder)) {
                 const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
-                // debugger;
                 oncoprint.setTrackGroupOrder(
                     parseInt(trackGroupIndex, 10),
                     nextOrder.map(key => trackSpecKeyToTrackId[key])

@@ -33,7 +33,7 @@ import {
     makeHeatmapTrackData,
 } from './DataUtils';
 import ResultsViewOncoprint from './ResultsViewOncoprint';
-import _ from 'lodash';
+import _, { isNumber } from 'lodash';
 import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
 import { MobxPromise } from 'mobxpromise';
 import GenesetCorrelatedGeneCache from 'shared/cache/GenesetCorrelatedGeneCache';
@@ -56,11 +56,6 @@ import {
 } from '../../cache/ClinicalDataCache';
 import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
-import {
-    COMMON_GENERIC_ASSAY_PROPERTY,
-    GenericAssayDataType,
-    getGenericAssayMetaPropertyOrDefault,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
 import {
     getGenericAssayTrackCacheQueries,
@@ -72,9 +67,19 @@ import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
+import { OncoprintModel } from 'oncoprintjs';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
+}
+
+export function formatPercent(str: string | number) {
+    const number = parseFloat(str.toString());
+    if (isNumber(number)) {
+        return number < 1 && number > 0 ? '<1%' : Math.round(number) + '%';
+    } else {
+        return 'n/a';
+    }
 }
 
 function makeGenesetHeatmapExpandHandler(
@@ -159,7 +164,7 @@ function formatGeneticTrackSublabel(
     }
 }
 
-function formatGeneticTrackLabel(
+export function formatGeneticTrackLabel(
     oqlFilter: UnflattenedOQLLineFilterOutput<object>
 ): string {
     return isMergedTrackFilter(oqlFilter)
@@ -738,6 +743,7 @@ export function makeGeneticTrackWith({
             sequencedSampleKeysByGene,
             sequencedPatientKeysByGene
         );
+
         const trackKey =
             parentKey === undefined
                 ? `GENETICTRACK_${index}`
@@ -784,6 +790,7 @@ export function makeGeneticTrackWith({
             // dont add asterisk if none are profiled
             info = `${info}*`;
         }
+
         return {
             key: trackKey,
             label:
@@ -803,6 +810,95 @@ export function makeGeneticTrackWith({
                 {
                     label: 'Sort by genes',
                     onClick: oncoprint.clearSortDirectionsAndSortByData,
+                },
+                {
+                    gapLabelsFn: (model: OncoprintModel) => {
+                        model.data_groups.update(model);
+                        const groupsByTrackMap = model.data_groups.get();
+
+                        const label = formatGeneticTrackLabel(oql);
+
+                        const sampleMode = oncoprint.columnMode === 'sample';
+
+                        // why are there more than one gene? what happens then?
+                        const gene = label; //geneSymbolArray[0];
+
+                        //problem here is that in case of merged tracks, the name of the track is not always a gene
+                        const info = groupsByTrackMap[gene][0].map(
+                            (groupData: any) => {
+                                let sequencedPatientKeysForGroup: Record<
+                                    string,
+                                    any[]
+                                > = {};
+                                let sequencedSampleKeysForGroup: Record<
+                                    string,
+                                    any[]
+                                > = {};
+                                if (sampleMode) {
+                                    sequencedSampleKeysForGroup = _(
+                                        geneSymbolArray
+                                    )
+                                        .keyBy(gene => gene)
+                                        .mapValues(gene => {
+                                            // you want to return only the patient ids which are listed as
+                                            // sequenced for the gene(s) in this track (plural in case of merged tracks)
+                                            return _.intersection(
+                                                _.flatMap(
+                                                    geneSymbolArray,
+                                                    gene =>
+                                                        sequencedSampleKeysByGene[
+                                                            gene
+                                                        ]
+                                                ),
+                                                groupData.map((d: any) => d.uid)
+                                            );
+                                        })
+                                        .value();
+                                } else {
+                                    sequencedPatientKeysForGroup = _(
+                                        geneSymbolArray
+                                    )
+                                        .keyBy(gene => gene)
+                                        .mapValues(gene => {
+                                            // you want to return only the patient ids which are listed as
+                                            // sequenced for the gene(s) in this track (plural in case of merged tracks)
+                                            return _.intersection(
+                                                _.flatMap(
+                                                    geneSymbolArray,
+                                                    gene =>
+                                                        sequencedPatientKeysByGene[
+                                                            gene
+                                                        ]
+                                                ),
+                                                groupData.map((d: any) => d.uid)
+                                            );
+                                        })
+                                        .value();
+                                }
+
+                                const info = alterationInfoForOncoprintTrackData(
+                                    sampleMode,
+                                    {
+                                        trackData: groupData,
+                                        oql: geneSymbolArray,
+                                    },
+                                    sequencedSampleKeysForGroup,
+                                    sequencedPatientKeysForGroup
+                                );
+
+                                return {
+                                    labelFormatter: function() {
+                                        return formatPercent(info.percent);
+                                    },
+                                    tooltipFormatter: function() {
+                                        return `${info.percent} (altered / profiled = ${info.altered} / ${info.sequenced})`;
+                                    },
+                                };
+                            }
+                        );
+
+                        return info;
+                    },
                 },
             ],
         };
