@@ -5,6 +5,8 @@ set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... do' loops that should not run when no files/dirs are detected by expansion
 
+echo export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:demo-rfc72
+
 DIR=$PWD
 
 cd $E2E_WORKSPACE/cbioportal-docker-compose

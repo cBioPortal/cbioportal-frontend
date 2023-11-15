@@ -2,7 +2,8 @@ version: '3'
 
 services:
   cbioportal:
+    image: cbioportal/cbioportal:demo-rfc72
     volumes:
       - $E2E_WORKSPACE/cbioportal:/cbioportal
-      - $TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro
-      - $E2E_WORKSPACE/cbioportal/portal/target/war-exploded:/cbioportal-webapp
+      - $TEST_HOME/runtime-config/portal.properties:/cbioportal/application.properties:ro
+    command: /bin/sh -c "java -Xms2g -Xmx4g -jar cbioportal/target/cbioportal-exec.jar --spring.config.location=cbioportal/application.properties --authenticate=false"
