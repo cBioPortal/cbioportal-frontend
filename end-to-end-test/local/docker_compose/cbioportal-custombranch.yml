@@ -6,4 +6,5 @@ services:
     volumes:
       - $E2E_WORKSPACE/cbioportal:/cbioportal
       - $TEST_HOME/runtime-config/portal.properties:/cbioportal/application.properties:ro
+      - $E2E_WORKSPACE/cbioportal/src/main/resources/db-scripts:/cbioportal/db-scripts
     command: /bin/sh -c "java -Xms2g -Xmx4g -jar cbioportal/target/cbioportal-exec.jar --spring.config.location=cbioportal/application.properties --authenticate=false"
