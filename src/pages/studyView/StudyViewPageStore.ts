@@ -2592,7 +2592,7 @@ export class StudyViewPageStore
         if (this.geneQueries.find(q => q.gene === hugoGeneSymbol)) {
             message = `${hugoGeneSymbol} removed from query queue`;
         } else {
-            message = `${hugoGeneSymbol} queued for query (see top right)`;
+            message = `${hugoGeneSymbol} queued for query (see top right of page for submit)`;
         }
 
         showQueryUpdatedToast(message);
@@ -2621,7 +2621,7 @@ export class StudyViewPageStore
         ) {
             message = `${gene1SymbolOrOql}::${gene2SymbolOrOql} removed from query queue`;
         } else {
-            message = `${gene1SymbolOrOql}::${gene2SymbolOrOql} queued for query (see top right)`;
+            message = `${gene1SymbolOrOql}::${gene2SymbolOrOql} queued for query (see top right of page for submit)`;
         }
 
         showQueryUpdatedToast(message);
