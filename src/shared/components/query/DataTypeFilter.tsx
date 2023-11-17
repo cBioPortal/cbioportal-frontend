@@ -70,9 +70,9 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                             width: 350,
                         }}
                     >
-                        <h5 style={{ paddingTop: 8 }}>
+                        <label style={{ paddingTop: 8 }}>
                             Filter to studies with selected data types
-                        </h5>
+                        </label>
                         <label
                             style={{
                                 color: '#3786C2',
