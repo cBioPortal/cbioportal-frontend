@@ -78,7 +78,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                 color: '#3786C2',
                                 paddingTop: 5,
                                 float: 'left',
-                                width: '65%',
+                                width: 220,
                             }}
                         >
                             Data type
@@ -86,11 +86,11 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         <label
                             style={{
                                 paddingTop: 6,
-                                paddingRight: 10,
+                                paddingRight: 15,
                                 color: '#999',
                                 textAlign: 'right',
                                 float: 'left',
-                                width: '15%',
+                                width: 55,
                                 display: 'inline-block',
                             }}
                         >
@@ -100,9 +100,10 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                             style={{
                                 paddingTop: 6,
                                 color: '#999',
+                                marginRight: 2,
                                 textAlign: 'right',
                                 float: 'left',
-                                width: '15%',
+                                width: 55,
                                 display: 'inline-block',
                             }}
                         >
@@ -115,7 +116,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                         style={{
                                             paddingTop: 5,
                                             float: 'left',
-                                            width: '65%',
+                                            width: 220,
                                         }}
                                     >
                                         <input
@@ -140,7 +141,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                             paddingRight: 10,
                                             textAlign: 'right',
                                             float: 'left',
-                                            width: '15%',
+                                            width: 55,
                                             display: 'inline-block',
                                         }}
                                     >
@@ -150,7 +151,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                         style={{
                                             paddingTop: 5,
                                             float: 'left',
-                                            width: '15%',
+                                            width: 55,
                                             color: '#999',
                                             marginRight: 2,
                                             textAlign: 'right',
