@@ -288,6 +288,9 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 clinicalAttributeIds.map(id => new ClinicalTrackConfig(id))
             )
         );
+        this.props.handlers.onChangeToggledClinicalTracks!(
+            this.getSelectedClinicalAttributes()
+        );
     }
 
     @action.bound
@@ -299,16 +302,37 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 'stableId'
             )
         );
+        this.props.handlers.onChangeToggledClinicalTracks!(
+            this.getSelectedClinicalAttributes()
+        );
+    }
+
+    @action.bound
+    private submit() {
+        this.props.handlers.onChangeSelectedClinicalTracks!(
+            this.props.state.toggledClinicalTracks!
+        );
     }
 
     @action.bound
     private toggleClinicalTrack(clinicalAttributeId: string) {
-        const toggled = toggleIncluded(
-            new ClinicalTrackConfig(clinicalAttributeId),
-            this.getSelectedClinicalAttributes(),
-            track => track.stableId === clinicalAttributeId
+        this.props.handlers.onChangeToggledClinicalTracks!(
+            toggleIncluded(
+                new ClinicalTrackConfig(clinicalAttributeId),
+                this.props.state.toggledClinicalTracks!,
+                track => track.stableId === clinicalAttributeId
+            )
         );
-        this.props.handlers.onChangeSelectedClinicalTracks!(toggled);
+    }
+
+    @computed get showSubmit() {
+        return (
+            _.xorBy(
+                this.getSelectedClinicalAttributes(),
+                this.props.state.toggledClinicalTracks!,
+                'stableId'
+            ).length !== 0
+        );
     }
 
     readonly addClinicalTracksMenu = MakeMobxView({
@@ -319,6 +343,8 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 freqPromise={this.clinicalAttributeIdToAvailableFrequency}
                 onAddAll={this.addAll}
                 onClearAll={this.clear}
+                showSubmit={this.showSubmit}
+                onSubmit={this.submit}
                 onToggleOption={this.toggleClinicalTrack}
                 optionsGivenInSortedOrder={true}
                 width={this.dropdownWidth}
@@ -392,7 +418,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                         selected:
                             option.key in
                             _.keyBy(
-                                this.getSelectedClinicalAttributes().map(
+                                this.props.state.toggledClinicalTracks!.map(
                                     a => a.stableId
                                 )
                             ),

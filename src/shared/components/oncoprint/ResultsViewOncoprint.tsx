@@ -306,6 +306,8 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @observable renderingComplete = false;
 
+    @observable toggledClinicalTracks: ClinicalTrackConfig[];
+
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
     private molecularProfileIdToTrackGroupIndex: {
@@ -507,6 +509,13 @@ export default class ResultsViewOncoprint extends React.Component<
         this.controlsState = observable({
             get selectedClinicalAttributeSpecInits(): ClinicalTrackConfigMap {
                 return self.selectedClinicalTrackConfig;
+            },
+            get toggledClinicalTracks(): ClinicalTrackConfig[] {
+                if (!self.toggledClinicalTracks) {
+                    return _.values(self.selectedClinicalTrackConfig);
+                } else {
+                    return self.toggledClinicalTracks;
+                }
             },
             get selectedColumnType() {
                 return self.oncoprintAnalysisCaseType;
@@ -859,6 +868,11 @@ export default class ResultsViewOncoprint extends React.Component<
                 });
             },
             onChangeSelectedClinicalTracks: this.setSessionClinicalTracks,
+            onChangeToggledClinicalTracks: (
+                clinicalTracks: ClinicalTrackConfig[]
+            ) => {
+                this.toggledClinicalTracks = clinicalTracks;
+            },
             onChangeHeatmapGeneInputValue: action((s: string) => {
                 this.heatmapGeneInputValue = s;
                 this.heatmapGeneInputValueUpdater(); // stop updating heatmap input if user has typed
@@ -1313,6 +1327,10 @@ export default class ResultsViewOncoprint extends React.Component<
                 ...session.userSettings,
                 clinicallist: _.values(json),
             };
+            this.controlsHandlers.onChangeToggledClinicalTracks &&
+                this.controlsHandlers.onChangeToggledClinicalTracks(
+                    _.values(json)
+                );
         }
     }
 
