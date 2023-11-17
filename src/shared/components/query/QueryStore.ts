@@ -291,8 +291,14 @@ export class QueryStore {
 
     @observable.ref searchClauses: SearchClause[] = [];
 
+    @observable.ref dataTypeFilters: string[] = [];
+
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);
+    }
+
+    @computed get filterType(): string[] {
+        return this.dataTypeFilters;
     }
 
     @observable private _allSelectedStudyIds: ObservableMap<
@@ -632,7 +638,7 @@ export class QueryStore {
     );
 
     readonly cancerStudies = remoteData(
-        client.getAllStudiesUsingGET({ projection: 'SUMMARY' }),
+        client.getAllStudiesUsingGET({ projection: 'DETAILED' }),
         []
     );
 
@@ -2222,6 +2228,10 @@ export class QueryStore {
     @action setSearchText(searchText: string) {
         this.clearSelectedCancerType();
         this.searchClauses = this.queryParser.parseSearchQuery(searchText);
+    }
+
+    @action setFilterType(filter: string) {
+        this.dataTypeFilters.push(filter);
     }
 
     @action clearSelectedCancerType() {
