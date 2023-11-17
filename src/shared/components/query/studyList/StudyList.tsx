@@ -104,10 +104,8 @@ export default class StudyList extends QueryStoreComponent<
         let childStudyIds = this.logic.cancerTypeListView
             .getDescendantCancerStudies(cancerType)
             .map(study => study.studyId);
-
         let heading: JSX.Element | undefined;
         let indentArrow: JSX.Element | undefined;
-
         if (cancerType != this.rootCancerType) {
             let liClassName = classNames(
                 styles.CancerType,
