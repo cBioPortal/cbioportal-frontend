@@ -71,7 +71,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         }}
                     >
                         <label style={{ paddingTop: 8 }}>
-                            Filter to studies with selected data types
+                            Filter studies with selected data types
                         </label>
                         <label
                             style={{
