@@ -22,14 +22,12 @@ export type CheckboxFilterField = {
 
 export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
     const options = props.filter.form.options;
-
     if (options.length < 2) {
         return null;
     }
 
     const prefix = props.filter.phrasePrefix || '';
     let checkedOptions: string[] = [];
-
     const relevantClauses: SearchClause[] = [];
     const toRemove: ListPhrase[] = [];
     props.query.forEach(clause => {
@@ -41,14 +39,12 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
             toRemove.push(phraseToRemove as ListPhrase);
         }
     });
-
     for (const option of options) {
         const isChecked = isOptionChecked(option, relevantClauses);
         if (isChecked) {
             checkedOptions.push(option);
         }
     }
-
     return (
         <div className="filter-checkbox">
             <h5>{props.filter.form.label}</h5>
@@ -97,7 +93,6 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
             </div>
         </div>
     );
-
     function updatePhrases(option: string, checked?: boolean) {
         if (checked) {
             checkedOptions.push(option);
@@ -146,7 +141,6 @@ export function createQueryUpdate(
 ): QueryUpdate {
     let toAdd: SearchClause[];
     const toRemove = phrasesToRemove;
-
     const options = filter.form.options;
     const prefix = filter.phrasePrefix || '';
     const fields = filter.nodeFields;
@@ -154,13 +148,13 @@ export function createQueryUpdate(
     const onlyAnd = optionsToAdd.length === options.length;
     const onlyNot = !optionsToAdd.length;
     const moreAnd = optionsToAdd.length > options.length / 2;
-
     if (onlyAnd) {
         toAdd = [];
     } else if (onlyNot || moreAnd) {
         const phrase = options
             .filter(o => !optionsToAdd.includes(o))
             .join(FILTER_VALUE_SEPARATOR);
+
         toAdd = [new NotSearchClause(createListPhrase(prefix, phrase, fields))];
     } else {
         const phrase = optionsToAdd.join(FILTER_VALUE_SEPARATOR);
