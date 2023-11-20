@@ -338,17 +338,27 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     readonly addClinicalTracksMenu = MakeMobxView({
         await: () => [this.trackOptionsByType],
         render: () => (
-            <AddChartByType
-                options={this.trackOptionsByType.result!.clinical}
-                freqPromise={this.clinicalAttributeIdToAvailableFrequency}
-                onAddAll={this.addAll}
-                onClearAll={this.clear}
-                showSubmit={this.showSubmit}
-                onSubmit={this.submit}
-                onToggleOption={this.toggleClinicalTrack}
-                optionsGivenInSortedOrder={true}
-                width={this.dropdownWidth}
-            />
+            <>
+                <AddChartByType
+                    options={this.trackOptionsByType.result!.clinical}
+                    freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                    onAddAll={this.addAll}
+                    onClearAll={this.clear}
+                    onToggleOption={this.toggleClinicalTrack}
+                    optionsGivenInSortedOrder={true}
+                    width={this.dropdownWidth}
+                />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="add-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Add tracks'}
+                    </button>
+                )}
+            </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
         showLastRenderWhenPending: true,
@@ -375,6 +385,16 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     frequencyHeaderTooltip="% samples in group"
                     width={this.dropdownWidth}
                 />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="add-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Add tracks'}
+                    </button>
+                )}
             </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
@@ -402,6 +422,16 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     frequencyHeaderTooltip="% samples in group"
                     width={this.dropdownWidth}
                 />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="add-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Add tracks'}
+                    </button>
+                )}
             </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,

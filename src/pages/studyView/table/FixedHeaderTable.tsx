@@ -56,8 +56,6 @@ export type IFixedHeaderTableProps<T> = {
     showAddRemoveAllButton?: boolean;
     addAll?: (data: T[]) => void;
     removeAll?: (data: T[]) => void;
-    showSubmit?: boolean;
-    submit?: () => void;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
     headerClassName?: string;
@@ -268,13 +266,6 @@ export default class FixedHeaderTable<T> extends React.Component<
         }
     }
 
-    @autobind
-    onSubmit() {
-        if (this.props.submit) {
-            this.props.submit();
-        }
-    }
-
     @computed
     get columnHeaders() {
         return this.props.columns.map(column => {
@@ -378,7 +369,6 @@ export default class FixedHeaderTable<T> extends React.Component<
         }`;
         const showSelectAll = !allSelected && this.props.addAll;
         const showDeselectAll = !noneSelected && this.props.removeAll;
-        const showSubmit = this.props.showSubmit && !!this.props.submit;
 
         return (
             <div style={{ display: 'flex', alignItems: 'baseline' }}>
@@ -398,15 +388,6 @@ export default class FixedHeaderTable<T> extends React.Component<
                         onClick={this.onRemoveAll}
                     >
                         {'Deselect all'}
-                    </button>
-                )}
-                {showSubmit && (
-                    <button
-                        className="btn btn-default btn-xs"
-                        data-test="fixed-header-table-submit"
-                        onClick={this.onSubmit}
-                    >
-                        {'Submit'}
                     </button>
                 )}
             </div>

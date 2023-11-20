@@ -26,8 +26,6 @@ export interface IAddChartByTypeProps {
     freqPromise?: MobxPromise<ChartDataCountSet>;
     onAddAll: (keys: string[]) => void;
     onClearAll: (keys: string[]) => void;
-    showSubmit?: boolean;
-    onSubmit?: () => void;
     onToggleOption: (key: string) => void;
     optionsGivenInSortedOrder?: boolean;
     frequencyHeaderTooltip?: string;
@@ -328,11 +326,6 @@ export default class AddChartByType extends React.Component<
     }
 
     @action.bound
-    submit() {
-        this.props.onSubmit && this.props.onSubmit();
-    }
-
-    @action.bound
     onOptionChange(option: AddChartOption) {
         this.props.onToggleOption(option.key);
     }
@@ -377,8 +370,6 @@ export default class AddChartByType extends React.Component<
                         showControlsAtTop={true}
                         addAll={this.addAll}
                         removeAll={this.removeAll}
-                        showSubmit={this.props.showSubmit}
-                        submit={this.submit}
                         showSelectableNumber={true}
                         showAddRemoveAllButton={true}
                         autoFocusSearchAfterRendering={true}
