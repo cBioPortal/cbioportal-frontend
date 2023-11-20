@@ -77,21 +77,25 @@ export default class OncoprintTrackInfoView {
                     return;
                 }
 
-                const float = parseFloat(text);
+                const num = text.match(/^[\d\.]*/)?.[0];
+                let suffix = text.match(/[^\d]*$/)?.[0];
+
+                const float = parseFloat(num);
                 let formattedPercent = '';
 
                 if (isNaN(float)) {
                     formattedPercent = 'N/P';
+                    suffix = ''; // we don't want any suffix in this case
                 } else if (isNumber(float)) {
                     formattedPercent =
                         float < 1 && float > 0
-                            ? '<1%'
-                            : Math.round(float) + '%';
+                            ? '<1'
+                            : Math.round(float).toString();
                 } else {
                     // do nothing
                 }
 
-                $new_label.text(formattedPercent);
+                $new_label.text(formattedPercent + suffix);
                 $new_label.appendTo(self.$text_ctr);
                 self.$label_elts.push($new_label);
                 setTimeout(function() {

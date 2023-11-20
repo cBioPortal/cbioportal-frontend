@@ -675,6 +675,7 @@ export function getAlterationData(
         sequencedSampleKeysByGene,
         sequencedPatientKeysByGene
     );
+
     if (
         isQueriedGeneSampling ||
         !queryGenes.map(gene => gene.hugoGeneSymbol).includes((oql as any).gene)
@@ -737,6 +738,7 @@ export function makeGeneticTrackWith({
                   coverageInformation,
                   selectedMolecularProfiles
               );
+
         const alterationInfo = alterationInfoForOncoprintTrackData(
             sampleMode,
             { trackData: data, oql: geneSymbolArray },
@@ -780,7 +782,7 @@ export function makeGeneticTrackWith({
         let infoTooltip = undefined;
         if (alterationInfo.sequenced !== 0) {
             // show tooltip explaining percent calculation, as long as its not N/P
-            infoTooltip = `altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced}`;
+            infoTooltip = `<strong>${alterationInfo.percent} altered</strong><br />(altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced})`;
         }
         if (
             alterationInfo.sequenced > 0 &&
@@ -789,6 +791,7 @@ export function makeGeneticTrackWith({
             // add asterisk to percentage if not all samples/patients are profiled for this track
             // dont add asterisk if none are profiled
             info = `${info}*`;
+            infoTooltip = `<strong>${info}</strong><br/>* = not all samples are profiled`;
         }
 
         return {
