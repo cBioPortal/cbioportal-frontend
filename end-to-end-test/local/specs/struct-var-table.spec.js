@@ -1,5 +1,5 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorageWithProperty = require('../../../shared/specUtils')
+var goToUrlAndSetLocalStorageWithProperty = require('../../shared/specUtils')
     .goToUrlAndSetLocalStorageWithProperty;
 var waitForStudyView = require('../../shared/specUtils').waitForStudyView;
 
