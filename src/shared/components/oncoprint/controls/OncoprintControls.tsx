@@ -58,6 +58,7 @@ export interface IOncoprintControlsHandlers
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
+    onSelectIsWhiteBackgroundForGlyphsEnabled?: (use: boolean) => void;
 
     onSelectHideVUS: (hide: boolean) => void;
     onSelectHideGermlineMutations: (hide: boolean) => void;
@@ -90,6 +91,7 @@ export interface IOncoprintControlsState
     showClinicalTrackLegends?: boolean;
     onlyShowClinicalLegendForAlteredCases?: boolean;
     showOqlInLabels?: boolean;
+    isWhiteBackgroundForGlyphsEnabled?: boolean;
     showMinimap: boolean;
     isClinicalTrackConfigDirty: boolean;
     isLoggedIn: boolean;
@@ -151,6 +153,7 @@ const EVENT_KEY = {
     showClinicalTrackLegends: '4',
     onlyShowClinicalLegendForAlteredCases: '4.1',
     showOqlInLabels: '4.2',
+    isWhiteBackgroundForGlyphsEnabled: '4.3',
     distinguishMutationType: '5',
     distinguishGermlineMutations: '5.1',
     sortByMutationType: '6',
@@ -274,6 +277,12 @@ export default class OncoprintControls extends React.Component<
                 this.props.handlers.onSelectShowOqlInLabels &&
                     this.props.handlers.onSelectShowOqlInLabels(
                         !this.props.state.showOqlInLabels
+                    );
+                break;
+            case EVENT_KEY.isWhiteBackgroundForGlyphsEnabled:
+                this.props.handlers.onSelectIsWhiteBackgroundForGlyphsEnabled &&
+                    this.props.handlers.onSelectIsWhiteBackgroundForGlyphsEnabled(
+                        !this.props.state.isWhiteBackgroundForGlyphsEnabled
                     );
                 break;
             case EVENT_KEY.columnTypeSample:
@@ -1044,6 +1053,23 @@ export default class OncoprintControls extends React.Component<
                             onClick={this.onInputClick}
                         />{' '}
                         Show OQL filters
+                    </label>
+                </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            data-test="toggleWhiteBackgroundForGlyphs"
+                            value={EVENT_KEY.isWhiteBackgroundForGlyphsEnabled}
+                            checked={
+                                this.props.state
+                                    .isWhiteBackgroundForGlyphsEnabled
+                            }
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Use white background (Caution: profiled and unprofiled
+                        samples look identical and germline mutations might be
+                        hidden)
                     </label>
                 </div>
             </CustomDropdown>

@@ -32,8 +32,10 @@ import {
     makeGeneticTrackData,
     makeHeatmapTrackData,
 } from './DataUtils';
-import ResultsViewOncoprint from './ResultsViewOncoprint';
 import _, { isNumber } from 'lodash';
+import ResultsViewOncoprint, {
+    getClinicalTrackValues,
+} from './ResultsViewOncoprint';
 import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
 import { MobxPromise } from 'mobxpromise';
 import GenesetCorrelatedGeneCache from 'shared/cache/GenesetCorrelatedGeneCache';
@@ -54,7 +56,11 @@ import {
     MUTATION_SPECTRUM_FILLS,
     SpecialAttribute,
 } from '../../cache/ClinicalDataCache';
-import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
+import {
+    ASCN_WHITE,
+    hexToRGBA,
+    RESERVED_CLINICAL_VALUE_COLORS,
+} from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
 import ifNotDefined from '../../lib/ifNotDefined';
 import {
@@ -446,7 +452,8 @@ export function getGenesetHeatmapTrackRuleSetParams() {
 export function getGeneticTrackRuleSetParams(
     distinguishMutationType?: boolean,
     distinguishDrivers?: boolean,
-    distinguishGermlineMutations?: boolean
+    distinguishGermlineMutations?: boolean,
+    isWhiteBackgroundForGlyphsEnabled?: boolean
 ): IGeneticAlterationRuleSetParams {
     let rule_set;
     if (!distinguishMutationType && !distinguishDrivers) {
@@ -461,6 +468,18 @@ export function getGeneticTrackRuleSetParams(
     rule_set = _.cloneDeep(rule_set);
     if (distinguishGermlineMutations) {
         Object.assign(rule_set.rule_params.conditional, germline_rule_params);
+    }
+    if (isWhiteBackgroundForGlyphsEnabled) {
+        rule_set.legend_base_color = hexToRGBA(ASCN_WHITE);
+        if (rule_set.rule_params.always) {
+            rule_set.rule_params.always.shapes = [
+                {
+                    type: 'rectangle',
+                    fill: hexToRGBA(ASCN_WHITE),
+                    z: 1,
+                },
+            ];
+        }
     }
     return rule_set;
 }
@@ -491,8 +510,8 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
                 category_key: 'attr_val',
                 category_to_color: Object.assign(
                     {},
-                    track.category_to_color,
-                    _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA)
+                    _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA),
+                    track.category_to_color
                 ),
                 universal_rule_categories: track.universal_rule_categories,
             };
@@ -675,6 +694,7 @@ export function getAlterationData(
         sequencedSampleKeysByGene,
         sequencedPatientKeysByGene
     );
+
     if (
         isQueriedGeneSampling ||
         !queryGenes.map(gene => gene.hugoGeneSymbol).includes((oql as any).gene)
@@ -737,6 +757,7 @@ export function makeGeneticTrackWith({
                   coverageInformation,
                   selectedMolecularProfiles
               );
+
         const alterationInfo = alterationInfoForOncoprintTrackData(
             sampleMode,
             { trackData: data, oql: geneSymbolArray },
@@ -780,7 +801,7 @@ export function makeGeneticTrackWith({
         let infoTooltip = undefined;
         if (alterationInfo.sequenced !== 0) {
             // show tooltip explaining percent calculation, as long as its not N/P
-            infoTooltip = `altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced}`;
+            infoTooltip = `<strong>${alterationInfo.percent} altered</strong><br />(altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced})`;
         }
         if (
             alterationInfo.sequenced > 0 &&
@@ -789,6 +810,7 @@ export function makeGeneticTrackWith({
             // add asterisk to percentage if not all samples/patients are profiled for this track
             // dont add asterisk if none are profiled
             info = `${info}*`;
+            infoTooltip = `<strong>${info}</strong><br/>* = not all samples are profiled`;
         }
 
         return {
@@ -1028,6 +1050,11 @@ export function makeClinicalTracksMobxPromise(
                         Yes: true,
                     };
                 }
+                const userSelectedClinicalTracksColors =
+                    oncoprint.props.store
+                        .userSelectedStudiesToClinicalTracksColors['global'][
+                        attribute.displayName
+                    ];
                 if (attribute.datatype === 'NUMBER') {
                     ret.datatype = 'number';
                     if (
@@ -1064,9 +1091,10 @@ export function makeClinicalTracksMobxPromise(
                     }
                 } else if (attribute.datatype === 'STRING') {
                     ret.datatype = 'string';
-                    (ret as any).category_to_color = _.mapValues(
-                        dataAndColors.categoryToColor,
-                        hexToRGBA
+                    (ret as any).category_to_color = Object.assign(
+                        {},
+                        _.mapValues(dataAndColors.categoryToColor, hexToRGBA),
+                        userSelectedClinicalTracksColors
                     );
                 } else if (
                     attribute.clinicalAttributeId ===
@@ -1074,7 +1102,16 @@ export function makeClinicalTracksMobxPromise(
                 ) {
                     ret.datatype = 'counts';
                     (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
-                    (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
+                    (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS.slice();
+                    _.forEach((ret as any).countsCategoryLabels, (label, i) => {
+                        if (
+                            userSelectedClinicalTracksColors &&
+                            userSelectedClinicalTracksColors[label]
+                        ) {
+                            (ret as any).countsCategoryFills[i] =
+                                userSelectedClinicalTracksColors[label];
+                        }
+                    });
                 }
 
                 const trackConfig =

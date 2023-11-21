@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend",
   "private": true,
-  "version": "3.3.262",
+  "version": "3.3.263",
   "workspaces": {
     "packages": [
       ".",
@@ -227,7 +227,7 @@
     "oncokb-frontend-commons": "^0.0.20",
     "oncokb-styles": "~1.4.2",
     "oncokb-ts-api-client": "^1.3.3",
-    "oncoprintjs": "^6.0.4",
+    "oncoprintjs": "^6.0.5",
     "pako": "2.0.2",
     "parameter-validator": "^1.0.2",
     "path-browserify": "^1.0.1",

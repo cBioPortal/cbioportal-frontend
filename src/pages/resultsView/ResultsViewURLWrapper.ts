@@ -77,6 +77,7 @@ export enum ResultsViewURLQueryEnum {
     geneset_list = 'geneset_list',
     generic_assay_groups = 'generic_assay_groups',
     show_samples = 'show_samples',
+    enable_white_background_for_glyphs = 'enable_white_background_for_glyphs',
     heatmap_track_groups = 'heatmap_track_groups',
     oncoprint_sortby = 'oncoprint_sortby',
     oncoprint_cluster_profile = 'oncoprint_cluster_profile',
@@ -127,6 +128,7 @@ export type ResultsViewURLQuery = {
 const shouldForceRemount: { [prop in keyof ResultsViewURLQuery]: boolean } = {
     clinicallist: false,
     show_samples: false,
+    enable_white_background_for_glyphs: false,
     heatmap_track_groups: false,
     oncoprint_sortby: false,
     oncoprint_cluster_profile: false,
@@ -181,6 +183,7 @@ const propertiesMap = _.mapValues(
         // oncoprint props
         clinicallist: { isSessionProp: false },
         show_samples: { isSessionProp: false },
+        enable_white_background_for_glyphs: { isSessionProp: false },
         heatmap_track_groups: { isSessionProp: false },
         oncoprint_sortby: { isSessionProp: false },
         oncoprint_cluster_profile: { isSessionProp: false },

@@ -304,6 +304,7 @@ import {
     ONCOKB_DEFAULT_INFO,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
+import { RGBAColor } from 'oncoprintjs';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -493,6 +494,15 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
             )
         );
+
+        const clinicalTracksColorConfig = localStorage.getItem(
+            'clinicalTracksColorConfig'
+        );
+        if (clinicalTracksColorConfig !== null) {
+            this._userSelectedStudiesToClinicalTracksColors = JSON.parse(
+                clinicalTracksColorConfig
+            );
+        }
     }
 
     destroy() {
@@ -524,6 +534,10 @@ export class ResultsViewPageStore extends AnalysisStore
     @computed
     get cancerStudyIds() {
         return this.urlWrapper.query.cancer_study_list.split(',');
+    }
+    @computed
+    get cancerStudyListSorted() {
+        return this.cancerStudyIds.sort().join(',');
     }
 
     @computed
@@ -573,6 +587,14 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable queryFormVisible: boolean = false;
 
+    @observable _userSelectedStudiesToClinicalTracksColors: {
+        [studies: string]: {
+            [label: string]: {
+                [value: string]: RGBAColor;
+            };
+        };
+    } = { global: {} };
+
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
             this.nonSelectedDownloadableMolecularProfilesGroupByName.result &&
@@ -585,6 +607,48 @@ export class ResultsViewPageStore extends AnalysisStore
     @observable public modifyQueryParams:
         | ModifyQueryParams
         | undefined = undefined;
+
+    @action.bound
+    public setUserSelectedClinicalTrackColor(
+        label: string,
+        value: string,
+        color: RGBAColor | undefined
+    ) {
+        // if color is undefined, delete color from userSelectedClinicalAttributeColors if exists
+        // else, set the color in userSelectedClinicalAttributeColors
+        if (
+            !color &&
+            this._userSelectedStudiesToClinicalTracksColors['global'][label] &&
+            this._userSelectedStudiesToClinicalTracksColors['global'][label][
+                value
+            ]
+        ) {
+            delete this._userSelectedStudiesToClinicalTracksColors['global'][
+                label
+            ][value];
+        } else if (color) {
+            if (
+                !this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ]
+            ) {
+                this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ] = {};
+            }
+            this._userSelectedStudiesToClinicalTracksColors['global'][label][
+                value
+            ] = color;
+        }
+        localStorage.setItem(
+            'clinicalTracksColorConfig',
+            JSON.stringify(this._userSelectedStudiesToClinicalTracksColors)
+        );
+    }
+
+    @computed get userSelectedStudiesToClinicalTracksColors() {
+        return this._userSelectedStudiesToClinicalTracksColors;
+    }
 
     @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {
