@@ -57,7 +57,7 @@
     "save-svg-as-png": "^1.4.17",
     "seamless-immutable": "^7.0.1",
     "superagent": "^3.8.3",
-    "svg2pdf.js": "github:cbioportal/svg2pdf.js#v1.3.3-cbio-patch-1",
+    "svg2pdf.js": "2.0.0",
     "typescript": "4.0.3",
     "url": "^0.11.0",
     "victory": "30.0.0"
