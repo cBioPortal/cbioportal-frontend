@@ -355,7 +355,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                         style={{ marginTop: '10px', marginBottom: '0px' }}
                         onClick={this.submit}
                     >
-                        {'Add tracks'}
+                        {'Update tracks'}
                     </button>
                 )}
             </>
@@ -392,7 +392,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                         style={{ marginTop: '10px', marginBottom: '0px' }}
                         onClick={this.submit}
                     >
-                        {'Add tracks'}
+                        {'Update tracks'}
                     </button>
                 )}
             </>
@@ -429,7 +429,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                         style={{ marginTop: '10px', marginBottom: '0px' }}
                         onClick={this.submit}
                     >
-                        {'Add tracks'}
+                        {'Update tracks'}
                     </button>
                 )}
             </>
