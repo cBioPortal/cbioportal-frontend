@@ -401,6 +401,35 @@ export class StudySummaryTab extends React.Component<
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
+            [ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE]: () => ({
+                filters: this.store
+                    .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                    .map(
+                        genomicDataFilterValue => genomicDataFilterValue.value
+                    ),
+                promise: this.store.getMutationEventChartDataCount(chartMeta),
+                onValueSelection: this.handlers
+                    .onGenomicDataCategoricalValueSelection,
+                onResetSelection: this.handlers
+                    .onGenomicDataCategoricalValueSelection,
+                selectedGenes: this.store.selectedGenes,
+                onGeneSelect: this.store.onCheckGene,
+                id: 'mutation-event-counts-table',
+                title: this.store.getChartTitle(
+                    ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE,
+                    props.title
+                ),
+                getData: () => this.store.getMutatedGenesDownloadData(),
+                genePanelCache: this.store.genePanelCache,
+                downloadTypes: ['Data'],
+                filterByCancerGenes: this.store
+                    .filterMutatedGenesTableByCancerGenes,
+                onChangeCancerGeneFilter: this.store
+                    .updateMutatedGenesTableByCancerGenesFilter,
+                alterationFilterEnabled: getServerConfig()
+                    .skin_show_settings_menu,
+                filterAlterations: this.store.isGlobalMutationFilterActive,
+            }),
             [ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE]: () => ({
                 filters: this.store.getGeneFiltersByUniqueKey(
                     chartMeta.uniqueKey

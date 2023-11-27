@@ -687,6 +687,8 @@ export type GenomicDataBinFilter = {
 export type GenomicDataCount = {
     'count': number
 
+        'uniqueCount': number
+
         'label': string
 
         'value': string

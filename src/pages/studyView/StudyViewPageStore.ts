@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _, { invoke } from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -155,6 +155,7 @@ import {
     submitToPage,
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
+    transformMutationEventType,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -221,6 +222,8 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import {
     AlterationTypeConstants,
     DataTypeConstants,
+    MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
+    MutationFilterConstants,
     MutationOptionConstants,
 } from 'shared/constants';
 import {
@@ -303,6 +306,8 @@ import {
     getAllowedSurvivalClinicalDataFilterId,
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
+import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
+import { Chart } from 'chart.js';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -1574,7 +1579,8 @@ export class StudyViewPageStore
     private createMutatedGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
-        statusCallback: (phase: LoadingPhase) => void
+        statusCallback: (phase: LoadingPhase) => void,
+        mutationTypes?: string[]
     ): Promise<string> {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
 
@@ -1595,8 +1601,12 @@ export class StudyViewPageStore
                     );
 
                     const mutationsByGene = _.groupBy(
-                        mutationData,
-                        m => m.gene.hugoGeneSymbol
+                        mutationTypes
+                            ? mutationData.filter(d =>
+                                  mutationTypes.includes(d.mutationType)
+                              )
+                            : mutationData,
+                        m => `${m.gene.hugoGeneSymbol}:${m.mutationType}`
                     );
 
                     return resolve(
@@ -1904,6 +1914,7 @@ export class StudyViewPageStore
                     const chartInfo = this._geneSpecificChartMap.get(
                         chartMeta.uniqueKey
                     )!;
+
                     comparisonId = await this.createCnaGeneComparisonSession(
                         chartMeta,
                         [chartInfo.hugoGeneSymbol],
@@ -3012,12 +3023,23 @@ export class StudyViewPageStore
     @action.bound
     updateCategoricalGenomicDataFilters(
         uniqueKey: string,
-        values: string[]
+        values: string[] | string[][]
     ): void {
         trackStudyViewFilterEvent('genomicCategoricalData', this);
-
+        let flattenValues: string[];
+        if (
+            Array.isArray(values) &&
+            (values as string[][]).every(value => Array.isArray(value))
+        ) {
+            flattenValues = (values as string[][]).reduce(
+                (acc, val) => acc.concat(val),
+                []
+            );
+        } else {
+            flattenValues = values as string[];
+        }
         const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
-            values
+            flattenValues
         );
         this.updateGenomicDataFiltersByValues(
             uniqueKey,
@@ -3883,9 +3905,66 @@ export class StudyViewPageStore
     }
 
     @computed get mutationDataFilters(): MutationDataFilter[] {
-        return Array.from(this._genomicDataFilterSet.values()).filter(filter =>
+        let mutationDataFilters = Array.from(
+            this._genomicDataFilterSet.values()
+        ).filter(filter =>
             filter.hasOwnProperty('categorization')
         ) as MutationDataFilter[];
+        if (mutationDataFilters.length > 0) {
+            let mutatedValues: DataFilterValue[] = [];
+            mutationDataFilters.forEach(filter => {
+                if (filter.categorization === MutationOptionConstants.EVENT) {
+                    filter.values = filter.values.reduce(
+                        (acc, dataFilterValue) => {
+                            if (
+                                [
+                                    MutationFilterConstants.MUTATED,
+                                    MutationFilterConstants.NOT_MUTATED,
+                                    MutationFilterConstants.NOT_PROFILED,
+                                ].includes(dataFilterValue.value)
+                            ) {
+                                mutatedValues.push(dataFilterValue);
+                            } else {
+                                acc.push(dataFilterValue);
+                            }
+
+                            return acc;
+                        },
+                        [] as DataFilterValue[]
+                    );
+                }
+            });
+
+            if (mutatedValues.length > 0) {
+                let mutatedFilter = mutationDataFilters.find(
+                    filter =>
+                        filter.categorization ===
+                        MutationOptionConstants.MUTATED
+                );
+
+                if (mutatedFilter) {
+                    mutatedFilter.values = mutatedFilter.values.concat(
+                        mutatedValues
+                    );
+                } else {
+                    let eventFilter = _.cloneDeep(
+                        mutationDataFilters.find(
+                            filter =>
+                                filter.categorization ===
+                                MutationOptionConstants.EVENT
+                        )
+                    );
+                    eventFilter!.values = mutatedValues;
+                    eventFilter!.categorization =
+                        MutationOptionConstants.MUTATED;
+                    mutationDataFilters.push(eventFilter!);
+                }
+            }
+        }
+        mutationDataFilters = mutationDataFilters.filter(
+            filter => filter.values.length > 0
+        );
+        return mutationDataFilters;
     }
 
     @computed get genericAssayDataFilters(): GenericAssayDataFilter[] {
@@ -4887,6 +4966,7 @@ export class StudyViewPageStore
                             result = await internalClient.fetchMutationDataCountsUsingPOST(
                                 params
                             );
+                            getDisplayedValue = transformMutationEventType;
                         } else {
                             result = await internalClient.fetchGenomicDataCountsUsingPOST(
                                 params
@@ -4925,6 +5005,83 @@ export class StudyViewPageStore
             });
         }
         return this.genomicDataCountPromises[chartMeta.uniqueKey];
+    }
+
+    public getMutationEventChartDataCount(
+        chartMeta: ChartMeta
+    ): MobxPromise<MultiSelectionTableRow[]> {
+        return remoteData<MultiSelectionTableRow[]>({
+            await: () => [this.selectedSamples],
+            invoke: async () => {
+                let res: MultiSelectionTableRow[] = [];
+                const chartInfo = this._geneSpecificChartMap.get(
+                    chartMeta.uniqueKey
+                );
+                //only invoke if there are filtered samples
+                if (chartInfo && this.hasFilteredSamples) {
+                    let getDisplayedValue;
+                    let params = {
+                        genomicDataCountFilter: {
+                            genomicDataFilters: [
+                                {
+                                    hugoGeneSymbol: chartInfo.hugoGeneSymbol,
+                                    profileType: chartInfo.profileType,
+                                },
+                            ] as any,
+                            studyViewFilter: this.filters,
+                        },
+                    } as any;
+
+                    params = {
+                        ...params,
+                        $queryParameters: {
+                            projection:
+                                chartInfo.mutationOptionType ===
+                                MutationOptionConstants.MUTATED
+                                    ? 'SUMMARY'
+                                    : 'DETAILED',
+                        },
+                    };
+
+                    const [result, selectedSamples] = await Promise.all([
+                        await internalClient.fetchMutationDataCountsUsingPOST(
+                            params
+                        ),
+                        toPromise(this.selectedSamples),
+                    ]);
+
+                    const data = result.find(
+                        d =>
+                            d.hugoGeneSymbol === chartInfo.hugoGeneSymbol &&
+                            d.profileType === chartInfo.profileType
+                    );
+
+                    let counts: MultiSelectionTableRow[] = [];
+                    let profileType: string = '';
+                    if (data !== undefined) {
+                        counts = data.counts.map(c => {
+                            return {
+                                uniqueKey: c.value,
+                                label: c.label,
+                                // "Altered" and "Profiled" really just mean
+                                //  "numerator" and "denominator" in percent
+                                //  calculation of table. Here, they mean
+                                //  "# filtered samples in profile" and "# filtered samples overall"
+                                numberOfAlteredCases: c.uniqueCount,
+                                numberOfProfiledCases: selectedSamples.length,
+                                totalCount: c.count,
+                            } as any;
+                        });
+                        profileType = data.profileType;
+                    }
+
+                    return counts;
+                }
+                return res;
+            },
+            onError: () => {},
+            default: [],
+        });
     }
 
     private generateColorMapKey(id: string, value: string): string {
@@ -6223,6 +6380,21 @@ export class StudyViewPageStore
                         profileType: newChart.profileType,
                     } as any);
                     this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
+                } else if (
+                    newChart.mutationOptionType &&
+                    newChart.mutationOptionType ===
+                        MutationOptionConstants.EVENT
+                ) {
+                    this.chartsType.set(
+                        uniqueKey,
+                        ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE
+                    );
+                    this.chartsDimension.set(
+                        uniqueKey,
+                        STUDY_VIEW_CONFIG.layout.dimensions[
+                            ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE
+                        ]
+                    );
                 } else {
                     this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
                     this.chartsDimension.set(
@@ -10235,7 +10407,8 @@ export class StudyViewPageStore
         let count = 0;
         if (this.molecularProfileSampleCountSet.result !== undefined) {
             switch (chartType) {
-                case ChartTypeEnum.MUTATED_GENES_TABLE: {
+                case ChartTypeEnum.MUTATED_GENES_TABLE:
+                case ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE: {
                     count = this.molecularProfileSampleCountSet.result[
                         MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
                     ]

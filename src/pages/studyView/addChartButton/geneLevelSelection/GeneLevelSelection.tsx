@@ -76,7 +76,9 @@ export default class GeneLevelSelection extends React.Component<
                     profileType: this.selectedOption!.value,
                     hugoGeneSymbol: gene.hugoGeneSymbol,
                     dataType: this.selectedOption!.dataType,
-                    mutationOptionType: this.selectedSubOption!.value,
+                    ...(this.selectedSubOption
+                        ? { mutationOptionType: this.selectedSubOption.value }
+                        : {}),
                 };
             });
             this.props.onSubmit(charts);

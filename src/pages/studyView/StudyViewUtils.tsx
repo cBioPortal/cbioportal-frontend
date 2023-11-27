@@ -1866,6 +1866,19 @@ export function getCNAColorByAlteration(alteration: string): string {
     }
 }
 
+export function transformMutationEventType(eventType: string): string {
+    // Split the input string by underscores
+    var words = eventType.split('_');
+
+    // Capitalize the first letter of each word
+    var capitalizedWords = words.map(function(word) {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    });
+
+    // Join the words back together with a space between them
+    return capitalizedWords.join(' ');
+}
+
 export function getDefaultChartTypeByClinicalAttribute(
     clinicalAttribute: ClinicalAttribute
 ): ChartType | undefined {

@@ -134,3 +134,9 @@ export const MutationOptionConstants = {
     MUTATED: 'MUTATED',
     EVENT: 'EVENT',
 };
+
+export const MutationFilterConstants = {
+    MUTATED: 'MUTATED',
+    NOT_MUTATED: 'NOT_MUTATED',
+    NOT_PROFILED: 'NOT_PROFILED',
+};
