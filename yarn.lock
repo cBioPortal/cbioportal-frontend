@@ -1147,6 +1147,18 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
+"@datadog/browser-core@5.4.0":
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-core/-/browser-core-5.4.0.tgz#c9d55357d75a6ce25a95d235795d6b68c6f85e17"
+  integrity sha512-8HlKAcKXm7cJmzWQTVGnZiBs21BXkmRiknDaH9NbO6UT5JqYupXe/3zEesoX6Kxad2EzGlPVpBV816luWfqepw==
+
+"@datadog/browser-logs@^5.4.0":
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-logs/-/browser-logs-5.4.0.tgz#fc346364b1e59acb24d400114ef74adb6f223b92"
+  integrity sha512-0eLkUHUTnch8cpJMqV421XpUaEs0yS/4xriWz+GsAs+2uFQGio26fDmdRGOvK+8JowDBSv9VY+YzRi8iXlhJOA==
+  dependencies:
+    "@datadog/browser-core" "5.4.0"
+
 "@datastructures-js/max-heap@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@datastructures-js/max-heap/-/max-heap-2.0.0.tgz#4ab3bbc09706ff632aaa6d85fe6ba51747663b9a"
@@ -16634,12 +16646,6 @@ mobx@^6.0.0:
 "mobxpromise@github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f":
   version "2.0.1"
   resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/303db72588860bff0a6862a4f07a4e8a3578c94f"
-  dependencies:
-    mobx "^6.0.0"
-
-"mobxpromise@github:cbioportal/mobxpromise#b6cf1d86a72644b2521463c4db428408dbcb35b1":
-  version "2.0.1"
-  resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/b6cf1d86a72644b2521463c4db428408dbcb35b1"
   dependencies:
     mobx "^6.0.0"
 
