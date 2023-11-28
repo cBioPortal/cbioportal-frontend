@@ -419,7 +419,8 @@ export class StudySummaryTab extends React.Component<
                     ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE,
                     props.title
                 ),
-                getData: () => this.store.getMutatedGenesDownloadData(),
+                getData: () =>
+                    this.store.getMutationTypesDownloadData(chartMeta),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
                 filterByCancerGenes: this.store

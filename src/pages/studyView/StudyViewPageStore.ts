@@ -212,7 +212,10 @@ import { CancerGene } from 'oncokb-ts-api-client';
 
 import { AppStore } from 'AppStore';
 import { getGeneCNAOQL } from 'pages/studyView/TableUtils';
-import { MultiSelectionTableRow } from './table/MultiSelectionTable';
+import {
+    MultiSelectionTable,
+    MultiSelectionTableRow,
+} from './table/MultiSelectionTable';
 import {
     getGroupParameters,
     getSelectedGroups,
@@ -2389,6 +2392,9 @@ export class StudyViewPageStore
     } = {};
     public genomicDataCountPromises: {
         [id: string]: MobxPromise<ClinicalDataCountSummary[]>;
+    } = {};
+    public mutationDataCountPromises: {
+        [id: string]: MobxPromise<MultiSelectionTableRow[]>;
     } = {};
     public genericAssayChartPromises: {
         [id: string]: MobxPromise<DataBin[]>;
@@ -5010,78 +5016,87 @@ export class StudyViewPageStore
     public getMutationEventChartDataCount(
         chartMeta: ChartMeta
     ): MobxPromise<MultiSelectionTableRow[]> {
-        return remoteData<MultiSelectionTableRow[]>({
-            await: () => [this.selectedSamples],
-            invoke: async () => {
-                let res: MultiSelectionTableRow[] = [];
-                const chartInfo = this._geneSpecificChartMap.get(
-                    chartMeta.uniqueKey
-                );
-                //only invoke if there are filtered samples
-                if (chartInfo && this.hasFilteredSamples) {
-                    let getDisplayedValue;
-                    let params = {
-                        genomicDataCountFilter: {
-                            genomicDataFilters: [
-                                {
-                                    hugoGeneSymbol: chartInfo.hugoGeneSymbol,
-                                    profileType: chartInfo.profileType,
-                                },
-                            ] as any,
-                            studyViewFilter: this.filters,
-                        },
-                    } as any;
-
-                    params = {
-                        ...params,
-                        $queryParameters: {
-                            projection:
-                                chartInfo.mutationOptionType ===
-                                MutationOptionConstants.MUTATED
-                                    ? 'SUMMARY'
-                                    : 'DETAILED',
-                        },
-                    };
-
-                    const [result, selectedSamples] = await Promise.all([
-                        await internalClient.fetchMutationDataCountsUsingPOST(
-                            params
-                        ),
-                        toPromise(this.selectedSamples),
-                    ]);
-
-                    const data = result.find(
-                        d =>
-                            d.hugoGeneSymbol === chartInfo.hugoGeneSymbol &&
-                            d.profileType === chartInfo.profileType
+        if (
+            !this.mutationDataCountPromises.hasOwnProperty(chartMeta.uniqueKey)
+        ) {
+            this.mutationDataCountPromises[chartMeta.uniqueKey] = remoteData<
+                MultiSelectionTableRow[]
+            >({
+                await: () => [this.selectedSamples],
+                invoke: async () => {
+                    let res: MultiSelectionTableRow[] = [];
+                    const chartInfo = this._geneSpecificChartMap.get(
+                        chartMeta.uniqueKey
                     );
+                    //only invoke if there are filtered samples
+                    if (chartInfo && this.hasFilteredSamples) {
+                        let getDisplayedValue;
+                        let params = {
+                            genomicDataCountFilter: {
+                                genomicDataFilters: [
+                                    {
+                                        hugoGeneSymbol:
+                                            chartInfo.hugoGeneSymbol,
+                                        profileType: chartInfo.profileType,
+                                    },
+                                ] as any,
+                                studyViewFilter: this.filters,
+                            },
+                        } as any;
 
-                    let counts: MultiSelectionTableRow[] = [];
-                    let profileType: string = '';
-                    if (data !== undefined) {
-                        counts = data.counts.map(c => {
-                            return {
-                                uniqueKey: c.value,
-                                label: c.label,
-                                // "Altered" and "Profiled" really just mean
-                                //  "numerator" and "denominator" in percent
-                                //  calculation of table. Here, they mean
-                                //  "# filtered samples in profile" and "# filtered samples overall"
-                                numberOfAlteredCases: c.uniqueCount,
-                                numberOfProfiledCases: selectedSamples.length,
-                                totalCount: c.count,
-                            } as any;
-                        });
-                        profileType = data.profileType;
+                        params = {
+                            ...params,
+                            $queryParameters: {
+                                projection:
+                                    chartInfo.mutationOptionType ===
+                                    MutationOptionConstants.MUTATED
+                                        ? 'SUMMARY'
+                                        : 'DETAILED',
+                            },
+                        };
+
+                        const [result, selectedSamples] = await Promise.all([
+                            await internalClient.fetchMutationDataCountsUsingPOST(
+                                params
+                            ),
+                            toPromise(this.selectedSamples),
+                        ]);
+
+                        const data = result.find(
+                            d =>
+                                d.hugoGeneSymbol === chartInfo.hugoGeneSymbol &&
+                                d.profileType === chartInfo.profileType
+                        );
+
+                        let counts: MultiSelectionTableRow[] = [];
+                        let profileType: string = '';
+                        if (data !== undefined) {
+                            counts = data.counts.map(c => {
+                                return {
+                                    uniqueKey: c.value,
+                                    label: c.label,
+                                    // "Altered" and "Profiled" really just mean
+                                    //  "numerator" and "denominator" in percent
+                                    //  calculation of table. Here, they mean
+                                    //  "# filtered samples in profile" and "# filtered samples overall"
+                                    numberOfAlteredCases: c.uniqueCount,
+                                    numberOfProfiledCases:
+                                        selectedSamples.length,
+                                    totalCount: c.count,
+                                } as any;
+                            });
+                            profileType = data.profileType;
+                        }
+
+                        return counts;
                     }
-
-                    return counts;
-                }
-                return res;
-            },
-            onError: () => {},
-            default: [],
-        });
+                    return res;
+                },
+                onError: () => {},
+                default: [],
+            });
+        }
+        return this.mutationDataCountPromises[chartMeta.uniqueKey];
     }
 
     private generateColorMapKey(id: string, value: string): string {
@@ -9206,6 +9221,38 @@ export class StudyViewPageStore
                     data.push(rowData.join('\t'));
                 }
             );
+            return data.join('\n');
+        } else return '';
+    }
+
+    public async getMutationTypesDownloadData(
+        chartMeta: ChartMeta
+    ): Promise<string> {
+        const result = this.getMutationEventChartDataCount(chartMeta).result!;
+
+        if (result) {
+            let header = [
+                'Mutation Event',
+                '# Mut',
+                '#',
+                'Profiled Samples',
+                'Freq',
+            ];
+            let data = [header.join('\t')];
+            _.each(result, (record: MultiSelectionTableRow) => {
+                let rowData = [
+                    record.label,
+                    record.totalCount,
+                    record.numberOfAlteredCases,
+                    record.numberOfProfiledCases,
+                    getFrequencyStr(
+                        (record.numberOfAlteredCases /
+                            record.numberOfProfiledCases) *
+                            100
+                    ),
+                ];
+                data.push(rowData.join('\t'));
+            });
             return data.join('\n');
         } else return '';
     }
