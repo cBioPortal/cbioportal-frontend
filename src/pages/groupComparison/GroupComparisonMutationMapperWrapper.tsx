@@ -24,8 +24,9 @@ import styles from './styles.module.scss';
 import { saveOncoKbIconStyleToLocalStorage } from 'shared/lib/AnnotationColumnUtils';
 import {
     generateMutationIdByGeneAndProteinChange,
-    getGenomeNexusUrl,
+    getGenomeBuildFromStudies,
 } from 'shared/lib/StoreUtils';
+import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 
 interface IGroupComparisonMutationMapperWrapperProps {
     store: GroupComparisonStore;
@@ -48,6 +49,9 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
     }
 
     @computed get mutationMapperToolStore() {
+        const genomeBuild = getGenomeBuildFromStudies(
+            this.props.store.studies.result
+        );
         const store = new MutationMapperToolStore(
             this.props.store.filteredAndAnnotatedMutations.result,
             {
@@ -59,11 +63,14 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                     .uniqueSampleKeyToTumorType.result,
                 uniqueSampleKeyToCancerType: this.props.store
                     .uniqueSampleKeyToCancerType.result,
+                genomeBuild: genomeBuild,
             }
         );
-        store.setGenomeNexusUrl(
-            getGenomeNexusUrl(this.props.store.studies.result)
-        );
+
+        if (genomeBuild === REFERENCE_GENOME.grch38.UCSC) {
+            store.setGenomeNexusUrl(getServerConfig().genomenexus_url_grch38!);
+        }
+
         return store;
     }
 
