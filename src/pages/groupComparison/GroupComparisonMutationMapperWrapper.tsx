@@ -26,7 +26,6 @@ import {
     generateMutationIdByGeneAndProteinChange,
     getGenomeBuildFromStudies,
 } from 'shared/lib/StoreUtils';
-import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 
 interface IGroupComparisonMutationMapperWrapperProps {
     store: GroupComparisonStore;
@@ -66,10 +65,6 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                 genomeBuild: genomeBuild,
             }
         );
-
-        if (genomeBuild === REFERENCE_GENOME.grch38.UCSC) {
-            store.setGenomeNexusUrl(getServerConfig().genomenexus_url_grch38!);
-        }
 
         return store;
     }

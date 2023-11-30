@@ -100,6 +100,12 @@ export default class MutationMapperToolStore {
     ) {
         makeObservable(this);
         this.mutationData = mutationData;
+        if (
+            this.mutationMapperStoreConfigOverride?.genomeBuild ===
+            REFERENCE_GENOME.grch38.UCSC
+        ) {
+            this.grch38GenomeNexusUrl = getServerConfig().genomenexus_url_grch38!;
+        }
     }
 
     @computed get isoformOverrideSource(): string {
