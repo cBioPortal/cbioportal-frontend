@@ -60,8 +60,6 @@ import { SiteError } from 'shared/model/appMisc';
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
     @observable criticalErrors: Error[] = [];
-    // if we use grch37(default), grch38GenomeNexusUrl will be undefined
-    @observable grch38GenomeNexusUrl: string | undefined = undefined;
 
     readonly genes = remoteData<Gene[]>(
         {
@@ -100,12 +98,6 @@ export default class MutationMapperToolStore {
     ) {
         makeObservable(this);
         this.mutationData = mutationData;
-        if (
-            this.mutationMapperStoreConfigOverride?.genomeBuild ===
-            REFERENCE_GENOME.grch38.UCSC
-        ) {
-            this.grch38GenomeNexusUrl = getServerConfig().genomenexus_url_grch38!;
-        }
     }
 
     @computed get isoformOverrideSource(): string {
@@ -113,9 +105,15 @@ export default class MutationMapperToolStore {
     }
 
     @computed get genomeNexusClient() {
-        const client = this.grch38GenomeNexusUrl
-            ? new GenomeNexusAPI(this.grch38GenomeNexusUrl)
-            : defaultGenomeNexusClient;
+        let client = defaultGenomeNexusClient;
+        if (
+            this.mutationMapperStoreConfigOverride?.genomeBuild ===
+            REFERENCE_GENOME.grch38.UCSC
+        ) {
+            client = new GenomeNexusAPI(
+                getServerConfig().genomenexus_url_grch38!
+            );
+        }
 
         client.addErrorHandler(err => {
             eventBus.emit(
@@ -132,9 +130,15 @@ export default class MutationMapperToolStore {
     }
 
     @computed get genomeNexusInternalClient() {
-        const client = this.grch38GenomeNexusUrl
-            ? new GenomeNexusAPIInternal(this.grch38GenomeNexusUrl)
-            : defaultGenomeNexusInternalClient;
+        let client = defaultGenomeNexusInternalClient;
+        if (
+            this.mutationMapperStoreConfigOverride?.genomeBuild ===
+            REFERENCE_GENOME.grch38.UCSC
+        ) {
+            client = new GenomeNexusAPIInternal(
+                getServerConfig().genomenexus_url_grch38!
+            );
+        }
 
         client.addErrorHandler(err => {
             eventBus.emit(
@@ -355,9 +359,11 @@ export default class MutationMapperToolStore {
                                     {
                                         filterMutationsBySelectedTranscript: !this
                                             .hasInputWithProteinChanges,
-                                        genomeBuild: this.grch38GenomeNexusUrl
-                                            ? REFERENCE_GENOME.grch38.UCSC
-                                            : REFERENCE_GENOME.grch37.UCSC,
+                                        genomeBuild:
+                                            this
+                                                .mutationMapperStoreConfigOverride
+                                                ?.genomeBuild ||
+                                            REFERENCE_GENOME.grch37.UCSC,
                                         ...this
                                             .mutationMapperStoreConfigOverride,
                                     },
@@ -452,13 +458,12 @@ export default class MutationMapperToolStore {
         );
     }
 
-    public setGenomeNexusUrl(grch38GenomeNexusUrl: string | undefined) {
-        this.grch38GenomeNexusUrl = grch38GenomeNexusUrl;
-    }
-
     @autobind
     generateGenomeNexusHgvsgUrl(hgvsg: string) {
-        return getGenomeNexusHgvsgUrl(hgvsg, this.grch38GenomeNexusUrl);
+        return getGenomeNexusHgvsgUrl(
+            hgvsg,
+            this.genomeNexusClient.getDomain()
+        );
     }
 
     @cached @computed get pubMedCache() {
