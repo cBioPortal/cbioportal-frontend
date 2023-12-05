@@ -71,7 +71,7 @@ describe('treatment feature', () => {
             selectTreamentsBothAxes();
         });
 
-        it('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
+        it('shows value larger than 8.00 in figure legend and indicates sub-threshold data points in plot', () => {
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
 
             browser.execute(() => {
@@ -81,7 +81,7 @@ describe('treatment feature', () => {
             assertScreenShotMatch(res);
         });
 
-        it('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data points in plot', () => {
+        it('when option deselected, hides value larger than 8.00 in figure legend and sub-threshold data points in plot', () => {
             $('[data-test=ViewLimitValues]').waitForExist({ timeout: 10000 });
             $('[data-test=ViewLimitValues]').click();
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
@@ -100,7 +100,7 @@ describe('treatment feature', () => {
             assertScreenShotMatch(res);
         });
 
-        it('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data point indicators in waterfall plot', () => {
+        it('when option deselected, hides value larger than 8.00 in figure legend and sub-threshold data point indicators in waterfall plot', () => {
             var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
             selectReactSelectOption(horzDataSelect, 'Ordered samples');
 
