@@ -35,14 +35,13 @@ describe('oncoprint colors', () => {
             getElementByTestHandle('add-chart-option-mutation-spectrum')
                 .$('label')
                 .click();
+            getElementByTestHandle('update-tracks').waitForDisplayed();
+            getElementByTestHandle('update-tracks').click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
 
             // check that mutation spectrum is added to the oncoprint
             let legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf('Mutation spectrum') > -1);
-
-            $tracksDropdown.waitForDisplayed();
-            $tracksDropdown.click();
 
             var trackOptionsElts = getNthOncoprintTrackOptionsElements(5);
             // open menu

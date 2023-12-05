@@ -65,9 +65,16 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         string
     >({}, { deep: true });
 
+    private tracksDropdown: CustomDropdown;
+
     constructor(props: IAddTrackProps) {
         super(props);
         makeObservable(this);
+    }
+
+    @autobind
+    private tracksDropdownRef(dropdown: CustomDropdown) {
+        this.tracksDropdown = dropdown;
     }
 
     @action.bound
@@ -312,6 +319,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         this.props.handlers.onChangeSelectedClinicalTracks!(
             this.props.state.toggledClinicalTracks!
         );
+        this.tracksDropdown.hide();
     }
 
     @action.bound
@@ -351,7 +359,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 {this.showSubmit && (
                     <button
                         className="btn btn-primary btn-sm"
-                        data-test="add-tracks"
+                        data-test="update-tracks"
                         style={{ marginTop: '10px', marginBottom: '0px' }}
                         onClick={this.submit}
                     >
@@ -388,7 +396,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 {this.showSubmit && (
                     <button
                         className="btn btn-primary btn-sm"
-                        data-test="add-tracks"
+                        data-test="update-tracks"
                         style={{ marginTop: '10px', marginBottom: '0px' }}
                         onClick={this.submit}
                     >
@@ -425,7 +433,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 {this.showSubmit && (
                     <button
                         className="btn btn-primary btn-sm"
-                        data-test="add-tracks"
+                        data-test="update-tracks"
                         style={{ marginTop: '10px', marginBottom: '0px' }}
                         onClick={this.submit}
                     >
@@ -733,6 +741,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 id="addTracksDropdown"
                 className="oncoprintAddTracksDropdown"
                 styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}
+                ref={this.tracksDropdownRef}
             >
                 <div
                     style={{
