@@ -19,9 +19,9 @@ if [ ! "$(ls -A $CBIO_DB_DATA_DIR)" ]; then
 fi
 
 compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml"
-if [ $CUSTOM_BACKEND -eq 1 ]; then
-  compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
-fi
+#if [ $CUSTOM_BACKEND -eq 1 ]; then
+  #compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
+#fi
 
 rm -rf $CBIO_DB_DATA_DIR/*
 mkdir -p $CBIO_DB_DATA_DIR
