@@ -204,7 +204,7 @@ import {
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
 import { LoadingPhase } from '../groupComparison/GroupComparisonLoading';
-import { sleepUntil } from '../../shared/lib/TimeUtils';
+import { sleep, sleepUntil } from '../../shared/lib/TimeUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { CancerGene } from 'oncokb-ts-api-client';
@@ -8459,6 +8459,8 @@ export class StudyViewPageStore
     readonly hasCNSegmentData = remoteData<boolean>({
         await: () => [this.samples],
         invoke: async () => {
+            await sleep(20000);
+
             return defaultClient
                 .fetchCopyNumberSegmentsUsingPOSTWithHttpInfo({
                     sampleIdentifiers: this.samples.result.map(sample => ({
