@@ -6387,35 +6387,35 @@ export class StudyViewPageStore
                     'Distinct Counts of Patients with Clinical Event Types',
             };
         }
-        if (this.shouldDisplaySampleTreatments.result) {
-            _chartMetaSet['SAMPLE_TREATMENTS'] = {
-                uniqueKey: 'SAMPLE_TREATMENTS',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: true,
-                displayName: 'Treatment per Sample (pre/post)',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
-                ),
-                renderWhenDataChange: true,
-                description:
-                    'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
-            };
-        }
+        //if (this.shouldDisplaySampleTreatments.result) {
+        _chartMetaSet['SAMPLE_TREATMENTS'] = {
+            uniqueKey: 'SAMPLE_TREATMENTS',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: true,
+            displayName: 'Treatment per Sample (pre/post)',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
+            ),
+            renderWhenDataChange: true,
+            description:
+                'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
+        };
+        //}
 
-        if (this.shouldDisplayPatientTreatments.result) {
-            _chartMetaSet['PATIENT_TREATMENTS'] = {
-                uniqueKey: 'PATIENT_TREATMENTS',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: true,
-                displayName: 'Treatment per Patient',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.PATIENT_TREATMENTS_TABLE
-                ),
-                renderWhenDataChange: true,
-                description:
-                    'List of treatments and the corresponding number of patients treated',
-            };
-        }
+        //if (this.shouldDisplayPatientTreatments.result) {
+        _chartMetaSet['PATIENT_TREATMENTS'] = {
+            uniqueKey: 'PATIENT_TREATMENTS',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: true,
+            displayName: 'Treatment per Patient',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.PATIENT_TREATMENTS_TABLE
+            ),
+            renderWhenDataChange: true,
+            description:
+                'List of treatments and the corresponding number of patients treated',
+        };
+        //}
 
         if (this.shouldDisplaySampleTreatmentGroups.result) {
             _chartMetaSet['SAMPLE_TREATMENT_GROUPS'] = {
@@ -6654,7 +6654,9 @@ export class StudyViewPageStore
             this.survivalEntryMonths.isPending ||
             this.shouldDisplayPatientTreatments.isPending ||
             this.sharedCustomData.isPending ||
-            this.shouldDisplayClinicalEventTypeCounts.isPending;
+            this.shouldDisplayClinicalEventTypeCounts.isPending ||
+            this.shouldDisplaySampleTreatments.isPending ||
+            this.shouldDisplayPatientTreatments.isPending;
         if (
             this.clinicalAttributes.isComplete &&
             !_.isEmpty(this.clinicalAttributes.result)
@@ -7124,7 +7126,11 @@ export class StudyViewPageStore
 
     @action.bound
     updateChartStats(): void {
+        //debugger;
+
         this.initializeChartStatsByClinicalAttributes();
+
+        //debugger;
 
         if (!_.isEmpty(this.molecularProfiles.result)) {
             const chartMeta = _.find(

@@ -595,6 +595,7 @@ export default class StudyViewPage extends React.Component<
                     this.store.unknownQueriedIds.isComplete &&
                     this.store.displayedStudies.isComplete &&
                     this.store.queriedPhysicalStudies.isComplete &&
+                    this.store.shouldDisplaySampleTreatments.isComplete &&
                     this.store.queriedPhysicalStudies.result.length > 0 && (
                         <div>
                             <StudyPageHeader

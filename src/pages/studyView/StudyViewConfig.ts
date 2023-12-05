@@ -3,6 +3,7 @@ import { StudyView } from '../../config/IAppConfig';
 import { Layout } from 'react-grid-layout';
 import _ from 'lodash';
 import { ChartType } from './StudyViewUtils';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export type StudyViewColor = {
     theme: StudyViewColorTheme;
@@ -287,6 +288,18 @@ const studyViewFrontEnd = {
         },
     },
 };
+
+// these should really be passed in as instance specific configuration
+if (/\.mskcc\.org/.test(getBrowserWindow().location.hostname)) {
+    Object.assign(studyViewFrontEnd.priority, {
+        MUTATED_GENES_TABLE: 940,
+        CNA_GENES_TABLE: 930,
+        STRUCTURAL_VARIANT_GENES_TABLE: 920,
+        'X-VS-Y-FRACTION_GENOME_ALTERED-MUTATION_COUNT': 890,
+        SAMPLE_COUNT: 820,
+        GENOMIC_PROFILES_SAMPLE_COUNT: -1,
+    });
+}
 
 export const STUDY_VIEW_CONFIG: StudyViewConfig = _.assign(
     studyViewFrontEnd,
