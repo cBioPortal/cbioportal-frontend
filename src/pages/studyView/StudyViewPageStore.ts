@@ -7532,7 +7532,7 @@ export class StudyViewPageStore
             let filterAttributes: ClinicalAttribute[] = queriedAttributes
                 .filter(attr => (parseInt(attr.priority) || 0) > 0)
                 .sort(clinicalAttributeComparator)
-                .slice(0, 20);
+                .slice(0, 30);
 
             // Also check the initial filters, make sure all clinical attributes in initial filters will be added in default visible attributes
             let initialFilteredAttributeIds: string[] = [];
