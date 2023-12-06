@@ -39,3 +39,6 @@ end-to-end-test/local/studies/**
 *.cert
 *.key
 *.gmt
+*.yaml
+*.html
+*.crt
