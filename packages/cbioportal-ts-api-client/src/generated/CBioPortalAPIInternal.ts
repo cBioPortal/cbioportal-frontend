@@ -834,8 +834,15 @@ export type MutationCountByPosition = {
         'proteinPosStart': number
 
 };
-export type MutationDataFilter = GenomicDataFilter & {
-    'categorization': string
+export type MutationDataFilter = {
+    'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'values': Array < Array< DataFilterValue > >
+
+        'categorization': string
+        
 }
 export type MutationPositionIdentifier = {
     'entrezGeneId': number

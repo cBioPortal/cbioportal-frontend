@@ -568,8 +568,14 @@ export type MutationMultipleStudyFilter = {
         'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
-export type MutationDataFilter = GenomicDataFilter & {
-    'categorization': string
+export type MutationDataFilter = {
+    'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'values': Array < Array< DataFilterValue > >
+
+        'categorization': string
 }
 export type NumericGeneMolecularData = {
     'entrezGeneId': number

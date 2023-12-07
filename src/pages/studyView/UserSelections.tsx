@@ -77,6 +77,7 @@ export interface IUserSelectionsProps {
         uniqueKey: string,
         values: DataFilterValue[]
     ) => void;
+    updateMutationDataFilter: (uniqueKey: string, values: string[][]) => void;
     updateGenericAssayDataFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
@@ -290,7 +291,7 @@ export default class UserSelections extends React.Component<
             components
         );
 
-        // Genomic chart filters
+        // Mutation chart filters
         _.reduce(
             this.props.filter.mutationDataFilters || [],
             (acc, mutationDataFilter) => {
@@ -301,26 +302,37 @@ export default class UserSelections extends React.Component<
                 );
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
                 if (chartMeta) {
-                    let dataFilterComponent = this.renderCategoricalDataFilter(
-                        mutationDataFilter.values,
-                        this.props.updateGenomicDataFilter,
-                        chartMeta
-                    );
-
                     acc.push(
                         <div className={styles.parentGroupLogic}>
                             <GroupLogic
-                                components={[
-                                    <span
-                                        className={
-                                            styles.filterClinicalAttrName
-                                        }
-                                    >
-                                        {chartMeta.displayName}
-                                    </span>,
-                                    dataFilterComponent,
-                                ]}
-                                operation={':'}
+                                components={mutationDataFilter.values.map(
+                                    dataFilterValues => {
+                                        return (
+                                            <GroupLogic
+                                                components={[
+                                                    <span
+                                                        className={
+                                                            styles.filterClinicalAttrName
+                                                        }
+                                                    >
+                                                        {chartMeta.displayName}
+                                                    </span>,
+                                                    this.groupedMutationDataFilters(
+                                                        dataFilterValues,
+                                                        this.props
+                                                            .updateMutationDataFilter,
+                                                        chartMeta
+                                                    ),
+                                                ]}
+                                                operation=":"
+                                                group={
+                                                    dataFilterValues.length > 1
+                                                }
+                                            />
+                                        );
+                                    }
+                                )}
+                                operation={'and'}
                                 group={false}
                             />
                         </div>
@@ -1008,6 +1020,43 @@ export default class UserSelections extends React.Component<
                 />
             );
         });
+    }
+
+    private groupedMutationDataFilters(
+        dataFilterValues: DataFilterValue[],
+        onDelete: (chartUniqueKey: string, values: string[][]) => void,
+        chartMeta: ChartMeta & { chartType: ChartType }
+    ): JSX.Element {
+        return (
+            <GroupLogic
+                components={dataFilterValues.map(dataFilterValue => {
+                    return (
+                        <PillTag
+                            content={dataFilterValue.value}
+                            backgroundColor={
+                                STUDY_VIEW_CONFIG.colors.theme
+                                    .clinicalFilterContent
+                            }
+                            onDelete={() =>
+                                onDelete(chartMeta.uniqueKey, [
+                                    _.remove(
+                                        dataFilterValues,
+                                        value =>
+                                            value.value !==
+                                            dataFilterValue.value
+                                    ).map(
+                                        dataFilterValue => dataFilterValue.value
+                                    ),
+                                ])
+                            }
+                            store={this.props.store}
+                        />
+                    );
+                })}
+                operation={'or'}
+                group={false}
+            />
+        );
     }
 
     submitHesitantFilters() {

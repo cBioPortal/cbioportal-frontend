@@ -146,6 +146,15 @@ export class StudySummaryTab extends React.Component<
                     values
                 );
             },
+            onMutationDataValueSelection: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.updateMutationDataFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
             onGenericAssayDataBinSelection: (
                 chartMeta: ChartMeta,
                 dataBins: GenericAssayDataBin[]
@@ -206,12 +215,22 @@ export class StudySummaryTab extends React.Component<
                 }),
                 [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
                     promise: this.store.getGenomicChartDataCount(chartMeta),
-                    filters: this.store
-                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            genomicDataFilterValue =>
-                                genomicDataFilterValue.value
-                        ),
+                    filters: chartMeta.mutationOptionType
+                        ? this.store.getMutationDataFiltersByUniqueKey(
+                              chartMeta.uniqueKey
+                          ).length > 0
+                            ? this.store.getMutationDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )[0]
+                            : []
+                        : this.store
+                              .getGenomicDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )
+                              .map(
+                                  genomicDataFilterValue =>
+                                      genomicDataFilterValue.value
+                              ),
                     onValueSelection: this.handlers
                         .onGenomicDataCategoricalValueSelection,
                     onResetSelection: this.handlers
@@ -352,12 +371,22 @@ export class StudySummaryTab extends React.Component<
                 }),
                 [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
                     promise: this.store.getGenomicChartDataCount(chartMeta),
-                    filters: this.store
-                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            genomicDataFilterValue =>
-                                genomicDataFilterValue.value
-                        ),
+                    filters: chartMeta.mutationOptionType
+                        ? this.store.getMutationDataFiltersByUniqueKey(
+                              chartMeta.uniqueKey
+                          ).length > 0
+                            ? this.store.getMutationDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )[0]
+                            : []
+                        : this.store
+                              .getGenomicDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )
+                              .map(
+                                  genomicDataFilterValue =>
+                                      genomicDataFilterValue.value
+                              ),
                     onValueSelection: this.handlers
                         .onGenomicDataCategoricalValueSelection,
                     onResetSelection: this.handlers
@@ -402,16 +431,12 @@ export class StudySummaryTab extends React.Component<
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
             [ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE]: () => ({
-                filters: this.store
-                    .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                    .map(
-                        genomicDataFilterValue => genomicDataFilterValue.value
-                    ),
+                filters: this.store.getMutationDataFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
                 promise: this.store.getMutationEventChartDataCount(chartMeta),
-                onValueSelection: this.handlers
-                    .onGenomicDataCategoricalValueSelection,
-                onResetSelection: this.handlers
-                    .onGenomicDataCategoricalValueSelection,
+                onValueSelection: this.handlers.onMutationDataValueSelection,
+                onResetSelection: this.handlers.onMutationDataValueSelection,
                 selectedGenes: this.store.selectedGenes,
                 onGeneSelect: this.store.onCheckGene,
                 id: 'mutation-event-counts-table',

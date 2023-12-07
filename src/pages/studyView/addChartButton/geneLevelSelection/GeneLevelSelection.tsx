@@ -90,6 +90,14 @@ export default class GeneLevelSelection extends React.Component<
         if (option && option.value) {
             this._selectedProfileOption = option;
         }
+
+        if (
+            !this.subOptions
+                .map(subOption => subOption.label)
+                .includes(option.alterationType)
+        ) {
+            this._selectedSubProfileOption = undefined;
+        }
     }
 
     @action.bound

@@ -156,6 +156,7 @@ import {
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
     transformMutationEventType,
+    transformMutationEventUniqueKey,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -2024,6 +2025,10 @@ export class StudyViewPageStore
         ChartUniqueKey,
         GenomicDataFilter
     >({}, { deep: false });
+    private _mutationDataFilterSet = observable.map<
+        ChartUniqueKey,
+        MutationDataFilter
+    >({}, { deep: false });
     private _genericAssayDataFilterSet = observable.map<
         ChartUniqueKey,
         GenericAssayDataFilter
@@ -2752,6 +2757,7 @@ export class StudyViewPageStore
         this._geneFilterSet.clear();
         this._structVarFilterSet.clear();
         this._genomicDataFilterSet.clear();
+        this._mutationDataFilterSet.clear();
         this._genericAssayDataFilterSet.clear();
         this._chartSampleIdentifiersFilterSet.clear();
         this.preDefinedCustomChartFilterSet.clear();
@@ -3029,28 +3035,48 @@ export class StudyViewPageStore
     @action.bound
     updateCategoricalGenomicDataFilters(
         uniqueKey: string,
-        values: string[] | string[][]
+        values: string[]
     ): void {
         trackStudyViewFilterEvent('genomicCategoricalData', this);
-        let flattenValues: string[];
-        if (
-            Array.isArray(values) &&
-            (values as string[][]).every(value => Array.isArray(value))
-        ) {
-            flattenValues = (values as string[][]).reduce(
-                (acc, val) => acc.concat(val),
-                []
-            );
-        } else {
-            flattenValues = values as string[];
-        }
+
+        const chart = this._geneSpecificChartMap.get(uniqueKey);
         const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
-            flattenValues
+            values
         );
-        this.updateGenomicDataFiltersByValues(
-            uniqueKey,
-            _.cloneDeep(dataFilterValues)
-        );
+        if (chart!.mutationOptionType) {
+            this.updateMutationDataFilters(uniqueKey, [_.cloneDeep(values)]);
+        } else {
+            this.updateGenomicDataFiltersByValues(
+                uniqueKey,
+                _.cloneDeep(dataFilterValues)
+            );
+        }
+    }
+
+    @action.bound
+    updateMutationDataFilters(uniqueKey: string, values: string[][]): void {
+        trackStudyViewFilterEvent('mutationCategoricalData', this);
+
+        console.log(values);
+
+        if (values.every(valueArray => valueArray.length === 0)) {
+            this._mutationDataFilterSet.delete(uniqueKey);
+        } else {
+            const dataFilterValues: DataFilterValue[][] = values.map(
+                valueArray =>
+                    valueArray.map(value => {
+                        return { value: value } as DataFilterValue;
+                    })
+            );
+            const chart = this._geneSpecificChartMap.get(uniqueKey);
+            const mutationDataFilter: MutationDataFilter = {
+                hugoGeneSymbol: chart!.hugoGeneSymbol,
+                profileType: chart!.profileType,
+                values: dataFilterValues,
+                categorization: chart!.mutationOptionType!,
+            };
+            this._mutationDataFilterSet.set(uniqueKey, mutationDataFilter);
+        }
     }
 
     @action.bound
@@ -3528,6 +3554,9 @@ export class StudyViewPageStore
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this.resetGeneFilter(chartUniqueKey);
                     break;
+                case ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE:
+                    this.updateMutationDataFilters(chartUniqueKey, [[]]);
+                    break;
                 case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
                     this.setGenomicProfilesFilter([]);
                     break;
@@ -3564,6 +3593,7 @@ export class StudyViewPageStore
                     );
                     this.preDefinedCustomChartFilterSet.delete(chartUniqueKey);
                     this._genomicDataFilterSet.delete(chartUniqueKey);
+                    this._mutationDataFilterSet.delete(chartUniqueKey);
                     this._genericAssayDataFilterSet.delete(chartUniqueKey);
 
                     break;
@@ -3610,6 +3640,8 @@ export class StudyViewPageStore
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             case ChartTypeEnum.CNA_GENES_TABLE:
                 return this._geneFilterSet.has(chartUniqueKey);
+            case ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE:
+                return this._mutationDataFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                 return this._structVarFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
@@ -3905,72 +3937,66 @@ export class StudyViewPageStore
     }
 
     @computed get genomicDataFilters(): GenomicDataFilter[] {
-        return Array.from(this._genomicDataFilterSet.values()).filter(
-            filter => !filter.hasOwnProperty('categorization')
-        );
+        return Array.from(this._genomicDataFilterSet.values());
     }
 
     @computed get mutationDataFilters(): MutationDataFilter[] {
-        let mutationDataFilters = Array.from(
-            this._genomicDataFilterSet.values()
-        ).filter(filter =>
-            filter.hasOwnProperty('categorization')
-        ) as MutationDataFilter[];
-        if (mutationDataFilters.length > 0) {
-            let mutatedValues: DataFilterValue[] = [];
-            mutationDataFilters.forEach(filter => {
-                if (filter.categorization === MutationOptionConstants.EVENT) {
-                    filter.values = filter.values.reduce(
-                        (acc, dataFilterValue) => {
-                            if (
-                                [
-                                    MutationFilterConstants.MUTATED,
-                                    MutationFilterConstants.NOT_MUTATED,
-                                    MutationFilterConstants.NOT_PROFILED,
-                                ].includes(dataFilterValue.value)
-                            ) {
-                                mutatedValues.push(dataFilterValue);
-                            } else {
-                                acc.push(dataFilterValue);
-                            }
+        return Array.from(this._mutationDataFilterSet.values());
+        // if (mutationDataFilters.length > 0) {
+        //     let mutatedValues: DataFilterValue[] = [];
+        //     mutationDataFilters.forEach(filter => {
+        //         if (filter.categorization === MutationOptionConstants.EVENT) {
+        //             filter.values = filter.values.reduce(
+        //                 (acc, dataFilterValue) => {
+        //                     if (
+        //                         [
+        //                             MutationFilterConstants.MUTATED,
+        //                             MutationFilterConstants.NOT_MUTATED,
+        //                             MutationFilterConstants.NOT_PROFILED,
+        //                         ].includes(dataFilterValue.value)
+        //                     ) {
+        //                         mutatedValues.push(dataFilterValue);
+        //                     } else {
+        //                         acc.push(dataFilterValue);
+        //                     }
 
-                            return acc;
-                        },
-                        [] as DataFilterValue[]
-                    );
-                }
-            });
+        //                     return acc;
+        //                 },
+        //                 [] as DataFilterValue[]
+        //             );
+        //         }
+        //     });
 
-            if (mutatedValues.length > 0) {
-                let mutatedFilter = mutationDataFilters.find(
-                    filter =>
-                        filter.categorization ===
-                        MutationOptionConstants.MUTATED
-                );
+        //     if (mutatedValues.length > 0) {
+        //         let mutatedFilter = mutationDataFilters.find(
+        //             filter =>
+        //                 filter.categorization ===
+        //                 MutationOptionConstants.MUTATED
+        //         );
 
-                if (mutatedFilter) {
-                    mutatedFilter.values = mutatedFilter.values.concat(
-                        mutatedValues
-                    );
-                } else {
-                    let eventFilter = _.cloneDeep(
-                        mutationDataFilters.find(
-                            filter =>
-                                filter.categorization ===
-                                MutationOptionConstants.EVENT
-                        )
-                    );
-                    eventFilter!.values = mutatedValues;
-                    eventFilter!.categorization =
-                        MutationOptionConstants.MUTATED;
-                    mutationDataFilters.push(eventFilter!);
-                }
-            }
-        }
-        mutationDataFilters = mutationDataFilters.filter(
-            filter => filter.values.length > 0
-        );
-        return mutationDataFilters;
+        //         if (mutatedFilter) {
+        //             mutatedFilter.values = mutatedFilter.values.concat(
+        //                 mutatedValues
+        //             );
+        //         } else {
+        //             let eventFilter = _.cloneDeep(
+        //                 mutationDataFilters.find(
+        //                     filter =>
+        //                         filter.categorization ===
+        //                         MutationOptionConstants.EVENT
+        //                 )
+        //             );
+        //             eventFilter!.values = mutatedValues;
+        //             eventFilter!.categorization =
+        //                 MutationOptionConstants.MUTATED;
+        //             mutationDataFilters.push(eventFilter!);
+        //         }
+        //     }
+        // }
+        // mutationDataFilters = mutationDataFilters.filter(
+        //     filter => filter.values.length > 0
+        // );
+        // return mutationDataFilters;
     }
 
     @computed get genericAssayDataFilters(): GenericAssayDataFilter[] {
@@ -3991,6 +4017,7 @@ export class StudyViewPageStore
         }
 
         if (this.mutationDataFilters.length > 0) {
+            console.log(this.mutationDataFilters);
             filters.mutationDataFilters = this.mutationDataFilters;
         }
 
@@ -4211,6 +4238,15 @@ export class StudyViewPageStore
     ): DataFilterValue[] {
         return this._genomicDataFilterSet.has(uniqueKey)
             ? this._genomicDataFilterSet.get(uniqueKey)!.values
+            : [];
+    }
+
+    @autobind
+    public getMutationDataFiltersByUniqueKey(uniqueKey: string): string[][] {
+        return this._mutationDataFilterSet.has(uniqueKey)
+            ? this._mutationDataFilterSet.get(uniqueKey)!.values.map(value => {
+                  return value.map(innerValue => innerValue.value);
+              })
             : [];
     }
 

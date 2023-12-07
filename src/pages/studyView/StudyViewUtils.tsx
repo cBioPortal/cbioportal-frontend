@@ -92,6 +92,7 @@ import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
 import { toast } from 'react-toastify';
 import { useCallback } from 'react';
+import { MutationOptionConstants } from 'shared/constants';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -994,6 +995,28 @@ export function getVirtualStudyDescription(
                 }
             });
 
+            _.each(filter.mutationDataFilters || [], mutationDataFilter => {
+                const uniqueKey = getGenomicChartUniqueKey(
+                    mutationDataFilter.hugoGeneSymbol,
+                    mutationDataFilter.profileType,
+                    mutationDataFilter.categorization
+                );
+
+                const name = attributeNamesSet[uniqueKey];
+
+                if (name) {
+                    _.each(mutationDataFilter.values || [], value => {
+                        filterLines.push(
+                            `- ${name}: ${intervalFiltersDisplayValue(
+                                value,
+                                () => {},
+                                true
+                            )}`
+                        );
+                    });
+                }
+            });
+
             _.each(
                 filter.genericAssayDataFilters || [],
                 genericAssayDataFilters => {
@@ -1877,6 +1900,12 @@ export function transformMutationEventType(eventType: string): string {
 
     // Join the words back together with a space between them
     return capitalizedWords.join(' ');
+}
+
+export function transformMutationEventUniqueKey(uniqueKey: string): string {
+    const parts = uniqueKey.split('_');
+    parts[parts.length - 1] = MutationOptionConstants.MUTATED;
+    return parts.join('_');
 }
 
 export function getDefaultChartTypeByClinicalAttribute(
