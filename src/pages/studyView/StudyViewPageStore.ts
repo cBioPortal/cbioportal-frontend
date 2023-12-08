@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
@@ -19,6 +18,7 @@ import {
     AndedSampleTreatmentFilters,
     BinsGeneratorConfig,
     CancerStudy,
+    CBioPortalAPIInternal,
     ClinicalAttribute,
     ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
@@ -187,6 +187,7 @@ import {
 } from '../../shared/api/urls';
 import {
     DataType as DownloadDataType,
+    getBrowserWindow,
     onMobxPromise,
     pluralize,
     remoteData,
@@ -307,6 +308,8 @@ import {
     isSurvivalAttributeId,
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
+import CbioportalInternalClientInstance from 'shared/api/cbioportalInternalClientInstance';
+import CbioportalClientInstance from 'shared/api/cbioportalClientInstance';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -512,7 +515,8 @@ export class StudyViewPageStore
     constructor(
         public appStore: AppStore,
         private sessionServiceIsEnabled: boolean,
-        private urlWrapper: StudyViewURLWrapper
+        private urlWrapper: StudyViewURLWrapper,
+        public internalClient: CBioPortalAPIInternal
     ) {
         makeObservable(this);
 
@@ -4257,7 +4261,7 @@ export class StudyViewPageStore
     readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
         invoke: () => {
             if (!_.isEmpty(this.unfilteredAttrsForNonNumerical)) {
-                return internalClient.fetchClinicalDataCountsUsingPOST({
+                return this.internalClient.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this.unfilteredAttrsForNonNumerical,
                         studyViewFilter: this.filters,
@@ -4284,7 +4288,7 @@ export class StudyViewPageStore
         invoke: () => {
             //only invoke if there are filtered samples
             if (this.hasFilteredSamples) {
-                return internalClient.fetchCustomDataCountsUsingPOST({
+                return this.internalClient.fetchCustomDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this.unfilteredCustomAttrsForNonNumerical,
                         studyViewFilter: this.filters,
@@ -4311,7 +4315,7 @@ export class StudyViewPageStore
     >({
         invoke: () => {
             if (!_.isEmpty(this.newlyAddedUnfilteredAttrsForNonNumerical)) {
-                return internalClient.fetchClinicalDataCountsUsingPOST({
+                return this.internalClient.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this
                             .newlyAddedUnfilteredAttrsForNonNumerical,
@@ -4340,7 +4344,7 @@ export class StudyViewPageStore
                 this.hasSampleIdentifiersInFilter &&
                 this.newlyAddedUnfilteredAttrsForNumerical.length > 0
             ) {
-                const clinicalDataBinCountData = await internalClient.fetchClinicalDataBinCountsUsingPOST(
+                const clinicalDataBinCountData = await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
                     {
                         dataBinMethod: 'STATIC',
                         clinicalDataBinCountFilter: {
@@ -4381,7 +4385,7 @@ export class StudyViewPageStore
                         return element !== undefined;
                     }
                 );
-                const clinicalDataBinCountData = await internalClient.fetchClinicalDataBinCountsUsingPOST(
+                const clinicalDataBinCountData = await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
                     {
                         dataBinMethod: 'STATIC',
                         clinicalDataBinCountFilter: {
@@ -4450,7 +4454,7 @@ export class StudyViewPageStore
                             this._clinicalDataFilterSet.has(uniqueKey) ||
                             this.isInitialFilterState
                         ) {
-                            result = await internalClient.fetchClinicalDataCountsUsingPOST(
+                            result = await this.internalClient.fetchClinicalDataCountsUsingPOST(
                                 {
                                     clinicalDataCountFilter: {
                                         attributes: [
@@ -4592,7 +4596,7 @@ export class StudyViewPageStore
                             if (!this.hasFilteredSamples) {
                                 return [];
                             }
-                            result = await internalClient.fetchCustomDataCountsUsingPOST(
+                            result = await this.internalClient.fetchCustomDataCountsUsingPOST(
                                 {
                                     clinicalDataCountFilter: {
                                         attributes: [
@@ -4640,7 +4644,7 @@ export class StudyViewPageStore
                         return element !== undefined;
                     }
                 );
-                const result2 = await internalClient.fetchCustomDataBinCountsUsingPOST(
+                const result2 = await this.internalClient.fetchCustomDataBinCountsUsingPOST(
                     {
                         dataBinMethod: 'STATIC',
                         clinicalDataBinCountFilter: {
@@ -4672,7 +4676,7 @@ export class StudyViewPageStore
                         const attribute: ClinicalDataBinFilter = this.getDefaultClinicalDataBinFilter(
                             chartMeta.clinicalAttribute!
                         );
-                        const result = await internalClient.fetchCustomDataBinCountsUsingPOST(
+                        const result = await this.internalClient.fetchCustomDataBinCountsUsingPOST(
                             {
                                 dataBinMethod: 'STATIC',
                                 clinicalDataBinCountFilter: {
@@ -4719,7 +4723,7 @@ export class StudyViewPageStore
                                     const attribute: ClinicalDataBinFilter = this._customDataBinFilterSet.get(
                                         uniqueKey
                                     )!;
-                                    const result = await internalClient.fetchCustomDataBinCountsUsingPOST(
+                                    const result = await this.internalClient.fetchCustomDataBinCountsUsingPOST(
                                         {
                                             dataBinMethod: 'STATIC',
                                             clinicalDataBinCountFilter: {
@@ -4774,7 +4778,7 @@ export class StudyViewPageStore
                     if (chartInfo) {
                         let result: GenericAssayDataCountItem[] = [];
 
-                        result = await internalClient.fetchGenericAssayDataCountsUsingPOST(
+                        result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
                             {
                                 genericAssayDataCountFilter: {
                                     genericAssayDataFilters: [
@@ -4966,7 +4970,7 @@ export class StudyViewPageStore
                             if (!this.hasSampleIdentifiersInFilter) {
                                 return [];
                             }
-                            result = await internalClient.fetchClinicalDataBinCountsUsingPOST(
+                            result = await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
                                 {
                                     dataBinMethod,
                                     clinicalDataBinCountFilter: {
@@ -5022,7 +5026,7 @@ export class StudyViewPageStore
                     )!;
                     //only invoke if there are filtered samples
                     if (chartInfo && this.hasFilteredSamples) {
-                        const genomicDataBins = await internalClient.fetchGenomicDataBinCountsUsingPOST(
+                        const genomicDataBins = await this.internalClient.fetchGenomicDataBinCountsUsingPOST(
                             {
                                 dataBinMethod: DataBinMethodConstants.STATIC,
                                 genomicDataBinCountFilter: {
@@ -5072,7 +5076,7 @@ export class StudyViewPageStore
                         chartMeta.uniqueKey
                     )!;
                     if (chartInfo) {
-                        const gaDataBins = await internalClient.fetchGenericAssayDataBinCountsUsingPOST(
+                        const gaDataBins = await this.internalClient.fetchGenericAssayDataBinCountsUsingPOST(
                             {
                                 dataBinMethod: DataBinMethodConstants.STATIC,
                                 genericAssayDataBinCountFilter: {
@@ -5504,7 +5508,7 @@ export class StudyViewPageStore
     readonly resourceDefinitions = remoteData({
         await: () => [this.queriedPhysicalStudies],
         invoke: () => {
-            return internalClient.fetchResourceDefinitionsUsingPOST({
+            return this.internalClient.fetchResourceDefinitionsUsingPOST({
                 studyIds: this.queriedPhysicalStudies.result.map(
                     study => study.studyId
                 ),
@@ -5529,7 +5533,7 @@ export class StudyViewPageStore
             const promises = [];
             for (const resource of studyResourceDefinitions) {
                 promises.push(
-                    internalClient
+                    this.internalClient
                         .getAllStudyResourceDataInStudyUsingGET({
                             studyId: resource.studyId,
                             resourceId: resource.resourceId,
@@ -6587,6 +6591,16 @@ export class StudyViewPageStore
             },
             [] as ChartMeta[]
         );
+
+        // return [ {
+        //     "uniqueKey": "msk_impact_2017_mutations",
+        //     "dataType": "Genomic",
+        //     "patientAttribute": false,
+        //     "displayName": "Mutated Genes",
+        //     "priority": 90,
+        //     "renderWhenDataChange": false,
+        //     "description": ""
+        // }] as ChartMeta[];
     }
 
     get isStructVarTableFeatureEnabled() {
@@ -7584,7 +7598,7 @@ export class StudyViewPageStore
                 attr => attr.attributeId
             );
 
-            return internalClient.fetchClinicalDataCountsUsingPOST({
+            return this.internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
                     attributes,
                     studyViewFilter: this.initialFilters,
@@ -7615,7 +7629,7 @@ export class StudyViewPageStore
     >({
         await: () => [this.initialVisibleAttributesClinicalDataBinAttributes],
         invoke: async () => {
-            const clinicalDataBinCountData = await internalClient.fetchClinicalDataBinCountsUsingPOST(
+            const clinicalDataBinCountData = await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
                 {
                     dataBinMethod: 'STATIC',
                     clinicalDataBinCountFilter: {
@@ -7826,7 +7840,7 @@ export class StudyViewPageStore
                 !_.isEmpty(studyViewFilter.sampleIdentifiers) ||
                 !_.isEmpty(studyViewFilter.studyIds)
             ) {
-                return internalClient.fetchFilteredSamplesUsingPOST({
+                return this.internalClient.fetchFilteredSamplesUsingPOST({
                     studyViewFilter: studyViewFilter,
                 });
             }
@@ -7946,7 +7960,7 @@ export class StudyViewPageStore
                         )}`
                     );
                 }
-                return internalClient.fetchFilteredSamplesUsingPOST({
+                return this.internalClient.fetchFilteredSamplesUsingPOST({
                     studyViewFilter: this.filters,
                 });
             } else {
@@ -8058,7 +8072,7 @@ export class StudyViewPageStore
     >(
         q => ({
             invoke: async () => ({
-                data: await internalClient.fetchClinicalDataViolinPlotsUsingPOST(
+                data: await this.internalClient.fetchClinicalDataViolinPlotsUsingPOST(
                     {
                         categoricalAttributeId:
                             q.chartInfo.categoricalAttr.clinicalAttributeId,
@@ -8150,7 +8164,7 @@ export class StudyViewPageStore
                 ) {
                     parameters.yAxisStart = 0; // mutation count always starts at 0
                 }
-                const result: any = await internalClient.fetchClinicalDataDensityPlotUsingPOST(
+                const result: any = await this.internalClient.fetchClinicalDataDensityPlotUsingPOST(
                     parameters
                 );
                 const bins = result.bins.filter(
@@ -8210,7 +8224,7 @@ export class StudyViewPageStore
                 : [this.mutationProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
-                let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
+                let mutatedGenes = await this.internalClient.fetchMutatedGenesUsingPOST(
                     {
                         studyViewFilter: this.filters,
                     }
@@ -8266,7 +8280,7 @@ export class StudyViewPageStore
                 : [this.structuralVariantProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-                const structuralVariantGenes = await internalClient.fetchStructuralVariantGenesUsingPOST(
+                const structuralVariantGenes = await this.internalClient.fetchStructuralVariantGenesUsingPOST(
                     {
                         studyViewFilter: this.filters,
                     }
@@ -8399,9 +8413,11 @@ export class StudyViewPageStore
                 : [this.cnaProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
-                let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
-                    studyViewFilter: this.filters,
-                });
+                let cnaGenes = await this.internalClient.fetchCNAGenesUsingPOST(
+                    {
+                        studyViewFilter: this.filters,
+                    }
+                );
                 return cnaGenes.map(item => {
                     return {
                         ...item,
@@ -8501,7 +8517,7 @@ export class StudyViewPageStore
                 const molecularProfileIds = this.molecularProfiles.result.map(
                     molecularProfile => molecularProfile.molecularProfileId
                 );
-                const report = await internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                const report = await this.internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
                     { molecularProfileIds }
                 );
                 return {
@@ -9395,7 +9411,7 @@ export class StudyViewPageStore
         await: () => [this.molecularProfiles],
         invoke: async () => {
             const [counts, selectedSamples] = await Promise.all([
-                internalClient.fetchMolecularProfileSampleCountsUsingPOST({
+                this.internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                     studyViewFilter: this.filters,
                 }),
                 toPromise(this.selectedSamples),
@@ -9420,7 +9436,7 @@ export class StudyViewPageStore
     readonly caseListSampleCounts = remoteData<MultiSelectionTableRow[]>({
         invoke: async () => {
             const [counts, selectedSamples] = await Promise.all([
-                internalClient.fetchCaseListCountsUsingPOST({
+                this.internalClient.fetchCaseListCountsUsingPOST({
                     studyViewFilter: this.filters,
                 }),
                 toPromise(this.selectedSamples),
@@ -9461,9 +9477,11 @@ export class StudyViewPageStore
 
     readonly initialMolecularProfileSampleCounts = remoteData({
         invoke: async () => {
-            return internalClient.fetchMolecularProfileSampleCountsUsingPOST({
-                studyViewFilter: this.initialFilters,
-            });
+            return this.internalClient.fetchMolecularProfileSampleCountsUsingPOST(
+                {
+                    studyViewFilter: this.initialFilters,
+                }
+            );
         },
         default: [],
     });
@@ -9524,7 +9542,7 @@ export class StudyViewPageStore
             let clinicalAttributeCountFilter = {
                 sampleIdentifiers,
             } as ClinicalAttributeCountFilter;
-            return internalClient.getClinicalAttributeCountsUsingPOST({
+            return this.internalClient.getClinicalAttributeCountsUsingPOST({
                 clinicalAttributeCountFilter,
             });
         },
@@ -10193,7 +10211,7 @@ export class StudyViewPageStore
     }
     public readonly clinicalEventTypeCounts = remoteData({
         invoke: async () => {
-            return internalClient.getClinicalEventTypeCountsUsingPOST({
+            return this.internalClient.getClinicalEventTypeCountsUsingPOST({
                 studyViewFilter: this.filters,
             });
         },
@@ -10207,9 +10225,11 @@ export class StudyViewPageStore
             filters.studyIds = this.queriedPhysicalStudyIds.result;
             return Promise.resolve(
                 (
-                    await internalClient.getClinicalEventTypeCountsUsingPOST({
-                        studyViewFilter: filters as StudyViewFilter,
-                    })
+                    await this.internalClient.getClinicalEventTypeCountsUsingPOST(
+                        {
+                            studyViewFilter: filters as StudyViewFilter,
+                        }
+                    )
                 ).length > 0
             );
         },
