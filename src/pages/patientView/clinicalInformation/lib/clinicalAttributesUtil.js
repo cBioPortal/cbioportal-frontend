@@ -152,8 +152,10 @@ function derive(clinicalData) {
                     caseTypeNormalized = 'Urine';
                 } else if (caseTypeLower.indexOf('exosome') >= 0) {
                     caseTypeNormalized = 'Exosome';
-                } else if (caseTypeLower.indexOf('total') >= 0) {
+                } else if (caseTypeLower.indexOf('total rna') >= 0) {
                     caseTypeNormalized = 'total RNA';
+                } else if (caseTypeLower.indexOf('total dna') >= 0) {
+                    caseTypeNormalized = 'total DNA';
                 } else if (caseTypeLower.indexOf('tissue') >= 0) {
                     caseTypeNormalized = 'Tissue';
                 }
