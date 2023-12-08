@@ -22,7 +22,10 @@ import { LollipopTooltipCountInfo } from './LollipopTooltipCountInfo';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import styles from './styles.module.scss';
 import { saveOncoKbIconStyleToLocalStorage } from 'shared/lib/AnnotationColumnUtils';
-import { generateMutationIdByGeneAndProteinChange } from 'shared/lib/StoreUtils';
+import {
+    generateMutationIdByGeneAndProteinChange,
+    getGenomeBuildFromStudies,
+} from 'shared/lib/StoreUtils';
 
 interface IGroupComparisonMutationMapperWrapperProps {
     store: GroupComparisonStore;
@@ -45,6 +48,9 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
     }
 
     @computed get mutationMapperToolStore() {
+        const genomeBuild = getGenomeBuildFromStudies(
+            this.props.store.studies.result
+        );
         const store = new MutationMapperToolStore(
             this.props.store.filteredAndAnnotatedMutations.result,
             {
@@ -56,8 +62,10 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                     .uniqueSampleKeyToTumorType.result,
                 uniqueSampleKeyToCancerType: this.props.store
                     .uniqueSampleKeyToCancerType.result,
+                genomeBuild: genomeBuild,
             }
         );
+
         return store;
     }
 
