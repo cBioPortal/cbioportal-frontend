@@ -65,9 +65,16 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         string
     >({}, { deep: true });
 
+    private tracksDropdown: CustomDropdown;
+
     constructor(props: IAddTrackProps) {
         super(props);
         makeObservable(this);
+    }
+
+    @autobind
+    private tracksDropdownRef(dropdown: CustomDropdown) {
+        this.tracksDropdown = dropdown;
     }
 
     @action.bound
@@ -288,6 +295,9 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 clinicalAttributeIds.map(id => new ClinicalTrackConfig(id))
             )
         );
+        this.props.handlers.onChangeToggledClinicalTracks!(
+            this.getSelectedClinicalAttributes()
+        );
     }
 
     @action.bound
@@ -299,30 +309,64 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 'stableId'
             )
         );
+        this.props.handlers.onChangeToggledClinicalTracks!(
+            this.getSelectedClinicalAttributes()
+        );
+    }
+
+    @action.bound
+    private submit() {
+        this.props.handlers.onChangeSelectedClinicalTracks!(
+            this.props.state.toggledClinicalTracks!
+        );
+        this.tracksDropdown.hide();
     }
 
     @action.bound
     private toggleClinicalTrack(clinicalAttributeId: string) {
-        const toggled = toggleIncluded(
-            new ClinicalTrackConfig(clinicalAttributeId),
-            this.getSelectedClinicalAttributes(),
-            track => track.stableId === clinicalAttributeId
+        this.props.handlers.onChangeToggledClinicalTracks!(
+            toggleIncluded(
+                new ClinicalTrackConfig(clinicalAttributeId),
+                this.props.state.toggledClinicalTracks!,
+                track => track.stableId === clinicalAttributeId
+            )
         );
-        this.props.handlers.onChangeSelectedClinicalTracks!(toggled);
+    }
+
+    @computed get showSubmit() {
+        return (
+            _.xorBy(
+                this.getSelectedClinicalAttributes(),
+                this.props.state.toggledClinicalTracks!,
+                'stableId'
+            ).length !== 0
+        );
     }
 
     readonly addClinicalTracksMenu = MakeMobxView({
         await: () => [this.trackOptionsByType],
         render: () => (
-            <AddChartByType
-                options={this.trackOptionsByType.result!.clinical}
-                freqPromise={this.clinicalAttributeIdToAvailableFrequency}
-                onAddAll={this.addAll}
-                onClearAll={this.clear}
-                onToggleOption={this.toggleClinicalTrack}
-                optionsGivenInSortedOrder={true}
-                width={this.dropdownWidth}
-            />
+            <>
+                <AddChartByType
+                    options={this.trackOptionsByType.result!.clinical}
+                    freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                    onAddAll={this.addAll}
+                    onClearAll={this.clear}
+                    onToggleOption={this.toggleClinicalTrack}
+                    optionsGivenInSortedOrder={true}
+                    width={this.dropdownWidth}
+                />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="update-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Update tracks'}
+                    </button>
+                )}
+            </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
         showLastRenderWhenPending: true,
@@ -349,6 +393,16 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     frequencyHeaderTooltip="% samples in group"
                     width={this.dropdownWidth}
                 />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="update-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Update tracks'}
+                    </button>
+                )}
             </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
@@ -376,6 +430,16 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     frequencyHeaderTooltip="% samples in group"
                     width={this.dropdownWidth}
                 />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="update-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Update tracks'}
+                    </button>
+                )}
             </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
@@ -392,7 +456,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                         selected:
                             option.key in
                             _.keyBy(
-                                this.getSelectedClinicalAttributes().map(
+                                this.props.state.toggledClinicalTracks!.map(
                                     a => a.stableId
                                 )
                             ),
@@ -677,6 +741,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 id="addTracksDropdown"
                 className="oncoprintAddTracksDropdown"
                 styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}
+                ref={this.tracksDropdownRef}
             >
                 <div
                     style={{
