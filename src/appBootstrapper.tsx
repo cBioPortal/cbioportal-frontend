@@ -27,7 +27,7 @@ import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import { initializeTracking, sendToLoggly } from 'shared/lib/tracking';
 import superagentCache from 'superagent-cache';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, onMobxPromise } from 'cbioportal-frontend-commons';
 import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
@@ -289,6 +289,8 @@ $(document).ready(async () => {
     // need to use jsonp, so use jquery
     let initialServerConfig =
         browserWindow.rawServerConfig || (await fetchServerConfig());
+
+    getBrowserWindow().onMobxPromise = onMobxPromise;
 
     initializeServerConfiguration(initialServerConfig);
 
