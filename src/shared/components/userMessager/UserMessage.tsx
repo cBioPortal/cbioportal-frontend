@@ -60,7 +60,23 @@ if (
             id: '2023_qval_change',
         },
     ];
+
+    // MSK specific messaging
+    if (
+        [
+            'cbioportal.mskcc.org',
+        ].includes(getBrowserWindow().location.hostname)
+    ) {
+        MESSAGE_DATA.push(
+            {
+                dateEnd: 100000000000000,
+                content: `The <a href="https://cbioportal.mskcc.org/study/summary?id=mskimpact" _target="_blank">MSK-IMPACT cohort</a> now includes additional NLP-derived data elements from the Cancer Data Science Initiative (<a href="https://mskcc.sharepoint.com/sites/pub-CDSI" target="_blank">Read more</a>)`,
+                id: '2023_msk_chord_release',
+            }
+        )
+    }
 }
+
 
 interface IUserMessagerProps {
     dataUrl?: string;
