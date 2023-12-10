@@ -136,7 +136,7 @@ describe('ClinicalDataUtils', () => {
                     copyNumberSegmentPresent: false,
                     patientId: 'patient1',
                     sampleId: 'sample1',
-                    sampleType: 'BLOOD_NORMAL',
+                    sampleType: 'Blood Derived Normal',
                     sequenced: false,
                     studyId: 'study_n',
                     uniquePatientKey: 'fakekey',
