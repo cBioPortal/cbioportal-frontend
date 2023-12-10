@@ -86,7 +86,7 @@ export function buildCBioLink(path: string) {
 
 export function getCbioPortalApiUrl() {
     const root = trimTrailingSlash(getLoadConfig().apiRoot!);
-    return `${root}/api`;
+    return `${root}`;
 }
 
 export function getFrontendAssetUrl(path: string) {

@@ -172,7 +172,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         {
                             molecularProfileId: this.props.selectedProfile
                                 .molecularProfileId,
-                            genericAssayDataFilter: {
+                            genericAssayFilter: {
                                 genericAssayStableIds: [
                                     (this.props
                                         .selectedRow as GenericAssayEnrichmentWithQ)
