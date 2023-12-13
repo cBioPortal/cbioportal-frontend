@@ -165,11 +165,7 @@ export function getClinicalTrackColor(
         let valueIndex = _.indexOf(track.countsCategoryLabels, value);
         return track.countsCategoryFills[valueIndex];
     } else if (track.datatype === 'string' && track.category_to_color) {
-        if (
-            (track.label === 'Sample Type' ||
-                track.label === 'Sample type id') &&
-            value === 'Mixed'
-        ) {
+        if (value === 'Mixed') {
             return track.category_to_color[value] || [48, 97, 194, 1];
         }
         return track.category_to_color[value];
@@ -305,6 +301,9 @@ export default class ResultsViewOncoprint extends React.Component<
     @observable mouseInsideBounds: boolean = false;
 
     @observable renderingComplete = false;
+
+    // clinical tracks selected in the tracks menu that are pending submission
+    @observable clinicalTracksPendingSubmission: ClinicalTrackConfig[];
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
@@ -507,6 +506,13 @@ export default class ResultsViewOncoprint extends React.Component<
         this.controlsState = observable({
             get selectedClinicalAttributeSpecInits(): ClinicalTrackConfigMap {
                 return self.selectedClinicalTrackConfig;
+            },
+            get clinicalTracksPendingSubmission(): ClinicalTrackConfig[] {
+                if (!self.clinicalTracksPendingSubmission) {
+                    return _.values(self.selectedClinicalTrackConfig);
+                } else {
+                    return self.clinicalTracksPendingSubmission;
+                }
             },
             get selectedColumnType() {
                 return self.oncoprintAnalysisCaseType;
@@ -859,6 +865,11 @@ export default class ResultsViewOncoprint extends React.Component<
                 });
             },
             onChangeSelectedClinicalTracks: this.setSessionClinicalTracks,
+            onChangeClinicalTracksPendingSubmission: (
+                clinicalTracks: ClinicalTrackConfig[]
+            ) => {
+                this.clinicalTracksPendingSubmission = clinicalTracks;
+            },
             onChangeHeatmapGeneInputValue: action((s: string) => {
                 this.heatmapGeneInputValue = s;
                 this.heatmapGeneInputValueUpdater(); // stop updating heatmap input if user has typed
@@ -1313,6 +1324,10 @@ export default class ResultsViewOncoprint extends React.Component<
                 ...session.userSettings,
                 clinicallist: _.values(json),
             };
+            this.controlsHandlers.onChangeClinicalTracksPendingSubmission &&
+                this.controlsHandlers.onChangeClinicalTracksPendingSubmission(
+                    _.values(json)
+                );
         }
     }
 
@@ -1892,11 +1907,8 @@ export default class ResultsViewOncoprint extends React.Component<
                 _.indexOf(MUTATION_SPECTRUM_CATEGORIES, value)
             ];
         } else if (this.selectedClinicalTrack.datatype === 'string') {
-            if (
-                (this.selectedClinicalTrack.label === 'Sample Type' ||
-                    this.selectedClinicalTrack.label === 'Sample type id') &&
-                value === 'Mixed'
-            ) {
+            // Mixed refers to when an event has multiple values (i.e. Sample Type for a patient event may have both Primary and Recurrence values)
+            if (value === 'Mixed') {
                 return [48, 97, 194, 1];
             } else {
                 return hexToRGBA(

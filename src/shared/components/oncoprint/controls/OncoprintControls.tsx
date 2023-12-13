@@ -74,6 +74,9 @@ export interface IOncoprintControlsHandlers
     onChangeSelectedClinicalTracks?: (
         trackConfigs: ClinicalTrackConfig[]
     ) => void;
+    onChangeClinicalTracksPendingSubmission?: (
+        trackConfigs: ClinicalTrackConfig[]
+    ) => void;
     onClickAddGenesToHeatmap?: () => void;
     onSelectGenericAssayProfile?: (molecularProfileId: string) => void;
     onClickAddGenericAssays?: (info: GenericAssayTrackInfo[]) => void;
@@ -110,6 +113,7 @@ export interface IOncoprintControlsState
         [clinicalAttributeId: string]: number;
     }>;
     selectedClinicalAttributeSpecInits?: ClinicalTrackConfigMap;
+    clinicalTracksPendingSubmission?: ClinicalTrackConfig[];
     heatmapProfilesPromise?: MobxPromise<MolecularProfile[]>;
     genericAssayEntitiesGroupedByGenericAssayTypePromise?: MobxPromise<{
         [genericAssayType: string]: GenericAssayMeta[];
