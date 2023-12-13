@@ -302,7 +302,8 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @observable renderingComplete = false;
 
-    @observable toggledClinicalTracks: ClinicalTrackConfig[];
+    // clinical tracks selected in the tracks menu that are pending submission
+    @observable clinicalTracksPendingSubmission: ClinicalTrackConfig[];
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
@@ -506,11 +507,11 @@ export default class ResultsViewOncoprint extends React.Component<
             get selectedClinicalAttributeSpecInits(): ClinicalTrackConfigMap {
                 return self.selectedClinicalTrackConfig;
             },
-            get toggledClinicalTracks(): ClinicalTrackConfig[] {
-                if (!self.toggledClinicalTracks) {
+            get clinicalTracksPendingSubmission(): ClinicalTrackConfig[] {
+                if (!self.clinicalTracksPendingSubmission) {
                     return _.values(self.selectedClinicalTrackConfig);
                 } else {
-                    return self.toggledClinicalTracks;
+                    return self.clinicalTracksPendingSubmission;
                 }
             },
             get selectedColumnType() {
@@ -864,10 +865,10 @@ export default class ResultsViewOncoprint extends React.Component<
                 });
             },
             onChangeSelectedClinicalTracks: this.setSessionClinicalTracks,
-            onChangeToggledClinicalTracks: (
+            onChangeClinicalTracksPendingSubmission: (
                 clinicalTracks: ClinicalTrackConfig[]
             ) => {
-                this.toggledClinicalTracks = clinicalTracks;
+                this.clinicalTracksPendingSubmission = clinicalTracks;
             },
             onChangeHeatmapGeneInputValue: action((s: string) => {
                 this.heatmapGeneInputValue = s;
@@ -1323,8 +1324,8 @@ export default class ResultsViewOncoprint extends React.Component<
                 ...session.userSettings,
                 clinicallist: _.values(json),
             };
-            this.controlsHandlers.onChangeToggledClinicalTracks &&
-                this.controlsHandlers.onChangeToggledClinicalTracks(
+            this.controlsHandlers.onChangeClinicalTracksPendingSubmission &&
+                this.controlsHandlers.onChangeClinicalTracksPendingSubmission(
                     _.values(json)
                 );
         }
@@ -1906,6 +1907,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 _.indexOf(MUTATION_SPECTRUM_CATEGORIES, value)
             ];
         } else if (this.selectedClinicalTrack.datatype === 'string') {
+            // Mixed refers to when an event has multiple values (i.e. Sample Type for a patient event may have both Primary and Recurrence values)
             if (value === 'Mixed') {
                 return [48, 97, 194, 1];
             } else {
