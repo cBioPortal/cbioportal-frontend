@@ -177,6 +177,7 @@ export interface IServerConfig {
     enable_cross_study_expression: string;
     studyview_max_samples_selected: number;
     study_download_url: string;
+    studyview_clinical_attribute_chart_count: number;
     vaf_sequential_mode_default: boolean; // this has a default
     vaf_log_scale_default: boolean; // this has a default
     skin_study_view_show_sv_table: boolean; // this has a default
