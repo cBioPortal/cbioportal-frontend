@@ -113,36 +113,31 @@ export default class ActionButtons extends React.Component<
 
     @computed
     get virtualStudy(): JSX.Element | null {
-        if (this.props.loadingComplete) {
-            return (
-                <VirtualStudy
-                    user={this.props.appStore.userName}
-                    name={
-                        this.props.store.isSingleVirtualStudyPageWithoutFilter
-                            ? this.props.store.filteredVirtualStudies.result[0]
-                                  .data.name
-                            : undefined
-                    }
-                    description={
-                        this.props.store.isSingleVirtualStudyPageWithoutFilter
-                            ? this.props.store.filteredVirtualStudies.result[0]
-                                  .data.description
-                            : undefined
-                    }
-                    studyWithSamples={this.props.store.studyWithSamples.result}
-                    selectedSamples={this.props.store.selectedSamples.result}
-                    filter={this.props.store.userSelections}
-                    attributesMetaSet={this.props.store.chartMetaSet}
-                    molecularProfileNameSet={
-                        this.props.store.molecularProfileNameSet.result || {}
-                    }
-                    caseListNameSet={
-                        this.props.store.caseListNameSet.result || {}
-                    }
-                />
-            );
-        }
-        return null;
+        return (
+            <VirtualStudy
+                user={this.props.appStore.userName}
+                name={
+                    this.props.store.isSingleVirtualStudyPageWithoutFilter
+                        ? this.props.store.filteredVirtualStudies.result[0].data
+                              .name
+                        : undefined
+                }
+                description={
+                    this.props.store.isSingleVirtualStudyPageWithoutFilter
+                        ? this.props.store.filteredVirtualStudies.result[0].data
+                              .description
+                        : undefined
+                }
+                studyWithSamples={this.props.store.studyWithSamples.result}
+                selectedSamples={this.props.store.selectedSamples.result}
+                filter={this.props.store.userSelections}
+                attributesMetaSet={this.props.store.chartMetaSet}
+                molecularProfileNameSet={
+                    this.props.store.molecularProfileNameSet.result || {}
+                }
+                caseListNameSet={this.props.store.caseListNameSet.result || {}}
+            />
+        );
     }
 
     render() {
@@ -155,7 +150,7 @@ export default class ActionButtons extends React.Component<
                 >
                     <button
                         className="btn btn-default btn-sm"
-                        disabled={!this.props.loadingComplete}
+                        disabled={this.props.store.selectedPatients?.length < 1}
                         onClick={this.openCases}
                         data-event={serializeEvent({
                             category: 'studyPage',
@@ -182,7 +177,14 @@ export default class ActionButtons extends React.Component<
                         <button
                             data-tour="action-button-bookmark"
                             className="btn btn-default btn-sm"
-                            disabled={!this.props.loadingComplete}
+                            disabled={
+                                this.props.store.filteredVirtualStudies
+                                    .isPending ||
+                                this.props.store.selectedSamples.isPending ||
+                                this.props.store.molecularProfileNameSet
+                                    .isPending ||
+                                this.props.store.caseListNameSet.isPending
+                            }
                         >
                             <i className="fa fa-bookmark"></i>
                         </button>
