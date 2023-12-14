@@ -6402,20 +6402,20 @@ export class StudyViewPageStore
         };
         //}
 
-        //if (this.shouldDisplayPatientTreatments.result) {
-        _chartMetaSet['PATIENT_TREATMENTS'] = {
-            uniqueKey: 'PATIENT_TREATMENTS',
-            dataType: ChartMetaDataTypeEnum.CLINICAL,
-            patientAttribute: true,
-            displayName: 'Treatment per Patient',
-            priority: getDefaultPriorityByUniqueKey(
-                ChartTypeEnum.PATIENT_TREATMENTS_TABLE
-            ),
-            renderWhenDataChange: true,
-            description:
-                'List of treatments and the corresponding number of patients treated',
-        };
-        //}
+        if (this.shouldDisplayPatientTreatments.result) {
+            _chartMetaSet['PATIENT_TREATMENTS'] = {
+                uniqueKey: 'PATIENT_TREATMENTS',
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: true,
+                displayName: 'Treatment per Patient',
+                priority: getDefaultPriorityByUniqueKey(
+                    ChartTypeEnum.PATIENT_TREATMENTS_TABLE
+                ),
+                renderWhenDataChange: true,
+                description:
+                    'List of treatments and the corresponding number of patients treated',
+            };
+        }
 
         if (this.shouldDisplaySampleTreatmentGroups.result) {
             _chartMetaSet['SAMPLE_TREATMENT_GROUPS'] = {
@@ -7126,11 +7126,7 @@ export class StudyViewPageStore
 
     @action.bound
     updateChartStats(): void {
-        //debugger;
-
         this.initializeChartStatsByClinicalAttributes();
-
-        //debugger;
 
         if (!_.isEmpty(this.molecularProfiles.result)) {
             const chartMeta = _.find(
@@ -8459,7 +8455,9 @@ export class StudyViewPageStore
     readonly hasCNSegmentData = remoteData<boolean>({
         await: () => [this.samples],
         invoke: async () => {
-            await sleep(20000);
+            // this promise determine whether the CN Segments tab shows up
+            // this is expensive and nonessential call so we prioritize other calls first
+            await sleep(10000);
 
             return defaultClient
                 .fetchCopyNumberSegmentsUsingPOSTWithHttpInfo({
