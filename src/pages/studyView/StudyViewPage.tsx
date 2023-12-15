@@ -78,6 +78,7 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
+import PlotsFeature from 'pages/resultsView/plots/PlotsFeature';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -732,6 +733,124 @@ export default class StudyViewPage extends React.Component<
                                                 openResource={this.openResource}
                                             />
                                         </div>
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={5}
+                                        id={StudyViewPageTabKeyEnum.PLOTS}
+                                        linkText={
+                                            StudyViewPageTabDescriptions.PLOTS
+                                        }
+                                    >
+                                        <PlotsFeature
+                                            filteredSamplesByDetailedCancerType={
+                                                this.store
+                                                    .filteredSamplesByDetailedCancerType
+                                            }
+                                            mutations={this.store.mutations}
+                                            studies={
+                                                this.store.displayedStudies
+                                            }
+                                            molecularProfileIdSuffixToMolecularProfiles={
+                                                this.store
+                                                    .molecularProfileIdSuffixToMolecularProfiles
+                                            }
+                                            entrezGeneIdToGene={
+                                                this.store.entrezGeneIdToGeneAll
+                                            }
+                                            sampleKeyToSample={
+                                                this.store.sampleSetByKey
+                                            }
+                                            genes={this.store.allGenes}
+                                            clinicalAttributes={
+                                                this.store.clinicalAttributes
+                                            }
+                                            genesets={this.store.genesets}
+                                            genericAssayEntitiesGroupByMolecularProfileId={
+                                                this.store
+                                                    .genericAssayEntitiesGroupedByProfileId
+                                            }
+                                            studyIds={
+                                                this.store
+                                                    .queriedPhysicalStudyIds
+                                            }
+                                            molecularProfilesWithData={
+                                                this.store.molecularProfiles
+                                            }
+                                            molecularProfilesInStudies={
+                                                this.store
+                                                    .molecularProfilesInStudies
+                                            }
+                                            annotatedCnaCache={
+                                                this.store.annotatedCnaCache
+                                            }
+                                            annotatedMutationCache={
+                                                this.store
+                                                    .annotatedMutationCache
+                                            }
+                                            structuralVariantCache={
+                                                this.store
+                                                    .structuralVariantCache
+                                            }
+                                            studyToMutationMolecularProfile={
+                                                this.store
+                                                    .studyToMutationMolecularProfile
+                                            }
+                                            studyToMolecularProfileDiscreteCna={
+                                                this.store
+                                                    .studyToMolecularProfileDiscreteCna
+                                            }
+                                            clinicalDataCache={
+                                                this.store.clinicalDataCache
+                                            }
+                                            patientKeyToFilteredSamples={
+                                                this.store
+                                                    .patientKeyToFilteredSamples
+                                            }
+                                            numericGeneMolecularDataCache={
+                                                this.store
+                                                    .numericGeneMolecularDataCache
+                                            }
+                                            coverageInformation={
+                                                this.store.coverageInformation
+                                            }
+                                            filteredSamples={
+                                                this.store.selectedSamples
+                                            }
+                                            genesetMolecularDataCache={
+                                                this.store
+                                                    .genesetMolecularDataCache
+                                            }
+                                            genericAssayMolecularDataCache={
+                                                this.store
+                                                    .genericAssayMolecularDataCache
+                                            }
+                                            studyToStructuralVariantMolecularProfile={
+                                                this.store
+                                                    .studyToStructuralVariantMolecularProfile
+                                            }
+                                            driverAnnotationSettings={
+                                                this.store
+                                                    .driverAnnotationSettings
+                                            }
+                                            studyIdToStudy={
+                                                this.store.everyStudyIdToStudy
+                                                    .result
+                                            }
+                                            structuralVariants={
+                                                this.store.structuralVariants
+                                                    .result
+                                            }
+                                            hugoGeneSymbols={
+                                                this.store.allHugoGeneSymbols
+                                                    .result
+                                            }
+                                            selectedGenericAssayEntitiesGroupByMolecularProfileId={{}}
+                                            molecularProfileIdToMolecularProfile={
+                                                this.store
+                                                    .molecularProfileIdToMolecularProfile
+                                            }
+                                            urlWrapper={this.urlWrapper}
+                                        />
                                     </MSKTab>
 
                                     {this.resourceTabs.component}

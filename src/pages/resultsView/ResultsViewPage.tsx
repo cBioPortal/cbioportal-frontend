@@ -74,6 +74,7 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import PathWayMapperContainer from 'pages/resultsView/pathwayMapper/PathWayMapperContainer';
+import PlotsFeature from './plots/PlotsFeature';
 
 export function initStore(
     appStore: AppStore,
@@ -253,8 +254,75 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.PLOTS}
                             linkText={'Plots'}
                         >
-                            <PlotsTab
+                            {/* <PlotsTab
                                 store={store}
+                                urlWrapper={this.urlWrapper}
+                            /> */}
+                            <PlotsFeature
+                                filteredSamplesByDetailedCancerType={
+                                    store.filteredSamplesByDetailedCancerType
+                                }
+                                mutations={store.mutations}
+                                studies={store.studies}
+                                molecularProfileIdSuffixToMolecularProfiles={
+                                    store.molecularProfileIdSuffixToMolecularProfiles
+                                }
+                                entrezGeneIdToGene={store.entrezGeneIdToGene}
+                                sampleKeyToSample={store.sampleKeyToSample}
+                                genes={store.genes}
+                                clinicalAttributes={store.clinicalAttributes}
+                                genesets={store.genesets}
+                                genericAssayEntitiesGroupByMolecularProfileId={
+                                    store.genericAssayEntitiesGroupByMolecularProfileId
+                                }
+                                studyIds={store.studyIds}
+                                molecularProfilesWithData={
+                                    store.molecularProfilesWithData
+                                }
+                                molecularProfilesInStudies={
+                                    store.molecularProfilesInStudies
+                                }
+                                annotatedCnaCache={store.annotatedCnaCache}
+                                annotatedMutationCache={
+                                    store.annotatedMutationCache
+                                }
+                                structuralVariantCache={
+                                    store.structuralVariantCache
+                                }
+                                studyToMutationMolecularProfile={
+                                    store.studyToMutationMolecularProfile
+                                }
+                                studyToMolecularProfileDiscreteCna={
+                                    store.studyToMolecularProfileDiscreteCna
+                                }
+                                clinicalDataCache={store.clinicalDataCache}
+                                patientKeyToFilteredSamples={
+                                    store.patientKeyToFilteredSamples
+                                }
+                                numericGeneMolecularDataCache={
+                                    store.numericGeneMolecularDataCache
+                                }
+                                coverageInformation={store.coverageInformation}
+                                filteredSamples={store.filteredSamples}
+                                genesetMolecularDataCache={
+                                    store.genesetMolecularDataCache
+                                }
+                                genericAssayMolecularDataCache={
+                                    store.genericAssayMolecularDataCache
+                                }
+                                studyToStructuralVariantMolecularProfile={
+                                    store.studyToStructuralVariantMolecularProfile
+                                }
+                                driverAnnotationSettings={
+                                    store.driverAnnotationSettings
+                                }
+                                hugoGeneSymbols={store.hugoGeneSymbols}
+                                selectedGenericAssayEntitiesGroupByMolecularProfileId={
+                                    store.selectedGenericAssayEntitiesGroupByMolecularProfileId
+                                }
+                                molecularProfileIdToMolecularProfile={
+                                    store.molecularProfileIdToMolecularProfile
+                                }
                                 urlWrapper={this.urlWrapper}
                             />
                         </MSKTab>
