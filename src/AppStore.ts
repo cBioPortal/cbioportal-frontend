@@ -63,14 +63,7 @@ export class AppStore {
     }
 
     @computed get logoutUrl() {
-        if (
-            this.authMethod === 'saml' ||
-            this.authMethod === 'saml_plus_basic'
-        ) {
-            return 'saml/logout';
-        } else {
-            return 'logout';
-        }
+        return 'logout';
     }
 
     @computed get isErrorCondition() {
