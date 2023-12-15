@@ -53,6 +53,7 @@ export default class IFrameLoader extends React.Component<
                     }}
                     src={this.props.url}
                     onLoad={this.onLoad}
+                    allowFullScreen={true}
                 ></iframe>
             </div>
         );
