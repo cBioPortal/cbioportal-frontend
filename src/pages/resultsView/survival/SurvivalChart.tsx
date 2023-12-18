@@ -174,8 +174,8 @@ export default class SurvivalChartExtended
             },
         },
         pValue: {
-            x: 800,
-            y: 50,
+            x: 600,
+            y: -60,
             textAnchor: 'start',
         },
         legend: {
@@ -1406,13 +1406,11 @@ export default class SurvivalChartExtended
                             domain={[0, 100]}
                             crossAxis={false}
                         />
-
+                        {this.showPValueText && this.pValueText}
                         {this.showLegend && this.xAxisForPlot}
                         {!this.showLegend && this.xAxisForSummaryViewPlot}
                         {this.scattersAndLines}
-                        {this.showLegend &&
-                            this.showHazardRatio &&
-                            this.pValueText}
+                        {this.showLegend && this.showHazardRatio}
                         {this.showNormalLegend && this.defaultLegend}
                         {this.showHazardRatio && (
                             <VictoryLegend
