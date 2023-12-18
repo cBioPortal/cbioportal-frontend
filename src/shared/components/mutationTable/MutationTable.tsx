@@ -168,6 +168,7 @@ import {
 } from 'shared/lib/AnnotationColumnUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import CustomDriverTypeColumnFormatter from './column/CustomDriverColumnFormatter';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -192,6 +193,7 @@ export enum MutationTableColumnType {
     NORMAL_ALLELE_FREQ = 'Allele Freq (N)',
     FUNCTIONAL_IMPACT = 'Functional Impact',
     ANNOTATION = 'Annotation',
+    CUSTOM_DRIVER = 'Custom Driver',
     HGVSG = 'HGVSg',
     COSMIC = 'COSMIC',
     COPY_NUM = 'Copy #',
@@ -1050,6 +1052,26 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
+        };
+
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
+            name: MutationTableColumnType.CUSTOM_DRIVER,
+            render: d =>
+                CustomDriverTypeColumnFormatter.renderFunction(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
+            download: CustomDriverTypeColumnFormatter.getTextValue,
+            sortBy: (d: Mutation[]) =>
+                CustomDriverTypeColumnFormatter.getTextValue(d),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverTypeColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
         };
 
         this._columns[MutationTableColumnType.HGVSG] = {
