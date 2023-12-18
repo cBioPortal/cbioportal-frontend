@@ -46,7 +46,7 @@ export DB_DATA_DIR=$E2E_WORKSPACE/cbio_db_data
 
 cd $PORTAL_SOURCE_DIR
 
-export BACKEND=cbioportal:demo-rfc72
+export BACKEND=cbioportal:master
 export BRANCH_ENV="http://localhost:8080"
 export GENOME_NEXUS_URL="https://www.genomenexus.org"
 

@@ -4,8 +4,6 @@ set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 
-echo export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:demo-rfc72
-
 DIR=$PWD
 
 cd $E2E_WORKSPACE/cbioportal-docker-compose
