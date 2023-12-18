@@ -300,7 +300,7 @@ export function initializeLoadConfiguration() {
 
     const configServiceUrl =
         getBrowserWindow().frontendConfig.configurationServiceUrl ||
-        `${APIROOT}config_service.jsp`;
+        `${APIROOT}index`;
 
     const loadConfig: Partial<IAppConfig> = {
         configurationServiceUrl: configServiceUrl,
@@ -380,8 +380,7 @@ export function setLoadConfig(obj: Partial<ILoadConfig>) {
 export function fetchServerConfig() {
     return $.ajax({
         url: getConfigurationServiceApiUrl(),
-        dataType: 'jsonp',
-        jsonpCallback: 'callback',
+        dataType: 'json',
     });
 }
 

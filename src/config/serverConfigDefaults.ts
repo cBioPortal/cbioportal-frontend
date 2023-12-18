@@ -87,6 +87,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_show_tools_tab: true,
     skin_show_web_api_tab: true,
     skin_show_tweet_button: false,
+    skin_show_study_help_button: false,
     skin_show_tissue_image_tab: true,
     quick_search_enabled: false,
     default_cross_cancer_study_list:

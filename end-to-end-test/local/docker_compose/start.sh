@@ -5,10 +5,11 @@ set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... do' loops that should not run when no files/dirs are detected by expansion
 
+echo export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:demo-rfc72
+
 DIR=$PWD
 
 cd $E2E_WORKSPACE/cbioportal-docker-compose
-
 
 compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml -f $TEST_HOME/docker_compose/keycloak.yml"
 if [ $CUSTOM_BACKEND -eq 1 ]; then
@@ -34,12 +35,13 @@ wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/auth/real
 docker-compose $compose_extensions pull
 docker-compose $compose_extensions up -d
 
+# wait for up to 15m until all services are up and running
 healthy=
 for i in {1..30}; do
-    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8080/api/health) == 200 ]] && { healthy=1; break; } || echo "Waiting for cBioPortal services                 ..."
-    sleep 30
+    [[ $(curl -sf http://localhost:8080/api/health) ]] && { healthy=1; break; } || echo "Waiting for cBioPortal service                 ..."
+    sleep 10
 done
-[ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Waiting for cBioPortal services                 ... done"
+[ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Waiting for cBioPortal service                 ... done"
 
 cd $PWD
 

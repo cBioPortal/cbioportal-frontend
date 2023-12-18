@@ -40,10 +40,9 @@ export default class WebAPIPage extends React.Component<{}, {}> {
 
     renderDataAccessTokensDiv() {
         if (
-            getServerConfig().authenticationMethod === 'social_auth' ||
-            (getServerConfig().dat_method !== 'uuid' &&
-                getServerConfig().dat_method !== 'jwt' &&
-                getServerConfig().dat_method !== 'oauth2')
+            getServerConfig().authenticationMethod === 'optional_oauth2' ||
+            // TODO: Potentially need to support other methods in the future, but for now only support oauth2
+            getServerConfig().dat_method !== 'oauth2'
         ) {
             return <div></div>;
         } else {

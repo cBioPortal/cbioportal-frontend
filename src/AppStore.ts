@@ -53,7 +53,7 @@ export class AppStore {
 
     @computed get isSocialAuthenticated() {
         if (this.authMethod) {
-            return this.authMethod.includes('social_auth');
+            return this.authMethod.includes('optional_oauth2');
         }
         return false;
     }
@@ -63,14 +63,7 @@ export class AppStore {
     }
 
     @computed get logoutUrl() {
-        if (
-            this.authMethod === 'saml' ||
-            this.authMethod === 'saml_plus_basic'
-        ) {
-            return 'saml/logout';
-        } else {
-            return 'j_spring_security_logout';
-        }
+        return 'logout';
     }
 
     @computed get isErrorCondition() {

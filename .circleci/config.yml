@@ -287,11 +287,6 @@ jobs:
                   $TEST_HOME/docker_compose/setup.sh
                 no_output_timeout: 25m
             - run:
-                name: Generate checksum of data that populates the test database
-                command: |
-                  $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
-                no_output_timeout: 25m
-            - run:
                 name: Create MySQL data directory
                 command: |
                   docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
