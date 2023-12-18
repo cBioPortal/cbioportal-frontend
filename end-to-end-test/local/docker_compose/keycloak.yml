@@ -2,7 +2,6 @@ version: '3'
 
 services:
   cbioportal:
-    image: cbioportal/cbioportal:demo-rfc72
     volumes:
       - $TEST_HOME/docker_compose/keycloak/localdb.crt:/cbioportal-webapp/local.crt:ro
       - $TEST_HOME/docker_compose/keycloak/localdb.key:/cbioportal-webapp/local.key

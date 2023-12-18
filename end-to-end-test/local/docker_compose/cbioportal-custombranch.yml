@@ -2,7 +2,6 @@ version: '3'
 
 services:
   cbioportal:
-    image: cbioportal/cbioportal:demo-rfc72
     volumes:
       - $E2E_WORKSPACE/cbioportal:/cbioportal
       - $TEST_HOME/runtime-config/portal.properties:/cbioportal/application.properties:ro
