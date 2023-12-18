@@ -122,6 +122,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                         <input
                                             type="checkbox"
                                             style={{ marginRight: 2 }}
+                                            defaultChecked={type.checked}
                                             onClick={() => {
                                                 type.checked = !type.checked;
                                                 props.store.dataTypeFilters = createDataTypeUpdate(
