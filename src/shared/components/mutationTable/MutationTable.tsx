@@ -157,6 +157,7 @@ export interface IMutationTableProps {
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
     customControls?: JSX.Element;
+    isPutativeDriver?: (mutation: Partial<AnnotatedMutation>) => boolean;
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
@@ -169,6 +170,8 @@ import {
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import CustomDriverTypeColumnFormatter from './column/CustomDriverColumnFormatter';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { isPutativeDriver } from 'shared/lib/MutationUtils';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -1059,7 +1062,8 @@ export default class MutationTable<
             render: d =>
                 CustomDriverTypeColumnFormatter.renderFunction(
                     d,
-                    this.props.indexedVariantAnnotations
+                    this.props.indexedVariantAnnotations,
+                    this.props.isPutativeDriver
                 ),
             download: CustomDriverTypeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>

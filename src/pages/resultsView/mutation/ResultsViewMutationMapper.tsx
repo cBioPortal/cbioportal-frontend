@@ -266,6 +266,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 deactivateColumnFilter={this.deactivateColumnFilter}
                 namespaceColumns={this.props.store.namespaceColumnConfig}
                 columns={this.columns}
+                isPutativeDriver={this.props.isPutativeDriver}
             />
         );
     }
