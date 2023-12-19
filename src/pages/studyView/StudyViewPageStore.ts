@@ -11015,6 +11015,35 @@ export class StudyViewPageStore
         },
     });
 
+    readonly plotsSelectedGenes = remoteData<Gene[]>({
+        invoke: () => {
+            let entrezIds: string[] = [];
+            if (
+                this.urlWrapper.query.plots_horz_selection?.selectedGeneOption
+            ) {
+                entrezIds.push(
+                    this.urlWrapper.query.plots_horz_selection
+                        .selectedGeneOption
+                );
+            }
+            if (
+                this.urlWrapper.query.plots_vert_selection?.selectedGeneOption
+            ) {
+                entrezIds.push(
+                    this.urlWrapper.query.plots_vert_selection
+                        .selectedGeneOption
+                );
+            }
+            if (entrezIds.length > 0) {
+                return client.fetchGenesUsingPOST({
+                    geneIdType: 'ENTREZ_GENE_ID',
+                    geneIds: entrezIds,
+                });
+            }
+            return Promise.resolve([]);
+        },
+    });
+
     readonly entrezGeneIdToGeneAll = remoteData<{
         [entrezGeneId: string]: Gene;
     }>({
@@ -11022,7 +11051,6 @@ export class StudyViewPageStore
         invoke: () => {
             // build reference gene map
             return Promise.resolve(
-                // _.keyBy(this.allGenes.result!.filter(g => g.hugoGeneSymbol === 'KRAS'), g => g.entrezGeneId)
                 _.keyBy(this.allGenes.result!, g => g.entrezGeneId)
             );
         },
@@ -11206,7 +11234,6 @@ export class StudyViewPageStore
             }
             const studyIdToProfileMap = this
                 .studyToStructuralVariantMolecularProfile.result;
-            const genes: Gene[] = this.allGenes.result!;
 
             const sampleMolecularIdentifiers = this.samples.result.reduce(
                 (memo, sample: Sample) => {
@@ -11300,10 +11327,10 @@ export class StudyViewPageStore
         //  (2) this means the requests can be cached on the server based on the molecular profile id
         //  (3) We can initiate the mutations call before the samples call completes, thus
         //      putting more response waiting time in parallel
-        await: () => [this.allGenes, this.mutationProfiles],
+        await: () => [this.plotsSelectedGenes, this.mutationProfiles],
         invoke: () => {
             if (
-                this.allGenes.result!.length === 0 ||
+                this.plotsSelectedGenes.result!.length === 0 ||
                 this.mutationProfiles.result!.length === 0
             ) {
                 return Promise.resolve([]);
@@ -11312,7 +11339,7 @@ export class StudyViewPageStore
             return client.fetchMutationsInMultipleMolecularProfilesUsingPOST({
                 projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                 mutationMultipleStudyFilter: {
-                    entrezGeneIds: this.allGenes.result!.map(
+                    entrezGeneIds: this.plotsSelectedGenes.result!.map(
                         g => g.entrezGeneId
                     ),
                     molecularProfileIds: this.mutationProfiles.result!.map(
@@ -11711,7 +11738,7 @@ export class StudyViewPageStore
                 [
                     this.studyToMolecularProfileDiscreteCna,
                     this.getDiscreteCNAPutativeDriverInfo,
-                    this.entrezGeneIdToGene,
+                    this.entrezGeneIdToGeneAll,
                 ],
                 studyToMolecularProfileDiscrete => {
                     return _.values(studyToMolecularProfileDiscrete).map(p => ({
@@ -11736,7 +11763,7 @@ export class StudyViewPageStore
             const filteredAndAnnotatedReport = filterAndAnnotateMolecularData(
                 cnaData,
                 this.getDiscreteCNAPutativeDriverInfo.result!,
-                this.entrezGeneIdToGene.result!
+                this.entrezGeneIdToGeneAll.result!
             );
             const data = filteredAndAnnotatedReport.data.concat(
                 filteredAndAnnotatedReport.vus
@@ -11902,15 +11929,20 @@ export class StudyViewPageStore
     readonly discreteCopyNumberAlterations_preload = remoteData<
         DiscreteCopyNumberData[]
     >({
-        await: () => [this.allGenes, this.studyToMolecularProfileDiscreteCna],
+        await: () => [
+            this.plotsSelectedGenes,
+            this.studyToMolecularProfileDiscreteCna,
+        ],
         invoke: async () => {
-            if (this.cnaMolecularProfileIds.length == 0) {
+            if (
+                this.cnaMolecularProfileIds.length === 0 ||
+                this.plotsSelectedGenes.result!.length === 0
+            ) {
                 return [];
             }
 
             const entrezGeneIds = _.map(
-                // this.allGenes.result!.filter(g => g.hugoGeneSymbol === 'KRAS'),
-                this.allGenes.result!,
+                this.plotsSelectedGenes.result!,
                 (gene: Gene) => gene.entrezGeneId
             );
 
@@ -11960,7 +11992,6 @@ export class StudyViewPageStore
         await: () => [
             this.sampleSetByKey,
             this.molecularData_preload,
-            // this.allGenes,
             this.molecularProfiles,
             this.samples,
         ],
@@ -11981,69 +12012,68 @@ export class StudyViewPageStore
     // we then have to filter this using samples, which can be loaded concurrently instead of serially
     readonly molecularData_preload = remoteData<NumericGeneMolecularData[]>({
         await: () => [
-            this.allGenes,
+            this.plotsSelectedGenes,
             this.displayedStudies,
             this.molecularProfiles,
         ],
         invoke: async () => {
             // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint, generic assay with generic assay endpoint.
             // filter out mutation genetic profile and structural variant profiles and generic assay profiles
-            // const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
-            //     this.molecularProfiles.result!
-            // );
-            // const genes = this.allGenes.result!.filter(g => g.hugoGeneSymbol === 'KRAS' || g.hugoGeneSymbol === 'NRAS' || g.hugoGeneSymbol === 'BRAF');
-            // // const genes = this.allGenes.result!;
+            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
+                this.molecularProfiles.result!
+            );
+            const genes = this.plotsSelectedGenes.result;
 
-            // if (
-            //     profilesWithoutMutationProfile.length &&
-            //     genes != undefined &&
-            //     genes.length
-            // ) {
-            //     const molecularProfileIds = profilesWithoutMutationProfile.map(
-            //         p => p.molecularProfileId
-            //     );
-            //     const numSamples = _.sumBy(
-            //         this.displayedStudies.result!,
-            //         s => s.allSampleCount
-            //     );
+            if (
+                profilesWithoutMutationProfile.length &&
+                genes != undefined &&
+                genes.length
+            ) {
+                const molecularProfileIds = profilesWithoutMutationProfile.map(
+                    p => p.molecularProfileId
+                );
+                const numSamples = _.sumBy(
+                    this.displayedStudies.result!,
+                    s => s.allSampleCount
+                );
 
-            //     // if size of response is too big (around 1.6 million), the request seems to fail. This is a conservative limit
-            //     const maximumDataPointsPerRequest = 1500000;
+                // if size of response is too big (around 1.6 million), the request seems to fail. This is a conservative limit
+                const maximumDataPointsPerRequest = 1500000;
 
-            //     const {
-            //         geneChunks,
-            //         profileChunks,
-            //     } = getGeneAndProfileChunksForRequest(
-            //         maximumDataPointsPerRequest,
-            //         numSamples,
-            //         genes,
-            //         molecularProfileIds
-            //     );
+                const {
+                    geneChunks,
+                    profileChunks,
+                } = getGeneAndProfileChunksForRequest(
+                    maximumDataPointsPerRequest,
+                    numSamples,
+                    genes,
+                    molecularProfileIds
+                );
 
-            //     const dataPromises: Promise<NumericGeneMolecularData[]>[] = [];
+                const dataPromises: Promise<NumericGeneMolecularData[]>[] = [];
 
-            //     geneChunks.forEach(geneChunk => {
-            //         profileChunks.forEach(profileChunk => {
-            //             const molecularDataMultipleStudyFilter = {
-            //                 entrezGeneIds: geneChunk.map(g => g.entrezGeneId),
-            //                 molecularProfileIds: profileChunk,
-            //             } as MolecularDataMultipleStudyFilter;
+                geneChunks.forEach(geneChunk => {
+                    profileChunks.forEach(profileChunk => {
+                        const molecularDataMultipleStudyFilter = {
+                            entrezGeneIds: geneChunk.map(g => g.entrezGeneId),
+                            molecularProfileIds: profileChunk,
+                        } as MolecularDataMultipleStudyFilter;
 
-            //             dataPromises.push(
-            //                 client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
-            //                     {
-            //                         projection:
-            //                             REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-            //                         molecularDataMultipleStudyFilter,
-            //                     }
-            //                 )
-            //             );
-            //         });
-            //     });
+                        dataPromises.push(
+                            client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                                {
+                                    projection:
+                                        REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                                    molecularDataMultipleStudyFilter,
+                                }
+                            )
+                        );
+                    });
+                });
 
-            //     const allData = await Promise.all(dataPromises);
-            //     return _.flatten(allData);
-            // }
+                const allData = await Promise.all(dataPromises);
+                return _.flatten(allData);
+            }
 
             return [];
         },
@@ -12056,15 +12086,6 @@ export class StudyViewPageStore
             (d: DiscreteCopyNumberData) => createDiscreteCopyNumberDataKey(d)
         );
     }
-
-    readonly entrezGeneIdToGene = remoteData<{ [entrezGeneId: number]: Gene }>({
-        await: () => [this.allGenes],
-        invoke: () =>
-            Promise.resolve(
-                // _.keyBy(this.allGenes.result!.filter(g => g.hugoGeneSymbol === 'KRAS'), gene => gene.entrezGeneId)
-                _.keyBy(this.allGenes.result!, gene => gene.entrezGeneId)
-            ),
-    });
 
     public annotatedMutationCache = new MobxPromiseCache<
         { entrezGeneId: number },
