@@ -155,8 +155,7 @@ import {
     submitToPage,
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
-    transformMutationEventType,
-    transformMutationEventUniqueKey,
+    transformMutatedType,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -5008,7 +5007,7 @@ export class StudyViewPageStore
                             result = await internalClient.fetchMutationDataCountsUsingPOST(
                                 params
                             );
-                            getDisplayedValue = transformMutationEventType;
+                            getDisplayedValue = transformMutatedType;
                         } else {
                             result = await internalClient.fetchGenomicDataCountsUsingPOST(
                                 params
@@ -5066,8 +5065,7 @@ export class StudyViewPageStore
                     );
                     //only invoke if there are filtered samples
                     if (chartInfo && this.hasFilteredSamples) {
-                        let getDisplayedValue;
-                        let params = {
+                        const params = {
                             genomicDataCountFilter: {
                                 genomicDataFilters: [
                                     {
@@ -5078,10 +5076,6 @@ export class StudyViewPageStore
                                 ] as any,
                                 studyViewFilter: this.filters,
                             },
-                        } as any;
-
-                        params = {
-                            ...params,
                             $queryParameters: {
                                 projection:
                                     chartInfo.mutationOptionType ===
@@ -5089,7 +5083,7 @@ export class StudyViewPageStore
                                         ? 'SUMMARY'
                                         : 'DETAILED',
                             },
-                        };
+                        } as any;
 
                         const [result, selectedSamples] = await Promise.all([
                             await internalClient.fetchMutationDataCountsUsingPOST(
@@ -5105,7 +5099,6 @@ export class StudyViewPageStore
                         );
 
                         let counts: MultiSelectionTableRow[] = [];
-                        let profileType: string = '';
                         if (data !== undefined) {
                             counts = data.counts.map(c => {
                                 return {
@@ -5121,7 +5114,6 @@ export class StudyViewPageStore
                                     totalCount: c.count,
                                 } as any;
                             });
-                            profileType = data.profileType;
                         }
 
                         return counts;

@@ -1889,7 +1889,9 @@ export function getCNAColorByAlteration(alteration: string): string {
     }
 }
 
-export function transformMutationEventType(eventType: string): string {
+export function transformMutatedType(eventType: string): string {
+    if (eventType === undefined || eventType === 'NA') return eventType;
+
     // Split the input string by underscores
     var words = eventType.split('_');
 
@@ -1900,12 +1902,6 @@ export function transformMutationEventType(eventType: string): string {
 
     // Join the words back together with a space between them
     return capitalizedWords.join(' ');
-}
-
-export function transformMutationEventUniqueKey(uniqueKey: string): string {
-    const parts = uniqueKey.split('_');
-    parts[parts.length - 1] = MutationOptionConstants.MUTATED;
-    return parts.join('_');
 }
 
 export function getDefaultChartTypeByClinicalAttribute(

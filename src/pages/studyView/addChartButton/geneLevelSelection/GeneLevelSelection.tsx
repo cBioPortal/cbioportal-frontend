@@ -113,7 +113,7 @@ export default class GeneLevelSelection extends React.Component<
             hugoGeneSymbol +
             ': ' +
             this.selectedOption!.profileName +
-            (this.selectedSubOption ? ': ' + this.selectedSubOption!.value : '')
+            (this.selectedSubOption ? ': ' + this.selectedSubOption!.label : '')
         );
     }
 
@@ -137,10 +137,10 @@ export default class GeneLevelSelection extends React.Component<
         if (
             this.selectedOption !== undefined &&
             this.subOptions
-                .map(option => option.label)
+                .map(option => option.profileType)
                 .includes(this.selectedOption.alterationType)
         ) {
-            return this.subOptions[0].options[0];
+            return this.subOptions[0];
         }
 
         return undefined;
@@ -179,17 +179,14 @@ export default class GeneLevelSelection extends React.Component<
     private get subOptions() {
         return [
             {
-                label: AlterationTypeConstants.MUTATION_EXTENDED,
-                options: [
-                    {
-                        value: MutationOptionConstants.MUTATED,
-                        label: 'Mutated',
-                    },
-                    {
-                        value: MutationOptionConstants.EVENT,
-                        label: 'Mutation Types',
-                    },
-                ],
+                value: MutationOptionConstants.MUTATED,
+                label: 'Mutated vs Wild Type',
+                profileType: AlterationTypeConstants.MUTATION_EXTENDED,
+            },
+            {
+                value: MutationOptionConstants.EVENT,
+                label: 'Mutation Types',
+                profileType: AlterationTypeConstants.MUTATION_EXTENDED,
             },
         ];
     }
@@ -280,7 +277,7 @@ export default class GeneLevelSelection extends React.Component<
                             />
                             {this.selectedOption &&
                                 this.subOptions
-                                    .map(option => option.label)
+                                    .map(option => option.profileType)
                                     .includes(
                                         this.selectedOption.alterationType
                                     ) && (
