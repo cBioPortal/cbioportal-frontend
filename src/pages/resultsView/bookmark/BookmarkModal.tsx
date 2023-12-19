@@ -14,6 +14,7 @@ interface IBookmarkModalProps {
     title: string;
     description?: string;
 }
+
 @observer
 export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
     @observable urlData: ShareUrls | undefined = undefined;
@@ -78,7 +79,6 @@ export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
     public container: HTMLDivElement;
 
     render() {
-        //NOTE: internal div id necessary for
         return (
             <Modal show={true} onHide={this.props.onHide}>
                 <Modal.Header closeButton>
@@ -91,66 +91,71 @@ export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
                         style={{ top: 32 }}
                         isLoading={!this.urlData}
                     />
-                    <div
-                        className={classNames({ hidden: !this.urlData })}
-                        ref={(el: HTMLDivElement) => (this.container = el)}
-                    >
-                        <form>
-                            <div className="form-group">
-                                <p>{this.props.description}</p>
-                                <div className="input-group">
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        data-test="bookmark-url"
-                                        value={
-                                            this.urlData
-                                                ? this.urlData.fullUrl
-                                                : ''
-                                        }
-                                    />
-                                    <div className="input-group-addon">
-                                        <a
-                                            ref={(el: HTMLAnchorElement) =>
-                                                (this.sessionButton = el)
-                                            }
-                                            onClick={this.showThumb}
-                                        >
-                                            <i className="fa fa-clipboard"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            {this.urlData && this.urlData.bitlyUrl && (
+
+                    {
+                        <div
+                            className={classNames({ hidden: !this.urlData })}
+                            ref={(el: HTMLDivElement) => (this.container = el)}
+                        >
+                            <form>
                                 <div className="form-group">
-                                    <label htmlFor="exampleInputAmount">
-                                        Shortened URL
-                                    </label>
+                                    <p>{this.props.description}</p>
                                     <div className="input-group">
                                         <input
                                             type="text"
                                             className="form-control"
+                                            data-test="bookmark-url"
                                             value={
                                                 this.urlData
-                                                    ? this.urlData.bitlyUrl
+                                                    ? this.urlData.fullUrl
                                                     : ''
                                             }
                                         />
                                         <div className="input-group-addon">
                                             <a
-                                                onClick={this.showThumb}
                                                 ref={(el: HTMLAnchorElement) =>
-                                                    (this.bitlyButton = el)
+                                                    (this.sessionButton = el)
                                                 }
+                                                onClick={this.showThumb}
                                             >
                                                 <i className="fa fa-clipboard"></i>
                                             </a>
                                         </div>
                                     </div>
                                 </div>
-                            )}
-                        </form>
-                    </div>
+                                {this.urlData && this.urlData.bitlyUrl && (
+                                    <div className="form-group">
+                                        <label htmlFor="exampleInputAmount">
+                                            Shortened URL
+                                        </label>
+                                        <div className="input-group">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={
+                                                    this.urlData
+                                                        ? this.urlData.bitlyUrl
+                                                        : ''
+                                                }
+                                            />
+                                            <div className="input-group-addon">
+                                                <a
+                                                    onClick={this.showThumb}
+                                                    ref={(
+                                                        el: HTMLAnchorElement
+                                                    ) =>
+                                                        (this.bitlyButton = el)
+                                                    }
+                                                >
+                                                    <i className="fa fa-clipboard"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </form>
+                        </div>
+                    }
                 </Modal.Body>
             </Modal>
         );
