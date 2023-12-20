@@ -355,11 +355,11 @@ class PlotsTabWaterfallPlot extends WaterfallPlot<IWaterfallPlotData> {}
 const SVG_ID = 'plots-tab-plot-svg';
 
 export const NONE_SELECTED_OPTION_STRING_VALUE = 'none';
-export const NONE_SELECTED_OPTION_NUMERICAL_VALUE = -1;
+export const NONE_SELECTED_OPTION_NUMERICAL_VALUE = -10000;
 export const NONE_SELECTED_OPTION_LABEL = 'Ordered samples';
-export const ALL_SELECTED_OPTION_NUMERICAL_VALUE = -3;
+export const ALL_SELECTED_OPTION_NUMERICAL_VALUE = -30000;
 export const SAME_SELECTED_OPTION_STRING_VALUE = 'same';
-export const SAME_SELECTED_OPTION_NUMERICAL_VALUE = -2;
+export const SAME_SELECTED_OPTION_NUMERICAL_VALUE = -20000;
 const LEGEND_TO_BOTTOM_WIDTH_THRESHOLD = 550; // when plot is wider than this value, the legend moves from right to bottom of screen
 const DISCRETE_CATEGORY_LIMIT = 150; // when a discrete variable has more categories, the discrete plot will not be rendered.
 
@@ -3811,16 +3811,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         isLoading={
                                             this.horzGeneOptions.isPending
                                         }
-                                        defaultOptions={
-                                            (vertical
-                                                ? this.vertGeneOptions.result?.slice(
-                                                      0,
-                                                      20
-                                                  )
-                                                : this.horzGeneOptions.result?.slice(
-                                                      0,
-                                                      20
-                                                  )) || []
+                                        noOptionsMessage={() =>
+                                            'Search for gene'
                                         }
                                         clearable={false}
                                         searchable={false}
@@ -5442,8 +5434,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                         this.horzGeneOptions
                                                             .isPending
                                                     }
-                                                    defaultOptions={
-                                                        defaultOptions
+                                                    noOptionsMessage={() =>
+                                                        'Search for gene or clinical attribute'
                                                     }
                                                     clearable={false}
                                                     searchable={true}
