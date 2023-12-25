@@ -58,7 +58,7 @@
     "react-select": "^3.0.4",
     "react-table": "^6.10.0",
     "seamless-immutable": "^7.1.4",
-    "superagent": "^3.8.3",
+    "superagent": "^7.0.2",
     "typescript": "4.0.3"
   }
 }
