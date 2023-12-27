@@ -1,3 +1,8 @@
+import _ from 'lodash';
+import { ClinicalTrackDatum } from 'shared/components/oncoprint/Oncoprint';
+import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
+import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
+
 export function getDataForSubmission(
     fileInput: HTMLInputElement | null,
     stringInput: string
@@ -20,4 +25,22 @@ export function getDataForSubmission(
             resolve(stringInput);
         }
     });
+}
+
+export function getDefaultClinicalAttributeColoringForStringDatatype(
+    data: ClinicalTrackDatum[]
+) {
+    const colorGetter = makeUniqueColorGetter(
+        _.values(RESERVED_CLINICAL_VALUE_COLORS)
+    );
+    let categoryToColor = _.cloneDeep(RESERVED_CLINICAL_VALUE_COLORS);
+    for (const d of data) {
+        if (
+            (d.attr_val as string) !== '' &&
+            !((d.attr_val as string) in categoryToColor)
+        ) {
+            categoryToColor[d.attr_val as string] = colorGetter();
+        }
+    }
+    return categoryToColor;
 }

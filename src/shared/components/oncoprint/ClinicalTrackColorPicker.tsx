@@ -15,12 +15,10 @@ import {
     rgbaToHex,
 } from 'shared/lib/Colors';
 import { COLORS } from 'pages/studyView/StudyViewUtils';
-import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 import { RGBAColor } from 'oncoprintjs';
 import _ from 'lodash';
 
 export interface IGroupCheckboxProps {
-    store: ResultsViewPageStore;
     handleClinicalTrackColorChange?: (
         value: string,
         color: RGBAColor | undefined

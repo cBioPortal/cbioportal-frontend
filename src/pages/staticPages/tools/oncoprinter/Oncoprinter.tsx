@@ -8,7 +8,7 @@ import OncoprintControls, {
 } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
 import { getServerConfig } from 'config/config';
-import { OncoprintJS } from 'oncoprintjs';
+import { OncoprintJS, RGBAColor } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import { FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
@@ -19,6 +19,24 @@ import WindowStore from '../../../../shared/components/window/WindowStore';
 import { getGeneticTrackKey } from './OncoprinterGeneticUtils';
 import InfoBanner from '../../../../shared/components/banners/InfoBanner';
 import '../../../../globalStyles/oncoprintStyles.scss';
+import _ from 'lodash';
+import {
+    MUTATION_SPECTRUM_CATEGORIES,
+    MUTATION_SPECTRUM_FILLS,
+} from 'shared/cache/ClinicalDataCache';
+import {
+    hexToRGBA,
+    RESERVED_CLINICAL_VALUE_COLORS,
+    rgbaToHex,
+} from 'shared/lib/Colors';
+import {
+    getClinicalTrackColor,
+    getClinicalTrackValues,
+} from 'shared/components/oncoprint/ResultsViewOncoprint';
+import { Modal } from 'react-bootstrap';
+import ClinicalTrackColorPicker from 'shared/components/oncoprint/ClinicalTrackColorPicker';
+import classnames from 'classnames';
+import { getDefaultClinicalAttributeColoringForStringDatatype } from './OncoprinterToolUtils';
 
 interface IOncoprinterProps {
     divId: string;
@@ -379,9 +397,177 @@ export default class Oncoprinter extends React.Component<
         return WindowStore.size.width - 75;
     }
 
+    @action.bound
+    public handleSelectedClinicalTrackColorChange(
+        value: string,
+        color: RGBAColor | undefined
+    ) {
+        if (this.selectedClinicalTrack) {
+            this.props.store.setUserSelectedClinicalTrackColor(
+                this.selectedClinicalTrack.label,
+                value,
+                color
+            );
+        }
+    }
+
+    @observable trackKeySelectedForEdit: string | null = null;
+
+    @action.bound
+    setTrackKeySelectedForEdit(key: string | null) {
+        this.trackKeySelectedForEdit = key;
+    }
+
+    @computed get selectedClinicalTrack() {
+        return _.find(
+            this.props.store.clinicalTracks,
+            t => t.key === this.trackKeySelectedForEdit
+        );
+    }
+
+    @computed get defaultClinicalAttributeColoringForStringDatatype() {
+        if (this.selectedClinicalTrack) {
+            return _.mapValues(
+                getDefaultClinicalAttributeColoringForStringDatatype(
+                    this.selectedClinicalTrack.data
+                ),
+                hexToRGBA
+            );
+        }
+        return _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA);
+    }
+
+    @autobind
+    private getDefaultSelectedClinicalTrackColor(value: string) {
+        if (!this.selectedClinicalTrack) {
+            return [255, 255, 255, 1];
+        }
+        if (this.selectedClinicalTrack.datatype === 'counts') {
+            return MUTATION_SPECTRUM_FILLS[
+                _.indexOf(MUTATION_SPECTRUM_CATEGORIES, value)
+            ];
+        } else if (this.selectedClinicalTrack.datatype === 'string') {
+            // Mixed refers to when an event has multiple values (i.e. Sample Type for a patient event may have both Primary and Recurrence values)
+            if (value === 'Mixed') {
+                return [220, 57, 18, 1];
+            } else {
+                return this.defaultClinicalAttributeColoringForStringDatatype[
+                    value
+                ];
+            }
+        }
+        return [255, 255, 255, 1];
+    }
+
+    @computed get selectedClinicalTrackValues() {
+        if (this.selectedClinicalTrack) {
+            return getClinicalTrackValues(this.selectedClinicalTrack);
+        }
+        return [];
+    }
+
+    @observable clinicalTrackColorChanged: boolean = false;
+
+    @action.bound
+    setClinicalTrackColorChanged(changed: boolean) {
+        this.clinicalTrackColorChanged = changed;
+    }
+
     public render() {
         return (
             <div className="posRelative">
+                {this.selectedClinicalTrack && (
+                    <Modal
+                        show={true}
+                        onHide={() => this.setTrackKeySelectedForEdit(null)}
+                    >
+                        <Modal.Header closeButton>
+                            <Modal.Title>
+                                Color Configuration:{' '}
+                                {this.selectedClinicalTrack.label}
+                            </Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <table className="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Value</th>
+                                        <th>Color</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {this.selectedClinicalTrackValues.map(
+                                        value => (
+                                            <tr>
+                                                <td>{value}</td>
+                                                <td>
+                                                    <ClinicalTrackColorPicker
+                                                        handleClinicalTrackColorChange={
+                                                            this
+                                                                .handleSelectedClinicalTrackColorChange
+                                                        }
+                                                        clinicalTrackValue={
+                                                            value
+                                                        }
+                                                        color={getClinicalTrackColor(
+                                                            this
+                                                                .selectedClinicalTrack!,
+                                                            value as string
+                                                        )}
+                                                        setClinicalTrackColorChanged={
+                                                            this
+                                                                .setClinicalTrackColorChanged
+                                                        }
+                                                    />
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
+                                </tbody>
+                            </table>
+                            <button
+                                className={classnames(
+                                    'btn',
+                                    'btn-default',
+                                    'btn-sm',
+                                    {
+                                        hidden: _.every(
+                                            this.selectedClinicalTrackValues,
+                                            v =>
+                                                rgbaToHex(
+                                                    getClinicalTrackColor(
+                                                        this
+                                                            .selectedClinicalTrack!,
+                                                        v as string
+                                                    )
+                                                ) ===
+                                                rgbaToHex(
+                                                    this.getDefaultSelectedClinicalTrackColor(
+                                                        v
+                                                    ) as RGBAColor
+                                                )
+                                        ),
+                                    }
+                                )}
+                                data-test="resetColors"
+                                style={{ marginTop: 5 }}
+                                onClick={() => {
+                                    this.selectedClinicalTrackValues.forEach(
+                                        v => {
+                                            this.handleSelectedClinicalTrackColorChange(
+                                                v,
+                                                undefined
+                                            );
+                                        }
+                                    );
+                                    this.setClinicalTrackColorChanged(true);
+                                }}
+                            >
+                                Reset Colors
+                            </button>
+                        </Modal.Body>
+                    </Modal>
+                )}
                 <div
                     className={classNames('oncoprintContainer', {
                         fadeIn: !this.isHidden,
@@ -454,6 +640,18 @@ export default class Oncoprinter extends React.Component<
                                 }
                                 showMinimap={this.showMinimap}
                                 onMinimapClose={this.onMinimapClose}
+                                trackKeySelectedForEdit={
+                                    this.trackKeySelectedForEdit
+                                }
+                                setTrackKeySelectedForEdit={
+                                    this.setTrackKeySelectedForEdit
+                                }
+                                clinicalTrackColorChanged={
+                                    this.clinicalTrackColorChanged
+                                }
+                                setClinicalTrackColorChanged={
+                                    this.setClinicalTrackColorChanged
+                                }
                             />
                         </div>
                     </div>

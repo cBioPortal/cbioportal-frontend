@@ -147,7 +147,7 @@ export function getClinicalTrackValues(track: ClinicalTrackSpec): any[] {
         const values = _(track.data)
             .map(d => d.attr_val)
             .uniq()
-            .without(undefined)
+            .without(undefined, '')
             .value();
         return values.sort((a: string, b: string) =>
             a < b ? -1 : a > b ? 1 : 0
@@ -1999,7 +1999,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                                 <td>{value}</td>
                                                 <td>
                                                     <ClinicalTrackColorPicker
-                                                        store={this.props.store}
                                                         handleClinicalTrackColorChange={
                                                             this
                                                                 .handleSelectedClinicalTrackColorChange
