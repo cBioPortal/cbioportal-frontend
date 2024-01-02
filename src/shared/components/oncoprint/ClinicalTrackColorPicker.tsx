@@ -25,7 +25,6 @@ export interface IGroupCheckboxProps {
     ) => void;
     clinicalTrackValue: any;
     color: RGBAColor;
-    setClinicalTrackColorChanged: (changed: boolean) => void;
 }
 
 const COLOR_UNDEFINED = '#FFFFFF';
@@ -57,7 +56,6 @@ export default class ClinicalTrackColorPicker extends React.Component<
                 );
         }
         // set changed track key
-        this.props.setClinicalTrackColorChanged(true);
     };
 
     @computed get colorList() {

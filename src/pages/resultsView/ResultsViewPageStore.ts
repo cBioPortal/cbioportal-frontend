@@ -435,6 +435,8 @@ interface IResultsViewExclusionSettings {
     ) => void;
 }
 
+const ONCOPRINT_COLOR_CONFIG = 'clinicalTracksColorConfig';
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
@@ -496,7 +498,7 @@ export class ResultsViewPageStore extends AnalysisStore
         );
 
         const clinicalTracksColorConfig = localStorage.getItem(
-            'clinicalTracksColorConfig'
+            ONCOPRINT_COLOR_CONFIG
         );
         if (clinicalTracksColorConfig !== null) {
             this._userSelectedStudiesToClinicalTracksColors = JSON.parse(
@@ -641,7 +643,7 @@ export class ResultsViewPageStore extends AnalysisStore
             ] = color;
         }
         localStorage.setItem(
-            'clinicalTracksColorConfig',
+            ONCOPRINT_COLOR_CONFIG,
             JSON.stringify(this._userSelectedStudiesToClinicalTracksColors)
         );
     }

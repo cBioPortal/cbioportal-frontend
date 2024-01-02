@@ -1929,13 +1929,6 @@ export default class ResultsViewOncoprint extends React.Component<
         return [];
     }
 
-    @observable clinicalTrackColorChanged: boolean = false;
-
-    @action.bound
-    setClinicalTrackColorChanged(changed: boolean) {
-        this.clinicalTrackColorChanged = changed;
-    }
-
     public render() {
         getBrowserWindow().donk = this;
         return (
@@ -2011,10 +2004,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                                                 .selectedClinicalTrack!,
                                                             value as string
                                                         )}
-                                                        setClinicalTrackColorChanged={
-                                                            this
-                                                                .setClinicalTrackColorChanged
-                                                        }
                                                     />
                                                 </td>
                                             </tr>
@@ -2057,7 +2046,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                             );
                                         }
                                     );
-                                    this.setClinicalTrackColorChanged(true);
                                 }}
                             >
                                 Reset Colors
@@ -2161,12 +2149,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                 }
                                 setTrackKeySelectedForEdit={
                                     this.setTrackKeySelectedForEdit
-                                }
-                                clinicalTrackColorChanged={
-                                    this.clinicalTrackColorChanged
-                                }
-                                setClinicalTrackColorChanged={
-                                    this.setClinicalTrackColorChanged
                                 }
                             />
                         </div>

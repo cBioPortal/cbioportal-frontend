@@ -301,8 +301,6 @@ export interface IOncoprintProps {
 
     trackKeySelectedForEdit?: string | null;
     setTrackKeySelectedForEdit?: (key: string | null) => void;
-    clinicalTrackColorChanged?: boolean;
-    setClinicalTrackColorChanged?: (changed: boolean) => void;
 
     suppressRendering?: boolean;
     onSuppressRendering?: () => void;

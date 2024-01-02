@@ -43,6 +43,8 @@ interface IOncoprinterProps {
     store: OncoprinterStore;
 }
 
+const DEFAULT_WHITE = [255, 255, 255, 1];
+
 @observer
 export default class Oncoprinter extends React.Component<
     IOncoprinterProps,
@@ -440,23 +442,26 @@ export default class Oncoprinter extends React.Component<
     @autobind
     private getDefaultSelectedClinicalTrackColor(value: string) {
         if (!this.selectedClinicalTrack) {
-            return [255, 255, 255, 1];
+            return DEFAULT_WHITE;
         }
-        if (this.selectedClinicalTrack.datatype === 'counts') {
-            return MUTATION_SPECTRUM_FILLS[
-                _.indexOf(MUTATION_SPECTRUM_CATEGORIES, value)
-            ];
-        } else if (this.selectedClinicalTrack.datatype === 'string') {
-            // Mixed refers to when an event has multiple values (i.e. Sample Type for a patient event may have both Primary and Recurrence values)
-            if (value === 'Mixed') {
-                return [220, 57, 18, 1];
-            } else {
-                return this.defaultClinicalAttributeColoringForStringDatatype[
-                    value
+        switch (this.selectedClinicalTrack.datatype) {
+            case 'counts':
+                return MUTATION_SPECTRUM_FILLS[
+                    _.indexOf(MUTATION_SPECTRUM_CATEGORIES, value)
                 ];
-            }
+            case 'string':
+                // Mixed refers to when an event has multiple values (i.e. Sample Type for a patient event may have both Primary and Recurrence values)
+                if (value === 'Mixed') {
+                    return [220, 57, 18, 1];
+                } else {
+                    return this
+                        .defaultClinicalAttributeColoringForStringDatatype[
+                        value
+                    ];
+                }
+            default:
+                return DEFAULT_WHITE;
         }
-        return [255, 255, 255, 1];
     }
 
     @computed get selectedClinicalTrackValues() {
@@ -464,13 +469,6 @@ export default class Oncoprinter extends React.Component<
             return getClinicalTrackValues(this.selectedClinicalTrack);
         }
         return [];
-    }
-
-    @observable clinicalTrackColorChanged: boolean = false;
-
-    @action.bound
-    setClinicalTrackColorChanged(changed: boolean) {
-        this.clinicalTrackColorChanged = changed;
     }
 
     public render() {
@@ -514,10 +512,6 @@ export default class Oncoprinter extends React.Component<
                                                                 .selectedClinicalTrack!,
                                                             value as string
                                                         )}
-                                                        setClinicalTrackColorChanged={
-                                                            this
-                                                                .setClinicalTrackColorChanged
-                                                        }
                                                     />
                                                 </td>
                                             </tr>
@@ -560,7 +554,6 @@ export default class Oncoprinter extends React.Component<
                                             );
                                         }
                                     );
-                                    this.setClinicalTrackColorChanged(true);
                                 }}
                             >
                                 Reset Colors
@@ -645,12 +638,6 @@ export default class Oncoprinter extends React.Component<
                                 }
                                 setTrackKeySelectedForEdit={
                                     this.setTrackKeySelectedForEdit
-                                }
-                                clinicalTrackColorChanged={
-                                    this.clinicalTrackColorChanged
-                                }
-                                setClinicalTrackColorChanged={
-                                    this.setClinicalTrackColorChanged
                                 }
                             />
                         </div>

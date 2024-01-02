@@ -55,6 +55,8 @@ function genomeNexusKey2(l:{chromosome:string, start:number, end:number, referen
     return `${l.chromosome}_${l.start}_${l.end}_${l.referenceAllele}_${l.variantAllele}`;
 }*/
 
+const ONCOPRINTER_COLOR_CONFIG = 'oncoprinterClinicalTracksColorConfig';
+
 export default class OncoprinterStore {
     // NOTE: we are not annotating hotspot because that needs nucleotide positions
     //      we are not annotating COSMIC because that needs keywords
@@ -82,7 +84,7 @@ export default class OncoprinterStore {
         this.initialize();
 
         const clinicalTracksColorConfig = localStorage.getItem(
-            'oncoprinterClinicalTracksColorConfig'
+            ONCOPRINTER_COLOR_CONFIG
         );
         if (clinicalTracksColorConfig !== null) {
             this._userSelectedClinicalTracksColors = JSON.parse(
@@ -628,7 +630,7 @@ export default class OncoprinterStore {
             this._userSelectedClinicalTracksColors[label][value] = color;
         }
         localStorage.setItem(
-            'oncoprinterClinicalTracksColorConfig',
+            ONCOPRINTER_COLOR_CONFIG,
             JSON.stringify(this._userSelectedClinicalTracksColors)
         );
     }
