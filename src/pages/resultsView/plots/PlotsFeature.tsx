@@ -328,6 +328,7 @@ export interface IPlotsTabProps {
         [molecularProfileId: string]: MolecularProfile;
     }>;
     urlWrapper: ResultsViewURLWrapper | StudyViewURLWrapper;
+    hasNoQueriedGenes?: boolean;
 }
 
 export type PlotsTabDataSource = {
@@ -4090,10 +4091,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                       ])
                     : [];
             const queriedGeneRelatedOptions = isGeneRelatedOptions
-                ? filterGenericAssayOptionsByGenes(
-                      filteredOtherOptions,
-                      queriedHugoGeneSymbols
-                  )
+                ? this.props.hasNoQueriedGenes
+                    ? filteredOtherOptions
+                    : filterGenericAssayOptionsByGenes(
+                          filteredOtherOptions,
+                          queriedHugoGeneSymbols
+                      )
                 : [];
             filteredOtherOptions = [
                 ...selectedGeneRelatedOptions,

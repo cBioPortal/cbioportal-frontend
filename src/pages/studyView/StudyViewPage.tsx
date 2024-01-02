@@ -850,6 +850,7 @@ export default class StudyViewPage extends React.Component<
                                                     .molecularProfileIdToMolecularProfile
                                             }
                                             urlWrapper={this.urlWrapper}
+                                            hasNoQueriedGenes={true}
                                         />
                                     </MSKTab>
 
