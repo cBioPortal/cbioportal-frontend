@@ -18,6 +18,7 @@ import {
     ListPhrase,
     Phrase,
 } from 'shared/components/query/filteredSearch/Phrase';
+import { toFilterFieldOption } from 'shared/components/query/filteredSearch/field/FilterFieldOption';
 
 export class QueryParser {
     /**
@@ -38,7 +39,7 @@ export class QueryParser {
                     input: FilterList,
                     options: ServerConfigHelpers.skin_example_study_queries(
                         getServerConfig()!.skin_example_study_queries || ''
-                    ),
+                    ).map(toFilterFieldOption),
                 },
             },
             /**
@@ -49,7 +50,7 @@ export class QueryParser {
                 nodeFields: ['referenceGenome'],
                 form: {
                     input: FilterCheckbox,
-                    options: [...referenceGenomes],
+                    options: [...referenceGenomes].map(toFilterFieldOption),
                     label: 'Reference genome',
                 },
             },
