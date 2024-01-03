@@ -237,7 +237,7 @@
     "pathway-mapper": "^2.3.0",
     "pdfobject": "^2.0.201604172",
     "pegjs": "^0.10.0",
-    "plotly.js": "^1.42.5",
+    "plotly.js": "^2.25.2",
     "pluralize": "^7.0.0",
     "postcss-loader": "^1.2.2",
     "postcss-url": "^8.0.0",
