@@ -774,7 +774,8 @@ export default class StudyViewPage extends React.Component<
                                                     .queriedPhysicalStudyIds
                                             }
                                             molecularProfilesWithData={
-                                                this.store.molecularProfiles
+                                                this.store
+                                                    .molecularProfilesInStudies
                                             }
                                             molecularProfilesInStudies={
                                                 this.store
@@ -833,8 +834,7 @@ export default class StudyViewPage extends React.Component<
                                                     .driverAnnotationSettings
                                             }
                                             studyIdToStudy={
-                                                this.store.everyStudyIdToStudy
-                                                    .result
+                                                this.store.studyIdToStudy.result
                                             }
                                             structuralVariants={
                                                 this.store.structuralVariants

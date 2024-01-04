@@ -5316,6 +5316,17 @@ export class StudyViewPageStore
         default: [],
     });
 
+    readonly studyIdToStudy = remoteData(
+        {
+            await: () => [this.queriedPhysicalStudies],
+            invoke: () =>
+                Promise.resolve(
+                    _.keyBy(this.queriedPhysicalStudies.result, x => x.studyId)
+                ),
+        },
+        {}
+    );
+
     readonly queriedSampleIdentifiers = remoteData<SampleIdentifier[]>({
         await: () => [
             this.filteredPhysicalStudies,
@@ -11218,7 +11229,7 @@ export class StudyViewPageStore
 
     readonly structuralVariants = remoteData<StructuralVariant[]>({
         await: () => [
-            this.allGenes,
+            this.plotsSelectedGenes,
             this.samples,
             this.studyToStructuralVariantMolecularProfile,
             this.entrezGeneIdToGeneAll,
@@ -11228,7 +11239,7 @@ export class StudyViewPageStore
                 _.isEmpty(
                     this.studyToStructuralVariantMolecularProfile.result
                 ) ||
-                _.isEmpty(this.allGenes.result)
+                _.isEmpty(this.plotsSelectedGenes.result)
             ) {
                 return [];
             }
@@ -11258,18 +11269,18 @@ export class StudyViewPageStore
                 // Set all SVs that are queried at the gene level.
                 // The gene1::gene2 orientation does not come into play here.
                 const entrezGeneIds = _.map(
-                    this.allGenes.result,
+                    this.plotsSelectedGenes.result,
                     (gene: Gene) => gene.entrezGeneId
                 );
-                // Set all SVs that are queried at the gene1::gene2 orientation level.
-                const structuralVariantQueries = [].map(sv =>
-                    createStructuralVariantQuery(sv, this.allGenes.result!)
-                );
+                // // Set all SVs that are queried at the gene1::gene2 orientation level.
+                // const structuralVariantQueries = this.structVarQueries.map(sv =>
+                //     createStructuralVariantQuery(sv, this.plotsSelectedGenes.result!)
+                // );
 
                 return await internalClient.fetchStructuralVariantsUsingPOST({
                     structuralVariantFilter: {
                         entrezGeneIds,
-                        structuralVariantQueries,
+                        structuralVariantQueries: [],
                         sampleMolecularIdentifiers,
                         molecularProfileIds: [],
                     },

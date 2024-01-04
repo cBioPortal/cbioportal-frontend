@@ -1916,7 +1916,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         await: () => [this.props.genes],
         invoke: () => {
             return Promise.resolve(
-                // this.props.genes.result!.filter(g => g.hugoGeneSymbol === 'KRAS').map(gene => ({
                 this.props.genes.result!.map(gene => ({
                     value: gene.entrezGeneId,
                     label: gene.hugoGeneSymbol,
