@@ -45,6 +45,7 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.ASCN_COPY_NUM,
             MutationTableColumnType.ANNOTATION,
             MutationTableColumnType.CUSTOM_DRIVER,
+            MutationTableColumnType.CUSTOM_DRIVER_TIER,
             MutationTableColumnType.HGVSG,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.REF_READS_N,
@@ -226,6 +227,7 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         this._columns[MutationTableColumnType.CUSTOM_DRIVER].order = 41;
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER].order = 42;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 45;
         this._columns[MutationTableColumnType.ASCN_METHOD].order = 46;
         this._columns[MutationTableColumnType.CLONAL].order = 47;

@@ -8,10 +8,10 @@ import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 /**
  * Mutation Column Formatter.
  */
-export default class CustomDriverColumnFormatter {
+export default class CustomDriverTierColumnFormatter {
     public static getTextValue(data: Mutation[]): string {
         let textValue: string = '';
-        const dataValue = CustomDriverColumnFormatter.getData(data);
+        const dataValue = CustomDriverTierColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -23,12 +23,12 @@ export default class CustomDriverColumnFormatter {
     public static getData(data: Mutation[]) {
         if (data.length > 0) {
             if (
-                data[0].driverFilterAnnotation === null ||
-                data[0].driverFilterAnnotation === ''
+                data[0].driverTiersFilterAnnotation === null ||
+                data[0].driverTiersFilterAnnotation === ''
             ) {
                 return data[0].driverTiersFilter;
             }
-            return data[0].driverFilterAnnotation;
+            return data[0].driverTiersFilterAnnotation;
         } else {
             return null;
         }
@@ -36,12 +36,12 @@ export default class CustomDriverColumnFormatter {
 
     public static renderFunction(mutations: Mutation[]) {
         // use text for all purposes (display, sort, filter)
-        const text: string = CustomDriverColumnFormatter.getTextValue(
+        const text: string = CustomDriverTierColumnFormatter.getTextValue(
             mutations
         );
 
         // use actual value for tooltip
-        const toolTip: string = CustomDriverColumnFormatter.getTextValue(
+        const toolTip: string = CustomDriverTierColumnFormatter.getTextValue(
             mutations
         );
 

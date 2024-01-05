@@ -14,6 +14,8 @@ import CohortColumnFormatter from './column/CohortColumnFormatter';
 import CnaColumnFormatter from './column/CnaColumnFormatter';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
+import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import SampleManager from '../SampleManager';
 import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
@@ -34,7 +36,6 @@ import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
-import CustomDriverTypeColumnFormatter from './column/CustomDriverColumnFormatter';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -298,16 +299,16 @@ export default class CopyNumberTableWrapper extends React.Component<
 
         columns.push({
             name: 'Custom Driver',
-            render: d => CustomDriverTypeColumnFormatter.renderFunction(d),
-            download: CustomDriverTypeColumnFormatter.getTextValue,
+            render: d => CustomDriverColumnFormatter.renderFunction(d),
+            download: CustomDriverColumnFormatter.getTextValue,
             sortBy: (d: DiscreteCopyNumberData[]) =>
-                CustomDriverTypeColumnFormatter.getTextValue(d),
+                CustomDriverColumnFormatter.getTextValue(d),
             filter: (
                 d: DiscreteCopyNumberData[],
                 filterString: string,
                 filterStringUpper: string
             ) =>
-                CustomDriverTypeColumnFormatter.getTextValue(d)
+                CustomDriverColumnFormatter.getTextValue(d)
                     .toUpperCase()
                     .includes(filterStringUpper),
             visible:
@@ -318,6 +319,30 @@ export default class CopyNumberTableWrapper extends React.Component<
                         d[0].driverFilterAnnotation !== undefined
                 ),
             order: 55,
+        });
+
+        columns.push({
+            name: 'Custom Driver Tier',
+            render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+            download: CustomDriverTierColumnFormatter.getTextValue,
+            sortBy: (d: DiscreteCopyNumberData[]) =>
+                CustomDriverTierColumnFormatter.getTextValue(d),
+            filter: (
+                d: DiscreteCopyNumberData[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverTierColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible:
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.length > 0 &&
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.every(
+                    d =>
+                        d[0].driverFilter !== undefined ||
+                        d[0].driverFilterAnnotation !== undefined
+                ),
+            order: 56,
         });
 
         columns.push({

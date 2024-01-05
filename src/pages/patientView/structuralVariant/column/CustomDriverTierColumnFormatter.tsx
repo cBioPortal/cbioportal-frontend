@@ -6,10 +6,10 @@ import { AnnotatedStructuralVariant } from 'shared/model/AnnotatedMutation';
 /**
  * Discrete Copy Number Formatter.
  */
-export default class CustomDriverColumnFormatter {
+export default class CustomDriverTierColumnFormatter {
     public static getTextValue(data: StructuralVariant[]): string {
         let textValue: string = '';
-        const dataValue = CustomDriverColumnFormatter.getData(data);
+        const dataValue = CustomDriverTierColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -21,30 +21,32 @@ export default class CustomDriverColumnFormatter {
     public static getData(data: StructuralVariant[]) {
         if (data.length > 0) {
             if (
-                data[0].driverFilterAnn === null ||
-                data[0].driverFilterAnn === ''
+                data[0].driverTiersFilterAnn === null ||
+                data[0].driverTiersFilterAnn === ''
             ) {
-                return data[0].driverFilter;
+                return data[0].driverTiersFilter;
             }
-            return data[0].driverFilterAnn;
+            return data[0].driverTiersFilterAnn;
         } else {
             return null;
         }
     }
 
-    public static renderFunction(cnaData: StructuralVariant[]) {
+    public static renderFunction(svData: StructuralVariant[]) {
         // use text for all purposes (display, sort, filter)
-        const text: string = CustomDriverColumnFormatter.getTextValue(cnaData);
+        const text: string = CustomDriverTierColumnFormatter.getTextValue(
+            svData
+        );
 
         // use actual value for tooltip
-        const toolTip: string = CustomDriverColumnFormatter.getTextValue(
-            cnaData
+        const toolTip: string = CustomDriverTierColumnFormatter.getTextValue(
+            svData
         );
 
         let content;
         if (
-            cnaData[0] !== undefined &&
-            (cnaData[0] as AnnotatedStructuralVariant).putativeDriver
+            svData[0] !== undefined &&
+            (svData[0] as AnnotatedStructuralVariant).putativeDriver
         ) {
             content = (
                 <span>

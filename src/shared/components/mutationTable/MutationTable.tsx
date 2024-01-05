@@ -42,6 +42,8 @@ import { ICosmicData } from 'shared/model/Cosmic';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
 import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMutSigData } from 'shared/model/MutSig';
+import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import VariantCountCache from 'shared/cache/VariantCountCache';
@@ -168,9 +170,6 @@ import {
 } from 'shared/lib/AnnotationColumnUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
-import CustomDriverTypeColumnFormatter from './column/CustomDriverColumnFormatter';
-import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
-import { isPutativeDriver } from 'shared/lib/MutationUtils';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -196,6 +195,7 @@ export enum MutationTableColumnType {
     FUNCTIONAL_IMPACT = 'Functional Impact',
     ANNOTATION = 'Annotation',
     CUSTOM_DRIVER = 'Custom Driver',
+    CUSTOM_DRIVER_TIER = 'Custom Driver Tier',
     HGVSG = 'HGVSg',
     COSMIC = 'COSMIC',
     COPY_NUM = 'Copy #',
@@ -1070,18 +1070,43 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
             name: MutationTableColumnType.CUSTOM_DRIVER,
-            render: d => CustomDriverTypeColumnFormatter.renderFunction(d),
-            download: CustomDriverTypeColumnFormatter.getTextValue,
+            render: d => CustomDriverColumnFormatter.renderFunction(d),
+            download: CustomDriverColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
-                CustomDriverTypeColumnFormatter.getTextValue(d),
+                CustomDriverColumnFormatter.getTextValue(d),
             filter: (
                 d: Mutation[],
                 filterString: string,
                 filterStringUpper: string
             ) =>
-                CustomDriverTypeColumnFormatter.getTextValue(d)
+                CustomDriverColumnFormatter.getTextValue(d)
                     .toUpperCase()
                     .includes(filterStringUpper),
+            visible:
+                this.props.data &&
+                this.props.data.length > 0 &&
+                !this.props.data.every(
+                    d =>
+                        d[0].driverFilter !== undefined ||
+                        d[0].driverFilterAnnotation !== undefined
+                ),
+        };
+
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER] = {
+            name: MutationTableColumnType.CUSTOM_DRIVER_TIER,
+            render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+            download: CustomDriverTierColumnFormatter.getTextValue,
+            sortBy: (d: Mutation[]) =>
+                CustomDriverTierColumnFormatter.getTextValue(d),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverTierColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible: false,
         };
 
         this._columns[MutationTableColumnType.HGVSG] = {

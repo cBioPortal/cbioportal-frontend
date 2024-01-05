@@ -17,6 +17,8 @@ import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
 import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from 'config/config';
 import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
+import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import { DownloadControlOption, remoteData } from 'cbioportal-frontend-commons';
 import {
     calculateOncoKbContentPadding,
@@ -29,7 +31,6 @@ import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
-import CustomDriverTypeColumnFormatter from './column/CustomDriverColumnFormatter';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -330,16 +331,16 @@ export default class StructuralVariantTableWrapper extends React.Component<
 
             columns.push({
                 name: 'Custom Driver',
-                render: d => CustomDriverTypeColumnFormatter.renderFunction(d),
-                download: CustomDriverTypeColumnFormatter.getTextValue,
+                render: d => CustomDriverColumnFormatter.renderFunction(d),
+                download: CustomDriverColumnFormatter.getTextValue,
                 sortBy: (d: StructuralVariant[]) =>
-                    CustomDriverTypeColumnFormatter.getTextValue(d),
+                    CustomDriverColumnFormatter.getTextValue(d),
                 filter: (
                     d: StructuralVariant[],
                     filterString: string,
                     filterStringUpper: string
                 ) =>
-                    CustomDriverTypeColumnFormatter.getTextValue(d)
+                    CustomDriverColumnFormatter.getTextValue(d)
                         .toUpperCase()
                         .includes(filterStringUpper),
                 visible:
@@ -351,6 +352,31 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             d[0].driverFilterAnn !== undefined
                     ),
                 order: 46,
+            });
+
+            columns.push({
+                name: 'Custom Driver Tier',
+                render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+                download: CustomDriverTierColumnFormatter.getTextValue,
+                sortBy: (d: StructuralVariant[]) =>
+                    CustomDriverTierColumnFormatter.getTextValue(d),
+                filter: (
+                    d: StructuralVariant[],
+                    filterString: string,
+                    filterStringUpper: string
+                ) =>
+                    CustomDriverTierColumnFormatter.getTextValue(d)
+                        .toUpperCase()
+                        .includes(filterStringUpper),
+                visible:
+                    this.props.store.groupedStructuralVariantData.result
+                        .length > 0 &&
+                    this.props.store.groupedStructuralVariantData.result.every(
+                        d =>
+                            d[0].driverFilter !== undefined ||
+                            d[0].driverFilterAnn !== undefined
+                    ),
+                order: 47,
             });
 
             columns.push({

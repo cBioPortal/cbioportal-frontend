@@ -4,12 +4,12 @@ import _ from 'lodash';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 
 /**
- * Discrete Copy Number Formatter.
+ * Mutation Column Formatter.
  */
-export default class CustomDriverColumnFormatter {
+export default class CustomDriverTierColumnFormatter {
     public static getTextValue(data: DiscreteCopyNumberData[]): string {
         let textValue: string = '';
-        const dataValue = CustomDriverColumnFormatter.getData(data);
+        const dataValue = CustomDriverTierColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -21,12 +21,12 @@ export default class CustomDriverColumnFormatter {
     public static getData(data: DiscreteCopyNumberData[]) {
         if (data.length > 0) {
             if (
-                data[0].driverFilterAnnotation === null ||
-                data[0].driverFilterAnnotation === ''
+                data[0].driverTiersFilterAnnotation === null ||
+                data[0].driverTiersFilterAnnotation === ''
             ) {
-                return data[0].driverFilter;
+                return data[0].driverTiersFilter;
             }
-            return data[0].driverFilterAnnotation;
+            return data[0].driverTiersFilterAnnotation;
         } else {
             return null;
         }
@@ -34,10 +34,12 @@ export default class CustomDriverColumnFormatter {
 
     public static renderFunction(cnaData: DiscreteCopyNumberData[]) {
         // use text for all purposes (display, sort, filter)
-        const text: string = CustomDriverColumnFormatter.getTextValue(cnaData);
+        const text: string = CustomDriverTierColumnFormatter.getTextValue(
+            cnaData
+        );
 
         // use actual value for tooltip
-        const toolTip: string = CustomDriverColumnFormatter.getTextValue(
+        const toolTip: string = CustomDriverTierColumnFormatter.getTextValue(
             cnaData
         );
 
@@ -53,7 +55,7 @@ export default class CustomDriverColumnFormatter {
                 </span>
             );
         } else {
-            content = <span>{text}</span>;
+            content = <span>{text} </span>;
         }
 
         return <span>{content}</span>;
