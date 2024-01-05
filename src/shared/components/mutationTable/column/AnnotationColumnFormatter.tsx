@@ -10,6 +10,7 @@ import {
 } from 'react-mutation-mapper';
 import { oncoKbAnnotationDownload } from 'oncokb-frontend-commons';
 import {
+    getCivicGenes,
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
@@ -143,6 +144,31 @@ export default class AnnotationColumnFormatter {
                 hasMultipleCancerTypes={hasMultipleCancerTypes}
                 {...columnProps}
             />
+        );
+    }
+
+    public static isVisible(props: Partial<AnnotationProps>) {
+        const annotation = getAnnotationData(
+            props.mutation,
+            props.oncoKbCancerGenes,
+            props.hotspotData,
+            props.myCancerGenomeData,
+            props.oncoKbData,
+            props.usingPublicOncoKbInstance,
+            props.civicGenes,
+            props.civicVariants,
+            props.indexedVariantAnnotations,
+            props.resolveTumorType,
+            props.resolveEntrezGeneId
+        );
+
+        return (
+            (props.enableOncoKb && props.oncoKbData?.result !== undefined) ||
+            (props.enableRevue && annotation.vue !== undefined) ||
+            (props.enableCivic && annotation.civicEntry !== undefined) ||
+            (props.enableMyCancerGenome &&
+                annotation.myCancerGenomeLinks.length > 0) ||
+            (props.enableHotspot && props.hotspotData !== undefined)
         );
     }
 }

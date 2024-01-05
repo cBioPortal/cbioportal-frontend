@@ -208,16 +208,8 @@ export default class ResultsViewMutationTable extends MutationTable<
         );
 
         // disable annotation column if non canonical transcript is selected
-        this._columns[
-            MutationTableColumnType.ANNOTATION
-        ].shouldExclude = () => {
-            return (
-                this.props.isCanonicalTranscript === false ||
-                this.props.cosmicData !== undefined ||
-                this.props.oncoKbData !== undefined ||
-                this.props.hotspotData !== undefined
-            );
-        };
+        this._columns[MutationTableColumnType.ANNOTATION].shouldExclude = () =>
+            this.props.isCanonicalTranscript === false;
 
         // order columns
         this._columns[MutationTableColumnType.STUDY].order = 0;

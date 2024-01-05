@@ -157,7 +157,6 @@ export interface IMutationTableProps {
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
     customControls?: JSX.Element;
-    isPutativeDriver?: (mutation: Partial<AnnotatedMutation>) => boolean;
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
@@ -1055,16 +1054,23 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
+            visible: AnnotationColumnFormatter.isVisible({
+                enableOncoKb: this.props.enableOncoKb,
+                enableRevue: this.props.enableRevue,
+                enableCivic: this.props.enableCivic,
+                enableMyCancerGenome: this.props.enableMyCancerGenome,
+                enableHotspot: this.props.enableHotspot,
+                oncoKbData: this.props.oncoKbData,
+                civicGenes: this.props.civicGenes,
+                civicVariants: this.props.civicVariants,
+                myCancerGenomeData: this.props.myCancerGenomeData,
+                hotspotData: this.props.hotspotData,
+            }),
         };
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
             name: MutationTableColumnType.CUSTOM_DRIVER,
-            render: d =>
-                CustomDriverTypeColumnFormatter.renderFunction(
-                    d,
-                    this.props.indexedVariantAnnotations,
-                    this.props.isPutativeDriver
-                ),
+            render: d => CustomDriverTypeColumnFormatter.renderFunction(d),
             download: CustomDriverTypeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 CustomDriverTypeColumnFormatter.getTextValue(d),

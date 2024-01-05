@@ -34,6 +34,7 @@ import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import CustomDriverTypeColumnFormatter from './column/CustomDriverColumnFormatter';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -287,7 +288,36 @@ export default class CopyNumberTableWrapper extends React.Component<
                     this.pageStore.cnaCivicVariants
                 );
             },
+            visible:
+                this.props.enableOncoKb &&
+                this.pageStore.cnaOncoKbData.result.indicatorMap !== null &&
+                Object.keys(this.pageStore.cnaOncoKbData.result.indicatorMap)
+                    .length > 0,
             order: 50,
+        });
+
+        columns.push({
+            name: 'Custom Driver',
+            render: d => CustomDriverTypeColumnFormatter.renderFunction(d),
+            download: CustomDriverTypeColumnFormatter.getTextValue,
+            sortBy: (d: DiscreteCopyNumberData[]) =>
+                CustomDriverTypeColumnFormatter.getTextValue(d),
+            filter: (
+                d: DiscreteCopyNumberData[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverTypeColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible:
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.length > 0 &&
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.every(
+                    d =>
+                        d[0].driverFilter !== undefined ||
+                        d[0].driverFilterAnnotation !== undefined
+                ),
+            order: 55,
         });
 
         columns.push({

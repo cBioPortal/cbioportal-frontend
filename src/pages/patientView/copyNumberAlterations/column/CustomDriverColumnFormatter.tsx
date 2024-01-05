@@ -1,15 +1,13 @@
 import * as React from 'react';
-import { Mutation } from 'cbioportal-ts-api-client';
-import { createToolTip } from './CategoricalColumnFormatter';
-import styles from './mutationType.module.scss';
+import { DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
-import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 
 /**
- * Mutation Column Formatter.
+ * Discrete Copy Number Formatter.
  */
 export default class CustomDriverTypeColumnFormatter {
-    public static getTextValue(data: Mutation[]): string {
+    public static getTextValue(data: DiscreteCopyNumberData[]): string {
         let textValue: string = '';
         const dataValue = CustomDriverTypeColumnFormatter.getData(data);
 
@@ -20,7 +18,7 @@ export default class CustomDriverTypeColumnFormatter {
         return textValue;
     }
 
-    public static getData(data: Mutation[]) {
+    public static getData(data: DiscreteCopyNumberData[]) {
         if (data.length > 0) {
             if (
                 data[0].driverFilterAnnotation === null ||
@@ -34,21 +32,22 @@ export default class CustomDriverTypeColumnFormatter {
         }
     }
 
-    public static renderFunction(mutations: Mutation[]) {
+    public static renderFunction(cnaData: DiscreteCopyNumberData[]) {
         // use text for all purposes (display, sort, filter)
         const text: string = CustomDriverTypeColumnFormatter.getTextValue(
-            mutations
+            cnaData
         );
 
         // use actual value for tooltip
         const toolTip: string = CustomDriverTypeColumnFormatter.getTextValue(
-            mutations
+            cnaData
         );
 
         let content;
         if (
-            mutations[0] !== undefined &&
-            (mutations[0] as AnnotatedMutation).putativeDriver
+            cnaData[0] !== undefined &&
+            ((cnaData[0] as unknown) as AnnotatedNumericGeneMolecularData)
+                .putativeDriver
         ) {
             content = (
                 <span>
@@ -56,13 +55,9 @@ export default class CustomDriverTypeColumnFormatter {
                 </span>
             );
         } else {
-            content = <span>{text} </span>;
+            content = <span>{text}</span>;
         }
 
-        // add tooltip only if the display value differs from the actual text value!
-        if (toolTip.toLowerCase() !== text.toLowerCase()) {
-            content = createToolTip(content, toolTip);
-        }
-        return <span className={styles.mutationTypeCell}>{content}</span>;
+        return <span>{content}</span>;
     }
 }

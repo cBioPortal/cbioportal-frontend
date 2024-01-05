@@ -96,6 +96,7 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.DBSNP,
             MutationTableColumnType.GENE_PANEL,
             MutationTableColumnType.SIGNAL,
+            MutationTableColumnType.CUSTOM_DRIVER,
         ],
     };
 
@@ -313,6 +314,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER].order = 111;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 114;
         this._columns[MutationTableColumnType.ASCN_METHOD].order = 115;
         this._columns[MutationTableColumnType.CLONAL].order = 116;

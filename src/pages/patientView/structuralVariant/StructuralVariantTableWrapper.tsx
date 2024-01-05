@@ -29,6 +29,7 @@ import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
+import CustomDriverTypeColumnFormatter from './column/CustomDriverColumnFormatter';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -316,7 +317,40 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         this.props.store.uniqueSampleKeyToTumorType
                     );
                 },
+                visible:
+                    getServerConfig().show_oncokb &&
+                    this.props.store.structuralVariantOncoKbData.result
+                        .indicatorMap !== null &&
+                    Object.keys(
+                        this.props.store.structuralVariantOncoKbData.result
+                            .indicatorMap
+                    ).length > 0,
                 order: 45,
+            });
+
+            columns.push({
+                name: 'Custom Driver',
+                render: d => CustomDriverTypeColumnFormatter.renderFunction(d),
+                download: CustomDriverTypeColumnFormatter.getTextValue,
+                sortBy: (d: StructuralVariant[]) =>
+                    CustomDriverTypeColumnFormatter.getTextValue(d),
+                filter: (
+                    d: StructuralVariant[],
+                    filterString: string,
+                    filterStringUpper: string
+                ) =>
+                    CustomDriverTypeColumnFormatter.getTextValue(d)
+                        .toUpperCase()
+                        .includes(filterStringUpper),
+                visible:
+                    this.props.store.groupedStructuralVariantData.result
+                        .length > 0 &&
+                    this.props.store.groupedStructuralVariantData.result.every(
+                        d =>
+                            d[0].driverFilter !== undefined ||
+                            d[0].driverFilterAnn !== undefined
+                    ),
+                order: 46,
             });
 
             columns.push({
