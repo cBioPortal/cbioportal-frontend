@@ -33,7 +33,7 @@ export function getDefaultClinicalAttributeColoringForStringDatatype(
     const colorGetter = makeUniqueColorGetter(
         _.values(RESERVED_CLINICAL_VALUE_COLORS)
     );
-    let categoryToColor = _.cloneDeep(RESERVED_CLINICAL_VALUE_COLORS);
+    let categoryToColor: { [value: string]: string } = {};
     for (const d of data) {
         if (
             (d.attr_val as string) !== '' &&
@@ -42,5 +42,9 @@ export function getDefaultClinicalAttributeColoringForStringDatatype(
             categoryToColor[d.attr_val as string] = colorGetter();
         }
     }
+    categoryToColor = Object.assign(
+        categoryToColor,
+        RESERVED_CLINICAL_VALUE_COLORS
+    );
     return categoryToColor;
 }

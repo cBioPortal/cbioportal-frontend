@@ -96,6 +96,7 @@ import { Modal } from 'react-bootstrap';
 import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 import classnames from 'classnames';
+import { OncoprintColorModal } from './OncoprintColorModal';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -103,6 +104,9 @@ interface IResultsViewOncoprintProps {
     urlWrapper: ResultsViewURLWrapper;
     addOnBecomeVisibleListener?: (callback: () => void) => void;
 }
+
+const DEFAULT_UNKNOWN_COLOR = [255, 255, 255, 1];
+const DEFAULT_MIXED_COLOR = [48, 97, 194, 1];
 
 export enum SortByUrlParamValue {
     CASE_ID = 'case_id',
@@ -166,11 +170,11 @@ export function getClinicalTrackColor(
         return track.countsCategoryFills[valueIndex];
     } else if (track.datatype === 'string' && track.category_to_color) {
         if (value === 'Mixed') {
-            return track.category_to_color[value] || [48, 97, 194, 1];
+            return track.category_to_color[value] || DEFAULT_MIXED_COLOR;
         }
         return track.category_to_color[value];
     } else {
-        return [255, 255, 255, 1] as RGBAColor;
+        return DEFAULT_UNKNOWN_COLOR as RGBAColor;
     }
 }
 
@@ -1890,6 +1894,8 @@ export default class ResultsViewOncoprint extends React.Component<
         this.trackKeySelectedForEdit = key;
     }
 
+    // if trackKeySelectedForEdit is null ('Edit Colors' has not been selected in an individual track menu),
+    // selectedClinicalTrack will be undefined
     @computed get selectedClinicalTrack() {
         return _.find(
             this.clinicalTracks.result,
@@ -1898,35 +1904,30 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @autobind
-    private getDefaultSelectedClinicalTrackColor(value: string) {
+    private getSelectedClinicalTrackDefaultColorForValue(
+        attributeValue: string
+    ) {
         if (!this.selectedClinicalTrack) {
-            return [255, 255, 255, 1];
+            return DEFAULT_UNKNOWN_COLOR;
         }
         if (this.selectedClinicalTrack.datatype === 'counts') {
             return MUTATION_SPECTRUM_FILLS[
-                _.indexOf(MUTATION_SPECTRUM_CATEGORIES, value)
+                _.indexOf(MUTATION_SPECTRUM_CATEGORIES, attributeValue)
             ];
         } else if (this.selectedClinicalTrack.datatype === 'string') {
             // Mixed refers to when an event has multiple values (i.e. Sample Type for a patient event may have both Primary and Recurrence values)
-            if (value === 'Mixed') {
-                return [48, 97, 194, 1];
+            if (attributeValue === 'Mixed') {
+                return DEFAULT_MIXED_COLOR;
             } else {
                 return hexToRGBA(
                     this.props.store.clinicalDataCache.get(
                         this.props.store.clinicalAttributeIdToClinicalAttribute
                             .result![this.selectedClinicalTrack!.attributeId]
-                    ).result!.categoryToColor![value]
+                    ).result!.categoryToColor![attributeValue]
                 );
             }
         }
-        return [255, 255, 255, 1];
-    }
-
-    @computed get selectedClinicalTrackValues() {
-        if (this.selectedClinicalTrack) {
-            return getClinicalTrackValues(this.selectedClinicalTrack);
-        }
-        return [];
+        return DEFAULT_UNKNOWN_COLOR;
     }
 
     public render() {
@@ -1967,91 +1968,18 @@ export default class ResultsViewOncoprint extends React.Component<
                 </div>
 
                 {this.selectedClinicalTrack && (
-                    <Modal
-                        show={true}
-                        onHide={() => this.setTrackKeySelectedForEdit(null)}
-                    >
-                        <Modal.Header closeButton>
-                            <Modal.Title>
-                                Color Configuration:{' '}
-                                {this.selectedClinicalTrack.label}
-                            </Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <table className="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Value</th>
-                                        <th>Color</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {this.selectedClinicalTrackValues.map(
-                                        value => (
-                                            <tr>
-                                                <td>{value}</td>
-                                                <td>
-                                                    <ClinicalTrackColorPicker
-                                                        handleClinicalTrackColorChange={
-                                                            this
-                                                                .handleSelectedClinicalTrackColorChange
-                                                        }
-                                                        clinicalTrackValue={
-                                                            value
-                                                        }
-                                                        color={getClinicalTrackColor(
-                                                            this
-                                                                .selectedClinicalTrack!,
-                                                            value as string
-                                                        )}
-                                                    />
-                                                </td>
-                                            </tr>
-                                        )
-                                    )}
-                                </tbody>
-                            </table>
-                            <button
-                                className={classnames(
-                                    'btn',
-                                    'btn-default',
-                                    'btn-sm',
-                                    {
-                                        hidden: _.every(
-                                            this.selectedClinicalTrackValues,
-                                            v =>
-                                                rgbaToHex(
-                                                    getClinicalTrackColor(
-                                                        this
-                                                            .selectedClinicalTrack!,
-                                                        v as string
-                                                    )
-                                                ) ===
-                                                rgbaToHex(
-                                                    this.getDefaultSelectedClinicalTrackColor(
-                                                        v
-                                                    ) as RGBAColor
-                                                )
-                                        ),
-                                    }
-                                )}
-                                data-test="resetColors"
-                                style={{ marginTop: 5 }}
-                                onClick={() => {
-                                    this.selectedClinicalTrackValues.forEach(
-                                        v => {
-                                            this.handleSelectedClinicalTrackColorChange(
-                                                v,
-                                                undefined
-                                            );
-                                        }
-                                    );
-                                }}
-                            >
-                                Reset Colors
-                            </button>
-                        </Modal.Body>
-                    </Modal>
+                    <OncoprintColorModal
+                        setTrackKeySelectedForEdit={
+                            this.setTrackKeySelectedForEdit
+                        }
+                        selectedClinicalTrack={this.selectedClinicalTrack}
+                        handleSelectedClinicalTrackColorChange={
+                            this.handleSelectedClinicalTrackColorChange
+                        }
+                        getSelectedClinicalTrackDefaultColorForValue={
+                            this.getSelectedClinicalTrackDefaultColorForValue
+                        }
+                    />
                 )}
 
                 <div

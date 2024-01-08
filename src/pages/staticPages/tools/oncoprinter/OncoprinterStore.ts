@@ -74,8 +74,8 @@ export default class OncoprinterStore {
     @observable customDriverWarningHidden: boolean;
 
     @observable _userSelectedClinicalTracksColors: {
-        [label: string]: {
-            [value: string]: RGBAColor;
+        [trackLabel: string]: {
+            [attributeValue: string]: RGBAColor;
         };
     } = {};
 

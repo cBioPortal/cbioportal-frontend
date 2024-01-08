@@ -521,20 +521,24 @@ export function getClinicalTracks(
                     attr.countsCategories!.length ===
                         MUTATION_SPECTRUM_FILLS.length
                 ) {
-                    countsCategoryFills = MUTATION_SPECTRUM_FILLS.slice();
-                    _.forEach(attr.countsCategories, (label, i) => {
-                        if (
-                            userSelectedClinicalTracksColors[attr.trackName] &&
-                            userSelectedClinicalTracksColors[attr.trackName][
-                                label
-                            ]
-                        ) {
-                            countsCategoryFills[i] =
+                    countsCategoryFills = attr.countsCategories!.map(
+                        (label, i) => {
+                            if (
                                 userSelectedClinicalTracksColors[
                                     attr.trackName
+                                ] &&
+                                userSelectedClinicalTracksColors[
+                                    attr.trackName
+                                ][label]
+                            ) {
+                                return userSelectedClinicalTracksColors[
+                                    attr.trackName
                                 ][label];
+                            } else {
+                                return MUTATION_SPECTRUM_FILLS[i];
+                            }
                         }
-                    });
+                    );
                 }
                 break;
         }

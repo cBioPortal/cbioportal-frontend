@@ -591,8 +591,8 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable _userSelectedStudiesToClinicalTracksColors: {
         [studies: string]: {
-            [label: string]: {
-                [value: string]: RGBAColor;
+            [trackLabel: string]: {
+                [attributeValue: string]: RGBAColor;
             };
         };
     } = { global: {} };

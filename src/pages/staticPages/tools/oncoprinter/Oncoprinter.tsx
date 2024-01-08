@@ -37,13 +37,15 @@ import { Modal } from 'react-bootstrap';
 import ClinicalTrackColorPicker from 'shared/components/oncoprint/ClinicalTrackColorPicker';
 import classnames from 'classnames';
 import { getDefaultClinicalAttributeColoringForStringDatatype } from './OncoprinterToolUtils';
+import { OncoprintColorModal } from 'shared/components/oncoprint/OncoprintColorModal';
 
 interface IOncoprinterProps {
     divId: string;
     store: OncoprinterStore;
 }
 
-const DEFAULT_WHITE = [255, 255, 255, 1];
+const DEFAULT_UNKNOWN_COLOR = [255, 255, 255, 1];
+const DEFAULT_MIXED_COLOR = [220, 57, 18, 1];
 
 @observer
 export default class Oncoprinter extends React.Component<
@@ -420,6 +422,8 @@ export default class Oncoprinter extends React.Component<
         this.trackKeySelectedForEdit = key;
     }
 
+    // if trackKeySelectedForEdit is null ('Edit Colors' has not been selected in an individual track menu),
+    // selectedClinicalTrack will be undefined
     @computed get selectedClinicalTrack() {
         return _.find(
             this.props.store.clinicalTracks,
@@ -440,126 +444,48 @@ export default class Oncoprinter extends React.Component<
     }
 
     @autobind
-    private getDefaultSelectedClinicalTrackColor(value: string) {
+    private getSelectedClinicalTrackDefaultColorForValue(
+        attributeValue: string
+    ) {
         if (!this.selectedClinicalTrack) {
-            return DEFAULT_WHITE;
+            return DEFAULT_UNKNOWN_COLOR;
         }
         switch (this.selectedClinicalTrack.datatype) {
             case 'counts':
                 return MUTATION_SPECTRUM_FILLS[
-                    _.indexOf(MUTATION_SPECTRUM_CATEGORIES, value)
+                    _.indexOf(MUTATION_SPECTRUM_CATEGORIES, attributeValue)
                 ];
             case 'string':
                 // Mixed refers to when an event has multiple values (i.e. Sample Type for a patient event may have both Primary and Recurrence values)
-                if (value === 'Mixed') {
-                    return [220, 57, 18, 1];
+                if (attributeValue === 'Mixed') {
+                    return DEFAULT_MIXED_COLOR;
                 } else {
                     return this
                         .defaultClinicalAttributeColoringForStringDatatype[
-                        value
+                        attributeValue
                     ];
                 }
             default:
-                return DEFAULT_WHITE;
+                return DEFAULT_UNKNOWN_COLOR;
         }
-    }
-
-    @computed get selectedClinicalTrackValues() {
-        if (this.selectedClinicalTrack) {
-            return getClinicalTrackValues(this.selectedClinicalTrack);
-        }
-        return [];
     }
 
     public render() {
         return (
             <div className="posRelative">
                 {this.selectedClinicalTrack && (
-                    <Modal
-                        show={true}
-                        onHide={() => this.setTrackKeySelectedForEdit(null)}
-                    >
-                        <Modal.Header closeButton>
-                            <Modal.Title>
-                                Color Configuration:{' '}
-                                {this.selectedClinicalTrack.label}
-                            </Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <table className="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Value</th>
-                                        <th>Color</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {this.selectedClinicalTrackValues.map(
-                                        value => (
-                                            <tr>
-                                                <td>{value}</td>
-                                                <td>
-                                                    <ClinicalTrackColorPicker
-                                                        handleClinicalTrackColorChange={
-                                                            this
-                                                                .handleSelectedClinicalTrackColorChange
-                                                        }
-                                                        clinicalTrackValue={
-                                                            value
-                                                        }
-                                                        color={getClinicalTrackColor(
-                                                            this
-                                                                .selectedClinicalTrack!,
-                                                            value as string
-                                                        )}
-                                                    />
-                                                </td>
-                                            </tr>
-                                        )
-                                    )}
-                                </tbody>
-                            </table>
-                            <button
-                                className={classnames(
-                                    'btn',
-                                    'btn-default',
-                                    'btn-sm',
-                                    {
-                                        hidden: _.every(
-                                            this.selectedClinicalTrackValues,
-                                            v =>
-                                                rgbaToHex(
-                                                    getClinicalTrackColor(
-                                                        this
-                                                            .selectedClinicalTrack!,
-                                                        v as string
-                                                    )
-                                                ) ===
-                                                rgbaToHex(
-                                                    this.getDefaultSelectedClinicalTrackColor(
-                                                        v
-                                                    ) as RGBAColor
-                                                )
-                                        ),
-                                    }
-                                )}
-                                data-test="resetColors"
-                                style={{ marginTop: 5 }}
-                                onClick={() => {
-                                    this.selectedClinicalTrackValues.forEach(
-                                        v => {
-                                            this.handleSelectedClinicalTrackColorChange(
-                                                v,
-                                                undefined
-                                            );
-                                        }
-                                    );
-                                }}
-                            >
-                                Reset Colors
-                            </button>
-                        </Modal.Body>
-                    </Modal>
+                    <OncoprintColorModal
+                        setTrackKeySelectedForEdit={
+                            this.setTrackKeySelectedForEdit
+                        }
+                        selectedClinicalTrack={this.selectedClinicalTrack}
+                        handleSelectedClinicalTrackColorChange={
+                            this.handleSelectedClinicalTrackColorChange
+                        }
+                        getSelectedClinicalTrackDefaultColorForValue={
+                            this.getSelectedClinicalTrackDefaultColorForValue
+                        }
+                    />
                 )}
                 <div
                     className={classNames('oncoprintContainer', {
