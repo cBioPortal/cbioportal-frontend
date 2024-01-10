@@ -11294,14 +11294,14 @@ export class StudyViewPageStore
             this.genePanelDataForAllProfiles,
             this.sampleSetByKey,
             this.patients,
-            this.allGenes,
+            this.plotsSelectedGenes,
         ],
         invoke: () =>
             getCoverageInformation(
                 this.genePanelDataForAllProfiles.result!,
                 this.sampleSetByKey.result!,
                 this.patients.result!,
-                this.allGenes.result!
+                this.plotsSelectedGenes.result!
             ),
     });
 
