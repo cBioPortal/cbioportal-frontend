@@ -63,7 +63,7 @@ export class QueryParser {
                 form: {
                     input: FilterCheckbox,
                     options:
-                        readPermissions.size >= 1
+                        readPermissions.size > 1
                             ? [
                                   { value: 'true', displayValue: 'Authorized' },
                                   {

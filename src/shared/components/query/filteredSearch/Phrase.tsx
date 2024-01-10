@@ -129,7 +129,7 @@ export class ListPhrase implements Phrase {
         for (const fieldName of this.fields) {
             let anyPhraseMatch = false;
             const fieldValue = study[fieldName];
-            if (fieldValue) {
+            if (typeof fieldValue !== 'undefined') {
                 for (const phrase of this._phraseList) {
                     anyPhraseMatch =
                         anyPhraseMatch ||
