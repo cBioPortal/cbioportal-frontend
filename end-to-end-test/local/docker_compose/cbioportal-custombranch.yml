@@ -4,5 +4,12 @@ services:
   cbioportal:
     volumes:
       - $E2E_WORKSPACE/cbioportal:/cbioportal
-      - $TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro
-      - $E2E_WORKSPACE/cbioportal/portal/target/war-exploded:/cbioportal-webapp
+      - $TEST_HOME/runtime-config/portal.properties:/cbioportal/application.properties:ro
+      - $E2E_WORKSPACE/cbioportal/src/main/resources/db-scripts:/cbioportal/db-scripts
+      - $TEST_HOME/docker_compose/keycloak/localdb.crt:/cbioportal/local.crt:ro
+      - $TEST_HOME/docker_compose/keycloak/localdb.key:/cbioportal/local.key
+      - $E2E_WORKSPACE/keycloak/idp-metadata.xml:/cbioportal/idp-metadata.xml:ro
+    command: /bin/sh -c "java -Xms2g -Xmx4g -jar cbioportal/target/cbioportal-exec.jar --spring.config.location=cbioportal/application.properties --spring.config.location=cbioportal/application.properties --dat.method=none --multithread.core_pool_size=1
+      --authenticate=saml --spring.security.saml2.relyingparty.registration.cbio-idp.assertingparty.metadata-uri=file:/cbioportal/idp-metadata.xml --session.service.url=http://cbioportal-session:5000/api/sessions/my_portal/
+      --spring.security.saml2.relyingparty.registration.cbio-idp.entity-id=cbioportal --spring.security.saml2.relyingparty.registration.cbio-idp.signing.credentials[0].certificate-location=file:/cbioportal/local.crt
+      --spring.security.saml2.relyingparty.registration.cbio-idp.signing.credentials[0].private-key-location=file:/cbioportal/local.key"

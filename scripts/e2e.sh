@@ -66,9 +66,9 @@ fi
 if [ "$SPIN_UP" = "true" ]
 then
   #cleanup
-  sudo rm -rf $E2E_WORKSPACE/kc_db_data
-  sudo rm -rf $E2E_WORKSPACE/cbioportal-docker-compose
-  sudo rm -rf $E2E_WORKSPACE/cbio_db_data
+  rm -rf $E2E_WORKSPACE/kc_db_data
+  rm -rf $E2E_WORKSPACE/cbioportal-docker-compose
+  rm -rf $E2E_WORKSPACE/cbio_db_data
 
   $TEST_HOME/docker_compose/setup.sh
   [ $CUSTOM_BACKEND -eq 1 ] && $TEST_HOME/docker_compose/build.sh

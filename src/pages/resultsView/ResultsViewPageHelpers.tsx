@@ -27,7 +27,7 @@ export enum ResultsViewTab {
 
 export enum ResultsViewPathwaysSubTab {
     PATHWAY_MAPPER = 'PathwayMapper',
-    NDEX = 'NDEx',
+    NDEX = 'NDEx Cancer Pathways',
 }
 
 export enum LegacyResultsViewComparisonSubTab {

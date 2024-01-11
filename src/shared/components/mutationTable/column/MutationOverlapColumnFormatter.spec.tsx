@@ -112,7 +112,7 @@ describe('MutationOverlapColumnFormatter', () => {
         {
             uniqueSampleKey: 'UC0wMDAwNDQxLVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3',
             uniquePatientKey: 'UC0wMDAwNDQxOm1za19pbXBhY3RfMjAxNw',
-            sampleType: 'PRIMARY_SOLID_TUMOR',
+            sampleType: 'Primary Solid Tumor',
             sequenced: true,
             copyNumberSegmentPresent: true,
             sampleId: 'P-0000441-T01-IM3',
@@ -122,7 +122,7 @@ describe('MutationOverlapColumnFormatter', () => {
         {
             uniqueSampleKey: 'UC0wMDAwNDQxLVQwMi1JTTU6bXNrX2ltcGFjdF8yMDE3',
             uniquePatientKey: 'UC0wMDAwNDQxOm1za19pbXBhY3RfMjAxNw',
-            sampleType: 'PRIMARY_SOLID_TUMOR',
+            sampleType: 'Primary Solid Tumor',
             sequenced: true,
             copyNumberSegmentPresent: true,
             sampleId: 'P-0000441-T02-IM5',
@@ -132,7 +132,7 @@ describe('MutationOverlapColumnFormatter', () => {
         {
             uniqueSampleKey: 'UC0wMDA0OTEwLVQwMy1JTTU6bXNrX2ltcGFjdF8yMDE3',
             uniquePatientKey: 'UC0wMDA0OTEwOm1za19pbXBhY3RfMjAxNw',
-            sampleType: 'PRIMARY_SOLID_TUMOR',
+            sampleType: 'Primary Solid Tumor',
             sequenced: true,
             copyNumberSegmentPresent: true,
             sampleId: 'P-0004910-T03-IM5',
@@ -142,7 +142,7 @@ describe('MutationOverlapColumnFormatter', () => {
         {
             uniqueSampleKey: 'UC0wMDA0OTEwLVQwNC1JTTU6bXNrX2ltcGFjdF8yMDE3',
             uniquePatientKey: 'UC0wMDA0OTEwOm1za19pbXBhY3RfMjAxNw',
-            sampleType: 'PRIMARY_SOLID_TUMOR',
+            sampleType: 'Primary Solid Tumor',
             sequenced: true,
             copyNumberSegmentPresent: true,
             sampleId: 'P-0004910-T04-IM5',
@@ -152,7 +152,7 @@ describe('MutationOverlapColumnFormatter', () => {
         {
             uniqueSampleKey: 'UC0wMDA0NDc0LVQwMS1JTTU6bXNrX2ltcGFjdF8yMDE3',
             uniquePatientKey: 'UC0wMDA0NDc0Om1za19pbXBhY3RfMjAxNw',
-            sampleType: 'PRIMARY_SOLID_TUMOR',
+            sampleType: 'Primary Solid Tumor',
             sequenced: true,
             copyNumberSegmentPresent: true,
             sampleId: 'P-0004474-T01-IM5',

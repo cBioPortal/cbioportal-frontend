@@ -315,7 +315,7 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
                     {
                         molecularProfileId: this.props.selectedProfile
                             .molecularProfileId,
-                        genericAssayDataFilter: {
+                        genericAssayFilter: {
                             genericAssayStableIds: [
                                 (this
                                     .highlightedRow as GenericAssayCategoricalEnrichmentRow)

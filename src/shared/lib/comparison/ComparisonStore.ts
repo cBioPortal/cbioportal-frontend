@@ -1335,7 +1335,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
-                    groupsAndAlterationTypes,
+                    molecularProfileCasesGroupAndAlterationTypeFilter: groupsAndAlterationTypes,
                 });
             }
             return Promise.resolve([]);
@@ -1402,7 +1402,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
-                    groupsAndAlterationTypes,
+                    molecularProfileCasesGroupAndAlterationTypeFilter: groupsAndAlterationTypes,
                 });
             }
             return Promise.resolve([]);
@@ -1520,7 +1520,8 @@ export default abstract class ComparisonStore extends AnalysisStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.mrnaEnrichmentDataRequestGroups.result!,
+                    groupsContainingSampleAndMolecularProfileIdentifiers: this
+                        .mrnaEnrichmentDataRequestGroups.result!,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1606,7 +1607,8 @@ export default abstract class ComparisonStore extends AnalysisStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.proteinEnrichmentDataRequestGroups.result!,
+                    groupsContainingSampleAndMolecularProfileIdentifiers: this
+                        .proteinEnrichmentDataRequestGroups.result!,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1691,7 +1693,8 @@ export default abstract class ComparisonStore extends AnalysisStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.methylationEnrichmentDataRequestGroups.result!,
+                    groupsContainingSampleAndMolecularProfileIdentifiers: this
+                        .methylationEnrichmentDataRequestGroups.result!,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1987,7 +1990,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                                     return internalClient.fetchGenericAssayEnrichmentsUsingPOST(
                                         {
                                             enrichmentType: 'SAMPLE',
-                                            groups: genericAssayEnrichmentDataRequestGroups,
+                                            groupsContainingSampleAndMolecularProfileIdentifiers: genericAssayEnrichmentDataRequestGroups,
                                         }
                                     );
                                 } else {
@@ -2026,7 +2029,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                                     return internalClient.fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOST(
                                         {
                                             enrichmentType: 'SAMPLE',
-                                            groups: genericAssayEnrichmentDataRequestGroups,
+                                            groupsContainingSampleAndMolecularProfileIdentifiers: genericAssayEnrichmentDataRequestGroups,
                                         }
                                     );
                                 } else {
@@ -2066,7 +2069,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                                         return internalClient.fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOST(
                                             {
                                                 enrichmentType: 'SAMPLE',
-                                                groups: genericAssayEnrichmentDataRequestGroups,
+                                                groupsContainingSampleAndMolecularProfileIdentifiers: genericAssayEnrichmentDataRequestGroups,
                                             }
                                         );
                                     } else {
@@ -2858,7 +2861,7 @@ export default abstract class ComparisonStore extends AnalysisStore
             onMobxPromise<any>(
                 [this._originalGroups, this.samples, this.sampleKeyToGroups],
                 (
-                    groups: ComparisonGroup[],
+                    groupsContainingSampleAndMolecularProfileIdentifiers: ComparisonGroup[],
                     samples: Sample[],
                     sampleKeyToGroups: {
                         [uniqueSampleKey: string]: {
@@ -2869,7 +2872,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                     resolve(
                         getGroupsDownloadData(
                             samples,
-                            groups,
+                            groupsContainingSampleAndMolecularProfileIdentifiers,
                             sampleKeyToGroups
                         )
                     );

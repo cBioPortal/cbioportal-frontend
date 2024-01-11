@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend",
   "private": true,
-  "version": "3.3.263",
+  "version": "3.3.264",
   "workspaces": {
     "packages": [
       ".",
@@ -30,8 +30,10 @@
     "buildBootstrap": "sass --style :compressed src/globalStyles/bootstrap-entry.scss src/globalStyles/prefixed-bootstrap.min.css",
     "heroku-postbuild": "yarn run build && yarn add pushstate-server@3.0.1 -g",
     "updateAPI": "yarn run fetchAPI && yarn run buildAPI && yarn run updateOncoKbAPI && yarn run updateGenomeNexusAPI",
-    "fetchAPILocal": "export CBIOPORTAL_URL=http://localhost:8090 && curl -s -L -k ${CBIOPORTAL_URL}/api/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json && curl -s -L -k ${CBIOPORTAL_URL}/api/api-docs?group=internal | json | grep -v host | grep -v basePath | grep -v termsOfService > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json",
-    "fetchAPI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && curl -s -L -k ${CBIOPORTAL_URL}/api/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json && curl -s -L -k ${CBIOPORTAL_URL}/api/api-docs?group=internal | json | grep -v host | grep -v basePath | grep -v termsOfService > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json",
+    "convertToSwagger2": "./scripts/convert_to_swagger2.sh && yarn run extendSwagger2Converter",
+    "fetchAPILocal": "export CBIOPORTAL_URL=http://localhost:8090 && curl -s -L -k ${CBIOPORTAL_URL}/v3/api-docs/public | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json && curl -s -L -k ${CBIOPORTAL_URL}/v3/api-docs/internal | json | grep -v host | grep -v basePath | grep -v termsOfService > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json",
+    "fetchAPI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && curl -s -L -k ${CBIOPORTAL_URL}/v3/api-docs/public  > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json && curl -s -L -k ${CBIOPORTAL_URL}/v3/api-docs/internal | json  > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json && yarn run convertToSwagger2",
+    "extendSwagger2Converter": "node scripts/extend_converter.js packages/cbioportal-ts-api-client/src/generated CBioPortalAPI CBioPortalAPIInternal",
     "buildAPI": "node scripts/generate-api.js packages/cbioportal-ts-api-client/src/generated CBioPortalAPI CBioPortalAPIInternal",
     "updateOncoKbAPI": "yarn run fetchOncoKbAPI && yarn run buildOncoKbAPI",
     "fetchOncoKbAPI": "curl -s -k https://www.oncokb.org/api/v1/v2/api-docs?group=Public%20APIs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/oncokb-ts-api-client/src/generated/OncoKbAPI-docs.json",
@@ -158,7 +160,7 @@
     "bundle-loader": "^0.5.4",
     "cbioportal-clinical-timeline": "^0.3.72",
     "cbioportal-frontend-commons": "^0.5.57",
-    "cbioportal-ts-api-client": "^0.9.63",
+    "cbioportal-ts-api-client": "^0.9.64",
     "cbioportal-utils": "^0.3.36",
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",

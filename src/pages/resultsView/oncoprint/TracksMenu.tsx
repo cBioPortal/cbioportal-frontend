@@ -295,7 +295,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 clinicalAttributeIds.map(id => new ClinicalTrackConfig(id))
             )
         );
-        this.props.handlers.onChangeToggledClinicalTracks!(
+        this.props.handlers.onChangeClinicalTracksPendingSubmission!(
             this.getSelectedClinicalAttributes()
         );
     }
@@ -309,7 +309,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 'stableId'
             )
         );
-        this.props.handlers.onChangeToggledClinicalTracks!(
+        this.props.handlers.onChangeClinicalTracksPendingSubmission!(
             this.getSelectedClinicalAttributes()
         );
     }
@@ -317,17 +317,17 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     @action.bound
     private submit() {
         this.props.handlers.onChangeSelectedClinicalTracks!(
-            this.props.state.toggledClinicalTracks!
+            this.props.state.clinicalTracksPendingSubmission!
         );
         this.tracksDropdown.hide();
     }
 
     @action.bound
     private toggleClinicalTrack(clinicalAttributeId: string) {
-        this.props.handlers.onChangeToggledClinicalTracks!(
+        this.props.handlers.onChangeClinicalTracksPendingSubmission!(
             toggleIncluded(
                 new ClinicalTrackConfig(clinicalAttributeId),
-                this.props.state.toggledClinicalTracks!,
+                this.props.state.clinicalTracksPendingSubmission!,
                 track => track.stableId === clinicalAttributeId
             )
         );
@@ -337,7 +337,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         return (
             _.xorBy(
                 this.getSelectedClinicalAttributes(),
-                this.props.state.toggledClinicalTracks!,
+                this.props.state.clinicalTracksPendingSubmission!,
                 'stableId'
             ).length !== 0
         );
@@ -456,7 +456,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                         selected:
                             option.key in
                             _.keyBy(
-                                this.props.state.toggledClinicalTracks!.map(
+                                this.props.state.clinicalTracksPendingSubmission!.map(
                                     a => a.stableId
                                 )
                             ),
