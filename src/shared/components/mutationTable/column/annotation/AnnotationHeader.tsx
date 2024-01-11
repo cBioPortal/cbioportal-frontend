@@ -55,6 +55,7 @@ export enum AnnotationSources {
     CIVIC = 'civic',
     MY_CANCER_GENOME = 'myCancerGenome',
     CANCER_HOTSPOTS = 'cancerHotspots',
+    REVUE = 'reVue',
 }
 
 export const sourceTooltipInfo = {
@@ -102,6 +103,14 @@ export const sourceTooltipInfo = {
                 'a resource for statistically significant recurrent 3D clustered hotspots in cancer',
             reference: 'Gao et al. 2017',
             referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/28115009/',
+        },
+    ],
+    [AnnotationSources.REVUE]: [
+        {
+            sourceUrl: 'https://www.cancerrevue.org/',
+            sourceName: 'reVUE',
+            sourceDescription:
+                'a repository for variants with unexpected effects (VUE) in cancer',
         },
     ],
 };
@@ -361,6 +370,7 @@ const AnnotationHeader: React.FunctionComponent<{
     width: number;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
+    showRevueIcon?: boolean;
 }> = props => {
     return (
         <span>
@@ -393,7 +403,30 @@ const AnnotationHeader: React.FunctionComponent<{
                             marginLeft: 5,
                             marginBottom: 0,
                             marginRight:
-                                props.width - 21 > 0 ? props.width - 21 : 0,
+                                props.width - 22 > 0 ? props.width - 22 : 0,
+                        }}
+                    />
+                </DefaultTooltip>
+            )}
+            {/* only show reVUE when reVUE is enabled and there are reVUE mutations in the query */}
+            {getServerConfig().show_revue && props.showRevueIcon && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            infoProps={
+                                sourceTooltipInfo[AnnotationSources.REVUE]
+                            }
+                        />
+                    }
+                >
+                    <img
+                        src={require('../../../../../../src/rootImages/vue_logo.png')}
+                        style={{
+                            height: 14,
+                            width: 14,
+                            marginLeft: 7,
+                            marginRight: 1,
                         }}
                     />
                 </DefaultTooltip>
@@ -415,7 +448,7 @@ const AnnotationHeader: React.FunctionComponent<{
                         style={{
                             height: 14,
                             width: 14,
-                            marginLeft: 6,
+                            marginLeft: 7,
                             marginRight: 1,
                         }}
                     />

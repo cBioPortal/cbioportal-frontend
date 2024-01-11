@@ -13,7 +13,6 @@ import {
     IGenesetHeatmapTrackDatum,
     IGenericAssayHeatmapTrackDatum,
 } from 'shared/components/oncoprint/Oncoprint';
-import { AnnotatedExtendedAlteration } from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
     ClinicalAttribute,
@@ -25,6 +24,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { MutationSpectrum } from 'cbioportal-ts-api-client';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 
 /* Type assertions are used throughout this file to force functions to accept
 /* mocked parameters known to be sufficient. */

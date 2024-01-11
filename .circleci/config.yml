@@ -2,6 +2,25 @@
 #
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
+version: 2.1
+
+parameters:
+  remote_spec_pattern:
+    type: string
+    default: "./remote/specs/**/*.spec.js"
+  localdb_spec_pattern:
+    type: string
+    default: "./local/specs/**/*.spec.js"
+  enable_remote_e2e:
+    type: boolean
+    default: true
+  enable_localdb_e2e:
+    type: boolean
+    default: true
+  manual_trigger_branch_env:
+    type: string
+    default: "master"
+
 defaults: &defaults
   working_directory: /tmp/repo
   docker:
@@ -11,62 +30,69 @@ defaults: &defaults
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
+    - when:
+        condition: << pipeline.parameters.enable_remote_e2e >>
+        steps:
     #    - run:
     #        name: "Install yarn at specific version"
     #        command:
     #          sudo npm install --global yarn@1.22.4
-    - attach_workspace:
-        at: /tmp/
-    - run:
-        name: "Spin up frontend over ssl if necessary and run end to end tests"
-        command: |
-          sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
-          yarn serveDist & \
-          cd end-to-end-test && \
-          yarn install --frozen-lockfile && \
-          ../scripts/env_vars.sh && \
-          eval "$(../scripts/env_vars.sh)" && \
-          curl $CBIOPORTAL_URL > /dev/null && \
-          sleep 5s && \
-          curl $CBIOPORTAL_URL > /dev/null && \
-          sleep 5s && \
-          curl $CBIOPORTAL_URL > /dev/null && \
-          sleep 20s && \
-          (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
-          sleep 1s && \
-          echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
-          yarn run test-webdriver-manager-remote
-        when: always
-        environment:
-          FRONTEND_TEST_USE_LOCAL_DIST: true
-          WEBPACK_PARALLEL: false
-    - run:
-        name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
-        command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
-    -  store_artifacts:
-         path: /tmp/repo/end-to-end-test/remote/screenshots
-         destination: /screenshots
-    -  store_artifacts:
-         path: /tmp/repo/end-to-end-test/shared/image-compare
-         destination: /image-compare
-    -  store_artifacts:
-         path: /tmp/repo/end-to-end-test/remote/error
-         destination: /errorShots
-    - store_test_results:
-        path: /tmp/repo/end-to-end-test/remote/junit
-    - store_artifacts:
-        path: /tmp/repo/end-to-end-test/remote/junit
-    - store_artifacts:
-        path: /tmp/repo/end-to-end-test/shared/imageCompare.html
-        destination: /imageCompare.html
-    - store_artifacts:
-        path: /tmp/repo/end-to-end-test/remote/junit/customReport.json
-        destination: /customReport.json
-    - store_artifacts:
-        path: /tmp/repo/end-to-end-test/remote/junit/errors
-        destination: /errors
+          - attach_workspace:
+              at: /tmp/
+          - run:
+              name: "Spin up frontend over ssl if necessary and run end to end tests"
+              command: |
+                sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
+                yarn serveDist & \
+                cd end-to-end-test && \
+                yarn install --frozen-lockfile && \
+                ../scripts/env_vars.sh && \
+                eval "$(../scripts/env_vars.sh)" && \
+                curl $CBIOPORTAL_URL > /dev/null && \
+                sleep 5s && \
+                curl $CBIOPORTAL_URL > /dev/null && \
+                sleep 5s && \
+                curl $CBIOPORTAL_URL > /dev/null && \
+                sleep 20s && \
+                (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
+                sleep 1s && \
+                echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
+                yarn run test-webdriver-manager-remote
+              when: always
+              environment:
+                FRONTEND_TEST_USE_LOCAL_DIST: true
+                WEBPACK_PARALLEL: false
+          - run:
+              name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
+              command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+          -  store_artifacts:
+               path: /tmp/repo/end-to-end-test/remote/screenshots
+               destination: /screenshots
+          -  store_artifacts:
+               path: /tmp/repo/end-to-end-test/shared/image-compare
+               destination: /image-compare
+          -  store_artifacts:
+               path: /tmp/repo/end-to-end-test/remote/error
+               destination: /errorShots
+          - store_test_results:
+              path: /tmp/repo/end-to-end-test/remote/junit
+          - store_artifacts:
+              path: /tmp/repo/end-to-end-test/remote/junit
+          - store_artifacts:
+              path: /tmp/repo/end-to-end-test/shared/imageCompare.html
+              destination: /imageCompare.html
+          - store_artifacts:
+              path: /tmp/repo/end-to-end-test/remote/junit/customReport.json
+              destination: /customReport.json
+          - store_artifacts:
+              path: /tmp/repo/end-to-end-test/remote/junit/errors
+              destination: /errors
+    - unless:
+        condition: << pipeline.parameters.enable_remote_e2e >>
+        steps:
+          - run: echo "Job Ignored via enable_remote_e2e"
+          - run: exit 1
 
-version: 2
 jobs:
   install:
     <<: *defaults
@@ -88,8 +114,8 @@ jobs:
           command: "cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
       - restore_cache:
           keys:
-            - v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-            - v8-dependencies-{{ checksum "yarn.lock" }}
+            - v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+            - v10-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
       - run: yarn buildModules
@@ -99,7 +125,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-          key: v8-dependencies-{{ checksum "yarn.lock" }}
+          key: v10-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: "Run build if no dist folder"
           command: 'ls dist || yarn run build'
@@ -113,7 +139,7 @@ jobs:
             - node_modules
             - dist
             - common-dist
-          key: v8-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+          key: v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -121,6 +147,8 @@ jobs:
 
   api_sync:
     <<: *defaults
+    environment:
+      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
     steps:
       - attach_workspace:
           at: /tmp/
@@ -193,7 +221,8 @@ jobs:
   end_to_end_tests:
     <<: *defaults
     environment:
-      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
+      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
+      SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
@@ -214,128 +243,121 @@ jobs:
       image: ubuntu-2004:202201-02
     resource_class: large
     steps:
-      - attach_workspace:
-          at: /tmp/
-#      - run:
-#          # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
-#          name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
-#          command: pyenv local 3.6.5 && virtualenv venv
-      - run:
-          name: Setup python libraries
-          command: |
-            pip3 install requests pyyaml
-      #      - run:
-      #          name: Install canvas deps [for screenshot comparison]
-      #          command: |
-      #              sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt-get update && \
-            sudo apt-get install jq unzip
-      - run:
-          name: Setup e2e-environment
-          command: |
-            source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
-            cd $TEST_HOME/runtime-config && \
-            ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
-      - run:
-          name: Check build whether custom backend is needed
-          command: |
-            echo "$CUSTOM_BACKEND" > /tmp/repo/custom_backend_switch
-      - restore_cache:
-          # when custom_backend_switch file has '1' a custom backend
-          # is used and the more extended set of maven repo's will be attached
-          keys:
-            - maven-repo-v1-{{ checksum "custom_backend_switch" }}
-      - run:
-          name: Build custom backend
-          command: |
-            grep -q 0 /tmp/repo/custom_backend_switch || $TEST_HOME/docker_compose/build.sh
-          no_output_timeout: 25m
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: maven-repo-v1-{{ checksum "custom_backend_switch" }}
-      - run:
-          name: Setup docker compose assets
-          command: |
-            $TEST_HOME/docker_compose/setup.sh
-          no_output_timeout: 25m
-      - run:
-          name: Generate checksum of data that populates the test database
-          command: |
-            $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
-          no_output_timeout: 25m
-      - run:
-          name: Create MySQL data directory
-          command: |
-            docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
-      - restore_cache:
-          keys:
-            - v8-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
-      - restore_cache:
-          keys:
-            - v8-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
-      - run:
-          name: Init database
-          command: |
-            cd $TEST_HOME/docker_compose && echo $CBIO_DB_DATA_DIR && ls -la $CBIO_DB_DATA_DIR && \
-            [ "$(ls -A $CBIO_DB_DATA_DIR)" ] && echo "DB initialization is not needed." || ./initdb.sh
-      - run:
-          name: Change owner of MySQL database files (needed by cache)
-          command: |
-            sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
-            sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR
-      - save_cache:
-          paths:
-            - /tmp/repo/e2e-localdb-workspace/cbio_db_data
-          key: v9-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
-      - run:
-          name: Start cbioportal and other services
-          command: |
-            $TEST_HOME/docker_compose/start.sh
-      - run:
-          name: Change owner of keycloak MySQL database files (needed by cache)
-          command: |
-            if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
-                sudo chmod -R 777 $KC_DB_DATA_DIR && \
-                sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
-            fi
-      - save_cache:
-          paths:
-            - /tmp/repo/e2e-localdb-workspace/kc_db_data
-          key: v9-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
-      - run:
-          name: Run end-2-end tests with studies in local database
-          command: |
-            cd $PORTAL_SOURCE_DIR && \
-            $TEST_HOME/docker_compose/test.sh
-      - run:
-          name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
-          command: 'for f in $TEST_HOME/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
-      -  store_artifacts:
-           path: /tmp/repo/end-to-end-test/local/screenshots
-           destination: /screenshots
-      -  store_artifacts:
-           path: /tmp/repo/end-to-end-test/shared/image-compare
-           destination: /image-compare
-      -  store_artifacts:
-           path: /tmp/repo/end-to-end-test/local/errorShots
-           destination: /errorShots
-      - store_test_results:
-          path: /tmp/repo/end-to-end-test/local/junit
-      - store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/junit
-      - store_artifacts:
-          path: /tmp/repo/end-to-end-test/shared/imageCompare.html
-          destination: /imageCompare.html
-      - store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/junit/customReport.json
-          destination: /customReport.json
-      - store_artifacts:
-          path: /tmp/repo/end-to-end-test/remote/junit/errors
-          destination: /errors
+      - when:
+          condition: << pipeline.parameters.enable_localdb_e2e >>
+          steps:
+            - attach_workspace:
+                at: /tmp/
+            - run:
+                name: Setup python libraries
+                command: |
+                  pip3 install requests pyyaml
+            - run:
+                name: Install dependencies
+                command: |
+                  sudo apt-get update && \
+                  sudo apt-get install jq unzip
+            - run:
+                name: Setup e2e-environment
+                command: |
+                  source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
+                  cd $TEST_HOME/runtime-config && \
+                  ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
+            - run:
+                name: Check build whether custom backend is needed
+                command: |
+                  echo "$CUSTOM_BACKEND" > /tmp/repo/custom_backend_switch
+            - restore_cache:
+                # when custom_backend_switch file has '1' a custom backend
+                # is used and the more extended set of maven repo's will be attached
+                keys:
+                  - maven-repo-v1-{{ checksum "custom_backend_switch" }}
+            - run:
+                name: Build custom backend
+                command: |
+                  grep -q 0 /tmp/repo/custom_backend_switch || $TEST_HOME/docker_compose/build.sh
+                no_output_timeout: 25m
+            - save_cache:
+                paths:
+                  - ~/.m2
+                key: maven-repo-v1-{{ checksum "custom_backend_switch" }}
+            - run:
+                name: Setup docker compose assets
+                command: |
+                  $TEST_HOME/docker_compose/setup.sh
+                no_output_timeout: 25m
+            - run:
+                name: Generate checksum of data that populates the test database
+                command: |
+                  $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
+                no_output_timeout: 25m
+            - run:
+                name: Create MySQL data directory
+                command: |
+                  docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
+            - restore_cache:
+                keys:
+                  - v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+            - run:
+                name: Init database
+                command: |
+                  cd $TEST_HOME/docker_compose && echo $CBIO_DB_DATA_DIR && ls -la $CBIO_DB_DATA_DIR && \
+                  [ "$(ls -A $CBIO_DB_DATA_DIR)" ] && echo "DB initialization is not needed." || ./initdb.sh
+            - run:
+                name: Change owner of MySQL database files (needed by cache)
+                command: |
+                  sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
+                  sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR
+            - save_cache:
+                paths:
+                  - /tmp/repo/e2e-localdb-workspace/cbio_db_data
+                key: v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+            - run:
+                name: Start cbioportal and other services
+                command: |
+                  $TEST_HOME/docker_compose/start.sh
+            - run:
+                name: Change owner of keycloak MySQL database files (needed by cache)
+                command: |
+                  if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
+                      sudo chmod -R 777 $KC_DB_DATA_DIR && \
+                      sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
+                  fi
+            - run:
+                name: Run end-2-end tests with studies in local database
+                command: |
+                  cd $PORTAL_SOURCE_DIR && \
+                  $TEST_HOME/docker_compose/test.sh
+            - run:
+                name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
+                command: 'for f in $TEST_HOME/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+            -  store_artifacts:
+                 path: /tmp/repo/end-to-end-test/local/screenshots
+                 destination: /screenshots
+            -  store_artifacts:
+                 path: /tmp/repo/end-to-end-test/shared/image-compare
+                 destination: /image-compare
+            -  store_artifacts:
+                 path: /tmp/repo/end-to-end-test/local/errorShots
+                 destination: /errorShots
+            - store_test_results:
+                path: /tmp/repo/end-to-end-test/local/junit
+            - store_artifacts:
+                path: /tmp/repo/end-to-end-test/local/junit
+            - store_artifacts:
+                path: /tmp/repo/end-to-end-test/shared/imageCompare.html
+                destination: /imageCompare.html
+            - store_artifacts:
+                path: /tmp/repo/end-to-end-test/local/junit/customReport.json
+                destination: /customReport.json
+            - store_artifacts:
+                path: /tmp/repo/end-to-end-test/remote/junit/errors
+                destination: /errors
+      - unless:
+          condition: << pipeline.parameters.enable_localdb_e2e >>
+          steps:
+            - run: echo "Job Ignored via enable_localdb_e2e"
+            - run: exit 1
 
     environment:
       PORTAL_SOURCE_DIR: /tmp/repo
@@ -343,9 +365,13 @@ jobs:
       E2E_WORKSPACE: /tmp/repo/e2e-localdb-workspace
       CBIO_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/cbio_db_data
       KC_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/kc_db_data
+      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
+      CIRCLE_CI_LOCALDB_SPEC_PATTERN: << pipeline.parameters.localdb_spec_pattern >>
 
   prettier:
     <<: *defaults
+    environment:
+      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
     steps:
       - attach_workspace:
           at: /tmp/
@@ -354,7 +380,6 @@ jobs:
           command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
 
 workflows:
-  version: 2
   install_and_test:
     jobs:
       - install
@@ -366,7 +391,6 @@ workflows:
               ignore:
                 - master
                 - release-*
- #               - rc
       - unit_tests_main:
           requires:
             - install
@@ -396,7 +420,6 @@ workflows:
             branches:
               only:
                 - master
-#                - rc
     jobs:
       - install
       - api_sync:

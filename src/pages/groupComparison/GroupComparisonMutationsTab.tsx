@@ -12,7 +12,7 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { LollipopGeneSelector } from './LollipopGeneSelector';
-import GroupComparisonMutationsTabPlot from './GroupComparisonMutationsTabPlot';
+import GroupComparisonMutationMapperWrapper from './GroupComparisonMutationMapperWrapper';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
@@ -160,7 +160,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
                             </MSKTabs>
                         </div>
                     </div>
-                    <GroupComparisonMutationsTabPlot
+                    <GroupComparisonMutationMapperWrapper
                         store={this.props.store}
                         onScaleToggle={this.onScaleToggle}
                         mutations={_(this.props.store.mutationsByGroup.result!)

@@ -9,13 +9,16 @@ import { Link } from 'react-router-dom';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { buildCBioPortalPageUrl } from '../../api/urls';
 import { ResultsViewTab } from '../../../pages/resultsView/ResultsViewPageHelpers';
+import { Tour } from 'tours';
+import { mockOrder } from 'pages/patientView/vafPlot/mockData';
+import { remoteData } from 'cbioportal-frontend-commons';
+import { sleep } from 'shared/lib/TimeUtils';
+import parseNews from 'shared/lib/parseNews';
 
 interface IRightBarProps {
     queryStore: QueryStore;
 }
-interface IRightBarState {
-    twitterLoading: boolean;
-}
+interface IRightBarState {}
 
 @observer
 export default class RightBar extends React.Component<
@@ -24,9 +27,6 @@ export default class RightBar extends React.Component<
 > {
     constructor(props: IRightBarProps) {
         super(props);
-        this.state = {
-            twitterLoading: true, // only used for default what's new
-        };
     }
 
     get studyStore() {
@@ -43,6 +43,17 @@ export default class RightBar extends React.Component<
             true
         );
     }
+
+    public newsContent = remoteData(async () => {
+        await sleep(3000);
+        return fetch(
+            'https://www.cbioportal.org/proxy/docs.cbioportal.org/news/'
+        )
+            .then(d => d.text())
+            .then(d => {
+                return parseNews(d);
+            });
+    });
 
     private CancerTypeDescendantStudy({
         cancerType,
@@ -85,7 +96,6 @@ export default class RightBar extends React.Component<
                     </div>
                 );
             } else {
-                let Timeline = require('react-twitter-widgets').Timeline;
                 return (
                     <div
                         className="rightBarSection"
@@ -104,61 +114,47 @@ export default class RightBar extends React.Component<
                                 ></i>
                             </a>
                         </h3>
-                        {
-                            // TODO this is a temporary workaround to limit the vertical size of the Timeline container
-                            //  ideally this should be fixed within the corresponding react component
-                            //  we should revisit this once there is a newer and properly working version of the library
-                            //  another alternative is to directly use the twitter generated code
-                            //  (https://publish.twitter.com/?maxheight=200&query=%40cbioportal&widget=Timeline)
-                            //  but then we lose the "onLoad" functionality
-                        }
+
+                        {this.newsContent.isPending && (
+                            <div className={'newsContent'}>
+                                <LoadingIndicator
+                                    className={'newsLoader'}
+                                    isLoading={this.newsContent.isPending}
+                                    size={'small'}
+                                />
+                            </div>
+                        )}
+
+                        {this.newsContent.isComplete && (
+                            <div
+                                className={'newsContent'}
+                                dangerouslySetInnerHTML={{
+                                    __html: this.newsContent.result!,
+                                }}
+                            ></div>
+                        )}
+
                         <div
                             style={{
                                 marginTop: 3,
                                 maxHeight: 200,
                                 overflowY: 'scroll',
                             }}
-                        >
-                            <Timeline
-                                dataSource={{
-                                    sourceType: 'profile',
-                                    screenName: 'cbioportal',
-                                }}
-                                options={{
-                                    username: 'cbioportal',
-                                    // TODO height option does not seem to work anymore
-                                    //  (see the workaround and comments above)
-                                    height: '200',
-                                    chrome: 'noheader%20nofooter',
-                                }}
-                                onLoad={() =>
-                                    this.setState({ twitterLoading: false })
-                                }
-                            />
-                        </div>
+                        ></div>
                         <div>
-                            {(this.state.twitterLoading && (
-                                <span style={{ textAlign: 'center' }}>
-                                    <LoadingIndicator
-                                        isLoading={true}
-                                        small={true}
-                                    />
-                                </span>
-                            )) || (
-                                <div style={{ paddingTop: 5 }}>
-                                    <p style={{ textAlign: 'center' }}>
-                                        Sign up for low-volume email news alerts
-                                    </p>
-                                    <a
-                                        target="_blank"
-                                        className="btn btn-default btn-sm"
-                                        href="http://groups.google.com/group/cbioportal-news/boxsubscribe"
-                                        style={{ width: '100%' }}
-                                    >
-                                        Subscribe
-                                    </a>
-                                </div>
-                            )}
+                            <div style={{ paddingTop: 5 }}>
+                                <p style={{ textAlign: 'center' }}>
+                                    Sign up for low-volume email news alerts
+                                </p>
+                                <a
+                                    target="_blank"
+                                    className="btn btn-default btn-sm"
+                                    href="http://groups.google.com/group/cbioportal-news/boxsubscribe"
+                                    style={{ width: '100%' }}
+                                >
+                                    Subscribe
+                                </a>
+                            </div>
                         </div>
                     </div>
                 );
@@ -303,10 +299,32 @@ export default class RightBar extends React.Component<
         ) : null;
     }
 
+    getHomePageTour() {
+        const isLoading =
+            !this.studyStore.cancerTypes.isComplete ||
+            !this.studyStore.cancerStudies.isComplete ||
+            !this.studyStore.userVirtualStudies.isComplete;
+        return getServerConfig().skin_right_nav_show_web_tours ? (
+            <div className="rightBarSection" style={{ minHeight: '70px' }}>
+                <h3>Interactive Tours</h3>
+                {!isLoading && (
+                    <Tour
+                        hideEntry={false}
+                        isLoggedIn={this.studyStore.userLoggedIn}
+                        studies={
+                            this.studyStore.selectableSelectedStudyIds.length
+                        }
+                    />
+                )}
+            </div>
+        ) : null;
+    }
+
     render() {
         return (
             <div>
                 {this.getWhatsNew()}
+                {this.getHomePageTour()}
                 {this.getExampleSection()}
                 {this.getInstallationMap()}
                 {this.getTestimonialsSection()}

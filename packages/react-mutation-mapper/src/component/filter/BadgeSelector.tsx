@@ -56,7 +56,8 @@ export type BadgeSelectorProps = {
             badgeFirst?: boolean,
             value?: string,
             badge?: JSX.Element | null
-        ) => JSX.Element
+        ) => JSX.Element,
+        badgeFirst?: boolean
     ) => JSX.Element;
     filter?: DataFilter<string>;
     options?: BadgeSelectorOption[];
@@ -86,6 +87,7 @@ export type BadgeSelectorProps = {
         badge?: JSX.Element | null
     ) => JSX.Element;
     useOnlyFeature?: boolean;
+    badgeFirst?: boolean;
 };
 
 export const DEFAULT_BADGE_CHAR_WIDTH = 10;
@@ -253,7 +255,8 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
             badgeFirst?: boolean,
             value?: string,
             badge?: JSX.Element | null
-        ) => JSX.Element
+        ) => JSX.Element,
+        badgeFirst?: boolean
     ): JSX.Element {
         return this.props.getBadgeLabel ? (
             this.props.getBadgeLabel(
@@ -262,7 +265,8 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
                 badgeClassName,
                 badgeAlignmentStyle,
                 isDriverAnnotated,
-                badgeLabelFormat
+                badgeLabelFormat,
+                badgeFirst
             )
         ) : (
             <BadgeLabel
@@ -276,6 +280,7 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
                 badgeClassName={this.props.badgeClassName}
                 isDriverAnnotated={this.props.isDriverAnnotated}
                 badgeLabelFormat={this.props.badgeLabelFormat}
+                badgeFirst={this.props.badgeFirst}
             />
         );
     }
@@ -305,7 +310,8 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
                     ? this.badgeAlignmentStyles[index]
                     : undefined,
                 this.props.isDriverAnnotated,
-                this.props.badgeLabelFormat
+                this.props.badgeLabelFormat,
+                this.props.badgeFirst
             ),
             value: option.value,
         }));

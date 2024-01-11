@@ -26,18 +26,19 @@ import {
     PatientIdentifier,
     Sample,
     SampleIdentifier,
+    StructuralVariantFilterQuery,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
 import { BarDatum } from './charts/barChart/BarChart';
 import {
+    BinMethodOption,
     GenericAssayChart,
     GenomicChart,
-    XvsYScatterChart,
     XvsYChartSettings,
+    XvsYScatterChart,
     XvsYViolinChart,
-    BinMethodOption,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -54,6 +55,10 @@ import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyVie
 import MobxPromise from 'mobxpromise';
 import {
     CNA_COLOR_AMP,
+    CNA_COLOR_DEFAULT,
+    CNA_COLOR_DIPLOID,
+    CNA_COLOR_GAIN,
+    CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
     EditableSpan,
     getTextWidth,
@@ -76,12 +81,18 @@ import { ChartOption } from './addChartButton/AddChartButton';
 import { observer } from 'mobx-react';
 import {
     ChartUserSetting,
+    CustomChartIdentifierWithValue,
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { getServerConfig } from 'config/config';
 import joinJsx from 'shared/lib/joinJsx';
 import { BoundType, NumberRange } from 'range-ts';
+import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
+import { toast } from 'react-toastify';
+import { value } from 'numeral';
+import { useCallback, useMemo } from 'react';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -118,6 +129,7 @@ export enum SpecialChartsUniqueKeyEnum {
     SAMPLE_TREATMENTS = 'SAMPLE_TREATMENTS',
     SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
     SAMPLE_TREATMENT_TARGET = 'SAMPLE_TREATMENT_TARGET',
+    CLINICAL_EVENT_TYPE_COUNTS = 'CLINICAL_EVENT_TYPE_COUNTS',
 }
 
 export type AnalysisGroup = {
@@ -148,6 +160,7 @@ export type ChartMeta = {
     patientAttribute: boolean;
     renderWhenDataChange: boolean;
 };
+
 export type ChartMetaWithDimensionAndChartType = ChartMeta & {
     dimension: ChartDimension;
     chartType: ChartType;
@@ -452,6 +465,7 @@ export const COLORS = [
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
 export const MutationCountVsCnaYBinsMin = 52; // calibrated so that the dots are right up against each other. needs to correspond with the width and height of the chart
+export const SURVIVAL_PLOT_ID_SUFFIX = 'SURVIVAL';
 
 const OPERATOR_MAP: { [op: string]: string } = {
     '<=': '≤',
@@ -463,7 +477,8 @@ const OPERATOR_MAP: { [op: string]: string } = {
 export function getClinicalAttributeOverlay(
     displayName: string,
     description: string,
-    clinicalAttributeId?: string
+    clinicalAttributeId?: string,
+    isCompactSurvivalChart?: boolean
 ): JSX.Element {
     const comparisonDisplayName = displayName.toLowerCase().trim();
     let comparisonDescription = description
@@ -483,6 +498,14 @@ export function getClinicalAttributeOverlay(
             {comparisonDescription !== comparisonDisplayName && (
                 <div>{description}</div>
             )}
+            <br />
+            {isCompactSurvivalChart && (
+                <div>All events were floored to the nearest month</div>
+            )}
+            {!!clinicalAttributeId &&
+                new RegExp(`${SURVIVAL_PLOT_ID_SUFFIX}$`).test(
+                    clinicalAttributeId
+                ) && <div>x axis unit: months</div>}
         </div>
     );
 }
@@ -510,13 +533,18 @@ export function getDescriptionOverlay(
     );
 }
 
+// This function acts as a toggle. If present in 'geneQueries',
+// the query is removed. If absent a query is added.
 export function updateGeneQuery(
     geneQueries: SingleGeneQuery[],
     selectedGene: string
 ): SingleGeneQuery[] {
+    // Remove any query that is already known for this gene.
     let updatedQueries = _.filter(
         geneQueries,
-        query => query.gene !== selectedGene
+        query =>
+            query.gene !== selectedGene ||
+            queryContainsStructVarAlteration(query)
     );
     if (updatedQueries.length === geneQueries.length) {
         updatedQueries.push({
@@ -772,15 +800,71 @@ export function getGenericAssayChartUniqueKey(
 }
 
 const UNIQUE_KEY_SEPARATOR = ':';
+const CHART_TYPE_SEPARATOR = ';';
 
-export function getUniqueKeyFromMolecularProfileIds(
+export function getUniqueKeyFromGeneFilterMolecularProfileIds(
     molecularProfileIds: string[]
 ) {
-    return _.sortBy(molecularProfileIds).join(UNIQUE_KEY_SEPARATOR);
+    const svChartType = molecularProfileIds[0]?.includes('structural_variants')
+        ? ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+        : undefined;
+    return getUniqueKeyFromMolecularProfileIds(
+        molecularProfileIds,
+        svChartType
+    );
+}
+
+export function getUniqueKeyFromMolecularProfileIds(
+    molecularProfileIds: string[],
+    chartType?: ChartTypeEnum
+) {
+    const returnValue = _(molecularProfileIds)
+        .sortBy(molecularProfileIds)
+        .join(UNIQUE_KEY_SEPARATOR);
+    return chartType
+        ? chartType + CHART_TYPE_SEPARATOR + returnValue
+        : returnValue;
+}
+
+export function calculateSampleCountForClinicalEventTypeCountTable(
+    selectedPatientCnt: number,
+    selectedSampleCnt: number,
+    clinicalEventTypeCounts?: ClinicalEventTypeCount[]
+): number {
+    let sampleCount = 0;
+    if (!_.isEmpty(clinicalEventTypeCounts) && selectedPatientCnt > 0) {
+        const maxClinicalEventTypeCount = _.maxBy(
+            clinicalEventTypeCounts,
+            c => c.count
+        );
+        const freqOfPatients =
+            maxClinicalEventTypeCount!.count / selectedPatientCnt;
+        sampleCount = selectedSampleCnt * freqOfPatients;
+    }
+    return sampleCount;
+}
+
+function startsWithSvChartType(chartType?: string) {
+    return (
+        chartType &&
+        [
+            ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
+            ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
+        ].some(ct => chartType.startsWith(ct))
+    );
 }
 
 export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
-    return uniqueKey.split(UNIQUE_KEY_SEPARATOR);
+    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
+    if (!startsWithSvChartType(parts[0])) {
+        return parts;
+    } else {
+        return _.map(
+            parts,
+            molecularProfileId =>
+                molecularProfileId.split(CHART_TYPE_SEPARATOR)[1]
+        );
+    }
 }
 
 export function getCurrentDate() {
@@ -894,6 +978,7 @@ export function getVirtualStudyDescription(
                     genomicDataFilter.profileType
                 );
                 const name = attributeNamesSet[uniqueKey];
+
                 if (name) {
                     filterLines.push(
                         `- ${name}: ${intervalFiltersDisplayValue(
@@ -956,6 +1041,7 @@ export function isFiltered(
         _.isEmpty(filter) ||
         (_.isEmpty(filter.clinicalDataFilters) &&
             _.isEmpty(filter.geneFilters) &&
+            _.isEmpty(filter.structuralVariantFilters) &&
             _.isEmpty(filter.genomicProfiles) &&
             _.isEmpty(filter.genomicDataFilters) &&
             _.isEmpty(filter.genericAssayDataFilters) &&
@@ -972,7 +1058,8 @@ export function isFiltered(
             (!filter.patientTreatmentTargetFilters ||
                 _.isEmpty(filter.patientTreatmentTargetFilters.filters)) &&
             (!filter.sampleTreatmentTargetFilters ||
-                _.isEmpty(filter.sampleTreatmentTargetFilters.filters)))
+                _.isEmpty(filter.sampleTreatmentTargetFilters.filters)) &&
+            _.isEmpty(filter.clinicalEventFilters))
     );
 
     if (filter.sampleIdentifiersSet) {
@@ -1030,7 +1117,6 @@ export function toSvgDomNodeWithLegend(
         .find(params.legendGroupSelector)
         .get(0);
     const legendBBox = legend.getBoundingClientRect();
-
     if (params.selectorToHide) {
         $(svg)
             .find(params.selectorToHide)
@@ -1753,20 +1839,25 @@ export function getExponent(value: number): number {
     return Number(Math.log10(Math.abs(value)).toFixed(fractionDigits));
 }
 
-export function getCNAByAlteration(alteration: number) {
-    return CNA_TO_ALTERATION[alteration] || '';
+export function getCNAByAlteration(alteration: string | number) {
+    const numberValue = Number(alteration);
+    return !isNaN(numberValue) ? CNA_TO_ALTERATION[numberValue] || '' : 'NA';
 }
 
-export function getCNAColorByAlteration(
-    alteration: string
-): string | undefined {
+export function getCNAColorByAlteration(alteration: string): string {
     switch (alteration) {
         case 'HOMDEL':
             return CNA_COLOR_HOMDEL;
+        case 'HETLOSS':
+            return CNA_COLOR_HETLOSS;
+        case 'DIPLOID':
+            return CNA_COLOR_DIPLOID;
+        case 'GAIN':
+            return CNA_COLOR_GAIN;
         case 'AMP':
             return CNA_COLOR_AMP;
         default:
-            return undefined;
+            return CNA_COLOR_DEFAULT;
     }
 }
 
@@ -1893,15 +1984,17 @@ export function calculateLayout(
     let layout: Layout[] = [];
     let availableChartLayoutsMap: { [chartId: string]: boolean } = {};
     let matrix = [new Array(cols).fill('')] as string[][];
-    // sort the visibleAttributes by priority
-    visibleAttributes.sort(chartMetaComparator);
+
     // look if we need to put the chart to a fixed position and add the position to the matrix
     if (currentGridLayout.length > 0) {
         if (currentFocusedChartByUser && currentFocusedChartByUserDimension) {
-            const currentChartLayout = currentGridLayout.find(
+            var currentFocusedChartIndex = currentGridLayout.findIndex(
                 layout => layout.i === currentFocusedChartByUser.uniqueKey
             )!;
-            if (currentChartLayout) {
+
+            if (currentFocusedChartIndex !== -1) {
+                const currentChartLayout =
+                    currentGridLayout[currentFocusedChartIndex];
                 const newChartLayout = calculateNewLayoutForFocusedChart(
                     currentChartLayout,
                     currentFocusedChartByUser,
@@ -1913,35 +2006,40 @@ export function calculateLayout(
                     currentFocusedChartByUser.uniqueKey
                 ] = true;
                 matrix = generateMatrixByLayout(newChartLayout, cols);
+
+                currentGridLayout[currentFocusedChartIndex] = newChartLayout;
             } else {
                 throw new Error(
                     'cannot find matching unique key in the grid layout'
                 );
             }
-        } else {
-            const chartOrderMap = _.keyBy(
-                currentGridLayout,
-                chartLayout => chartLayout.i
-            );
-            // order charts based on x and y (first order by y, if y is same for both then order by x)
-            // push all undefined charts to last
-            visibleAttributes.sort((a, b) => {
-                const chart1 = chartOrderMap[a.uniqueKey];
-                const chart2 = chartOrderMap[b.uniqueKey];
-                if (chart1 || chart2) {
-                    if (!chart2) {
-                        return -1;
-                    }
-                    if (!chart1) {
-                        return 1;
-                    }
-                    return chart1.y === chart2.y
-                        ? chart1.x - chart2.x
-                        : chart1.y - chart2.y;
-                }
-                return 0;
-            });
         }
+
+        const chartOrderMap = _.keyBy(
+            currentGridLayout,
+            chartLayout => chartLayout.i
+        );
+        // order charts based on x and y (first order by y, if y is same for both then order by x)
+        // push all undefined charts to last
+        visibleAttributes.sort((a, b) => {
+            const chart1 = chartOrderMap[a.uniqueKey];
+            const chart2 = chartOrderMap[b.uniqueKey];
+            if (chart1 || chart2) {
+                if (!chart2) {
+                    return -1;
+                }
+                if (!chart1) {
+                    return 1;
+                }
+                return chart1.y === chart2.y
+                    ? chart1.x - chart2.x
+                    : chart1.y - chart2.y;
+            }
+            return 0;
+        });
+    } else {
+        // sort the visibleAttributes by priority
+        visibleAttributes.sort(chartMetaComparator);
     }
 
     // filter out the fixed position chart then calculate layout
@@ -2152,6 +2250,7 @@ export type ClinicalDataCountSummary = ClinicalDataCount & {
     color: string;
     percentage: number;
     freq: string;
+    displayedValue?: string;
 };
 
 export function getClinicalDataCountWithColorByClinicalDataCount(
@@ -2331,6 +2430,7 @@ export function getSamplesByExcludingFiltersOnChart(
     let updatedFilter: StudyViewFilter = {
         clinicalDataFilters: filter.clinicalDataFilters,
         geneFilters: filter.geneFilters,
+        structuralVariantFilters: filter.structuralVariantFilters,
     } as any;
 
     let _sampleIdentifiers = _.reduce(
@@ -2772,12 +2872,23 @@ export function getGroupedClinicalDataByBins(
             // Check if the ClinicalData value is number
             if (!isNaN(datum.value as any)) {
                 //find if it belongs to any of numeric bins.
-                dataBin = _.find(
-                    numericDataBins,
-                    dataBin =>
-                        parseFloat(datum.value) > dataBin.start &&
-                        parseFloat(datum.value) <= dataBin.end
-                );
+                dataBin = _.find(numericDataBins, dataBin => {
+                    if (dataBin.start === dataBin.end) {
+                        // this is a special case where the buckets are single integers, end
+                        // is the same value as the start
+                        // ideally this would never be the case--it should be handled in bin creation
+                        // but this is simplest way to resolve problem
+                        return (
+                            parseFloat(datum.value) === dataBin.start ||
+                            parseFloat(datum.value) === dataBin.end
+                        );
+                    } else {
+                        return (
+                            parseFloat(datum.value) > dataBin.start &&
+                            parseFloat(datum.value) <= dataBin.end
+                        );
+                    }
+                });
             }
 
             //If ClinicalData value is not a number of does not belong to any number bins
@@ -2980,10 +3091,8 @@ export async function getAllClinicalDataByStudyViewFilter(
         sampleClinicalData: [],
         patientClinicalData: [],
     };
-
     const maxPageSize = 500000;
     let pageNumber = 0;
-
     do {
         const remoteClinicalDataCollection = await internalClient.fetchClinicalDataClinicalTableUsingPOST(
             {
@@ -3380,25 +3489,26 @@ export function buildSelectedDriverTiersMap(
 
 export const FilterIconMessage: React.FunctionComponent<{
     chartType: ChartType;
-    geneFilterQuery: GeneFilterQuery;
-}> = observer(({ chartType, geneFilterQuery }) => {
+    annotatedFilterQuery: GeneFilterQuery | StructuralVariantFilterQuery;
+}> = observer(({ chartType, annotatedFilterQuery }) => {
     const annotationFilterIsActive = annotationFilterActive(
-        geneFilterQuery.includeDriver,
-        geneFilterQuery.includeVUS,
-        geneFilterQuery.includeUnknownOncogenicity
+        annotatedFilterQuery.includeDriver,
+        annotatedFilterQuery.includeVUS,
+        annotatedFilterQuery.includeUnknownOncogenicity
     );
     const tierFilterIsActive = driverTierFilterActive(
-        geneFilterQuery.tiersBooleanMap,
-        geneFilterQuery.includeUnknownTier
+        annotatedFilterQuery.tiersBooleanMap,
+        annotatedFilterQuery.includeUnknownTier
     );
     const statusFilterIsActive = statusFilterActive(
-        geneFilterQuery.includeGermline,
-        geneFilterQuery.includeSomatic,
-        geneFilterQuery.includeUnknownStatus
+        annotatedFilterQuery.includeGermline,
+        annotatedFilterQuery.includeSomatic,
+        annotatedFilterQuery.includeUnknownStatus
     );
     const isMutationType =
         chartType === ChartTypeEnum.MUTATED_GENES_TABLE ||
-        chartType === ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE;
+        chartType === ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE ||
+        chartType === ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE;
     if (
         !annotationFilterIsActive &&
         !tierFilterIsActive &&
@@ -3408,31 +3518,31 @@ export const FilterIconMessage: React.FunctionComponent<{
 
     const driverFilterTextElements: string[] = [];
     if (annotationFilterIsActive) {
-        geneFilterQuery.includeDriver &&
+        annotatedFilterQuery.includeDriver &&
             driverFilterTextElements.push('driver');
-        geneFilterQuery.includeVUS &&
+        annotatedFilterQuery.includeVUS &&
             driverFilterTextElements.push('passenger');
-        geneFilterQuery.includeUnknownOncogenicity &&
+        annotatedFilterQuery.includeUnknownOncogenicity &&
             driverFilterTextElements.push('unknown');
     }
 
     const statusFilterTextElements: string[] = [];
     if (statusFilterIsActive && isMutationType) {
-        geneFilterQuery.includeGermline &&
+        annotatedFilterQuery.includeGermline &&
             statusFilterTextElements.push('germline');
-        geneFilterQuery.includeSomatic &&
+        annotatedFilterQuery.includeSomatic &&
             statusFilterTextElements.push('somatic');
-        geneFilterQuery.includeUnknownStatus &&
+        annotatedFilterQuery.includeUnknownStatus &&
             statusFilterTextElements.push('unknown');
     }
 
     const tierNames = tierFilterIsActive
-        ? _(geneFilterQuery.tiersBooleanMap)
+        ? _(annotatedFilterQuery.tiersBooleanMap)
               .pickBy()
               .keys()
               .value()
         : [];
-    if (tierFilterIsActive && geneFilterQuery.includeUnknownTier)
+    if (tierFilterIsActive && annotatedFilterQuery.includeUnknownTier)
         tierNames.push('unknown');
 
     let driverFilterText = '';
@@ -3539,17 +3649,18 @@ export function findInvalidMolecularProfileIds(
     filters: StudyViewFilter,
     molecularProfiles: MolecularProfile[]
 ): string[] {
+    let geneFilters = filters.geneFilters;
     const molecularProfilesInFilters = _(
-        filters.geneFilters?.map(f => f.molecularProfileIds)
+        geneFilters?.map(f => f.molecularProfileIds)
     )
         .flatten()
         .uniq()
         .value();
-
-    return _.difference(
+    let result = _.difference(
         molecularProfilesInFilters,
         molecularProfiles.map(p => p.molecularProfileId)
     );
+    return result;
 }
 
 export function getFilteredMolecularProfilesByAlterationType(
@@ -3821,3 +3932,78 @@ export const FGA_VS_MUTATION_COUNT_KEY = makeXvsYUniqueKey(
 
 export const FGA_PLOT_DOMAIN = { min: 0, max: 1 };
 export const MUTATION_COUNT_PLOT_DOMAIN = { min: 0 };
+
+export type ComparisonCustomData = {
+    patientId: string;
+    sampleId: string;
+    studyId: string;
+    uniquePatientKey: string;
+    uniqueSampleKey: string;
+    value: string;
+};
+
+// This function returns the ClinicalData for the selected samples in a custom numerical dataset (for group comparison)
+export function transformSampleDataToSelectedSampleClinicalData(
+    sampleData: CustomChartIdentifierWithValue[],
+    selectedSamples: Sample[],
+    clinicalAttribute: ClinicalAttribute
+): ClinicalData[] {
+    const selectedSampleData: ComparisonCustomData[] = sampleData.map(
+        sample =>
+            ({
+                ...sample,
+                ...selectedSamples.find(
+                    itmInner => itmInner.sampleId === sample.sampleId
+                ),
+            } as ComparisonCustomData)
+    );
+    const clinicalDataSamples = selectedSampleData
+        .map(item => {
+            return {
+                clinicalAttribute: clinicalAttribute,
+                clinicalAttributeId: clinicalAttribute.clinicalAttributeId,
+                ...item,
+            } as ClinicalData;
+        })
+        .filter(item => item.uniqueSampleKey !== undefined);
+    return clinicalDataSamples;
+}
+
+const TOAST_SUPPRESS_KEY = 'SV-update-query';
+
+export function showQueryUpdatedToast(message: string) {
+    if (localStorage.getItem(TOAST_SUPPRESS_KEY) === null) {
+        toast.success(
+            () => (
+                <ToastSuppressor
+                    message={message}
+                    toastKey={TOAST_SUPPRESS_KEY}
+                />
+            ),
+            {
+                delay: 0,
+                position: 'top-right',
+                autoClose: 4000,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: 'light',
+            } as any
+        );
+    }
+}
+
+function ToastSuppressor(props: any) {
+    const suppressToast = useCallback(() => {
+        localStorage.setItem(props.toastKey, 'true');
+    }, []);
+
+    return (
+        <>
+            <p>{props.message}</p>
+            <a onClick={suppressToast}>Don't show this again</a>
+        </>
+    );
+}

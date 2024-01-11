@@ -13,6 +13,7 @@ import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
 import _ from 'lodash';
 import {
+    DownloadControlOption,
     EditableSpan,
     toggleColumnVisibility,
 } from 'cbioportal-frontend-commons';
@@ -371,6 +372,10 @@ export default class SurvivalPrefixTable extends React.Component<
                     showCopy: false,
                 }}
                 filterBoxWidth={120}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls !==
+                    DownloadControlOption.HIDE_ALL
+                }
             />
         );
     }

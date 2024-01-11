@@ -30,6 +30,13 @@ export interface ITimelineConfig {
 export type ITrackEventConfig = {
     trackTypeMatch: RegExp;
     configureTrack: (track: TimelineTrackSpecification) => any;
+    legend?: TimelineLegendItem[];
+    attributeOrder?: string[];
+};
+
+export type SegmentedAttributes = {
+    first: TimelineEventAttribute[];
+    rest: TimelineEventAttribute[];
 };
 
 export enum TimelineTrackType {
@@ -38,6 +45,11 @@ export enum TimelineTrackType {
 }
 
 export type TimeLineColorGetter = (e: TimelineEvent) => string | void;
+
+export type TimelineLegendItem = {
+    label: string;
+    color: string;
+};
 
 export interface TimelineTrackSpecification {
     items: TimelineEvent[];

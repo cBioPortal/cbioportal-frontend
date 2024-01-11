@@ -85,30 +85,6 @@ export type Citations = {
         'pmids': Array < string >
 
 };
-export type ClinVar = {
-    'alleleId': number
-
-        'alt': string
-
-        'chrom': string
-
-        'cytogenic': string
-
-        'gene': Gene
-
-        'hg19': Hg19
-
-        'hg38': Hg38
-
-        'hgvs': Hgvs
-
-        'license': string
-
-        'rcv': Array < Rcv >
-
-        'variantId': number
-
-};
 export type Clinvar = {
     'alternateAllele': string
 
@@ -413,11 +389,15 @@ export type HrdScore = {
 
 };
 export type Implication = {
-    'alterations': Array < string >
+    'abstracts': Array < ArticleAbstract >
+
+        'alterations': Array < string >
 
         'description': string
 
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'levelOfEvidence': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
+
+        'pmids': Array < string >
 
         'tumorType': TumorType
 
@@ -435,13 +415,15 @@ export type IndicatorQueryResp = {
 
         'geneSummary': string
 
-        'highestDiagnosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'highestDiagnosticImplicationLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
-        'highestPrognosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'highestFdaLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
-        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'highestPrognosticImplicationLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
-        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'highestResistanceLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
+
+        'highestSensitiveLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
         'hotspot': boolean
 
@@ -451,9 +433,9 @@ export type IndicatorQueryResp = {
 
         'oncogenic': string
 
-        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
+        'otherSignificantResistanceLevels': Array < "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO" >
 
-        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
+        'otherSignificantSensitiveLevels': Array < "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO" >
 
         'prognosticImplications': Array < Implication >
 
@@ -483,11 +465,13 @@ export type IndicatorQueryTreatment = {
 
         'drugs': Array < Drug >
 
-        'fdaApproved': boolean
+        'fdaLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+        'level': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3" | "NO"
 
         'levelAssociatedCancerType': TumorType
+
+        'levelExcludedCancerTypes': Array < TumorType >
 
         'pmids': Array < string >
 
@@ -511,7 +495,7 @@ export type MainType = {
 
         'name': string
 
-        'tumorForm': "SOLID" | "LIQUID"
+        'tumorForm': "SOLID" | "LIQUID" | "MIXED"
 
 };
 export type MutationAssessor = {
@@ -597,7 +581,7 @@ export type Mutdb = {
 
 };
 export type MyVariantInfo = {
-    'clinVar': ClinVar
+    'clinVar': MyVariantInfoClinVar
 
         'cosmic': Cosmic
 
@@ -626,6 +610,30 @@ export type MyVariantInfoAnnotation = {
     'annotation': MyVariantInfo
 
         'license': string
+
+};
+export type MyVariantInfoClinVar = {
+    'alleleId': number
+
+        'alt': string
+
+        'chrom': string
+
+        'cytogenic': string
+
+        'gene': Gene
+
+        'hg19': Hg19
+
+        'hg38': Hg38
+
+        'hgvs': Hgvs
+
+        'license': string
+
+        'rcv': Array < Rcv >
+
+        'variantId': number
 
 };
 export type NucleotideContext = {
@@ -724,11 +732,11 @@ export type Query = {
 
         'proteinStart': number
 
+        'referenceGenome': "GRCh37" | "GRCh38"
+
         'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN"
 
         'tumorType': string
-
-        'type': string
 
 };
 export type Rcv = {
@@ -944,7 +952,7 @@ export type TumorType = {
 
         'tissue': string
 
-        'tumorForm': "SOLID" | "LIQUID"
+        'tumorForm': "SOLID" | "LIQUID" | "MIXED"
 
 };
 export type UntranslatedRegion = {
@@ -979,6 +987,10 @@ export type VariantAnnotation = {
         'colocatedVariants': Array < ColocatedVariant >
 
         'end': number
+
+        'errorMessage': string
+
+        'genomicLocationExplanation': string
 
         'hgvsg': string
 
@@ -1056,6 +1068,10 @@ export type Version = {
 export type Vues = {
     'comment': string
 
+        'confirmed': boolean
+
+        'context': string
+
         'defaultEffect': string
 
         'genomicLocation': string
@@ -1064,17 +1080,21 @@ export type Vues = {
 
         'hugoGeneSymbol': string
 
-        'pubmedIds': Array < number >
+        'pubmedId': number
 
         'referenceText': string
 
         'revisedProteinEffect': string
 
+        'revisedVariantClassification': string
+
         'transcriptId': string
 
         'variant': string
 
-        'variantClassification': string
+        'vepPredictedProteinEffect': string
+
+        'vepPredictedVariantClassification': string
 
 };
 
@@ -1140,7 +1160,7 @@ export default class GenomeNexusAPI {
         'variants': Array < string > ,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1175,13 +1195,13 @@ export default class GenomeNexusAPI {
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationPOSTWithHttpInfo(parameters: {
         'variants': Array < string > ,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1237,13 +1257,13 @@ export default class GenomeNexusAPI {
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationPOST(parameters: {
             'variants': Array < string > ,
             'isoformOverrideSource' ? : string,
             'token' ? : string,
-            'fields' ? : Array < string > ,
+            'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < VariantAnnotation >
@@ -1256,7 +1276,7 @@ export default class GenomeNexusAPI {
         'variantIds': Array < string > ,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1291,13 +1311,13 @@ export default class GenomeNexusAPI {
      * @param {} variantIds - List of variant IDs. For example ["rs116035550"]
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationByIdPOSTWithHttpInfo(parameters: {
         'variantIds': Array < string > ,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1353,13 +1373,13 @@ export default class GenomeNexusAPI {
      * @param {} variantIds - List of variant IDs. For example ["rs116035550"]
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationByIdPOST(parameters: {
             'variantIds': Array < string > ,
             'isoformOverrideSource' ? : string,
             'token' ? : string,
-            'fields' ? : Array < string > ,
+            'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < VariantAnnotation >
@@ -1372,7 +1392,7 @@ export default class GenomeNexusAPI {
         'variantId': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1408,13 +1428,13 @@ export default class GenomeNexusAPI {
      * @param {string} variantId - dbSNP id. For example rs116035550.
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationByIdGETWithHttpInfo(parameters: {
         'variantId': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1468,13 +1488,13 @@ export default class GenomeNexusAPI {
      * @param {string} variantId - dbSNP id. For example rs116035550.
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationByIdGET(parameters: {
         'variantId': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < VariantAnnotation > {
@@ -1486,7 +1506,7 @@ export default class GenomeNexusAPI {
         'genomicLocations': Array < GenomicLocation > ,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1521,13 +1541,13 @@ export default class GenomeNexusAPI {
      * @param {} genomicLocations - List of Genomic Locations
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationByGenomicLocationPOSTWithHttpInfo(parameters: {
         'genomicLocations': Array < GenomicLocation > ,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1583,13 +1603,13 @@ export default class GenomeNexusAPI {
      * @param {} genomicLocations - List of Genomic Locations
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationByGenomicLocationPOST(parameters: {
             'genomicLocations': Array < GenomicLocation > ,
             'isoformOverrideSource' ? : string,
             'token' ? : string,
-            'fields' ? : Array < string > ,
+            'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < VariantAnnotation >
@@ -1602,7 +1622,7 @@ export default class GenomeNexusAPI {
         'genomicLocation': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1638,13 +1658,13 @@ export default class GenomeNexusAPI {
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationByGenomicLocationGETWithHttpInfo(parameters: {
         'genomicLocation': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1698,13 +1718,13 @@ export default class GenomeNexusAPI {
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationByGenomicLocationGET(parameters: {
         'genomicLocation': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < VariantAnnotation > {
@@ -1716,7 +1736,7 @@ export default class GenomeNexusAPI {
         'variant': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1752,13 +1772,13 @@ export default class GenomeNexusAPI {
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationGETWithHttpInfo(parameters: {
         'variant': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1812,13 +1832,13 @@ export default class GenomeNexusAPI {
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
+     * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
     fetchVariantAnnotationGET(parameters: {
         'variant': string,
         'isoformOverrideSource' ? : string,
         'token' ? : string,
-        'fields' ? : Array < string > ,
+        'fields' ? : "annotation_summary" | "clinvar" | "hotspots" | "mutation_assessor" | "my_variant_info" | "nucleotide_context" | "oncokb" | "ptms" | "signal",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < VariantAnnotation > {

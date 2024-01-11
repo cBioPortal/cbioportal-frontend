@@ -102,6 +102,24 @@ export class ServerConfigHelpers {
         return matches ? matches.map((s: string) => s.trim()) : [];
     }
 
+    @memoize
+    static parseCustomSampleTypeColors(config: string | undefined): any {
+        const result = {
+            customSampleTypes: [] as string[],
+            customSampleTypeToColor: {} as any,
+            customSampleTypesLower: [] as string[],
+        };
+        if (!config) {
+            return result;
+        }
+        result.customSampleTypeToColor = JSON.parse(config);
+        result.customSampleTypes = _.keys(result.customSampleTypeToColor);
+        result.customSampleTypesLower = result.customSampleTypes.map(t =>
+            t.toLowerCase()
+        );
+        return result;
+    }
+
     @memoize static parseConfigFormat(
         str: string | null
     ): CategorizedConfigItems {

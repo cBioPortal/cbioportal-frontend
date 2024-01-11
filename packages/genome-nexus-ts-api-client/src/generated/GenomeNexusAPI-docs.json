@@ -83,14 +83,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "hotspots"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -149,14 +171,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: annotation_summary",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "annotation_summary"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -210,14 +254,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: annotation_summary",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "annotation_summary"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -273,14 +339,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "hotspots"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -334,14 +422,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "hotspots"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -392,14 +502,36 @@
           {
             "name": "fields",
             "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots",
+            "description": "Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to \"annotation_summary\" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}",
             "required": false,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "annotation_summary",
+                "clinvar",
+                "hotspots",
+                "mutation_assessor",
+                "my_variant_info",
+                "nucleotide_context",
+                "oncokb",
+                "ptms",
+                "signal"
+              ]
             },
             "collectionFormat": "multi",
-            "default": "hotspots"
+            "default": "annotation_summary",
+            "enum": [
+              "annotation_summary",
+              "clinvar",
+              "hotspots",
+              "mutation_assessor",
+              "my_variant_info",
+              "nucleotide_context",
+              "oncokb",
+              "ptms",
+              "signal"
+            ]
           }
         ],
         "responses": {
@@ -1244,59 +1376,6 @@
         }
       }
     },
-    "ClinVar": {
-      "type": "object",
-      "properties": {
-        "alleleId": {
-          "type": "integer",
-          "format": "int32",
-          "description": "allele_id"
-        },
-        "alt": {
-          "type": "string",
-          "description": "alt"
-        },
-        "chrom": {
-          "type": "string",
-          "description": "chrom"
-        },
-        "cytogenic": {
-          "type": "string",
-          "description": "cytogenic"
-        },
-        "gene": {
-          "description": "gene",
-          "$ref": "#/definitions/Gene"
-        },
-        "hg19": {
-          "description": "hg19",
-          "$ref": "#/definitions/Hg19"
-        },
-        "hg38": {
-          "description": "hg38",
-          "$ref": "#/definitions/Hg38"
-        },
-        "hgvs": {
-          "description": "hgvs",
-          "$ref": "#/definitions/Hgvs"
-        },
-        "license": {
-          "type": "string",
-          "description": "license"
-        },
-        "rcv": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Rcv"
-          }
-        },
-        "variantId": {
-          "type": "integer",
-          "format": "int32",
-          "description": "variant_id"
-        }
-      }
-    },
     "Clinvar": {
       "type": "object",
       "properties": {
@@ -2039,6 +2118,12 @@
     "Implication": {
       "type": "object",
       "properties": {
+        "abstracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArticleAbstract"
+          }
+        },
         "alterations": {
           "type": "array",
           "items": {
@@ -2051,25 +2136,30 @@
         "levelOfEvidence": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
             "LEVEL_Dx1",
             "LEVEL_Dx2",
             "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
             "NO"
           ]
+        },
+        "pmids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "tumorType": {
           "$ref": "#/definitions/TumorType"
@@ -2105,92 +2195,110 @@
         "highestDiagnosticImplicationLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
             "LEVEL_Dx1",
             "LEVEL_Dx2",
             "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
+            "NO"
+          ]
+        },
+        "highestFdaLevel": {
+          "type": "string",
+          "enum": [
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
             "NO"
           ]
         },
         "highestPrognosticImplicationLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
             "LEVEL_Dx1",
             "LEVEL_Dx2",
             "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
             "NO"
           ]
         },
         "highestResistanceLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
             "LEVEL_Dx1",
             "LEVEL_Dx2",
             "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
             "NO"
           ]
         },
         "highestSensitiveLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
             "LEVEL_Dx1",
             "LEVEL_Dx2",
             "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
             "NO"
           ]
         },
@@ -2212,23 +2320,22 @@
           "items": {
             "type": "string",
             "enum": [
-              "LEVEL_0",
               "LEVEL_1",
               "LEVEL_2",
-              "LEVEL_2A",
-              "LEVEL_2B",
               "LEVEL_3A",
               "LEVEL_3B",
               "LEVEL_4",
               "LEVEL_R1",
               "LEVEL_R2",
-              "LEVEL_R3",
               "LEVEL_Px1",
               "LEVEL_Px2",
               "LEVEL_Px3",
               "LEVEL_Dx1",
               "LEVEL_Dx2",
               "LEVEL_Dx3",
+              "LEVEL_Fda1",
+              "LEVEL_Fda2",
+              "LEVEL_Fda3",
               "NO"
             ]
           }
@@ -2238,23 +2345,22 @@
           "items": {
             "type": "string",
             "enum": [
-              "LEVEL_0",
               "LEVEL_1",
               "LEVEL_2",
-              "LEVEL_2A",
-              "LEVEL_2B",
               "LEVEL_3A",
               "LEVEL_3B",
               "LEVEL_4",
               "LEVEL_R1",
               "LEVEL_R2",
-              "LEVEL_R3",
               "LEVEL_Px1",
               "LEVEL_Px2",
               "LEVEL_Px3",
               "LEVEL_Dx1",
               "LEVEL_Dx2",
               "LEVEL_Dx3",
+              "LEVEL_Fda1",
+              "LEVEL_Fda2",
+              "LEVEL_Fda3",
               "NO"
             ]
           }
@@ -2323,35 +2429,58 @@
             "$ref": "#/definitions/Drug"
           }
         },
-        "fdaApproved": {
-          "type": "boolean",
-          "example": false
-        },
-        "level": {
+        "fdaLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
             "LEVEL_Dx1",
             "LEVEL_Dx2",
             "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
+            "NO"
+          ]
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
             "NO"
           ]
         },
         "levelAssociatedCancerType": {
           "$ref": "#/definitions/TumorType"
+        },
+        "levelExcludedCancerTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TumorType"
+          }
         },
         "pmids": {
           "type": "array",
@@ -2413,7 +2542,8 @@
           "type": "string",
           "enum": [
             "SOLID",
-            "LIQUID"
+            "LIQUID",
+            "MIXED"
           ]
         }
       },
@@ -2599,7 +2729,7 @@
       "properties": {
         "clinVar": {
           "description": "clinvar",
-          "$ref": "#/definitions/ClinVar"
+          "$ref": "#/definitions/MyVariantInfoClinVar"
         },
         "cosmic": {
           "description": "cosmic",
@@ -2654,6 +2784,59 @@
         },
         "license": {
           "type": "string"
+        }
+      }
+    },
+    "MyVariantInfoClinVar": {
+      "type": "object",
+      "properties": {
+        "alleleId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "allele_id"
+        },
+        "alt": {
+          "type": "string",
+          "description": "alt"
+        },
+        "chrom": {
+          "type": "string",
+          "description": "chrom"
+        },
+        "cytogenic": {
+          "type": "string",
+          "description": "cytogenic"
+        },
+        "gene": {
+          "description": "gene",
+          "$ref": "#/definitions/Gene"
+        },
+        "hg19": {
+          "description": "hg19",
+          "$ref": "#/definitions/Hg19"
+        },
+        "hg38": {
+          "description": "hg38",
+          "$ref": "#/definitions/Hg38"
+        },
+        "hgvs": {
+          "description": "hgvs",
+          "$ref": "#/definitions/Hgvs"
+        },
+        "license": {
+          "type": "string",
+          "description": "license"
+        },
+        "rcv": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Rcv"
+          }
+        },
+        "variantId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "variant_id"
         }
       }
     },
@@ -2866,6 +3049,13 @@
           "type": "integer",
           "format": "int32"
         },
+        "referenceGenome": {
+          "type": "string",
+          "enum": [
+            "GRCh37",
+            "GRCh38"
+          ]
+        },
         "svType": {
           "type": "string",
           "enum": [
@@ -2879,9 +3069,6 @@
           ]
         },
         "tumorType": {
-          "type": "string"
-        },
-        "type": {
           "type": "string"
         }
       }
@@ -3360,7 +3547,8 @@
           "type": "string",
           "enum": [
             "SOLID",
-            "LIQUID"
+            "LIQUID",
+            "MIXED"
           ]
         }
       },
@@ -3436,7 +3624,7 @@
           "description": "NCBI build number"
         },
         "clinvar": {
-          "description": "ClinVar",
+          "description": "MyVariantInfoClinVar",
           "$ref": "#/definitions/ClinvarAnnotation"
         },
         "colocatedVariants": {
@@ -3449,6 +3637,12 @@
           "type": "integer",
           "format": "int32",
           "description": "End position"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "genomicLocationExplanation": {
+          "type": "string"
         },
         "hgvsg": {
           "type": "string"
@@ -3621,6 +3815,12 @@
         "comment": {
           "type": "string"
         },
+        "confirmed": {
+          "type": "boolean"
+        },
+        "context": {
+          "type": "string"
+        },
         "defaultEffect": {
           "type": "string"
         },
@@ -3633,17 +3833,17 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "pubmedIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
+        "pubmedId": {
+          "type": "integer",
+          "format": "int32"
         },
         "referenceText": {
           "type": "string"
         },
         "revisedProteinEffect": {
+          "type": "string"
+        },
+        "revisedVariantClassification": {
           "type": "string"
         },
         "transcriptId": {
@@ -3652,7 +3852,10 @@
         "variant": {
           "type": "string"
         },
-        "variantClassification": {
+        "vepPredictedProteinEffect": {
+          "type": "string"
+        },
+        "vepPredictedVariantClassification": {
           "type": "string"
         }
       }

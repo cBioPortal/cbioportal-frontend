@@ -2,6 +2,10 @@ const {
     getNthOncoprintTrackOptionsElements,
 } = require('../../../shared/specUtils');
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
+
+var getElementByTestHandle = require('../../../shared/specUtils')
+    .getElementByTestHandle;
+
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
@@ -235,7 +239,9 @@ describe('track group headers', function() {
         $(mrnaElements.dropdown_selector + ' li:nth-child(2)').click(); // Click Don't Cluster
         browser.pause(2000); // give it time to sort
 
-        var res = checkOncoprintElement();
+        var res = checkOncoprintElement(undefined, [
+            { width: 2000, height: 1000 },
+        ]);
         assertScreenShotMatch(res);
     });
 });
@@ -263,7 +269,7 @@ describe('sorting', function() {
 
         $('[data-test="StudySelect"] input').click();
 
-        $('a=Query By Gene').click();
+        getElementByTestHandle('queryByGeneButton').click();
 
         browser.pause(1000);
 
@@ -317,7 +323,7 @@ describe('sorting', function() {
 
         $('[data-test="StudySelect"] input').click();
 
-        $('a=Query By Gene').click();
+        getElementByTestHandle('queryByGeneButton').click();
 
         //browser.pause(500);
 

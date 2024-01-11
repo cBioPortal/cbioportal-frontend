@@ -20,9 +20,11 @@ import {
     applyDefaultMutationFilter,
     applyDefaultMutationStatusFilter,
     applyDefaultPositionFilter,
+    applyDefaultProteinChangeFilter,
     applyDefaultProteinImpactTypeFilter,
 } from '../util/FilterUtils';
 import { defaultOncoKbFilter } from 'oncokb-frontend-commons';
+import { ProteinChangeFilter } from '../filter/ProteinChangeFilter';
 
 export class DefaultMutationMapperFilterApplier implements FilterApplier {
     protected get customFilterAppliers(): {
@@ -36,6 +38,7 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
             [DataFilterType.PROTEIN_IMPACT_TYPE]: this
                 .applyProteinImpactTypeFilter,
             [DataFilterType.MUTATION_STATUS]: this.applyMutationStatusFilter,
+            [DataFilterType.PROTEIN_CHANGE]: this.applyProteinChangeFilter,
             ...this.filterAppliersOverride,
         };
     }
@@ -111,6 +114,14 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
         mutation: Mutation
     ) {
         return applyDefaultMutationStatusFilter(filter, mutation);
+    }
+
+    @autobind
+    protected applyProteinChangeFilter(
+        filter: ProteinChangeFilter,
+        mutation: Mutation
+    ) {
+        return applyDefaultProteinChangeFilter(filter, mutation);
     }
 }
 

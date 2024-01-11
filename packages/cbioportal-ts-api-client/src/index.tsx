@@ -36,6 +36,9 @@ export {
     GenericAssayDataBinFilter,
     GenericAssayDataCountFilter,
     GenericAssayDataCountItem,
+    GenericAssayCountSummary,
+    GenericAssayBinaryEnrichment,
+    GenericAssayCategoricalEnrichment,
     GenericAssayEnrichment,
     Geneset,
     GenesetCorrelation,
@@ -72,5 +75,7 @@ export {
     CustomDriverAnnotationReport,
     StructuralVariant,
     StructuralVariantFilter,
+    StructuralVariantQuery,
+    StructuralVariantGeneSubQuery,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';

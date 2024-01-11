@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import $ from 'jquery';
 import localForage from 'localforage';
 import {
     fetchVariantAnnotationsByMutation as fetchDefaultVariantAnnotationsByMutation,
@@ -32,6 +31,7 @@ import {
     ReferenceGenomeGene,
     Sample,
     SampleFilter,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -46,17 +46,19 @@ import {
 import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {
+    chunkCalls,
     EvidenceType,
     IHotspotIndex,
     IOncoKbData,
     isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import {
-    generateQueryVariantId,
-    generateProteinChangeQuery,
-    generateIdToIndicatorMap,
-    generateCopyNumberAlterationQuery,
     generateAnnotateStructuralVariantQuery,
+    generateCopyNumberAlterationQuery,
+    generateIdToIndicatorMap,
+    generateProteinChangeQuery,
+    generateQueryVariantId,
+    OtherBiomarkersQueryType,
 } from 'oncokb-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
@@ -65,22 +67,18 @@ import { indexPdbAlignments } from 'shared/lib/PdbUtils';
 import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
 import {
+    AlterationTypeConstants,
     CLINICAL_ATTRIBUTE_ID_ENUM,
     DataTypeConstants,
     GENOME_NEXUS_ARG_FIELD_ENUM,
 } from 'shared/constants';
-import {
-    AnnotatedNumericGeneMolecularData,
-    CustomDriverNumericGeneMolecularData,
-} from '../../pages/resultsView/ResultsViewPageStore';
-import { AlterationTypeConstants } from 'shared/constants';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getServerConfig } from 'config/config';
 import {
     AnnotateCopyNumberAlterationQuery,
     AnnotateStructuralVariantQuery,
-    IndicatorQueryResp,
     CancerGene,
+    IndicatorQueryResp,
     OncoKbAPI,
     OncoKBInfo,
 } from 'oncokb-ts-api-client';
@@ -103,15 +101,18 @@ import {
     isNotGermlineMutation,
 } from 'shared/lib/MutationUtils';
 import { ObservableMap } from 'mobx';
-import { chunkCalls } from 'cbioportal-utils';
-import { StructuralVariant } from 'cbioportal-ts-api-client';
-import eventBus from 'shared/events/eventBus';
 
 import { ErrorMessages } from 'shared/errorMessages';
-import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { FilteredAndAnnotatedMutationsReport } from './comparison/AnalysisStoreUtils';
-import { SiteError } from 'shared/model/appMisc';
+import {
+    CustomDriverFilterEvent,
+    DriverInfo,
+    DriverInfoWithHotspots,
+    HotSpotInfo,
+} from 'shared/model/CustomDriverAnnotationInfo';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { EnsemblFilter } from 'genome-nexus-ts-api-client';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
@@ -279,6 +280,24 @@ export async function fetchAllReferenceGenomeGenes(
             return [];
         }
     }
+}
+
+export async function fetchEnsemblTranscriptsByEnsemblFilter(
+    ensemblFilter: Partial<EnsemblFilter>,
+    client: GenomeNexusAPI = genomeNexusClient
+) {
+    return await client.fetchEnsemblTranscriptsByEnsemblFilterPOST({
+        ensemblFilter: Object.assign(
+            // set default to empty array
+            {
+                geneIds: [],
+                hugoSymbols: [],
+                proteinIds: [],
+                transcriptIds: [],
+            },
+            ensemblFilter
+        ),
+    });
 }
 
 export async function fetchPdbAlignmentData(
@@ -1103,25 +1122,36 @@ export function findMrnaRankMolecularProfileId(
 export function generateUniqueSampleKeyToTumorTypeMap(
     clinicalDataForSamples: MobxPromise<ClinicalData[]>,
     studies?: MobxPromise<CancerStudy[]>,
-    samples?: MobxPromise<Sample[]>
+    samples?: MobxPromise<Sample[]>,
+    useCancerTypeAttribute?: boolean
 ): { [sampleId: string]: string } {
     const map: { [sampleId: string]: string } = {};
 
     if (clinicalDataForSamples.result) {
-        // first priority is CANCER_TYPE_DETAILED in clinical data
-        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-            if (clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
-                map[clinicalData.uniqueSampleKey] = clinicalData.value;
-            }
-        });
-
-        // // second priority is CANCER_TYPE in clinical data
-        // _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-        //     // update map with CANCER_TYPE value only if it is not already updated
-        //     if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
-        //         map[clinicalData.uniqueSampleKey] = clinicalData.value;
-        //     }
-        // });
+        // if useCancerTypeAttribute is true, use CANCER_TYPE in clinical data
+        // else, use CANCER_TYPE_DETAILED in clinical data
+        if (useCancerTypeAttribute) {
+            _.each(
+                clinicalDataForSamples.result,
+                (clinicalData: ClinicalData) => {
+                    if (clinicalData.clinicalAttributeId === 'CANCER_TYPE') {
+                        map[clinicalData.uniqueSampleKey] = clinicalData.value;
+                    }
+                }
+            );
+        } else {
+            _.each(
+                clinicalDataForSamples.result,
+                (clinicalData: ClinicalData) => {
+                    if (
+                        clinicalData.clinicalAttributeId ===
+                        'CANCER_TYPE_DETAILED'
+                    ) {
+                        map[clinicalData.uniqueSampleKey] = clinicalData.value;
+                    }
+                }
+            );
+        }
     }
 
     // last resort: fall back to the study cancer type
@@ -1156,7 +1186,7 @@ export function mergeDiscreteCNAData(
 }
 
 export function mergeMutations(
-    mutationData: MobxPromise<Mutation[]>,
+    mutationData: Mutation[],
     generateMutationId: MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent
 ) {
     const idToMutations: { [key: string]: Mutation[] } = {};
@@ -1184,13 +1214,13 @@ export function mergeMutationsIncludingUncalled(
 
     updateIdToMutationsMap(
         idToMutations,
-        mutationData,
+        mutationData.result,
         generateMutationId,
         false
     );
     updateIdToMutationsMap(
         idToMutations,
-        uncalledMutationData,
+        uncalledMutationData.result,
         generateMutationId,
         true
     );
@@ -1200,12 +1230,12 @@ export function mergeMutationsIncludingUncalled(
 
 function updateIdToMutationsMap(
     idToMutations: { [key: string]: Mutation[] },
-    mutationData: MobxPromise<Mutation[]>,
+    mutationData: Mutation[] | undefined,
     generateMutationId: MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent,
     onlyUpdateExistingIds: boolean
 ) {
-    if (mutationData.result) {
-        for (const mutation of mutationData.result) {
+    if (mutationData) {
+        for (const mutation of mutationData) {
             const mutationId = generateMutationId(mutation);
             if (!onlyUpdateExistingIds || mutationId in idToMutations) {
                 idToMutations[mutationId] = idToMutations[mutationId] || [];
@@ -1260,6 +1290,10 @@ export function generateStructuralVariantId(s: StructuralVariant): string {
     ]
         .sort()
         .join('_');
+}
+
+export function generateMutationIdByGeneAndProteinChange(m: Mutation): string {
+    return `${m.gene.hugoGeneSymbol}_${m.proteinChange}`;
 }
 
 export function generateMutationIdByGeneAndProteinChangeAndEvent(
@@ -1856,74 +1890,57 @@ export function getOncoKbOncogenic(response: IndicatorQueryResp): string {
     }
 }
 
-export function evaluateDiscreteCNAPutativeDriverInfo(
-    cnaDatum: CustomDriverNumericGeneMolecularData,
+export function evaluatePutativeDriverInfoWithHotspots(
+    event: CustomDriverFilterEvent,
     oncoKbDatum: IndicatorQueryResp | undefined | null | false,
     customDriverAnnotationsActive: boolean,
-    customDriverTierSelection: ObservableMap<string, boolean> | undefined
-) {
-    const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
-
-    // Set driverFilter to true when:
-    // (1) custom drivers active in settings menu
-    // (2) the datum has a custom driver annotation
-    const customDriverBinary: boolean =
-        (customDriverAnnotationsActive &&
-            cnaDatum.driverFilter === PUTATIVE_DRIVER) ||
-        false;
-
-    // Set tier information to the tier name when the tiers checkbox
-    // is selected for the corresponding tier of the datum in settings menu.
-    // This forces the CNA to be counted as a driver mutation.
-    const customDriverTier: string | undefined =
-        cnaDatum.driverTiersFilter &&
-        customDriverTierSelection &&
-        customDriverTierSelection.get(cnaDatum.driverTiersFilter)
-            ? cnaDatum.driverTiersFilter
-            : undefined;
-
+    customDriverTierSelection: ObservableMap<string, boolean> | undefined,
+    hotspotInfo: HotSpotInfo
+): DriverInfoWithHotspots {
+    const hotspots =
+        hotspotInfo.hotspotAnnotationsActive && hotspotInfo.hotspotDriver;
     return {
-        oncoKb,
-        customDriverBinary,
-        customDriverTier,
+        ...evaluatePutativeDriverInfo(
+            event,
+            oncoKbDatum,
+            customDriverAnnotationsActive,
+            customDriverTierSelection
+        ),
+        hotspots,
     };
 }
 
-export function evaluateMutationPutativeDriverInfo(
-    mutation: Mutation,
+export function evaluatePutativeDriverInfo(
+    event: CustomDriverFilterEvent,
     oncoKbDatum: IndicatorQueryResp | undefined | null | false,
-    hotspotAnnotationsActive: boolean,
-    hotspotDriver: boolean,
     customDriverAnnotationsActive: boolean,
     customDriverTierSelection: ObservableMap<string, boolean> | undefined
-) {
+): DriverInfo {
     const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
-    const hotspots = hotspotAnnotationsActive && hotspotDriver;
 
     // Set driverFilter to true when:
     // (1) custom drivers active in settings menu
     // (2) the datum has a custom driver annotation
     const customDriverBinary: boolean =
         (customDriverAnnotationsActive &&
-            mutation.driverFilter === PUTATIVE_DRIVER) ||
+            event.driverFilter === PUTATIVE_DRIVER) ||
         false;
 
     // Set tier information to the tier name when the tiers checkbox
     // is selected for the corresponding tier of the datum in settings menu.
     // This forces the Mutation to be counted as a driver mutation.
     const customDriverTier: string | undefined =
-        mutation.driverTiersFilter &&
+        event.driverTiersFilter &&
         customDriverTierSelection &&
-        customDriverTierSelection.get(mutation.driverTiersFilter)
-            ? mutation.driverTiersFilter
+        customDriverTierSelection.get(event.driverTiersFilter)
+            ? event.driverTiersFilter
             : undefined;
 
     return {
         oncoKb,
-        hotspots,
         customDriverBinary,
         customDriverTier,
-    };
+    } as DriverInfo;
 }
 
 export function filterAndAnnotateMolecularData(

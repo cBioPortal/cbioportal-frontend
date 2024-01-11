@@ -23,12 +23,6 @@ import {
     genetic_rule_set_same_color_for_all_recurrence,
     germline_rule_params,
 } from './geneticrules';
-import {
-    AnnotatedExtendedAlteration,
-    CaseAggregatedData,
-    IQueriedCaseData,
-    IQueriedMergedTrackCaseData,
-} from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants } from 'shared/constants';
 import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -38,8 +32,10 @@ import {
     makeGeneticTrackData,
     makeHeatmapTrackData,
 } from './DataUtils';
-import ResultsViewOncoprint from './ResultsViewOncoprint';
-import _ from 'lodash';
+import _, { isNumber } from 'lodash';
+import ResultsViewOncoprint, {
+    getClinicalTrackValues,
+} from './ResultsViewOncoprint';
 import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
 import { MobxPromise } from 'mobxpromise';
 import GenesetCorrelatedGeneCache from 'shared/cache/GenesetCorrelatedGeneCache';
@@ -60,13 +56,12 @@ import {
     MUTATION_SPECTRUM_FILLS,
     SpecialAttribute,
 } from '../../cache/ClinicalDataCache';
-import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
-import { ISelectOption } from './controls/OncoprintControls';
 import {
-    COMMON_GENERIC_ASSAY_PROPERTY,
-    GenericAssayDataType,
-    getGenericAssayMetaPropertyOrDefault,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+    ASCN_WHITE,
+    hexToRGBA,
+    RESERVED_CLINICAL_VALUE_COLORS,
+} from 'shared/lib/Colors';
+import { ISelectOption } from './controls/OncoprintControls';
 import ifNotDefined from '../../lib/ifNotDefined';
 import {
     getGenericAssayTrackCacheQueries,
@@ -74,9 +69,23 @@ import {
     isGenericAssayHeatmapProfile,
 } from 'shared/components/oncoprint/ResultsViewOncoprintUtils';
 import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
+import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
+import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
+import { OncoprintModel } from 'oncoprintjs';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
+}
+
+export function formatPercent(str: string | number) {
+    const number = parseFloat(str.toString());
+    if (isNumber(number)) {
+        return number < 1 && number > 0 ? '<1%' : Math.round(number) + '%';
+    } else {
+        return 'n/a';
+    }
 }
 
 function makeGenesetHeatmapExpandHandler(
@@ -161,7 +170,7 @@ function formatGeneticTrackSublabel(
     }
 }
 
-function formatGeneticTrackLabel(
+export function formatGeneticTrackLabel(
     oqlFilter: UnflattenedOQLLineFilterOutput<object>
 ): string {
     return isMergedTrackFilter(oqlFilter)
@@ -443,7 +452,8 @@ export function getGenesetHeatmapTrackRuleSetParams() {
 export function getGeneticTrackRuleSetParams(
     distinguishMutationType?: boolean,
     distinguishDrivers?: boolean,
-    distinguishGermlineMutations?: boolean
+    distinguishGermlineMutations?: boolean,
+    isWhiteBackgroundForGlyphsEnabled?: boolean
 ): IGeneticAlterationRuleSetParams {
     let rule_set;
     if (!distinguishMutationType && !distinguishDrivers) {
@@ -458,6 +468,18 @@ export function getGeneticTrackRuleSetParams(
     rule_set = _.cloneDeep(rule_set);
     if (distinguishGermlineMutations) {
         Object.assign(rule_set.rule_params.conditional, germline_rule_params);
+    }
+    if (isWhiteBackgroundForGlyphsEnabled) {
+        rule_set.legend_base_color = hexToRGBA(ASCN_WHITE);
+        if (rule_set.rule_params.always) {
+            rule_set.rule_params.always.shapes = [
+                {
+                    type: 'rectangle',
+                    fill: hexToRGBA(ASCN_WHITE),
+                    z: 1,
+                },
+            ];
+        }
     }
     return rule_set;
 }
@@ -488,8 +510,8 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
                 category_key: 'attr_val',
                 category_to_color: Object.assign(
                     {},
-                    track.category_to_color,
-                    _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA)
+                    _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA),
+                    track.category_to_color
                 ),
                 universal_rule_categories: track.universal_rule_categories,
             };
@@ -672,6 +694,7 @@ export function getAlterationData(
         sequencedSampleKeysByGene,
         sequencedPatientKeysByGene
     );
+
     if (
         isQueriedGeneSampling ||
         !queryGenes.map(gene => gene.hugoGeneSymbol).includes((oql as any).gene)
@@ -734,12 +757,14 @@ export function makeGeneticTrackWith({
                   coverageInformation,
                   selectedMolecularProfiles
               );
+
         const alterationInfo = alterationInfoForOncoprintTrackData(
             sampleMode,
             { trackData: data, oql: geneSymbolArray },
             sequencedSampleKeysByGene,
             sequencedPatientKeysByGene
         );
+
         const trackKey =
             parentKey === undefined
                 ? `GENETICTRACK_${index}`
@@ -776,7 +801,7 @@ export function makeGeneticTrackWith({
         let infoTooltip = undefined;
         if (alterationInfo.sequenced !== 0) {
             // show tooltip explaining percent calculation, as long as its not N/P
-            infoTooltip = `altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced}`;
+            infoTooltip = `<strong>${alterationInfo.percent} altered</strong><br />(altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced})`;
         }
         if (
             alterationInfo.sequenced > 0 &&
@@ -785,7 +810,9 @@ export function makeGeneticTrackWith({
             // add asterisk to percentage if not all samples/patients are profiled for this track
             // dont add asterisk if none are profiled
             info = `${info}*`;
+            infoTooltip = `<strong>${info}</strong><br/>* = not all samples are profiled`;
         }
+
         return {
             key: trackKey,
             label:
@@ -805,6 +832,95 @@ export function makeGeneticTrackWith({
                 {
                     label: 'Sort by genes',
                     onClick: oncoprint.clearSortDirectionsAndSortByData,
+                },
+                {
+                    gapLabelsFn: (model: OncoprintModel) => {
+                        model.data_groups.update(model);
+                        const groupsByTrackMap = model.data_groups.get();
+
+                        const label = formatGeneticTrackLabel(oql);
+
+                        const sampleMode = oncoprint.columnMode === 'sample';
+
+                        // why are there more than one gene? what happens then?
+                        const gene = label; //geneSymbolArray[0];
+
+                        //problem here is that in case of merged tracks, the name of the track is not always a gene
+                        const info = groupsByTrackMap[gene][0].map(
+                            (groupData: any) => {
+                                let sequencedPatientKeysForGroup: Record<
+                                    string,
+                                    any[]
+                                > = {};
+                                let sequencedSampleKeysForGroup: Record<
+                                    string,
+                                    any[]
+                                > = {};
+                                if (sampleMode) {
+                                    sequencedSampleKeysForGroup = _(
+                                        geneSymbolArray
+                                    )
+                                        .keyBy(gene => gene)
+                                        .mapValues(gene => {
+                                            // you want to return only the patient ids which are listed as
+                                            // sequenced for the gene(s) in this track (plural in case of merged tracks)
+                                            return _.intersection(
+                                                _.flatMap(
+                                                    geneSymbolArray,
+                                                    gene =>
+                                                        sequencedSampleKeysByGene[
+                                                            gene
+                                                        ]
+                                                ),
+                                                groupData.map((d: any) => d.uid)
+                                            );
+                                        })
+                                        .value();
+                                } else {
+                                    sequencedPatientKeysForGroup = _(
+                                        geneSymbolArray
+                                    )
+                                        .keyBy(gene => gene)
+                                        .mapValues(gene => {
+                                            // you want to return only the patient ids which are listed as
+                                            // sequenced for the gene(s) in this track (plural in case of merged tracks)
+                                            return _.intersection(
+                                                _.flatMap(
+                                                    geneSymbolArray,
+                                                    gene =>
+                                                        sequencedPatientKeysByGene[
+                                                            gene
+                                                        ]
+                                                ),
+                                                groupData.map((d: any) => d.uid)
+                                            );
+                                        })
+                                        .value();
+                                }
+
+                                const info = alterationInfoForOncoprintTrackData(
+                                    sampleMode,
+                                    {
+                                        trackData: groupData,
+                                        oql: geneSymbolArray,
+                                    },
+                                    sequencedSampleKeysForGroup,
+                                    sequencedPatientKeysForGroup
+                                );
+
+                                return {
+                                    labelFormatter: function() {
+                                        return formatPercent(info.percent);
+                                    },
+                                    tooltipFormatter: function() {
+                                        return `${info.percent} (altered / profiled = ${info.altered} / ${info.sequenced})`;
+                                    },
+                                };
+                            }
+                        );
+
+                        return info;
+                    },
                 },
             ],
         };
@@ -934,6 +1050,11 @@ export function makeClinicalTracksMobxPromise(
                         Yes: true,
                     };
                 }
+                const userSelectedClinicalTracksColors =
+                    oncoprint.props.store
+                        .userSelectedStudiesToClinicalTracksColors['global'][
+                        attribute.displayName
+                    ];
                 if (attribute.datatype === 'NUMBER') {
                     ret.datatype = 'number';
                     if (
@@ -970,9 +1091,10 @@ export function makeClinicalTracksMobxPromise(
                     }
                 } else if (attribute.datatype === 'STRING') {
                     ret.datatype = 'string';
-                    (ret as any).category_to_color = _.mapValues(
-                        dataAndColors.categoryToColor,
-                        hexToRGBA
+                    (ret as any).category_to_color = Object.assign(
+                        {},
+                        _.mapValues(dataAndColors.categoryToColor, hexToRGBA),
+                        userSelectedClinicalTracksColors
                     );
                 } else if (
                     attribute.clinicalAttributeId ===
@@ -980,7 +1102,16 @@ export function makeClinicalTracksMobxPromise(
                 ) {
                     ret.datatype = 'counts';
                     (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
-                    (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
+                    (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS.slice();
+                    _.forEach((ret as any).countsCategoryLabels, (label, i) => {
+                        if (
+                            userSelectedClinicalTracksColors &&
+                            userSelectedClinicalTracksColors[label]
+                        ) {
+                            (ret as any).countsCategoryFills[i] =
+                                userSelectedClinicalTracksColors[label];
+                        }
+                    });
                 }
 
                 const trackConfig =

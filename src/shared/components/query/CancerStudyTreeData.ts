@@ -10,9 +10,16 @@ export const CANCER_TYPE_ROOT = 'tissue';
 export const VIRTUAL_STUDY_NAME = 'My Virtual Studies';
 export const PHYSICAL_STUDY_NAME = 'Studies';
 
-export type CancerTypeWithVisibility = CancerType & { alwaysVisible?: boolean };
+export type CancerTypeWithVisibility = CancerType & {
+    alwaysVisible?: boolean;
+    id?: string;
+};
 
 export type CancerTreeNode = CancerTypeWithVisibility | CancerStudy;
+
+export function isStudy(node: CancerTreeNode): node is CancerStudy {
+    return !!(node as CancerStudy).studyId;
+}
 
 export type NodeMetadata = {
     isCancerType: boolean;
@@ -24,7 +31,13 @@ export type NodeMetadata = {
     descendantCancerTypes: CancerTypeWithVisibility[];
     ancestors: CancerTypeWithVisibility[]; // in order of ascending distance from node, ending in root node
     siblings: CancerStudy[]; // descendants of highest level non-root ancestor
-    searchTerms: string; // all related text in a single string for easy searching
+    studyTags?: string;
+};
+
+export type StudyTags = {
+    studyId: string;
+    cancerStudyId: number;
+    tags: string;
 };
 
 export default class CancerStudyTreeData {
@@ -41,6 +54,7 @@ export default class CancerStudyTreeData {
     };
 
     virtualStudyCategory: CancerTypeWithVisibility = {
+        id: 'my_virtual_studies_list',
         dedicatedColor: '',
         name: VIRTUAL_STUDY_NAME,
         parent: CANCER_TYPE_ROOT,
@@ -66,12 +80,14 @@ export default class CancerStudyTreeData {
     constructor({
         cancerTypes = [],
         studies = [],
+        allStudyTags = [],
         priorityStudies = {},
         virtualStudies = [],
         maxTreeDepth = 0,
     }: {
         cancerTypes: CancerTypeWithVisibility[];
         studies: CancerStudy[];
+        allStudyTags: StudyTags[];
         priorityStudies?: CategorizedConfigItems;
         virtualStudies?: VirtualStudy[];
         maxTreeDepth: number;
@@ -151,9 +167,18 @@ export default class CancerStudyTreeData {
                     );
                 }
 
-                let searchTerms = isCancerType
-                    ? node.name
-                    : [node.name, (node as CancerStudy).description].join('\n');
+                const foundStudyByTags =
+                    allStudyTags.length &&
+                    isStudy(node) &&
+                    allStudyTags.find(
+                        t => t.studyId === (node as CancerStudy).studyId
+                    );
+
+                let studyTags =
+                    foundStudyByTags && foundStudyByTags?.tags
+                        ? stringifyTags(JSON.parse(foundStudyByTags.tags))
+                        : '';
+
                 this.map_node_meta.set(node, {
                     isCancerType,
                     isPriorityCategory: false,
@@ -164,7 +189,7 @@ export default class CancerStudyTreeData {
                     descendantCancerTypes: [],
                     ancestors: [],
                     siblings: [],
-                    searchTerms,
+                    studyTags,
                 });
             }
         }
@@ -227,14 +252,6 @@ export default class CancerStudyTreeData {
                     );
                     parentMeta = parent && this.map_node_meta.get(parent);
                 }
-
-                let moreSearchTerms = [
-                    ...meta.ancestors,
-                    ...meta.priorityCategories,
-                ].map(cancerType => cancerType.name);
-                meta.searchTerms = [meta.searchTerms, ...moreSearchTerms].join(
-                    '\n'
-                );
             }
         }
 
@@ -251,4 +268,13 @@ export default class CancerStudyTreeData {
             }
         }
     }
+}
+
+function stringifyTags(tags: any): string {
+    if (_.isObject(tags)) {
+        return _.values(tags)
+            .map(stringifyTags)
+            .join(' ');
+    }
+    return '' + tags;
 }

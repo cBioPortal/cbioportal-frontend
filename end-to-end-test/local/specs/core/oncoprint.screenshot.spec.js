@@ -34,21 +34,7 @@ const studyes0_oncoprintTabUrl =
 
 const genericArrayUrl =
     CBIOPORTAL_URL +
-    '/results/oncoprint' +
-    '?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_test_generic_assay_mutations' +
-    '&cancer_study_list=lgg_ucsf_2014_test_generic_assay' +
-    '&Z_SCORE_THRESHOLD=2.0' +
-    '&RPPA_SCORE_THRESHOLD=2.0' +
-    '&data_priority=0' +
-    '&profileFilter=0' +
-    '&case_set_id=lgg_ucsf_2014_test_generic_assay_sequenced' +
-    '&gene_list=IDH1' +
-    '&geneset_list=%20' +
-    '&tab_index=tab_visualize' +
-    '&Action=Submit' +
-    '&show_samples=true' +
-    '&generic_assay_groups=lgg_ucsf_2014_test_generic_assay_mutational_signature_binary_v2%2Cmutational_signature_binary_2%2Cmutational_signature_binary_1%3Blgg_ucsf_2014_test_generic_assay_mutational_signature_category_v2%2Cmutational_signature_category_6%2Cmutational_signature_category_8%2Cmutational_signature_category_9';
-
+    '/results?cancer_study_list=lgg_ucsf_2014_test_generic_assay&tab_index=tab_visualize&case_set_id=lgg_ucsf_2014_test_generic_assay_all&Action=Submit&gene_list=IDH1%250ATP53&generic_assay_groups=lgg_ucsf_2014_test_generic_assay_mutational_signature_binary_SBS%2Cmutational_signature_binary_SBS1%2Cmutational_signature_binary_SBS9%3Blgg_ucsf_2014_test_generic_assay_mutational_signature_category_SBS%2Cmutational_signature_category_SBS1%2Cmutational_signature_category_SBS9';
 const SERVER_CLINICAL_TRACK_CONFIG = [
     {
         stableId: 'SUBTYPE',
@@ -215,6 +201,55 @@ describe('oncoprint', function() {
             expected.pop(); // <-- remove track
             const clinicallist = getTracksFromBookmark(browser);
             expect(clinicallist).toEqual(expected);
+        });
+    });
+
+    describe('oql structural variant tracks', () => {
+        beforeEach(() => {
+            // Build Struct Var OQL and place in the URL.
+            const oql =
+                // Downstream KIAA1549 has 1 struct var event (0.1%):
+                'KIAA1549: FUSION::\n' +
+                // Downstream KIAA1549 (using NULL special value) has 0 struct vars events:
+                'KIAA1549: FUSION::-\n' +
+                // Downstream BRAF has 1 struct var event (0.1%):
+                'BRAF: FUSION::\n' +
+                // Upstream BRAF has 35 struct var events (4%):
+                'BRAF: ::FUSION\n' +
+                // Upstream TMPRSS2 and downstream ERG have 1 struct var events (0.1%):
+                'ERG: TMPRSS2::FUSION\n';
+            const encodedOql = encodeURI(encodeURIComponent(oql));
+
+            const stuctVarUrl =
+                CBIOPORTAL_URL +
+                '/results/oncoprint' +
+                '?Action=Submit' +
+                '&RPPA_SCORE_THRESHOLD=2.0' +
+                '&Z_SCORE_THRESHOLD=2.0' +
+                '&cancer_study_list=study_es_0' +
+                '&case_set_id=study_es_0_all' +
+                '&data_priority=0' +
+                '&gene_list=' +
+                encodedOql +
+                '&geneset_list=%20' +
+                '&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic' +
+                '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations' +
+                '&profileFilter=0' +
+                '&tab_index=tab_visualize';
+
+            // Define a set of clinical tracks in the props so that changes here
+            // do not cause unnecessary differences in the screenshot test.
+            goToUrlAndSetLocalStorageWithProperty(stuctVarUrl, true, {
+                oncoprint_clinical_tracks_config_json: JSON.stringify(
+                    SERVER_CLINICAL_TRACK_CONFIG
+                ),
+            });
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
+        });
+
+        it('shows oql structural variant variations', function() {
+            const res = checkOncoprintElement();
+            assertScreenShotMatch(res);
         });
     });
 });

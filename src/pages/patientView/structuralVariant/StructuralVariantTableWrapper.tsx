@@ -17,7 +17,7 @@ import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
 import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from 'config/config';
 import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
-import { remoteData } from 'cbioportal-frontend-commons';
+import { DownloadControlOption, remoteData } from 'cbioportal-frontend-commons';
 import {
     calculateOncoKbContentPadding,
     calculateOncoKbContentWidthWithInterval,
@@ -145,7 +145,9 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     filterString: string,
                     filterStringUpper: string
                 ) => {
-                    return d[0].site1HugoSymbol.indexOf(filterStringUpper) > -1;
+                    return (
+                        d[0].site1HugoSymbol?.indexOf(filterStringUpper) > -1
+                    );
                 },
                 download: (d: StructuralVariant[]) => d[0].site1HugoSymbol,
                 sortBy: (d: StructuralVariant[]) => d[0].site1HugoSymbol,
@@ -298,6 +300,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             enableCivic: false,
                             enableMyCancerGenome: false,
                             enableHotspot: false,
+                            enableRevue: false,
                             userDisplayName: ServerConfigHelpers.getUserDisplayName(),
                             studyIdToStudy: this.props.store.studyIdToStudy
                                 .result,
@@ -539,6 +542,11 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             itemsLabel="Structural Variants"
                             itemsLabelPlural="Structural Variants"
                             showCountHeader={true}
+                            showCopyDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
                         />
                     )}
                 </>

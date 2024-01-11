@@ -241,7 +241,12 @@ export class TimelineStore {
         if (content === null) {
             // Show default tooltip if there's no custom track tooltip renderer,
             //  or if the track renderer returns `null`
-            content = <EventTooltipContent event={activeItem} />;
+            content = (
+                <EventTooltipContent
+                    trackConfig={tooltipModel.track.trackConf}
+                    event={activeItem}
+                />
+            );
         }
 
         const multipleItems = tooltipModel.events.length > 1;

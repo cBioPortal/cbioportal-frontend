@@ -154,19 +154,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         );
     }
 
-    @computed
-    get isCanonicalTranscript(): boolean {
-        if (this.canonicalTranscript.result && this.activeTranscript.result) {
-            // if transcript dropdown is enabled, return true for canonical transcript
-            return (
-                this.activeTranscript.result ===
-                this.canonicalTranscript.result.transcriptId
-            );
-        }
-        // return true if transcript dropdown is disabled
-        return true;
-    }
-
     @computed get numericalFilterColumns() {
         const columnIds = new Set<string>([
             MutationTableColumnType.CLONAL,

@@ -26,3 +26,15 @@
     color: #e5802b;
     font-weight: bold;
 }
+
+.revueIcon {
+    visibility: hidden;
+}
+
+.mutationTypeCell {
+    display: block;
+}
+
+.mutationTypeCell:hover .revueIcon {
+    visibility: visible;
+}

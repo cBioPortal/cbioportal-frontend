@@ -120,7 +120,7 @@ export function prepareCustomTabConfigurations(
             return t as ICustomTabConfiguration;
         });
 
-        // only show these on results_page
+        // Select appropriate tab configurations for the requested page.
         const customResultsTabs = custom_tabs.filter(
             (tab: ICustomTabConfiguration) => tab.location === pageLocation
         );

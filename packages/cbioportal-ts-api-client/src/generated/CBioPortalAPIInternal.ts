@@ -4,7 +4,11 @@ type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type AlterationCountByGene = {
     'entrezGeneId': number
 
+        'entrezGeneIds': Array < number >
+
         'hugoGeneSymbol': string
+
+        'hugoGeneSymbols': Array < string >
 
         'matchingGenePanelIds': Array < string >
 
@@ -15,6 +19,32 @@ export type AlterationCountByGene = {
         'qValue': number
 
         'totalCount': number
+
+        'uniqueEventKey': string
+
+};
+export type AlterationCountByStructuralVariant = {
+    'entrezGeneIds': Array < number >
+
+        'gene1EntrezGeneId': number
+
+        'gene1HugoGeneSymbol': string
+
+        'gene2EntrezGeneId': number
+
+        'gene2HugoGeneSymbol': string
+
+        'hugoGeneSymbols': Array < string >
+
+        'matchingGenePanelIds': Array < string >
+
+        'numberOfAlteredCases': number
+
+        'numberOfProfiledCases': number
+
+        'totalCount': number
+
+        'uniqueEventKey': string
 
 };
 export type AlterationEnrichment = {
@@ -107,6 +137,8 @@ export type ClinicalData = {
     'clinicalAttribute': ClinicalAttribute
 
         'clinicalAttributeId': string
+
+        'patientAttribute': boolean
 
         'patientId': string
 
@@ -304,7 +336,11 @@ export type CopyNumberCountByGene = {
 
         'entrezGeneId': number
 
+        'entrezGeneIds': Array < number >
+
         'hugoGeneSymbol': string
+
+        'hugoGeneSymbols': Array < string >
 
         'matchingGenePanelIds': Array < string >
 
@@ -315,6 +351,8 @@ export type CopyNumberCountByGene = {
         'qValue': number
 
         'totalCount': number
+
+        'uniqueEventKey': string
 
 };
 export type CopyNumberCountIdentifier = {
@@ -424,6 +462,44 @@ export type GeneFilterQuery = {
         'tiersBooleanMap': {}
 
 };
+export type GenericAssayBinaryEnrichment = {
+    'counts': Array < GenericAssayCountSummary >
+
+        'genericEntityMetaProperties': {}
+
+        'groupsStatistics': Array < GroupStatistics >
+
+        'name': string
+
+        'pValue': number
+
+        'qValue': number
+
+        'stableId': string
+
+};
+export type GenericAssayCategoricalEnrichment = {
+    'genericEntityMetaProperties': {}
+
+    'groupsStatistics': Array < GroupStatistics >
+
+        'name': string
+
+        'pValue': number
+
+        'qValue': number
+
+        'stableId': string
+
+};
+export type GenericAssayCountSummary = {
+    'count': number
+
+        'name': string
+
+        'totalCount': number
+
+};
 export type GenericAssayDataBin = {
     'count': number
 
@@ -496,6 +572,8 @@ export type GenericAssayEnrichment = {
         'name': string
 
         'pValue': number
+
+        'qValue': number
 
         'stableId': string
 
@@ -612,6 +690,20 @@ export type GenomicDataCount = {
         'label': string
 
         'value': string
+
+};
+export type GenomicDataCountFilter = {
+    'genomicDataFilters': Array < GenomicDataFilter >
+
+        'studyViewFilter': StudyViewFilter
+
+};
+export type GenomicDataCountItem = {
+    'counts': Array < GenomicDataCount >
+
+        'hugoGeneSymbol': string
+
+        'profileType': string
 
 };
 export type GenomicDataFilter = {
@@ -988,6 +1080,28 @@ export type StructuralVariantFilter = {
         'structuralVariantQueries': Array < StructuralVariantQuery >
 
 };
+export type StructuralVariantFilterQuery = {
+    'gene1Query': StructuralVariantGeneSubQuery
+
+        'gene2Query': StructuralVariantGeneSubQuery
+
+        'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
+
+        'tiersBooleanMap': {}
+
+};
 export type StructuralVariantGeneSubQuery = {
     'entrezId': number
 
@@ -1037,7 +1151,16 @@ export type StudyViewFilter = {
 
         'sampleTreatmentTargetFilters': AndedSampleTreatmentFilters
 
+        'structuralVariantFilters': Array < StudyViewStructuralVariantFilter >
+
         'studyIds': Array < string >
+
+};
+export type StudyViewStructuralVariantFilter = {
+    'molecularProfileIds': Array < string >
+
+        'structVarQueries': Array < Array < StructuralVariantFilterQuery >
+        >
 
 };
 export type VariantCount = {
@@ -1934,7 +2057,7 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'searchTerm' ? : string,
-        'sortBy' ? : "clinicalAttributeId" | "value",
+        'sortBy' ? : string,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
@@ -1978,7 +2101,7 @@ export default class CBioPortalAPIInternal {
      * @param {integer} pageNumber - Page number of the result list
      * @param {integer} pageSize - Page size of the result list
      * @param {string} searchTerm - Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.
-     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} sortBy - sampleId, patientId, or the ATTR_ID to sorted by
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(parameters: {
@@ -1986,7 +2109,7 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'searchTerm' ? : string,
-        'sortBy' ? : "clinicalAttributeId" | "value",
+        'sortBy' ? : string,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -2052,7 +2175,7 @@ export default class CBioPortalAPIInternal {
      * @param {integer} pageNumber - Page number of the result list
      * @param {integer} pageSize - Page size of the result list
      * @param {string} searchTerm - Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.
-     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} sortBy - sampleId, patientId, or the ATTR_ID to sorted by
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataClinicalTableUsingPOST(parameters: {
@@ -2060,7 +2183,7 @@ export default class CBioPortalAPIInternal {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'searchTerm' ? : string,
-        'sortBy' ? : "clinicalAttributeId" | "value",
+        'sortBy' ? : string,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -2473,6 +2596,96 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < CosmicMutation >
         > {
             return this.fetchCosmicCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchCustomDataBinCountsUsingPOSTURL(parameters: {
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/custom-data-bin-counts/fetch';
+
+        if (parameters['dataBinMethod'] !== undefined) {
+            queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch custom data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCustomDataBinCountsUsingPOST
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
+     * @param {string} dataBinMethod - Method for data binning
+     */
+    fetchCustomDataBinCountsUsingPOSTWithHttpInfo(parameters: {
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+        'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/custom-data-bin-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['clinicalDataBinCountFilter'] !== undefined) {
+                body = parameters['clinicalDataBinCountFilter'];
+            }
+
+            if (parameters['clinicalDataBinCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataBinCountFilter'));
+                return;
+            }
+
+            if (parameters['dataBinMethod'] !== undefined) {
+                queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch custom data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCustomDataBinCountsUsingPOST
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
+     * @param {string} dataBinMethod - Method for data binning
+     */
+    fetchCustomDataBinCountsUsingPOST(parameters: {
+            'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
+            'dataBinMethod' ? : "DYNAMIC" | "STATIC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalDataBin >
+        > {
+            return this.fetchCustomDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -3456,6 +3669,184 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < Sample >
         > {
             return this.fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOSTURL(parameters: {
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
+        'groups': Array < MolecularProfileCasesGroupFilter > ,
+            $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/generic-assay-binary-enrichments/fetch';
+        if (parameters['enrichmentType'] !== undefined) {
+            queryParameters['enrichmentType'] = parameters['enrichmentType'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch generic assay binary data enrichments in a molecular profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOST
+     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
+     * @param {} groups - List of groups containing sample and molecular profile identifiers
+     */
+    fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
+        'groups': Array < MolecularProfileCasesGroupFilter > ,
+            $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/generic-assay-binary-enrichments/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['enrichmentType'] !== undefined) {
+                queryParameters['enrichmentType'] = parameters['enrichmentType'];
+            }
+
+            if (parameters['groups'] !== undefined) {
+                body = parameters['groups'];
+            }
+
+            if (parameters['groups'] === undefined) {
+                reject(new Error('Missing required  parameter: groups'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch generic assay binary data enrichments in a molecular profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOST
+     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
+     * @param {} groups - List of groups containing sample and molecular profile identifiers
+     */
+    fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOST(parameters: {
+            'enrichmentType' ? : "PATIENT" | "SAMPLE",
+            'groups': Array < MolecularProfileCasesGroupFilter > ,
+                $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < GenericAssayBinaryEnrichment >
+        > {
+            return this.fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOSTURL(parameters: {
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
+        'groups': Array < MolecularProfileCasesGroupFilter > ,
+            $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/generic-assay-categorical-enrichments/fetch';
+        if (parameters['enrichmentType'] !== undefined) {
+            queryParameters['enrichmentType'] = parameters['enrichmentType'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch generic assay categorical data enrichments in a molecular profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOST
+     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
+     * @param {} groups - List of groups containing sample and molecular profile identifiers
+     */
+    fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
+        'enrichmentType' ? : "PATIENT" | "SAMPLE",
+        'groups': Array < MolecularProfileCasesGroupFilter > ,
+            $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/generic-assay-categorical-enrichments/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['enrichmentType'] !== undefined) {
+                queryParameters['enrichmentType'] = parameters['enrichmentType'];
+            }
+
+            if (parameters['groups'] !== undefined) {
+                body = parameters['groups'];
+            }
+
+            if (parameters['groups'] === undefined) {
+                reject(new Error('Missing required  parameter: groups'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch generic assay categorical data enrichments in a molecular profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOST
+     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
+     * @param {} groups - List of groups containing sample and molecular profile identifiers
+     */
+    fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOST(parameters: {
+            'enrichmentType' ? : "PATIENT" | "SAMPLE",
+            'groups': Array < MolecularProfileCasesGroupFilter > ,
+                $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < GenericAssayCategoricalEnrichment >
+        > {
+            return this.fetchGenericAssayCategoricalDataEnrichmentInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -4473,6 +4864,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < GenomicDataBin >
         > {
             return this.fetchGenomicDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenomicDataCountsUsingPOSTURL(parameters: {
+        'genomicDataCountFilter': GenomicDataCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genomic-data-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch genomic data counts by GenomicDataCountFilter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenomicDataCountsUsingPOST
+     * @param {} genomicDataCountFilter - Genomic data count filter
+     */
+    fetchGenomicDataCountsUsingPOSTWithHttpInfo(parameters: {
+        'genomicDataCountFilter': GenomicDataCountFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genomic-data-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['genomicDataCountFilter'] !== undefined) {
+                body = parameters['genomicDataCountFilter'];
+            }
+
+            if (parameters['genomicDataCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genomicDataCountFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch genomic data counts by GenomicDataCountFilter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenomicDataCountsUsingPOST
+     * @param {} genomicDataCountFilter - Genomic data count filter
+     */
+    fetchGenomicDataCountsUsingPOST(parameters: {
+            'genomicDataCountFilter': GenomicDataCountFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenomicDataCountItem >
+        > {
+            return this.fetchGenomicDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -5710,6 +6178,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < StructuralVariant >
         > {
             return this.fetchStructuralVariantsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchStructuralVariantCountsUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/structuralvariant-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch structural variant genes by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchStructuralVariantCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchStructuralVariantCountsUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/structuralvariant-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch structural variant genes by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchStructuralVariantCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchStructuralVariantCountsUsingPOST(parameters: {
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < AlterationCountByStructuralVariant >
+        > {
+            return this.fetchStructuralVariantCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

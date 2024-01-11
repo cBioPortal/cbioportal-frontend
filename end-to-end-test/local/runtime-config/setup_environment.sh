@@ -7,16 +7,15 @@ set -e
 echo export CBIOPORTAL_URL="http://localhost:8080"
 echo export SCREENSHOT_DIRECTORY=./local/screenshots
 echo export JUNIT_REPORT_PATH=./local/junit/
-echo export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
-
+SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
 
 
 
 echo export CBIO_DB_DATA_DIR=$E2E_WORKSPACE/cbio_db_data
 echo export KC_DB_DATA_DIR=$E2E_WORKSPACE/kc_db_data
 
-echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/v2.0.0/db-scripts/src/main/resources/cgds.sql
-echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/master/seedDB/seed-cbioportal_hg19_v2.7.3.sql.gz
+echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/v5.3.6/db-scripts/src/main/resources/cgds.sql
+echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/master/seedDB/seedDB_hg19_archive/seed-cbioportal_hg19_v2.12.14.sql.gz
 
 # -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
@@ -36,6 +35,9 @@ parse_custom_backend_var() {
 # Check whether running in CircleCI environment
 if [[ "$CIRCLECI" = true ]]; then
 
+    if [[ "$CIRCLE_CI_LOCALDB_SPEC_PATTERN" ]]; then
+        SPEC_FILE_PATTERN="$CIRCLE_CI_LOCALDB_SPEC_PATTERN"
+    fi
     # Check whether running in context of a pull request
     # by extracting the pull request number
     if [[ "$CIRCLE_PULL_REQUEST" =~ \/([0-9]+)$ ]] ; then
@@ -59,18 +61,20 @@ if [[ "$CIRCLECI" = true ]]; then
     fi
 
     # Check whether custom BACKEND environmental var is defined (required when running outside context of a pull request on CircleCI)
-    # When the current branch is master or rc continue using corresponding master or rc backend, respectively. 
+    # When the current branch is master or rc continue using corresponding master or rc backend, respectively.
     if [[ -z $BACKEND ]]; then
         if [[ -z $CIRCLE_PULL_REQUEST ]]; then
             if [[ "$CIRCLE_BRANCH" = "master" ]] || [[ "$CIRCLE_BRANCH" = "rc" ]] || [[ "$CIRCLE_BRANCH" == "release-"* ]]; then
-                BACKEND_PROJECT_USERNAME="cbioportal"
-                echo "export BACKEND_PROJECT_USERNAME=$BACKEND_PROJECT_USERNAME"
                 BACKEND_BRANCH="$CIRCLE_BRANCH"
-                echo "export BACKEND_BRANCH=$BACKEND_BRANCH"
+            elif [[ "$MANUAL_TRIGGER_BRANCH_ENV" ]]; then
+                BACKEND_BRANCH="$MANUAL_TRIGGER_BRANCH_ENV"
             else
                 echo Error: BACKEND environmental variable not set in /env/custom.sh for this feature branch. This is required when running outside context of a pull request on CircleCI.
                 exit 1
             fi
+            BACKEND_PROJECT_USERNAME="cbioportal"
+            echo "export BACKEND_PROJECT_USERNAME=$BACKEND_PROJECT_USERNAME"
+            echo "export BACKEND_BRANCH=$BACKEND_BRANCH"
         fi
     else
         parse_custom_backend_var
@@ -98,6 +102,8 @@ else
     echo export FRONTEND_PROJECT_USERNAME=$FRONTEND_PROJECT_USERNAME
     echo export FRONTEND_GROUPID=com.github.$FRONTEND_PROJECT_USERNAME
 fi
+
+echo export SPEC_FILE_PATTERN=$SPEC_FILE_PATTERN
 
 # Evaluate whether a custom backend image should be built
 # rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images

@@ -1,9 +1,10 @@
 import {
     EventPosition,
-    POINT_COLOR,
+    ITrackEventConfig,
     POINT_RADIUS,
     TimeLineColorGetter,
     TimelineEvent,
+    TimelineEventAttribute,
     TimelineTrackSpecification,
     TimelineTrackType,
 } from './types';
@@ -14,6 +15,7 @@ import {
     formatDate,
     getTrackEventCustomColorGetterFromConfiguration,
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
+    segmentAndSortAttributesForTooltip,
     TIMELINE_TRACK_HEIGHT,
 } from './lib/helpers';
 import { TimelineStore } from './TimelineStore';
@@ -460,53 +462,72 @@ export const OurPopup: React.FunctionComponent<any> = observer(function(
 
 export const EventTooltipContent: React.FunctionComponent<{
     event: TimelineEvent;
-}> = function({ event }) {
-    const attributes = event.event.attributes.filter(attr => {
+    trackConfig: ITrackEventConfig | undefined;
+}> = function({ event, trackConfig }) {
+    let attributes = event.event.attributes.filter(attr => {
         return (
             attr.key !== COLOR_ATTRIBUTE_KEY && attr.key !== SHAPE_ATTRIBUTE_KEY
         );
     });
+
+    // if we have an attribute order configuration, we need to
+    // update attribute list accordingly
+    if (trackConfig?.attributeOrder) {
+        attributes = segmentAndSortAttributesForTooltip(
+            attributes,
+            trackConfig.attributeOrder
+        );
+    }
+
     return (
         <div>
-            <table>
+            <table className={'table table-condensed'}>
                 <tbody>
-                    {_.map(
-                        attributes.sort((a: any, b: any) =>
-                            a.key > b.key ? 1 : -1
-                        ),
-                        (att: any) => {
-                            return (
-                                <tr>
-                                    <th>{att.key.replace(/_/g, ' ')}</th>
-                                    <td>
-                                        <ReactMarkdown
-                                            className="line-break"
-                                            allowedElements={['p', 'a', 'br']}
-                                            linkTarget={'_blank'}
-                                            components={{
-                                                a: ({ node, ...props }) => (
-                                                    <OurPopup {...props} />
-                                                ),
-                                            }}
-                                        >
-                                            {replaceArray(
-                                                att.value.replaceAll(
-                                                    '<br>',
-                                                    '; '
-                                                )
-                                            )}
-                                        </ReactMarkdown>
-                                    </td>
-                                </tr>
-                            );
-                        }
-                    )}
+                    {_.map(attributes, (attr: any) => {
+                        return (
+                            <tr>
+                                <td>{attr.key.replace(/_/g, ' ')}</td>
+                                <td>
+                                    <ReactMarkdown
+                                        allowedElements={['p', 'a', 'br']}
+                                        className="line-break"
+                                        linkTarget={'_blank'}
+                                        components={{
+                                            a: ({ node, ...props }) => {
+                                                if (
+                                                    /:blank$/.test(props.href!)
+                                                ) {
+                                                    return (
+                                                        <a
+                                                            href={props.href?.replace(
+                                                                /:blank$/,
+                                                                ''
+                                                            )}
+                                                            target={'_blank'}
+                                                        >
+                                                            {props.children}
+                                                        </a>
+                                                    );
+                                                } else {
+                                                    return (
+                                                        <OurPopup {...props} />
+                                                    );
+                                                }
+                                            },
+                                        }}
+                                    >
+                                        {attr.value}
+                                    </ReactMarkdown>
+                                </td>
+                            </tr>
+                        );
+                    })}
                     <tr>
-                        <th>{`${
+                        <td>{`${
                             event.event.endNumberOfDaysSinceDiagnosis
                                 ? 'START DATE'
                                 : 'DATE'
-                        }`}</th>
+                        }`}</td>
                         <td className={'nowrap'}>
                             {formatDate(
                                 event.event.startNumberOfDaysSinceDiagnosis
@@ -515,7 +536,7 @@ export const EventTooltipContent: React.FunctionComponent<{
                     </tr>
                     {event.event.endNumberOfDaysSinceDiagnosis && (
                         <tr>
-                            <th>END DATE</th>
+                            <td>END DATE</td>
                             <td className={'nowrap'}>
                                 {formatDate(
                                     event.event.endNumberOfDaysSinceDiagnosis

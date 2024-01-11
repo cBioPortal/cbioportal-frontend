@@ -42,6 +42,7 @@ export interface IServerConfig {
     oncoprint_custom_driver_annotation_binary_menu_label: string | null; // default:
     disabled_tabs: string | null;
     custom_tabs: any[];
+    custom_js_urls: string; // comma delimited string
     oncoprint_custom_driver_annotation_binary_default: boolean;
     oncoprint_custom_driver_annotation_tiers_default: boolean;
     oncoprint_oncokb_default: boolean;
@@ -67,6 +68,7 @@ export interface IServerConfig {
     show_hotspot: boolean | undefined;
     show_oncokb: boolean;
     show_civic: boolean;
+    show_revue: boolean;
     show_genomenexus: boolean;
     show_genomenexus_annotation_sources: string;
     show_pathway_mapper: boolean;
@@ -97,12 +99,14 @@ export interface IServerConfig {
     skin_documentation_news: string | null;
     skin_documentation_oql: string | null;
     skin_query_max_tree_depth: string;
+    skin_left_logo: string | null;
     skin_right_logo: string | null;
     skin_right_nav_show_data_sets: boolean;
     skin_right_nav_show_examples: boolean;
     skin_right_nav_show_testimonials: boolean;
     skin_right_nav_show_whats_new: boolean;
     skin_right_nav_show_twitter: boolean;
+    skin_right_nav_show_web_tours: boolean;
     skin_right_nav_whats_new_blurb: string | null;
     skin_show_about_tab: boolean;
     skin_show_data_tab: boolean;
@@ -119,7 +123,7 @@ export interface IServerConfig {
     skin_title: string;
     skin_authorization_message: string | null;
     skin_patientview_filter_genes_profiled_all_samples: boolean;
-    skin_hide_download_controls: boolean;
+    skin_hide_download_controls: string;
     show_mdacc_heatmap: boolean;
     quick_search_enabled: boolean;
     default_cross_cancer_study_list: string; // this has a default
@@ -164,13 +168,22 @@ export interface IServerConfig {
     skin_mutation_table_namespace_column_show_by_default: boolean;
     skin_patient_view_mutation_table_columns_show_on_init: string;
     skin_results_view_mutation_table_columns_show_on_init: string;
+    skin_comparison_view_mutation_table_columns_show_on_init: string;
     skin_patient_view_copy_number_table_columns_show_on_init: string;
     skin_patient_view_structural_variant_table_columns_show_on_init: string;
+    skin_patient_view_custom_sample_type_colors_json: string;
     comparison_categorical_na_values: string;
     fhirspark?: IFhirsparkConfig;
     cancerdrugsUrl?: string;
     cancerdrugsJsonUrl?: string;
     oncoprint_clinical_tracks_config_json: string;
+    oncoprint_clustered_default: boolean; // this has a default
+    enable_cross_study_expression: string;
+    studyview_max_samples_selected: number;
+    study_download_url: string;
+    vaf_sequential_mode_default: boolean; // this has a default
+    vaf_log_scale_default: boolean; // this has a default
+    skin_study_view_show_sv_table: boolean; // this has a default
 }
 
 export interface IFhirsparkConfig {

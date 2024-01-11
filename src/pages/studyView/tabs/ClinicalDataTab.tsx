@@ -16,7 +16,11 @@ import {
 } from '../StudyViewUtils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { isUrl, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    isUrl,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import { Else, If, Then } from 'react-if';
 import ProgressIndicator, {
     IProgressIndicatorItem,
@@ -298,7 +302,11 @@ export class ClinicalDataTab extends React.Component<
                                         <Else>
                                             <ClinicalDataTabTableComponent
                                                 initialItemsPerPage={20}
-                                                showCopyDownload={true}
+                                                showCopyDownload={
+                                                    getServerConfig()
+                                                        .skin_hide_download_controls ===
+                                                    DownloadControlOption.SHOW_ALL
+                                                }
                                                 showColumnVisibility={false}
                                                 data={
                                                     this.props.store

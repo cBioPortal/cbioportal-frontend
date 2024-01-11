@@ -15,12 +15,16 @@ export type ScatterData = {
     opacity?: number;
     group?: string;
     atRisk?: number;
+    numberOfEvents?: number;
+    numberOfCensored?: number;
 };
 
 export type DownSamplingOpts = {
     xDenominator: number;
     yDenominator: number;
     threshold: number;
+    enableCensoringCross?: boolean;
+    floorTimeToMonth?: boolean;
 };
 
 export type GroupedScatterData = {
@@ -50,6 +54,13 @@ export type SurvivalPlotFilters = {
 export type ParsedSurvivalData = {
     status: string | undefined;
     label: string;
+};
+
+type EventInfo = ScatterData & {
+    eventCount: number;
+    lastYInMonth: number;
+    censorCount: number;
+    lastRiskInMonth?: number;
 };
 
 export const survivalCasesHeaderText: { [prefix: string]: string } = {
@@ -86,6 +97,9 @@ export const survivalClinicalDataNullValueSet = new Set([
     '',
     'na',
 ]);
+
+// TODO: We can add this into the server properties if needed
+export const SURVIVAL_COMPACT_MODE_THRESHOLD = 15000;
 
 export function sortPatientSurvivals(patientSurvivals: PatientSurvival[]) {
     // First sort by month in asc order (smaller number to the front)
@@ -520,6 +534,81 @@ export function downSampling(
     });
 }
 
+export function floorScatterData(
+    scatterDataWithOpacity: ScatterData[]
+): ScatterData[] {
+    let eventInfo: EventInfo;
+    let result: ScatterData[] = [];
+    const eventInfoByMonth: { [month: number]: EventInfo } = _.reduce(
+        scatterDataWithOpacity,
+        (eventInfoByMonth: { [month: string]: EventInfo }, item) => {
+            const month = Math.floor(item.x);
+            if (!(month in eventInfoByMonth)) {
+                // Provide initial value
+                eventInfo = {
+                    ...item,
+                    eventCount: 0,
+                    lastYInMonth: 0,
+                    censorCount: 0,
+                    lastRiskInMonth: item.atRisk!,
+                };
+            } else {
+                eventInfo = eventInfoByMonth[month];
+            }
+            eventInfoByMonth[month] = updateEventInfo(eventInfo, item);
+            return eventInfoByMonth;
+        },
+        {}
+    );
+
+    result = _.map(eventInfoByMonth, (eventInfo, month) => {
+        const aggregatedScatter: ScatterData = {
+            x: parseInt(month),
+            y: eventInfo.lastYInMonth,
+            patientId: eventInfo.patientId,
+            uniquePatientKey: eventInfo.uniquePatientKey,
+            studyId: eventInfo.studyId,
+            status: eventInfo.status,
+            opacity: eventInfo.opacity,
+            group: eventInfo.group,
+            atRisk: eventInfo.lastRiskInMonth,
+            numberOfEvents: eventInfo.eventCount,
+            numberOfCensored: eventInfo.censorCount,
+        };
+        return aggregatedScatter;
+    });
+    return result;
+}
+
+// EventInfo is an object that keeps tracking the statistical information for KM plot during a period (e.g. a month)
+// updateEventInfo will update EventInfo based on the new scatter data
+// This is an internal function and only should be used by floorScatterData function
+function updateEventInfo(eventInfo: EventInfo, data: ScatterData): EventInfo {
+    eventInfo.lastYInMonth = data.y;
+    eventInfo.lastRiskInMonth = data.atRisk;
+    eventInfo.eventCount = data.status
+        ? eventInfo.eventCount + 1
+        : eventInfo.eventCount;
+    eventInfo.censorCount = data.status
+        ? eventInfo.censorCount
+        : eventInfo.censorCount + 1;
+    return eventInfo;
+}
+
+export function getLineDataFromScatterData(data: ScatterData[]): any[] {
+    let chartData: any[] = [];
+
+    chartData.push({ x: 0, y: 100 });
+    data.forEach((item, index) => {
+        chartData.push({
+            x: item.x,
+            y: item.y,
+        });
+    });
+
+    return chartData;
+}
+
 export function filterScatterData(
     allScatterData: GroupedScatterData,
     filters: SurvivalPlotFilters | undefined,
@@ -536,11 +625,15 @@ export function filterScatterData(
                     _val => filterBasedOnCoordinates(filters, _val)
                 );
             }
-            value.scatter = downSampling(value.scatter, downSamplingOpts);
-            value.scatterWithOpacity = downSampling(
-                value.scatterWithOpacity,
-                downSamplingOpts
-            );
+            if (downSamplingOpts.floorTimeToMonth) {
+                value.scatter = floorScatterData(value.scatterWithOpacity);
+                value.line = getLineDataFromScatterData(value.scatter);
+            } else {
+                value.scatter = downSampling(value.scatter, downSamplingOpts);
+            }
+            value.scatterWithOpacity = downSamplingOpts.enableCensoringCross
+                ? downSampling(value.scatterWithOpacity, downSamplingOpts)
+                : [];
             value.numOfCases = value.scatter.length;
         }
     });
@@ -600,9 +693,11 @@ export function generateSurvivalPlotYAxisLabelFromDisplayName(
     }
 }
 
+// The plot title string come from a related survival status clinical attribute
+// To get a correct title, we need to replace "status" and possible "survival" words with blank
+// See related request here: https://github.com/cBioPortal/cbioportal/issues/8378
 export function generateStudyViewSurvivalPlotTitle(title: string) {
-    let result = title.replace(/status/gi, '');
-    return /survival/i.test(result) ? result : `${result} Survival`;
+    return title.replace(/status|survival/gi, '').trim();
 }
 
 export function getSurvivalAttributes(clinicalAttributes: ClinicalAttribute[]) {

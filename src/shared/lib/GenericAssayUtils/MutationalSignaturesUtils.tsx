@@ -16,6 +16,7 @@ export enum MutationalSignaturesVersion {
 export enum MutationalSignatureStableIdKeyWord {
     MutationalSignatureContributionKeyWord = 'contribution',
     MutationalSignatureConfidenceKeyWord = 'pvalue',
+    MutationalSignatureCountKeyWord = 'counts',
 }
 
 export const MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD = 0.05;
@@ -69,6 +70,17 @@ export function getVersionOptions(versions: string[]) {
     return versions.map(version => {
         return getVersionOption(version);
     });
+}
+
+export function getSampleOption(sample: string) {
+    return {
+        label: 'Sample ' + sample,
+        value: sample,
+    };
+}
+
+export function getSampleOptions(samples: string[]) {
+    return samples.map(sample => getSampleOption(sample));
 }
 
 export type ISampleProgressBarProps = {
@@ -176,10 +188,17 @@ export function retrieveMutationalSignatureVersionFromData(
         })
     );
     if (uniqueProfileVersion !== undefined) {
-        return uniqueProfileVersion.includes('v3') &&
+        if (
+            uniqueProfileVersion.includes('v3') &&
             uniqueProfileVersion.includes('v2')
-            ? 'v3'
-            : uniqueProfileVersion[0]!;
+        ) {
+            return 'v3';
+        } else if (uniqueProfileVersion.includes('SBS')) {
+            // if there is no explicit version, we want to prefer SBS
+            return 'SBS';
+        } else {
+            return uniqueProfileVersion[0]!;
+        }
     }
     return 'v2';
 }

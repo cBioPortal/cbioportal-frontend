@@ -286,6 +286,18 @@ export function getGenericAssayMetaPropertyOrDefault(
     );
 }
 
+export function getGenericAssayCategoryFromName(
+    name: string,
+    defaultValue: string
+) {
+    // TODO: should we add additional property 'CATEGORY' in data file
+    // currently, category can be derived from name
+    // name format: ENTITY_NAME (CATEGORY)
+    // we can get category between '(' and ')'
+    const regExpName = /\(([^)]+)\)/;
+    return name ? regExpName.exec(name)![1] : 'No category';
+}
+
 export function getCategoryOrderByGenericAssayType(genericAssayType: string) {
     // return category order for reserved generic assay type
     // return undefined for other types
@@ -294,12 +306,19 @@ export function getCategoryOrderByGenericAssayType(genericAssayType: string) {
         : undefined;
 }
 
+export function constructGeneRegex(hugoGeneSymbol: string) {
+    // Match whole gene symbol text and case-insensitive, non-alphanumeric characters is allowed after gene symbol
+    // Sometimes, gene symbol might appear in description text
+    // If it shows in description text, we might want to find if it's before a blank space
+    return new RegExp(`^(${hugoGeneSymbol}|${hugoGeneSymbol}\\W+.*)$`, 'i');
+}
+
 export function filterGenericAssayEntitiesByGenes(
     genericAssayEntities: GenericAssayMeta[],
     hugoGeneSymbols: string[]
 ) {
     // filter logic is: stableId, name or description
-    // is any of them includes sepcific gene, then it's related, we should keep them and filter out others
+    // filter out others entities and only keep matching entities
     return _.filter(genericAssayEntities, meta => {
         const entityName = getGenericAssayMetaPropertyOrDefault(
             meta,
@@ -311,13 +330,14 @@ export function filterGenericAssayEntitiesByGenes(
             COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
             ''
         );
-        return _.some(
-            hugoGeneSymbols,
-            hugoGeneSymbol =>
-                RegExp(hugoGeneSymbol, 'i').test(meta.stableId) ||
-                RegExp(hugoGeneSymbol, 'i').test(entityName) ||
-                RegExp(hugoGeneSymbol, 'i').test(entityDescription)
-        );
+        return _.some(hugoGeneSymbols, hugoGeneSymbol => {
+            const regex = constructGeneRegex(hugoGeneSymbol);
+            return (
+                regex.test(meta.stableId) ||
+                regex.test(entityName) ||
+                regex.test(entityDescription)
+            );
+        });
     });
 }
 
@@ -326,9 +346,10 @@ export function filterGenericAssayOptionsByGenes(
     hugoGeneSymbols: string[]
 ) {
     return _.filter(options, option =>
-        _.some(hugoGeneSymbols, hugoGeneSymbol =>
-            doesOptionMatchSearchText(hugoGeneSymbol, option)
-        )
+        _.some(hugoGeneSymbols, hugoGeneSymbol => {
+            const regex = constructGeneRegex(hugoGeneSymbol);
+            return regex.test(option.label) || regex.test(option.value);
+        })
     );
 }
 
@@ -375,4 +396,21 @@ export function getSortedGenericAssayTabSpecs(
     );
 
     return _.sortBy(genericAssayTabSpecs, specs => specs.linkText);
+}
+
+export function getSortedGenericAssayAllTabSpecs(
+    genericAssayAllEnrichmentProfilesGroupedByGenericAssayType: {
+        [key: string]: MolecularProfile[];
+    } = {}
+): { genericAssayType: string; linkText: string }[] {
+    const genericAssayAllTabSpecs: {
+        genericAssayType: string;
+        linkText: string;
+    }[] = _.keys(
+        genericAssayAllEnrichmentProfilesGroupedByGenericAssayType
+    ).map(genericAssayType => ({
+        genericAssayType,
+        linkText: deriveDisplayTextFromGenericAssayType(genericAssayType),
+    }));
+    return _.sortBy(genericAssayAllTabSpecs, specs => specs.linkText);
 }

@@ -6,7 +6,6 @@ import {
 } from '../../groupComparison/GroupComparisonUtils';
 import { getStudiesAttr } from '../../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { Sample } from 'cbioportal-ts-api-client';
-import { IQueriedMergedTrackCaseData } from '../ResultsViewPageStore';
 import {
     isMergedTrackFilter,
     UnflattenedOQLLineFilterOutput,
@@ -17,6 +16,7 @@ import oql_parser from '../../../shared/lib/oql/oql-parser';
 import _ from 'lodash';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import { SessionGroupData } from 'shared/api/session-service/sessionServiceModels';
+import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 export type ResultsViewComparisonGroup = ComparisonGroup & {
     nameOfEnrichmentDirection: string;

@@ -40,10 +40,6 @@ import { BLACK, DEFAULT_GREY, LIGHT_GREY } from 'shared/lib/Colors';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
-    AnnotatedNumericGeneMolecularData,
-    CustomDriverNumericGeneMolecularData,
-} from '../ResultsViewPageStore';
-import {
     AlterationTypeConstants,
     DataTypeConstants,
     CLINICAL_ATTRIBUTE_FIELD_ENUM,
@@ -77,7 +73,9 @@ import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_OTHER,
+    MUT_COLOR_OTHER_PASSENGER,
     MUT_COLOR_PROMOTER,
+    MUT_COLOR_PROMOTER_PASSENGER,
     MUT_COLOR_SPLICE,
     MUT_COLOR_SPLICE_PASSENGER,
     MUT_COLOR_TRUNC,
@@ -85,6 +83,8 @@ import {
 } from 'cbioportal-frontend-commons';
 import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
@@ -1730,17 +1730,31 @@ export const oncoprintMutationTypeToAppearanceDrivers: {
     },
     promoter: {
         symbol: 'circle',
+        fill: MUT_COLOR_PROMOTER_PASSENGER,
+        stroke: '#000000',
+        strokeOpacity: NON_CNA_STROKE_OPACITY,
+        legendLabel: 'Promoter (VUS)',
+    },
+    'promoter.driver': {
+        symbol: 'circle',
         fill: MUT_COLOR_PROMOTER,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Promoter',
+        legendLabel: 'Promoter (Driver)',
     },
     other: {
+        symbol: 'circle',
+        fill: MUT_COLOR_OTHER_PASSENGER,
+        stroke: '#000000',
+        strokeOpacity: NON_CNA_STROKE_OPACITY,
+        legendLabel: 'Other (VUS)',
+    },
+    'other.driver': {
         symbol: 'circle',
         fill: MUT_COLOR_OTHER,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Other',
+        legendLabel: 'Other (Driver)',
     },
 };
 
@@ -1826,6 +1840,7 @@ export const mutationLegendOrder = [
     'inframe',
     'missense.driver',
     'missense',
+    'other.driver',
     'other',
 ];
 export const mutationRenderPriority = stringListToIndexSet([
@@ -1835,6 +1850,7 @@ export const mutationRenderPriority = stringListToIndexSet([
     'trunc.driver',
     'inframe.driver',
     'missense.driver',
+    'other.driver',
     'promoter',
     'splice',
     'trunc',

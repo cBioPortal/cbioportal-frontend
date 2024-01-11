@@ -43,6 +43,7 @@ import {
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import { maxPage } from './utils';
 import { inputBoxChangeTimeoutEvent } from '../../lib/EventUtils';
+import _ from 'lodash';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -119,6 +120,7 @@ type LazyMobXTableProps<T> = {
         column: Column<T>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
+    customControls?: JSX.Element;
 };
 
 function compareValues<U extends number | string>(
@@ -1096,7 +1098,19 @@ export default class LazyMobXTable<T> extends React.Component<
     }
 
     private get countHeader() {
-        return (
+        return this.props.customControls ? (
+            <h3
+                data-test="LazyMobXTable_CountHeader"
+                style={{
+                    color: 'black',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                }}
+            >
+                {this.store.displayData.length} {this.store.itemsLabel} (page{' '}
+                {this.store.page + 1} of {this.store.maxPage + 1})
+            </h3>
+        ) : (
             <span
                 data-test="LazyMobXTable_CountHeader"
                 style={{
@@ -1207,6 +1221,7 @@ export default class LazyMobXTable<T> extends React.Component<
                     ) : (
                         ''
                     )}
+                    {this.props.customControls}
                     {this.props.showPagination &&
                     this.props.showPaginationAtTop ? (
                         <Observer>{this.getPaginationControls}</Observer>

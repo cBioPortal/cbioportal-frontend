@@ -69,6 +69,7 @@ export enum ChartTypeEnum {
     VIOLIN_PLOT_TABLE = 'VIOLIN_PLOT_TABLE',
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     STRUCTURAL_VARIANT_GENES_TABLE = 'STRUCTURAL_VARIANT_GENES_TABLE',
+    STRUCTURAL_VARIANTS_TABLE = 'STRUCTURAL_VARIANTS_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     GENOMIC_PROFILES_TABLE = 'GENOMIC_PROFILES_TABLE',
     CASE_LIST_TABLE = 'CASE_LIST_TABLE',
@@ -78,6 +79,7 @@ export enum ChartTypeEnum {
     PATIENT_TREATMENTS_TABLE = 'PATIENT_TREATMENTS_TABLE',
     PATIENT_TREATMENT_GROUPS_TABLE = 'PATIENT_TREATMENT_GROUPS_TABLE',
     PATIENT_TREATMENT_TARGET_TABLE = 'PATIENT_TREATMENT_TARGET_TABLE',
+    CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'CLINICAL_EVENT_TYPE_COUNTS_TABLE',
     NONE = 'NONE',
 }
 
@@ -90,6 +92,7 @@ export enum ChartTypeNameEnum {
     VIOLIN_PLOT_TABLE = 'table',
     MUTATED_GENES_TABLE = 'table',
     STRUCTURAL_VARIANT_GENES_TABLE = 'table',
+    STRUCTURAL_VARIANTS_TABLE = 'table',
     CNA_GENES_TABLE = 'table',
     GENOMIC_PROFILES_TABLE = 'table',
     CASE_LIST_TABLE = 'table',
@@ -99,6 +102,7 @@ export enum ChartTypeNameEnum {
     PATIENT_TREATMENTS_TABLE = 'table',
     PATIENT_TREATMENT_GROUPS_TABLE = 'table',
     PATIENT_TREATMENT_TARGET_TABLE = 'table',
+    CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'table',
     NONE = 'none',
 }
 
@@ -124,6 +128,7 @@ const studyViewFrontEnd = {
         PFS_SURVIVAL: 250,
         MUTATED_GENES_TABLE: 90,
         STRUCTURAL_VARIANT_GENES_TABLE: 85,
+        STRUCTURAL_VARIANTS_TABLE: 85,
         CNA_GENES_TABLE: 80,
         PATIENT_TREATMENTS_TABLE: 75,
         PATIENT_TREATMENT_GROUPS_TABLE: 75,
@@ -131,6 +136,7 @@ const studyViewFrontEnd = {
         SAMPLE_TREATMENTS_TABLE: 75,
         SAMPLE_TREATMENT_GROUPS_TABLE: 75,
         SAMPLE_TREATMENT_TARGET_TABLE: 75,
+        CLINICAL_EVENT_TYPE_COUNTS_TABLE: 75,
         CANCER_STUDIES: 70,
         SEQUENCED: 60,
         HAS_CNA_DATA: 50,
@@ -205,6 +211,11 @@ const studyViewFrontEnd = {
                 h: 2,
                 minW: 2,
             },
+            [ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
             [ChartTypeEnum.CNA_GENES_TABLE]: {
                 w: 2,
                 h: 2,
@@ -246,6 +257,11 @@ const studyViewFrontEnd = {
                 minW: 2,
             },
             [ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE]: {
                 w: 2,
                 h: 2,
                 minW: 2,

@@ -22,6 +22,9 @@
     }
     max-width: none !important; //override bootstrap
     white-space: nowrap;
+    div:last-child {
+        white-space: nowrap !important;
+    }
 }
 
 .NotAvailable {

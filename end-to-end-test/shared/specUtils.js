@@ -54,13 +54,12 @@ function waitForOncoprint(timeout) {
             return (
                 !$('.oncoprintLoadingIndicator').isExisting() && // wait for loading indicator to hide, and
                 $('#oncoprintDiv svg rect').isExisting() && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-                $('.oncoprintContainer').getCSSProperty('opacity').value ===
-                    1 && // oncoprint has faded in
                 $('.oncoprint__controls').isExisting()
             ); // oncoprint controls are showing
         },
         { timeout }
     );
+    browser.pause(200);
 }
 
 function waitForComparisonTab() {
@@ -188,6 +187,22 @@ function setDropdownOpen(
             interval: 2000,
         }
     );
+}
+
+/**
+ * @param {string} url
+ * @returns {string} modifiedUrl
+ */
+function getUrl(url) {
+    if (!useExternalFrontend) {
+        console.log('Connecting to: ' + url);
+    } else {
+        const urlparam = 'localdev';
+        const prefix = url.indexOf('?') > 0 ? '&' : '?';
+        console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
+        url = `${url}${prefix}${urlparam}=true`;
+    }
+    return url;
 }
 
 function goToUrlAndSetLocalStorage(url, authenticated = false) {
@@ -372,7 +387,10 @@ function getNumberOfStudyViewCharts() {
 function setInputText(selector, text) {
     // backspace to delete current contents - webdriver is supposed to clear it but it doesnt always work
     $(selector).click();
-    browser.keys('\uE003'.repeat($(selector).getValue().length));
+    //browser.keys('\uE003'.repeat($(selector).getValue().length));
+
+    $(selector).clearValue();
+    //browser.pause(1000);
 
     $(selector).setValue(text);
 }
@@ -419,7 +437,7 @@ function pasteToElement(elementSelector, text) {
     browser.keys(['Shift', 'Insert']);
 }
 
-function checkOncoprintElement(selector) {
+function checkOncoprintElement(selector, viewports) {
     //browser.moveToObject('body', 0, 0);
     browser.execute(function() {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
@@ -431,6 +449,7 @@ function checkOncoprintElement(selector) {
             '.oncoprintjs__track_options__dropdown',
             '.oncoprintjs__cell_overlay_div',
         ],
+        viewports: viewports,
     });
 }
 
@@ -488,6 +507,8 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
         );
     });
 
+    $(selector).waitForExist({ timeout: 5000 });
+
     const ret = checkElementWithTemporaryClass(
         selector,
         selector,
@@ -523,7 +544,7 @@ function clickQueryByGeneButton() {
     $('.disabled[data-test=queryByGeneButton]').waitForExist({
         reverse: true,
     });
-    $('a=Query By Gene').click();
+    getElementByTestHandle('queryByGeneButton').click();
     $('body').scrollIntoView();
 }
 
@@ -549,12 +570,20 @@ function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
     };
 }
 
+/**
+ *
+ * @param {string} url
+ * @param {any} data
+ * @param {boolean} authenticated
+ */
 function postDataToUrl(url, data, authenticated = true) {
     const currentUrl = browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
+
+    url = getUrl(url);
     browser.execute(
-        (url, data) => {
+        (/** @type {string} */ url, /** @type {any} */ data) => {
             function formSubmit(url, params) {
                 // method="smart" means submit with GET iff the URL wouldn't be too long
 

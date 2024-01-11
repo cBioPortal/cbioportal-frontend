@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { computed } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import RightPanel from './rightPanel/RightPanel';
 import StudySummary from './studySummary/StudySummary';
@@ -18,6 +19,18 @@ export default class StudyPageHeader extends React.Component<
 > {
     constructor(props: IStudyPageHeaderProps) {
         super(props);
+    }
+
+    /**
+     * Force remount of filters when:
+     * - the submit mode changes;
+     * - filters are updated or submitted.
+     */
+    @computed
+    public get filtersRerenderKey() {
+        return `${this.props.store.hesitateUpdate}${_.size(
+            this.props.store.hesitantPillStore
+        )}`;
     }
 
     render() {
@@ -56,6 +69,7 @@ export default class StudyPageHeader extends React.Component<
 
                 {this.props.store.clinicalAttributeIdToDataType.isComplete && (
                     <UserSelections
+                        key={this.filtersRerenderKey}
                         store={this.props.store}
                         filter={this.props.store.userSelections}
                         comparisonGroupSelection={
@@ -78,18 +92,20 @@ export default class StudyPageHeader extends React.Component<
                         updateClinicalDataFilterByValues={
                             this.props.store.updateClinicalDataFilterByValues
                         }
-                        updateGenomicDataIntervalFilter={
-                            this.props.store
-                                .updateGenomicDataIntervalFiltersByValues
+                        updateGenomicDataFilter={
+                            this.props.store.updateGenomicDataFiltersByValues
                         }
                         updateGenericAssayDataFilter={
                             this.props.store
                                 .updateGenericAssayDataFiltersByValues
                         }
                         updateCustomChartFilter={
-                            this.props.store.setCustomChartFilters
+                            this.props.store.setCustomChartCategoricalFilters
                         }
                         removeGeneFilter={this.props.store.removeGeneFilter}
+                        removeStructVarFilter={
+                            this.props.store.removeStructVarFilter
+                        }
                         removeCustomSelectionFilter={
                             this.props.store.removeCustomSelectFilter
                         }
@@ -114,6 +130,9 @@ export default class StudyPageHeader extends React.Component<
                         }
                         removeTreatmentsFilter={
                             this.props.store.removeTreatmentsFilter
+                        }
+                        removeClinicalEventFilter={
+                            this.props.store.removeClinicalEventTypeFilter
                         }
                     />
                 )}

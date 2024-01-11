@@ -214,18 +214,21 @@ export function getOncoKbApiUrl() {
     );
 }
 
+export function getcBioPortalLogoUrl() {
+    return getLogoUrl(getServerConfig().skin_left_logo);
+}
+
 export function getInstituteLogoUrl() {
-    if (getServerConfig().skin_right_logo) {
-        if (/^http/.test(getServerConfig().skin_right_logo || '')) {
-            return getServerConfig().skin_right_logo!;
-        } else {
-            return buildCBioPortalPageUrl(
-                `images/${getServerConfig().skin_right_logo}`
-            );
-        }
-    } else {
-        return undefined;
+    return getLogoUrl(getServerConfig().skin_right_logo);
+}
+
+function getLogoUrl(logo_path: string | null) {
+    if (logo_path) {
+        return /^http/.test(logo_path || '')
+            ? logo_path!
+            : buildCBioPortalPageUrl(`images/${logo_path}`);
     }
+    return undefined;
 }
 
 export function getGenomeNexusApiUrl() {
@@ -290,7 +293,11 @@ export function getDarwinUrl(sampleIds: string[], caseId: string) {
 }
 
 export function getStudyDownloadListUrl() {
-    return 'https://cbioportal-datahub.s3.amazonaws.com/study_list.json';
+    return getServerConfig().study_download_url + 'study_list.json';
+}
+
+export function getStudyDownloadUrl() {
+    return getServerConfig().study_download_url;
 }
 
 export function getMDAndersonHeatmapPatientUrl(patientId: string) {

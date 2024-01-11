@@ -6,9 +6,12 @@ import { Router } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
+import { datadogLogs } from '@datadog/browser-logs';
+
 import {
     fetchServerConfig,
     getLoadConfig,
+    getServerConfig,
     initializeAPIClients,
     initializeAppStore,
     initializeLoadConfiguration,
@@ -24,7 +27,7 @@ import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import { initializeTracking, sendToLoggly } from 'shared/lib/tracking';
 import superagentCache from 'superagent-cache';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, onMobxPromise } from 'cbioportal-frontend-commons';
 import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
@@ -35,6 +38,7 @@ import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';
 import eventBus from 'shared/events/eventBus';
 import { SiteError } from 'shared/model/appMisc';
+import load from 'little-loader';
 
 export interface ICBioWindow {
     globalStores: {
@@ -213,6 +217,24 @@ browserWindow.routingStore = routingStore;
 let render = (key?: number) => {
     if (!getBrowserWindow().navigator.webdriver) initializeTracking();
 
+    if (stores.appStore.serverConfig.app_name === 'mskcc-portal') {
+        datadogLogs.init({
+            clientToken: 'pub9a94ebb002f105ff44d8e427b6549775',
+            site: 'datadoghq.com',
+            service: 'cbioportalinternal',
+            forwardErrorsToLogs: true,
+            sessionSampleRate: 100,
+            beforeSend: (log: any) => {
+                switch (log.origin) {
+                    case 'console':
+                        return false;
+                    default:
+                    // let dd send log
+                }
+            },
+        } as any);
+    }
+
     const rootNode = document.getElementById('reactRoot');
 
     ReactDOM.render(
@@ -235,6 +257,27 @@ if (__DEBUG__ && module.hot) {
     module.hot.accept('./routes', () => render());
 }
 
+async function loadCustomJs() {
+    if (!getServerConfig().custom_js_urls) {
+        return Promise.resolve();
+    }
+    const customJsFiles = getServerConfig().custom_js_urls.split(',');
+    return Promise.all(
+        Object.values(customJsFiles).map(
+            (customJsFileUrl: string) =>
+                new Promise((resolve, reject) => {
+                    load(customJsFileUrl, (err: any) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve();
+                        }
+                    });
+                })
+        )
+    );
+}
+
 $(document).ready(async () => {
     // we show blank page if the window.name is "blank"
     if (window.name === 'blank') {
@@ -247,6 +290,8 @@ $(document).ready(async () => {
     let initialServerConfig =
         browserWindow.rawServerConfig || (await fetchServerConfig());
 
+    getBrowserWindow().onMobxPromise = onMobxPromise;
+
     initializeServerConfiguration(initialServerConfig);
 
     initializeGenericAssayServerConfig();
@@ -254,6 +299,8 @@ $(document).ready(async () => {
     initializeAPIClients();
 
     initializeAppStore(stores.appStore);
+
+    await loadCustomJs();
 
     render();
 

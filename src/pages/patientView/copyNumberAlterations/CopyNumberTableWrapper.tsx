@@ -33,6 +33,7 @@ import autobind from 'autobind-decorator';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -269,6 +270,7 @@ export default class CopyNumberTableWrapper extends React.Component<
                         enableCivic: getServerConfig().show_civic as boolean,
                         enableMyCancerGenome: false,
                         enableHotspot: false,
+                        enableRevue: false,
                         userDisplayName: getServerConfig().user_display_name,
                         studyIdToStudy: this.pageStore.studyIdToStudy.result,
                     })}
@@ -444,6 +446,11 @@ export default class CopyNumberTableWrapper extends React.Component<
                                 onRowClick={this.props.onRowClick}
                                 onRowMouseEnter={this.props.onRowMouseEnter}
                                 onRowMouseLeave={this.props.onRowMouseLeave}
+                                showCopyDownload={
+                                    getServerConfig()
+                                        .skin_hide_download_controls ===
+                                    DownloadControlOption.SHOW_ALL
+                                }
                             />
                         </FeatureInstruction>
                     )}

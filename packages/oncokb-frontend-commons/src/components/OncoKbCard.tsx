@@ -16,6 +16,7 @@ export type OncoKbCardProps = {
     indicator?: IndicatorQueryResp;
     displayHighestLevelInTabTitle?: boolean;
     handleFeedbackOpen?: React.EventHandler<any>;
+    hasMultipleCancerTypes?: boolean;
 };
 
 export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
@@ -51,6 +52,7 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
                                 ? props.indicator.query.tumorType
                                 : ''
                         }
+                        displayCancerTypeInTitle={!props.hasMultipleCancerTypes}
                     />
                 )}
                 <OncoKbCardBody
@@ -66,7 +68,7 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
                 />
                 <div className={mainStyles.footer}>
                     {oncokbLinkOut() === undefined ? (
-                        { oncokbLogo }
+                        oncokbLogo
                     ) : (
                         <a
                             href={`${oncokbLinkOut()}`}

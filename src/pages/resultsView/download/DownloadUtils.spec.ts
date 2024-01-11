@@ -16,12 +16,12 @@ import {
     decideMolecularProfileSortingOrder,
     generateStructuralDownloadData,
 } from './DownloadUtils';
-import { ExtendedAlteration } from '../ResultsViewPageStore';
 import oql_parser, { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 
 describe('DownloadUtils', () => {
     const genes = [
@@ -158,9 +158,6 @@ describe('DownloadUtils', () => {
             referenceAllele: 'G',
             proteinChange: 'G598A',
             mutationType: 'Missense_Mutation',
-            functionalImpactScore: 'M',
-            fisValue: 2.855,
-            linkXvar: 'getma.org/?cm=var&var=hg19,7,55233043,G,C&fts=all',
             linkPdb:
                 'getma.org/pdb.php?prot=EGFR_HUMAN&from=482&to=681&var=G598A',
             linkMsa:
@@ -210,11 +207,6 @@ describe('DownloadUtils', () => {
             referenceAllele: 'G',
             proteinChange: 'G239C',
             mutationType: 'Missense_Mutation',
-            functionalImpactScore: '',
-            fisValue: 1.4013e-45,
-            linkXvar: '',
-            linkPdb: '',
-            linkMsa: '',
             ncbiBuild: 'GRCh37',
             variantType: 'SNP',
             keyword: 'EGFR G239 missense',

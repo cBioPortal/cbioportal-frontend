@@ -13,6 +13,7 @@ import {
     STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 import { MUT_PROFILE_COUNT_NOT_MUTATED } from 'pages/resultsView/plots/PlotsTabUtils';
+import { RGBAColor } from 'oncoprintjs';
 // Default grey
 export const BLACK = '#000000';
 export const LIGHT_GREY = '#D3D3D3';
@@ -177,4 +178,20 @@ export function hexToRGBA(str: string): [number, number, number, number] {
     const g = parseInt(str[3] + str[4], 16);
     const b = parseInt(str[5] + str[6], 16);
     return [r, g, b, 1];
+}
+
+export function rgbaToHex(rgba: RGBAColor): string {
+    let hexR = rgba[0].toString(16);
+    let hexG = rgba[1].toString(16);
+    let hexB = rgba[2].toString(16);
+    if (hexR.length === 1) {
+        hexR = '0' + hexR;
+    }
+    if (hexG.length === 1) {
+        hexG = '0' + hexG;
+    }
+    if (hexB.length === 1) {
+        hexB = '0' + hexB;
+    }
+    return `#${hexR}${hexG}${hexB}`;
 }

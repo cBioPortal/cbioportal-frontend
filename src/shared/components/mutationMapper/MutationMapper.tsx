@@ -46,6 +46,7 @@ import { ProteinImpactType } from 'cbioportal-frontend-commons';
 import DriverAnnotationProteinImpactTypeBadgeSelector from './DriverAnnotationProteinImpactTypeBadgeSelector';
 import { Mutation, PtmSource } from 'cbioportal-utils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { LegendColorCodes } from './LegendColorCodes';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -102,6 +103,7 @@ export interface IMutationMapperProps {
     enableHotspot?: boolean;
     enableMyCancerGenome?: boolean;
     enableCivic?: boolean;
+    enableRevue?: boolean;
     ptmSources?: string[];
 }
 
@@ -114,160 +116,7 @@ export default class MutationMapper<
     }
 
     protected legendColorCodes = (
-        <div style={{ maxWidth: 700, marginTop: 5 }}>
-            <strong style={{ color: '#2153AA' }}>Color Codes</strong>
-            <p>
-                Mutation diagram circles are colored with respect to the
-                corresponding mutation types. In case of different mutation
-                types at a single position, color of the circle is determined
-                with respect to the most frequent mutation type.
-            </p>
-            <br />
-            <div>
-                Mutation types and corresponding color codes are as follows:
-                <ul>
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor,
-                            }}
-                        >
-                            Missense Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseVusColor,
-                                }}
-                            >
-                                Missense Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                        </li>
-                    )}
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingColor,
-                            }}
-                        >
-                            Truncating Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                        : Nonsense, Nonstop, Frameshift deletion, Frameshift
-                        insertion, Splice site
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingVusColor,
-                                }}
-                            >
-                                Truncating Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                            : Nonsense, Nonstop, Frameshift deletion, Frameshift
-                            insertion, Splice site
-                        </li>
-                    )}
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeColor,
-                            }}
-                        >
-                            Inframe Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                        : Inframe deletion, Inframe insertion
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeVusColor,
-                                }}
-                            >
-                                Inframe Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                            : Inframe deletion, Inframe insertion
-                        </li>
-                    )}
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceColor,
-                            }}
-                        >
-                            Splice Mutations
-                        </strong>
-                        {this.props.isPutativeDriver !== undefined && (
-                            <span>(putative driver)</span>
-                        )}
-                    </li>
-                    {this.props.isPutativeDriver !== undefined && (
-                        <li>
-                            <strong
-                                style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceVusColor,
-                                }}
-                            >
-                                Splice Mutations
-                            </strong>
-                            {this.props.isPutativeDriver !== undefined && (
-                                <span>(unknown significance)</span>
-                            )}
-                        </li>
-                    )}
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.fusionColor,
-                            }}
-                        >
-                            Fusion Mutations
-                        </strong>
-                    </li>
-                    <li>
-                        <strong
-                            style={{
-                                color:
-                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherColor,
-                            }}
-                        >
-                            Other Mutations
-                        </strong>
-                        : All other types of mutations
-                    </li>
-                </ul>
-            </div>
-        </div>
+        <LegendColorCodes isPutativeDriver={this.props.isPutativeDriver} />
     );
 
     protected getTrackDataStatus(): TrackDataStatus {
@@ -633,19 +482,36 @@ export default class MutationMapper<
         );
     }
 
+    protected resetFilters() {
+        const dataStore = this.props.store.dataStore as MutationMapperDataStore;
+        dataStore.resetFilters();
+    }
+
     protected get filterResetPanel(): JSX.Element | null {
         const dataStore = this.props.store.dataStore as MutationMapperDataStore;
 
         return (
             <FilterResetPanel
-                resetFilters={() => dataStore.resetFilters()}
-                filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
+                resetFilters={this.resetFilters}
+                filterInfo={`Showing ${
+                    _.flatten(dataStore.tableData).length
+                } of ${_.flatten(dataStore.allData).length} mutations.`}
+                additionalInfo={
+                    dataStore.sortedFilteredSelectedData.length > 0
+                        ? ' (Shift click to select multiple residues)'
+                        : ''
+                }
                 className={classnames(
-                    'alert',
                     'alert-success',
+                    'small',
                     styles.filterResetPanel
                 )}
-                buttonClass="btn btn-default btn-xs"
+                buttonClass={classnames(
+                    'btn',
+                    'btn-default',
+                    'btn-xs',
+                    styles.removeFilterButton
+                )}
             />
         );
     }
@@ -657,6 +523,11 @@ export default class MutationMapper<
 
     protected get mutationTableComponent(): JSX.Element | null {
         // Child classes should override this method to return an instance of MutationTable
+        return null;
+    }
+
+    protected get plotFooter(): JSX.Element | null {
+        // Child classes should override this method to return a plot footer if needed
         return null;
     }
 
@@ -672,12 +543,13 @@ export default class MutationMapper<
                 />
                 {!this.isLoading && (
                     <div>
-                        <div style={{ display: 'flex' }}>
-                            <div
-                                className="borderedChart"
-                                style={{ marginRight: 10 }}
-                            >
+                        <div
+                            className="borderedChart"
+                            style={{ display: 'flex' }}
+                        >
+                            <div style={{ marginRight: 10 }}>
                                 {this.mutationPlot}
+                                {this.plotFooter}
                                 {this.proteinChainPanel}
                             </div>
 

@@ -3,8 +3,9 @@ import { observer } from 'mobx-react';
 import { PatientSurvival } from '../../../shared/model/PatientSurvival';
 import { action, computed, observable, makeObservable } from 'mobx';
 import Slider from 'react-rangeslider';
-import { Popover } from 'react-bootstrap';
+import { Popover, Tooltip } from 'react-bootstrap';
 import styles from './styles.module.scss';
+import Select from 'react-select';
 import './styles.scss';
 import { sleep } from '../../../shared/lib/TimeUtils';
 import _ from 'lodash';
@@ -17,6 +18,7 @@ import {
     VictoryScatter,
     VictoryZoomContainer,
 } from 'victory';
+
 import {
     getSurvivalSummaries,
     getLineData,
@@ -28,12 +30,17 @@ import {
     filterScatterData,
     SurvivalPlotFilters,
     SurvivalSummary,
+    ScatterData,
 } from './SurvivalUtil';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
-import { DefaultTooltip, DownloadControls } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+    DownloadControls,
+} from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
-import { AnalysisGroup } from '../../studyView/StudyViewUtils';
+import { AnalysisGroup, DataBin } from '../../studyView/StudyViewUtils';
 import { AbstractChart } from '../../studyView/charts/ChartContainer';
 import { toSvgDomNodeWithLegend } from '../../studyView/StudyViewUtils';
 import classnames from 'classnames';
@@ -45,13 +52,47 @@ import {
     EditableSpan,
     pluralize,
 } from 'cbioportal-frontend-commons';
-import { logRankTest } from 'pages/resultsView/survival/logRankTest';
+import {
+    logRankTest,
+    calculatePairWiseHazardRatio,
+} from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
 import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
-
+import * as victory from 'victory';
+import { scaleLinear } from 'd3-scale';
+import ReactSelect from 'react-select1';
+import { categoryPlotTypeOptions } from 'pages/groupComparison/ClinicalData';
+import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
+import $ from 'jquery';
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
     CHART = 'chart',
+}
+
+export type HazardRatioInformation = {
+    hazardInformation: {
+        lowerCI: number;
+        upperCI: number;
+        hazardRatio: number;
+    }[];
+    name: string;
+};
+
+export type HazardInformationLegend = {
+    name: string;
+    hazardInformation: string;
+};
+
+export interface LandmarkLineValues {
+    xStart: number;
+    xEnd: number;
+    yStart: number;
+    yEnd: number;
+}
+export interface LandmarkInformation {
+    groupName: string;
+    aliveSamples: number;
+    timePoint: number;
 }
 
 export interface ISurvivalChartProps {
@@ -88,6 +129,10 @@ export interface ISurvivalChartProps {
     legendLabelComponent?: any;
     yAxisTickCount?: number;
     xAxisTickCount?: number;
+    // Compact mode will hide censoring dots in the chart and do binning based on configuration
+    compactMode?: boolean;
+    attributeId?: string;
+    onUserSelection?: (dataBins: DataBin[]) => void;
 }
 
 const MIN_GROUP_SIZE_FOR_LOGRANK = 10;
@@ -95,21 +140,22 @@ const MIN_GROUP_SIZE_FOR_LOGRANK = 10;
 const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 
 @observer
-export default class SurvivalChart
+export default class SurvivalChartExtended
     extends React.Component<ISurvivalChartProps, {}>
     implements AbstractChart {
     @observable.ref tooltipModel: any;
     @observable scatterFilter: SurvivalPlotFilters;
     @observable highlightedCurve = '';
     @observable public sliderValue = this.getInitialSliderValue();
+
     // The denominator should be determined based on the plot width and height.
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
     private svgContainer: any;
     private styleOptsDefaultProps: any = {
-        width: 900,
+        width: 1200,
         height: 500,
-        padding: { top: 20, bottom: 50, left: 60, right: 20 },
+        padding: { top: 20, bottom: 25, left: 160, right: 20 },
         tooltipXOffset: 20,
         tooltipYOffset: -47,
         axis: {
@@ -128,13 +174,17 @@ export default class SurvivalChart
             },
         },
         pValue: {
-            x: 610,
-            y: 30,
+            x: 800,
+            y: 50,
             textAnchor: 'start',
         },
         legend: {
             x: 600,
             y: 50,
+        },
+        groupAxis: {
+            x: 0,
+            y: 0,
         },
     };
 
@@ -214,9 +264,40 @@ export default class SurvivalChart
             configurableOpts.legend.x =
                 configurableOpts.width - configurableOpts.padding.right;
         }
+        if (this.lengthLabelNames > 20) {
+            configurableOpts.padding.left =
+                configurableOpts.padding.left + this.lengthLabelNames * 4;
+        } else if (this.lengthLabelNames > 15 && this.lengthLabelNames < 20) {
+            configurableOpts.padding.left + this.lengthLabelNames * 2;
+        } else {
+            configurableOpts.padding.left = configurableOpts.padding.left;
+        }
+        if (Object.keys(this.props.sortedGroupedSurvivals).length > 4) {
+            this.victoryChartHeight =
+                600 +
+                20 * Object.keys(this.props.sortedGroupedSurvivals).length;
+        } else {
+            this.victoryChartHeight = 650;
+        }
+        if (this.showLandmarkLine) {
+            if (Object.keys(this.props.sortedGroupedSurvivals).length > 4) {
+                this.victoryChartHeight =
+                    this.victoryChartHeight +
+                    20 * Object.keys(this.props.sortedGroupedSurvivals).length;
+            } else {
+                this.victoryChartHeight =
+                    this.victoryChartHeight +
+                    20 * Object.keys(this.props.sortedGroupedSurvivals).length;
+            }
+        }
         return configurableOpts;
     }
 
+    @computed get lengthLabelNames() {
+        return _.max(
+            this.props.analysisGroups.map((item: any) => item.name.length)
+        );
+    }
     @computed
     get downSamplingDenominators() {
         return {
@@ -269,15 +350,30 @@ export default class SurvivalChart
     // The filter is only available when user zooms in the plot.
     @computed
     get scatterData(): GroupedScatterData {
-        return filterScatterData(
-            this.unfilteredScatterData,
-            this.scatterFilter,
-            {
-                xDenominator: this.downSamplingDenominators.x,
-                yDenominator: this.downSamplingDenominators.y,
-                threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD,
-            }
-        );
+        if (this.props.compactMode) {
+            return filterScatterData(
+                this.unfilteredScatterData,
+                this.scatterFilter,
+                {
+                    xDenominator: this.downSamplingDenominators.x,
+                    yDenominator: this.downSamplingDenominators.y,
+                    threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD,
+                    enableCensoringCross: false,
+                    floorTimeToMonth: true,
+                }
+            );
+        } else {
+            return filterScatterData(
+                this.unfilteredScatterData,
+                this.scatterFilter,
+                {
+                    xDenominator: this.downSamplingDenominators.x,
+                    yDenominator: this.downSamplingDenominators.y,
+                    threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD,
+                    enableCensoringCross: true,
+                }
+            );
+        }
     }
 
     public static defaultProps: Partial<ISurvivalChartProps> = {
@@ -294,7 +390,15 @@ export default class SurvivalChart
         makeObservable(this);
         this.tooltipMouseEnter = this.tooltipMouseEnter.bind(this);
         this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
+        this.landmarkLinesChecked = this.landmarkLinesChecked.bind(this);
+        this.updateLandmarkValues = this.updateLandmarkValues.bind(this);
+        this.openHooverBox = this.openHooverBox.bind(this);
+        this.closeHooverBox = this.closeHooverBox.bind(this);
+        this.calculateHazardRatio = this.calculateHazardRatio.bind(this);
+        this.changeControlGroup = this.changeControlGroup.bind(this);
     }
+
+    @observable landmarkBelowMaxDate: boolean = false;
 
     @computed get analysisGroupsMap() {
         return _.keyBy(this.props.analysisGroups, g => g.value);
@@ -319,13 +423,115 @@ export default class SurvivalChart
             return null;
         }
     }
+    @computed get getOrderGroups() {
+        const selectedGroup = this.analysisGroupsWithData.filter(
+            item => item.legendText == this._controlGroup!.value
+        );
+        const unSelectedGroup = this.analysisGroupsWithData.filter(
+            item => item.legendText !== this._controlGroup!.value
+        );
+        return [...selectedGroup, ...unSelectedGroup];
+    }
+
+    @computed get hazardRatioGroups(): HazardRatioInformation[] | null {
+        if (
+            this.analysisGroupsWithData.length > 1 &&
+            _.every(
+                this.analysisGroupsWithData,
+                group =>
+                    this.props.sortedGroupedSurvivals[group.value].length >
+                    MIN_GROUP_SIZE_FOR_LOGRANK
+            )
+        ) {
+            return calculatePairWiseHazardRatio(
+                this._controlGroup.value,
+                ...this.analysisGroupsWithData.map(group => {
+                    return this.props.sortedGroupedSurvivals[group.value];
+                })
+            );
+        } else {
+            if (this.analysisGroupsWithData.length > 1) {
+                // remove the groups with too low sample size
+                const reorderedGroup = this.getOrderGroups;
+                const groupsMeetingSampleSize = reorderedGroup
+                    .map(item => {
+                        if (
+                            this.props.sortedGroupedSurvivals[item.value]
+                                .length > MIN_GROUP_SIZE_FOR_LOGRANK
+                        ) {
+                            return item;
+                        }
+                    })
+                    .filter(group => group !== undefined);
+
+                return calculatePairWiseHazardRatio(
+                    this._controlGroup.value,
+                    ...groupsMeetingSampleSize.map(group => {
+                        return this.props.sortedGroupedSurvivals[group!.value];
+                    })
+                );
+            } else {
+                return null;
+            }
+        }
+    }
+
+    @action logRankAtLandmarkPVal(threshold: number[]): number | null {
+        const landmarkGroups: any = [];
+        const survivalData = this.props.sortedGroupedSurvivals;
+        threshold.forEach(thd => {
+            Object.keys(this.props.sortedGroupedSurvivals).forEach(item => {
+                const samples = survivalData[item].filter(obj => {
+                    return obj.months >= thd;
+                });
+                landmarkGroups.push(samples);
+            });
+        });
+        if (
+            landmarkGroups.length > 1 &&
+            _.every(
+                landmarkGroups,
+                grp => grp.length > MIN_GROUP_SIZE_FOR_LOGRANK
+            )
+        ) {
+            return logRankTest(...landmarkGroups);
+        } else {
+            return null;
+        }
+    }
+    @action hazardRatioAtLandmark(threshold: number[]) {
+        const landmarkGroups: any = [];
+        const survivalData = this.props.sortedGroupedSurvivals;
+        threshold.forEach(thd => {
+            Object.keys(this.props.sortedGroupedSurvivals).forEach(item => {
+                const samples = survivalData[item].filter(obj => {
+                    return obj.months >= thd;
+                });
+                landmarkGroups.push(samples);
+            });
+        });
+        if (
+            landmarkGroups.length > 1 &&
+            _.every(
+                landmarkGroups,
+                grp => grp.length > MIN_GROUP_SIZE_FOR_LOGRANK
+            )
+        ) {
+            return calculatePairWiseHazardRatio(
+                this._controlGroup.value,
+                ...landmarkGroups
+            );
+        } else {
+            return null;
+        }
+    }
 
     @computed get victoryLegendData() {
         const data: any = [];
         if (this.props.legendLocation === LegendLocation.CHART) {
-            for (const grp of this.analysisGroupsWithData) {
+            for (const grp of this.getOrderGroups) {
                 data.push({
-                    name: grp.legendText || grp.name || grp.value,
+                    name: grp.name || grp.legendText || grp.value,
                     symbol: {
                         fill: grp.color,
                         strokeOpacity: 0,
@@ -370,8 +576,11 @@ export default class SurvivalChart
     private get pValueText() {
         return (
             <VictoryLabel
-                x={this.styleOpts.pValue.x}
-                y={this.styleOpts.pValue.y}
+                x={this.styleOpts.width - this.styleOpts.padding.right + 10}
+                y={
+                    this.styleOpts.pValue.y +
+                    50 * this.analysisGroupsWithData.length
+                }
                 style={baseLabelStyles}
                 textAnchor={this.styleOpts.pValue.textAnchor}
                 text={`Logrank Test P-Value: ${this.pValue}`}
@@ -464,7 +673,6 @@ export default class SurvivalChart
         analysisGroupsWithData = _.sortBy(analysisGroupsWithData, grp =>
             this.highlightedCurve === grp.value ? 1 : 0
         );
-
         const lineElements = analysisGroupsWithData.map(grp => (
             <VictoryLine
                 key={grp.value}
@@ -512,30 +720,236 @@ export default class SurvivalChart
             .concat(scatterElements);
     }
 
-    @computed get legendForDownload() {
-        // override the legend style without mutating the actual theme object
-        const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
-        theme.legend.style.data = {
-            type: 'square',
-            size: 5,
-            strokeWidth: 0,
-            stroke: 'black',
-        };
-
-        return (
-            <VictoryLegend
-                x={0}
-                y={this.styleOpts.height + 1}
+    @computed get landmarkLines() {
+        const landmarkValues = this.landmarkPoint;
+        const lines = landmarkValues.map(item => (
+            <VictoryLine
                 style={{
-                    ...theme.legend.style,
-                    title: { fontWeight: 'bold' },
+                    data: {
+                        stroke: 'black',
+                        strokeDasharray: '3',
+                        strokeWidth: 1,
+                    },
+                    parent: { border: '1px solid #ccc' },
                 }}
-                title={this.props.title}
-                rowGutter={-10}
-                data={this.legendDataForDownload}
-                groupComponent={<g className="survivalChartDownloadLegend" />}
+                data={[
+                    { x: item.xStart, y: item.yStart },
+                    { x: item.xEnd, y: item.yEnd },
+                ]}
             />
+        ));
+
+        return lines;
+    }
+    @computed get groupLandMarkLine() {
+        const landmarkLineLegend = this.analysisGroupsWithData.map(
+            (item: any) => item.name
         );
+        landmarkLineLegend.unshift('Landmark');
+        const groups = landmarkLineLegend.map((x: string[], i: number) => (
+            <VictoryLabel
+                text={x}
+                x={0}
+                y={
+                    this.styleOptsDefaultProps.height -
+                    this.styleOpts.padding.bottom +
+                    this.labelOffset +
+                    i * 20
+                }
+                textAnchor="start"
+                style={{
+                    fontWeight: i == 0 ? 'bold' : 'normal',
+                    fontFamily:
+                        CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontFamily,
+                }}
+            />
+        ));
+        return groups;
+    }
+
+    @computed get groupSurvivalPlot() {
+        const landmarkLineLegend = this.analysisGroupsWithData.map(
+            (item: any) => item.name
+        );
+        landmarkLineLegend.unshift('Number at risk (n)');
+        const groups = landmarkLineLegend.map((x: string[], i: number) => (
+            <VictoryLabel
+                text={x}
+                x={0}
+                y={
+                    this.styleOptsDefaultProps.height -
+                    this.styleOpts.padding.bottom +
+                    60 +
+                    i * 20
+                }
+                textAnchor="start"
+                style={{
+                    fontWeight: i == 0 ? 'bold' : 'normal',
+                    fontFamily:
+                        CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontFamily,
+                }}
+            />
+        ));
+        return groups;
+    }
+
+    @computed get landmarkInformation() {
+        const initialGroupSize = Object.keys(
+            this.props.sortedGroupedSurvivals
+        ).map(item => this.props.sortedGroupedSurvivals[item].length);
+        const landmarkPointInformation = _.groupBy(
+            this.calculateGroupSize(
+                this.landmarkPoint.map(item => item.xStart)
+            ),
+            'timePoint'
+        );
+        const point = Object.keys(landmarkPointInformation).map(key =>
+            landmarkPointInformation[key].map((value, i) => {
+                if (
+                    landmarkPointInformation[key][i].timePoint <=
+                    this.sliderValue
+                ) {
+                    this.landmarkBelowMaxDate = true;
+                    return (
+                        <VictoryLabel
+                            text={
+                                (
+                                    (landmarkPointInformation[key][i]
+                                        .aliveSamples /
+                                        initialGroupSize[i]) *
+                                    100
+                                ).toFixed(1) + '%'
+                            }
+                            x={
+                                landmarkPointInformation[key][i].timePoint *
+                                    this.scaleFactor +
+                                this.styleOpts.padding.left
+                            }
+                            y={
+                                this.styleOptsDefaultProps.height -
+                                this.styleOpts.padding.bottom +
+                                this.labelOffset +
+                                20 +
+                                i * 20
+                            }
+                            style={{
+                                fontFamily:
+                                    CBIOPORTAL_VICTORY_THEME.legend.style.labels
+                                        .fontFamily,
+                            }}
+                            textAnchor="middle"
+                        />
+                    );
+                } else {
+                    this.landmarkBelowMaxDate =
+                        Math.min(
+                            ...Object.keys(landmarkPointInformation).map(Number)
+                        ) < this.sliderValue;
+                }
+            })
+        );
+        return point;
+    }
+    @computed get numberOfSamplesAtRisk() {
+        var timePoints = scaleLinear()
+            .domain([0, this.sliderValue])
+            .ticks(18);
+
+        const numberAtRisk = _.groupBy(
+            this.calculateGroupSize(timePoints.map(item => item)),
+            'timePoint'
+        );
+
+        const valueAtAxis = Object.keys(numberAtRisk).map(item =>
+            numberAtRisk[item].map((grp, i) => {
+                return (
+                    <VictoryLabel
+                        text={numberAtRisk[item][i].aliveSamples}
+                        x={
+                            numberAtRisk[item][i].timePoint * this.scaleFactor +
+                            this.styleOpts.padding.left
+                        }
+                        y={
+                            this.styleOptsDefaultProps.height -
+                            this.styleOpts.padding.bottom +
+                            80 +
+                            i * 20
+                        }
+                        style={{
+                            fontFamily:
+                                CBIOPORTAL_VICTORY_THEME.legend.style.labels
+                                    .fontFamily,
+                        }}
+                        textAnchor="middle"
+                    />
+                );
+            })
+        );
+
+        return valueAtAxis;
+    }
+    @observable _latestLandMarkPoint: number = 0;
+    @action updatelatestLandMarkPoint(value: number) {
+        this._latestLandMarkPoint = value;
+    }
+
+    @computed get legendWithHazardRatio() {
+        if (this.hazardRatioGroups !== null) {
+            const conGroupIndex = this.availableGroups
+                .map(item => item.label)
+                .indexOf(this._controlGroup.value);
+            const hazardRatio = this.hazardRatioGroups.map(
+                (hr, i) =>
+                    ({
+                        name: this.props.analysisGroups.map(item => item.name)[
+                            i
+                        ],
+                        hazardInformation:
+                            '\n' +
+                            'HR: ' +
+                            hr.hazardInformation[
+                                conGroupIndex
+                            ].hazardRatio.toFixed(3) +
+                            ' ( 95% CI: ' +
+                            hr.hazardInformation[conGroupIndex].lowerCI.toFixed(
+                                3
+                            ) +
+                            ' - ' +
+                            hr.hazardInformation[conGroupIndex].upperCI.toFixed(
+                                3
+                            ) +
+                            ' )',
+                    } as HazardInformationLegend)
+            );
+            const legendInfoName = this.victoryLegendData.map(
+                (grp: any) => grp.name
+            );
+            const hazardRatioSorted = _.orderBy(hazardRatio, [
+                hazardRatio => legendInfoName.indexOf(hazardRatio.name),
+            ]);
+            const information = _.merge(
+                _.keyBy(this.victoryLegendData, 'name'),
+                _.keyBy(hazardRatioSorted, 'name')
+            );
+
+            const legendWithHR = Object.keys(information).map(
+                (item: string, i: number) => {
+                    return {
+                        name:
+                            i == 0
+                                ? information[item].name + '\nControl'
+                                : information[item].hazardInformation !==
+                                  undefined
+                                ? information[item].name +
+                                  information[item].hazardInformation
+                                : information[item].name + '\nNA',
+                        subName: 'Hazard ratio group',
+                        symbol: information[item].symbol,
+                    };
+                }
+            );
+            return legendWithHR;
+        }
     }
 
     @computed
@@ -568,13 +982,200 @@ export default class SurvivalChart
     @action.bound
     onSliderChange(value: number) {
         this.sliderValue = value;
+        this.scaleFactor =
+            (this.styleOpts.width -
+                this.styleOpts.padding.left -
+                this.styleOpts.padding.right) /
+            value;
+    }
+    @observable _inputFieldVisible: boolean = false;
+    @observable _calculateHazardRatio: boolean = false;
+    @observable landmarkPoint: LandmarkLineValues[];
+    @observable showLandmarkLine: boolean = false;
+    @observable hooverBoxVisible: boolean = false;
+    @observable showHazardRatio: boolean = false;
+    @observable victoryChartHeight: number;
+    @observable scaleFactor: number =
+        (this.styleOpts.width -
+            this.styleOpts.padding.left -
+            this.styleOpts.padding.right) /
+        this.sliderValue;
+    @observable showNormalLegend = true;
+    @observable hazardRatio: HazardRatioInformation[];
+    @observable labelOffset: number =
+        65 + (Object.keys(this.props.sortedGroupedSurvivals).length + 1) * 20;
+    @action openHooverBox() {
+        return (this.hooverBoxVisible = true);
+    }
+    @action closeHooverBox() {
+        return (this.hooverBoxVisible = false);
+    }
+    @action landmarkLinesChecked() {
+        if (!this._inputFieldVisible) {
+            return (this._inputFieldVisible = true);
+        } else {
+            return (
+                (this._inputFieldVisible = false),
+                (this.showLandmarkLine = false),
+                $('input[data-test=landmarkValues]').val('')
+            );
+        }
     }
 
+    @action calculateGroupSize(thresholdValues: number[]) {
+        const landmarkInformationData: LandmarkInformation[] = [];
+        const survivalData = this.props.sortedGroupedSurvivals;
+        const groupInformation = Object.keys(this.props.sortedGroupedSurvivals);
+        thresholdValues.forEach(threshold => {
+            groupInformation.forEach(item => {
+                const samples = survivalData[item].filter(obj => {
+                    return obj.months >= threshold;
+                }).length;
+                const information = {
+                    groupName: item,
+                    aliveSamples: samples,
+                    timePoint: threshold,
+                };
+                landmarkInformationData.push(information);
+            });
+        });
+        return landmarkInformationData;
+    }
+
+    @action updateLandmarkValues(event: any): LandmarkLineValues[] {
+        const landmarkValues: [] =
+            event.target.value.split(',').length == 1
+                ? event.target.value.split(' ')
+                : event.target.value.split(',');
+        const landmarkArray = landmarkValues.map(
+            item =>
+                ({
+                    xStart: Number(item),
+                    xEnd: Number(item),
+                    yStart: 0,
+                    yEnd: 103,
+                } as LandmarkLineValues)
+        );
+        this.updatelatestLandMarkPoint(landmarkArray[0].xStart);
+        this.updateVisibilityLandmarkLines();
+        this.calculateGroupSize(landmarkArray.map(obj => obj.xStart));
+        return (this.landmarkPoint = landmarkArray);
+    }
+    @action calculateHazardRatio() {
+        if (!this.showHazardRatio) {
+            this.showNormalLegend = false;
+            this.showHazardRatio = true;
+        } else {
+            this.showNormalLegend = true;
+            this.showHazardRatio = false;
+        }
+    }
+
+    @computed get defaultLegend() {
+        const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
+        theme.legend.style.data = {
+            type: 'square',
+            size: 5,
+            strokeWidth: 0,
+            stroke: 'black',
+        };
+        return (
+            <VictoryLegend
+                x={this.styleOpts.legend.x}
+                y={this.styleOpts.legend.y}
+                data={this.victoryLegendData}
+                labels={this.victoryLegendData.map((grp: any) => grp.name)}
+                style={{
+                    ...theme.legend.style,
+                    title: { fontWeight: 'bold' },
+                }}
+                labelComponent={<VictoryLabel />}
+                groupComponent={<g className="survivalChartDownloadLegend" />}
+            />
+        );
+    }
+
+    @action updateVisibilityLandmarkLines() {
+        return (this.showLandmarkLine = true);
+    }
     @action.bound
     onSliderTextChange(text: string) {
         this.sliderValue = Number.parseFloat(text);
+        this.scaleFactor =
+            (this.styleOpts.width -
+                this.styleOpts.padding.left -
+                this.styleOpts.padding.right) /
+            Number.parseFloat(text);
     }
-
+    @observable _controlGroup: { label: string; value: string } = {
+        label: this.availableGroups[0].label,
+        value: this.availableGroups[0].value,
+    };
+    @computed get selectedControlGroup() {
+        return this._controlGroup;
+    }
+    @computed get availableGroups() {
+        if (Object.keys(this.props.sortedGroupedSurvivals).length > 1) {
+            const filteredObjects = Object.keys(
+                this.props.sortedGroupedSurvivals
+            )
+                .filter(
+                    item =>
+                        this.props.sortedGroupedSurvivals[item].length >
+                        MIN_GROUP_SIZE_FOR_LOGRANK
+                )
+                .map(item => ({
+                    label: item,
+                    value: item,
+                }));
+            return filteredObjects.length > 0
+                ? filteredObjects
+                : [
+                      {
+                          label: 'Group sizes too small',
+                          value: 'Group sizes too small',
+                      },
+                  ];
+        } else {
+            return [
+                {
+                    label: 'Group sizes too small',
+                    value: 'Group sizes too small',
+                },
+            ];
+        }
+    }
+    @action.bound changeControlGroup(groupValue: {
+        label: string;
+        value: string;
+    }) {
+        this._controlGroup = groupValue;
+    }
+    @computed get xAxisForPlot() {
+        const xAxis = (
+            <VictoryAxis
+                style={this.styleOpts.axis.x}
+                crossAxis={false}
+                tickCount={18}
+                label={this.props.xAxisLabel}
+                orientation={'bottom'}
+                domain={[0, 100]}
+            />
+        );
+        return xAxis;
+    }
+    @computed get xAxisForSummaryViewPlot() {
+        const xAxis = (
+            <VictoryAxis
+                style={this.styleOpts.axis.x}
+                crossAxis={false}
+                tickCount={this.xAxisTickCount}
+                label={this.props.xAxisLabel}
+                orientation={'bottom'}
+            />
+        );
+        return xAxis;
+    }
     @computed
     get chart() {
         return (
@@ -608,21 +1209,130 @@ export default class SurvivalChart
                         getData={this.getData}
                         style={{ position: 'absolute', zIndex: 10, right: 10 }}
                         type="button"
+                        showDownload={
+                            getServerConfig().skin_hide_download_controls ===
+                            DownloadControlOption.SHOW_ALL
+                        }
                     />
                 )}
-
-                <div
-                    style={{
-                        display: 'flex',
-                    }}
-                >
+                <div>
+                    {this.props.showSlider && (
+                        <div
+                            className="form-check "
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginLeft: 30,
+                            }}
+                        >
+                            <label className={'checkbox-inline'}>
+                                <input
+                                    type="checkbox"
+                                    data-test={'hazardRatioCheckbox'}
+                                    onChange={this.calculateHazardRatio}
+                                    disabled={
+                                        Object.keys(
+                                            this.props.sortedGroupedSurvivals
+                                        ).length == 1
+                                    }
+                                />{' '}
+                                Calculate hazard ratios
+                            </label>
+                            <React.Fragment>
+                                <div
+                                    style={{
+                                        marginLeft: '5px',
+                                        width: 300,
+                                        height: 35,
+                                    }}
+                                >
+                                    <ReactSelect
+                                        value={this.selectedControlGroup}
+                                        options={this.availableGroups}
+                                        onChange={this.changeControlGroup}
+                                        searchable={false}
+                                        clearable={false}
+                                        placeholder={'Select control group'}
+                                        disabled={!this.showHazardRatio}
+                                    />
+                                </div>
+                                <DefaultTooltip
+                                    placement="top"
+                                    overlay={
+                                        <span>
+                                            Option to set the control group.
+                                        </span>
+                                    }
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <i
+                                        className="fa fa-lg fa-question-circle"
+                                        style={{
+                                            padding: 10,
+                                            alignItems: 'center',
+                                        }}
+                                    ></i>
+                                </DefaultTooltip>
+                            </React.Fragment>
+                            <label className={'checkbox-inline'}>
+                                <input
+                                    type="checkbox"
+                                    data-test={'landmarkLines'}
+                                    onChange={this.landmarkLinesChecked.bind(
+                                        this
+                                    )}
+                                />{' '}
+                                Add landmarks
+                            </label>
+                            <React.Fragment>
+                                <div>
+                                    <input
+                                        type="text"
+                                        data-test="landmarkValues"
+                                        placeholder={'Add landmark values'}
+                                        className="form-control"
+                                        disabled={!this._inputFieldVisible}
+                                        name="landmarkValues"
+                                        style={{
+                                            marginLeft: '10px',
+                                            height: 35,
+                                            width: 200,
+                                            float: 'left',
+                                        }}
+                                        onChange={this.updateLandmarkValues.bind(
+                                            this
+                                        )}
+                                    />
+                                </div>
+                                <DefaultTooltip
+                                    placement="right"
+                                    overlay={
+                                        <span>
+                                            Enter numeric landmark(s) (comma or
+                                            whitespace separated)
+                                        </span>
+                                    }
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <i
+                                        className="fa fa-lg fa-question-circle"
+                                        style={{
+                                            padding: 10,
+                                            alignItems: 'center',
+                                        }}
+                                    ></i>
+                                </DefaultTooltip>
+                            </React.Fragment>
+                        </div>
+                    )}
                     {this.props.showSlider && (
                         <div
                             className="small"
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                marginLeft: 60,
+                                marginLeft: 200,
+                                marginTop: 15,
                             }}
                         >
                             <span>X-Axis Max:</span>
@@ -632,6 +1342,8 @@ export default class SurvivalChart
                                     width: 300,
                                     marginLeft: 10,
                                     marginRight: 10,
+                                    paddingTop: 10,
+                                    paddingBottom: 10,
                                 }}
                             >
                                 <Slider
@@ -656,67 +1368,101 @@ export default class SurvivalChart
                     )}
                 </div>
 
-                <VictoryChart
-                    containerComponent={
-                        <VictoryZoomContainer
-                            responsive={false}
-                            disable={true}
-                            zoomDomain={
-                                this.props.showSlider
-                                    ? { x: [0, this.sliderValue] }
-                                    : undefined
-                            }
-                            onZoomDomainChange={_.debounce((domain: any) => {
-                                this.scatterFilter = domain as SurvivalPlotFilters;
-                            }, 1000)}
-                            containerRef={(ref: any) =>
-                                (this.svgContainer = ref)
-                            }
+                <div>
+                    <VictoryChart
+                        containerComponent={
+                            <VictoryZoomContainer
+                                responsive={false}
+                                disable={true}
+                                zoomDomain={
+                                    this.props.showSlider
+                                        ? { x: [0, this.sliderValue] }
+                                        : undefined
+                                }
+                                onZoomDomainChange={_.debounce(
+                                    (domain: any) => {
+                                        this.scatterFilter = domain as SurvivalPlotFilters;
+                                    },
+                                    1000
+                                )}
+                                containerRef={(ref: any) =>
+                                    (this.svgContainer = ref)
+                                }
+                                height={this.victoryChartHeight}
+                            />
+                        }
+                        height={this.styleOpts.height}
+                        width={this.styleOpts.width}
+                        padding={this.styleOpts.padding}
+                        theme={CBIOPORTAL_VICTORY_THEME}
+                        domainPadding={{ x: [10, 50], y: [20, 20] }}
+                    >
+                        <VictoryAxis
+                            label={this.props.yAxisLabel}
+                            dependentAxis={true}
+                            tickFormat={(t: any) => `${t}%`}
+                            tickCount={this.props.yAxisTickCount}
+                            style={this.styleOpts.axis.y}
+                            domain={[0, 100]}
+                            crossAxis={false}
                         />
-                    }
-                    height={this.styleOpts.height}
-                    width={this.styleOpts.width}
-                    padding={this.styleOpts.padding}
-                    theme={CBIOPORTAL_VICTORY_THEME}
-                    domainPadding={{ x: [10, 50], y: [20, 20] }}
-                >
-                    <VictoryAxis
-                        style={this.styleOpts.axis.x}
-                        crossAxis={false}
-                        tickCount={this.xAxisTickCount}
-                        label={this.props.xAxisLabel}
-                    />
-                    <VictoryAxis
-                        label={this.props.yAxisLabel}
-                        dependentAxis={true}
-                        tickFormat={(t: any) => `${t}%`}
-                        tickCount={this.props.yAxisTickCount}
-                        style={this.styleOpts.axis.y}
-                        domain={[0, 100]}
-                        crossAxis={false}
-                    />
-                    {this.scattersAndLines}
-                    {this.showLegend && (
-                        <VictoryLegend
-                            x={this.styleOpts.legend.x}
-                            y={this.styleOpts.legend.y}
-                            data={this.victoryLegendData}
-                            labelComponent={
-                                this.props.legendLabelComponent || (
-                                    <TruncatedTextWithTooltipSVG
-                                        dy="0.3em"
-                                        maxWidth={256}
+
+                        {this.showLegend && this.xAxisForPlot}
+                        {!this.showLegend && this.xAxisForSummaryViewPlot}
+                        {this.scattersAndLines}
+                        {this.showLegend &&
+                            this.showHazardRatio &&
+                            this.pValueText}
+                        {this.showNormalLegend && this.defaultLegend}
+                        {this.showHazardRatio && (
+                            <VictoryLegend
+                                x={this.styleOpts.legend.x}
+                                y={this.styleOpts.legend.y}
+                                data={this.legendWithHazardRatio}
+                                labels={(data: any) => [
+                                    data.name,
+                                    data.subName || '',
+                                ]}
+                                labelComponent={
+                                    <VictoryLabel
+                                        style={[
+                                            {
+                                                fontFamily:
+                                                    CBIOPORTAL_VICTORY_THEME
+                                                        .legend.style.labels
+                                                        .fontFamily,
+                                                fontSize:
+                                                    CBIOPORTAL_VICTORY_THEME
+                                                        .legend.style.labels
+                                                        .fontSize,
+                                                fontWeight: 'normal',
+                                            },
+                                            {
+                                                fontFamily:
+                                                    CBIOPORTAL_VICTORY_THEME
+                                                        .legend.style.labels
+                                                        .fontFamily,
+                                                fontWeight: 'normal',
+                                                fontSize: '12',
+                                            },
+                                        ]}
+                                        dy={6.5}
                                     />
-                                )
-                            }
-                            groupComponent={
-                                <g className="survivalChartLegendHideForDownload" />
-                            }
-                        />
-                    )}
-                    {this.legendForDownload}
-                    {this.showPValueText && this.pValueText}
-                </VictoryChart>
+                                }
+                                groupComponent={
+                                    <g className="survivalChartDownloadLegend" />
+                                }
+                            />
+                        )}
+                        {this.showLegend && this.groupSurvivalPlot}
+                        {this.showLegend && this.numberOfSamplesAtRisk}
+                        {this.showLandmarkLine && this.landmarkLines}
+                        {this.showLandmarkLine &&
+                            this.landmarkBelowMaxDate &&
+                            this.groupLandMarkLine}
+                        {this.showLandmarkLine && this.landmarkInformation}
+                    </VictoryChart>
+                </div>
             </div>
         );
     }
@@ -730,6 +1476,7 @@ export default class SurvivalChart
                         style={{
                             display: 'inline-block',
                             marginRight: 12,
+                            marginBottom: 20,
                             fontWeight:
                                 this.highlightedCurve === group.value
                                     ? 'bold'
@@ -788,6 +1535,67 @@ export default class SurvivalChart
                 ))}
             </tr>
         ));
+    }
+
+    @computed get tableRowsHazardRatio() {
+        if (this.hazardRatioGroups !== null) {
+            return (
+                <table
+                    className={'table table-striped'}
+                    style={{ marginTop: 1, width: '100%' }}
+                >
+                    <tbody>
+                        <tr>
+                            <td>
+                                <i style={{ fontSize: 12, color: 'grey' }}>
+                                    hazard ratio ( {<span>&#177;</span>}95%
+                                    confidence interval)
+                                </i>{' '}
+                            </td>
+                            {this.hazardRatioGroups!.map((grp, i) => (
+                                <td>{this.props.analysisGroups[i].name}</td>
+                            ))}
+                        </tr>
+                        {this.hazardRatioGroups!.map((grp, i) => (
+                            <tr>
+                                <td>{this.props.analysisGroups[i].name}</td>
+                                {this.hazardRatioGroups!.map((subgrp, k) => (
+                                    <td>
+                                        <b>
+                                            {subgrp.hazardInformation[
+                                                i
+                                            ].hazardRatio.toFixed(3)}{' '}
+                                            (
+                                            {subgrp.hazardInformation[
+                                                i
+                                            ].lowerCI.toFixed(3)}
+                                            -
+                                            {subgrp.hazardInformation[
+                                                i
+                                            ].upperCI.toFixed(3)}
+                                            )
+                                        </b>
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            );
+        } else {
+            return (
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <b>Hazard ratio calculation failed</b>: Not
+                                enough groups / group size too small
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            );
+        }
     }
 
     public render() {
@@ -876,24 +1684,51 @@ export default class SurvivalChart
                             </div>
                         </Popover>
                     )}
+                    {this.showHazardRatio && (
+                        <div>
+                            <h4 className="forceHeaderStyle h4">
+                                Hazard ratio
+                            </h4>
+                        </div>
+                    )}
+
+                    {this.showHazardRatio && this.tableRowsHazardRatio}
+
                     {this.props.showTable && (
-                        <table
-                            className="table table-striped"
-                            style={{ marginTop: 20, width: '100%' }}
-                        >
-                            <tbody>
-                                <tr>
-                                    <td />
-                                    <td>{this.props.totalCasesHeader}</td>
-                                    <td>{this.props.statusCasesHeader}</td>
-                                    <td>{this.props.medianMonthsHeader}</td>
-                                </tr>
-                                {this.tableRows}
-                            </tbody>
-                        </table>
+                        <div style={{ marginTop: 20, width: '100%' }}>
+                            <h4 className="forceHeaderStyle h4">
+                                Survival plot summary
+                            </h4>
+                            <table
+                                className="table table-striped"
+                                style={{ marginTop: 5, width: '100%' }}
+                            >
+                                <tbody>
+                                    <tr>
+                                        <td />
+                                        <td>{this.props.totalCasesHeader}</td>
+                                        <td>{this.props.statusCasesHeader}</td>
+                                        <td>{this.props.medianMonthsHeader}</td>
+                                    </tr>
+                                    {this.tableRows}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
             );
         }
     }
+}
+export function generateFilterDataBin(
+    scatterPoints: Array<ScatterData>,
+    getAttributeId: () => string
+): DataBin {
+    const minX = scatterPoints[0].x;
+    const maxX = scatterPoints[scatterPoints.length - 1].x;
+    return {
+        id: getAttributeId(),
+        start: minX,
+        end: maxX,
+    } as DataBin;
 }

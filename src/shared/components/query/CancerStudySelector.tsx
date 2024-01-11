@@ -27,7 +27,11 @@ import QuickSelectButtons from './QuickSelectButtons';
 import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import WindowStore from 'shared/components/window/WindowStore';
 import { StudySearch } from 'shared/components/query/StudySearch';
-
+import { DataTypeFilter } from 'shared/components/query/DataTypeFilter';
+import {
+    getSampleCountsPerFilter,
+    getStudyCountPerFilter,
+} from 'shared/components/query/filteredSearch/StudySearchControls';
 const MIN_LIST_HEIGHT = 200;
 
 export interface ICancerStudySelectorProps {
@@ -36,6 +40,49 @@ export interface ICancerStudySelectorProps {
     forkedMode: boolean;
     aboveStudyListBlurb?: JSX.Element;
 }
+
+const StudyFilterOptionsFormatted = [
+    {
+        id: 'sequencedSampleCount',
+        name: 'Mutations',
+        checked: false,
+    },
+    {
+        id: 'cnaSampleCount',
+        name: 'CNA',
+        checked: false,
+    },
+    {
+        id: 'mrnaRnaSeqV2SampleCount',
+        name: 'RNA-Seq',
+        checked: false,
+    },
+    {
+        id: 'mrnaMicroarraySampleCount',
+        name: 'RNA (microarray)',
+        checked: false,
+    },
+    {
+        id: 'miRnaSampleCount',
+        name: 'miRNA',
+        checked: false,
+    },
+    {
+        id: 'rppaSampleCount',
+        name: 'RPPA',
+        checked: false,
+    },
+    {
+        id: 'massSpectrometrySampleCount',
+        name: 'Protein Mass-Spectrometry',
+        checked: false,
+    },
+    {
+        id: 'treatmentCount',
+        name: 'Treatment',
+        checked: false,
+    },
+];
 
 @observer
 export default class CancerStudySelector extends React.Component<
@@ -158,6 +205,40 @@ export default class CancerStudySelector extends React.Component<
         }
     }
 
+    @computed get showSamplesPerFilterType() {
+        const shownStudies = this.logic.mainView.getSelectionReport()
+            .shownStudies;
+        const studyForCalculation =
+            shownStudies.length < this.store.cancerStudies.result.length
+                ? shownStudies
+                : this.store.cancerStudies.result;
+        const filterAttributes = StudyFilterOptionsFormatted.filter(
+            item => item.name
+        );
+        const sampleCountsPerFilter = getSampleCountsPerFilter(
+            StudyFilterOptionsFormatted,
+            studyForCalculation
+        );
+        return sampleCountsPerFilter;
+    }
+
+    @computed get showStudiesPerFilterType() {
+        const shownStudies = this.logic.mainView.getSelectionReport()
+            .shownStudies;
+        const studyForCalculation =
+            shownStudies.length < this.store.cancerStudies.result.length
+                ? shownStudies
+                : this.store.cancerStudies.result;
+        const filterAttributes = StudyFilterOptionsFormatted.filter(
+            item => item.name
+        );
+        const studyCount = getStudyCountPerFilter(
+            StudyFilterOptionsFormatted,
+            studyForCalculation
+        );
+        return studyCount;
+    }
+
     private windowSizeDisposer: IReactionDisposer;
 
     componentDidMount(): void {
@@ -193,6 +274,7 @@ export default class CancerStudySelector extends React.Component<
             shownAndSelectedStudies,
         } = this.logic.mainView.getSelectionReport();
 
+        // TO DO shownStudies can be filtered based on the DataTypeFIlter
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
             getServerConfig().skin_quick_select_buttons
         );
@@ -237,21 +319,50 @@ export default class CancerStudySelector extends React.Component<
                             let searchTimeout: number | null = null;
 
                             return (
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    {this.store.queryParser && (
-                                        <StudySearch
-                                            parser={this.store.queryParser}
-                                            query={this.store.searchClauses}
-                                            onSearch={query =>
-                                                (this.store.searchClauses = query)
+                                <div>
+                                    <div
+                                        data-tour="data-type-filter"
+                                        data-test="data-type-filter-test"
+                                        style={{
+                                            display: 'inline-block',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <DataTypeFilter
+                                            dataFilter={
+                                                this.store.dataTypeFilters
+                                            }
+                                            isChecked={false}
+                                            buttonText={'Data type'}
+                                            dataFilterActive={
+                                                StudyFilterOptionsFormatted
+                                            }
+                                            store={this.store}
+                                            samplePerFilter={
+                                                this.showSamplesPerFilterType
+                                            }
+                                            studyPerFilter={
+                                                this.showStudiesPerFilterType
                                             }
                                         />
-                                    )}
+                                    </div>
+                                    <div
+                                        data-tour="cancer-study-search-box"
+                                        style={{
+                                            display: 'inline-block',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        {this.store.queryParser && (
+                                            <StudySearch
+                                                parser={this.store.queryParser}
+                                                query={this.store.searchClauses}
+                                                onSearch={query =>
+                                                    (this.store.searchClauses = query)
+                                                }
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             );
                         }}
@@ -268,6 +379,7 @@ export default class CancerStudySelector extends React.Component<
                             </Then>
                         </If>
                         <div
+                            data-tour="cancer-study-list-container"
                             className={styles.cancerStudyListContainer}
                             data-test="cancerTypeListContainer"
                         >

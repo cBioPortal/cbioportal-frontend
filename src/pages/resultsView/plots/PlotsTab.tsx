@@ -9,10 +9,7 @@ import {
 } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
-import {
-    allowExpressionProfiles,
-    ResultsViewPageStore,
-} from '../ResultsViewPageStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { Button, FormControl } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
@@ -102,7 +99,10 @@ import {
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
 import MultipleCategoryBarPlot from '../../groupComparison/MultipleCategoryBarPlot';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
-import { onMobxPromise } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    onMobxPromise,
+} from 'cbioportal-frontend-commons';
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
 import Pluralize from 'pluralize';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
@@ -132,6 +132,8 @@ import {
 } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import { getServerConfig } from 'config/config';
 
 enum EventKey {
     horz_logScale,
@@ -1009,12 +1011,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     // select default if _selectedGenericAssayOption is undefined and there are generic assay options to choose from
                     // if there is a gene selected in the other axis, select the first related option in this axis
                     // this will not override the option recorded in the url
-                    const selectedGeneRelatedOptions = selectedHugoGeneSymbolInTheOtherAxis
-                        ? filterGenericAssayOptionsByGenes(
-                              genericAssayOptions,
-                              [selectedHugoGeneSymbolInTheOtherAxis]
-                          )
-                        : [];
+                    // 1. get genericAssayType based on selection
+                    const genericAssayType = vertical
+                        ? self.vertSelection.dataType
+                        : self.horzSelection.dataType;
+                    // 2. If this genericAssayType is gene-related && one gene is selected in the other axis
+                    // Then find gene-related options
+                    const selectedGeneRelatedOptions =
+                        genericAssayType &&
+                        GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                            genericAssayType
+                        ]?.globalConfig?.geneRelatedGenericAssayType &&
+                        selectedHugoGeneSymbolInTheOtherAxis
+                            ? filterGenericAssayOptionsByGenes(
+                                  genericAssayOptions,
+                                  [selectedHugoGeneSymbolInTheOtherAxis]
+                              )
+                            : [];
+                    // 3. return first gene-related option or the detault option
                     return !_.isEmpty(selectedGeneRelatedOptions)
                         ? selectedGeneRelatedOptions[0]
                         : genericAssayOptions[0];
@@ -3418,7 +3432,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     selectedEntities,
                     this._vertGenericAssaySearchText,
                     this.props.store.hugoGeneSymbols,
-                    this.horzSelection.selectedGeneOption?.label
+                    this.horzSelection.selectedGeneOption?.label,
+                    GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                        axisSelection.dataType!
+                    ]?.globalConfig?.geneRelatedGenericAssayType
                 ) || [];
             // generate statistics for options
             genericAssayOptionsCount = this.vertGenericAssayOptions.result
@@ -3443,7 +3460,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     selectedEntities,
                     this._horzGenericAssaySearchText,
                     this.props.store.hugoGeneSymbols,
-                    this.vertSelection.selectedGeneOption?.label
+                    this.vertSelection.selectedGeneOption?.label,
+                    GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                        axisSelection.dataType!
+                    ]?.globalConfig?.geneRelatedGenericAssayType
                 ) || [];
             // generate statistics for options
             genericAssayOptionsCount = this.horzGenericAssayOptions.result
@@ -3913,7 +3933,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         selectedEntities: string[],
         serchText: string,
         queriedHugoGeneSymbols: string[],
-        selectedHugoGeneSymbolInTheOtherAxis?: string
+        selectedHugoGeneSymbolInTheOtherAxis?: string,
+        isGeneRelatedOptions?: boolean
     ) {
         if (alloptions) {
             const entities = alloptions.filter(option =>
@@ -3927,15 +3948,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // If there is a gene selected in the other axis, bring related options to that gene to first
             // Then bring all queried genes related options after those
             // Last, put all remaining options
-            const selectedGeneRelatedOptions = selectedHugoGeneSymbolInTheOtherAxis
-                ? filterGenericAssayOptionsByGenes(filteredOtherOptions, [
-                      selectedHugoGeneSymbolInTheOtherAxis,
-                  ])
+            const selectedGeneRelatedOptions =
+                isGeneRelatedOptions && selectedHugoGeneSymbolInTheOtherAxis
+                    ? filterGenericAssayOptionsByGenes(filteredOtherOptions, [
+                          selectedHugoGeneSymbolInTheOtherAxis,
+                      ])
+                    : [];
+            const queriedGeneRelatedOptions = isGeneRelatedOptions
+                ? filterGenericAssayOptionsByGenes(
+                      filteredOtherOptions,
+                      queriedHugoGeneSymbols
+                  )
                 : [];
-            const queriedGeneRelatedOptions = filterGenericAssayOptionsByGenes(
-                filteredOtherOptions,
-                queriedHugoGeneSymbols
-            );
             filteredOtherOptions = [
                 ...selectedGeneRelatedOptions,
                 ..._.difference(
@@ -4807,6 +4831,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
+    @computed get showDownload() {
+        return (
+            getServerConfig().skin_hide_download_controls ===
+            DownloadControlOption.SHOW_ALL
+        );
+    }
+
     @computed get plot() {
         const promises: MobxPromise<any>[] = [
             this.plotType,
@@ -5386,26 +5417,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             <DownloadControls
                                                 getSvg={this.getSvg}
                                                 filename={this.downloadFilename}
-                                                additionalRightButtons={[
-                                                    {
-                                                        key: 'Data',
-                                                        content: (
-                                                            <span>
-                                                                Data{' '}
-                                                                <i
-                                                                    className="fa fa-cloud-download"
-                                                                    aria-hidden="true"
-                                                                />
-                                                            </span>
-                                                        ),
-                                                        onClick: this
-                                                            .downloadData,
-                                                        disabled: !this.props
-                                                            .store
-                                                            .entrezGeneIdToGene
-                                                            .isComplete,
-                                                    },
-                                                ]}
+                                                additionalRightButtons={
+                                                    this.showDownload
+                                                        ? [
+                                                              {
+                                                                  key: 'Data',
+                                                                  content: (
+                                                                      <span>
+                                                                          Data{' '}
+                                                                          <i
+                                                                              className="fa fa-cloud-download"
+                                                                              aria-hidden="true"
+                                                                          />
+                                                                      </span>
+                                                                  ),
+                                                                  onClick: this
+                                                                      .downloadData,
+                                                                  disabled: !this
+                                                                      .props
+                                                                      .store
+                                                                      .entrezGeneIdToGene
+                                                                      .isComplete,
+                                                              },
+                                                          ]
+                                                        : undefined
+                                                }
                                                 dontFade={true}
                                                 style={{
                                                     position: 'absolute',
@@ -5510,8 +5546,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         tabReflectsOql={false}
                     />
 
-                    {!allowExpressionProfiles(
-                        this.props.store.studies.result
+                    {// we have always allowed expression data to be compared
+                    // across study in the plots tab
+                    // in portals other than our own.
+                    // only in our own portals have we imposed the rule
+                    // that all studies must be pan_can
+                    // so default to true
+                    !allowExpressionCrossStudy(
+                        this.props.store.studies.result,
+                        getServerConfig().enable_cross_study_expression,
+                        false
                     ) && (
                         <div className={'alert alert-info'}>
                             Expression data cannot be compared across the

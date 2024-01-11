@@ -206,22 +206,24 @@ export default class OncoprintTrackOptionsView {
             .addClass(SEPARATOR_CLASS);
     }
 
+    // 11/2/2023 we are removing sort arrow
+    // leaving commented out if it needs to be restored based on complaint
     private static renderSortArrow(
         $sortarrow: JQuery,
         model: OncoprintModel,
         track_id: TrackId
     ) {
-        let sortarrow_char = '';
-        if (model.isTrackSortDirectionChangeable(track_id)) {
-            sortarrow_char = {
-                '1':
-                    '<i class="fa fa-signal" aria-hidden="true" title="Sorted ascending"></i>',
-                '-1':
-                    '<i class="fa fa-signal" style="transform: scaleX(-1);" aria-hidden="true" title="Sorted descending"></i>',
-                '0': '',
-            }[model.getTrackSortDirection(track_id)];
-        }
-        $sortarrow.html(sortarrow_char);
+        // let sortarrow_char = '';
+        // if (model.isTrackSortDirectionChangeable(track_id)) {
+        //     sortarrow_char = {
+        //         '1':
+        //             '<i class="fa fa-signal" aria-hidden="true" title="Sorted ascending"></i>',
+        //         '-1':
+        //             '<i class="fa fa-signal" style="transform: scaleX(-1);" aria-hidden="true" title="Sorted descending"></i>',
+        //         '0': '',
+        //     }[model.getTrackSortDirection(track_id)];
+        // }
+        // $sortarrow.html(sortarrow_char);
     }
 
     private renderTrackOptions(

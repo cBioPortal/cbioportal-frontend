@@ -22,7 +22,8 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
-import { AppContext } from 'cbioportal-frontend-commons';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -58,6 +59,7 @@ export interface IChartHeaderProps {
         hugoGeneSymbols?: string[];
         treatmentUniqueKeys?: string[];
     }) => void;
+    isCompactSurvivalChart?: boolean;
 }
 
 export interface ChartControls {
@@ -271,7 +273,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             this.props.chartControls &&
             this.props.downloadTypes &&
             this.props.downloadTypes.length > 0 &&
-            this.context.showDownloadControls === true
+            getServerConfig().skin_hide_download_controls !==
+                DownloadControlOption.HIDE_ALL
         );
     }
 
@@ -654,6 +657,11 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     minWidth: downloadSubmenuWidth,
                                 }}
                                 dontFade={true}
+                                showDownload={
+                                    getServerConfig()
+                                        .skin_hide_download_controls ===
+                                    DownloadControlOption.SHOW_ALL
+                                }
                             />
                         )}
                     </div>
@@ -705,7 +713,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         this.props.description
                                             ? this.props.description.description
                                             : '',
-                                        this.props.chartMeta.uniqueKey
+                                        this.props.chartMeta.uniqueKey,
+                                        this.props.isCompactSurvivalChart
                                     )}
                                     destroyTooltipOnHide={true}
                                 >
@@ -727,8 +736,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             </If>
                             <If
                                 condition={
-                                    !!this.props.chartMeta.clinicalAttribute ||
-                                    !!this.props.chartMeta.description
+                                    !!!this.props.description &&
+                                    (!!this.props.chartMeta.clinicalAttribute ||
+                                        !!this.props.chartMeta.description)
                                 }
                             >
                                 <DefaultTooltip
@@ -869,5 +879,3 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         );
     }
 }
-
-ChartHeader.contextType = AppContext;

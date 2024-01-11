@@ -2,6 +2,7 @@ import { CancerStudy } from 'cbioportal-ts-api-client';
 import {
     CancerTreeNode,
     CancerTypeWithVisibility,
+    NodeMetadata,
 } from 'shared/components/query/CancerStudyTreeData';
 import {
     FILTER_SEPARATOR,
@@ -24,7 +25,7 @@ export type CancerTreeSearchFilter = {
     /**
      * Study node properties to search in
      */
-    nodeFields: CancerTreeNodeFields[];
+    nodeFields: FullTextSearchFields[];
 
     /**
      * Filter form config
@@ -32,23 +33,32 @@ export type CancerTreeSearchFilter = {
     form: FilterField;
 };
 
-export const defaultNodeFields: CancerTreeNodeFields[] = [
+/**
+ * Contains all full text search fields
+ */
+export type FullTextSearchNode = CancerStudy & NodeMetadata;
+
+export const searchNodeFields: FullTextSearchFields[] = [
     'name',
     'description',
     'studyId',
+    'studyTags',
 ];
 
-export type CancerTreeNodeFields =
-    | keyof CancerTypeWithVisibility
-    | keyof CancerStudy;
+export type FullTextSearchFields = keyof FullTextSearchNode;
 
 /**
- * @returns {boolean} true if the query matches,
+ * @returns {boolean} match
  * considering quotation marks, 'and' and 'or' logic
+ *
+ * @returns {boolean} forced
+ * indicates if non-match was the result of:
+ * - lacking clause matches (force = false)
+ * - or matching of a not-clause (force = true)
  */
 export function performSearchSingle(
     parsedQuery: SearchClause[],
-    study: CancerTreeNode
+    study: FullTextSearchNode
 ): MatchResult {
     let match = false;
     let hasPositiveClauseType = false;
@@ -73,11 +83,11 @@ export function performSearchSingle(
                 break;
             }
         } else if (clause.isAnd()) {
-            let clauseMatch = true;
+            let allPhrasesMatch = true;
             for (const phrase of clause.getPhrases()) {
-                clauseMatch = clauseMatch && phrase.match(study);
+                allPhrasesMatch = allPhrasesMatch && phrase.match(study);
             }
-            match = match || clauseMatch;
+            match = match || allPhrasesMatch;
         }
     }
     return { match, forced };
@@ -156,7 +166,7 @@ function addNotClause(toAdd: SearchClause, result: SearchClause[]) {
 export function createListPhrase(
     prefix: string,
     option: string,
-    fields: CancerTreeNodeFields[]
+    fields: FullTextSearchFields[]
 ): ListPhrase {
     const textRepresentation = `${
         prefix ? `${prefix}${FILTER_SEPARATOR}` : ''

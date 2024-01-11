@@ -7,7 +7,6 @@ import VirtualStudy, {
     IVirtualStudyProps,
 } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { computed } from 'mobx';
-import { AppContext } from 'cbioportal-frontend-commons';
 
 export interface ICopyDownloadLinksProps extends ICopyDownloadInputsProps {
     copyLinkRef?: (el: HTMLAnchorElement | null) => void;
@@ -37,17 +36,12 @@ export class CopyDownloadQueryLinks extends React.Component<
 
     @computed
     get showDownload() {
-        return (
-            this.props.showDownload &&
-            this.context.showDownloadControls === true
-        );
+        return this.props.showDownload;
     }
 
     @computed
     get showCopy() {
-        return (
-            this.props.showCopy && this.context.showDownloadControls === true
-        );
+        return this.props.showCopy;
     }
 
     public render() {
@@ -138,5 +132,3 @@ export class CopyDownloadQueryLinks extends React.Component<
         );
     }
 }
-
-CopyDownloadQueryLinks.contextType = AppContext;

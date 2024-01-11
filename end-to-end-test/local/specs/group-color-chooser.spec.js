@@ -183,13 +183,15 @@ describe('color chooser for groups menu in study view', function() {
         waitForGroupComparisonTabOpen();
 
         // check that selected colors are used
-        assert.strictEqual(
-            $(gbGroupButton).getAttribute('style'),
-            'background-color: rgb(41, 134, 226);'
+        assert(
+            $(gbGroupButton)
+                .getAttribute('style')
+                .includes('background-color: rgb(41, 134, 226)')
         );
-        assert.strictEqual(
-            $(oastGroupButton).getAttribute('style'),
-            'background-color: rgb(16, 150, 24);'
+        assert(
+            $(oastGroupButton)
+                .getAttribute('style')
+                .includes('background-color: rgb(16, 150, 24);')
         );
     });
 

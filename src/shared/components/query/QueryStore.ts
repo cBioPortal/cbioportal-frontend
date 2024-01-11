@@ -8,6 +8,7 @@ import {
     observable,
     ObservableMap,
     reaction,
+    runInAction,
     toJS,
 } from 'mobx';
 import {
@@ -71,6 +72,7 @@ import { SearchClause } from 'shared/components/query/filteredSearch/SearchClaus
 import { QueryParser } from 'shared/lib/query/QueryParser';
 import { AppStore } from 'AppStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
+import { CaseSetId } from 'shared/components/query/CaseSetSelectorUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -124,6 +126,26 @@ export class QueryStore {
 
         makeObservable(this);
 
+        /**
+         * Reset selectedSampleListId when sampleLists and sampleListInSelectedStudies have finished
+         */
+        reaction(
+            () => [this.sampleLists, this.sampleListInSelectedStudies],
+            () => {
+                if (
+                    !this.sampleLists.isComplete ||
+                    !this.sampleListInSelectedStudies.isComplete
+                ) {
+                    return;
+                }
+                if (
+                    !this.initiallySelected.sampleListId ||
+                    this.studiesHaveChangedSinceInitialization
+                ) {
+                    this._selectedSampleListId = undefined;
+                }
+            }
+        );
         this.initialize(urlWithInitialParams);
     }
 
@@ -269,8 +291,14 @@ export class QueryStore {
 
     @observable.ref searchClauses: SearchClause[] = [];
 
+    @observable.ref dataTypeFilters: string[] = [];
+
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);
+    }
+
+    @computed get filterType(): string[] {
+        return this.dataTypeFilters;
     }
 
     @observable private _allSelectedStudyIds: ObservableMap<
@@ -296,7 +324,10 @@ export class QueryStore {
     }
 
     set selectableSelectedStudyIds(val: string[]) {
-        this._allSelectedStudyIds = observable.map(stringListToSet(val));
+        runInAction(() => {
+            this.selectedSampleListId = undefined;
+            this._allSelectedStudyIds = observable.map(stringListToSet(val));
+        });
     }
 
     @action
@@ -474,9 +505,24 @@ export class QueryStore {
     @observable private _selectedSampleListId?: string = undefined; // user selection
     @computed
     public get selectedSampleListId() {
-        if (this._selectedSampleListId !== undefined)
-            return this._selectedSampleListId;
-        return this.defaultSelectedSampleListId;
+        // check to make sure selected sample list belongs to study
+        // OR is custom list
+        const matchesSelectedStudy =
+            // custom list
+            this._selectedSampleListId === CUSTOM_CASE_LIST_ID ||
+            // if multiple studies selected, then we look for list classes enumerated in CaseSetId enum
+            _.values(CaseSetId).includes(
+                this._selectedSampleListId as CaseSetId
+            ) ||
+            // otherwise, we check that this sample list belongs to a selected study
+            this.sampleListInSelectedStudies.result.some(
+                sampleList =>
+                    sampleList.sampleListId === this._selectedSampleListId
+            );
+
+        return matchesSelectedStudy
+            ? this._selectedSampleListId
+            : this.defaultSelectedSampleListId;
     }
 
     public set selectedSampleListId(value) {
@@ -592,9 +638,10 @@ export class QueryStore {
     );
 
     readonly cancerStudies = remoteData(
-        client.getAllStudiesUsingGET({ projection: 'SUMMARY' }),
+        client.getAllStudiesUsingGET({ projection: 'DETAILED' }),
         []
     );
+
     readonly cancerStudyIdsSet = remoteData<{ [studyId: string]: boolean }>({
         await: () => [this.cancerStudies],
         invoke: async () => {
@@ -603,6 +650,17 @@ export class QueryStore {
             );
         },
         default: {},
+    });
+
+    readonly cancerStudyTags = remoteData({
+        await: () => [this.cancerStudies],
+        invoke: async () => {
+            const studyIds = this.cancerStudies.result
+                .filter(s => s.readPermission)
+                .map(s => s.studyId);
+            return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+        },
+        default: [],
     });
 
     private readonly physicalStudiesIdsSet = remoteData<{
@@ -689,7 +747,7 @@ export class QueryStore {
         default: {},
     });
 
-    private readonly physicalStudiesSet = remoteData<{
+    public readonly physicalStudiesSet = remoteData<{
         [studyId: string]: CancerStudy;
     }>({
         await: () => [this.cancerStudies],
@@ -703,6 +761,15 @@ export class QueryStore {
             );
         },
         default: {},
+    });
+
+    public readonly selectedPhysicalStudies = remoteData({
+        await: () => [this.physicalStudiesSet],
+        invoke: async () => {
+            return this.physicalStudyIdsInSelection.map(
+                studyId => this.physicalStudiesSet.result[studyId]
+            );
+        },
     });
 
     readonly userVirtualStudies = remoteData(async () => {
@@ -985,14 +1052,6 @@ export class QueryStore {
             );
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly validProfileIdSetForSelectedStudies = remoteData({
@@ -1056,7 +1115,7 @@ export class QueryStore {
         return _.sumBy(this.selectableSelectedStudies, s => s.allSampleCount);
     }
 
-    readonly sampleLists = remoteData({
+    readonly sampleLists = remoteData<SampleList[]>({
         invoke: async () => {
             if (!this.isSingleNonVirtualStudySelected) {
                 return [];
@@ -1069,14 +1128,6 @@ export class QueryStore {
             return _.sortBy(sampleLists, sampleList => sampleList.name);
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly mutSigForSingleStudy = remoteData({
@@ -1430,6 +1481,7 @@ export class QueryStore {
         return new CancerStudyTreeData({
             cancerTypes: this.cancerTypes.result,
             studies: this.cancerStudies.result,
+            allStudyTags: this.cancerStudyTags.result,
             priorityStudies: this.priorityStudies,
             virtualStudies: this.forDownloadTab
                 ? []
@@ -1556,7 +1608,7 @@ export class QueryStore {
     getFilteredProfiles(
         molecularAlterationType: MolecularProfile['molecularAlterationType']
     ) {
-        return this.molecularProfilesInSelectedStudies.result.filter(
+        const ret = this.molecularProfilesInSelectedStudies.result.filter(
             profile => {
                 if (profile.molecularAlterationType != molecularAlterationType)
                     return false;
@@ -1564,6 +1616,8 @@ export class QueryStore {
                 return profile.showProfileInAnalysisTab || this.forDownloadTab;
             }
         );
+
+        return ret;
     }
 
     isProfileTypeSelected(profileType: string) {
@@ -2176,6 +2230,10 @@ export class QueryStore {
         this.searchClauses = this.queryParser.parseSearchQuery(searchText);
     }
 
+    @action setFilterType(filter: string) {
+        this.dataTypeFilters.push(filter);
+    }
+
     @action clearSelectedCancerType() {
         this.selectedCancerTypeIds = [];
     }
@@ -2273,16 +2331,7 @@ export class QueryStore {
 
         let urlParams = this.asyncUrlParams.result;
 
-        if (this.forDownloadTab) {
-            formSubmit(
-                buildCBioPortalPageUrl('data_download'),
-                urlParams.query,
-                undefined,
-                'smart'
-            );
-        } else {
-            this.singlePageAppSubmitRoutine(urlParams.query, currentTab);
-        }
+        this.singlePageAppSubmitRoutine(urlParams.query, currentTab);
 
         return true;
     }

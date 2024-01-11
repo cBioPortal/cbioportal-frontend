@@ -2,7 +2,8 @@ import * as React from 'react';
 import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import { action, computed, observable, makeObservable } from 'mobx';
+import 'react-toastify/dist/ReactToastify.css';
+import { action, computed, makeObservable, observable } from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -18,6 +19,7 @@ import { ClinicalDataTab } from './tabs/ClinicalDataTab';
 import {
     DefaultTooltip,
     getBrowserWindow,
+    onMobxPromise,
     remoteData,
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -32,7 +34,6 @@ import { Else, If, Then } from 'react-if';
 import CustomCaseSelection from './addChartButton/customCaseSelection/CustomCaseSelection';
 import { AppStore } from '../../AppStore';
 import ActionButtons from './studyPageHeader/ActionButtons';
-import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
     GACustomFieldsEnum,
     serializeEvent,
@@ -43,10 +44,10 @@ import classNames from 'classnames';
 import { getServerConfig, ServerConfigHelpers } from '../../config/config';
 import {
     AlterationMenuHeader,
-    getButtonNameWithDownPointer,
     ChartMetaDataTypeEnum,
+    getButtonNameWithDownPointer,
 } from './StudyViewUtils';
-import { Alert, Modal } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import styles from './styles.module.scss';
@@ -67,8 +68,15 @@ import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
-import URL from 'url';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import { Tour } from 'tours';
+import QueryString from 'qs';
+import setWindowVariable from 'shared/lib/setWindowVariable';
+import {
+    buildCustomTabs,
+    prepareCustomTabConfigurations,
+} from 'shared/lib/customTabs/customTabHelpers';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -136,6 +144,9 @@ export default class StudyViewPage extends React.Component<
             this.urlWrapper
         );
 
+        // Expose store to window for use in custom tabs.
+        setWindowVariable('studyViewPageStore', this.store);
+
         const openResourceId =
             this.urlWrapper.tabId &&
             extractResourceIdFromTabId(this.urlWrapper.tabId);
@@ -183,22 +194,33 @@ export default class StudyViewPage extends React.Component<
                 newStudyViewFilter.sharedCustomData = params.sharedCustomData;
             }
         }
+
+        // Overrite filterJson from URL with what is defined in postData
+        const postDataFilterJson = this.getFilterJsonFromPostData();
+        if (postDataFilterJson) {
+            newStudyViewFilter.filterJson = postDataFilterJson;
+        }
+
+        let updateStoreFromURLPromise = remoteData(() => Promise.resolve([]));
         if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
-            this.store.updateStoreFromURL(newStudyViewFilter);
             this.store.studyViewQueryFilter = newStudyViewFilter;
+            updateStoreFromURLPromise = remoteData(async () => {
+                await this.store.updateStoreFromURL(newStudyViewFilter);
+                return [];
+            });
         }
 
         onMobxPromise(
-            this.store.queriedPhysicalStudyIds,
+            [this.store.queriedPhysicalStudyIds, updateStoreFromURLPromise],
             (strArr: string[]) => {
+                this.store.initializeReaction();
                 trackEvent({
-                    category: 'studyPage',
-                    action: 'studyPageLoad',
-                    label: strArr.join(',') + ',',
-                    fieldsObject: {
-                        [GACustomFieldsEnum.VirtualStudy]: (
-                            this.store.filteredVirtualStudies.result!.length > 0
-                        ).toString(),
+                    eventName: 'studyPageLoad',
+                    parameters: {
+                        studies:
+                            this.store.queriedPhysicalStudies.result
+                                .map(s => s.studyId)
+                                .join(',') + ',',
                     },
                 });
             }
@@ -219,6 +241,33 @@ export default class StudyViewPage extends React.Component<
                 this.toolbarLeft = $(this.toolbar).position().left;
             }
         }, 500);
+    }
+
+    private getFilterJsonFromPostData(): string | undefined {
+        let filterJson: string | undefined;
+
+        const parsedFilterJson = _.unescape(
+            getBrowserWindow()?.postData?.filterJson
+        );
+
+        if (parsedFilterJson) {
+            try {
+                JSON.parse(parsedFilterJson);
+                filterJson = parsedFilterJson;
+            } catch (error) {
+                console.error(
+                    `PostData.filterJson does not have valid JSON, error: ${error}`
+                );
+            }
+        }
+        return filterJson;
+    }
+
+    @computed get customTabsConfigs() {
+        return prepareCustomTabConfigurations(
+            getServerConfig().custom_tabs,
+            'STUDY_PAGE'
+        );
     }
 
     @autobind
@@ -327,6 +376,21 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
+    @computed get isLoading() {
+        return (
+            this.store.queriedSampleIdentifiers.isPending ||
+            this.store.invalidSampleIds.isPending ||
+            this.body.isPending
+        );
+    }
+
+    @computed get isAnySampleSelected() {
+        return this.store.selectedSamples.result.length !==
+            this.store.samples.result.length
+            ? 1
+            : 0;
+    }
+
     @computed get studyViewFullUrlWithFilter() {
         return `${window.location.protocol}//${window.location.host}${
             window.location.pathname
@@ -362,6 +426,7 @@ export default class StudyViewPage extends React.Component<
                 this.store.patientTreatments,
                 this.store.patientTreatmentGroups,
                 this.store.sampleTreatmentGroups,
+                this.store.clinicalEventTypeCounts,
             ];
         },
         invoke: async () => {
@@ -484,6 +549,10 @@ export default class StudyViewPage extends React.Component<
             return tabs;
         },
     });
+
+    @computed get customTabs() {
+        return buildCustomTabs(this.customTabsConfigs);
+    }
 
     content() {
         return (
@@ -628,6 +697,7 @@ export default class StudyViewPage extends React.Component<
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
+                                    {this.customTabs}
                                 </MSKTabs>
 
                                 <div
@@ -927,6 +997,9 @@ export default class StudyViewPage extends React.Component<
                                         {ServerConfigHelpers.sessionServiceIsEnabled() &&
                                             this.groupsButton}
                                     </div>
+                                    <StudyViewPageSettingsMenu
+                                        store={this.store}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -980,14 +1053,16 @@ export default class StudyViewPage extends React.Component<
             >
                 <LoadingIndicator
                     size={'big'}
-                    isLoading={
-                        this.store.queriedSampleIdentifiers.isPending ||
-                        this.store.invalidSampleIds.isPending ||
-                        this.body.isPending
-                    }
+                    isLoading={this.isLoading}
                     center={true}
                 />
                 {this.body.component}
+                {!this.isLoading && (
+                    <Tour
+                        studies={this.isAnySampleSelected}
+                        isLoggedIn={this.props.appStore.isLoggedIn}
+                    />
+                )}
             </PageLayout>
         );
     }

@@ -25,9 +25,9 @@ import {
     EllipsisTextTooltip,
     Option,
 } from 'cbioportal-frontend-commons';
-import { ExtendedAlteration } from '../ResultsViewPageStore';
 import ExpressionEnrichmentsBoxPlot from './ExpressionEnrichmentsBoxPlot';
 import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];

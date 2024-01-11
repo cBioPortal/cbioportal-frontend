@@ -1,5 +1,7 @@
-import { CancerTreeNode } from 'shared/components/query/CancerStudyTreeData';
-import { CancerTreeNodeFields } from 'shared/lib/query/textQueryUtils';
+import {
+    FullTextSearchFields,
+    FullTextSearchNode,
+} from 'shared/lib/query/textQueryUtils';
 import _ from 'lodash';
 import {
     FILTER_SEPARATOR,
@@ -12,7 +14,7 @@ import {
 export interface Phrase {
     phrase: string;
     toString(): string;
-    match(study: CancerTreeNode): boolean;
+    match(searchNode: FullTextSearchNode): boolean;
     equals(other: Phrase): boolean;
 }
 
@@ -23,18 +25,18 @@ export interface Phrase {
  *
  * Study fields are matched using logical or
  */
-export class DefaultPhrase implements Phrase {
+export class StringPhrase implements Phrase {
     constructor(
         phrase: string,
         textRepresentation: string,
-        fields: CancerTreeNodeFields[]
+        fields: FullTextSearchFields[]
     ) {
         this._fields = fields;
         this._phrase = phrase;
         this._textRepresentation = textRepresentation;
     }
 
-    private readonly _fields: CancerTreeNodeFields[];
+    private readonly _fields: FullTextSearchFields[];
     protected readonly _textRepresentation: string;
     private readonly _phrase: string;
 
@@ -50,13 +52,13 @@ export class DefaultPhrase implements Phrase {
         return this._textRepresentation;
     }
 
-    public match(study: CancerTreeNode): boolean {
+    public match(study: FullTextSearchNode): boolean {
         let anyFieldMatch = false;
         for (const fieldName of this.fields) {
             let fieldMatch = false;
-            const fieldValue = (study as any)[fieldName];
+            const fieldValue = study[fieldName];
             if (fieldValue) {
-                fieldMatch = matchPhrase(this.phrase, fieldValue);
+                fieldMatch = matchPhrase(this.phrase, '' + fieldValue);
             }
             anyFieldMatch = anyFieldMatch || fieldMatch;
         }
@@ -67,7 +69,7 @@ export class DefaultPhrase implements Phrase {
         if (!other) {
             return false;
         }
-        const o = other as DefaultPhrase;
+        const o = other as StringPhrase;
         if (!o.phrase || !o.fields) {
             return false;
         }
@@ -79,7 +81,7 @@ export class DefaultPhrase implements Phrase {
 }
 
 /**
- * Comma separated list of strings that is matched against entire fields in study
+ * Comma separated list of strings that is matched against fields in study
  *
  * Shape: <prefix>:<phrase> in which phrase is a comma separated list
  *
@@ -87,14 +89,14 @@ export class DefaultPhrase implements Phrase {
  */
 export class ListPhrase implements Phrase {
     protected readonly _textRepresentation: string;
-    private readonly _fields: CancerTreeNodeFields[];
+    private readonly _fields: FullTextSearchFields[];
     private readonly _phraseList: string[];
     private readonly _prefix: string;
 
     constructor(
         phrase: string,
         textRepresentation: string,
-        fields: CancerTreeNodeFields[]
+        fields: FullTextSearchFields[]
     ) {
         this._fields = fields;
         this._phraseList = phrase.split(FILTER_VALUE_SEPARATOR);
@@ -122,15 +124,16 @@ export class ListPhrase implements Phrase {
         return this._textRepresentation;
     }
 
-    public match(study: CancerTreeNode): boolean {
+    public match(study: FullTextSearchNode): boolean {
         let anyFieldMatch = false;
         for (const fieldName of this.fields) {
             let anyPhraseMatch = false;
-            const fieldValue = (study as any)[fieldName];
+            const fieldValue = study[fieldName];
             if (fieldValue) {
                 for (const phrase of this._phraseList) {
                     anyPhraseMatch =
-                        anyPhraseMatch || matchPhraseFull(phrase, fieldValue);
+                        anyPhraseMatch ||
+                        matchPhraseFull(phrase, '' + fieldValue);
                 }
             }
             anyFieldMatch = anyFieldMatch || anyPhraseMatch;

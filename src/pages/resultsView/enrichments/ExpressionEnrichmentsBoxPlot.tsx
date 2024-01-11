@@ -21,11 +21,14 @@ import {
 import BoxScatterPlot, {
     IBoxScatterPlotData,
 } from 'shared/components/plots/BoxScatterPlot';
-import { remoteData, DownloadControls } from 'cbioportal-frontend-commons';
+import {
+    remoteData,
+    DownloadControls,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
-import { ExtendedAlteration } from '../ResultsViewPageStore';
 import { getSampleViewUrl } from 'shared/api/urls';
 import classNames from 'classnames';
 import { getGeneSummary } from '../querySummary/QuerySummaryUtils';
@@ -35,6 +38,8 @@ import {
     formatGenericAssayCompactLabelByNameAndId,
     getGenericAssayPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
+import { getServerConfig } from 'config/config';
 
 class EnrichmentsBoxPlotComponent extends BoxScatterPlot<
     IBoxScatterPlotPoint
@@ -370,6 +375,10 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         dontFade={true}
                         style={{ position: 'absolute', right: 10, top: 10 }}
                         type="button"
+                        showDownload={
+                            getServerConfig().skin_hide_download_controls ===
+                            DownloadControlOption.SHOW_ALL
+                        }
                     />
                     <EnrichmentsBoxPlotComponent
                         domainPadding={10}

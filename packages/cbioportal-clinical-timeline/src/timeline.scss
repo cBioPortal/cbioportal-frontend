@@ -1,5 +1,6 @@
 $width: 800px;
 $borderColor: #ccc;
+$tl-fontsize: 12px;
 
 .tl-timeline-wrapper {
     position: relative;
@@ -9,7 +10,7 @@ $borderColor: #ccc;
         top: -25px;
         display: inline-block;
         left: 50%;
-        font-size: 12px;
+        font-size: $tl-fontsize;
     }
 }
 
@@ -82,7 +83,7 @@ $borderColor: #ccc;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        font-size: 12px;
+        font-size: $tl-fontsize;
         > div {
             white-space: nowrap;
             border-bottom: 1px dashed #eee;
@@ -121,21 +122,24 @@ $borderColor: #ccc;
         z-index: 1070 !important;
     }
 
-    //.arrow {
-    //    border-right-color: #000000 !important;
-    //    border-left-color: #000000 !important;
-    //
-    //    &:after {
-    //        border-right-color: #000000 !important;
-    //        border-left-color: #000000 !important;
-    //    }
-    //}
     .popover-content {
         padding: 2px 5px !important;
         border: none;
         //background-color: #000000;
         //color: #fff;
         font-size: 10px;
+
+        table {
+            vertical-align: top;
+
+            tr:nth-child(even) {
+                background: #eeeeee;
+            }
+        }
+
+        td:first-child {
+            font-weight: bold;
+        }
 
         td,
         th {
@@ -166,4 +170,30 @@ $borderColor: #ccc;
 
 .line-break {
     white-space: pre-wrap;
+}
+
+.tl-tracklegend {
+    z-index: 1000;
+    background: #f2f2f2;
+    border-radius: 4px 0 0 0;
+    transform: translateY(-100%);
+    right: 33px;
+    padding: 10px 15px;
+    font-size: $tl-fontsize;
+
+    &.hidden {
+        display: none !important;
+        visibility: hidden;
+        height: 0px;
+        width: 0px;
+    }
+
+    table {
+        td {
+            padding: 0 5px 0 0;
+        }
+        tr:last-child td {
+            padding-bottom: 0;
+        }
+    }
 }

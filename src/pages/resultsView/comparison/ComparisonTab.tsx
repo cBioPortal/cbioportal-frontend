@@ -30,12 +30,15 @@ import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments';
 import AlterationEnrichments from 'pages/groupComparison/AlterationEnrichments';
+import GenericAssayEnrichmentCollections from 'pages/groupComparison/GenericAssayEnrichmentCollections';
 import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
-import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
 import styles from 'pages/resultsView/comparison/styles.module.scss';
 import { getServerConfig } from 'config/config';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
-import { getSortedGenericAssayTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    getSortedGenericAssayAllTabSpecs,
+    getSortedGenericAssayTabSpecs,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -263,28 +266,34 @@ export default class ComparisonTab extends React.Component<
                             />
                         </MSKTab>
                     )}
-                    {this.store.showGenericAssayTab &&
-                        getSortedGenericAssayTabSpecs(
+                    {(this.store.showGenericAssayCategoricalTab ||
+                        this.store.showGenericAssayBinaryTab ||
+                        this.store.showGenericAssayTab) &&
+                        getSortedGenericAssayAllTabSpecs(
                             this.store
-                                .genericAssayEnrichmentProfilesGroupedByGenericAssayType
+                                .genericAssayAllEnrichmentProfilesGroupedByGenericAssayType
                                 .result
-                        ).map(genericAssayTabSpecs => {
+                        ).map(genericAssayAllTabSpecs => {
                             return (
                                 <MSKTab
                                     id={`${
-                                        ResultsViewComparisonSubTab.GENERIC_ASSAY_PREFIX
-                                    }_${genericAssayTabSpecs.genericAssayType.toLowerCase()}`}
-                                    linkText={genericAssayTabSpecs.linkText}
+                                        GroupComparisonTab.GENERIC_ASSAY_PREFIX
+                                    }_${genericAssayAllTabSpecs.genericAssayType.toLowerCase()}`}
+                                    linkText={genericAssayAllTabSpecs.linkText}
                                     anchorClassName={
+                                        this.store
+                                            .genericAssayCategoricalTabUnavailable &&
+                                        this.store
+                                            .genericAssayBinaryTabUnavailable &&
                                         this.store.genericAssayTabUnavailable
                                             ? 'greyedOut'
                                             : ''
                                     }
                                 >
-                                    <GenericAssayEnrichments
+                                    <GenericAssayEnrichmentCollections
                                         store={this.store}
                                         genericAssayType={
-                                            genericAssayTabSpecs.genericAssayType
+                                            genericAssayAllTabSpecs.genericAssayType
                                         }
                                         resultsViewMode={true}
                                     />

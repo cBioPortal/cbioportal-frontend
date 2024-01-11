@@ -40,6 +40,7 @@ export default class GeneLevelSelection extends React.Component<
         label: string;
         profileName: string;
         description: string;
+        dataType: string;
     };
 
     @observable private _oql?: {
@@ -68,6 +69,7 @@ export default class GeneLevelSelection extends React.Component<
                     description: this.selectedOption!.description,
                     profileType: this.selectedOption!.value,
                     hugoGeneSymbol: gene.hugoGeneSymbol,
+                    dataType: this.selectedOption!.dataType,
                 };
             });
             this.props.onSubmit(charts);

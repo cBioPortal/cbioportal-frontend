@@ -24,6 +24,7 @@ const {
     setDropdownOpen,
     jsApiHover,
     setCheckboxChecked,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils');
 
 var {
@@ -394,9 +395,13 @@ describe('crc_msk_2017 study tests', () => {
         $(ADD_CHART_BUTTON).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_BUTTON).waitForEnabled({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
+        browser.waitUntil(
+            () =>
+                !$(ADD_CHART_BUTTON)
+                    .getAttribute('class')
+                    .includes('disabled'),
+            { timeout: WAIT_FOR_VISIBLE_TIMEOUT }
+        );
         setDropdownOpen(
             true,
             ADD_CHART_BUTTON,
@@ -720,10 +725,15 @@ describe('submit genes to results view query', () => {
             goToUrlAndSetLocalStorage(url);
             waitForNetworkQuiet();
         });
-        it('generic assay chart should be added in the summary tab', () => {
-            $(ADD_CHART_BUTTON).waitForEnabled({
-                timeout: 60000,
-            });
+        it('generic assay chart should be added in the summary tab', function() {
+            this.retries(0);
+            browser.waitUntil(
+                () =>
+                    !$(ADD_CHART_BUTTON)
+                        .getAttribute('class')
+                        .includes('disabled'),
+                { timeout: 60000 }
+            );
             $(ADD_CHART_BUTTON).click();
 
             // Change to GENERIC ASSAY tab
@@ -734,16 +744,22 @@ describe('submit genes to results view query', () => {
 
             // wait for generic assay data loading complete
             // and select a option
-            $('div[data-test="GenericAssaySelection"]').waitForExist();
-            $('div[data-test="GenericAssaySelection"] input').setValue(
-                'Prasinovirus'
-            );
+            $(
+                'div[data-test="GenericAssayEntitySelection"] #react-select-3-input'
+            ).waitForExist();
+            $(
+                'div[data-test="GenericAssayEntitySelection"] #react-select-3-input'
+            ).setValue('Prasinovirus');
+
             $('div=Select all filtered options (1)').click();
             // close the dropdown
             var indicators = $$('div[class$="indicatorContainer"]');
             indicators[0].click();
             var selectedOptions = $$('div[class$="multiValue"]');
             assert.equal(selectedOptions.length, 1);
+
+            // this is necessary to get the options selection to "take"
+            $(ADD_CHART_GENERIC_ASSAY_TAB).click();
 
             $('button=Add Chart').click();
             // Wait for chart to be added
@@ -801,6 +817,46 @@ describe('study view treatments table', () => {
 
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
+    });
+});
+
+describe('study view timeline events availability table', () => {
+    it('verify timeline events availability table is visible', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/study/summary?id=cesc_tcga_pan_can_atlas_2018`
+        );
+        getElementByTestHandle('CLINICAL_EVENT_TYPE_COUNT-table').waitForExist({
+            timeout: 20000,
+        });
+    });
+
+    it('verify filters can be applied', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/study/summary?id=cesc_tcga_pan_can_atlas_2018`
+        );
+
+        getElementByTestHandle('CLINICAL_EVENT_TYPE_COUNT-table').waitForExist({
+            timeout: 20000,
+        });
+        const selectedPatients = getElementByTestHandle(
+            'selected-patients'
+        ).getText();
+
+        const timelineEventsAvailabilityCheckBox =
+            '[data-test="CLINICAL_EVENT_TYPE_COUNT-table"] .ReactVirtualized__Table__row:nth-child(2) input';
+
+        const applyFilterButton =
+            '[data-test="CLINICAL_EVENT_TYPE_COUNT-table"] button';
+
+        $(timelineEventsAvailabilityCheckBox).waitForExist();
+        $(timelineEventsAvailabilityCheckBox).click();
+        $(applyFilterButton).waitForExist();
+        $(applyFilterButton).click();
+        waitForNetworkQuiet();
+        assert.notEqual(
+            getElementByTestHandle('selected-patients').getText(),
+            selectedPatients
+        );
     });
 });
 

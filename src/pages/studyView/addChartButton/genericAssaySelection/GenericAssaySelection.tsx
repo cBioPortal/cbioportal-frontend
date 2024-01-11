@@ -342,7 +342,7 @@ export default class GenericAssaySelection extends React.Component<
                         : 'auto',
                 }}
             >
-                <div data-test="GenericAssayEntitySelection">
+                <div data-test="GenericAssayProfileSelection">
                     {/* {this.isSelectedGenericAssayOptionsOverLimit && (
                         <div className="alert alert-warning">
                             <i
@@ -355,60 +355,67 @@ export default class GenericAssaySelection extends React.Component<
                         </div>
                     )} */}
                     <Select
-                        name="generic-assay-select"
-                        placeholder={
-                            this.overridePlaceHolderText
-                                ? this.overridePlaceHolderText
-                                : `Search for ${deriveDisplayTextFromGenericAssayType(
-                                      this.props.genericAssayType,
-                                      true
-                                  )}...`
-                        }
-                        closeMenuOnSelect={false}
-                        value={this.selectedGenericAssaysJS}
-                        isMulti
+                        value={this.selectedProfileOption}
+                        onChange={this.handleProfileSelect}
+                        options={this.props.molecularProfileOptions}
                         isClearable={false}
-                        options={this.showingGenericAssayOptions}
-                        filterOption={this.filterGenericAssayOption}
-                        onInputChange={this.onGenericAssayInputChange}
-                        onChange={this.onSelectGenericAssayEntities}
-                        noOptionsMessage={() => 'No results'}
-                        styles={{
-                            multiValueLabel: (base: any) => ({
-                                ...base,
-                                whiteSpace: 'normal',
-                            }),
-                        }}
-                        components={{
-                            MenuList: MenuList,
-                            MenuListHeader: (
-                                <MenuListHeader
-                                    current={
-                                        this.filteredGenericAssayOptions.length
-                                    }
-                                    total={
-                                        this.props.genericAssayEntityOptions
-                                            .length
-                                    }
-                                />
-                            ),
-                        }}
+                        isSearchable={false}
                     />
                 </div>
-                <div style={{ display: 'flex', marginTop: 10 }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        marginTop: 10,
+                        alignItems: 'center',
+                    }}
+                >
                     <div
-                        data-test="GenericAssayProfileSelection"
+                        data-test="GenericAssayEntitySelection"
                         style={{
                             flex: 1,
                             marginRight: 15,
                         }}
                     >
                         <Select
-                            value={this.selectedProfileOption}
-                            onChange={this.handleProfileSelect}
-                            options={this.props.molecularProfileOptions}
+                            name="generic-assay-select"
+                            placeholder={
+                                this.overridePlaceHolderText
+                                    ? this.overridePlaceHolderText
+                                    : `Search for ${deriveDisplayTextFromGenericAssayType(
+                                          this.props.genericAssayType,
+                                          true
+                                      )}...`
+                            }
+                            closeMenuOnSelect={false}
+                            value={this.selectedGenericAssaysJS}
+                            isMulti
                             isClearable={false}
-                            isSearchable={false}
+                            options={this.showingGenericAssayOptions}
+                            filterOption={this.filterGenericAssayOption}
+                            onInputChange={this.onGenericAssayInputChange}
+                            onChange={this.onSelectGenericAssayEntities}
+                            noOptionsMessage={() => 'No results'}
+                            styles={{
+                                multiValueLabel: (base: any) => ({
+                                    ...base,
+                                    whiteSpace: 'normal',
+                                }),
+                            }}
+                            components={{
+                                MenuList: MenuList,
+                                MenuListHeader: (
+                                    <MenuListHeader
+                                        current={
+                                            this.filteredGenericAssayOptions
+                                                .length
+                                        }
+                                        total={
+                                            this.props.genericAssayEntityOptions
+                                                .length
+                                        }
+                                    />
+                                ),
+                            }}
                         />
                     </div>
                     <button

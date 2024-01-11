@@ -44,6 +44,7 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import ReactDOM from 'react-dom';
 import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
+import { getServerConfig } from 'config/config';
 
 export interface IMutationOncoprintProps {
     store: PatientViewPageStore;
@@ -84,11 +85,15 @@ export default class MutationOncoprint extends React.Component<
         });
     }
 
-    private get clustered() {
+    private get clustered(): boolean {
         const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
             .clusterHeatmap;
-        return !urlValue || urlValue === 'true'; // default true
+        if (urlValue) {
+            return urlValue === 'true';
+        }
+        return getServerConfig().oncoprint_clustered_default;
     }
+
     private set clustered(o: boolean) {
         this.props.urlWrapper.updateURL(currentParams => {
             currentParams.genomicEvolutionSettings.clusterHeatmap = o.toString();

@@ -1,9 +1,18 @@
 import * as React from 'react';
-import { calcProteinChangeSortValue } from 'cbioportal-utils';
+import {
+    calcProteinChangeSortValue,
+    getVariantAnnotation,
+    isGermlineMutationStatus,
+    RemoteData,
+} from 'cbioportal-utils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { TruncatedText } from 'cbioportal-frontend-commons';
 import MutationStatusColumnFormatter from './MutationStatusColumnFormatter';
 import styles from './proteinChange.module.scss';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { RevueCell } from 'react-mutation-mapper';
+import { getServerConfig } from 'config/config';
+import _ from 'lodash';
 
 export default class ProteinChangeColumnFormatter {
     public static getSortValue(d: Mutation[]): number | null {
@@ -56,13 +65,30 @@ export default class ProteinChangeColumnFormatter {
         }
     }
 
-    public static renderWithMutationStatus(data: Mutation[]) {
+    public static renderWithMutationStatus(
+        mutations: Mutation[],
+        indexedVariantAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >
+    ) {
         // use text as display value
-        const text: string = ProteinChangeColumnFormatter.getDisplayValue(data);
+        const text: string = ProteinChangeColumnFormatter.getDisplayValue(
+            mutations
+        );
 
-        const mutationStatus:
-            | string
-            | null = MutationStatusColumnFormatter.getData(data);
+        const vue =
+            indexedVariantAnnotations?.isComplete &&
+            indexedVariantAnnotations?.result &&
+            !_.isEmpty(mutations)
+                ? getVariantAnnotation(
+                      mutations[0],
+                      indexedVariantAnnotations.result
+                  )?.annotation_summary?.vues
+                : undefined;
+
+        const isGermlineMutation = isGermlineMutationStatus(
+            MutationStatusColumnFormatter.getData(mutations)
+        );
 
         let content = (
             <TruncatedText
@@ -73,18 +99,19 @@ export default class ProteinChangeColumnFormatter {
             />
         );
 
-        // add a germline indicator next to protein change if it is a germline mutation!
-        if (
-            mutationStatus &&
-            mutationStatus.toLowerCase().indexOf('germline') > -1
-        ) {
-            content = (
-                <span>
-                    {content}
+        content = (
+            <span className={styles.proteinChangeCell}>
+                {content}
+                {isGermlineMutation && ( // add a germline indicator next to protein change if it is a germline mutation!
                     <span className={styles.germline}>Germline</span>
-                </span>
-            );
-        }
+                )}
+                {getServerConfig().show_revue && vue && (
+                    <span className={styles.revueIcon}>
+                        <RevueCell vue={vue} />
+                    </span>
+                )}
+            </span>
+        );
 
         return content;
     }

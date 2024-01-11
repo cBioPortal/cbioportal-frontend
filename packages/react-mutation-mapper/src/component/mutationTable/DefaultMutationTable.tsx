@@ -56,6 +56,7 @@ export type DefaultMutationTableProps = {
     >;
     selectedTranscriptId?: string;
     enableCivic?: boolean;
+    enableRevue?: boolean;
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
     pubMedCache?: MobxCache;
@@ -124,7 +125,8 @@ export default class DefaultMutationTable extends React.Component<
                       this.props.oncoKbData,
                       this.props.usingPublicOncoKbInstance,
                       this.props.civicGenes,
-                      this.props.civicVariants
+                      this.props.civicVariants,
+                      this.props.indexedVariantAnnotations
                   );
     }
 
@@ -217,6 +219,7 @@ export default class DefaultMutationTable extends React.Component<
                         enableHotspot={true}
                         enableCivic={this.props.enableCivic || false}
                         enableMyCancerGenome={true}
+                        enableRevue={true}
                         hotspotData={this.props.hotspotData}
                         oncoKbData={this.props.oncoKbData}
                         oncoKbCancerGenes={this.props.oncoKbCancerGenes}
@@ -226,6 +229,9 @@ export default class DefaultMutationTable extends React.Component<
                         pubMedCache={this.props.pubMedCache}
                         civicGenes={this.props.civicGenes}
                         civicVariants={this.props.civicVariants}
+                        indexedVariantAnnotations={
+                            this.props.indexedVariantAnnotations
+                        }
                     />
                 );
             case MutationColumn.HGVSG:

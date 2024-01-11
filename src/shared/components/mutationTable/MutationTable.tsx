@@ -63,6 +63,8 @@ import {
     IMyCancerGenomeData,
     RemoteData,
     IMyVariantInfoIndex,
+    extractGenomicLocation,
+    genomicLocationString,
 } from 'cbioportal-utils';
 import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
@@ -84,6 +86,7 @@ import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/m
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
     uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string };
+    uniqueSampleKeyToCancerType?: { [uniqueSampleKey: string]: string };
     molecularProfileIdToMolecularProfile?: {
         [molecularProfileId: string]: MolecularProfile;
     };
@@ -100,6 +103,7 @@ export interface IMutationTableProps {
     enableMyCancerGenome?: boolean;
     enableHotspot?: boolean;
     enableCivic?: boolean;
+    enableRevue?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -111,6 +115,8 @@ export interface IMutationTableProps {
     >;
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    oncoKbDataForCancerType?: RemoteData<IOncoKbData | Error | undefined>;
+    oncoKbDataForUnknownPrimary?: RemoteData<IOncoKbData | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
@@ -150,6 +156,7 @@ export interface IMutationTableProps {
         column: Column<Mutation[]>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
+    customControls?: JSX.Element;
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
@@ -159,7 +166,7 @@ import {
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
 } from 'shared/lib/AnnotationColumnUtils';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
 export enum MutationTableColumnType {
@@ -206,6 +213,13 @@ export enum MutationTableColumnType {
     DBSNP = 'dbSNP',
     GENE_PANEL = 'Gene panel',
     SIGNAL = 'SIGNAL',
+    NUM_MUTATED_GROUP_A = '(A) Group',
+    NUM_MUTATED_GROUP_B = '(B) Group',
+    LOG_RATIO = 'Log2 Ratio',
+    ENRICHED_IN = 'Enriched in',
+    MUTATION_OVERLAP = 'Mutation Overlap',
+    P_VALUE = 'P_VALUE',
+    Q_VALUE = 'Q_VALUE',
 }
 
 export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
@@ -287,6 +301,7 @@ export default class MutationTable<
         enableMyCancerGenome: true,
         enableHotspot: true,
         enableCivic: false,
+        enableRevue: true,
     };
 
     constructor(props: P) {
@@ -316,10 +331,32 @@ export default class MutationTable<
     }
 
     @autobind
-    private resolveTumorType(mutation: Mutation) {
+    protected resolveTumorType(mutation: Mutation) {
         // first, try to get it from uniqueSampleKeyToTumorType map
         if (this.props.uniqueSampleKeyToTumorType) {
             return this.props.uniqueSampleKeyToTumorType[
+                mutation.uniqueSampleKey
+            ];
+        }
+
+        // second, try the study cancer type
+        if (this.props.studyIdToStudy) {
+            const studyMetaData = this.props.studyIdToStudy[mutation.studyId];
+
+            if (studyMetaData.cancerTypeId !== 'mixed') {
+                return studyMetaData.cancerType.name;
+            }
+        }
+
+        // return Unknown, this should not happen...
+        return 'Unknown';
+    }
+
+    @autobind
+    protected resolveCancerType(mutation: Mutation) {
+        // first, try to get it from uniqueSampleKeyToCancerType map
+        if (this.props.uniqueSampleKeyToCancerType) {
+            return this.props.uniqueSampleKeyToCancerType[
                 mutation.uniqueSampleKey
             ];
         }
@@ -348,6 +385,35 @@ export default class MutationTable<
                 width =>
                     (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
             );
+        }
+    }
+
+    // hide reVUE if there is no reVUE mutations in the query
+    @computed get shouldShowRevue() {
+        const genomicLocationStrings = _.chain(this.props.dataStore?.allData)
+            .filter(mutationList => mutationList.length > 0) // get all mutations and filter out empty mutation list
+            .map(mutationList => mutationList[0]) // get mutation object (it's a list but only has one mutation)
+            .map(mutation => extractGenomicLocation(mutation))
+            .compact() // filter out undefined
+            .map(genomicLocation => genomicLocationString(genomicLocation))
+            .value();
+        const genomicLocationStringSet = new Set(genomicLocationStrings);
+        if (this.props.indexedVariantAnnotations?.result) {
+            const filteredVariantAnnotations = _.values(
+                _.pickBy(
+                    this.props.indexedVariantAnnotations!.result,
+                    (annotation, genomicLocationString) =>
+                        genomicLocationStringSet.has(genomicLocationString)
+                )
+            );
+            return _.some(
+                filteredVariantAnnotations.map(
+                    annotation =>
+                        annotation?.annotation_summary?.vues !== undefined
+                )
+            );
+        } else {
+            return false;
         }
     }
 
@@ -751,7 +817,11 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
             name: MutationTableColumnType.PROTEIN_CHANGE,
-            render: ProteinChangeColumnFormatter.renderWithMutationStatus,
+            render: d =>
+                ProteinChangeColumnFormatter.renderWithMutationStatus(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 ProteinChangeColumnFormatter.getSortValue(d),
@@ -760,7 +830,11 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {
             name: MutationTableColumnType.MUTATION_TYPE,
-            render: MutationTypeColumnFormatter.renderFunction,
+            render: d =>
+                MutationTypeColumnFormatter.renderFunction(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
             download: MutationTypeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 MutationTypeColumnFormatter.getDisplayValue(d),
@@ -865,7 +939,8 @@ export default class MutationTable<
                     name,
                     this.oncokbWidth,
                     this.props.mergeOncoKbIcons,
-                    this.handleOncoKbIconModeToggle
+                    this.handleOncoKbIconModeToggle,
+                    this.shouldShowRevue
                 ),
             render: (d: Mutation[]) => (
                 <span id="mutation-annotation">
@@ -888,7 +963,11 @@ export default class MutationTable<
                         enableMyCancerGenome: this.props
                             .enableMyCancerGenome as boolean,
                         enableHotspot: this.props.enableHotspot as boolean,
+                        enableRevue:
+                            !!this.props.enableRevue && this.shouldShowRevue,
                         userDisplayName: this.props.userDisplayName,
+                        indexedVariantAnnotations: this.props
+                            .indexedVariantAnnotations,
                         resolveTumorType: this.resolveTumorType,
                     })}
                 </span>
@@ -910,6 +989,7 @@ export default class MutationTable<
                             this.props.usingPublicOncoKbInstance,
                             this.props.civicGenes,
                             this.props.civicVariants,
+                            this.props.indexedVariantAnnotations,
                             this.resolveTumorType
                         );
 
@@ -951,7 +1031,9 @@ export default class MutationTable<
                     this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,
                     this.props.civicVariants,
-                    this.resolveTumorType
+                    this.props.indexedVariantAnnotations,
+                    this.resolveTumorType,
+                    !!this.props.enableRevue && this.shouldShowRevue
                 );
             },
             sortBy: (d: Mutation[]) => {
@@ -964,6 +1046,7 @@ export default class MutationTable<
                     this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,
                     this.props.civicVariants,
+                    this.props.indexedVariantAnnotations,
                     this.resolveTumorType
                 );
             },
@@ -1314,6 +1397,11 @@ export default class MutationTable<
                     this.props.columnToHeaderFilterIconModal
                 }
                 deactivateColumnFilter={this.props.deactivateColumnFilter}
+                customControls={this.props.customControls}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
             />
         );
     }

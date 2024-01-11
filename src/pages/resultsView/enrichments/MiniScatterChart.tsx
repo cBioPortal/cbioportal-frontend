@@ -18,9 +18,12 @@ import {
     axisLabelStyles,
     CBIOPORTAL_VICTORY_THEME,
     DownloadControls,
+    DownloadControlOption,
     getTextWidth,
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
+
+import { getServerConfig } from 'config/config';
 
 export interface IMiniScatterChartProps {
     data: any[];
@@ -285,6 +288,10 @@ export default class MiniScatterChart<
                             right: 10,
                             zIndex: 0,
                         }}
+                        showDownload={
+                            getServerConfig().skin_hide_download_controls ===
+                            DownloadControlOption.SHOW_ALL
+                        }
                     />
                 </div>
                 <Observer>{this.getTooltip}</Observer>

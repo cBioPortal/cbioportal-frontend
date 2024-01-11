@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
 import { CoExpressionPlotData } from 'pages/resultsView/coExpression/CoExpressionPlot';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-import { GeneticEntity } from 'pages/resultsView/ResultsViewPageStore';
+import { GeneticEntity } from 'shared/model/GeneticEntity';
 
 export function getUniquePrecision(
     value: number,

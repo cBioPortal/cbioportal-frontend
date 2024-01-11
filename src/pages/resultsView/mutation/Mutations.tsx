@@ -22,8 +22,12 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { saveOncoKbIconStyleToLocalStorage } from 'shared/lib/AnnotationColumnUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { getProteinImpactType } from 'cbioportal-frontend-commons';
+import { isPutativeDriver } from 'shared/lib/MutationUtils';
+import { AxisScale } from 'react-mutation-mapper';
+import { LollipopTooltipCountInfo } from 'pages/groupComparison/LollipopTooltipCountInfo';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -163,7 +167,7 @@ export default class Mutations extends React.Component<
     @action.bound
     protected handleOncoKbIconToggle(mergeIcons: boolean) {
         this.userSelectionStore.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
+        saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
     @computed get geneTabContent() {
@@ -230,7 +234,7 @@ export default class Mutations extends React.Component<
                         isPutativeDriver={
                             this.props.store.driverAnnotationSettings
                                 .driversAnnotated
-                                ? (m: AnnotatedMutation) => m.putativeDriver
+                                ? isPutativeDriver
                                 : undefined
                         }
                         trackVisibility={
@@ -269,6 +273,12 @@ export default class Mutations extends React.Component<
                         onClickSettingMenu={this.onClickSettingMenu}
                         compactStyle={true}
                         ptmSources={getServerConfig().ptmSources}
+                        plotYAxisLabelFormatter={symbol => {
+                            return `${symbol} patients`;
+                        }}
+                        plotLollipopTooltipCountInfo={
+                            this.plotLollipopTooltipCountInfo
+                        }
                     />
                 </div>
             );
@@ -287,5 +297,21 @@ export default class Mutations extends React.Component<
     @action.bound
     protected onClickSettingMenu(visible: boolean) {
         this.props.store.isSettingsMenuVisible = visible;
+    }
+
+    @autobind
+    protected plotLollipopTooltipCountInfo(
+        count: number,
+        mutations: Mutation[],
+        axisMode: AxisScale
+    ): JSX.Element {
+        return (
+            <LollipopTooltipCountInfo
+                count={count}
+                mutations={mutations}
+                axisMode={axisMode}
+                patientCount={this.props.store.filteredPatients.result!.length}
+            />
+        );
     }
 }

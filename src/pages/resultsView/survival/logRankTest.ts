@@ -205,7 +205,6 @@ function _logRankTest(
     _.each(groupsTte, function(groupTte, i) {
         var group = { tte: groupTte, ev: groupsEv[i] },
             r = expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
-        //console.log(group.name, group.tte.length, r.observed, r.expected,
         //	(r.observed-r.expected)*(r.observed-r.expected)/r.expected, r.timeNumber);
         if (r.expected) {
             O_E_table.push(r);
@@ -280,6 +279,7 @@ function _logRankTest(
         dof,
         KM_stats,
         pValue,
+        O_E_table,
     };
 }
 
@@ -309,6 +309,89 @@ export function logRankTest(...survivalCurves: SurvivalCurveItem[][]) {
             };
         })
         .filter(x => x.d > 0);
-
     return _logRankTest(survivalItems, groupsTte, groupsEv).pValue;
+}
+
+export function calculatePairWiseHazardRatio(
+    controlGroup: string,
+    ...survivalCurves: SurvivalCurveItem[][]
+) {
+    const allEvents = _.sortBy(_.flatten(survivalCurves), s => s.months);
+    const curve = new SurvivalCurve(allEvents);
+    const sortedCurves = survivalCurves.map(curveData => {
+        return _.sortBy(curveData, d => d.months);
+    });
+
+    const groupsTte = sortedCurves.map(curveData => {
+        return curveData.map(d => d.months);
+    });
+    const groupsEv = sortedCurves.map(curveData => {
+        return curveData.map(d => +d.status as 0 | 1);
+    });
+
+    const survivalItems = _.uniqBy(allEvents, e => e.months)
+        .map(e => {
+            return {
+                t: e.months,
+                d: curve.getDeathsExactlyAt(e.months),
+                n: curve.getTotalAtRiskAtStartOf(e.months),
+                rate:
+                    curve.getDeathsExactlyAt(e.months) /
+                    curve.getTotalAtRiskAtStartOf(e.months),
+            };
+        })
+        .filter(x => x.d > 0);
+    const expectedObservedEvents = _logRankTest(
+        survivalItems,
+        groupsTte,
+        groupsEv
+    ).O_E_table;
+    const expectedObservedRatioGroups = expectedObservedEvents.map(
+        (entry, i) => ({
+            name: 'Group ' + i,
+            ratio: entry.observed / (entry.expected + 0.0001),
+            observed: entry.observed,
+            expected: entry.expected,
+        })
+    );
+    const qnorm: number = 1.959963984540054;
+    const controleGroup = expectedObservedRatioGroups.map(group => group.ratio);
+    const expectedEventsControl = expectedObservedRatioGroups.map(
+        group => group.expected
+    );
+    const hazardratio = expectedObservedRatioGroups.map(group => ({
+        name: group.name,
+        ratio: controleGroup.map(
+            (ratioControl: number, i: number) => group.ratio / ratioControl
+        ),
+        expected: group.expected,
+        observed: group.observed,
+    }));
+    const confidenceInterval = hazardratio.map((subgrp, i) => {
+        return {
+            name: subgrp.name,
+            hazardInformation: subgrp.ratio.map((hr, j) => {
+                return {
+                    hazardRatio: hr,
+                    upperCI: Math.exp(
+                        Math.log(hr) +
+                            qnorm *
+                                Math.sqrt(
+                                    1 / expectedEventsControl[j] +
+                                        1 / expectedEventsControl[i]
+                                )
+                    ),
+                    lowerCI: Math.exp(
+                        Math.log(hr) -
+                            qnorm *
+                                Math.sqrt(
+                                    1 / expectedEventsControl[j] +
+                                        1 / expectedEventsControl[i]
+                                )
+                    ),
+                };
+            }),
+        };
+    });
+    return confidenceInterval;
 }

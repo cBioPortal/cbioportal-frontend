@@ -13,10 +13,6 @@ import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import { transition } from './DeltaUtils';
 import _ from 'lodash';
-import {
-    CustomDriverNumericGeneMolecularData,
-    ExtendedAlteration,
-} from '../../../pages/resultsView/ResultsViewPageStore';
 import './styles.scss';
 import { ShapeParams } from 'oncoprintjs/dist/js/oncoprintshape';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
@@ -24,6 +20,8 @@ import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
 } from 'shared/model/AnnotatedMutation';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 
 export type CategoricalTrackDatum = {
     entity: string;
@@ -293,12 +291,18 @@ export interface IOncoprintProps {
     };
     showClinicalTrackLegends?: boolean;
     showWhitespaceBetweenColumns?: boolean;
+    isWhiteBackgroundForGlyphsEnabled?: boolean;
     showMinimap?: boolean;
 
     onMinimapClose?: () => void;
     onDeleteClinicalTrack?: (key: string) => void;
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
     onTrackGapChange?: (trackId: TrackId, gap: boolean) => void;
+
+    trackKeySelectedForEdit?: string | null;
+    setTrackKeySelectedForEdit?: (key: string | null) => void;
+    clinicalTrackColorChanged?: boolean;
+    setClinicalTrackColorChanged?: (changed: boolean) => void;
 
     suppressRendering?: boolean;
     onSuppressRendering?: () => void;
