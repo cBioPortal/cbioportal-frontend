@@ -300,7 +300,7 @@ export function initializeLoadConfiguration() {
 
     const configServiceUrl =
         getBrowserWindow().frontendConfig.configurationServiceUrl ||
-        `${APIROOT}index`;
+        `${APIROOT}config_service`;
 
     const loadConfig: Partial<IAppConfig> = {
         configurationServiceUrl: configServiceUrl,
