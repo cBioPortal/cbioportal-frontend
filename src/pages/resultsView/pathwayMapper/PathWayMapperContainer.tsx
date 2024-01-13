@@ -92,10 +92,10 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                                 >
                                     NDEx
                                 </a>{' '}
-                                shows 966 pathways:
+                                shows 1,352 pathways:
                                 <ul>
                                     <li>
-                                        211 from{' '}
+                                        207 from{' '}
                                         <a
                                             href="https://www.nlm.nih.gov/research/umls/sourcereleasedocs/current/NCI_PID/index.html"
                                             target="_blank"
@@ -104,7 +104,7 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                                         </a>
                                     </li>
                                     <li>
-                                        69 from{' '}
+                                        83 from{' '}
                                         <a
                                             href="https://signor.uniroma2.it/"
                                             target="_blank"
@@ -113,13 +113,31 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                                         </a>
                                     </li>
                                     <li>
-                                        686 from{' '}
+                                        675 from{' '}
                                         <a
                                             href="https://www.wikipathways.org/"
                                             target="_blank"
                                         >
                                             WikiPathways
                                         </a>
+                                        <li>
+                                            11 from{' '}
+                                            <a
+                                                href="http://cptac.wikipathways.org/"
+                                                target="_blank"
+                                            >
+                                                CPTAC
+                                            </a>
+                                        </li>
+                                        <li>
+                                            30 from{' '}
+                                            <a
+                                                href="http://cptac.wikipathways.org/"
+                                                target="_blank"
+                                            >
+                                                CCMI
+                                            </a>
+                                        </li>
                                     </li>
                                 </ul>
                             </div>
