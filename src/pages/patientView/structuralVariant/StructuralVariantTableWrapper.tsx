@@ -320,12 +320,10 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 },
                 visible:
                     getServerConfig().show_oncokb &&
-                    this.props.store.structuralVariantOncoKbData.result
-                        .indicatorMap !== null &&
-                    Object.keys(
+                    _.isEmpty(
                         this.props.store.structuralVariantOncoKbData.result
                             .indicatorMap
-                    ).length > 0,
+                    ),
                 order: 45,
             });
 
@@ -346,7 +344,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 visible:
                     this.props.store.groupedStructuralVariantData.result
                         .length > 0 &&
-                    this.props.store.groupedStructuralVariantData.result.every(
+                    this.props.store.groupedStructuralVariantData.result.some(
                         d =>
                             d[0].driverFilter !== undefined ||
                             d[0].driverFilterAnn !== undefined

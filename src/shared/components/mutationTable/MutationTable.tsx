@@ -159,6 +159,7 @@ export interface IMutationTableProps {
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
     customControls?: JSX.Element;
+    isAnnotationVisible?: boolean;
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
@@ -311,6 +312,7 @@ export default class MutationTable<
     constructor(props: P) {
         super(props);
         makeObservable(this);
+
         this._columns = {} as Record<
             ExtendedMutationTableColumnType,
             MutationTableColumn
@@ -1054,18 +1056,7 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
-            visible: AnnotationColumnFormatter.isVisible({
-                enableOncoKb: this.props.enableOncoKb,
-                enableRevue: this.props.enableRevue,
-                enableCivic: this.props.enableCivic,
-                enableMyCancerGenome: this.props.enableMyCancerGenome,
-                enableHotspot: this.props.enableHotspot,
-                oncoKbData: this.props.oncoKbData,
-                civicGenes: this.props.civicGenes,
-                civicVariants: this.props.civicVariants,
-                myCancerGenomeData: this.props.myCancerGenomeData,
-                hotspotData: this.props.hotspotData,
-            }),
+            visible: this.isAnnotationVisible,
         };
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
@@ -1083,9 +1074,9 @@ export default class MutationTable<
                     .toUpperCase()
                     .includes(filterStringUpper),
             visible:
-                this.props.data &&
+                this.props.data !== undefined &&
                 this.props.data.length > 0 &&
-                !this.props.data.every(
+                !this.props.data.some(
                     d =>
                         d[0].driverFilter !== undefined ||
                         d[0].driverFilterAnnotation !== undefined
@@ -1429,6 +1420,23 @@ export default class MutationTable<
         );
     }
 
+    @computed protected get isAnnotationVisible(): boolean {
+        return (
+            AnnotationColumnFormatter.isVisible({
+                enableOncoKb: this.props.enableOncoKb,
+                enableRevue: this.props.enableRevue,
+                enableCivic: this.props.enableCivic,
+                enableMyCancerGenome: this.props.enableMyCancerGenome,
+                enableHotspot: this.props.enableHotspot,
+                oncoKbData: this.props.oncoKbData,
+                civicGenes: this.props.civicGenes,
+                civicVariants: this.props.civicVariants,
+                myCancerGenomeData: this.props.myCancerGenomeData,
+                hotspotData: this.props.hotspotData,
+            }) || false
+        );
+    }
+
     public render() {
         return (
             <MutationTableComponent
@@ -1438,7 +1446,11 @@ export default class MutationTable<
                 dataStore={this.props.dataStore}
                 downloadDataFetcher={this.props.downloadDataFetcher}
                 initialItemsPerPage={this.props.initialItemsPerPage}
-                initialSortColumn={this.props.initialSortColumn}
+                initialSortColumn={
+                    this.isAnnotationVisible
+                        ? this.props.initialSortColumn
+                        : MutationTableColumnType.CUSTOM_DRIVER
+                }
                 initialSortDirection={this.props.initialSortDirection}
                 itemsLabel={this.props.itemsLabel}
                 itemsLabelPlural={this.props.itemsLabelPlural}

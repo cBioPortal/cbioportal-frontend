@@ -291,9 +291,7 @@ export default class CopyNumberTableWrapper extends React.Component<
             },
             visible:
                 this.props.enableOncoKb &&
-                this.pageStore.cnaOncoKbData.result.indicatorMap !== null &&
-                Object.keys(this.pageStore.cnaOncoKbData.result.indicatorMap)
-                    .length > 0,
+                _.isEmpty(this.pageStore.cnaOncoKbData.result.indicatorMap),
             order: 50,
         });
 
@@ -313,7 +311,7 @@ export default class CopyNumberTableWrapper extends React.Component<
                     .includes(filterStringUpper),
             visible:
                 this.pageStore.mergedDiscreteCNADataFilteredByGene.length > 0 &&
-                this.pageStore.mergedDiscreteCNADataFilteredByGene.every(
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.some(
                     d =>
                         d[0].driverFilter !== undefined ||
                         d[0].driverFilterAnnotation !== undefined
