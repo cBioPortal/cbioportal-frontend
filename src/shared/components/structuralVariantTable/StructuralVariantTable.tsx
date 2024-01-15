@@ -478,6 +478,7 @@ export default class StructuralVariantTable<
                         enableMyCancerGenome: false,
                         enableHotspot: false,
                         enableRevue: false,
+                        enableSharedTR: false,
                         userDisplayName: ServerConfigHelpers.getUserDisplayName(),
                         studyIdToStudy: this.props.studyIdToStudy,
                     })}

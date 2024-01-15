@@ -65,7 +65,7 @@ export function setAuthorInTherapyRecommendation(
 }
 
 export function getAuthor(): string {
-    return getServerConfig().user_display_name;
+    return getServerConfig().user_display_name || 'anonymousUser';
 }
 
 export function isTherapyRecommendationEmpty(

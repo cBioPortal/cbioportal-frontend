@@ -29,6 +29,7 @@ import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
+import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
 
 /**
  * @author Selcuk Onur Sumer
@@ -42,7 +43,8 @@ export default class AnnotationColumnFormatter {
         uniqueSampleKeyToTumorType?: { [sampleId: string]: string },
         civicGenes?: RemoteData<ICivicGeneIndex | undefined>,
         civicVariants?: RemoteData<ICivicVariantIndex | undefined>,
-        studyIdToStudy?: { [studyId: string]: CancerStudy }
+        studyIdToStudy?: { [studyId: string]: CancerStudy },
+        sharedTherapyRecommendationData?: ISharedTherapyRecommendationData
     ) {
         let value: IAnnotation;
 
@@ -154,6 +156,18 @@ export default class AnnotationColumnFormatter {
                 isHotspot: false,
                 is3dHotspot: false,
             };
+            if (sharedTherapyRecommendationData) {
+                value = {
+                    ...value,
+                    sharedTherapyRecommendationData: {
+                        ...sharedTherapyRecommendationData,
+                        proteinChange:
+                            copyNumberData[0].alteration === -2
+                                ? 'Deletion'
+                                : 'Amplification',
+                    },
+                };
+            }
         } else {
             value = DEFAULT_ANNOTATION_DATA;
         }
@@ -293,7 +307,8 @@ export default class AnnotationColumnFormatter {
             columnProps.uniqueSampleKeyToTumorType,
             columnProps.civicGenes,
             columnProps.civicVariants,
-            columnProps.studyIdToStudy
+            columnProps.studyIdToStudy,
+            columnProps.sharedTherapyRecommendationData
         );
 
         return <GenericAnnotation {...columnProps} annotation={annotation} />;

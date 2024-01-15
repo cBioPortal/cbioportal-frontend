@@ -76,6 +76,7 @@ export interface IServerConfig {
     show_transcript_dropdown: boolean;
     show_signal: boolean;
     show_ndex: boolean;
+    show_sharedTR: boolean;
     survival_initial_x_axis_limit: number;
     survival_show_p_q_values_in_survival_type_table: boolean;
     survival_min_group_threshold: number;

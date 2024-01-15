@@ -48,6 +48,7 @@ import ErrorMessage from 'shared/components/ErrorMessage';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on an mutation to zoom in on the gene in the IGV browser above';
@@ -90,6 +91,7 @@ type IMutationTableWrapperProps = {
     columns: string[];
     alleleFreqHeaderRender?: ((name: string) => JSX.Element) | undefined;
     pageMode?: 'sample' | 'patient';
+    sharedTherapyRecommendationData?: ISharedTherapyRecommendationData;
 };
 
 const ANNOTATION_ELEMENT_ID = 'mutation-annotation';
@@ -150,6 +152,8 @@ export default class MutationTableWrapper extends React.Component<
             this.pageStore.mutSigData,
             this.pageStore.cosmicData,
             this.pageStore.mutationTableShowGeneFilterMenu,
+            this.pageStore.localTherapyRecommendations,
+            this.pageStore.localFollowUps,
         ],
 
         render: () => {
@@ -278,6 +282,7 @@ export default class MutationTableWrapper extends React.Component<
                                 }
                                 enableCivic={getServerConfig().show_civic}
                                 enableRevue={getServerConfig().show_revue}
+                                enableSharedTR={getServerConfig().show_sharedTR}
                                 columnVisibility={this.props.columnVisibility}
                                 showGeneFilterMenu={
                                     this.pageStore
@@ -310,6 +315,25 @@ export default class MutationTableWrapper extends React.Component<
                                 columns={this.props.columns}
                                 alleleFreqHeaderRender={
                                     this.props.alleleFreqHeaderRender
+                                }
+                                sharedTherapyRecommendationData={
+                                    {
+                                        localTherapyRecommendations: this
+                                            .pageStore
+                                            .localTherapyRecommendations.result,
+                                        sharedTherapyRecommendations: this
+                                            .pageStore
+                                            .sharedTherapyRecommendations,
+                                        localFollowUps: this.pageStore
+                                            .localFollowUps.result,
+                                        sharedFollowUps: this.pageStore
+                                            .sharedFollowUps,
+                                        diagnosis: this.pageStore.getDiagnosisFromSamples.result.map(
+                                            cd => cd.value
+                                        ),
+                                        studyId: this.pageStore.getSafeStudyId(),
+                                        caseId: this.pageStore.getSafePatientId(),
+                                    } as ISharedTherapyRecommendationData
                                 }
                             />
                         </FeatureInstruction>

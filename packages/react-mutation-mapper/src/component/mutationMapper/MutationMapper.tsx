@@ -30,6 +30,7 @@ import {
     TrackName,
     TrackVisibility,
 } from '../track/TrackSelector';
+import { ISharedTherapyRecommendationData } from '../bzkfAnnotation/modelCopy/TherapyRecommendation';
 
 export type MutationMapperProps = {
     hugoSymbol?: string;
@@ -104,6 +105,7 @@ export type MutationMapperProps = {
     compactStyle?: boolean;
     collapsePtmTrack?: boolean;
     collapseUniprotTopologyTrack?: boolean;
+    sharedTherapyRecommendationData?: ISharedTherapyRecommendationData;
 };
 
 export function initDefaultMutationMapperStore(props: MutationMapperProps) {

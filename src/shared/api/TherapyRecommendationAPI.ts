@@ -1,4 +1,4 @@
-import { Mutation } from 'cbioportal-ts-api-client';
+import { DiscreteCopyNumberData, Mutation } from 'cbioportal-ts-api-client';
 import {
     IMtb,
     IDeletions,
@@ -164,9 +164,9 @@ export async function updateFollowupUsingPUT(
         });
 }
 
-export async function fetchOtherMtbsUsingPOST(
+export async function fetchTherapyRecommendationsByAlterationsUsingPOST(
     url: string,
-    alterations: Mutation[]
+    alterations: (Mutation | DiscreteCopyNumberData)[]
 ) {
     console.log('### Recycling MTBs ### Calling GET: ' + url);
     return request
@@ -174,11 +174,26 @@ export async function fetchOtherMtbsUsingPOST(
         .send(alterations)
         .then(res => {
             if (res.ok) {
-                console.group('### Recycling MTBs ### Success GETting ' + url);
-                console.log(JSON.parse(res.text));
-                console.groupEnd();
                 const response = JSON.parse(res.text);
-                return response as ITherapyRecommendation[];
+                var TRs = response as ITherapyRecommendation[];
+                TRs.forEach(tr => {
+                    var diag = tr.reasoning.clinicalData?.filter((cd: any) => {
+                        return (
+                            cd.attributeName == 'Diagnosis' ||
+                            cd.attributeName == 'Cancer Type' ||
+                            cd.attributeId == 'CANCER_TYPE' ||
+                            cd.attributeId == 'CANCER_TYPE_DETAILED' ||
+                            cd.attributeId == 'ONCO_TREE_CODE'
+                        );
+                    });
+                    tr.diagnosis = diag?.map(
+                        (diagnosisDatum: any) => diagnosisDatum.value
+                    );
+                });
+                console.group('### Recycling MTBs ### Success GETting ' + url);
+                console.log(TRs);
+                console.groupEnd();
+                return TRs as ITherapyRecommendation[];
             } else {
                 console.group(
                     '### Recycling MTBs ### ERROR res not ok GETting ' + url
@@ -200,18 +215,55 @@ export async function fetchOtherMtbsUsingPOST(
         });
 }
 
+export async function fetchFollowUpsByAlterationsUsingPOST(
+    url: string,
+    alterations: (Mutation | DiscreteCopyNumberData)[]
+) {
+    console.log('### Recycling FollowUps ### Calling POST: ' + url);
+    return request
+        .post(url)
+        .send(alterations)
+        .then(res => {
+            if (res.ok) {
+                console.group(
+                    '### Recycling FollowUps ### Success POSTing ' + url
+                );
+                console.log(JSON.parse(res.text));
+                console.groupEnd();
+                const response = JSON.parse(res.text);
+                return response as IFollowUp[];
+            } else {
+                console.group(
+                    '### Recycling FollowUps ### ERROR res not ok POSTing ' +
+                        url
+                );
+                console.log(JSON.parse(res.text));
+                console.groupEnd();
+
+                return [] as IFollowUp[];
+            }
+        })
+        .catch(err => {
+            console.group(
+                '### Recycling FollowUps ### ERROR catched POSTing ' + url
+            );
+            console.log(err);
+            console.groupEnd();
+
+            return [] as IFollowUp[];
+        });
+}
+
 export async function updateMtbUsingPUT(
     id: string,
     studyId: string,
     url: string,
     mtbs: IMtb[]
 ) {
-    mtbs.forEach(
-        mtb =>
-            (mtb.therapyRecommendations = flattenArray(
-                mtb.therapyRecommendations
-            ))
-    );
+    mtbs.forEach(mtb => {
+        mtb.therapyRecommendations = flattenArray(mtb.therapyRecommendations);
+        mtb.therapyRecommendations.forEach(tr => (tr.studyId = studyId));
+    });
     url = url + '?studyId=' + studyId;
     console.log('### MTB ### Calling PUT: ' + url);
     return request
