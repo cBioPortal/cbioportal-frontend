@@ -69,7 +69,7 @@
         ],
         "parameters": [
           {
-            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
+            "description": "Secret API key passed in HTTP header. The key is configured in application.properties of the portal instance.",
             "in": "header",
             "name": "X-API-KEY",
             "required": true,
