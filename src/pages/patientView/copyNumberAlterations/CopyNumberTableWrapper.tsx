@@ -300,7 +300,7 @@ export default class CopyNumberTableWrapper extends React.Component<
             render: d => CustomDriverColumnFormatter.renderFunction(d),
             download: CustomDriverColumnFormatter.getTextValue,
             sortBy: (d: DiscreteCopyNumberData[]) =>
-                CustomDriverColumnFormatter.getTextValue(d),
+                CustomDriverColumnFormatter.sortValue(d),
             filter: (
                 d: DiscreteCopyNumberData[],
                 filterString: string,

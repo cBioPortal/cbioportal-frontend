@@ -2,6 +2,7 @@ import * as React from 'react';
 import { DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { DriverFilterOrder } from 'shared/lib/StoreUtils';
 
 /**
  * Discrete Copy Number Formatter.
@@ -30,6 +31,23 @@ export default class CustomDriverColumnFormatter {
         } else {
             return null;
         }
+    }
+
+    public static sortValue(data: DiscreteCopyNumberData[]) {
+        if (
+            _.isEmpty(data[0].driverFilter) ||
+            _.isEmpty(data[0].driverFilterAnnotation)
+        ) {
+            return null;
+        }
+
+        return (
+            DriverFilterOrder[
+                data[0].driverFilter.toUpperCase() as keyof typeof DriverFilterOrder
+            ] +
+            '_' +
+            data[0].driverFilterAnnotation
+        );
     }
 
     public static renderFunction(cnaData: DiscreteCopyNumberData[]) {

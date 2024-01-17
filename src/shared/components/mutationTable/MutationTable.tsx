@@ -71,7 +71,11 @@ import {
 import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
-import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';
+import {
+    ColumnSortDirection,
+    getAnnotationData,
+    IAnnotation,
+} from 'react-mutation-mapper';
 import HgvscColumnFormatter from './column/HgvscColumnFormatter';
 import HgvsgColumnFormatter from './column/HgvsgColumnFormatter';
 import GnomadColumnFormatter from './column/GnomadColumnFormatter';
@@ -1063,8 +1067,7 @@ export default class MutationTable<
             name: MutationTableColumnType.CUSTOM_DRIVER,
             render: d => CustomDriverColumnFormatter.renderFunction(d),
             download: CustomDriverColumnFormatter.getTextValue,
-            sortBy: (d: Mutation[]) =>
-                CustomDriverColumnFormatter.getTextValue(d),
+            sortBy: (d: Mutation[]) => CustomDriverColumnFormatter.sortValue(d),
             filter: (
                 d: Mutation[],
                 filterString: string,
@@ -1076,7 +1079,7 @@ export default class MutationTable<
             visible:
                 this.props.data !== undefined &&
                 this.props.data.length > 0 &&
-                !this.props.data.some(
+                this.props.data.some(
                     d =>
                         d[0].driverFilter !== undefined ||
                         d[0].driverFilterAnnotation !== undefined

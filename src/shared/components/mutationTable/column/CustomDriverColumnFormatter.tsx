@@ -4,6 +4,7 @@ import { createToolTip } from './CategoricalColumnFormatter';
 import styles from './mutationType.module.scss';
 import _ from 'lodash';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { DriverFilterOrder, PUTATIVE_DRIVER } from 'shared/lib/StoreUtils';
 
 /**
  * Mutation Column Formatter.
@@ -34,6 +35,23 @@ export default class CustomDriverColumnFormatter {
         }
     }
 
+    public static sortValue(data: Mutation[]) {
+        if (
+            _.isEmpty(data[0].driverFilter) ||
+            _.isEmpty(data[0].driverFilterAnnotation)
+        ) {
+            return null;
+        }
+
+        return (
+            DriverFilterOrder[
+                data[0].driverFilter.toUpperCase() as keyof typeof DriverFilterOrder
+            ] +
+            '_' +
+            data[0].driverFilterAnnotation
+        );
+    }
+
     public static renderFunction(mutations: Mutation[]) {
         // use text for all purposes (display, sort, filter)
         const text: string = CustomDriverColumnFormatter.getTextValue(
@@ -47,8 +65,8 @@ export default class CustomDriverColumnFormatter {
 
         let content;
         if (
-            mutations[0] !== undefined &&
-            (mutations[0] as AnnotatedMutation).putativeDriver
+            !_.isEmpty(mutations[0]?.driverFilter) &&
+            mutations[0].driverFilter === PUTATIVE_DRIVER
         ) {
             content = (
                 <span>

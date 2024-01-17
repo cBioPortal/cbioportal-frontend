@@ -2,6 +2,7 @@ import * as React from 'react';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { AnnotatedStructuralVariant } from 'shared/model/AnnotatedMutation';
+import { DriverFilterOrder } from 'shared/lib/StoreUtils';
 
 /**
  * Discrete Copy Number Formatter.
@@ -30,6 +31,23 @@ export default class CustomDriverColumnFormatter {
         } else {
             return null;
         }
+    }
+
+    public static sortValue(data: StructuralVariant[]) {
+        if (
+            _.isEmpty(data[0].driverFilter) ||
+            _.isEmpty(data[0].driverFilterAnn)
+        ) {
+            return null;
+        }
+
+        return (
+            DriverFilterOrder[
+                data[0].driverFilter.toUpperCase() as keyof typeof DriverFilterOrder
+            ] +
+            '_' +
+            data[0].driverFilterAnn
+        );
     }
 
     public static renderFunction(cnaData: StructuralVariant[]) {
