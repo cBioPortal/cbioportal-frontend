@@ -11,6 +11,9 @@ import { MUTATION_SPECTRUM_FILLS } from '../../../../shared/cache/ClinicalDataCa
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from 'shared/constants';
 import { capitalize } from 'cbioportal-frontend-commons';
+import { hexToRGBA } from 'shared/lib/Colors';
+import { RGBAColor } from 'oncoprintjs';
+import { getDefaultClinicalAttributeColoringForStringDatatype } from './OncoprinterToolUtils';
 
 export const ONCOPRINTER_VAL_NA = 'N/A';
 
@@ -470,6 +473,11 @@ export function getHeatmapTrackKey(attributeName: string) {
 export function getClinicalTracks(
     attributes: OncoprinterClinicalTrackSpec[],
     parsedLines: OncoprinterOrderedValuesInputLine[],
+    userSelectedClinicalTracksColors: {
+        [label: string]: {
+            [value: string]: RGBAColor;
+        };
+    },
     excludedSampleIds?: string[]
 ) {
     let attributeToOncoprintData = getClinicalOncoprintData(
@@ -486,10 +494,20 @@ export function getClinicalTracks(
 
     attributes.map(attr => {
         const data = attributeToOncoprintData[attr.trackName];
-        let datatype, numberRange, countsCategoryFills;
+        let datatype, category_to_color, numberRange, countsCategoryFills;
         switch (attr.datatype) {
             case ClinicalTrackDataType.STRING:
                 datatype = 'string';
+                category_to_color = Object.assign(
+                    {},
+                    _.mapValues(
+                        getDefaultClinicalAttributeColoringForStringDatatype(
+                            data
+                        ),
+                        hexToRGBA
+                    ),
+                    userSelectedClinicalTracksColors[attr.trackName]
+                );
                 break;
             case ClinicalTrackDataType.NUMBER:
             case ClinicalTrackDataType.LOG_NUMBER:
@@ -503,7 +521,24 @@ export function getClinicalTracks(
                     attr.countsCategories!.length ===
                         MUTATION_SPECTRUM_FILLS.length
                 ) {
-                    countsCategoryFills = MUTATION_SPECTRUM_FILLS;
+                    countsCategoryFills = attr.countsCategories!.map(
+                        (label, i) => {
+                            if (
+                                userSelectedClinicalTracksColors[
+                                    attr.trackName
+                                ] &&
+                                userSelectedClinicalTracksColors[
+                                    attr.trackName
+                                ][label]
+                            ) {
+                                return userSelectedClinicalTracksColors[
+                                    attr.trackName
+                                ][label];
+                            } else {
+                                return MUTATION_SPECTRUM_FILLS[i];
+                            }
+                        }
+                    );
                 }
                 break;
         }
@@ -511,6 +546,7 @@ export function getClinicalTracks(
             key: getClinicalTrackKey(attr.trackName),
             attributeId: attr.trackName,
             label: attr.trackName,
+            category_to_color,
             data,
             datatype,
             description: '',

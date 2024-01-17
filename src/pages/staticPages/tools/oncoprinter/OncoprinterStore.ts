@@ -39,6 +39,7 @@ import {
     parseHeatmapInput,
 } from './OncoprinterClinicalAndHeatmapUtils';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { RGBAColor } from 'oncoprintjs';
 
 export type OncoprinterDriverAnnotationSettings = Pick<
     DriverAnnotationSettings,
@@ -53,6 +54,8 @@ function genomeNexusKey(l:OncoprinterInputLineType3_Incomplete){
 function genomeNexusKey2(l:{chromosome:string, start:number, end:number, referenceAllele:string, variantAllele:string}){
     return `${l.chromosome}_${l.start}_${l.end}_${l.referenceAllele}_${l.variantAllele}`;
 }*/
+
+const ONCOPRINTER_COLOR_CONFIG = 'oncoprinterClinicalTracksColorConfig';
 
 export default class OncoprinterStore {
     // NOTE: we are not annotating hotspot because that needs nucleotide positions
@@ -70,9 +73,24 @@ export default class OncoprinterStore {
     @observable hideGermlineMutations = false;
     @observable customDriverWarningHidden: boolean;
 
+    @observable _userSelectedClinicalTracksColors: {
+        [trackLabel: string]: {
+            [attributeValue: string]: RGBAColor;
+        };
+    } = {};
+
     constructor() {
         makeObservable(this);
         this.initialize();
+
+        const clinicalTracksColorConfig = localStorage.getItem(
+            ONCOPRINTER_COLOR_CONFIG
+        );
+        if (clinicalTracksColorConfig !== null) {
+            this._userSelectedClinicalTracksColors = JSON.parse(
+                clinicalTracksColorConfig
+            );
+        }
     }
 
     private initialize() {
@@ -572,6 +590,7 @@ export default class OncoprinterStore {
         return getClinicalTracks(
             result.headers,
             result.data,
+            this.userSelectedClinicalTracksColors,
             this.sampleIdsNotInInputOrder
         );
     }
@@ -588,5 +607,35 @@ export default class OncoprinterStore {
             result.data,
             this.sampleIdsNotInInputOrder
         );
+    }
+
+    @action.bound
+    public setUserSelectedClinicalTrackColor(
+        label: string,
+        value: string,
+        color: RGBAColor | undefined
+    ) {
+        // if color is undefined, delete color from userSelectedClinicalAttributeColors if exists
+        // else, set the color in userSelectedClinicalAttributeColors
+        if (
+            !color &&
+            this._userSelectedClinicalTracksColors[label] &&
+            this._userSelectedClinicalTracksColors[label][value]
+        ) {
+            delete this._userSelectedClinicalTracksColors[label][value];
+        } else if (color) {
+            if (!this._userSelectedClinicalTracksColors[label]) {
+                this._userSelectedClinicalTracksColors[label] = {};
+            }
+            this._userSelectedClinicalTracksColors[label][value] = color;
+        }
+        localStorage.setItem(
+            ONCOPRINTER_COLOR_CONFIG,
+            JSON.stringify(this._userSelectedClinicalTracksColors)
+        );
+    }
+
+    @computed get userSelectedClinicalTracksColors() {
+        return this._userSelectedClinicalTracksColors;
     }
 }
