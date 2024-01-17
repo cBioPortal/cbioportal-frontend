@@ -81,7 +81,7 @@ export default class CustomCaseSelection extends React.Component<
     get sampleSet(): { [id: string]: Sample } {
         return _.keyBy(
             this.props.selectedSamples,
-            s => `${s.studyId}:${s.sampleId}`
+            s => (this.isSingleStudy ? s.sampleId : `${s.studyId}:${s.sampleId}`)
         );
     }
 
