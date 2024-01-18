@@ -174,8 +174,8 @@ export default class SurvivalChartExtended
             },
         },
         pValue: {
-            x: 800,
-            y: 50,
+            x: 910,
+            y: 30,
             textAnchor: 'start',
         },
         legend: {
@@ -576,11 +576,8 @@ export default class SurvivalChartExtended
     private get pValueText() {
         return (
             <VictoryLabel
-                x={this.styleOpts.width - this.styleOpts.padding.right + 10}
-                y={
-                    this.styleOpts.pValue.y +
-                    50 * this.analysisGroupsWithData.length
-                }
+                x={this.styleOpts.pValue.x}
+                y={this.styleOpts.pValue.y}
                 style={baseLabelStyles}
                 textAnchor={this.styleOpts.pValue.textAnchor}
                 text={`Logrank Test P-Value: ${this.pValue}`}
@@ -1406,13 +1403,11 @@ export default class SurvivalChartExtended
                             domain={[0, 100]}
                             crossAxis={false}
                         />
-
+                        {this.showPValueText && this.pValueText}
                         {this.showLegend && this.xAxisForPlot}
                         {!this.showLegend && this.xAxisForSummaryViewPlot}
                         {this.scattersAndLines}
-                        {this.showLegend &&
-                            this.showHazardRatio &&
-                            this.pValueText}
+                        {this.showLegend && this.showHazardRatio}
                         {this.showNormalLegend && this.defaultLegend}
                         {this.showHazardRatio && (
                             <VictoryLegend

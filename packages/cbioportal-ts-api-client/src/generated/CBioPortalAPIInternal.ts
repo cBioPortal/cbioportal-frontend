@@ -1348,7 +1348,7 @@ export default class CBioPortalAPIInternal {
      * Clear and reinitialize caches
      * @method
      * @name CBioPortalAPIInternal#clearAllCachesUsingDELETE
-     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in application.properties of the portal instance.
      * @param {boolean} springManagedCache - Clear Spring-managed caches
      */
     clearAllCachesUsingDELETEWithHttpInfo(parameters: {
@@ -1397,7 +1397,7 @@ export default class CBioPortalAPIInternal {
      * Clear and reinitialize caches
      * @method
      * @name CBioPortalAPIInternal#clearAllCachesUsingDELETE
-     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in application.properties of the portal instance.
      * @param {boolean} springManagedCache - Clear Spring-managed caches
      */
     clearAllCachesUsingDELETE(parameters: {
