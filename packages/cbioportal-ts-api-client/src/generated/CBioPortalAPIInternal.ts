@@ -4559,7 +4559,7 @@ export default class CBioPortalAPIInternal {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/mutation-data-counts/fetch';
+        let path = '/api/mutation-data-counts/fetch';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -4585,7 +4585,7 @@ export default class CBioPortalAPIInternal {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/mutation-data-counts/fetch';
+        let path = '/api/mutation-data-counts/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};

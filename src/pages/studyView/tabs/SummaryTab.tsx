@@ -180,7 +180,10 @@ export class StudySummaryTab extends React.Component<
                 commonProps: () => ({
                     onChangeChartType: this.handlers.onChangeChartType,
                     getData: (dataType?: DataType) =>
-                        this.store.getChartDownloadableData(chartMeta, dataType),
+                        this.store.getChartDownloadableData(
+                            chartMeta,
+                            dataType
+                        ),
                     downloadTypes: ['Summary Data', 'Full Data', 'SVG', 'PDF'],
                 }),
                 [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({

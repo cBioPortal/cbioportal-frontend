@@ -1,5 +1,5 @@
 import * as React from 'react';
-import _ from 'lodash';
+import _, { filter } from 'lodash';
 import { observer } from 'mobx-react';
 import { computed, makeObservable, runInAction } from 'mobx';
 import styles from './styles.module.scss';
@@ -302,37 +302,42 @@ export default class UserSelections extends React.Component<
                 );
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
                 if (chartMeta) {
+                    const filters = mutationDataFilter.values.map(
+                        dataFilterValues => {
+                            return (
+                                <GroupLogic
+                                    components={[
+                                        this.groupedMutationDataFilters(
+                                            dataFilterValues,
+                                            this.props.updateMutationDataFilter,
+                                            chartMeta
+                                        ),
+                                    ]}
+                                    operation=":"
+                                    group={dataFilterValues.length > 1}
+                                />
+                            );
+                        }
+                    );
+
                     acc.push(
                         <div className={styles.parentGroupLogic}>
                             <GroupLogic
-                                components={mutationDataFilter.values.map(
-                                    dataFilterValues => {
-                                        return (
-                                            <GroupLogic
-                                                components={[
-                                                    <span
-                                                        className={
-                                                            styles.filterClinicalAttrName
-                                                        }
-                                                    >
-                                                        {chartMeta.displayName}
-                                                    </span>,
-                                                    this.groupedMutationDataFilters(
-                                                        dataFilterValues,
-                                                        this.props
-                                                            .updateMutationDataFilter,
-                                                        chartMeta
-                                                    ),
-                                                ]}
-                                                operation=":"
-                                                group={
-                                                    dataFilterValues.length > 1
-                                                }
-                                            />
-                                        );
-                                    }
-                                )}
-                                operation={'and'}
+                                components={[
+                                    <span
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
+                                    >
+                                        {chartMeta.displayName}
+                                    </span>,
+                                    <GroupLogic
+                                        components={filters}
+                                        operation={'and'}
+                                        group={filters.length > 1}
+                                    />,
+                                ]}
+                                operation={':'}
                                 group={false}
                             />
                         </div>

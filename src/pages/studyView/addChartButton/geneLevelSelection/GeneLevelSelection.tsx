@@ -265,7 +265,8 @@ export default class GeneLevelSelection extends React.Component<
                         <div
                             style={{
                                 flex: 1,
-                                marginRight: 15,
+                                width: '50%',
+                                marginRight: '5%',
                             }}
                         >
                             <ReactSelect
@@ -274,31 +275,36 @@ export default class GeneLevelSelection extends React.Component<
                                 options={this.molecularProfileOptions}
                                 isClearable={false}
                                 isSearchable={false}
+                                style={{ width: '100%' }}
                             />
-                            {this.selectedOption &&
-                                this.subOptions
-                                    .map(option => option.profileType)
-                                    .includes(
-                                        this.selectedOption.alterationType
-                                    ) && (
-                                    <ReactSelect
-                                        value={this.selectedSubOption}
-                                        onChange={this.handleSubSelect}
-                                        options={this.subOptions}
-                                        isClearable={false}
-                                        isSearchable={false}
-                                    />
-                                )}
                         </div>
                         <button
                             disabled={this.isQueryInvalid || this.hasOQL}
                             className="btn btn-primary btn-sm"
                             data-test="GeneLevelSelectionSubmitButton"
                             onClick={this.onAddChart}
+                            style={{ width: '25%' }}
                         >
                             {this.props.submitButtonText}
                         </button>
                     </div>
+                    <div style={{ width: '70%', marginTop: '5px' }}>
+                        {this.selectedOption &&
+                            this.subOptions
+                                .map(option => option.profileType)
+                                .includes(
+                                    this.selectedOption.alterationType
+                                ) && (
+                                <ReactSelect
+                                    value={this.selectedSubOption}
+                                    onChange={this.handleSubSelect}
+                                    options={this.subOptions}
+                                    isClearable={false}
+                                    isSearchable={false}
+                                />
+                            )}
+                    </div>
+
                     {/* <div className={styles.operations}>
                         
                     </div> */}
