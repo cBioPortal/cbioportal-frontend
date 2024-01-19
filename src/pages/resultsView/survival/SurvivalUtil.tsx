@@ -738,3 +738,20 @@ export function calculateNumberOfPatients(
         s.uniquePatientKey in patientToAnalysisGroups ? 1 : 0
     );
 }
+
+export function calculateLabelWidth(
+    text: number,
+    fontFamily: string,
+    fontSize: number
+) {
+    const tempElement = document.createElement('div');
+    tempElement.style.position = 'absolute';
+    tempElement.style.opacity = '0';
+    tempElement.style.fontFamily = fontFamily;
+    tempElement.style.fontSize = fontSize.toString();
+    tempElement.textContent = text.toString();
+    document.body.appendChild(tempElement);
+    const labelWidth = tempElement.offsetWidth;
+    document.body.removeChild(tempElement);
+    return labelWidth;
+}
