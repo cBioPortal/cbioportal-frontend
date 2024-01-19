@@ -212,10 +212,7 @@ import { CancerGene } from 'oncokb-ts-api-client';
 
 import { AppStore } from 'AppStore';
 import { getGeneCNAOQL } from 'pages/studyView/TableUtils';
-import {
-    MultiSelectionTable,
-    MultiSelectionTableRow,
-} from './table/MultiSelectionTable';
+import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import {
     getGroupParameters,
     getSelectedGroups,
@@ -225,8 +222,6 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import {
     AlterationTypeConstants,
     DataTypeConstants,
-    MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
-    MutationFilterConstants,
     MutationOptionConstants,
 } from 'shared/constants';
 import {
@@ -3941,61 +3936,6 @@ export class StudyViewPageStore
 
     @computed get mutationDataFilters(): MutationDataFilter[] {
         return Array.from(this._mutationDataFilterSet.values());
-        // if (mutationDataFilters.length > 0) {
-        //     let mutatedValues: DataFilterValue[] = [];
-        //     mutationDataFilters.forEach(filter => {
-        //         if (filter.categorization === MutationOptionConstants.EVENT) {
-        //             filter.values = filter.values.reduce(
-        //                 (acc, dataFilterValue) => {
-        //                     if (
-        //                         [
-        //                             MutationFilterConstants.MUTATED,
-        //                             MutationFilterConstants.NOT_MUTATED,
-        //                             MutationFilterConstants.NOT_PROFILED,
-        //                         ].includes(dataFilterValue.value)
-        //                     ) {
-        //                         mutatedValues.push(dataFilterValue);
-        //                     } else {
-        //                         acc.push(dataFilterValue);
-        //                     }
-
-        //                     return acc;
-        //                 },
-        //                 [] as DataFilterValue[]
-        //             );
-        //         }
-        //     });
-
-        //     if (mutatedValues.length > 0) {
-        //         let mutatedFilter = mutationDataFilters.find(
-        //             filter =>
-        //                 filter.categorization ===
-        //                 MutationOptionConstants.MUTATED
-        //         );
-
-        //         if (mutatedFilter) {
-        //             mutatedFilter.values = mutatedFilter.values.concat(
-        //                 mutatedValues
-        //             );
-        //         } else {
-        //             let eventFilter = _.cloneDeep(
-        //                 mutationDataFilters.find(
-        //                     filter =>
-        //                         filter.categorization ===
-        //                         MutationOptionConstants.EVENT
-        //                 )
-        //             );
-        //             eventFilter!.values = mutatedValues;
-        //             eventFilter!.categorization =
-        //                 MutationOptionConstants.MUTATED;
-        //             mutationDataFilters.push(eventFilter!);
-        //         }
-        //     }
-        // }
-        // mutationDataFilters = mutationDataFilters.filter(
-        //     filter => filter.values.length > 0
-        // );
-        // return mutationDataFilters;
     }
 
     @computed get genericAssayDataFilters(): GenericAssayDataFilter[] {
@@ -4016,7 +3956,6 @@ export class StudyViewPageStore
         }
 
         if (this.mutationDataFilters.length > 0) {
-            console.log(this.mutationDataFilters);
             filters.mutationDataFilters = this.mutationDataFilters;
         }
 
