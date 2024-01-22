@@ -16649,7 +16649,7 @@ mobx@^6.0.0:
   dependencies:
     mobx "^6.0.0"
 
-"mobxpromise@github:cbioportal/mobxpromise#c3429672eb39be54e54ce14a8636e8d843729db3":
+"mobxpromise@github:cbioportal/mobxpromise#c3429672eb39be54e54ce14a8636e8d843729db3", "mobxpromise@github:cbioportal/mobxpromise#v2.0.1":
   version "2.0.1"
   resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/c3429672eb39be54e54ce14a8636e8d843729db3"
   dependencies:

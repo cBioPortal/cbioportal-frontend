@@ -144,7 +144,7 @@ export default class GeneSymbolValidator extends React.Component<
             if (this.props.afterValidation) {
                 this.props.afterValidation(
                     genes.suggestions.length === 0,
-                    this.genes.result,
+                    genes,
                     this.oql
                 );
             }
