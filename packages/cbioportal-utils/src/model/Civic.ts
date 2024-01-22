@@ -14,12 +14,12 @@ export interface ICivicVariantSummary {
     evidenceCounts: EvidenceCountsByType;
 }
 export interface EvidenceCountsByType {
-    diagnosticCount: number;
-    predictiveCount: number;
-    prognosticCount: number;
-    predisposingCount: number;
-    oncogenicCount: number;
-    functionalCount: number;
+    diagnosticCount?: number;
+    predictiveCount?: number;
+    prognosticCount?: number;
+    predisposingCount?: number;
+    oncogenicCount?: number;
+    functionalCount?: number;
 }
 
 export interface ICivicGeneIndex {
