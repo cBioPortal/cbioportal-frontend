@@ -104,9 +104,6 @@ export function getCivicVariants(
         }
     }
 
-    // We're explicitly waiting for all promises to finish (done or fail).
-    // We are wrapping them in another promise separately, to make sure we also
-    // wait in case one of the promises fails and the other is still busy.
     return Promise.resolve(civicVariants);
 }
 

@@ -84,9 +84,7 @@ function transformCivicVariantsToEvidenceCountMap(
     }
     return map;
 }
-/**
- * CIViC
- */
+
 export class CivicAPI {
     /**
      * Retrieves the gene entries for the hugo symbols given, if they are in the Civic API.
@@ -115,13 +113,11 @@ export class CivicAPI {
                 geneId
             );
 
-            // Update the map with the new variantsByGeneId
             civicVariantSummaryMap = {
                 ...civicVariantSummaryMap,
                 ...transformCivicVariantsToEvidenceCountMap(variantsByGeneId),
             };
 
-            // If there are more pages, update the "after" parameter for the next call
             if (variantsByGeneId.pageInfo.hasNextPage) {
                 after = variantsByGeneId.pageInfo.endCursor;
             } else {
