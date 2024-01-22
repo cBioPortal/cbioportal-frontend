@@ -30,15 +30,15 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
             for (let name in variantMap) {
                 let variant = variantMap[name];
                 let entryTypes: string = '';
-                for (let evidenceType in variant.evidenceCounts) {
-                    entryTypes +=
-                        evidenceType.toLowerCase() +
-                        ': ' +
-                        variant.evidenceCounts[evidenceType] +
-                        ', ';
+                for (const [key, value] of Object.entries(
+                    variant.evidenceCounts
+                )) {
+                    if (value !== 0) {
+                        if (entryTypes !== '') entryTypes += ', ';
+                        // Remove "Count" substring out of key string
+                        entryTypes += `${key.slice(0, -5)}: ${value}`;
+                    }
                 }
-                entryTypes = entryTypes.slice(0, -2) + '.';
-
                 list.push(
                     this.variantItem(
                         name,

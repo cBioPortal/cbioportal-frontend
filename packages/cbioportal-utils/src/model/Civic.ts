@@ -9,28 +9,17 @@ export interface ICivicGeneSummary {
 export interface ICivicVariantSummary {
     id: number;
     name: string;
-    geneId: number;
-    description: string;
     url: string;
-    evidenceCounts: { [evidenceType: string]: number };
-    evidences: ICivicEvidenceSummary[];
+    description: string;
+    evidenceCounts: EvidenceCountsByType;
 }
-
-export enum EvidenceLevel {
-    A = 'A',
-    B = 'B',
-    C = 'C',
-    D = 'D',
-    E = 'E',
-}
-
-export interface ICivicEvidenceSummary {
-    id: number;
-    type: string;
-    clinicalSignificance: string;
-    level: EvidenceLevel;
-    therapies: string[];
-    disease?: string;
+export interface EvidenceCountsByType {
+    diagnosticCount: number;
+    predictiveCount: number;
+    prognosticCount: number;
+    predisposingCount: number;
+    oncogenicCount: number;
+    functionalCount: number;
 }
 
 export interface ICivicGeneIndex {
