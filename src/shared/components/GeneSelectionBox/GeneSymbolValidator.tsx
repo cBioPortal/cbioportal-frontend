@@ -86,6 +86,8 @@ export default class GeneSymbolValidator extends React.Component<
                 isInteger
             );
 
+            console.log('getting genes for gene symbol validator');
+
             let getEntrezResults = async () => {
                 let found: Gene[];
                 if (entrezIds.length)
@@ -140,15 +142,15 @@ export default class GeneSymbolValidator extends React.Component<
                 ],
             };
         },
-        onResult: genes => {
-            if (this.props.afterValidation) {
-                this.props.afterValidation(
-                    genes.suggestions.length === 0,
-                    this.genes.result,
-                    this.oql
-                );
-            }
-        },
+        // onResult: genes => {
+        //     if (this.props.afterValidation) {
+        //         this.props.afterValidation(
+        //             genes.suggestions.length === 0,
+        //             this.genes.result,
+        //             this.oql
+        //         );
+        //     }
+        // },
         default: getEmptyGeneValidationResult(),
     });
 
