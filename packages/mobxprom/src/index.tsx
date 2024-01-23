@@ -1,2 +1,2 @@
-export * from './mobxPromise';
+export * from './MobxPromise';
 export * from './utils';

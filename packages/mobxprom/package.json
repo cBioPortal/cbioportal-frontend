@@ -1,6 +1,6 @@
 {
   "name": "mobxprom",
-  "version": "0.5.58",
+  "version": "2.1.0",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -20,6 +20,7 @@
     "start": "yarn run watch",
     "watch": "concurrently \"yarn run tcm:watch\" \"yarn run rollup:watch\"",
     "watchSSL": "yarn run watch",
+    "rollup": "rollup -c rollup.config.ts",
     "rollup:watch": "yarn run rollup --watch",
     "tcm": "tcm -p src/**/*.module.scss",
     "tcm:watch": "yarn run tcm --watch",
@@ -34,6 +35,5 @@
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "dependencies": {
-    "mobx": "^6.0.0"
   }
 }
