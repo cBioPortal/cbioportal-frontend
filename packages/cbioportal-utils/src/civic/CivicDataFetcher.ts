@@ -165,9 +165,7 @@ export class CivicAPI {
                 };
                 return geneSummary;
             });
-            for (const geneSummary of geneSummaries) {
-                result.push(await geneSummary);
-            }
+            result.push(...(await Promise.all(geneSummaries)));
         }
         return Promise.resolve(result);
     }
