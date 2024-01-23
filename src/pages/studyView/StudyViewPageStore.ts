@@ -223,6 +223,7 @@ import {
     AlterationTypeConstants,
     DataTypeConstants,
     MutationOptionConstants,
+    MutationOptionConstantsLabel,
 } from 'shared/constants';
 import {
     createSurvivalAttributeIdsDict,
@@ -2202,6 +2203,20 @@ export class StudyViewPageStore
             });
         }
 
+        if (!_.isEmpty(filters.mutationDataFilters)) {
+            filters.mutationDataFilters!.forEach(mutationDataFilter => {
+                const uniqueKey = getGenomicChartUniqueKey(
+                    mutationDataFilter.hugoGeneSymbol,
+                    mutationDataFilter.profileType,
+                    mutationDataFilter.categorization
+                );
+                this._mutationDataFilterSet.set(
+                    uniqueKey,
+                    _.clone(mutationDataFilter)
+                );
+            });
+        }
+
         if (!_.isEmpty(filters.genericAssayDataFilters)) {
             filters.genericAssayDataFilters!.forEach(genericAssayDataFilter => {
                 const uniqueKey = getGenericAssayChartUniqueKey(
@@ -3050,8 +3065,6 @@ export class StudyViewPageStore
     @action.bound
     updateMutationDataFilters(uniqueKey: string, values: string[][]): void {
         trackStudyViewFilterEvent('mutationCategoricalData', this);
-
-        console.log(values);
 
         if (values.every(valueArray => valueArray.length === 0)) {
             this._mutationDataFilterSet.delete(uniqueKey);
@@ -7209,6 +7222,16 @@ export class StudyViewPageStore
                             dataType:
                                 molecularProfileOption?.dataType ||
                                 DataType.NUMBER,
+                            ...(chartUserSettings.profileType ===
+                            MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
+                                ? {
+                                      mutationOptionType:
+                                          chartUserSettings.chartType ===
+                                          ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE
+                                              ? MutationOptionConstants.EVENT
+                                              : MutationOptionConstants.MUTATED,
+                                  }
+                                : {}),
                         },
                     ],
                     true
@@ -7922,7 +7945,13 @@ export class StudyViewPageStore
                         this.addGeneSpecificCharts(
                             [
                                 {
-                                    name: `${mutationDataFilter.hugoGeneSymbol}: ${molecularProfileOption.label}`,
+                                    name: `${
+                                        mutationDataFilter.hugoGeneSymbol
+                                    }: ${mutationDataFilter.profileType}: ${
+                                        MutationOptionConstantsLabel[
+                                            mutationDataFilter.categorization
+                                        ]
+                                    }`,
                                     description: molecularProfileOption.label,
                                     profileType: mutationDataFilter.profileType,
                                     hugoGeneSymbol:

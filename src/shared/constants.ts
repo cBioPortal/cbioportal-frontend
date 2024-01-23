@@ -134,3 +134,8 @@ export const MutationOptionConstants = {
     MUTATED: 'MUTATED',
     EVENT: 'EVENT',
 };
+
+export const MutationOptionConstantsLabel = {
+    [MutationOptionConstants.MUTATED]: 'Mutated vs Wild Type',
+    [MutationOptionConstants.EVENT]: 'Mutation Types',
+};

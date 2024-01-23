@@ -20,6 +20,7 @@ import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
 import {
     AlterationTypeConstants,
     MutationOptionConstants,
+    MutationOptionConstantsLabel,
 } from 'shared/constants';
 import autobind from 'autobind-decorator';
 
@@ -180,12 +181,16 @@ export default class GeneLevelSelection extends React.Component<
         return [
             {
                 value: MutationOptionConstants.MUTATED,
-                label: 'Mutated vs Wild Type',
+                label:
+                    MutationOptionConstantsLabel[
+                        MutationOptionConstants.MUTATED
+                    ],
                 profileType: AlterationTypeConstants.MUTATION_EXTENDED,
             },
             {
                 value: MutationOptionConstants.EVENT,
-                label: 'Mutation Types',
+                label:
+                    MutationOptionConstantsLabel[MutationOptionConstants.EVENT],
                 profileType: AlterationTypeConstants.MUTATION_EXTENDED,
             },
         ];

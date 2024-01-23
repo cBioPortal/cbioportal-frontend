@@ -1037,7 +1037,7 @@ export default class UserSelections extends React.Component<
                 components={dataFilterValues.map(dataFilterValue => {
                     return (
                         <PillTag
-                            content={dataFilterValue.value}
+                            content={dataFilterValue.value.split('_').join(' ')}
                             backgroundColor={
                                 STUDY_VIEW_CONFIG.colors.theme
                                     .clinicalFilterContent
