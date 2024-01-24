@@ -18,7 +18,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-import { labelMobxPromises, MobxPromise } from 'mobxpromise';
 import { computed, makeObservable } from 'mobx';
 import { StructuralVariantExt } from 'shared/model/Fusion';
 import ResultViewFusionMapperDataStore from './ResultsViewStructuralVariantMapperDataStore';
@@ -30,7 +29,11 @@ import {
 } from 'cbioportal-ts-api-client';
 import { IOncoKbData } from 'cbioportal-utils';
 import { CancerGene } from 'oncokb-ts-api-client';
-import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    labelMobxPromises,
+    MobxPromise,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import {
     fetchCanonicalTranscripts,
     fetchEnsemblTranscriptsByEnsemblFilter,

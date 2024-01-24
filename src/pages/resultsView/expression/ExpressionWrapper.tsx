@@ -39,9 +39,12 @@ import {
 } from '../plots/PlotsTabUtils';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
-import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    MobxPromise,
+    remoteData,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
-import { MobxPromise } from 'mobxpromise';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import BoxScatterPlot, {
     IBoxScatterPlotData,

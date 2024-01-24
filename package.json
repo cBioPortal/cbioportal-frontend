@@ -224,7 +224,6 @@
     "mobx-react-lite": "3.0.1",
     "mobx-react-router": "4.1.0",
     "mobx-utils": "6.0.1",
-    "mobxpromise": "^2.1.0",
     "numeral": "^2.0.6",
     "object-sizeof": "^1.2.0",
     "oncokb-frontend-commons": "^0.0.21",

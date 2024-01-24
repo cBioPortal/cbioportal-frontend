@@ -1,11 +1,10 @@
 import * as React from 'react';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 import ErrorBox from '../errorBox/ErrorBox';
 import ReactElement = React.ReactElement;
-import { ThreeBounce } from 'better-react-spinkit';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 
 interface ISectionHeaderProps

@@ -1,4 +1,3 @@
-import { MobxPromise } from 'mobxpromise';
 import {
     Mutation,
     PatientIdentifier,
@@ -25,6 +24,7 @@ import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import {
     DefaultTooltip,
+    MobxPromise,
     stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
 import { GroupComparisonTab } from './GroupComparisonTabs';

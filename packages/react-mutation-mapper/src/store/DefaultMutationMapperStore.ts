@@ -1,5 +1,5 @@
 import autobind from 'autobind-decorator';
-import { remoteData } from 'cbioportal-frontend-commons';
+import { cached, MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import {
     AggregatedHotspots,
     convertDbPtmToPtm,
@@ -49,7 +49,6 @@ import {
 } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { computed, observable, makeObservable } from 'mobx';
-import MobxPromise, { cached } from 'mobxpromise';
 
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import DataStore from '../model/DataStore';

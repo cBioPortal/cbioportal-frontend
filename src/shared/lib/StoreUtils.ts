@@ -37,7 +37,7 @@ import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import g2sClient from 'shared/api/g2sClientInstance';
-import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import { MobxPromise, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import {
     Alignment,
     Genome2StructureAPI,
@@ -61,7 +61,6 @@ import {
     OtherBiomarkersQueryType,
 } from 'oncokb-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
-import { MobxPromise } from 'mobxpromise';
 import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
 import { indexPdbAlignments } from 'shared/lib/PdbUtils';
 import { IGisticData } from 'shared/model/Gistic';

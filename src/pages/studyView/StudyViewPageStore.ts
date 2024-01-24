@@ -155,7 +155,6 @@ import {
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
 } from './StudyViewUtils';
-import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import {
@@ -167,7 +166,6 @@ import {
     convertToGene1Gene2String,
     parseOQLQuery,
     queryContainsStructVarAlteration,
-    STRUCTVARNullGeneStr,
     unparseOQLQueryLine,
 } from 'shared/lib/oql/oqlfilter';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
@@ -187,6 +185,7 @@ import {
 } from '../../shared/api/urls';
 import {
     DataType as DownloadDataType,
+    MobxPromise,
     onMobxPromise,
     pluralize,
     remoteData,
@@ -277,15 +276,8 @@ import {
 import { PageType } from 'shared/userSession/PageType';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
-import { Simulate } from 'react-dom/test-utils';
-import select = Simulate.select;
 import { StructVarMultiSelectionTableRow } from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
 import { PillStore } from 'shared/components/PillTag/PillTag';
-import { toast, cssTransition } from 'react-toastify';
-import {
-    PatientIdentifier,
-    PatientIdentifierFilter,
-} from 'shared/model/PatientIdentifierFilter';
 import {
     doesStructVarMatchSingleGeneQuery,
     generateStructVarTableCellKey,
@@ -304,7 +296,6 @@ import {
 } from './StudyViewQueryExtractor';
 import {
     getAllowedSurvivalClinicalDataFilterId,
-    isSurvivalAttributeId,
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
 

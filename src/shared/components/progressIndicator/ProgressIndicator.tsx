@@ -6,7 +6,7 @@ import { computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import ErrorMessage from '../ErrorMessage';
 import Spinner from 'react-spinkit';
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import autobind from 'autobind-decorator';
 

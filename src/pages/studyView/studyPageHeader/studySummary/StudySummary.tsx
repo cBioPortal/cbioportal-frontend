@@ -9,11 +9,13 @@ import { StudySummaryRecord } from '../../virtualStudy/VirtualStudy';
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import { getStudySummaryUrl } from '../../../../shared/api/urls';
 import { DefaultTooltip, getNCBIlink } from 'cbioportal-frontend-commons';
-import MobxPromise from 'mobxpromise';
 import { StudyDataDownloadLink } from '../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 import { serializeEvent } from '../../../../shared/lib/tracking';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
-import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    MobxPromise,
+} from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
 
 interface IStudySummaryProps {

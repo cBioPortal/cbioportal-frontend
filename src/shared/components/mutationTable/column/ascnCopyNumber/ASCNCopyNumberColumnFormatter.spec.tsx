@@ -5,7 +5,7 @@ import { initMutation } from 'test/MutationMockUtils';
 import { initClinicalData } from 'test/ClinicalDataMockUtils';
 import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
 import SampleManager from 'pages/patientView/SampleManager';
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumnFormatter';
 
 /* Test design

@@ -1,14 +1,8 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { makeObservable, observable } from 'mobx';
-import _ from 'lodash';
-import {
-    CancerStudy,
-    ClinicalData,
-    GenePanelData,
-    MolecularProfile,
-    Mutation,
-} from 'cbioportal-ts-api-client';
+import { ClinicalData, Mutation } from 'cbioportal-ts-api-client';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import SampleManager from '../SampleManager';
 import PubMedCache from 'shared/cache/PubMedCache';
@@ -18,27 +12,19 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IMyCancerGenomeData,
-    IMyVariantInfoIndex,
     IOncoKbData,
     RemoteData,
 } from 'cbioportal-utils';
 import { CancerGene } from 'oncokb-ts-api-client';
-import {
-    calculateOncoKbContentWidthWithInterval,
-    DEFAULT_ONCOKB_CONTENT_WIDTH,
-} from 'shared/lib/AnnotationColumnUtils';
+import { DEFAULT_ONCOKB_CONTENT_WIDTH } from 'shared/lib/AnnotationColumnUtils';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import PatientViewMutationTable from './PatientViewMutationTable';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
-import VariantCountCache from 'shared/cache/VariantCountCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
-import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { IMutSigData } from 'shared/model/MutSig';
 import { ICosmicData } from 'shared/model/Cosmic';
-import MobxPromise from 'mobxpromise';
 
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
