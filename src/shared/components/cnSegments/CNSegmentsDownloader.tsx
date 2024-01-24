@@ -1,5 +1,5 @@
 import * as React from 'react';
-import MobxPromise from 'mobxpromise/dist/src/MobxPromise';
+import { MobxPromise } from 'mobxpromise';
 import { makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { Button } from 'react-bootstrap';

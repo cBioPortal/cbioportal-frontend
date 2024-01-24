@@ -1,5 +1,5 @@
 {
-  "name": "mobxprom",
+  "name": "mobxpromise",
   "version": "2.1.0",
   "main": "dist/index.js",
   "module": "dist/index.es.js",

@@ -1,11 +1,10 @@
 import {
+    hasObservers,
     MobxPromiseImpl,
     MobxPromise,
     MobxPromiseFactory,
     MobxPromiseInputUnion,
-} from 'mobxprom';
-
-import { hasObservers } from 'mobxpromise';
+} from 'mobxpromise';
 
 type errorHandler = (error: Error) => void;
 

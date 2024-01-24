@@ -1,4 +1,4 @@
-import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
+import { MobxPromise } from 'mobxpromise';
 import {
     Mutation,
     PatientIdentifier,
