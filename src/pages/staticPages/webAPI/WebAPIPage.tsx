@@ -27,6 +27,8 @@ export class UserDataAccessToken {
     }
 }
 
+const supported_dat_methods = ['oauth2', 'uuid'];
+
 @observer
 export default class WebAPIPage extends React.Component<{}, {}> {
     private get appStore() {
@@ -41,8 +43,7 @@ export default class WebAPIPage extends React.Component<{}, {}> {
     renderDataAccessTokensDiv() {
         if (
             getServerConfig().authenticationMethod === 'optional_oauth2' ||
-            // TODO: Potentially need to support other methods in the future, but for now only support oauth2
-            getServerConfig().dat_method !== 'oauth2'
+            !supported_dat_methods.includes(getServerConfig().dat_method)
         ) {
             return <div></div>;
         } else {

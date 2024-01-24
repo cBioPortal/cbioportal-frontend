@@ -49,6 +49,8 @@ export class DataAccessTokensDropdown extends React.Component<
     }
 
     @computed get getDatDropdownList(): any {
+        const supported_dat_methods = ['oauth2', 'uuid'];
+
         const listItems = [
             {
                 id: 'signout',
@@ -75,9 +77,9 @@ export class DataAccessTokensDropdown extends React.Component<
                 ),
                 hide:
                     this.props.appStore.isSocialAuthenticated ||
-                    (getServerConfig().dat_method !== 'uuid' &&
-                        getServerConfig().dat_method !== 'jwt' &&
-                        getServerConfig().dat_method !== 'oauth2'),
+                    !supported_dat_methods.includes(
+                        getServerConfig().dat_method
+                    ),
             },
         ];
         const shownListItems = listItems.filter(l => {
