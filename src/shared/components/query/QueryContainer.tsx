@@ -53,7 +53,8 @@ export default class QueryContainer extends React.Component<
                 this.store.cancerTypes.isComplete &&
                 this.store.cancerStudies.isComplete &&
                 this.store.selectedPhysicalStudies.isComplete &&
-                this.store.profiledSamplesCount.isComplete)
+                this.store.profiledSamplesCount.isComplete &&
+                this.store.cancerStudyTags.isComplete)
         );
     }
 
