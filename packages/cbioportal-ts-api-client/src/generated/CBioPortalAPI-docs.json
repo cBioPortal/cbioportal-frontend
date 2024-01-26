@@ -4338,6 +4338,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "structuralVariantCount": {
+          "format": "int32",
+          "type": "integer"
+        },
         "studyId": {
           "type": "string"
         },

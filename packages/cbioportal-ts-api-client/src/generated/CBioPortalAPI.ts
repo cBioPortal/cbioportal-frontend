@@ -98,6 +98,8 @@ export type CancerStudy = {
 
         'status': number
 
+        'structuralVariantCount': number
+
         'studyId': string
 
         'treatmentCount': number
