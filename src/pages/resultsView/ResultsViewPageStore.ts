@@ -1674,7 +1674,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 try {
                     urlResponse = (await request
                         .post(
-                            'https://iquery-cbio.ucsd.edu/integratedsearch/v1/'
+                            'https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/'
                         )
                         .send(postData)
                         .set('Accept', 'application/json')
