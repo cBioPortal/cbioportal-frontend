@@ -1,14 +1,8 @@
-import fetch from 'cross-fetch';
 import {
-    ApolloClient,
-    from,
-    HttpLink,
-    InMemoryCache,
-    gql,
-} from '@apollo/client';
-import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename';
-
-import { ICivicGeneSummary, ICivicVariantSummary } from '../model/Civic';
+    EvidenceCountsByType,
+    ICivicGeneSummary,
+    ICivicVariantSummary,
+} from '../model/Civic';
 import _ from 'lodash';
 
 type CivicAPIGenes = {
@@ -47,25 +41,6 @@ type CivicMolecularProfile = {
     description: string;
     evidenceCountsByType: EvidenceCountsByType;
 };
-
-type EvidenceCountsByType = {
-    diagnosticCount: number;
-    predictiveCount: number;
-    prognosticCount: number;
-    predisposingCount: number;
-    oncogenicCount: number;
-    functionalCount: number;
-};
-
-const client = new ApolloClient({
-    link: from([
-        removeTypenameFromVariables(),
-        new HttpLink({ uri: 'https://civicdb.org/api/graphql', fetch }),
-    ]),
-    cache: new InMemoryCache({
-        addTypename: false,
-    }),
-});
 
 function transformCivicVariantsToEvidenceCountMap(
     variants: CivicVariantCollection
@@ -109,10 +84,9 @@ export class CivicAPI {
 
         while (needToFetch) {
             const variantsByGeneId: CivicVariantCollection = await this.fetchCivicAPIVariants(
-                after,
-                geneId
+                geneId,
+                after
             );
-
             civicVariantSummaryMap = {
                 ...civicVariantSummaryMap,
                 ...transformCivicVariantsToEvidenceCountMap(variantsByGeneId),
@@ -172,14 +146,88 @@ export class CivicAPI {
 
     // Call Variants if have more than 100 variants. The Variants query can return up to 300 variants in a single query.
     fetchCivicAPIVariants(
-        after: string | null = null,
-        geneId: number
+        geneId: number,
+        after: string | null
     ): Promise<CivicVariantCollection> {
-        return client
-            .query({
-                query: gql`
-                    query variants($after: String, $geneId: Int) {
-                        variants(after: $after, geneId: $geneId) {
+        const url = 'https://civicdb.org/api/graphql';
+        const headers = {
+            'content-type': 'application/json',
+        };
+        const body = JSON.stringify({
+            variables: {
+                geneId: geneId,
+                after: after,
+            },
+            query: `query variants($after: String, $geneId: Int) {
+                variants(after: $after, geneId: $geneId) {
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        startCursor
+                        hasPreviousPage
+                    }
+                    nodes {
+                        id
+                        name
+                        link
+                        singleVariantMolecularProfile {
+                            description
+                            evidenceCountsByType {
+                                diagnosticCount
+                                predictiveCount
+                                prognosticCount
+                                predisposingCount
+                                oncogenicCount
+                                functionalCount
+                            }
+                        }
+                    }
+                }
+            }`,
+        });
+        return fetch(url, {
+            headers,
+            body,
+            method: 'POST',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Civic error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result =>
+                Promise.resolve(result.data.variants as CivicVariantCollection)
+            );
+    }
+
+    fetchCivicAPIGenes(
+        entrezSymbols: string[],
+        after: string | null
+    ): Promise<CivicAPIGenes> {
+        const url = 'https://civicdb.org/api/graphql';
+        const headers = {
+            'content-type': 'application/json',
+        };
+        const body = JSON.stringify({
+            variables: {
+                entrezSymbols: entrezSymbols,
+                after: after,
+            },
+            query: `query genes($after: String, $entrezSymbols: [String!]) {
+                genes(after: $after, entrezSymbols: $entrezSymbols) {
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        startCursor
+                        hasPreviousPage
+                    }
+                    nodes {
+                        id
+                        description
+                        link
+                        name
+                        variants {
                             pageInfo {
                                 endCursor
                                 hasNextPage
@@ -187,8 +235,8 @@ export class CivicAPI {
                                 hasPreviousPage
                             }
                             nodes {
-                                id
                                 name
+                                id
                                 link
                                 singleVariantMolecularProfile {
                                     description
@@ -204,67 +252,23 @@ export class CivicAPI {
                             }
                         }
                     }
-                `,
-                variables: { after: after, geneId: geneId },
+                }
+            }`,
+        });
+        return fetch(url, {
+            headers,
+            body,
+            method: 'POST',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Civic error! status: ${response.status}`);
+                }
+                return response.json();
             })
-            .then(civicResponse => {
-                return civicResponse.data.variants as CivicVariantCollection;
-            });
-    }
-
-    fetchCivicAPIGenes(
-        hugoGeneSymbols: string[],
-        after: string | null = null
-    ): Promise<CivicAPIGenes> {
-        return client
-            .query({
-                query: gql`
-                    query genes($after: String, $entrezSymbols: [String!]) {
-                        genes(after: $after, entrezSymbols: $entrezSymbols) {
-                            pageInfo {
-                                endCursor
-                                hasNextPage
-                                startCursor
-                                hasPreviousPage
-                            }
-                            nodes {
-                                id
-                                description
-                                link
-                                name
-                                variants {
-                                    pageInfo {
-                                        endCursor
-                                        hasNextPage
-                                        startCursor
-                                        hasPreviousPage
-                                    }
-                                    nodes {
-                                        name
-                                        id
-                                        link
-                                        singleVariantMolecularProfile {
-                                            description
-                                            evidenceCountsByType {
-                                                diagnosticCount
-                                                predictiveCount
-                                                prognosticCount
-                                                predisposingCount
-                                                oncogenicCount
-                                                functionalCount
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                `,
-                variables: { after: after, entrezSymbols: hugoGeneSymbols },
-            })
-            .then(civicResponse => {
-                return civicResponse.data.genes as CivicAPIGenes;
-            });
+            .then(result =>
+                Promise.resolve(result.data.genes as CivicAPIGenes)
+            );
     }
 }
 
