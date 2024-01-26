@@ -252,8 +252,6 @@ export class MobxPromiseImpl<R> {
             this.internalError = undefined;
             this.internalStatus = 'complete';
 
-            console.log('here i am');
-
             if (this.onResult) this.onResult(result || this.defaultResult); // may use defaultResult
         }
     }
