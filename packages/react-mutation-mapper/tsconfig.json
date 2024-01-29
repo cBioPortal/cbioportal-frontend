@@ -2,5 +2,5 @@
   "extends": "../config/tsconfig.json",
   "include": [
     "src",
-    "../typings/**/*", "../cbioportal-utils/src/model/OncoTreeTumorTypes.tsx", "../cbioportal-utils/src/model/TherapyRecommendation.ts" ]
+    "../typings/**/*"]
 }
