@@ -1,9 +1,9 @@
 import React from 'react';
 import {
     ITherapyRecommendation,
-    EvidenceLevel,
+    TREvidenceLevel,
     EvidenceLevelExtension,
-} from 'shared/model/TherapyRecommendation';
+} from 'cbioportal-utils';
 import Select from 'react-select';
 import _ from 'lodash';
 import { components } from 'react-select';
@@ -17,7 +17,7 @@ import { Checkbox, Col, Form, FormControl, Row } from 'react-bootstrap';
 
 interface TherapyRecommendationFormEvidenceLevelInputProps {
     data: ITherapyRecommendation;
-    onChange: (evidenceLevel: EvidenceLevel) => void;
+    onChange: (evidenceLevel: TREvidenceLevel) => void;
     onChangeExtension: (evidenceLevelExtension: EvidenceLevelExtension) => void;
     onChangeM3Text: (text: string) => void;
 }
@@ -43,7 +43,7 @@ export default class TherapyRecommendationFormEvidenceLevelInput extends React.C
         this.state = {
             isM3Disabled:
                 this.props.data.evidenceLevel.toString() !==
-                EvidenceLevel[EvidenceLevel.m3].toString(),
+                TREvidenceLevel[TREvidenceLevel.m3].toString(),
             isM1Disabled: !this.props.data.evidenceLevel
                 .toString()
                 .match('m1|m2'),
@@ -96,10 +96,10 @@ export default class TherapyRecommendationFormEvidenceLevelInput extends React.C
 
         const evidenceLevelDefault = {
             label: this.props.data.evidenceLevel || 'NA',
-            value: EvidenceLevel[this.props.data.evidenceLevel],
+            value: TREvidenceLevel[this.props.data.evidenceLevel],
         };
         console.log(evidenceLevelDefault);
-        const evidenceLevelOptions = Object.entries(EvidenceLevel)
+        const evidenceLevelOptions = Object.entries(TREvidenceLevel)
             .filter(([key, value]) => typeof value === 'string')
             .map(([key, value]) => ({
                 label: value,
@@ -144,8 +144,8 @@ export default class TherapyRecommendationFormEvidenceLevelInput extends React.C
                         classNamePrefix="select"
                         onChange={(selectedOption: MyOption) => {
                             this.props.onChange(
-                                EvidenceLevel[
-                                    selectedOption.value as keyof typeof EvidenceLevel
+                                TREvidenceLevel[
+                                    selectedOption.value as keyof typeof TREvidenceLevel
                                 ]
                             );
                             this.props.onChangeExtension(
@@ -155,7 +155,9 @@ export default class TherapyRecommendationFormEvidenceLevelInput extends React.C
                             this.setState({
                                 isM3Disabled:
                                     this.props.data.evidenceLevel.toString() !==
-                                    EvidenceLevel[EvidenceLevel.m3].toString(),
+                                    TREvidenceLevel[
+                                        TREvidenceLevel.m3
+                                    ].toString(),
                                 isM1Disabled: !this.props.data.evidenceLevel
                                     .toString()
                                     .match('m1|m2'),

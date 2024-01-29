@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import {
-    ITherapyRecommendation,
-    ITreatment,
-} from 'shared/model/TherapyRecommendation';
+import { ITherapyRecommendation, ITreatment } from 'cbioportal-utils';
 import CreatableSelect from 'react-select/creatable';
 import _ from 'lodash';
 interface Option {

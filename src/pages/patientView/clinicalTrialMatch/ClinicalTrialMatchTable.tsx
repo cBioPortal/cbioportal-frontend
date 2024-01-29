@@ -12,7 +12,7 @@ import styles from 'shared/components/loadingIndicator/styles.module.scss';
 import { height } from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlot';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { Button } from 'react-bootstrap';
-import { IClinicalTrial } from 'shared/model/TherapyRecommendation';
+import { IClinicalTrial } from 'cbioportal-utils';
 
 enum ColumnKey {
     NUM_FOUND = 'Appearences',

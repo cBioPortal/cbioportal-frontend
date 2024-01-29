@@ -3,9 +3,9 @@ import * as _ from 'lodash';
 import { Modal, Button } from 'react-bootstrap';
 import {
     ITherapyRecommendation,
-    EvidenceLevel,
+    TREvidenceLevel,
     IGeneticAlteration,
-} from 'shared/model/TherapyRecommendation';
+} from 'cbioportal-utils';
 import Select from 'react-select';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { getNewTherapyRecommendation } from '../TherapyRecommendationTableUtils';
@@ -216,7 +216,7 @@ export default class TherapyRecommendationFormOncoKb extends React.Component<
         therapyRecommendation.reasoning.geneticAlterations = [mutation];
 
         // Evidence Level
-        therapyRecommendation.evidenceLevel = EvidenceLevel.NA;
+        therapyRecommendation.evidenceLevel = TREvidenceLevel.NA;
 
         // References
         treatment.pmids.map(reference => {

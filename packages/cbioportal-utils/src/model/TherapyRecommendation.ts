@@ -1,4 +1,4 @@
-export enum EvidenceLevel {
+export enum TREvidenceLevel {
     NA,
     m1A,
     m1B,
@@ -38,6 +38,7 @@ export interface IMtb {
     geneticCounselingRecommendation: boolean;
     rebiopsyRecommendation: boolean;
     generalRecommendation: string;
+    diagnosis: string;
     date: string;
     mtbState: MtbState;
     samples: string[];
@@ -48,13 +49,16 @@ export interface ITherapyRecommendation {
     id: string;
     comment: string[];
     reasoning: IReasoning;
-    evidenceLevel: EvidenceLevel;
+    evidenceLevel: TREvidenceLevel;
     evidenceLevelExtension?: EvidenceLevelExtension;
     evidenceLevelM3Text: string;
     author: string;
     treatments: ITreatment[];
     references: IReference[];
     clinicalTrials: IClinicalTrial[];
+    diagnosis?: string[];
+    studyId?: string;
+    caseId?: string;
 }
 
 export interface IClinicalTrial {
@@ -136,4 +140,15 @@ export interface IFollowUp {
     sideEffect: boolean;
     response: IResponseCriteria;
     comment: string;
+}
+
+export interface ISharedTherapyRecommendationData {
+    localTherapyRecommendations: ITherapyRecommendation[];
+    localFollowUps: IFollowUp[];
+    sharedTherapyRecommendations: ITherapyRecommendation[];
+    sharedFollowUps: IFollowUp[];
+    proteinChange?: string;
+    diagnosis?: string[];
+    caseId?: string;
+    studyId?: string;
 }

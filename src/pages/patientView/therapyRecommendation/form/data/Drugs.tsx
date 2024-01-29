@@ -1,4 +1,4 @@
-import { ITreatment } from 'shared/model/TherapyRecommendation';
+import { ITreatment } from 'cbioportal-utils';
 
 export const Drugs = [
     {

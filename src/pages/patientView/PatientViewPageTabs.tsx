@@ -666,7 +666,8 @@ export function tabs(
                     }
                     pubMedCache={pageComponent.patientViewPageStore.pubMedCache}
                     otherMtbs={
-                        pageComponent.patientViewPageStore.otherMtbs.result
+                        pageComponent.patientViewPageStore
+                            .localTherapyRecommendations.result
                     }
                     clinicalTrialClipboard={
                         pageComponent.patientViewPageStore

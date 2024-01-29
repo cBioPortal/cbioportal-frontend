@@ -56,9 +56,20 @@ export enum AnnotationSources {
     MY_CANCER_GENOME = 'myCancerGenome',
     CANCER_HOTSPOTS = 'cancerHotspots',
     REVUE = 'reVue',
+    BZKF = 'bzkf',
 }
 
 export const sourceTooltipInfo = {
+    [AnnotationSources.BZKF]: [
+        {
+            sourceUrl: 'https://bzkf.de/',
+            sourceName: 'BZKF',
+            sourceDescription:
+                'supporting the developement of features enabling the reuse and exchange of historic therapyrecommendation- and followup-data. ',
+            reference: '',
+            referenceUrl: 'https://bzkf.de',
+        },
+    ],
     [AnnotationSources.ONCOKB]: [
         {
             sourceUrl: 'https://www.oncokb.org/',
@@ -114,6 +125,68 @@ export const sourceTooltipInfo = {
         },
     ],
 };
+
+export const bzkfData: LegendDescription[] = [
+    {
+        legend: (
+            <img
+                src={require('../../../../../../packages/react-mutation-mapper/src/images/genome_full_match.png')}
+                style={{
+                    height: 20,
+                    width: 20,
+                }}
+            />
+        ),
+        description: (
+            <span>
+                Therapyrecommendations with matching alteration and diagnosis
+                have been found
+            </span>
+        ),
+    },
+    {
+        legend: (
+            <img
+                src={require('../../../../../../packages/react-mutation-mapper/src/images/genome_part_match.png')}
+                style={{
+                    height: 20,
+                    width: 20,
+                }}
+            />
+        ),
+        description: <span>Partial matches based on the alteration</span>,
+    },
+    {
+        legend: (
+            <img
+                src={require('../../../../../../packages/react-mutation-mapper/src/images/genome_diag_match.png')}
+                style={{
+                    height: 20,
+                    width: 20,
+                }}
+            />
+        ),
+        description: <span>Partial matches based on the diagnosis</span>,
+    },
+    {
+        legend: (
+            <img
+                src={require('../../../../../../packages/react-mutation-mapper/src/images/genome_no_match.png')}
+                style={{
+                    height: 20,
+                    width: 20,
+                }}
+            />
+        ),
+        description: <span>No matching therapyrecommendations</span>,
+    },
+    {
+        legend: <i className="fa fa-exclamation-triangle text-danger" />,
+        description: (
+            <span>Cancer type / Alteration is differing from the patients</span>
+        ),
+    },
+];
 
 export const civicData: LegendDescription[] = [
     {
@@ -376,6 +449,31 @@ const AnnotationHeader: React.FunctionComponent<{
         <span>
             {props.name}
             <br />
+            {getServerConfig().show_sharedTR && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            infoProps={
+                                sourceTooltipInfo[AnnotationSources.BZKF]
+                            }
+                            legendDescriptions={bzkfData}
+                        />
+                    }
+                >
+                    <img
+                        src={require('../../../../../../packages/react-mutation-mapper/src/images/genome.png')}
+                        style={{
+                            height: 20,
+                            width: 20,
+                            marginLeft: 5,
+                            marginBottom: 0,
+                            marginRight:
+                                props.width - 21 > 0 ? props.width - 21 : 0,
+                        }}
+                    />
+                </DefaultTooltip>
+            )}
             {getServerConfig().show_oncokb && (
                 <DefaultTooltip
                     placement="top"

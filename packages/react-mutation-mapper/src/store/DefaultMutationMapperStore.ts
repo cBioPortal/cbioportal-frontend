@@ -84,6 +84,7 @@ interface DefaultMutationMapperStoreConfig {
     enableCivic?: boolean;
     enableOncoKb?: boolean;
     enableRevue?: boolean;
+    enableSharedTR?: boolean;
     cachePostMethodsOnClients?: boolean;
     apiCacheLimit?: number;
     getMutationCount?: (mutation: Partial<Mutation>) => number;

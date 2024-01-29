@@ -328,6 +328,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
                             enableRevue:
                                 !!this.props.enableRevue &&
                                 this.shouldShowRevue,
+                            enableSharedTR: this.props
+                                .enableSharedTR as boolean,
                             userDisplayName: this.props.userDisplayName,
                             indexedVariantAnnotations: this.props
                                 .indexedVariantAnnotations,

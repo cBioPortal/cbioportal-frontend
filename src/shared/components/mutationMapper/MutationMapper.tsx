@@ -104,6 +104,7 @@ export interface IMutationMapperProps {
     enableMyCancerGenome?: boolean;
     enableCivic?: boolean;
     enableRevue?: boolean;
+    enableSharedTR?: boolean;
     ptmSources?: string[];
 }
 

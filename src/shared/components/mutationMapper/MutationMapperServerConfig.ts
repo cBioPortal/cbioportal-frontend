@@ -8,6 +8,7 @@ export interface IMutationMapperServerConfig {
     mycancergenome_show?: boolean;
     show_civic?: boolean;
     show_revue?: boolean;
+    show_sharedTR?: boolean;
     ptmSources?: string[];
     mygene_info_url: string | null;
     uniprot_id_url: string | null;
@@ -32,5 +33,6 @@ export function convertToMutationMapperProps(
         enableMyCancerGenome: config.mycancergenome_show,
         enableCivic: config.show_civic,
         enableRevue: config.show_revue,
+        enableSharedTR: config.show_sharedTR,
     };
 }

@@ -34,6 +34,7 @@ import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -273,6 +274,21 @@ export default class CopyNumberTableWrapper extends React.Component<
                         enableRevue: false,
                         userDisplayName: getServerConfig().user_display_name,
                         studyIdToStudy: this.pageStore.studyIdToStudy.result,
+                        enableSharedTR: getServerConfig().show_sharedTR,
+                        sharedTherapyRecommendationData: {
+                            localTherapyRecommendations: this.pageStore
+                                .localTherapyRecommendations.result,
+                            sharedTherapyRecommendations: this.pageStore
+                                .sharedTherapyRecommendations,
+                            localFollowUps: this.pageStore.localFollowUps
+                                .result,
+                            sharedFollowUps: this.pageStore.sharedFollowUps,
+                            diagnosis: this.pageStore.getDiagnosisFromSamples.result.map(
+                                cd => cd.value
+                            ),
+                            studyId: this.pageStore.getSafeStudyId(),
+                            caseId: this.pageStore.getSafePatientId(),
+                        } as ISharedTherapyRecommendationData,
                     })}
                 </span>
             ),
@@ -400,6 +416,8 @@ export default class CopyNumberTableWrapper extends React.Component<
             this.pageStore.mrnaRankMolecularProfileId,
             this.pageStore.cnaTableShowGeneFilterMenu,
             this.pageStore.referenceGenes,
+            this.pageStore.localTherapyRecommendations,
+            this.pageStore.localFollowUps,
         ],
         render: () => {
             const { someProfiled } = getSamplesProfiledStatus(

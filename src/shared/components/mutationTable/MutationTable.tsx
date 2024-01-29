@@ -104,6 +104,7 @@ export interface IMutationTableProps {
     enableHotspot?: boolean;
     enableCivic?: boolean;
     enableRevue?: boolean;
+    enableSharedTR?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -157,6 +158,7 @@ export interface IMutationTableProps {
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
     customControls?: JSX.Element;
+    sharedTherapyRecommendationData?: ISharedTherapyRecommendationData;
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
@@ -168,6 +170,11 @@ import {
 } from 'shared/lib/AnnotationColumnUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import {
+    ITherapyRecommendationProps,
+    ITherapyRecommendationState,
+} from 'pages/patientView/therapyRecommendation/MtbTherapyRecommendationTable';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -302,6 +309,7 @@ export default class MutationTable<
         enableHotspot: true,
         enableCivic: false,
         enableRevue: true,
+        enableSharedTR: true,
     };
 
     constructor(props: P) {
@@ -965,9 +973,12 @@ export default class MutationTable<
                         enableHotspot: this.props.enableHotspot as boolean,
                         enableRevue:
                             !!this.props.enableRevue && this.shouldShowRevue,
+                        enableSharedTR: this.props.enableSharedTR as boolean,
                         userDisplayName: this.props.userDisplayName,
                         indexedVariantAnnotations: this.props
                             .indexedVariantAnnotations,
+                        sharedTherapyRecommendationData: this.props
+                            .sharedTherapyRecommendationData,
                         resolveTumorType: this.resolveTumorType,
                     })}
                 </span>
@@ -990,6 +1001,7 @@ export default class MutationTable<
                             this.props.civicGenes,
                             this.props.civicVariants,
                             this.props.indexedVariantAnnotations,
+                            this.props.sharedTherapyRecommendationData,
                             this.resolveTumorType
                         );
 
@@ -1032,6 +1044,7 @@ export default class MutationTable<
                     this.props.civicGenes,
                     this.props.civicVariants,
                     this.props.indexedVariantAnnotations,
+                    this.props.sharedTherapyRecommendationData,
                     this.resolveTumorType,
                     !!this.props.enableRevue && this.shouldShowRevue
                 );
@@ -1047,6 +1060,7 @@ export default class MutationTable<
                     this.props.civicGenes,
                     this.props.civicVariants,
                     this.props.indexedVariantAnnotations,
+                    this.props.sharedTherapyRecommendationData,
                     this.resolveTumorType
                 );
             },

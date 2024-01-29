@@ -1,9 +1,9 @@
 import {
     ITherapyRecommendation,
-    EvidenceLevel,
+    TREvidenceLevel,
     IReference,
     EvidenceLevelExtension,
-} from 'shared/model/TherapyRecommendation';
+} from 'cbioportal-utils';
 import _ from 'lodash';
 import request from 'superagent';
 import * as React from 'react';
@@ -38,7 +38,7 @@ export function getNewTherapyRecommendation(
         id: patientId + '_' + timeId,
         comment: [],
         reasoning: {},
-        evidenceLevel: EvidenceLevel.NA,
+        evidenceLevel: TREvidenceLevel.NA,
         evidenceLevelExtension: EvidenceLevelExtension.NA,
         evidenceLevelM3Text: '',
         author: getAuthor(),
@@ -65,7 +65,7 @@ export function setAuthorInTherapyRecommendation(
 }
 
 export function getAuthor(): string {
-    return getServerConfig().user_display_name;
+    return getServerConfig().user_display_name || 'anonymousUser';
 }
 
 export function isTherapyRecommendationEmpty(
@@ -74,7 +74,7 @@ export function isTherapyRecommendationEmpty(
     if (
         therapyRecommendation.comment &&
         therapyRecommendation.comment.every(s => s === '') &&
-        therapyRecommendation.evidenceLevel === EvidenceLevel.NA &&
+        therapyRecommendation.evidenceLevel === TREvidenceLevel.NA &&
         _.isEmpty(therapyRecommendation.reasoning) &&
         therapyRecommendation.treatments.length === 0 &&
         therapyRecommendation.references.length === 0

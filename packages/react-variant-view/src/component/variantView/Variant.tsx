@@ -10,7 +10,7 @@ import { variantToMutation } from '../../util/VariantUtil';
 import styles from './Variant.module.scss';
 import { GenomeNexusAPI } from 'genome-nexus-ts-api-client';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
-import { MutationMapperDataFetcher } from 'react-mutation-mapper/dist/model/MutationMapperDataFetcher';
+import { MutationMapperDataFetcher } from 'react-mutation-mapper/src/model/MutationMapperDataFetcher';
 
 interface IVariantProps {
     variant: string;

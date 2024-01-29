@@ -3,10 +3,7 @@ import CreatableSelect from 'react-select';
 import { OptionsType, ValueType } from 'react-select';
 
 import { Drugs } from './data/Drugs';
-import {
-    ITherapyRecommendation,
-    ITreatment,
-} from 'shared/model/TherapyRecommendation';
+import { ITherapyRecommendation, ITreatment } from 'cbioportal-utils';
 
 interface Option {
     label: string;

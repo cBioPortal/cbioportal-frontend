@@ -14,7 +14,7 @@ import { components } from 'react-select';
 import Async, { useAsync } from 'react-select/async';
 import AsyncSelect from 'react-select/async';
 import CreatableSelect from 'react-select/creatable';
-import oncoTreeTumorTypes from './utils/OncoTreeTumorTypes';
+import oncoTreeTumorTypes from 'cbioportal-utils/src/model/OncoTreeTumorTypes';
 import {
     recruitingValueNames,
     countriesNames,

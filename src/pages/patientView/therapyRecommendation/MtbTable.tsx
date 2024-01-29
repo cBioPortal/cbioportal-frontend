@@ -7,7 +7,7 @@ import {
     MtbState,
     IDeletions,
     IClinicalTrial,
-} from '../../../shared/model/TherapyRecommendation';
+} from 'cbioportal-utils';
 import { computed, makeObservable, observable } from 'mobx';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import styles from './style/therapyRecommendation.module.scss';
@@ -484,6 +484,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             geneticCounselingRecommendation: false,
             rebiopsyRecommendation: false,
             therapyRecommendations: [],
+            diagnosis: '',
             date: now.toISOString().split('T')[0],
             mtbState: Object.keys(MtbState).find(
                 key =>

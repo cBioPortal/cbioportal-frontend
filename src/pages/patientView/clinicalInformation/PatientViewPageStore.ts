@@ -211,7 +211,8 @@ import {
     IFollowUp,
     ITherapyRecommendation,
     IClinicalTrial,
-} from '../../../shared/model/TherapyRecommendation';
+    IClinicalData,
+} from 'cbioportal-utils';
 import {
     StudyListEntry,
     StudyList,
@@ -242,7 +243,9 @@ import {
     updateFollowupUsingPUT,
     deleteFollowupUsingDELETE,
     checkPermissionUsingGET,
-    fetchOtherMtbsUsingPOST,
+    fetchTherapyRecommendationsByAlterationsUsingPOST,
+    fetchFollowUpsByAlterationsUsingPOST as fetchLocalFollowUpsUsingPOST,
+    fetchFollowUpsByAlterationsUsingPOST,
 } from 'shared/api/TherapyRecommendationAPI';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import { ageAsNumber } from '../clinicalTrialMatch/utils/AgeSexConverter';
@@ -2701,13 +2704,75 @@ export class PatientViewPageStore {
         []
     );
 
-    readonly otherMtbs = remoteData<ITherapyRecommendation[]>(
+    readonly localTherapyRecommendations = remoteData<ITherapyRecommendation[]>(
         {
             invoke: () => {
-                return fetchOtherMtbsUsingPOST(
+                return fetchTherapyRecommendationsByAlterationsUsingPOST(
                     this.getMtbJsonStoreUrl('alteration'),
-                    this.mutationData.result
+                    [
+                        ...this.mutationData.result,
+                        ...this.discreteCNAData.result,
+                    ]
                 );
+            },
+        },
+        []
+    );
+
+    readonly sharedTherapyRecommendations = [] as ITherapyRecommendation[];
+
+    readonly localFollowUps = remoteData<IFollowUp[]>(
+        {
+            invoke: () => {
+                return fetchFollowUpsByAlterationsUsingPOST(
+                    this.getMtbJsonStoreUrl('alteration', true),
+                    [
+                        ...this.mutationData.result,
+                        ...this.discreteCNAData.result,
+                    ]
+                );
+            },
+        },
+        []
+    );
+
+    readonly sharedFollowUps = [] as IFollowUp[];
+
+    readonly getDiagnosisFromSamples = remoteData<ClinicalData[]>(
+        {
+            await: () => [this.patientViewData],
+            invoke: async () => {
+                var patientData = await this.patientViewData;
+                var samples = patientData.result.samples;
+                var clinDat = patientData.result.patient?.clinicalData;
+                var tumor_entities: ClinicalData[] = [];
+
+                for (var i = 0; i < clinDat!.length; i++) {
+                    if (clinDat![i].clinicalAttributeId == 'DIAGNOSIS') {
+                        tumor_entities.push(clinDat![i]);
+                    }
+                }
+
+                for (var i = 0; i < samples!.length; i++) {
+                    for (var k = 0; k < samples![i].clinicalData.length; k++) {
+                        if (
+                            samples![i].clinicalData[k].clinicalAttributeId ==
+                            'ONCOTREE_CODE'
+                        ) {
+                            tumor_entities.push(samples![i].clinicalData[k]);
+                        }
+
+                        if (
+                            samples![i].clinicalData[k].clinicalAttributeId ==
+                                'CANCER_TYPE_DETAILED' ||
+                            samples![i].clinicalData[k].clinicalAttributeId ==
+                                'CANCER_TYPE'
+                        ) {
+                            tumor_entities.push(samples![i].clinicalData[k]);
+                        }
+                    }
+                }
+                return tumor_entities;
             },
         },
         []
@@ -2715,6 +2780,32 @@ export class PatientViewPageStore {
 
     updateMtbs = async (mtbs: IMtb[]): Promise<boolean> => {
         console.log('update');
+        mtbs.forEach(mtb =>
+            mtb.therapyRecommendations.forEach(tr => {
+                var diagnosis = [
+                    {
+                        sampleId: this.getDiagnosisFromSamples.result[0]
+                            .sampleId,
+                        attributeId: this.getDiagnosisFromSamples.result[0]
+                            .clinicalAttribute.clinicalAttributeId,
+                        attributeName: this.getDiagnosisFromSamples.result[0]
+                            .clinicalAttribute.displayName,
+                        value: this.getDiagnosisFromSamples.result[0].value,
+                    },
+                ] as IClinicalData[];
+                if (
+                    !tr.reasoning.clinicalData?.find(
+                        diag => diag.value == diagnosis[0].value
+                    )
+                ) {
+                    tr.reasoning.clinicalData = diagnosis.concat(
+                        tr.reasoning.clinicalData
+                            ? tr.reasoning.clinicalData
+                            : []
+                    );
+                }
+            })
+        );
         return updateMtbUsingPUT(
             this.getSafePatientId(),
             this.getSafeStudyId(),
@@ -2764,7 +2855,11 @@ export class PatientViewPageStore {
         return checkPermissionUsingGET(checkUrl, this.getSafeStudyId());
     };
 
-    getMtbJsonStoreUrl = (id: string, followUp: boolean = false) => {
+    getMtbJsonStoreUrl = (
+        id: string,
+        followUp: boolean = false,
+        shared: boolean = false
+    ) => {
         let host: string | null = window.location.hostname;
         let port = ':' + window.location.port;
         if (
@@ -2779,14 +2874,21 @@ export class PatientViewPageStore {
             getServerConfig().fhirspark!.port !== 'undefined'
         )
             port = ':' + getServerConfig().fhirspark!.port;
-        return '//' + host + port + (followUp ? '/followup/' : '/mtb/') + id;
+        return (
+            '//' +
+            host +
+            port +
+            (shared ? '/shared' : '') +
+            (followUp ? '/followup/' : '/mtb/') +
+            id
+        );
     };
 
-    private getSafePatientId = () => {
+    public getSafePatientId = () => {
         return encodeURIComponent(this.patientId);
     };
 
-    private getSafeStudyId = () => {
+    public getSafeStudyId = () => {
         return encodeURIComponent(this.studyId);
     };
 

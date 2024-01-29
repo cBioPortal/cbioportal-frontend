@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-    ITherapyRecommendation,
-    IClinicalData,
-} from 'shared/model/TherapyRecommendation';
+import { ITherapyRecommendation, IClinicalData } from 'cbioportal-utils';
 import CreatableSelect from 'react-select/creatable';
 import _ from 'lodash';
 import { components } from 'react-select';
