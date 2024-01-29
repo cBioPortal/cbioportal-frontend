@@ -1,4 +1,4 @@
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { Mutation } from 'cbioportal-ts-api-client';
 import {
     GenomeNexusAPIInternal,

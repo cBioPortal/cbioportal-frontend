@@ -4,7 +4,6 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import CustomDropdown from './CustomDropdown';
 import ConfirmNgchmModal from './ConfirmNgchmModal';
 import ReactSelect from 'react-select1';
-import { MobxPromise } from 'mobxpromise';
 import { action, computed, observable, reaction, makeObservable } from 'mobx';
 import _ from 'lodash';
 import { SortMode } from '../ResultsViewOncoprint';
@@ -18,12 +17,12 @@ import {
     DefaultTooltip,
     DownloadControlOption,
     EditableSpan,
+    MobxPromise,
 } from 'cbioportal-frontend-commons';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
 import './styles.scss';
 import classNames from 'classnames';
-import { SpecialAttribute } from '../../../cache/ClinicalDataCache';
 import { ResultsViewPageStore } from '../../../../pages/resultsView/ResultsViewPageStore';
 import {
     OncoprintAnalysisCaseType,

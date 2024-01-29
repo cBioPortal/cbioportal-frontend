@@ -1,4 +1,4 @@
-import OncoprintJS, {
+import {
     ICategoricalRuleSetParams,
     IGeneticAlterationRuleSetParams,
     IGradientRuleSetParams,
@@ -25,7 +25,7 @@ import {
 } from './geneticrules';
 import { AlterationTypeConstants } from 'shared/constants';
 import { CoverageInformation } from '../../lib/GenePanelUtils';
-import { remoteData } from 'cbioportal-frontend-commons';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import {
     makeCategoricalTrackData,
     makeClinicalTrackData,
@@ -33,11 +33,8 @@ import {
     makeHeatmapTrackData,
 } from './DataUtils';
 import _, { isNumber } from 'lodash';
-import ResultsViewOncoprint, {
-    getClinicalTrackValues,
-} from './ResultsViewOncoprint';
+import ResultsViewOncoprint from './ResultsViewOncoprint';
 import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
-import { MobxPromise } from 'mobxpromise';
 import GenesetCorrelatedGeneCache from 'shared/cache/GenesetCorrelatedGeneCache';
 import {
     isMergedTrackFilter,

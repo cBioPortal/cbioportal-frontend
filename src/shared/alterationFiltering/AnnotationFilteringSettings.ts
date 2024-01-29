@@ -1,6 +1,6 @@
 import { action, observable, ObservableMap } from 'mobx';
 import { getServerConfig } from 'config/config';
-import { MobxPromiseUnionType } from 'mobxpromise';
+import { MobxPromiseUnionType } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 
 export interface IAnnotationFilterSettings

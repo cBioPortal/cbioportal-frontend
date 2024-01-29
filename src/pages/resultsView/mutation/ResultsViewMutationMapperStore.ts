@@ -8,14 +8,13 @@ import {
     MolecularProfile,
     SampleIdentifier,
 } from 'cbioportal-ts-api-client';
-import { remoteData } from 'cbioportal-frontend-commons';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 import {
     VariantAnnotation,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
-import { MobxPromise } from 'mobxpromise';
 import { fetchCosmicData } from 'shared/lib/StoreUtils';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';

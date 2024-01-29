@@ -1,12 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import {
-    action,
-    observable,
-    computed,
-    makeObservable,
-    makeAutoObservable,
-} from 'mobx';
+import { action, observable, computed, makeObservable } from 'mobx';
 import _ from 'lodash';
 import {
     default as LazyMobXTable,
@@ -66,6 +60,10 @@ import {
     extractGenomicLocation,
     genomicLocationString,
 } from 'cbioportal-utils';
+import {
+    DownloadControlOption,
+    MobxPromise,
+} from 'cbioportal-frontend-commons';
 import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
@@ -82,6 +80,14 @@ import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutation
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
+import { getServerConfig } from 'config/config';
+import {
+    calculateOncoKbContentPadding,
+    calculateOncoKbContentWidthOnNextFrame,
+    calculateOncoKbContentWidthWithInterval,
+    DEFAULT_ONCOKB_CONTENT_WIDTH,
+} from 'shared/lib/AnnotationColumnUtils';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
@@ -158,16 +164,6 @@ export interface IMutationTableProps {
     deactivateColumnFilter?: (columnId: string) => void;
     customControls?: JSX.Element;
 }
-import MobxPromise from 'mobxpromise';
-import { getServerConfig } from 'config/config';
-import {
-    calculateOncoKbContentPadding,
-    calculateOncoKbContentWidthOnNextFrame,
-    calculateOncoKbContentWidthWithInterval,
-    DEFAULT_ONCOKB_CONTENT_WIDTH,
-} from 'shared/lib/AnnotationColumnUtils';
-import { DownloadControlOption } from 'cbioportal-frontend-commons';
-import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',

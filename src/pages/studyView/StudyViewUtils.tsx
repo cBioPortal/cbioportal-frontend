@@ -52,7 +52,6 @@ import {
     STUDY_VIEW_CONFIG,
 } from './StudyViewConfig';
 import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
-import MobxPromise from 'mobxpromise';
 import {
     CNA_COLOR_AMP,
     CNA_COLOR_DEFAULT,
@@ -62,6 +61,7 @@ import {
     CNA_COLOR_HOMDEL,
     EditableSpan,
     getTextWidth,
+    MobxPromise,
     stringListToIndexSet,
     toPromise,
 } from 'cbioportal-frontend-commons';
@@ -91,8 +91,7 @@ import { BoundType, NumberRange } from 'range-ts';
 import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
 import { toast } from 'react-toastify';
-import { value } from 'numeral';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {

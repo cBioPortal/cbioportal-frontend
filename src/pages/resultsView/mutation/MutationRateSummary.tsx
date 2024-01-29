@@ -10,7 +10,7 @@ import {
     somaticMutationRate,
 } from 'shared/lib/MutationUtils';
 import { computed, makeObservable } from 'mobx';
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 
 import MutationStatusSelector from './MutationStatusSelector';

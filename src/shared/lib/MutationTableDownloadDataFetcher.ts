@@ -1,4 +1,4 @@
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from 'shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import LazyMobXCache from 'shared/lib/LazyMobXCache';
 import {

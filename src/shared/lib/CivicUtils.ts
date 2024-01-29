@@ -1,4 +1,4 @@
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import {
     CivicAlterationType,
     fetchCivicGenes as fetchDefaultCivicGenes,

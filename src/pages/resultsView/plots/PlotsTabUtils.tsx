@@ -11,7 +11,6 @@ import {
     PlotsTabOption,
     SelectedColoringTypes,
 } from './PlotsTab';
-import { MobxPromise } from 'mobxpromise';
 import {
     CancerStudy,
     ClinicalAttribute,
@@ -26,7 +25,11 @@ import {
 
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 
-import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    remoteData,
+    MobxPromise,
+    stringListToIndexSet,
+} from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
 import { getSampleViewUrl, getStudySummaryUrl } from '../../../shared/api/urls';
 import _ from 'lodash';
@@ -39,11 +42,7 @@ import {
 import { BLACK, DEFAULT_GREY, LIGHT_GREY } from 'shared/lib/Colors';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
-import {
-    AlterationTypeConstants,
-    DataTypeConstants,
-    CLINICAL_ATTRIBUTE_FIELD_ENUM,
-} from 'shared/constants';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
@@ -59,7 +58,6 @@ import {
     LegendDataWithId,
 } from '../../../shared/components/plots/PlotUtils';
 import { isSampleProfiledInMultiple } from '../../../shared/lib/isSampleProfiled';
-import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
 import { ObservableMap } from 'mobx';
 import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
 import joinJsx from 'shared/lib/joinJsx';

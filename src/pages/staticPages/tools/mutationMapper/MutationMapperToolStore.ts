@@ -1,6 +1,5 @@
 import { action, computed, observable, makeObservable } from 'mobx';
 import _ from 'lodash';
-import { cached } from 'mobxpromise';
 import {
     annotateMutations,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
@@ -10,7 +9,7 @@ import {
     resolveDefaultsForMissingValues,
 } from 'cbioportal-utils';
 
-import { remoteData } from 'cbioportal-frontend-commons';
+import { cached, remoteData } from 'cbioportal-frontend-commons';
 import {
     EnsemblTranscript,
     VariantAnnotation,

@@ -5,8 +5,7 @@ import {
 } from 'genome-nexus-ts-api-client';
 import g2sClient from 'shared/api/g2sClientInstance';
 import { CacheData } from 'shared/lib/LazyMobXCache';
-import { remoteData } from 'cbioportal-frontend-commons';
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 
 export type ResidueMappingQuery = {
     uniprotId: string;

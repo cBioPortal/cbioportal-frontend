@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
-import MobxPromise from 'mobxpromise';
 import { Nav, NavItem } from 'react-bootstrap';
 
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
@@ -21,7 +20,11 @@ import {
     default as ProgressIndicator,
     IProgressIndicatorItem,
 } from 'shared/components/progressIndicator/ProgressIndicator';
-import { DownloadControlOption, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    MobxPromise,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import CaseFilterWarning from 'shared/components/banners/CaseFilterWarning';
 import { getServerConfig } from 'config/config';
 

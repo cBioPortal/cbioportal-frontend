@@ -1,16 +1,12 @@
 import * as React from 'react';
-import _ from 'lodash';
-import MobxPromise from 'mobxpromise';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
-import { Checkbox } from 'react-bootstrap';
-import { remoteData, getTextWidth } from 'cbioportal-frontend-commons';
+import { getTextWidth, MobxPromise } from 'cbioportal-frontend-commons';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
 import CustomDropdown from 'shared/components/oncoprint/controls/CustomDropdown';
 import AddChartByType from '../../studyView/addChartButton/addChartByType/AddChartByType';
-import { ChartDataCountSet } from '../../studyView/StudyViewUtils';
 
 export interface IAddColumnsProps extends IColumnVisibilityControlsProps {
     clinicalAttributes: ClinicalAttribute[];

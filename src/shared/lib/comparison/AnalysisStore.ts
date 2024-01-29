@@ -1,4 +1,9 @@
-import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    cached,
+    MobxPromise,
+    MobxPromiseUnionTypeWithDefault,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import {
     CancerStudy,
     ClinicalData,
@@ -9,11 +14,10 @@ import {
     MutationCountByPosition,
     Sample,
 } from 'cbioportal-ts-api-client';
-import { computed, makeObservable, observable } from 'mobx';
+import { computed, observable } from 'mobx';
 import _ from 'lodash';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import {
-    evaluatePutativeDriverInfo,
     evaluatePutativeDriverInfoWithHotspots,
     fetchOncoKbCancerGenes,
     fetchOncoKbDataForOncoprint,
@@ -25,10 +29,6 @@ import {
     makeIsHotspotForOncoprint,
     ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
-import MobxPromise, {
-    cached,
-    MobxPromiseUnionTypeWithDefault,
-} from 'mobxpromise';
 import { DriverAnnotationSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { getServerConfig } from 'config/config';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';

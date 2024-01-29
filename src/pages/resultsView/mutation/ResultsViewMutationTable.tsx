@@ -1,5 +1,5 @@
 import * as React from 'react';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import {
     IMutationTableProps,
     MutationTableColumnType,

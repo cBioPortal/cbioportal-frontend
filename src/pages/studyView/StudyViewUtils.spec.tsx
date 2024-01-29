@@ -83,7 +83,6 @@ import { Layout } from 'react-grid-layout';
 import sinon, { spy } from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { ChartDimension, ChartTypeEnum } from './StudyViewConfig';
-import { MobxPromise } from 'mobxpromise';
 import {
     CLI_NO_COLOR,
     CLI_YES_COLOR,
@@ -95,7 +94,11 @@ import {
     CustomChartIdentifierWithValue,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
-import { remoteData, toPromise } from 'cbioportal-frontend-commons';
+import {
+    MobxPromise,
+    remoteData,
+    toPromise,
+} from 'cbioportal-frontend-commons';
 import { autorun, observable, runInAction } from 'mobx';
 
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
