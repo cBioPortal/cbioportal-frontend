@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Modal, Button } from 'react-bootstrap';
-import { ITherapyRecommendation } from 'shared/model/TherapyRecommendation';
+import { ITherapyRecommendation } from 'cbioportal-utils';
 import Select from 'react-select';
 import { DiscreteCopyNumberData, Mutation } from 'cbioportal-ts-api-client';
 import { VariantAnnotation, MyVariantInfo } from 'genome-nexus-ts-api-client';

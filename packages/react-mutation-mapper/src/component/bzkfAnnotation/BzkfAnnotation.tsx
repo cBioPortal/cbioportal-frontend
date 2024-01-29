@@ -5,7 +5,7 @@ import {
     ITherapyRecommendation,
     IFollowUp,
     ISharedTherapyRecommendationData,
-} from './modelCopy/TherapyRecommendation';
+} from 'cbioportal-utils/src/model/TherapyRecommendation';
 import { Tab, Tabs } from 'react-bootstrap';
 import noMatchLogo from '../../images/genome_no_match.png';
 import diagMatchLogo from '../../images/genome_diag_match.png';

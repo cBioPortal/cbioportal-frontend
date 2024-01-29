@@ -1,11 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Modal, Button } from 'react-bootstrap';
-import {
-    ITherapyRecommendation,
-    IMtb,
-    MtbState,
-} from 'shared/model/TherapyRecommendation';
+import { ITherapyRecommendation, IMtb, MtbState } from 'cbioportal-utils';
 import Select from 'react-select';
 
 interface IFollowUpFormProps {

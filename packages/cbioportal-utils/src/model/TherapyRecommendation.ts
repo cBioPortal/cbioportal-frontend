@@ -1,4 +1,4 @@
-export enum EvidenceLevel {
+export enum TREvidenceLevel {
     NA,
     m1A,
     m1B,
@@ -38,6 +38,7 @@ export interface IMtb {
     geneticCounselingRecommendation: boolean;
     rebiopsyRecommendation: boolean;
     generalRecommendation: string;
+    diagnosis: string;
     date: string;
     mtbState: MtbState;
     samples: string[];
@@ -48,7 +49,7 @@ export interface ITherapyRecommendation {
     id: string;
     comment: string[];
     reasoning: IReasoning;
-    evidenceLevel: EvidenceLevel;
+    evidenceLevel: TREvidenceLevel;
     evidenceLevelExtension?: EvidenceLevelExtension;
     evidenceLevelM3Text: string;
     author: string;

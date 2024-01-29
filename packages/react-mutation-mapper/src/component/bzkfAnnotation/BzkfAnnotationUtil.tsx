@@ -2,9 +2,9 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
     IFollowUp,
     ITherapyRecommendation,
-} from './modelCopy/TherapyRecommendation';
+} from 'cbioportal-utils/src/model/TherapyRecommendation';
 import * as React from 'react';
-import oncoTreeTumorTypes from './modelCopy/OncoTreeTumorTypes';
+import oncoTreeTumorTypes from 'cbioportal-utils/src/model/OncoTreeTumorTypes';
 
 const tumorTypes = oncoTreeTumorTypes;
 

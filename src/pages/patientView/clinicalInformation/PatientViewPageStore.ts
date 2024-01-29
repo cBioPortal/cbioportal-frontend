@@ -212,7 +212,7 @@ import {
     ITherapyRecommendation,
     IClinicalTrial,
     IClinicalData,
-} from '../../../shared/model/TherapyRecommendation';
+} from 'cbioportal-utils';
 import {
     StudyListEntry,
     StudyList,

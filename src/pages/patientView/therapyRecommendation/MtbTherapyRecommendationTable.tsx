@@ -8,9 +8,9 @@ import {
     IGeneticAlteration,
     IReference,
     IClinicalData,
-    EvidenceLevel,
+    TREvidenceLevel,
     IClinicalTrial,
-} from '../../../shared/model/TherapyRecommendation';
+} from 'cbioportal-utils';
 import { computed, makeObservable, observable } from 'mobx';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import styles from './style/therapyRecommendation.module.scss';

@@ -4,7 +4,7 @@ import { IBzkfAnnotationProps } from './BzkfAnnotation';
 import {
     ISharedTherapyRecommendationData,
     ITherapyRecommendation,
-} from './modelCopy/TherapyRecommendation';
+} from 'cbioportal-utils/src/model/TherapyRecommendation';
 import {
     filterFunc,
     generateTableEntries,

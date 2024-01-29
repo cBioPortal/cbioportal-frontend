@@ -48,7 +48,7 @@ import ErrorMessage from 'shared/components/ErrorMessage';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
-import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on an mutation to zoom in on the gene in the IGV browser above';

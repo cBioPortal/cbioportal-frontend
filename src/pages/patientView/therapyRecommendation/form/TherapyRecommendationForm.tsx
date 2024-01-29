@@ -3,9 +3,9 @@ import * as _ from 'lodash';
 import { Modal, Button } from 'react-bootstrap';
 import {
     ITherapyRecommendation,
-    EvidenceLevel,
+    TREvidenceLevel,
     IClinicalTrial,
-} from 'shared/model/TherapyRecommendation';
+} from 'cbioportal-utils';
 import { TherapyRecommendationFormAlterationInput } from './TherapyRecommendationFormAlterationInput';
 import {
     Mutation,

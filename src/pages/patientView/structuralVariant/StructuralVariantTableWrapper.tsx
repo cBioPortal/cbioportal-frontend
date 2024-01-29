@@ -29,7 +29,7 @@ import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
-import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;

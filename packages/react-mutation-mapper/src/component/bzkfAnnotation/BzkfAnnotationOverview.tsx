@@ -2,7 +2,7 @@ import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { Table } from 'react-bootstrap';
 import { IBzkfAnnotationProps } from './BzkfAnnotation';
-import { ISharedTherapyRecommendationData } from './modelCopy/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils/src/model/TherapyRecommendation';
 
 interface therapyRecMatches {
     matchingAlterationLocal: number;

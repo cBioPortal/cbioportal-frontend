@@ -25,7 +25,7 @@ import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable
 import _ from 'lodash';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
-import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export interface IPatientViewMutationsTabProps {
     patientViewPageStore: PatientViewPageStore;

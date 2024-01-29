@@ -4,7 +4,7 @@ import {
     IDeletions,
     ITherapyRecommendation,
     IFollowUp,
-} from 'shared/model/TherapyRecommendation';
+} from 'cbioportal-utils';
 import * as request from 'superagent';
 
 export function flattenArray(x: Array<any>): Array<any> {

@@ -29,7 +29,7 @@ import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
-import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 /**
  * @author Selcuk Onur Sumer

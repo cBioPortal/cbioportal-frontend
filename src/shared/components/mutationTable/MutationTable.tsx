@@ -174,7 +174,7 @@ import {
     ITherapyRecommendationProps,
     ITherapyRecommendationState,
 } from 'pages/patientView/therapyRecommendation/MtbTherapyRecommendationTable';
-import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',

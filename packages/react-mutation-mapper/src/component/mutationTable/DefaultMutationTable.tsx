@@ -41,7 +41,7 @@ import { MutationColumn } from './MutationColumnHelper';
 
 import './defaultMutationTable.scss';
 import { getClinvarData } from '../clinvar/ClinvarHelper';
-import { ISharedTherapyRecommendationData } from '../bzkfAnnotation/modelCopy/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils/src/model/TherapyRecommendation';
 
 export type DefaultMutationTableProps = {
     hotspotData?: RemoteData<IHotspotIndex | undefined>;

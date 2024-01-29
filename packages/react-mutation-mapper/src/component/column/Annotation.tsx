@@ -42,7 +42,7 @@ import { CanonicalMutationType } from 'cbioportal-frontend-commons';
 import { VariantAnnotation, Vues as VUE } from 'genome-nexus-ts-api-client';
 import { RevueCell, sortValue as revueSortValue } from '../revue/Revue';
 import annotationStyles from './annotation.module.scss';
-import { ISharedTherapyRecommendationData } from '../bzkfAnnotation/modelCopy/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils/src/model/TherapyRecommendation';
 import BzkfAnnotation from '../bzkfAnnotation/BzkfAnnotation';
 
 export type AnnotationProps = {

@@ -34,7 +34,7 @@ import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
-import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';

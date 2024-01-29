@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-    ITherapyRecommendation,
-    IClinicalTrial,
-} from 'shared/model/TherapyRecommendation';
+import { ITherapyRecommendation, IClinicalTrial } from 'cbioportal-utils';
 import AsyncCreatableSelect from 'react-select/async';
 import _ from 'lodash';
 import request from 'superagent';

@@ -19,7 +19,7 @@ import {
 } from 'oncokb-frontend-commons';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
-import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export default class AnnotationColumnFormatter {
     public static getData(

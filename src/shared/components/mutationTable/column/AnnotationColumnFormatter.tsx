@@ -23,7 +23,7 @@ import { CancerGene } from 'oncokb-ts-api-client';
 import AnnotationHeader from './annotation/AnnotationHeader';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
-import { ISharedTherapyRecommendationData } from 'shared/model/TherapyRecommendation';
+import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
 
 export interface IAnnotationColumnProps extends AnnotationProps {
     pubMedCache?: OncokbPubMedCache;

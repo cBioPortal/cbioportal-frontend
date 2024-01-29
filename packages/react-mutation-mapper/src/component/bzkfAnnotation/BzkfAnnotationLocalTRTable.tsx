@@ -3,12 +3,12 @@ import {
     IFollowUp,
     IResponseCriteria,
     ISharedTherapyRecommendationData,
-} from './modelCopy/TherapyRecommendation';
+} from 'cbioportal-utils/src/model/TherapyRecommendation';
 import * as React from 'react';
 import { Table } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { IBzkfAnnotationProps } from './BzkfAnnotation';
-import oncoTreeTumorTypes from './modelCopy/OncoTreeTumorTypes';
+import oncoTreeTumorTypes from 'cbioportal-utils/src/model/OncoTreeTumorTypes';
 import {
     filterFunc,
     generateTableEntries,
