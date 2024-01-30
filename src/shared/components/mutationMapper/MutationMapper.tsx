@@ -105,6 +105,7 @@ export interface IMutationMapperProps {
     enableCivic?: boolean;
     enableRevue?: boolean;
     ptmSources?: string[];
+    showDownload?: boolean;
 }
 
 export default class MutationMapper<
@@ -422,6 +423,7 @@ export default class MutationMapper<
                 axisMode={this.props.axisMode}
                 onScaleToggle={this.props.onScaleToggle}
                 showPercentToggle={this.props.showPlotPercentToggle}
+                showDownloadControls={this.props.showDownload}
             />
         );
     }

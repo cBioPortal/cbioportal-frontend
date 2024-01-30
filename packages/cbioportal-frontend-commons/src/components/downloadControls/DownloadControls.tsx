@@ -11,7 +11,6 @@ import { saveSvg, saveSvgAsPng } from 'save-svg-as-png';
 import svgToPdfDownload from '../../lib/svgToPdfDownload';
 import { CSSProperties } from 'react';
 import { isPromiseLike } from 'cbioportal-utils';
-import { AppContext, DownloadControlOption } from '../appContext/AppContext';
 
 type ButtonSpec = {
     key: string;
@@ -29,6 +28,12 @@ export type DownloadControlsButton =
     | 'Full Data';
 
 export type DataType = 'summary' | 'full';
+
+export enum DownloadControlOption {
+    SHOW_ALL = 'show',
+    HIDE_DATA = 'data',
+    HIDE_ALL = 'hide',
+}
 
 interface IDownloadControlsProps {
     getSvg?: () => SVGElement | null | PromiseLike<SVGElement | null>;
@@ -306,9 +311,7 @@ export default class DownloadControls extends React.Component<
     }
 
     render() {
-        if (
-            this.context.showDownloadControls === DownloadControlOption.HIDE_ALL
-        ) {
+        if (this.showDownload === false) {
             return null;
         }
 
@@ -421,5 +424,3 @@ export default class DownloadControls extends React.Component<
         }
     }
 }
-
-DownloadControls.contextType = AppContext;

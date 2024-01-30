@@ -1,3 +1,7 @@
+import {
+    DownloadControlOption,
+    DownloadControls,
+} from 'cbioportal-frontend-commons';
 import { IMutationMapperProps } from './MutationMapper';
 
 // This is a subset of IServerConfig containing config values used only in Mutation Mapper
@@ -14,6 +18,7 @@ export interface IMutationMapperServerConfig {
     ensembl_transcript_url: string | null;
     genomenexus_isoform_override_source: string | undefined;
     genomenexus_url: string | null;
+    skin_hide_download_controls?: string;
 }
 
 export function convertToMutationMapperProps(
@@ -32,5 +37,8 @@ export function convertToMutationMapperProps(
         enableMyCancerGenome: config.mycancergenome_show,
         enableCivic: config.show_civic,
         enableRevue: config.show_revue,
+        showDownload:
+            config.skin_hide_download_controls !==
+            DownloadControlOption.HIDE_ALL,
     };
 }
