@@ -913,6 +913,15 @@ export class PatientViewPageStore {
             .filter((value, index, self) => self.indexOf(value) === index);
     }
 
+    @computed get samplesNotProfiledForMutationalSignatures(): string[] {
+        const allSamples = this.samplesWithUniqueKeys.result.map(
+            sample => sample.sampleId
+        );
+        return allSamples.filter(
+            element => !this.samplesWithCountDataAvailable.includes(element)
+        );
+    }
+
     readonly samplesWithoutCancerTypeClinicalData = remoteData(
         {
             await: () => [this.samples, this.clinicalDataForSamples],

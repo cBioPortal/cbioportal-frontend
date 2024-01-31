@@ -602,7 +602,7 @@ export function tabs(
             <MSKTab
                 key={8}
                 id="mutationalSignatures"
-                linkText="Mutational Signature Data"
+                linkText="Mutational Signatures"
                 hide={
                     pageComponent.patientViewPageStore
                         .mutationalSignatureMolecularProfiles.isPending ||
@@ -641,6 +641,10 @@ export function tabs(
                     samples={
                         pageComponent.patientViewPageStore
                             .samplesWithCountDataAvailable
+                    }
+                    samplesNotProfiled={
+                        pageComponent.patientViewPageStore
+                            .samplesNotProfiledForMutationalSignatures
                     }
                     onSampleChange={pageComponent.onSampleIdChange}
                 />

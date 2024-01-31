@@ -1,37 +1,37 @@
 import * as React from 'react';
-import { Observer, observer } from 'mobx-react';
+import { observer } from 'mobx-react';
 import { computed, action, makeObservable, observable } from 'mobx';
 import {
     IMutationalSignature,
     IMutationalCounts,
 } from 'shared/model/MutationalSignature';
-import ClinicalInformationMutationalSignatureTable from '../clinicalInformation/ClinicalInformationMutationalSignatureTable';
+import ClinicalInformationMutationalSignatureTable, {
+    IMutationalSignatureRow,
+} from '../clinicalInformation/ClinicalInformationMutationalSignatureTable';
 import Select from 'react-select';
 import autobind from 'autobind-decorator';
+import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 
-import {
-    ClinicalDataBySampleId,
-    MolecularProfile,
-    Sample,
-} from 'cbioportal-ts-api-client';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import {
     getVersionOption,
     getVersionOptions,
     getSampleOptions,
     getSampleOption,
-    MutationalSignaturesVersion,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import _ from 'lodash';
-import { ButtonGroup, Button } from 'react-bootstrap';
+import { ButtonGroup } from 'react-bootstrap';
 
 import MutationalBarChart from 'pages/patientView/mutationalSignatures/MutationalSignatureBarChart';
-import { getPercentageOfMutationalCount } from './MutationalSignatureBarChartUtils';
 import {
-    DefaultTooltip,
-    placeArrowBottomLeft,
-    DownloadControls,
-} from 'cbioportal-frontend-commons';
+    formatMutationalSignatureLabel,
+    getPercentageOfMutationalCount,
+    prepareMutationalSignatureDataForTable,
+} from './MutationalSignatureBarChartUtils';
+import { DefaultTooltip, DownloadControls } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
+import { MutationalSignatureTableDataStore } from 'pages/patientView/mutationalSignatures/MutationalSignaturesDataStore';
+import WindowStore from 'shared/components/window/WindowStore';
 
 export interface IMutationalSignaturesContainerProps {
     data: { [version: string]: IMutationalSignature[] };
@@ -39,10 +39,14 @@ export interface IMutationalSignaturesContainerProps {
     version: string;
     sample: string;
     samples: string[];
+    samplesNotProfiled: string[];
     onVersionChange: (version: string) => void;
     onSampleChange: (sample: string) => void;
     dataCount: { [version: string]: IMutationalCounts[] };
 }
+
+const CONTENT_TO_SHOW_ABOVE_TABLE =
+    'Click on a mutational signature to update reference plot';
 
 interface IAxisScaleSwitchProps {
     onChange: (selectedScale: AxisScale) => void;
@@ -59,21 +63,35 @@ export default class MutationalSignaturesContainer extends React.Component<
     IMutationalSignaturesContainerProps,
     {}
 > {
-    @observable signatureProfile: string;
+    public mutationalSignatureTableStore: MutationalSignatureTableDataStore;
+    @observable signatureProfile: string = this.props.data[
+        this.props.version
+    ][0].meta.name;
+    @observable signatureToPlot: string = this.props.data[this.props.version][0]
+        .meta.name;
     private plotSvg: SVGElement | null = null;
     @observable signatureURL: string;
     @observable signatureDescription: string;
     @observable isSignatureInformationToolTipVisible: boolean = false;
+    @observable updateReferencePlot: boolean = false;
     public static defaultProps: Partial<IAxisScaleSwitchProps> = {
         selectedScale: AxisScale.COUNT,
     };
 
     @observable
-    selectedScale: string = AxisScale.COUNT;
+    selectedScale: string = AxisScale.PERCENT;
 
-    mutationalProfileSelection = (childData: string, visibility: boolean) => {
+    mutationalProfileSelection = (
+        childData: string,
+        visibility: boolean,
+        updateReference: boolean
+    ) => {
         this.signatureProfile = childData;
+        this.updateReferencePlot = updateReference;
         this.isSignatureInformationToolTipVisible = visibility;
+        this.signatureToPlot = updateReference
+            ? childData
+            : this.signatureToPlot;
         this.signatureURL =
             this.props.data[this.props.version].filter(obj => {
                 return childData === obj.meta.name;
@@ -94,6 +112,12 @@ export default class MutationalSignaturesContainer extends React.Component<
     constructor(props: IMutationalSignaturesContainerProps) {
         super(props);
         makeObservable(this);
+
+        this.mutationalSignatureTableStore = new MutationalSignatureTableDataStore(
+            () => {
+                return this.mutationalSignatureDataForTable;
+            }
+        );
     }
 
     @observable _selectedData: IMutationalCounts[] = this.props.dataCount[
@@ -158,18 +182,32 @@ export default class MutationalSignaturesContainer extends React.Component<
             </button>
         );
     }
-    @observable yAxisLabel: string = 'Mutational count (value)';
+
+    @observable currentVersion: string = this.props.version;
+    @observable yLabelString: string = this.updateYaxisLabel;
+    @observable yAxisLabel: string = this.yLabelString;
 
     @action.bound
     private handlePercentClick() {
         this.selectedScale = AxisScale.PERCENT;
-        this.yAxisLabel = 'Mutational count (%)';
+        this.yAxisLabel = this.updateYaxisLabel;
+    }
+
+    @computed get updateYaxisLabel() {
+        const unitAxis = this.selectedScale == '%' ? ' (%)' : ' (count)';
+        const yLabel =
+            this.currentVersion == 'SBS'
+                ? 'Single Base Substitution'
+                : this.currentVersion == 'DBS'
+                ? 'Double Base Substitutions'
+                : 'Indels';
+        return yLabel + unitAxis;
     }
 
     @action.bound
     private handleCountClick() {
         this.selectedScale = AxisScale.COUNT;
-        this.yAxisLabel = 'Mutational count (value)';
+        this.yAxisLabel = this.updateYaxisLabel;
     }
 
     @computed get getDataForGraph(): IMutationalCounts[] {
@@ -181,18 +219,23 @@ export default class MutationalSignaturesContainer extends React.Component<
             return this.mutationalSignatureCountDataGroupedByVersionForSample;
         }
     }
-
     @observable
     _mutationalSignatureCountDataGroupedByVersionForSample: IMutationalCounts[];
-    @computed get mutationalSignatureCountDataGroupedByVersionForSample() {
-        const sampleIdToFilter = this.props.samples.includes(this.props.sample)
-            ? this.props.sample
-            : undefined;
+    @computed
+    get mutationalSignatureCountDataGroupedByVersionForSample(): IMutationalCounts[] {
         return (
             this._mutationalSignatureCountDataGroupedByVersionForSample ||
             this.props.dataCount[this.props.version]
-                .map(item => item)
-                .filter(subItem => subItem.sampleId === sampleIdToFilter)
+                .map((obj, index) => {
+                    obj[
+                        'mutationalSignatureLabel'
+                    ] = formatMutationalSignatureLabel(
+                        obj.mutationalSignatureLabel,
+                        this.props.version
+                    );
+                    return obj;
+                })
+                .filter(subItem => subItem.sampleId === this.sampleIdToFilter)
         );
     }
 
@@ -200,11 +243,16 @@ export default class MutationalSignaturesContainer extends React.Component<
     private onVersionChange(option: { label: string; value: string }): void {
         this.props.onVersionChange(option.value);
         this.signatureProfile = this.props.data[option.value][0].meta.name;
+        this.signatureToPlot = this.props.data[option.value][0].meta.name;
+        this.updateReferencePlot = false;
         this.isSignatureInformationToolTipVisible = false;
+        this.currentVersion = option.value;
+        this.yAxisLabel = this.updateYaxisLabel;
     }
 
-    @action.bound
+    @autobind
     private onSampleChange(sample: { label: string; value: string }): void {
+        this.getTotalMutationalCount;
         this.props.onSampleChange(sample.value);
     }
 
@@ -217,16 +265,81 @@ export default class MutationalSignaturesContainer extends React.Component<
         return this.plotSvg;
     }
 
+    @autobind
+    onMutationalSignatureTableRowClick(d: IMutationalSignatureRow) {
+        this.signatureProfile = d.name;
+        this.signatureURL = d.url;
+        this.signatureProfile = d.name;
+        this.signatureToPlot = d.name;
+        this.updateReferencePlot = true;
+        this.mutationalSignatureTableStore.setSelectedMutSig(d);
+        if (this.mutationalSignatureTableStore.selectedMutSig.length > 0) {
+            this.mutationalSignatureTableStore.setclickedMutSig(d);
+            this.mutationalSignatureTableStore.toggleSelectedMutSig(
+                this.mutationalSignatureTableStore.selectedMutSig[0]
+            );
+        }
+    }
+
+    @autobind
+    onMutationalSignatureTableMouseOver(d: IMutationalSignatureRow) {
+        this.signatureProfile = d.name;
+        this.signatureURL = d.url;
+        this.signatureProfile = d.name;
+    }
+
+    @computed get mutationalSignatureDataForTable() {
+        return prepareMutationalSignatureDataForTable(
+            this.props.data[this.props.version],
+            this.props.samples
+        );
+    }
+
+    @computed get sampleIdToFilter() {
+        return this.props.samples.includes(this.props.sample)
+            ? this.props.sample
+            : undefined;
+    }
+
+    @computed get getTotalMutationalCount() {
+        const countPerVersion = this.props.dataCount[this.props.version]
+            .filter(subItem => subItem.sampleId === this.sampleIdToFilter)
+            .map(item => {
+                return item.value;
+            });
+        const mutTotalCount = countPerVersion.reduce((a, b) => a + b, 0);
+        return [this.props.version, mutTotalCount];
+    }
+
     public render() {
         return (
             <div data-test="MutationalSignaturesContainer">
                 <div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {this.props.samplesNotProfiled.length > 0 && (
+                        <div className={'alert alert-info'}>
+                            <span>
+                                {this.props.samplesNotProfiled.length > 1
+                                    ? this.props.samplesNotProfiled.join(',')
+                                    : this.props.samplesNotProfiled}{' '}
+                                {this.props.samplesNotProfiled.length > 1
+                                    ? ' are'
+                                    : ' is'}{' '}
+                                not profiled for mutational signatures
+                            </span>
+                        </div>
+                    )}
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            width: '100%',
+                        }}
+                    >
                         <div
                             style={{
                                 display: 'inline-block',
                                 marginLeft: 5,
-                                width: 800,
+                                width: 1000,
                             }}
                         >
                             <div
@@ -236,7 +349,31 @@ export default class MutationalSignaturesContainer extends React.Component<
                                     paddingBottom: 10,
                                 }}
                             >
-                                Version:
+                                Variant Class:
+                                <DefaultTooltip
+                                    placement="right"
+                                    overlay={
+                                        <span>
+                                            <b>
+                                                Mutational signature description
+                                                (COSMIC):{' '}
+                                            </b>{' '}
+                                            <br />
+                                            <b>SBS</b>: Single Base Substitution{' '}
+                                            <br />
+                                            <b>DBS</b>: Double Base Substitution{' '}
+                                            <br />
+                                            <b>ID</b>: Small Insertions and
+                                            Deletions <br />
+                                        </span>
+                                    }
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <i
+                                        className="fa fa-lg fa-question-circle"
+                                        style={{ paddingLeft: 5 }}
+                                    ></i>
+                                </DefaultTooltip>
                                 <Select
                                     className="basic-single"
                                     name={'mutationalSignaturesVersionSelector'}
@@ -252,13 +389,14 @@ export default class MutationalSignaturesContainer extends React.Component<
                                     clearable={false}
                                 />
                             </div>
+
                             {this.props.samples.length > 1 && (
                                 <div
                                     style={{
                                         float: 'left',
                                         width: 300,
-                                        paddingLeft: '10px',
-                                        marginLeft: '10px',
+                                        paddingLeft: 10,
+                                        marginLeft: 10,
                                         paddingBottom: 10,
                                     }}
                                 >
@@ -293,7 +431,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                                     style={{
                                         display: 'inline-block',
                                         marginLeft: 5,
-                                        width: 800,
+                                        width: 100,
                                         paddingBottom: 10,
                                     }}
                                 >
@@ -302,6 +440,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                                             style={{
                                                 float: 'left',
                                                 width: 100,
+                                                paddingLeft: 10,
                                             }}
                                         >
                                             Y-Axis:
@@ -317,20 +456,33 @@ export default class MutationalSignaturesContainer extends React.Component<
                                             </ButtonGroup>
                                         </div>
                                     )}
-                                    <DownloadControls
-                                        filename="mutationalBarChart"
-                                        getSvg={this.getSvg}
-                                        buttons={['SVG', 'PNG']}
-                                        type="button"
-                                        dontFade
-                                        style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            right: 0,
-                                            paddingBottom: 10,
-                                        }}
-                                    />
                                 </div>
+                                {!_.isEmpty(this.props.dataCount) && (
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            width: WindowStore.size.width - 100,
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                float: 'left',
+                                                paddingLeft: 10,
+                                                width: 100,
+                                                boxSizing: 'border-box',
+                                            }}
+                                        >
+                                            <h5>Sample</h5>
+                                            {this.props.sample}
+                                        </div>
+                                        <div>
+                                            <h5>Mutational count</h5>
+                                            {this.getTotalMutationalCount[0]}:
+                                            {this.getTotalMutationalCount[1]}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -339,28 +491,73 @@ export default class MutationalSignaturesContainer extends React.Component<
                 {this.props.data && (
                     <div>
                         {!_.isEmpty(this.props.dataCount) && (
-                            <MutationalBarChart
-                                signature={this.signatureProfile}
-                                height={220}
-                                width={800}
-                                refStatus={false}
-                                svgId={'MutationalBarChart'}
-                                svgRef={this.assignPlotSvgRef}
-                                data={this.getDataForGraph}
-                                version={this.props.version}
-                                sample={this.props.sample}
-                                label={this.yAxisLabel}
-                            />
+                            <div
+                                className={'borderedChart'}
+                                style={{ marginLeft: 10 }}
+                            >
+                                <div
+                                    style={{
+                                        zIndex: 10,
+                                        position: 'absolute',
+                                        right: 10,
+                                        top: 10,
+                                    }}
+                                >
+                                    <DownloadControls
+                                        filename="mutationalBarChart"
+                                        getSvg={this.getSvg}
+                                        buttons={['SVG', 'PNG', 'PDF']}
+                                        type="button"
+                                        dontFade
+                                    />
+                                </div>
+                                <div style={{ overflow: 'auto' }}>
+                                    <MutationalBarChart
+                                        signature={this.signatureToPlot}
+                                        height={220}
+                                        width={WindowStore.size.width - 100}
+                                        refStatus={false}
+                                        svgId={'MutationalBarChart'}
+                                        svgRef={this.assignPlotSvgRef}
+                                        data={this.getDataForGraph}
+                                        version={this.props.version}
+                                        sample={this.props.sample}
+                                        label={this.yAxisLabel}
+                                        selectedScale={this.selectedScale}
+                                        updateReference={
+                                            this.updateReferencePlot
+                                        }
+                                        initialReference={
+                                            this.props.data[
+                                                this.props.version
+                                            ][0].meta.name
+                                        }
+                                    />
+                                </div>
+                            </div>
                         )}
 
                         <div>
-                            <ClinicalInformationMutationalSignatureTable
-                                data={this.props.data[this.props.version]}
-                                parentCallback={this.mutationalProfileSelection}
-                                url={this.signatureURL}
-                                description={this.signatureDescription}
-                                signature={this.signatureProfile}
-                            />
+                            <FeatureInstruction
+                                content={CONTENT_TO_SHOW_ABOVE_TABLE}
+                            >
+                                <ClinicalInformationMutationalSignatureTable
+                                    data={this.mutationalSignatureDataForTable}
+                                    url={this.signatureURL}
+                                    description={this.signatureDescription}
+                                    signature={this.signatureProfile}
+                                    samples={this.props.samples}
+                                    onRowClick={
+                                        this.onMutationalSignatureTableRowClick
+                                    }
+                                    onRowMouseEnter={
+                                        this.onMutationalSignatureTableMouseOver
+                                    }
+                                    dataStore={
+                                        this.mutationalSignatureTableStore
+                                    }
+                                />
+                            </FeatureInstruction>
                         </div>
                     </div>
                 )}
