@@ -236,6 +236,11 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     vaf_log_scale_default: false,
 
     skin_study_view_show_sv_table: false,
+
+    skin_custom_driver_name: 'Custom Driver',
+    skin_custom_driver_description: 'Custom driver annotation',
+    skin_custom_driver_tiers_name: 'Custom Driver Tiers',
+    skin_custom_driver_tiers_description: 'Custom driver tiers',
 };
 
 export default ServerConfigDefaults;

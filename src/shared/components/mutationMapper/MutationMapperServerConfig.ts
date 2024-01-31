@@ -6,6 +6,10 @@ import { IMutationMapperProps } from './MutationMapper';
 
 // This is a subset of IServerConfig containing config values used only in Mutation Mapper
 export interface IMutationMapperServerConfig {
+    skin_custom_driver_description?: string;
+    skin_custom_driver_tiers_name?: string;
+    skin_custom_driver_tiers_description?: string;
+    skin_custom_driver_name?: string;
     show_oncokb?: boolean;
     show_genomenexus?: boolean;
     show_hotspot?: boolean;
@@ -40,5 +44,10 @@ export function convertToMutationMapperProps(
         showDownload:
             config.skin_hide_download_controls !==
             DownloadControlOption.HIDE_ALL,
+        customDriverName: config.skin_custom_driver_name,
+        customDriverDescription: config.skin_custom_driver_description,
+        customDriverTiersName: config.skin_custom_driver_tiers_name,
+        customDriverTiersDescription:
+            config.skin_custom_driver_tiers_description,
     };
 }

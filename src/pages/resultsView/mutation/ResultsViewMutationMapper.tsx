@@ -266,6 +266,16 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 deactivateColumnFilter={this.deactivateColumnFilter}
                 namespaceColumns={this.props.store.namespaceColumnConfig}
                 columns={this.columns}
+                customDriverName={getServerConfig().skin_custom_driver_name}
+                customDriverDescription={
+                    getServerConfig().skin_custom_driver_description
+                }
+                customDriverTiersName={
+                    getServerConfig().skin_custom_driver_tiers_name
+                }
+                customDriverTiersDescription={
+                    getServerConfig().skin_custom_driver_tiers_description
+                }
             />
         );
     }

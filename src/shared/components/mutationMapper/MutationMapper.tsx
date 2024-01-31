@@ -106,6 +106,10 @@ export interface IMutationMapperProps {
     enableRevue?: boolean;
     ptmSources?: string[];
     showDownload?: boolean;
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 }
 
 export default class MutationMapper<

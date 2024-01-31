@@ -1877,6 +1877,13 @@ export function tumorTypeResolver(cancerTypeMap: SampleCancerTypeMap) {
 export const PUTATIVE_DRIVER = 'Putative_Driver';
 export const PUTATIVE_PASSENGER = 'Putative_Passenger';
 
+export const DriverFilterOrder = {
+    PUTATIVE_DRIVER: 3,
+    PUTATIVE_PASSENGER: 2,
+    UNKNOWN: 1,
+    NA: 0,
+};
+
 export function getOncoKbOncogenic(response: IndicatorQueryResp): string {
     if (
         ONCOKB_ONCOGENIC_LOWERCASE.indexOf(

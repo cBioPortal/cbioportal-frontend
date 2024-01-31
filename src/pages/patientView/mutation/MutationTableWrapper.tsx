@@ -76,6 +76,10 @@ type IMutationTableWrapperProps = {
     columns: string[];
     alleleFreqHeaderRender?: ((name: string) => JSX.Element) | undefined;
     pageMode?: 'sample' | 'patient';
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 };
 
 const ANNOTATION_ELEMENT_ID = 'mutation-annotation';
@@ -296,6 +300,16 @@ export default class MutationTableWrapper extends React.Component<
                                 columns={this.props.columns}
                                 alleleFreqHeaderRender={
                                     this.props.alleleFreqHeaderRender
+                                }
+                                customDriverName={this.props.customDriverName}
+                                customDriverDescription={
+                                    this.props.customDriverDescription
+                                }
+                                customDriverTiersName={
+                                    this.props.customDriverTiersName
+                                }
+                                customDriverTiersDescription={
+                                    this.props.customDriverTiersDescription
                                 }
                             />
                         </FeatureInstruction>

@@ -262,6 +262,16 @@ export function tabs(
                     }
                     columns={pageComponent.columns}
                     pageMode={pageComponent.patientViewPageStore.pageMode}
+                    customDriverName={getServerConfig().skin_custom_driver_name}
+                    customDriverDescription={
+                        getServerConfig().skin_custom_driver_description
+                    }
+                    customDriverTiersName={
+                        getServerConfig().skin_custom_driver_tiers_name
+                    }
+                    customDriverTiersDescription={
+                        getServerConfig().skin_custom_driver_tiers_description
+                    }
                     alleleFreqHeaderRender={
                         pageComponent.patientViewPageStore
                             .mergedMutationDataFilteredByGene.length > 0 &&
