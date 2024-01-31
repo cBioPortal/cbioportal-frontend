@@ -48,6 +48,11 @@ export function getCivicGenes(hugoSymbols: string[]): Promise<ICivicGeneIndex> {
  * Asynchronously retrieve a map with Civic information from the mutationSpecs given for all genes in civicGenes.
  * If no mutationSpecs are given, then return the Civic information of all the CNA variants of the genes in civicGenes.
  */
+export function splitProteinChange(proteinChange: string): string[] {
+    // Match any other variants after splitting the name on + or /
+    return proteinChange.split(/[+\/]/);
+}
+
 export function getCivicVariants(
     civicGenes: ICivicGeneIndex,
     mutationSpecs?: Array<MutationSpec>
@@ -58,30 +63,31 @@ export function getCivicVariants(
             [geneSymbol: string]: Set<String>;
         } = mutationSpecs.reduce((acc, mutation) => {
             const geneSymbol = mutation.gene.hugoGeneSymbol;
-            // Match any other variants after splitting the name on + or /
-            const splitProteinChanges = mutation.proteinChange.split(/[+\/]/);
+            const splittedProteinChanges = splitProteinChange(
+                mutation.proteinChange
+            );
             if (!acc[geneSymbol]) {
-                acc[geneSymbol] = new Set(splitProteinChanges);
+                acc[geneSymbol] = new Set(splittedProteinChanges);
             } else {
-                for (const splitProteinChange of splitProteinChanges) {
+                for (const splitProteinChange of splittedProteinChanges) {
                     acc[geneSymbol].add(splitProteinChange);
                 }
             }
             return acc;
         }, {} as { [geneSymbol: string]: Set<String> });
 
-        for (const geneSymbol in geneToProteinChangeSet) {
-            if (geneSymbol in civicGenes) {
-                const proteinChangeSet = geneToProteinChangeSet[geneSymbol];
-                const geneVariants = civicGenes[geneSymbol].variants;
-                for (const variantName in geneVariants) {
-                    if (proteinChangeSet.has(variantName)) {
-                        if (!civicVariants[geneSymbol]) {
-                            civicVariants[geneSymbol] = {};
-                        }
-                        civicVariants[geneSymbol][variantName] =
-                            geneVariants[variantName];
+        // civicGenes is fetched from civic by giving mutation gene symbols as input
+        // so all genes in the civicGenes should be in geneToProteinChangeSet too
+        for (const geneSymbol in civicGenes) {
+            const proteinChangeSet = geneToProteinChangeSet[geneSymbol];
+            const geneVariants = civicGenes[geneSymbol].variants;
+            for (const variantName in geneVariants) {
+                if (proteinChangeSet.has(variantName)) {
+                    if (!civicVariants[geneSymbol]) {
+                        civicVariants[geneSymbol] = {};
                     }
+                    civicVariants[geneSymbol][variantName] =
+                        geneVariants[variantName];
                 }
             }
         }

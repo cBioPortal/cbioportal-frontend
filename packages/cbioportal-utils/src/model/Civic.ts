@@ -11,9 +11,9 @@ export interface ICivicVariantSummary {
     name: string;
     url: string;
     description: string;
-    evidenceCounts: EvidenceCountsByType;
+    evidenceCounts: ICivivEvidenceCountsByType;
 }
-export interface EvidenceCountsByType {
+export interface ICivivEvidenceCountsByType {
     diagnosticCount?: number;
     predictiveCount?: number;
     prognosticCount?: number;

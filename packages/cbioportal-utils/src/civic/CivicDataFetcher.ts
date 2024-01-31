@@ -1,5 +1,5 @@
 import {
-    EvidenceCountsByType,
+    ICivivEvidenceCountsByType,
     ICivicGeneSummary,
     ICivicVariantSummary,
 } from '../model/Civic';
@@ -39,7 +39,7 @@ type CivicVariant = {
 
 type CivicMolecularProfile = {
     description: string;
-    evidenceCountsByType: EvidenceCountsByType;
+    evidenceCountsByType: ICivivEvidenceCountsByType;
 };
 
 function transformCivicVariantsToEvidenceCountMap(
