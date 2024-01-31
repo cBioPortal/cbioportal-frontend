@@ -352,6 +352,16 @@ export function tabs(
                     pageComponent.patientViewPageStore.namespaceColumnConfig
                         .structVar
                 }
+                customDriverName={getServerConfig().skin_custom_driver_name}
+                customDriverDescription={
+                    getServerConfig().skin_custom_driver_description
+                }
+                customDriverTiersName={
+                    getServerConfig().skin_custom_driver_tiers_name
+                }
+                customDriverTiersDescription={
+                    getServerConfig().skin_custom_driver_tiers_description
+                }
             />
 
             <hr />
@@ -416,6 +426,21 @@ export function tabs(
                                 namespaceColumns={
                                     pageComponent.patientViewPageStore
                                         .namespaceColumnConfig.cna
+                                }
+                                customDriverName={
+                                    getServerConfig().skin_custom_driver_name
+                                }
+                                customDriverDescription={
+                                    getServerConfig()
+                                        .skin_custom_driver_description
+                                }
+                                customDriverTiersName={
+                                    getServerConfig()
+                                        .skin_custom_driver_tiers_name
+                                }
+                                customDriverTiersDescription={
+                                    getServerConfig()
+                                        .skin_custom_driver_tiers_description
                                 }
                             />
                         </If>

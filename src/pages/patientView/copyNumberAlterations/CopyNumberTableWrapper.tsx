@@ -34,6 +34,8 @@ import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on a CNA row to zoom in on the gene in the IGV browser above';
@@ -61,6 +63,10 @@ type ICopyNumberTableWrapperProps = {
     disableTooltip: boolean;
     mergeOncoKbIcons?: boolean;
     namespaceColumns?: NamespaceColumnConfig;
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 };
 
 const ANNOTATION_ELEMENT_ID = 'copy-number-annotation';
@@ -288,6 +294,56 @@ export default class CopyNumberTableWrapper extends React.Component<
                 );
             },
             order: 50,
+        });
+
+        columns.push({
+            name: this.props.customDriverName!,
+            render: d => CustomDriverColumnFormatter.renderFunction(d),
+            download: CustomDriverColumnFormatter.getTextValue,
+            sortBy: (d: DiscreteCopyNumberData[]) =>
+                CustomDriverColumnFormatter.sortValue(d),
+            filter: (
+                d: DiscreteCopyNumberData[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible:
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.length > 0 &&
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.some(
+                    d =>
+                        d[0].driverFilter !== undefined ||
+                        d[0].driverFilterAnnotation !== undefined
+                ),
+            tooltip: <span>{this.props.customDriverDescription!}</span>,
+            order: 55,
+        });
+
+        columns.push({
+            name: this.props.customDriverTiersName!,
+            render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+            download: CustomDriverTierColumnFormatter.getTextValue,
+            sortBy: (d: DiscreteCopyNumberData[]) =>
+                CustomDriverTierColumnFormatter.getTextValue(d),
+            filter: (
+                d: DiscreteCopyNumberData[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverTierColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible:
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.length > 0 &&
+                this.pageStore.mergedDiscreteCNADataFilteredByGene.every(
+                    d =>
+                        d[0].driverFilter !== undefined ||
+                        d[0].driverFilterAnnotation !== undefined
+                ),
+            tooltip: <span>{this.props.customDriverTiersDescription}</span>,
+            order: 56,
         });
 
         columns.push({

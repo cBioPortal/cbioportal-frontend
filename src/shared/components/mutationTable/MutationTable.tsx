@@ -1057,8 +1057,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
-            name: (this.props.customDriverName ||
-                MutationTableColumnType.CUSTOM_DRIVER) as string,
+            name: this.props.customDriverName!,
             render: d => CustomDriverColumnFormatter.renderFunction(d),
             download: CustomDriverColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) => CustomDriverColumnFormatter.sortValue(d),
@@ -1078,11 +1077,12 @@ export default class MutationTable<
                         d[0].driverFilter !== undefined ||
                         d[0].driverFilterAnnotation !== undefined
                 ),
+            tooltip: <span>{this.props.customDriverDescription}</span>,
+            defaultSortDirection: 'desc',
         };
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER] = {
-            name: (this.props.customDriverTiersName ||
-                MutationTableColumnType.CUSTOM_DRIVER_TIER) as string,
+            name: this.props.customDriverTiersName!,
             render: d => CustomDriverTierColumnFormatter.renderFunction(d),
             download: CustomDriverTierColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
@@ -1096,6 +1096,7 @@ export default class MutationTable<
                     .toUpperCase()
                     .includes(filterStringUpper),
             visible: false,
+            tooltip: <span>{this.props.customDriverTiersDescription}</span>,
         };
 
         this._columns[MutationTableColumnType.HGVSG] = {
