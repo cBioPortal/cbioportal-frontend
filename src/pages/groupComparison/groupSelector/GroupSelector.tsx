@@ -206,6 +206,15 @@ export default class GroupSelector extends React.Component<
                         index={buttons.length}
                     />
                 );
+                // Logic To Put Primary First
+                let buttons_: any[] = [];
+                buttons_[0] = buttons[1];
+                buttons_[1] = buttons[0];
+                // console.log("chk",  buttons[0].props.group, buttons[1].props.group, buttons_[0].props.group, buttons_[1].props.group)
+                buttons_[0].props.group.ordinal = 'A';
+                buttons_[1].props.group.ordinal = 'B';
+                // buttons_[0].props.group.nameWithOrdinal = buttons[1].props.group.nameWithOrdinal;
+                // buttons_[1].props.group.nameWithOrdinal = buttons[0].props.group.nameWithOrdinal;
                 return (
                     <div
                         data-tour="single-study-group-comparison-groups"
