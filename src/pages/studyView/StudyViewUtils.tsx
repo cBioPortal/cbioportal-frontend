@@ -114,6 +114,7 @@ import { MolecularAlterationType_filenameSuffix } from 'shared/lib/StoreUtils';
 import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import Survival from 'pages/groupComparison/Survival';
 import { StructVarMultiSelectionTableRow } from './table/StructuralVariantMultiSelectionTable';
+import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
