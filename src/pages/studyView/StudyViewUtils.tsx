@@ -88,10 +88,11 @@ import {
 import { getServerConfig } from 'config/config';
 import joinJsx from 'shared/lib/joinJsx';
 import { BoundType, NumberRange } from 'range-ts';
-import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
 import { toast } from 'react-toastify';
 import { useCallback } from 'react';
+import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
