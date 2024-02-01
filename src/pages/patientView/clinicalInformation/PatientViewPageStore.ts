@@ -2782,27 +2782,29 @@ export class PatientViewPageStore {
         console.log('update');
         mtbs.forEach(mtb =>
             mtb.therapyRecommendations.forEach(tr => {
-                var diagnosis = [
-                    {
-                        sampleId: this.getDiagnosisFromSamples.result[0]
-                            .sampleId,
-                        attributeId: this.getDiagnosisFromSamples.result[0]
-                            .clinicalAttribute.clinicalAttributeId,
-                        attributeName: this.getDiagnosisFromSamples.result[0]
-                            .clinicalAttribute.displayName,
-                        value: this.getDiagnosisFromSamples.result[0].value,
-                    },
-                ] as IClinicalData[];
-                if (
-                    !tr.reasoning.clinicalData?.find(
-                        diag => diag.value == diagnosis[0].value
-                    )
-                ) {
-                    tr.reasoning.clinicalData = diagnosis.concat(
-                        tr.reasoning.clinicalData
-                            ? tr.reasoning.clinicalData
-                            : []
-                    );
+                if (this.getDiagnosisFromSamples.result.length > 0) {
+                    var diagnosis = [
+                        {
+                            sampleId: this.getDiagnosisFromSamples.result[0]
+                                .sampleId,
+                            attributeId: this.getDiagnosisFromSamples.result[0]
+                                .clinicalAttribute.clinicalAttributeId,
+                            attributeName: this.getDiagnosisFromSamples
+                                .result[0].clinicalAttribute.displayName,
+                            value: this.getDiagnosisFromSamples.result[0].value,
+                        },
+                    ] as IClinicalData[];
+                    if (
+                        !tr.reasoning.clinicalData?.find(
+                            diag => diag.value == diagnosis[0].value
+                        )
+                    ) {
+                        tr.reasoning.clinicalData = diagnosis.concat(
+                            tr.reasoning.clinicalData
+                                ? tr.reasoning.clinicalData
+                                : []
+                        );
+                    }
                 }
             })
         );
