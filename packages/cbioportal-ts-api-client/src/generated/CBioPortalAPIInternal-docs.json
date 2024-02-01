@@ -381,7 +381,7 @@
           },
           {
             "default": 0,
-            "description": "Page number of the result list",
+            "description": "Page number of the result list. Zero represents the first page.",
             "format": "int32",
             "in": "query",
             "minimum": 0,
@@ -5910,19 +5910,18 @@
       "type": "object"
     },
     "SampleClinicalDataCollection": {
-      "type": "object",
       "properties": {
         "byUniqueSampleKey": {
-          "type": "object",
           "additionalProperties": {
-            "type": "array",
             "items": {
               "$ref": "#/definitions/ClinicalData"
-            }
-          }
+            },
+            "type": "array"
+          },
+          "type": "object"
         }
       },
-      "title": "SampleClinicalDataCollection"
+      "type": "object"
     },
     "SampleIdentifier": {
       "properties": {
