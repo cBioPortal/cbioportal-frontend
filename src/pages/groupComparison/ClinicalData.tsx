@@ -861,6 +861,16 @@ export default class ClinicalData extends React.Component<
                                 symbol="circle"
                                 useLogSpaceTicks={true}
                                 legendLocationWidthThreshold={550}
+                                pValue={
+                                    this.showPAndQ
+                                        ? this.highlightedRow.pValue
+                                        : null
+                                }
+                                qValue={
+                                    this.showPAndQ
+                                        ? this.highlightedRow.qValue
+                                        : null
+                                }
                             />
                         );
                     } else if (this.boxPlotData.isError) {
