@@ -23,9 +23,9 @@ enum ColumnKey {
     TITLE = 'Trial',
     ARM = 'Arm',
     GENE = 'Gene',
-    MATCHTYPE = 'Match Type',
-    MATCHING_CRITERIA = 'Matching Criteria',
-    STATUS = 'Status',
+    PATIENT_MATCHDATA = 'Patient Matching Data',
+    TRIAL_MATCHING_CRITERIA = 'Trial Matching Criteria',
+    STATUS = 'Trial Status',
 }
 
 enum ColumnWidth {
@@ -55,15 +55,15 @@ export default class TrialMatchTableNew extends React.Component<
         return {
             [ColumnKey.STATUS]: ColumnWidth.STATUS,
             [ColumnKey.TITLE]:
-                0.3 * (this.props.containerWidth - ColumnWidth.STATUS),
+                0.2 * (this.props.containerWidth - ColumnWidth.STATUS),
             [ColumnKey.ARM]:
-                0.1 * (this.props.containerWidth - ColumnWidth.STATUS),
+                0.2 * (this.props.containerWidth - ColumnWidth.STATUS),
             [ColumnKey.GENE]:
-                0.1 * (this.props.containerWidth - ColumnWidth.STATUS),
-            [ColumnKey.MATCHTYPE]:
-                0.1 * (this.props.containerWidth - ColumnWidth.STATUS),
-            [ColumnKey.MATCHING_CRITERIA]:
-                0.4 * (this.props.containerWidth - ColumnWidth.STATUS),
+                0.05 * (this.props.containerWidth - ColumnWidth.STATUS),
+            [ColumnKey.PATIENT_MATCHDATA]:
+                0.25 * (this.props.containerWidth - ColumnWidth.STATUS),
+            [ColumnKey.TRIAL_MATCHING_CRITERIA]:
+                0.3 * (this.props.containerWidth - ColumnWidth.STATUS),
         };
     }
 
@@ -73,11 +73,12 @@ export default class TrialMatchTableNew extends React.Component<
             render: (trialmatch: ITrialMatch) => (
                 <div>
                     <If condition={trialmatch.protocolNo.length > 0}>
-                        <div>{trialmatch.protocolNo}</div>
+                        <div>Trial protocol Number:&nbsp;{trialmatch.protocolNo}</div>
                     </If>
 
                     <If condition={trialmatch.nctId.length > 0}>
                         <div>
+                            Trial NCTid:&nbsp; 
                             <a
                                 target="_blank"
                                 href={
@@ -89,20 +90,22 @@ export default class TrialMatchTableNew extends React.Component<
                             </a>
                         </div>
                     </If>
-                    <div>{trialmatch.shortTitle}</div>
+                    <div>Trial Short Title:&nbsp;{trialmatch.shortTitle}</div>
                 </div>
             ),
-            sortBy: (trialmatch: ITrialMatch) => trialmatch.shortTitle,
+            sortBy: (trialmatch: ITrialMatch) => trialmatch.nctId,
             width: this.columnWidths[ColumnKey.TITLE],
         },
         {
             name: ColumnKey.ARM,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    <div>{trialmatch.armDescription}</div>
+                    <div>Arm Id:&nbsp;{trialmatch.arm_internal_id}</div>
+                    <div>Arm Code:&nbsp;{trialmatch.arm_code}</div>
+                    <div>Arm Description:&nbsp;{trialmatch.armDescription}</div>
                 </div>
             ),
-            sortBy: (trialmatch: ITrialMatch) => trialmatch.armDescription,
+            sortBy: (trialmatch: ITrialMatch) => trialmatch.arm_code,
             width: this.columnWidths[ColumnKey.ARM],
         },
         {
@@ -116,35 +119,31 @@ export default class TrialMatchTableNew extends React.Component<
             width: this.columnWidths[ColumnKey.GENE],
         },
         {
-            name: ColumnKey.MATCHTYPE,
+            name: ColumnKey.PATIENT_MATCHDATA,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    <div>{trialmatch.matchType}</div>
+                    <div>Match Type:&nbsp;{trialmatch.matchType}</div>
+                    <br />
+                    <div>Genomic Alteration:&nbsp;{trialmatch.genomicAlteration}</div>
+                    <br />
+                    <div>True Protein Change:&nbsp;{trialmatch.trueProteinChange}</div>
+                    <br />
+                    <div>Oncotree Primary Diagnosis Name:&nbsp;{trialmatch.oncotreePrimaryDiagnosisName}</div>
                 </div>
             ),
             sortBy: (trialmatch: ITrialMatch) => trialmatch.matchType,
-            width: this.columnWidths[ColumnKey.MATCHTYPE],
+            width: this.columnWidths[ColumnKey.PATIENT_MATCHDATA],
         },
         {
-            name: ColumnKey.MATCHING_CRITERIA,
+            name: ColumnKey.TRIAL_MATCHING_CRITERIA,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    genomicAlteration:
-                    <div>&nbsp;{trialmatch.genomicAlteration}</div>
-                    <br />
-                    oncotreePrimaryDiagnosisName:
-                    <div>&nbsp;{trialmatch.oncotreePrimaryDiagnosisName}</div>
-                    <br />
-                    trialOncotreePrimaryDiagnosis:
+                    Trial Oncotree Primary Diagnosis Name:&nbsp;
                     <div>&nbsp;{trialmatch.trialOncotreePrimaryDiagnosis}</div>
-                    <br />
-                    trueProteinChange:
-                    <div>&nbsp;{trialmatch.trueProteinChange}</div>
-                    <br />
                 </div>
             ),
-            sortBy: (trialmatch: ITrialMatch) => trialmatch.genomicAlteration,
-            width: this.columnWidths[ColumnKey.MATCHING_CRITERIA],
+            sortBy: (trialmatch: ITrialMatch) => trialmatch.trialOncotreePrimaryDiagnosis,
+            width: this.columnWidths[ColumnKey.TRIAL_MATCHING_CRITERIA],
         },
         {
             name: ColumnKey.STATUS,

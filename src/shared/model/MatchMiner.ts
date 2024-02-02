@@ -44,7 +44,7 @@ export interface IDrug {
     ncit_code?: string;
     synonyms?: string;
 }
-
+/*
 export interface ITrialMatch {
     id: string;
     nctId: string | '';
@@ -54,6 +54,29 @@ export interface ITrialMatch {
     oncotreePrimaryDiagnosisName: string | '';
     gender: string | '';
     matchType: string | '';
+    armDescription: string | '';
+    armType: string | '';
+    sampleId: string;
+    mrn: string;
+    trueHugoSymbol: string | '';
+    trueProteinChange: string | '';
+    vitalStatus: string | '';
+    genomicAlteration: string | '';
+    trialAgeNumerical: string | '';
+    trialOncotreePrimaryDiagnosis: string | '';
+}
+*/
+export interface ITrialMatch {
+    id: string;
+    nctId: string | '';
+    protocolNo: string | '';
+    shortTitle: string | '';
+    status: string | '';
+    oncotreePrimaryDiagnosisName: string | '';
+    gender: string | '';
+    matchType: string | '';
+    arm_internal_id: string | '';
+    arm_code: string | '';
     armDescription: string | '';
     armType: string | '';
     sampleId: string;
