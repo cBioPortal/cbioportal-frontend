@@ -1663,7 +1663,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     /* TODO: disable alteration services for now, until we have
                      * https://github.com/cBioPortal/cbioportal/issues/9305
                     geneAnnotationServices: {
-                        mutation: "https://iquery-cbio.ucsd.edu/integratedsearch/v1/mutationfrequency",
+                        mutation: "https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/mutationfrequency",
                         alteration: "http://localhost"
                     }
                     */
@@ -1674,7 +1674,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 try {
                     urlResponse = (await request
                         .post(
-                            'https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/'
+                            'https://iquery-cbio.ucsd.edu/integratedsearch/v1/'
                         )
                         .send(postData)
                         .set('Accept', 'application/json')
