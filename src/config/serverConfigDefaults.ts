@@ -223,6 +223,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     studyview_max_samples_selected: 0,
 
+    studyview_clinical_attribute_chart_count: 20,
+
     study_download_url: '',
 
     oncoprint_clustered_default: true,

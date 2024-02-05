@@ -294,6 +294,7 @@ export function buildBaseConfig(
             ['TREATMENT', 'TREATMENT_TYPE', 'SUBTYPE', 'AGENT'],
             ['LAB_TEST', 'TEST'],
             ['DIAGNOSIS', 'SUBTYPE'],
+            ['PATHOLOGY', 'SUBTYPE'],
         ],
         trackEventRenderers: [
             {
