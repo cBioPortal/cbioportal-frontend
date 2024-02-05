@@ -6378,20 +6378,20 @@ export class StudyViewPageStore
                     'Distinct Counts of Patients with Clinical Event Types',
             };
         }
-        //if (this.shouldDisplaySampleTreatments.result) {
-        _chartMetaSet['SAMPLE_TREATMENTS'] = {
-            uniqueKey: 'SAMPLE_TREATMENTS',
-            dataType: ChartMetaDataTypeEnum.CLINICAL,
-            patientAttribute: true,
-            displayName: 'Treatment per Sample (pre/post)',
-            priority: getDefaultPriorityByUniqueKey(
-                ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
-            ),
-            renderWhenDataChange: true,
-            description:
-                'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
-        };
-        //}
+        if (this.shouldDisplaySampleTreatments.result) {
+            _chartMetaSet['SAMPLE_TREATMENTS'] = {
+                uniqueKey: 'SAMPLE_TREATMENTS',
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: true,
+                displayName: 'Treatment per Sample (pre/post)',
+                priority: getDefaultPriorityByUniqueKey(
+                    ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
+                ),
+                renderWhenDataChange: true,
+                description:
+                    'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
+            };
+        }
 
         if (this.shouldDisplayPatientTreatments.result) {
             _chartMetaSet['PATIENT_TREATMENTS'] = {
