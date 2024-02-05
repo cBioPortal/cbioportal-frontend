@@ -25,130 +25,92 @@ export enum CivicAlterationType {
 export const CIVIC_NA_VALUE = 'NA';
 
 /**
- * Asynchronously adds the given variant from a gene to the variant map specified.
- */
-function lookupCivicVariantAndAddToMap(
-    variantMap: ICivicVariantIndex,
-    variantId: number,
-    variantName: string,
-    geneSymbol: string,
-    geneId: number
-): Promise<void> {
-    return civicClient
-        .getCivicVariantSummary(variantId, variantName, geneId)
-        .then((result: ICivicVariantSummary) => {
-            if (result) {
-                if (!variantMap[geneSymbol]) {
-                    variantMap[geneSymbol] = {};
-                }
-                variantMap[geneSymbol][variantName] = result;
-            }
-        });
-}
-
-/**
  * Asynchronously return a map with Civic information from the genes given.
  */
-export function getCivicGenes(
-    entrezGeneIds: number[]
-): Promise<ICivicGeneIndex> {
-    // Assemble a list of promises, each of which will retrieve a batch of genes
-    let promises: Array<Promise<Array<ICivicGeneSummary>>> = [];
-
-    // To prevent the request from growing too large, we send it off in multiple chunks
-    const chunkedIds: number[][] = _.chunk(_.uniq(entrezGeneIds), 400);
-
-    chunkedIds.forEach(entrezGeneIds =>
-        promises.push(civicClient.getCivicGenesBatch(entrezGeneIds.join(',')))
+export function getCivicGenes(hugoSymbols: string[]): Promise<ICivicGeneIndex> {
+    return Promise.resolve(civicClient.getCivicGeneSummaries(hugoSymbols)).then(
+        (responses: ICivicGeneSummary[]) => {
+            return responses.reduce(
+                (
+                    acc: { [name: string]: ICivicGeneSummary },
+                    civicGene: ICivicGeneSummary
+                ) => {
+                    acc[civicGene.name] = civicGene;
+                    return acc;
+                },
+                {}
+            );
+        }
     );
-
-    // We're waiting for all promises to finish, then return civicGenes
-    return Promise.all(promises).then((responses: ICivicGeneSummary[][]) => {
-        return responses.reduce(
-            (
-                acc: { [name: string]: ICivicGeneSummary },
-                civicGenes: ICivicGeneSummary[]
-            ) => {
-                civicGenes.forEach(
-                    civicGene => (acc[civicGene.name] = civicGene)
-                );
-                return acc;
-            },
-            {}
-        );
-    });
 }
 
 /**
  * Asynchronously retrieve a map with Civic information from the mutationSpecs given for all genes in civicGenes.
  * If no mutationSpecs are given, then return the Civic information of all the CNA variants of the genes in civicGenes.
  */
+export function splitProteinChange(proteinChange: string): string[] {
+    // Match any other variants after splitting the name on + or /
+    return proteinChange.split(/[+\/]/);
+}
+
 export function getCivicVariants(
     civicGenes: ICivicGeneIndex,
     mutationSpecs?: Array<MutationSpec>
 ): Promise<ICivicVariantIndex> {
     let civicVariants: ICivicVariantIndex = {};
-    let promises: Array<Promise<void>> = [];
-
     if (mutationSpecs) {
-        let calledVariants: Set<number> = new Set([]);
-        for (let mutation of mutationSpecs) {
-            let geneSymbol = mutation.gene.hugoGeneSymbol;
-            let geneEntry = civicGenes[geneSymbol];
-            let proteinChanges = [mutation.proteinChange];
-            // Match any other variants after splitting the name on + or /
-            let split = mutation.proteinChange.split(/[+\/]/);
-            proteinChanges.push(split[0]);
-            for (let proteinChange of proteinChanges) {
-                if (geneEntry && geneEntry.variants[proteinChange]) {
-                    if (
-                        !calledVariants.has(geneEntry.variants[proteinChange])
-                    ) {
-                        //Avoid calling the same variant
-                        calledVariants.add(geneEntry.variants[proteinChange]);
-                        promises.push(
-                            lookupCivicVariantAndAddToMap(
-                                civicVariants,
-                                geneEntry.variants[proteinChange],
-                                proteinChange,
-                                geneSymbol,
-                                geneEntry.id
-                            )
-                        );
+        const geneToProteinChangeSet: {
+            [geneSymbol: string]: Set<String>;
+        } = mutationSpecs.reduce((acc, mutation) => {
+            const geneSymbol = mutation.gene.hugoGeneSymbol;
+            const splittedProteinChanges = splitProteinChange(
+                mutation.proteinChange
+            );
+            if (!acc[geneSymbol]) {
+                acc[geneSymbol] = new Set(splittedProteinChanges);
+            } else {
+                for (const splitProteinChange of splittedProteinChanges) {
+                    acc[geneSymbol].add(splitProteinChange);
+                }
+            }
+            return acc;
+        }, {} as { [geneSymbol: string]: Set<String> });
+
+        // civicGenes is fetched from civic by giving mutation gene symbols as input
+        // so all genes in the civicGenes should be in geneToProteinChangeSet too
+        for (const geneSymbol in civicGenes) {
+            const proteinChangeSet = geneToProteinChangeSet[geneSymbol];
+            const geneVariants = civicGenes[geneSymbol].variants;
+            for (const variantName in geneVariants) {
+                if (proteinChangeSet.has(variantName)) {
+                    if (!civicVariants[geneSymbol]) {
+                        civicVariants[geneSymbol] = {};
                     }
+                    civicVariants[geneSymbol][variantName] =
+                        geneVariants[variantName];
                 }
             }
         }
     } else {
-        for (let geneName in civicGenes) {
-            let geneEntry = civicGenes[geneName];
-            let geneVariants = geneEntry.variants;
+        for (const geneSymbol in civicGenes) {
+            const geneEntry = civicGenes[geneSymbol];
+            const geneVariants = geneEntry.variants;
             if (!_.isEmpty(geneVariants)) {
-                for (let variantName in geneVariants) {
+                for (const variantName in geneVariants) {
                     // Only retrieve CNA variants
                     if (
                         variantName == CivicAlterationType.AMPLIFICATION ||
                         variantName == CivicAlterationType.DELETION
                     ) {
-                        promises.push(
-                            lookupCivicVariantAndAddToMap(
-                                civicVariants,
-                                geneVariants[variantName],
-                                variantName,
-                                geneName,
-                                geneEntry.id
-                            )
-                        );
+                        civicVariants[geneSymbol][variantName] =
+                            geneVariants[variantName];
                     }
                 }
             }
         }
     }
 
-    // We're explicitly waiting for all promises to finish (done or fail).
-    // We are wrapping them in another promise separately, to make sure we also
-    // wait in case one of the promises fails and the other is still busy.
-    return Promise.all(promises).then(() => civicVariants);
+    return Promise.resolve(civicVariants);
 }
 
 /**
@@ -194,17 +156,16 @@ export function getCivicEntry(
 }
 
 export function fetchCivicGenes(
-    mutations: Partial<Mutation>[],
-    getEntrezGeneId: (mutation: Partial<Mutation>) => number
+    mutations: Partial<Mutation>[]
 ): Promise<ICivicGeneIndex> {
     if (mutations.length === 0) {
         return Promise.resolve({});
     }
-
-    const entrezGeneSymbols = _.uniq(
-        mutations.map(mutation => getEntrezGeneId(mutation))
-    );
-
+    const entrezGeneSymbols = _.chain(mutations)
+        .map(mutation => mutation.gene?.hugoGeneSymbol)
+        .compact()
+        .uniq()
+        .value();
     return getCivicGenes(entrezGeneSymbols);
 }
 

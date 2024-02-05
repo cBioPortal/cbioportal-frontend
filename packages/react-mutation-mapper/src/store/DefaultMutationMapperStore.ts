@@ -1031,10 +1031,7 @@ class DefaultMutationMapperStore<T extends Mutation>
         await: () => [this.mutationData],
         invoke: async () =>
             this.config.enableCivic
-                ? fetchCivicGenes(
-                      this.mutationData.result || [],
-                      this.getDefaultEntrezGeneId
-                  )
+                ? fetchCivicGenes(this.mutationData.result || [])
                 : {},
         onError: () => {
             // fail silently
