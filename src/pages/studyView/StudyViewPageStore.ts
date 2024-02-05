@@ -7530,8 +7530,7 @@ export class StudyViewPageStore
                 .sort(clinicalAttributeComparator)
                 .slice(
                     0,
-                    getServerConfig()
-                        .studyview_clinical_attribute_chart_count || 30
+                    getServerConfig().studyview_clinical_attribute_chart_count
                 );
 
             // Also check the initial filters, make sure all clinical attributes in initial filters will be added in default visible attributes

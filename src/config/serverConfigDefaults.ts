@@ -223,7 +223,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     studyview_max_samples_selected: 0,
 
-    studyview_clinical_attribute_chart_count: 30,
+    studyview_clinical_attribute_chart_count: 20,
 
     study_download_url: '',
 
