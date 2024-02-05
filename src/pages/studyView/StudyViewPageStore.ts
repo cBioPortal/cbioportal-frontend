@@ -8449,10 +8449,6 @@ export class StudyViewPageStore
     readonly hasCNSegmentData = remoteData<boolean>({
         await: () => [this.samples],
         invoke: async () => {
-            // this promise determine whether the CN Segments tab shows up
-            // this is expensive and nonessential call so we prioritize other calls first
-            await sleep(10000);
-
             return defaultClient
                 .fetchCopyNumberSegmentsUsingPOSTWithHttpInfo({
                     sampleIdentifiers: this.samples.result.map(sample => ({
