@@ -56,9 +56,6 @@ export default class DefaultTooltip extends React.Component<
     render() {
         let { disabled, visible, onPopupAlign, ...restProps } = this.props;
         let tooltipProps: TooltipProps = restProps;
-        if (disabled) {
-            visible = false;
-        }
         if (typeof visible !== 'undefined') {
             tooltipProps.visible = visible;
         }
