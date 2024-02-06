@@ -343,6 +343,7 @@ export function tabs(
                 onSelectGenePanel={pageComponent.toggleGenePanelModal}
                 mergeOncoKbIcons={pageComponent.mergeMutationTableOncoKbIcons}
                 onOncoKbIconToggle={pageComponent.handleOncoKbIconToggle}
+                enableOncoKb={getServerConfig().show_oncokb}
                 sampleIds={
                     sampleManager
                         ? sampleManager.getActiveSampleIdsInOrder()

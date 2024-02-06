@@ -1054,6 +1054,7 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
+            visible: AnnotationColumnFormatter.visible(this.props),
         };
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
@@ -1419,6 +1420,10 @@ export default class MutationTable<
         );
     }
 
+    @computed protected get initialColumnVisible(): boolean {
+        return AnnotationColumnFormatter.visible(this.props) || false;
+    }
+
     public render() {
         return (
             <MutationTableComponent
@@ -1428,7 +1433,11 @@ export default class MutationTable<
                 dataStore={this.props.dataStore}
                 downloadDataFetcher={this.props.downloadDataFetcher}
                 initialItemsPerPage={this.props.initialItemsPerPage}
-                initialSortColumn={this.props.initialSortColumn}
+                initialSortColumn={
+                    this.initialColumnVisible
+                        ? this.props.initialSortColumn
+                        : this.props.customDriverName
+                }
                 initialSortDirection={this.props.initialSortDirection}
                 itemsLabel={this.props.itemsLabel}
                 itemsLabelPlural={this.props.itemsLabelPlural}

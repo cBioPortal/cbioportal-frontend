@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { action, makeObservable, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import LazyMobXTable, {
@@ -37,6 +37,7 @@ export interface IStructuralVariantTableWrapperProps {
     onSelectGenePanel?: (name: string) => void;
     mergeOncoKbIcons?: boolean;
     sampleIds: string[];
+    enableOncoKb: boolean;
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
     namespaceColumns?: NamespaceColumnConfig;
     customDriverName?: string;
@@ -300,8 +301,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             oncoKbContentPadding: calculateOncoKbContentPadding(
                                 this.oncokbWidth
                             ),
-                            enableOncoKb: getServerConfig()
-                                .show_oncokb as boolean,
+                            enableOncoKb: this.props.enableOncoKb,
                             pubMedCache: this.props.store.pubMedCache,
                             enableCivic: false,
                             enableMyCancerGenome: false,
@@ -322,6 +322,12 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         this.props.store.uniqueSampleKeyToTumorType
                     );
                 },
+                visible:
+                    this.props.enableOncoKb &&
+                    _.isEmpty(
+                        this.props.store.structuralVariantOncoKbData.result
+                            .indicatorMap
+                    ),
                 order: 45,
             });
 
@@ -551,6 +557,15 @@ export default class StructuralVariantTableWrapper extends React.Component<
         default: [],
     });
 
+    @computed protected get initialColumnVisible(): boolean {
+        return (
+            this.props.enableOncoKb &&
+            _.isEmpty(
+                this.props.store.structuralVariantOncoKbData.result.indicatorMap
+            )
+        );
+    }
+
     readonly tableUI = MakeMobxView({
         await: () => [
             this.props.store.structuralVariantProfile,
@@ -595,7 +610,11 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                 this.props.store.groupedStructuralVariantData
                                     .result!
                             }
-                            initialSortColumn="Annotation"
+                            initialSortColumn={
+                                this.initialColumnVisible
+                                    ? 'Annotation'
+                                    : this.props.customDriverName
+                            }
                             initialSortDirection="desc"
                             initialItemsPerPage={10}
                             itemsLabel="Structural Variants"

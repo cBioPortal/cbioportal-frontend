@@ -293,6 +293,9 @@ export default class CopyNumberTableWrapper extends React.Component<
                     this.pageStore.cnaCivicVariants
                 );
             },
+            visible:
+                this.props.enableOncoKb &&
+                _.isEmpty(this.pageStore.cnaOncoKbData.result.indicatorMap),
             order: 50,
         });
 
@@ -446,6 +449,13 @@ export default class CopyNumberTableWrapper extends React.Component<
         return this.props.pageStore;
     }
 
+    @computed protected get initialColumnVisible(): boolean {
+        return (
+            this.props.enableOncoKb &&
+            _.isEmpty(this.pageStore.cnaOncoKbData.result.indicatorMap)
+        );
+    }
+
     tableUI = MakeMobxView({
         await: () => [
             this.pageStore.studyIdToStudy,
@@ -489,7 +499,11 @@ export default class CopyNumberTableWrapper extends React.Component<
                                         .mergedDiscreteCNADataFilteredByGene
                                 }
                                 dataStore={this.props.dataStore}
-                                initialSortColumn="Annotation"
+                                initialSortColumn={
+                                    this.initialColumnVisible
+                                        ? 'Annotation'
+                                        : this.props.customDriverName
+                                }
                                 initialSortDirection="desc"
                                 initialItemsPerPage={10}
                                 itemsLabel="Copy Number Alteration"
