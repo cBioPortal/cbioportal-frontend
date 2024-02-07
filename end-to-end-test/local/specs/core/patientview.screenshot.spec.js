@@ -257,6 +257,6 @@ const selectSampleMutationalSignature = () => {
         timeout: 10000,
     });
     $('div.mutationalSignatureSampleSelector__indicators').click();
-    $('div=Sample P01_Rec').waitForDisplayed({ timeout: 10000 });
-    $('div=Sample P01_Rec').click();
+    $('div=P01_Rec').waitForDisplayed({ timeout: 10000 });
+    $('div=P01_Rec').click();
 };
