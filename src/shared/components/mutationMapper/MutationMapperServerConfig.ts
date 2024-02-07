@@ -6,10 +6,10 @@ import { IMutationMapperProps } from './MutationMapper';
 
 // This is a subset of IServerConfig containing config values used only in Mutation Mapper
 export interface IMutationMapperServerConfig {
-    skin_custom_driver_description?: string;
-    skin_custom_driver_tiers_name?: string;
-    skin_custom_driver_tiers_description?: string;
-    skin_custom_driver_name?: string;
+    oncoprint_custom_driver_annotation_binary_menu_label: string | null;
+    oncoprint_custom_driver_annotation_binary_menu_description: string | null;
+    oncoprint_custom_driver_annotation_tiers_menu_label: string | null;
+    oncoprint_custom_driver_annotation_tiers_menu_description: string | null;
     show_oncokb?: boolean;
     show_genomenexus?: boolean;
     show_hotspot?: boolean;
@@ -44,10 +44,17 @@ export function convertToMutationMapperProps(
         showDownload:
             config.skin_hide_download_controls !==
             DownloadControlOption.HIDE_ALL,
-        customDriverName: config.skin_custom_driver_name,
-        customDriverDescription: config.skin_custom_driver_description,
-        customDriverTiersName: config.skin_custom_driver_tiers_name,
+        customDriverName:
+            config.oncoprint_custom_driver_annotation_binary_menu_label ||
+            undefined,
+        customDriverDescription:
+            config.oncoprint_custom_driver_annotation_binary_menu_description ||
+            undefined,
+        customDriverTiersName:
+            config.oncoprint_custom_driver_annotation_tiers_menu_label ||
+            undefined,
         customDriverTiersDescription:
-            config.skin_custom_driver_tiers_description,
+            config.oncoprint_custom_driver_annotation_tiers_menu_description ||
+            undefined,
     };
 }

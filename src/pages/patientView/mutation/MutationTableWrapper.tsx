@@ -34,6 +34,8 @@ import ErrorMessage from 'shared/components/ErrorMessage';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import { MutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on an mutation to zoom in on the gene in the IGV browser above';
@@ -300,6 +302,13 @@ export default class MutationTableWrapper extends React.Component<
                                 columns={this.props.columns}
                                 alleleFreqHeaderRender={
                                     this.props.alleleFreqHeaderRender
+                                }
+                                initialSortColumn={
+                                    AnnotationColumnFormatter.visible(
+                                        this.props
+                                    )
+                                        ? MutationTableColumnType.ANNOTATION
+                                        : this.props.customDriverName
                                 }
                                 customDriverName={this.props.customDriverName}
                                 customDriverDescription={

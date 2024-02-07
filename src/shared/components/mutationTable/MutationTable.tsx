@@ -1071,9 +1071,9 @@ export default class MutationTable<
                     .toUpperCase()
                     .includes(filterStringUpper),
             visible:
-                this.props.data !== undefined &&
-                this.props.data.length > 0 &&
-                this.props.data.some(
+                this.props.dataStore &&
+                !_.isEmpty(this.props.dataStore.allData) &&
+                this.props.dataStore.allData.some(
                     d =>
                         d[0].driverFilter !== undefined ||
                         d[0].driverFilterAnnotation !== undefined
@@ -1433,11 +1433,7 @@ export default class MutationTable<
                 dataStore={this.props.dataStore}
                 downloadDataFetcher={this.props.downloadDataFetcher}
                 initialItemsPerPage={this.props.initialItemsPerPage}
-                initialSortColumn={
-                    this.initialColumnVisible
-                        ? this.props.initialSortColumn
-                        : this.props.customDriverName
-                }
+                initialSortColumn={this.props.initialSortColumn}
                 initialSortDirection={this.props.initialSortDirection}
                 itemsLabel={this.props.itemsLabel}
                 itemsLabelPlural={this.props.itemsLabelPlural}

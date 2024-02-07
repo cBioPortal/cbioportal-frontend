@@ -39,6 +39,10 @@ export interface IPatientViewMutationsTabProps {
     sampleIds: string[];
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 }
 
 enum PlotTab {
@@ -363,6 +367,12 @@ export default class PatientViewMutationsTab extends React.Component<
                     }
                     namespaceColumns={this.dataStore.namespaceColumnConfig}
                     columns={this.columns}
+                    customDriverName={this.props.customDriverName}
+                    customDriverDescription={this.props.customDriverDescription}
+                    customDriverTiersName={this.props.customDriverTiersName}
+                    customDriverTiersDescription={
+                        this.props.customDriverTiersDescription
+                    }
                 />
             </div>
         ),

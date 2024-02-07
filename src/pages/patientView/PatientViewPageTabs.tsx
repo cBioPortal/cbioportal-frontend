@@ -262,15 +262,21 @@ export function tabs(
                     }
                     columns={pageComponent.columns}
                     pageMode={pageComponent.patientViewPageStore.pageMode}
-                    customDriverName={getServerConfig().skin_custom_driver_name}
+                    customDriverName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_label!
+                    }
                     customDriverDescription={
-                        getServerConfig().skin_custom_driver_description
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_description!
                     }
                     customDriverTiersName={
-                        getServerConfig().skin_custom_driver_tiers_name
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_label!
                     }
                     customDriverTiersDescription={
-                        getServerConfig().skin_custom_driver_tiers_description
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_description!
                     }
                     alleleFreqHeaderRender={
                         pageComponent.patientViewPageStore
@@ -353,15 +359,21 @@ export function tabs(
                     pageComponent.patientViewPageStore.namespaceColumnConfig
                         .structVar
                 }
-                customDriverName={getServerConfig().skin_custom_driver_name}
+                customDriverName={
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_binary_menu_label!
+                }
                 customDriverDescription={
-                    getServerConfig().skin_custom_driver_description
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_binary_menu_description!
                 }
                 customDriverTiersName={
-                    getServerConfig().skin_custom_driver_tiers_name
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_tiers_menu_label!
                 }
                 customDriverTiersDescription={
-                    getServerConfig().skin_custom_driver_tiers_description
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_tiers_menu_description!
                 }
             />
 
@@ -429,19 +441,20 @@ export function tabs(
                                         .namespaceColumnConfig.cna
                                 }
                                 customDriverName={
-                                    getServerConfig().skin_custom_driver_name
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_binary_menu_label!
                                 }
                                 customDriverDescription={
                                     getServerConfig()
-                                        .skin_custom_driver_description
+                                        .oncoprint_custom_driver_annotation_binary_menu_description!
                                 }
                                 customDriverTiersName={
                                     getServerConfig()
-                                        .skin_custom_driver_tiers_name
+                                        .oncoprint_custom_driver_annotation_tiers_menu_label!
                                 }
                                 customDriverTiersDescription={
                                     getServerConfig()
-                                        .skin_custom_driver_tiers_description
+                                        .oncoprint_custom_driver_annotation_tiers_menu_description!
                                 }
                             />
                         </If>
@@ -470,6 +483,22 @@ export function tabs(
                         pageComponent.mergeMutationTableOncoKbIcons
                     }
                     onOncoKbIconToggle={pageComponent.handleOncoKbIconToggle}
+                    customDriverName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_label!
+                    }
+                    customDriverDescription={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_description!
+                    }
+                    customDriverTiersName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_label!
+                    }
+                    customDriverTiersDescription={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_description!
+                    }
                 />
             </MSKTab>
         );

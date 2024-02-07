@@ -39,7 +39,10 @@ export interface IServerConfig {
     app_version: string | null; // default: "1.0"
     authenticationMethod: string | undefined;
     bitly_access_token: string | null;
-    oncoprint_custom_driver_annotation_binary_menu_label: string | null; // default:
+    oncoprint_custom_driver_annotation_binary_menu_label: string | null;
+    oncoprint_custom_driver_annotation_binary_menu_description: string | null;
+    oncoprint_custom_driver_annotation_tiers_menu_label: string | null;
+    oncoprint_custom_driver_annotation_tiers_menu_description: string | null;
     disabled_tabs: string | null;
     custom_tabs: any[];
     custom_js_urls: string; // comma delimited string
@@ -137,7 +140,6 @@ export interface IServerConfig {
     studiesWithGermlineConsentedSamples: string[] | undefined;
     mdacc_heatmap_study_meta_url: string | null;
     mdacc_heatmap_study_url: string | null;
-    oncoprint_custom_driver_annotation_tiers_menu_label: string | null;
     enable_darwin: boolean;
     query_sets_of_genes: string | null;
     skin_quick_select_buttons: string | null;

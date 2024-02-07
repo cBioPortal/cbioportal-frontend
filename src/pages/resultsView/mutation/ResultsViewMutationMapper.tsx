@@ -39,10 +39,14 @@ import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary'
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 import { submitToStudyViewPage } from '../querySummary/QuerySummaryUtils';
-import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import {
+    ExtendedMutationTableColumnType,
+    MutationTableColumnType,
+} from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
 import { getServerConfig } from 'config/config';
+import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -266,15 +270,26 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 deactivateColumnFilter={this.deactivateColumnFilter}
                 namespaceColumns={this.props.store.namespaceColumnConfig}
                 columns={this.columns}
-                customDriverName={getServerConfig().skin_custom_driver_name}
+                initialSortColumn={
+                    AnnotationColumnFormatter.visible(this.props)
+                        ? MutationTableColumnType.ANNOTATION
+                        : this.props.customDriverName
+                }
+                customDriverName={
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_binary_menu_label!
+                }
                 customDriverDescription={
-                    getServerConfig().skin_custom_driver_description
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_binary_menu_description!
                 }
                 customDriverTiersName={
-                    getServerConfig().skin_custom_driver_tiers_name
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_tiers_menu_label!
                 }
                 customDriverTiersDescription={
-                    getServerConfig().skin_custom_driver_tiers_description
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_tiers_menu_description!
                 }
             />
         );
