@@ -286,7 +286,7 @@ export function getDigitalSlideArchiveIFrameUrl(patientId: string) {
 }
 
 export function getDarwinUrl(sampleIds: string[], caseId: string) {
-    return buildCBioPortalAPIUrl('checkDarwinAccess.do', {
+    return buildCBioPortalAPIUrl('proxy/checkDarwinAccess', {
         sample_id: sampleIds.join(','),
         case_id: caseId,
     });
