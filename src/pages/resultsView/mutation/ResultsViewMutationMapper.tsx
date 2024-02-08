@@ -57,6 +57,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
     userDisplayName: string;
     onClickSettingMenu?: (visible: boolean) => void;
+    enableCustomDriver: boolean;
 }
 
 @observer
@@ -244,6 +245,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 enableMyCancerGenome={this.props.enableMyCancerGenome}
                 enableCivic={this.props.enableCivic}
                 enableRevue={this.props.enableRevue}
+                enableCustomDriver={this.props.enableCustomDriver}
                 totalNumberOfExons={this.totalExonNumber}
                 generateGenomeNexusHgvsgUrl={
                     this.props.store.generateGenomeNexusHgvsgUrl

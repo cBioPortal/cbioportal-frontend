@@ -260,6 +260,18 @@ export default class ResultsViewMutationTable extends MutationTable<
 
         // exclude
         this._columns[
+            MutationTableColumnType.CUSTOM_DRIVER
+        ].shouldExclude = () => {
+            return !this.props.enableCustomDriver;
+        };
+
+        this._columns[
+            MutationTableColumnType.CUSTOM_DRIVER_TIER
+        ].shouldExclude = () => {
+            return !this.props.enableCustomDriver;
+        };
+
+        this._columns[
             MutationTableColumnType.CANCER_TYPE_DETAILED
         ].shouldExclude = () => {
             return !this.props.uniqueSampleKeyToTumorType;

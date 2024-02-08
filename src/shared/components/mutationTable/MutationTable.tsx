@@ -112,6 +112,7 @@ export interface IMutationTableProps {
     enableHotspot?: boolean;
     enableCivic?: boolean;
     enableRevue?: boolean;
+    enableCustomDriver?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
