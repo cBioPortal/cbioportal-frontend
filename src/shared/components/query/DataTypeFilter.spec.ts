@@ -39,7 +39,7 @@ describe('DataTypeFilter', () => {
                 status: 1,
                 studyId: 'teststudy1',
                 treatmentCount: 45,
-                structuralVariantCount: 0,
+                structuralVariantCount: 10,
             },
             {
                 allSampleCount: 1500,
@@ -213,7 +213,7 @@ describe('DataTypeFilter', () => {
                 status: 1,
                 studyId: 'teststudy1',
                 treatmentCount: 45,
-                structuralVariantCount: 0,
+                structuralVariantCount: 10,
             },
             {
                 structuralVariantCount: 0,
