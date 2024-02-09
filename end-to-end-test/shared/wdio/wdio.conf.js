@@ -209,7 +209,7 @@ exports.config = {
                 args: chromeArgs,
             },
             acceptInsecureCerts: true,
-            acceptSslCerts: true,
+            //acceptSslCerts: true,
             // If outputDir is provided WebdriverIO can capture driver session logs
             // it is possible to configure which logTypes to include/exclude.
             // excludeDriverLogs: ['*'], // pass '*' to exclude all driver session logs
@@ -260,6 +260,7 @@ exports.config = {
     // Default request retries count
     connectionRetryCount: 3,
 
+    port: 9515,
     //
     // Test runner services
     // Services take over a specific job you don't want to take care of. They enhance
