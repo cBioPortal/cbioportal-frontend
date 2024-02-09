@@ -7,7 +7,7 @@ var {
     waitForOncoprint,
     goToUrlAndSetLocalStorage,
     getElementByTestHandle,
-} = require('../../../shared/specUtils');
+} = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -31,21 +31,24 @@ describe('Invalid query handling', () => {
     });
 });
 
-describe('cross cancer query', function() {
-    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', function() {
-        goToUrlAndSetLocalStorage(
+describe.only('cross cancer query', function() {
+    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', async function() {
+        await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_list=chol_tcga%2Cblca_tcga_pub%2Ccoadread_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=all&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
 
         // wait for cancer types summary to appear
-        $('[data-test="cancerTypeSummaryChart"]').waitForExist({
+        const mo = await getElementByTestHandle('cancerTypeSummaryChart');
+
+        await mo.waitForExist({
             timeout: 60000,
         });
 
         // check if TP53 is in the navigation above the plots
-        $('.nav-pills').waitForExist({ timeout: 30000 });
-        var text = $('.nav-pills').getText();
-        assert(text.search('TP53') > -1);
+        const boo = await $('.nav-pills').waitForExist();
+        //await boo.waitForExist({ timeout: 30000 });
+        const text = await boo.getText();
+        assert(text.search('TP533') > -1);
     });
 });
 
