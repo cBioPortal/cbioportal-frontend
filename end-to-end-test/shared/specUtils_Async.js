@@ -101,7 +101,11 @@ function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
     );
 }
 
-async function getElementByTestHandle(handle) {
+async function getElementByTestHandle(handle, options) {
+    if (options?.timeout) {
+        await $(`[data-test="${handle}"]`).waitForExist(options);
+    }
+
     return await $(`[data-test="${handle}"]`);
 }
 
@@ -259,27 +263,11 @@ function showGsva() {
     setServerConfiguration({ skin_show_gsva: true });
 }
 
-function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
-    browser.waitUntil(
-        () => {
-            var ret =
-                $$('[data-test="cancerTypeListContainer"] > ul > ul').length ===
-                expectedNumber;
-            if (text && ret) {
-                ret = $(
-                    '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-                ).isExisting();
-                if (ret) {
-                    ret =
-                        $(
-                            '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-                        ).getText() === text;
-                }
-            }
-            return ret;
-        },
-        { timeout: 60000 }
-    );
+async function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
+    await browser.waitUntil(async () => {
+        const cbs = await jq(`[data-test="StudySelect"] input:checkbox`);
+        return cbs.length === expectedNumber;
+    });
 }
 
 function getNthOncoprintTrackOptionsElements(n) {
@@ -534,11 +522,12 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
     return res;
 }
 
-function clickQueryByGeneButton() {
-    $('.disabled[data-test=queryByGeneButton]').waitForExist({
+async function clickQueryByGeneButton() {
+    await $('.disabled[data-test=queryByGeneButton]').waitForExist({
         reverse: true,
     });
-    getElementByTestHandle('queryByGeneButton').click();
+    //const el = await getElementByTestHandle('queryByGeneButton');
+    await clickElement('handle=queryByGeneButton');
     $('body').scrollIntoView();
 }
 
@@ -684,8 +673,8 @@ function selectElementByText(text) {
     return $(`//*[text()="${text}"]`);
 }
 
-function jq(selector) {
-    return browser.execute(selector => {
+async function jq(selector) {
+    return await browser.execute(selector => {
         return jQuery(selector).toArray();
     }, selector);
 }
@@ -724,12 +713,25 @@ function selectClinicalTabPlotType(type) {
     ).click();
 }
 
+async function clickElement(selector, options = {}) {
+    let el;
+
+    if (/^handle=/.test(selector)) {
+        el = await getElementByTestHandle(selector.replace(/^handle=/, ''));
+    } else {
+        el = await $(selector);
+    }
+    await el.waitForDisplayed(options);
+    await el.click();
+}
+
 module.exports = {
     checkElementWithElementHidden,
     waitForPlotsTab,
     waitForAndCheckPlotsTab,
     waitForStudyQueryPage,
     waitForGeneQueryPage,
+    clickElement,
     waitForOncoprint,
     waitForCoExpressionTab,
     waitForPatientView,

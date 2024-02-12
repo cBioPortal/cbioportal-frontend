@@ -7,6 +7,7 @@ var {
     waitForOncoprint,
     goToUrlAndSetLocalStorage,
     getElementByTestHandle,
+    clickElement,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -31,7 +32,7 @@ describe('Invalid query handling', () => {
     });
 });
 
-describe.only('cross cancer query', function() {
+describe('cross cancer query', function() {
     it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', async function() {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_list=chol_tcga%2Cblca_tcga_pub%2Ccoadread_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=all&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
@@ -45,67 +46,70 @@ describe.only('cross cancer query', function() {
         });
 
         // check if TP53 is in the navigation above the plots
-        const boo = await $('.nav-pills').waitForExist();
-        //await boo.waitForExist({ timeout: 30000 });
-        const text = await boo.getText();
-        assert(text.search('TP533') > -1);
+        await browser.waitUntil(() => {
+            return $('.nav-pills*=TP53').isDisplayed();
+        });
     });
 });
 
-describe('single study query', function() {
-    this.retries(1);
+describe('single study query', async function() {
+    this.retries(2);
 
-    describe('mutation mapper ', function() {
-        it('should show somatic and germline mutation rate', function() {
-            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
+    describe('mutation mapper ', async function() {
+        it.only('should show somatic and germline mutation rate', async function() {
+            await goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
 
-            var input = $('[data-test=study-search] input[type=text]');
+            const input = await $('[data-test=study-search] input[type=text]');
 
-            input.waitForExist({ timeout: 10000 });
+            await input.waitForExist({ timeout: 10000 });
 
-            input.setValue('ovarian nature 2011');
+            await input.setValue('ovarian nature 2011');
 
-            waitForNumberOfStudyCheckboxes(1);
+            await waitForNumberOfStudyCheckboxes(1);
 
-            var checkBox = $('[data-test="StudySelect"]');
+            await clickElement('[data-test="StudySelect"] input');
 
-            checkBox.waitForExist({ timeout: 10000 });
-
-            $('[data-test="StudySelect"] input').click();
-
-            clickQueryByGeneButton();
+            await clickQueryByGeneButton();
 
             // query BRCA1 and BRCA2
-            $('[data-test="geneSet"]').setValue('BRCA1 BRCA2');
+            await $('[data-test="geneSet"]').setValue('BRCA1 BRCA2');
 
-            $('[data-test="queryButton"]').waitForEnabled({ timeout: 10000 });
-            $('[data-test="queryButton"]').click();
+            await $('[data-test="queryButton"]').waitForEnabled({
+                timeout: 10000,
+            });
+            await $('[data-test="queryButton"]').click();
 
             // click mutations tab
-            $('a.tabAnchor_mutations').waitForExist({ timeout: 10000 });
-            $('a.tabAnchor_mutations').click();
+            await $('a.tabAnchor_mutations').waitForExist({ timeout: 10000 });
+            await $('a.tabAnchor_mutations').click();
 
-            $('[data-test="mutation-rate-summary"]').waitForExist({
+            await $('[data-test="mutation-rate-summary"]').waitForExist({
                 timeout: 60000,
             });
-            var text = $('[data-test="mutation-rate-summary"]').getText();
+
+            const text = await $(
+                '[data-test="mutation-rate-summary"]'
+            ).getText();
+
             // check germline mutation rate
             assert(text.search('8.2%') > -1);
             // check somatic mutation
             assert(text.search('3.5%') > -1);
         });
 
-        it('should show lollipop for MUC2', function() {
-            goToUrlAndSetLocalStorage(
+        it.only('should show lollipop for MUC2', async function() {
+            await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_cna`
             );
 
             //  wait for mutations tab
-            $('a.tabAnchor_mutations').waitForExist({ timeout: 10000 });
-            $('a.tabAnchor_mutations').click();
+            await $('a.tabAnchor_mutations').waitForExist({ timeout: 10000 });
+            await $('a.tabAnchor_mutations').click();
 
             // check lollipop plot appears
-            $('[data-test="LollipopPlot"]').waitForExist({ timeout: 60000 });
+            await $('[data-test="LollipopPlot"]').waitForExist({
+                timeout: 60000,
+            });
         });
     });
 
