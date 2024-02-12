@@ -165,11 +165,9 @@ exports.config = {
     //
     //
 
-    //port: 9515,
+    specs: ['./remote/specs/core/results.logic.spec.js'],
 
-    specs: [SPEC_FILE_PATTERN],
-
-    //specs: ['./remote/specs/core/oncoprint.screenshot.spec.js'],
+    //specs: ['./remote/specs/core/comparisonTab.screenshot.spec.js'],
 
     // Patterns to exclude.
     exclude: [
@@ -349,17 +347,17 @@ exports.config = {
                 },
             },
         ],
-        [
-            CustomReporter,
-            {
-                testHome: TEST_TYPE,
-                outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-                outputFileFormat: function(opts) {
-                    // optional
-                    return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
-                },
-            },
-        ],
+        // [
+        //     CustomReporter,
+        //     {
+        //         testHome: TEST_TYPE,
+        //         outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
+        //         outputFileFormat: function(opts) {
+        //             // optional
+        //             return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
+        //         },
+        //     },
+        // ],
     ],
 
     testHome: process.env.JUNIT_REPORT_PATH,
@@ -514,12 +512,12 @@ exports.config = {
      * @param {<Object>} results object containing test results
      */
     onComplete: function(exitCode, config, capabilities, results) {
-        //const resultsDir = process.env.JUNIT_REPORT_PATH;
+        const resultsDir = process.env.JUNIT_REPORT_PATH;
 
         mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
 
-        // this is going to eliminate duplicate tests caused by retries
-        // leaving, for each unique test name only one result (error or pass)
+        //this is going to eliminate duplicate tests caused by retries
+        //leaving, for each unique test name only one result (error or pass)
         transformJUNITFiles(resultsDir);
     },
     /**
