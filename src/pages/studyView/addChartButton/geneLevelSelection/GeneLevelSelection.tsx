@@ -31,6 +31,19 @@ export interface IGeneLevelSelectionProps {
     containerWidth: number;
 }
 
+const molecularProfileSubOptions = [
+    {
+        value: MutationOptionConstants.MUTATED,
+        label: MutationOptionConstantsLabel[MutationOptionConstants.MUTATED],
+        profileType: AlterationTypeConstants.MUTATION_EXTENDED,
+    },
+    {
+        value: MutationOptionConstants.EVENT,
+        label: MutationOptionConstantsLabel[MutationOptionConstants.EVENT],
+        profileType: AlterationTypeConstants.MUTATION_EXTENDED,
+    },
+];
+
 @observer
 export default class GeneLevelSelection extends React.Component<
     IGeneLevelSelectionProps,
@@ -93,7 +106,7 @@ export default class GeneLevelSelection extends React.Component<
         }
 
         if (
-            !this.subOptions
+            !molecularProfileSubOptions
                 .map(subOption => subOption.label)
                 .includes(option.alterationType)
         ) {
@@ -137,11 +150,11 @@ export default class GeneLevelSelection extends React.Component<
 
         if (
             this.selectedOption !== undefined &&
-            this.subOptions
+            molecularProfileSubOptions
                 .map(option => option.profileType)
                 .includes(this.selectedOption.alterationType)
         ) {
-            return this.subOptions[0];
+            return molecularProfileSubOptions[0];
         }
 
         return undefined;
@@ -175,25 +188,6 @@ export default class GeneLevelSelection extends React.Component<
             return this._genes!.found;
         }
         return [];
-    }
-
-    private get subOptions() {
-        return [
-            {
-                value: MutationOptionConstants.MUTATED,
-                label:
-                    MutationOptionConstantsLabel[
-                        MutationOptionConstants.MUTATED
-                    ],
-                profileType: AlterationTypeConstants.MUTATION_EXTENDED,
-            },
-            {
-                value: MutationOptionConstants.EVENT,
-                label:
-                    MutationOptionConstantsLabel[MutationOptionConstants.EVENT],
-                profileType: AlterationTypeConstants.MUTATION_EXTENDED,
-            },
-        ];
     }
 
     @computed
@@ -295,7 +289,7 @@ export default class GeneLevelSelection extends React.Component<
                     </div>
                     <div style={{ width: '70%', marginTop: '5px' }}>
                         {this.selectedOption &&
-                            this.subOptions
+                            molecularProfileSubOptions
                                 .map(option => option.profileType)
                                 .includes(
                                     this.selectedOption.alterationType
@@ -303,7 +297,7 @@ export default class GeneLevelSelection extends React.Component<
                                 <ReactSelect
                                     value={this.selectedSubOption}
                                     onChange={this.handleSubSelect}
-                                    options={this.subOptions}
+                                    options={molecularProfileSubOptions}
                                     isClearable={false}
                                     isSearchable={false}
                                 />

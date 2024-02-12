@@ -34,6 +34,14 @@ import {
     makeDensityScatterPlotTooltip,
     logScalePossible,
     ChartMetaDataTypeEnum,
+    getMutationTypesDownloadData,
+    getScatterDownloadData,
+    getSurvivalDownloadData,
+    getMutatedGenesDownloadData,
+    getStructuralVariantGenesDownloadData,
+    getGenesCNADownloadData,
+    getPatientTreatmentDownloadData,
+    getSampleTreatmentDownloadData,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import DelayedRender from 'shared/components/DelayedRender';
@@ -422,7 +430,11 @@ export class StudySummaryTab extends React.Component<
                     ChartTypeEnum.MUTATED_GENES_TABLE,
                     props.title
                 ),
-                getData: () => this.store.getMutatedGenesDownloadData(),
+                getData: () =>
+                    getMutatedGenesDownloadData(
+                        this.store.mutatedGeneTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
                 filterByCancerGenes: this.store
@@ -448,7 +460,9 @@ export class StudySummaryTab extends React.Component<
                     props.title
                 ),
                 getData: () =>
-                    this.store.getMutationTypesDownloadData(chartMeta),
+                    getMutationTypesDownloadData(
+                        this.store.getMutationEventChartDataCount(chartMeta)
+                    ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
                 filterByCancerGenes: this.store
@@ -474,7 +488,10 @@ export class StudySummaryTab extends React.Component<
                     props.title
                 ),
                 getData: () =>
-                    this.store.getStructuralVariantGenesDownloadData(),
+                    getStructuralVariantGenesDownloadData(
+                        this.store.structuralVariantGeneTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
                 filterByCancerGenes: this.store.filterSVGenesTableByCancerGenes,
@@ -500,7 +517,10 @@ export class StudySummaryTab extends React.Component<
                     props.title
                 ),
                 getData: () =>
-                    this.store.getStructuralVariantGenesDownloadData(),
+                    getStructuralVariantGenesDownloadData(
+                        this.store.structuralVariantTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
                 filterByCancerGenes: this.store
@@ -525,7 +545,11 @@ export class StudySummaryTab extends React.Component<
                     ChartTypeEnum.CNA_GENES_TABLE,
                     props.title
                 ),
-                getData: () => this.store.getGenesCNADownloadData(),
+                getData: () =>
+                    getGenesCNADownloadData(
+                        this.store.cnaGeneTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
                 filterByCancerGenes: this.store
@@ -556,7 +580,13 @@ export class StudySummaryTab extends React.Component<
                 const props: any = {
                     promise: this.store.survivalPlots,
                     getData: () =>
-                        this.store.getSurvivalDownloadData(chartMeta),
+                        getSurvivalDownloadData(
+                            chartMeta,
+                            this.store.survivalPlots.result,
+                            this.store.survivalData.result,
+                            this.store.selectedPatients,
+                            this.store.selectedPatientKeys.result
+                        ),
                     patientToAnalysisGroup: this.store.patientToAnalysisGroup,
                     downloadTypes: ['Data', 'SVG', 'PDF'],
                     description: this.store.survivalDescriptions.result
@@ -741,8 +771,9 @@ export class StudySummaryTab extends React.Component<
                     },
                     sampleToAnalysisGroup: this.store.sampleToAnalysisGroup,
                     getData: () =>
-                        this.store.getScatterDownloadData(
-                            props.chartMeta!.uniqueKey
+                        getScatterDownloadData(
+                            props.chartMeta!.uniqueKey,
+                            this.store.selectedSamples
                         ),
                     downloadTypes: ['Data', 'SVG', 'PDF'],
                 };
@@ -752,7 +783,8 @@ export class StudySummaryTab extends React.Component<
                 filters: this.store.sampleTreatmentFiltersAsStrings,
                 promise: this.store.sampleTreatments,
                 onValueSelection: this.store.onTreatmentSelection,
-                getData: () => this.store.getSampleTreatmentDownloadData(),
+                getData: () =>
+                    getSampleTreatmentDownloadData(this.store.sampleTreatments),
                 downloadTypes: ['Data'],
                 onResetSelection: () => {
                     this.store.clearSampleTreatmentFilters();
@@ -778,7 +810,10 @@ export class StudySummaryTab extends React.Component<
                 filters: this.store.patientTreatmentFiltersAsStrings,
                 promise: this.store.patientTreatments,
                 onValueSelection: this.store.onTreatmentSelection,
-                getData: () => this.store.getPatientTreatmentDownloadData(),
+                getData: () =>
+                    getPatientTreatmentDownloadData(
+                        this.store.patientTreatments
+                    ),
                 downloadTypes: ['Data'],
                 onResetSelection: () => {
                     this.store.clearPatientTreatmentFilters();
