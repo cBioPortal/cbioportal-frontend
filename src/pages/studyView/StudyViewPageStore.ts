@@ -11029,6 +11029,7 @@ export class StudyViewPageStore
     readonly plotsSelectedGenes = remoteData<Gene[]>({
         invoke: () => {
             let entrezIds: string[] = [];
+            // gene selected in horz axis
             if (
                 this.urlWrapper.query.plots_horz_selection?.selectedGeneOption
             ) {
@@ -11037,6 +11038,7 @@ export class StudyViewPageStore
                         .selectedGeneOption
                 );
             }
+            // gene selected in vert axis
             if (
                 this.urlWrapper.query.plots_vert_selection?.selectedGeneOption
             ) {
@@ -11044,6 +11046,20 @@ export class StudyViewPageStore
                     this.urlWrapper.query.plots_vert_selection
                         .selectedGeneOption
                 );
+            }
+            // gene selected in color menu
+            if (
+                this.urlWrapper.query.plots_coloring_selection
+                    ?.selectedOption &&
+                this.urlWrapper.query.plots_coloring_selection.selectedOption.match(
+                    '^[0-9]*'
+                )
+            ) {
+                // extract entrezGeneId from plot coloring selection string
+                let selectedColoringGene = this.urlWrapper.query.plots_coloring_selection.selectedOption.match(
+                    '^[0-9]*'
+                )![0];
+                entrezIds.push(selectedColoringGene);
             }
             if (entrezIds.length > 0) {
                 return client.fetchGenesUsingPOST({

@@ -748,7 +748,8 @@ export default class StudyViewPage extends React.Component<
                                             }
                                             mutations={this.store.mutations}
                                             studies={
-                                                this.store.displayedStudies
+                                                this.store
+                                                    .queriedPhysicalStudies
                                             }
                                             molecularProfileIdSuffixToMolecularProfiles={
                                                 this.store
@@ -851,6 +852,14 @@ export default class StudyViewPage extends React.Component<
                                             }
                                             urlWrapper={this.urlWrapper}
                                             hasNoQueriedGenes={true}
+                                            genePanelDataForAllProfiles={
+                                                this.store
+                                                    .genePanelDataForAllProfiles
+                                                    .result
+                                            }
+                                            patients={
+                                                this.store.patients.result
+                                            }
                                         />
                                     </MSKTab>
 

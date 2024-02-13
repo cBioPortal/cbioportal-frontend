@@ -77,6 +77,8 @@ import {
     Geneset,
     StructuralVariant,
     NumericGeneMolecularData,
+    GenePanelData,
+    Patient,
 } from 'cbioportal-ts-api-client';
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
 import WaterfallPlot from 'shared/components/plots/WaterfallPlot';
@@ -86,6 +88,9 @@ import InfoIcon from '../../../shared/components/InfoIcon';
 import {
     CBIOPORTAL_VICTORY_THEME,
     DownloadControls,
+    MobxPromise,
+    MobxPromiseUnionType,
+    MobxPromiseUnionTypeWithDefault,
     remoteData,
     wrapText,
 } from 'cbioportal-frontend-commons';
@@ -117,10 +122,6 @@ import ResultsViewURLWrapper, {
     PlotsSelectionParam,
     ResultsViewURLQuery,
 } from '../ResultsViewURLWrapper';
-import MobxPromise, {
-    MobxPromiseUnionType,
-    MobxPromiseUnionTypeWithDefault,
-} from 'mobxpromise';
 import ClinicalDataCache, {
     SpecialAttribute,
 } from '../../../shared/cache/ClinicalDataCache';
@@ -149,12 +150,16 @@ import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
-import { CoverageInformation } from 'shared/lib/GenePanelUtils';
+import {
+    CoverageInformation,
+    getCoverageInformation,
+} from 'shared/lib/GenePanelUtils';
 import GenesetMolecularDataCache from 'shared/cache/GenesetMolecularDataCache';
 import GenericAssayMolecularDataCache from 'shared/cache/GenericAssayMolecularDataCache';
 import { DriverAnnotationSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import StudyViewURLWrapper from 'pages/studyView/StudyViewURLWrapper';
 import { StudyViewURLQuery } from 'pages/studyView/StudyViewPageStore';
+import { fetchGenes } from 'shared/lib/StoreUtils';
 
 enum EventKey {
     horz_logScale,
@@ -329,6 +334,8 @@ export interface IPlotsTabProps {
     }>;
     urlWrapper: ResultsViewURLWrapper | StudyViewURLWrapper;
     hasNoQueriedGenes?: boolean;
+    genePanelDataForAllProfiles?: GenePanelData[];
+    patients?: Patient[];
 }
 
 export type PlotsTabDataSource = {
@@ -859,8 +866,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this._selectedGeneOption === undefined &&
                     geneOptions.length
                 ) {
-                    // select default if _selectedGeneOption is undefined and theres defaults to choose from
-                    return geneOptions[0];
+                    // if no queried genes, default is undefined, else default is first gene option
+                    if (self.props.hasNoQueriedGenes) {
+                        return undefined;
+                    } else {
+                        return {
+                            value: geneOptions[0].value,
+                            label: self.isGeneProfiled(geneOptions[0].label)
+                                ? geneOptions[0].label
+                                : geneOptions[0].label + ' (Not profiled)',
+                        };
+                    }
                 } else if (
                     vertical &&
                     this._selectedGeneOption &&
@@ -874,9 +890,30 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 ) {
                     // if vertical gene option is "same as horizontal", and horizontal is clinical, then use the actual
                     //      gene option value instead of "Same gene" option value, because that would be slightly weird UX
-                    return self.horzSelection.selectedGeneOption;
+                    const selectedGeneOption =
+                        self.horzSelection.selectedGeneOption;
+                    if (selectedGeneOption) {
+                        return {
+                            value: selectedGeneOption.value,
+                            label: self.isGeneProfiled(selectedGeneOption.label)
+                                ? selectedGeneOption.label
+                                : selectedGeneOption.label + ' (Not profiled)',
+                        };
+                    }
+                    return selectedGeneOption;
                 } else {
                     // otherwise, return stored value for this variable
+                    if (this._selectedGeneOption) {
+                        return {
+                            value: this._selectedGeneOption.value,
+                            label: self.isGeneProfiled(
+                                this._selectedGeneOption.label
+                            )
+                                ? this._selectedGeneOption.label
+                                : this._selectedGeneOption.label +
+                                  ' (Not profiled)',
+                        };
+                    }
                     return this._selectedGeneOption;
                 }
             },
@@ -905,6 +942,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     (this._dataType === undefined && dataTypeOptions.length) ||
                     selectedDataTypeDoesNotExist
                 ) {
+                    // if no queried genes, default is undefined
+                    if (self.props.hasNoQueriedGenes) {
+                        return undefined;
+                    }
                     // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (
                         isAlterationTypePresent(
@@ -1462,13 +1503,43 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     });
 
                     if (!option) {
-                        // Otherwise, find first gene option
-                        option = options.find(
-                            o =>
-                                o.info.entrezGeneId !== undefined &&
-                                o.info.entrezGeneId !==
-                                    NONE_SELECTED_OPTION_NUMERICAL_VALUE
-                        );
+                        // if no queried genes, set color option to gene on the horz/vert axis if exists, else none
+                        if (self.props.hasNoQueriedGenes) {
+                            if (self.horzSelection.selectedGeneOption) {
+                                option = options.find(
+                                    o =>
+                                        o.info.entrezGeneId !== undefined &&
+                                        o.info.entrezGeneId !==
+                                            NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
+                                        o.info.entrezGeneId ===
+                                            self.horzSelection
+                                                .selectedGeneOption!.value
+                                );
+                            } else if (self.vertSelection.selectedGeneOption) {
+                                option = options.find(
+                                    o =>
+                                        o.info.entrezGeneId !== undefined &&
+                                        o.info.entrezGeneId !==
+                                            NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
+                                        o.info.entrezGeneId ===
+                                            self.vertSelection
+                                                .selectedGeneOption!.value
+                                );
+                            } else {
+                                option = options.find(
+                                    o =>
+                                        o.info.entrezGeneId ===
+                                        NONE_SELECTED_OPTION_NUMERICAL_VALUE
+                                );
+                            }
+                        } else {
+                            option = options.find(
+                                o =>
+                                    o.info.entrezGeneId !== undefined &&
+                                    o.info.entrezGeneId !==
+                                        NONE_SELECTED_OPTION_NUMERICAL_VALUE
+                            );
+                        }
                     }
                     return option;
                 } else {
@@ -1751,7 +1822,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private getHorizontalAxisMenu() {
         if (
             !this.dataTypeOptions.isComplete ||
-            !this.dataTypeToDataSourceOptions.isComplete
+            !this.dataTypeToDataSourceOptions.isComplete ||
+            !this.props.coverageInformation.isComplete
         ) {
             return <span></span>;
         } else {
@@ -1766,7 +1838,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private getVerticalAxisMenu() {
         if (
             !this.dataTypeOptions.isComplete ||
-            !this.dataTypeToDataSourceOptions.isComplete
+            !this.dataTypeToDataSourceOptions.isComplete ||
+            !this.props.coverageInformation.isComplete
         ) {
             return <span></span>;
         } else {
@@ -1916,10 +1989,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         await: () => [this.props.genes],
         invoke: () => {
             return Promise.resolve(
-                this.props.genes.result!.map(gene => ({
-                    value: gene.entrezGeneId,
-                    label: gene.hugoGeneSymbol,
-                }))
+                this.props.genes
+                    .result!.map(gene => ({
+                        value: gene.entrezGeneId,
+                        label: gene.hugoGeneSymbol,
+                    }))
+                    .sort((a, b) => {
+                        return a.label < b.label ? -1 : 1;
+                    })
             );
         },
     });
@@ -2595,18 +2672,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             )
                 ? this.horzSelection.selectedGeneOption
                 : this.vertSelection.selectedGeneOption;
-            this.updateColoringMenuGene(selectedGene!.value);
+            selectedGene && this.updateColoringMenuGene(selectedGene.value);
 
             // for two genes, if the current gene for coloring is not selected in either axis, switch to gene selection on x-axis
         } else if (
             this.bothAxesMolecularProfile &&
+            this.horzSelection.selectedGeneOption &&
             currentSelectedGeneId !==
-                this.horzSelection.selectedGeneOption!.value &&
+                this.horzSelection.selectedGeneOption.value &&
+            this.vertSelection.selectedGeneOption &&
             currentSelectedGeneId !==
-                this.vertSelection.selectedGeneOption!.value
+                this.vertSelection.selectedGeneOption.value
         ) {
             this.updateColoringMenuGene(
-                this.horzSelection.selectedGeneOption!.value
+                this.horzSelection.selectedGeneOption.value
             );
         }
 
@@ -3378,6 +3457,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return !isValidMrnaProfile && hasNegativeNumbers;
     }
 
+    private isGeneProfiled(
+        gene: string,
+        coverageInformation?: CoverageInformation
+    ) {
+        if (coverageInformation) {
+            return Object.values(coverageInformation.samples).some(
+                s => !_.isEmpty(s.allGenes) || !!s.byGene[gene]
+            );
+        }
+        if (this.props.coverageInformation.isComplete) {
+            return Object.values(
+                this.props.coverageInformation.result!.samples
+            ).some(s => !_.isEmpty(s.allGenes) || !!s.byGene[gene]);
+        }
+        return false;
+    }
+
     private getAxisMenu(
         vertical: boolean,
         dataSourceOptionsByType: {
@@ -3612,17 +3708,45 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             ? this.vertAxisCategories
             : this.horzAxisCategories;
 
-        const loadOptions = (inputText: string, callback: any) => {
+        const loadOptions = async (inputText: string, callback: any) => {
             if (!inputText) {
                 callback([]);
             }
             const stringCompare = (item: any) =>
                 item.label.startsWith(inputText.toUpperCase());
-            const options =
+            let options =
                 (vertical
                     ? this.vertGeneOptions.result
                     : this.horzGeneOptions.result) || [];
-            callback(options.filter(stringCompare).slice(0, 20));
+            options = options.filter(stringCompare).slice(0, 10);
+            if (this.props.hasNoQueriedGenes) {
+                const genes = await fetchGenes(options.map(o => o.label));
+                const coverageInformationPromise = getCoverageInformation(
+                    this.props.genePanelDataForAllProfiles!,
+                    this.props.sampleKeyToSample.result!,
+                    this.props.patients!,
+                    genes
+                );
+                const coverageInformation = await coverageInformationPromise.then(
+                    (coverageInformation: CoverageInformation) => {
+                        return coverageInformation;
+                    }
+                );
+                options = options.map(g => ({
+                    value: g.value,
+                    label: this.isGeneProfiled(g.label, coverageInformation)
+                        ? g.label
+                        : g.label + ' (Not profiled)',
+                }));
+            } else {
+                options = options.map(g => ({
+                    value: g.value,
+                    label: this.isGeneProfiled(g.label)
+                        ? g.label
+                        : g.label + ' (Not profiled)',
+                }));
+            }
+            callback(options);
         };
 
         return (
@@ -4893,6 +5017,33 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
+    @computed get showNoDataTypesSelectedWarning() {
+        return (
+            this.dataTypeOptions.isComplete &&
+            this.dataTypeToDataSourceOptions.isComplete &&
+            (!this.horzSelection.dataType || !this.vertSelection.dataType)
+        );
+    }
+
+    @computed get showNoGenesSelectedWarning() {
+        return (
+            this.dataTypeOptions.isComplete &&
+            this.dataTypeToDataSourceOptions.isComplete &&
+            ((this.horzSelection.dataType &&
+                this.showGeneSelectBox(
+                    this.horzSelection.dataType,
+                    isGenericAssaySelected(this.horzSelection)
+                ) &&
+                !this.horzSelection.selectedGeneOption) ||
+                (this.vertSelection.dataType &&
+                    this.showGeneSelectBox(
+                        this.vertSelection.dataType,
+                        isGenericAssaySelected(this.vertSelection)
+                    ) &&
+                    !this.vertSelection.selectedGeneOption))
+        );
+    }
+
     @computed get showUtilitiesMenu() {
         return (
             this.plotType.isComplete &&
@@ -5004,6 +5155,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         an entity.
                     </span>
                 </div>
+            );
+        }
+
+        if (this.showNoDataTypesSelectedWarning) {
+            return (
+                <div className={'alert alert-info'}>
+                    Please select datatype(s).
+                </div>
+            );
+        }
+        if (this.showNoGenesSelectedWarning) {
+            return (
+                <div className={'alert alert-info'}>Please select gene(s).</div>
             );
         }
 
@@ -5753,7 +5917,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     <div style={{ display: 'flex' }}>
                         <div className="leftColumn">
                             {this.dataTypeOptions.isComplete &&
-                            this.dataTypeToDataSourceOptions.isComplete ? (
+                            this.dataTypeToDataSourceOptions.isComplete &&
+                            this.props.coverageInformation.isComplete ? (
                                 <Observer>{this.controls}</Observer>
                             ) : (
                                 <LoadingIndicator
