@@ -167,7 +167,8 @@ export default class AnnotationColumnFormatter {
             (props.enableCivic && annotation.civicEntry !== undefined) ||
             (props.enableMyCancerGenome &&
                 annotation.myCancerGenomeLinks.length > 0) ||
-            (props.enableHotspot && props.hotspotData !== undefined)
+            (props.enableHotspot && props.hotspotData !== undefined) ||
+            false
         );
     }
 }

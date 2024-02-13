@@ -20,10 +20,8 @@ export default class CustomDriverTierColumnFormatter {
 
     public static getData(data: DiscreteCopyNumberData[]) {
         if (data.length > 0) {
-            if (
-                data[0].driverTiersFilterAnnotation === null ||
-                data[0].driverTiersFilterAnnotation === ''
-            ) {
+            // show driverTiersFilter data in case driverTiersFilterAnnotation is not present
+            if (_.isEmpty(data[0].driverTiersFilterAnnotation)) {
                 return data[0].driverTiersFilter;
             }
             return data[0].driverTiersFilterAnnotation;

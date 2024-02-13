@@ -557,15 +557,6 @@ export default class StructuralVariantTableWrapper extends React.Component<
         default: [],
     });
 
-    @computed protected get initialColumnVisible(): boolean {
-        return (
-            this.props.enableOncoKb &&
-            _.isEmpty(
-                this.props.store.structuralVariantOncoKbData.result.indicatorMap
-            )
-        );
-    }
-
     readonly tableUI = MakeMobxView({
         await: () => [
             this.props.store.structuralVariantProfile,
@@ -611,7 +602,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                     .result!
                             }
                             initialSortColumn={
-                                this.initialColumnVisible
+                                AnnotationColumnFormatter.visible(this.props)
                                     ? 'Annotation'
                                     : this.props.customDriverName
                             }

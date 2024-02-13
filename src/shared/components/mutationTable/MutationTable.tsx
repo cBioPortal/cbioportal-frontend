@@ -1421,10 +1421,6 @@ export default class MutationTable<
         );
     }
 
-    @computed protected get initialColumnVisible(): boolean {
-        return AnnotationColumnFormatter.visible(this.props) || false;
-    }
-
     public render() {
         return (
             <MutationTableComponent

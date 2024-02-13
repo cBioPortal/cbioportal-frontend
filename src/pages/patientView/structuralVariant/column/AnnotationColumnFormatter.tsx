@@ -19,6 +19,7 @@ import {
 } from 'oncokb-frontend-commons';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
+import { IStructuralVariantTableWrapperProps } from '../StructuralVariantTableWrapper';
 
 export default class AnnotationColumnFormatter {
     public static getData(
@@ -236,5 +237,17 @@ export default class AnnotationColumnFormatter {
         );
 
         return <GenericAnnotation {...columnProps} annotation={annotation} />;
+    }
+
+    public static visible(
+        props: Partial<IStructuralVariantTableWrapperProps>
+    ): boolean {
+        return (
+            (props.enableOncoKb &&
+                _.isEmpty(
+                    props.store!.structuralVariantOncoKbData.result.indicatorMap
+                )) ||
+            false
+        );
     }
 }

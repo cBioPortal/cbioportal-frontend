@@ -44,7 +44,7 @@ class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
 type CNATableColumn = Column<DiscreteCopyNumberData[]> & { order: number };
 
-type ICopyNumberTableWrapperProps = {
+export type ICopyNumberTableWrapperProps = {
     pageStore: PatientViewPageStore;
     sampleIds: string[];
     sampleManager: SampleManager | null;
@@ -449,13 +449,6 @@ export default class CopyNumberTableWrapper extends React.Component<
         return this.props.pageStore;
     }
 
-    @computed protected get initialColumnVisible(): boolean {
-        return (
-            this.props.enableOncoKb &&
-            _.isEmpty(this.pageStore.cnaOncoKbData.result.indicatorMap)
-        );
-    }
-
     tableUI = MakeMobxView({
         await: () => [
             this.pageStore.studyIdToStudy,
@@ -500,7 +493,9 @@ export default class CopyNumberTableWrapper extends React.Component<
                                 }
                                 dataStore={this.props.dataStore}
                                 initialSortColumn={
-                                    this.initialColumnVisible
+                                    AnnotationColumnFormatter.visible(
+                                        this.props
+                                    )
                                         ? 'Annotation'
                                         : this.props.customDriverName
                                 }

@@ -21,10 +21,8 @@ export default class CustomDriverColumnFormatter {
 
     public static getData(data: StructuralVariant[]) {
         if (data.length > 0) {
-            if (
-                data[0].driverFilterAnn === null ||
-                data[0].driverFilterAnn === ''
-            ) {
+            // show driverFilter data in case driverFilterAnnotation is not present
+            if (_.isEmpty(data[0].driverFilterAnn)) {
                 return data[0].driverFilter;
             }
             return data[0].driverFilterAnn;

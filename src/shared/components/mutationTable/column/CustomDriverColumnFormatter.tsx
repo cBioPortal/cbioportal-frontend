@@ -22,11 +22,9 @@ export default class CustomDriverColumnFormatter {
 
     public static getData(data: Mutation[]) {
         if (data.length > 0) {
-            if (
-                data[0].driverFilterAnnotation === null ||
-                data[0].driverFilterAnnotation === ''
-            ) {
-                return data[0].driverTiersFilter;
+            // show driverFilter data in case driverFilterAnnotation is not present
+            if (_.isEmpty(data[0].driverFilterAnnotation)) {
+                return data[0].driverFilter;
             }
             return data[0].driverFilterAnnotation;
         } else {
