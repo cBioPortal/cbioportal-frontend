@@ -103,7 +103,8 @@ function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
 
 async function getElementByTestHandle(handle, options) {
     if (options?.timeout) {
-        await $(`[data-test="${handle}"]`).waitForExist(options);
+        const el = await $(`[data-test="${handle}"]`);
+        await el.waitForExist(options);
     }
 
     return await $(`[data-test="${handle}"]`);

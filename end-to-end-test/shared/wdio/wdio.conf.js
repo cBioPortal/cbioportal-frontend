@@ -33,8 +33,9 @@ const chromeArgs = [
             ? [
                   '--headless',
                   '--no-sandbox',
-                  '--disable-gpu',
                   '--disable-setuid-sandbox',
+                  '--in-process-gpu',
+                  '--use-gl=angle',
               ]
             : [];
     })()
@@ -258,7 +259,7 @@ exports.config = {
     // Default request retries count
     connectionRetryCount: 3,
 
-    //port: 9515,
+    port: 9515,
     //
     // Test runner services
     // Services take over a specific job you don't want to take care of. They enhance
@@ -515,10 +516,10 @@ exports.config = {
         const resultsDir = process.env.JUNIT_REPORT_PATH;
 
         mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
-
-        //this is going to eliminate duplicate tests caused by retries
-        //leaving, for each unique test name only one result (error or pass)
-        transformJUNITFiles(resultsDir);
+        //
+        // //this is going to eliminate duplicate tests caused by retries
+        // //leaving, for each unique test name only one result (error or pass)
+        // transformJUNITFiles(resultsDir);
     },
     /**
      * Gets executed when a refresh happens.
