@@ -45,7 +45,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
                 yarn serveDist & \
                 cd end-to-end-test && \
-                yarn install --frozen-lockfile && \
+                yarn install --frozen-lockfile --ignore-engines && \
                 ../scripts/env_vars.sh && \
                 eval "$(../scripts/env_vars.sh)" && \
                 curl $CBIOPORTAL_URL > /dev/null && \
