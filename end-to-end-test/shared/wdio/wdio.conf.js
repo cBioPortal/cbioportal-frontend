@@ -259,7 +259,7 @@ exports.config = {
     // Default request retries count
     connectionRetryCount: 3,
 
-    port: 9515,
+    //port: 9515,
     //
     // Test runner services
     // Services take over a specific job you don't want to take care of. They enhance
