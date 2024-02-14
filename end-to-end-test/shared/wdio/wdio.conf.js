@@ -513,8 +513,6 @@ exports.config = {
      * @param {<Object>} results object containing test results
      */
     onComplete: function(exitCode, config, capabilities, results) {
-        const resultsDir = process.env.JUNIT_REPORT_PATH;
-
         mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
         //
         // //this is going to eliminate duplicate tests caused by retries
