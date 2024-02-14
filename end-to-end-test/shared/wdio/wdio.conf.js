@@ -166,7 +166,7 @@ exports.config = {
     //
     //
 
-    specs: ['./remote/specs/core/results.logic.spec.js'],
+    specs: [SPEC_FILE_PATTERN],
 
     //specs: ['./remote/specs/core/comparisonTab.screenshot.spec.js'],
 
@@ -259,7 +259,6 @@ exports.config = {
     // Default request retries count
     connectionRetryCount: 3,
 
-    //port: 9515,
     //
     // Test runner services
     // Services take over a specific job you don't want to take care of. They enhance
