@@ -293,9 +293,6 @@ export default class CopyNumberTableWrapper extends React.Component<
                     this.pageStore.cnaCivicVariants
                 );
             },
-            visible:
-                this.props.enableOncoKb &&
-                _.isEmpty(this.pageStore.cnaOncoKbData.result.indicatorMap),
             order: 50,
         });
 
@@ -493,11 +490,8 @@ export default class CopyNumberTableWrapper extends React.Component<
                                 }
                                 dataStore={this.props.dataStore}
                                 initialSortColumn={
-                                    AnnotationColumnFormatter.visible(
-                                        this.props
-                                    )
-                                        ? 'Annotation'
-                                        : this.props.customDriverName
+                                    getServerConfig()
+                                        .skin_patient_view_tables_default_sort_column
                                 }
                                 initialSortDirection="desc"
                                 initialItemsPerPage={10}

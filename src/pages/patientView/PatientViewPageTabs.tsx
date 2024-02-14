@@ -262,22 +262,6 @@ export function tabs(
                     }
                     columns={pageComponent.columns}
                     pageMode={pageComponent.patientViewPageStore.pageMode}
-                    customDriverName={
-                        getServerConfig()
-                            .oncoprint_custom_driver_annotation_binary_menu_label!
-                    }
-                    customDriverDescription={
-                        getServerConfig()
-                            .oncoprint_custom_driver_annotation_binary_menu_description!
-                    }
-                    customDriverTiersName={
-                        getServerConfig()
-                            .oncoprint_custom_driver_annotation_tiers_menu_label!
-                    }
-                    customDriverTiersDescription={
-                        getServerConfig()
-                            .oncoprint_custom_driver_annotation_tiers_menu_description!
-                    }
                     alleleFreqHeaderRender={
                         pageComponent.patientViewPageStore
                             .mergedMutationDataFilteredByGene.length > 0 &&

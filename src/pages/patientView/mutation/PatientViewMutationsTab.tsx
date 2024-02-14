@@ -367,11 +367,25 @@ export default class PatientViewMutationsTab extends React.Component<
                     }
                     namespaceColumns={this.dataStore.namespaceColumnConfig}
                     columns={this.columns}
-                    customDriverName={this.props.customDriverName}
-                    customDriverDescription={this.props.customDriverDescription}
-                    customDriverTiersName={this.props.customDriverTiersName}
+                    initialSortColumn={
+                        getServerConfig()
+                            .skin_patient_view_tables_default_sort_column
+                    }
+                    customDriverName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_label!
+                    }
+                    customDriverDescription={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_description!
+                    }
+                    customDriverTiersName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_label!
+                    }
                     customDriverTiersDescription={
-                        this.props.customDriverTiersDescription
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_description!
                     }
                 />
             </div>

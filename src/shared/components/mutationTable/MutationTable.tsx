@@ -1055,7 +1055,6 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
-            visible: AnnotationColumnFormatter.visible(this.props),
         };
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {

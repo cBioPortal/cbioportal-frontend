@@ -322,12 +322,6 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         this.props.store.uniqueSampleKeyToTumorType
                     );
                 },
-                visible:
-                    this.props.enableOncoKb &&
-                    _.isEmpty(
-                        this.props.store.structuralVariantOncoKbData.result
-                            .indicatorMap
-                    ),
                 order: 45,
             });
 
@@ -602,9 +596,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                     .result!
                             }
                             initialSortColumn={
-                                AnnotationColumnFormatter.visible(this.props)
-                                    ? 'Annotation'
-                                    : this.props.customDriverName
+                                getServerConfig()
+                                    .skin_patient_view_tables_default_sort_column
                             }
                             initialSortDirection="desc"
                             initialItemsPerPage={10}

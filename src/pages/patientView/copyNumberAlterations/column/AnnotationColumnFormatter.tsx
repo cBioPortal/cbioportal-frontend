@@ -315,16 +315,4 @@ export default class AnnotationColumnFormatter {
             />
         );
     }
-
-    public static visible(
-        props: Partial<ICopyNumberTableWrapperProps>
-    ): boolean {
-        return (
-            (props.enableOncoKb &&
-                _.isEmpty(
-                    props.pageStore!.cnaOncoKbData.result.indicatorMap
-                )) ||
-            false
-        );
-    }
 }

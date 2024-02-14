@@ -273,25 +273,14 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 namespaceColumns={this.props.store.namespaceColumnConfig}
                 columns={this.columns}
                 initialSortColumn={
-                    AnnotationColumnFormatter.visible(this.props)
-                        ? MutationTableColumnType.ANNOTATION
-                        : this.props.customDriverName
-                }
-                customDriverName={
                     getServerConfig()
-                        .oncoprint_custom_driver_annotation_binary_menu_label!
+                        .skin_results_view_tables_default_sort_column
                 }
-                customDriverDescription={
-                    getServerConfig()
-                        .oncoprint_custom_driver_annotation_binary_menu_description!
-                }
-                customDriverTiersName={
-                    getServerConfig()
-                        .oncoprint_custom_driver_annotation_tiers_menu_label!
-                }
+                customDriverName={this.props.customDriverName}
+                customDriverDescription={this.props.customDriverDescription}
+                customDriverTiersName={this.props.customDriverTiersName}
                 customDriverTiersDescription={
-                    getServerConfig()
-                        .oncoprint_custom_driver_annotation_tiers_menu_description!
+                    this.props.customDriverTiersDescription
                 }
             />
         );

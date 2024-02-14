@@ -238,16 +238,4 @@ export default class AnnotationColumnFormatter {
 
         return <GenericAnnotation {...columnProps} annotation={annotation} />;
     }
-
-    public static visible(
-        props: Partial<IStructuralVariantTableWrapperProps>
-    ): boolean {
-        return (
-            (props.enableOncoKb &&
-                _.isEmpty(
-                    props.store!.structuralVariantOncoKbData.result.indicatorMap
-                )) ||
-            false
-        );
-    }
 }

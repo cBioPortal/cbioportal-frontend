@@ -78,10 +78,6 @@ type IMutationTableWrapperProps = {
     columns: string[];
     alleleFreqHeaderRender?: ((name: string) => JSX.Element) | undefined;
     pageMode?: 'sample' | 'patient';
-    customDriverName?: string;
-    customDriverDescription?: string;
-    customDriverTiersName?: string;
-    customDriverTiersDescription?: string;
 };
 
 const ANNOTATION_ELEMENT_ID = 'mutation-annotation';
@@ -304,21 +300,24 @@ export default class MutationTableWrapper extends React.Component<
                                     this.props.alleleFreqHeaderRender
                                 }
                                 initialSortColumn={
-                                    AnnotationColumnFormatter.visible(
-                                        this.props
-                                    )
-                                        ? MutationTableColumnType.ANNOTATION
-                                        : this.props.customDriverName
+                                    getServerConfig()
+                                        .skin_patient_view_tables_default_sort_column
                                 }
-                                customDriverName={this.props.customDriverName}
+                                customDriverName={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_binary_menu_label!
+                                }
                                 customDriverDescription={
-                                    this.props.customDriverDescription
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_binary_menu_description!
                                 }
                                 customDriverTiersName={
-                                    this.props.customDriverTiersName
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_tiers_menu_label!
                                 }
                                 customDriverTiersDescription={
-                                    this.props.customDriverTiersDescription
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_tiers_menu_description!
                                 }
                             />
                         </FeatureInstruction>
