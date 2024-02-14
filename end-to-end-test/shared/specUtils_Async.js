@@ -1,6 +1,8 @@
 const clipboardy = require('clipboardy');
 const assertScreenShotMatch = require('./lib/testUtils').assertScreenShotMatch;
 
+const DEFAULT_TIMEOUT = 5000;
+
 function waitForStudyQueryPage(timeout) {
     $('div[data-test="cancerTypeListContainer"]').waitForExist({
         timeout: timeout || 10000,
@@ -524,12 +526,15 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
 }
 
 async function clickQueryByGeneButton() {
-    await $('.disabled[data-test=queryByGeneButton]').waitForExist({
+    const el = await $('.disabled[data-test=queryByGeneButton]');
+    await el.waitForExist({
         reverse: true,
     });
     //const el = await getElementByTestHandle('queryByGeneButton');
     await clickElement('handle=queryByGeneButton');
-    $('body').scrollIntoView();
+
+    const body = await $('body');
+    await body.scrollIntoView();
 }
 
 function clickModifyStudySelectionButton() {
@@ -714,7 +719,7 @@ function selectClinicalTabPlotType(type) {
     ).click();
 }
 
-async function clickElement(selector, options = {}) {
+async function getElement(selector, options = {}) {
     let el;
 
     if (/^handle=/.test(selector)) {
@@ -722,6 +727,38 @@ async function clickElement(selector, options = {}) {
     } else {
         el = await $(selector);
     }
+
+    if (options.timeout) {
+        await el.waitForExist(options);
+    }
+    return el;
+}
+
+async function getText(selector, option) {
+    const el = await getElement(...arguments);
+    return await el.getText();
+}
+
+async function isSelected(selector, options) {
+    const el = await getElement(
+        selector,
+        options || { timeout: DEFAULT_TIMEOUT }
+    );
+    return await el.isSelected();
+}
+
+async function isUnselected(selector, options) {
+    return (await isSelected(...arguments)) === false;
+}
+
+async function clickElement(selector, options = {}) {
+    let el = await getElement(selector);
+    //
+    // if (/^handle=/.test(selector)) {
+    //     el = await getElementByTestHandle(selector.replace(/^handle=/, ''));
+    // } else {
+    //     el = await $(selector);
+    // }
     await el.waitForDisplayed(options);
     await el.click();
 }
@@ -786,4 +823,8 @@ module.exports = {
     setServerConfiguration,
     selectClinicalTabPlotType,
     getElementByTestHandle,
+    getElement,
+    getText,
+    isSelected,
+    isUnselected,
 };

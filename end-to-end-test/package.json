@@ -4,7 +4,7 @@
   "description": "Dependencies for running tests with webdriverio and browserstack",
   "main": "index.js",
   "scripts": {
-    "test-webdriver-manager": "npx wdio ./shared/wdio/wdio.conf.js",
+    "test-webdriver-manager": "npx wdio  ./shared/wdio/wdio.conf.js",
     "test-webdriver-manager-local": "export TEST_TYPE=local && export MANAGER_MAX_INSTANCES=2 && yarn run test-webdriver-manager",
     "test-webdriver-manager-remote": "export TEST_TYPE=remote && yarn run test-webdriver-manager",
     "test-webdriver-manager-debug": "(DEBUG=true npx wdio ./shared/wdio/wdio.conf.js --inspect || bash shared/image-compare/upload_failed_screenshots.sh)",
@@ -15,7 +15,7 @@
   "author": "",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@wdio/cli": "7",
+    "@wdio/cli": "7.35",
     "@wdio/codemod": "^0.12.0",
     "@wdio/junit-reporter": "7",
     "@wdio/sync": "^7.27.0",
@@ -30,8 +30,7 @@
     "wdio-junit-reporter": "^0.3.1",
     "wdio-novus-visual-regression-service": "^1.2.4",
     "wdio-spec-reporter": "0.1.0",
-    "wdio-timeline-reporter": "^5.1.4",
-    "webdriverio": "7"
+    "wdio-timeline-reporter": "^5.1.4"
   },
   "devDependencies": {
     "@wdio/local-runner": "7",
