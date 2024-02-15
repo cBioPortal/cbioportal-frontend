@@ -5418,6 +5418,36 @@
       ],
       "type": "object"
     },
+    "MutationDataFilter": {
+      "properties": {
+        "categorization": {
+          "enum": [
+            "MUTATED",
+            "EVENT"
+          ],
+          "type": "string"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "items": {
+              "$ref": "#/definitions/DataFilterValue"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "categorization"
+      ],
+      "type": "object"
+    },
     "MutationFilter": {
       "description": "List of Sample IDs/Sample List ID and Entrez Gene IDs",
       "properties": {
@@ -5923,6 +5953,12 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "type": "array"
+        },
+        "mutationDataFilters": {
+          "items": {
+            "$ref": "#/definitions/MutationDataFilter"
           },
           "type": "array"
         },
