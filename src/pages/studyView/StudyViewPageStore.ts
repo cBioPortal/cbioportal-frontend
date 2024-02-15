@@ -40,8 +40,6 @@ import {
     GenericAssayData,
     GenericAssayDataBin,
     GenericAssayDataBinFilter,
-    GenericAssayDataCountFilter,
-    GenericAssayDataCountItem,
     GenericAssayDataFilter,
     GenericAssayDataMultipleStudyFilter,
     GenericAssayMeta,
@@ -156,11 +154,11 @@ import {
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
     invokeGenomicDataCount,
-    addColorToCategories,
     invokeMutationDataCount,
     invokeGenericAssayDataCount,
     getDefaultClinicalDataBinFilter,
     getCustomChartDownloadData,
+    generateColorMapKey,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -4505,6 +4503,63 @@ export class StudyViewPageStore
         this.changeChartVisibility(uniqueKey, false);
     }
 
+    public addColorToCategories(
+        counts: ClinicalDataCount[],
+        attributeId: string,
+        getDisplayedValue?: (value: string) => string,
+        getDisplayedColor?: (value: string) => string
+    ): ClinicalDataCountSummary[] {
+        return getClinicalDataCountWithColorByClinicalDataCount(counts).map(
+            item => {
+                if (getDisplayedValue) {
+                    item.displayedValue = getDisplayedValue(item.value);
+                }
+
+                if (getDisplayedColor) {
+                    return {
+                        ...item,
+                        color: getDisplayedColor(item.value),
+                    };
+                }
+
+                let colorMapKey = generateColorMapKey(attributeId, item.value);
+                // If the item doesn't has an assigned color
+                if (!this.chartItemToColor.has(colorMapKey)) {
+                    // If the color has not been used
+                    if (
+                        !this.chartToUsedColors
+                            .get(attributeId)
+                            ?.has(item.color)
+                    ) {
+                        this.chartItemToColor.set(colorMapKey, item.color);
+                        this.chartToUsedColors
+                            .get(attributeId)
+                            ?.add(item.color);
+                    } else {
+                        // Pick up a new color if the color has been used
+                        let d = {
+                            value: item.value,
+                            count: item.count,
+                        };
+                        let newColor = pickNewColorForClinicData(
+                            d,
+                            this.chartToUsedColors.get(attributeId) || new Set()
+                        );
+                        this.chartItemToColor.set(colorMapKey, newColor);
+                        this.chartToUsedColors.get(attributeId)?.add(newColor);
+                        item.color = newColor;
+                    }
+                    return item;
+                } else {
+                    return {
+                        ...item,
+                        color: this.chartItemToColor.get(colorMapKey)!,
+                    };
+                }
+            }
+        );
+    }
+
     public getClinicalDataCount(
         chartMeta: ChartMeta
     ): MobxPromise<ClinicalDataCountSummary[]> {
@@ -4585,7 +4640,7 @@ export class StudyViewPageStore
                         if (!this.chartToUsedColors.has(attributeId))
                             this.chartToUsedColors.set(attributeId, new Set());
                     }
-                    return addColorToCategories(counts, attributeId);
+                    return this.addColorToCategories(counts, attributeId);
                 },
                 onError: () => {},
                 default: [],
@@ -4660,7 +4715,7 @@ export class StudyViewPageStore
                         if (!this.chartToUsedColors.has(attributeId))
                             this.chartToUsedColors.set(attributeId, new Set());
                     }
-                    return addColorToCategories(counts, attributeId);
+                    return this.addColorToCategories(counts, attributeId);
                 },
                 onError: () => {},
                 default: [],
@@ -4812,10 +4867,25 @@ export class StudyViewPageStore
                         chartMeta.uniqueKey
                     );
                     if (chartInfo) {
-                        return invokeGenericAssayDataCount(
+                        let result = await invokeGenericAssayDataCount(
                             chartInfo,
                             this.filters
                         );
+                        if (_.isEmpty(result)) {
+                            return res;
+                        } else {
+                            if (!this.chartToUsedColors.has(result.stableId)) {
+                                this.chartToUsedColors.set(
+                                    result.stableId,
+                                    new Set()
+                                );
+                            }
+
+                            return this.addColorToCategories(
+                                result.counts,
+                                result.stableId
+                            );
+                        }
                     }
                     return res;
                 },
@@ -4842,7 +4912,16 @@ export class StudyViewPageStore
                     );
                     //only invoke if there are filtered samples
                     if (chartInfo && this.hasFilteredSamples) {
-                        return invokeGenomicDataCount(chartInfo, this.filters);
+                        let result = await invokeGenomicDataCount(
+                            chartInfo,
+                            this.filters
+                        );
+
+                        return this.addColorToCategories(
+                            result.counts,
+                            result.profileType,
+                            result.getDisplayedValue
+                        );
                     }
                     return res;
                 },
@@ -4883,10 +4962,6 @@ export class StudyViewPageStore
             });
         }
         return this.mutationDataCountPromises[chartMeta.uniqueKey];
-    }
-
-    private generateColorMapKey(id: string, value: string): string {
-        return `${id}.${value}`;
     }
 
     @autobind
@@ -9749,7 +9824,7 @@ export class StudyViewPageStore
                     {} as { [id: string]: ClinicalDataCount }
                 )
             );
-            return addColorToCategories(
+            return this.addColorToCategories(
                 counts,
                 SpecialChartsUniqueKeyEnum.CANCER_STUDIES
             );

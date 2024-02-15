@@ -4078,55 +4078,8 @@ export function getDefaultClinicalDataBinFilter(
     } as ClinicalDataBinFilter & { showNA?: boolean };
 }
 
-export function addColorToCategories(
-    counts: ClinicalDataCount[],
-    attributeId: string,
-    getDisplayedValue?: (value: string) => string,
-    getDisplayedColor?: (value: string) => string
-): ClinicalDataCountSummary[] {
-    return getClinicalDataCountWithColorByClinicalDataCount(counts).map(
-        item => {
-            if (getDisplayedValue) {
-                item.displayedValue = getDisplayedValue(item.value);
-            }
-
-            if (getDisplayedColor) {
-                return {
-                    ...item,
-                    color: getDisplayedColor(item.value),
-                };
-            }
-
-            let colorMapKey = this.generateColorMapKey(attributeId, item.value);
-            // If the item doesn't has an assigned color
-            if (!this.chartItemToColor.has(colorMapKey)) {
-                // If the color has not been used
-                if (!this.chartToUsedColors.get(attributeId)?.has(item.color)) {
-                    this.chartItemToColor.set(colorMapKey, item.color);
-                    this.chartToUsedColors.get(attributeId)?.add(item.color);
-                } else {
-                    // Pick up a new color if the color has been used
-                    let d = {
-                        value: item.value,
-                        count: item.count,
-                    };
-                    let newColor = pickNewColorForClinicData(
-                        d,
-                        this.chartToUsedColors.get(attributeId) || new Set()
-                    );
-                    this.chartItemToColor.set(colorMapKey, newColor);
-                    this.chartToUsedColors.get(attributeId)?.add(newColor);
-                    item.color = newColor;
-                }
-                return item;
-            } else {
-                return {
-                    ...item,
-                    color: this.chartItemToColor.get(colorMapKey)!,
-                };
-            }
-        }
-    );
+export function generateColorMapKey(id: string, value: string): string {
+    return `${id}.${value}`;
 }
 
 export async function invokeGenericAssayDataCount(
@@ -4158,12 +4111,9 @@ export async function invokeGenericAssayDataCount(
             } as ClinicalDataCount;
         });
         stableId = data.stableId;
-        if (!this.chartToUsedColors.has(stableId)) {
-            this.chartToUsedColors.set(stableId, new Set());
-        }
     }
 
-    return addColorToCategories(counts, stableId);
+    return { stableId: stableId, counts: counts };
 }
 
 export async function invokeGenomicDataCount(
@@ -4220,7 +4170,11 @@ export async function invokeGenomicDataCount(
         profileType = data.profileType;
     }
 
-    return this.addColorToCategories(counts, profileType, getDisplayedValue);
+    return {
+        counts: counts,
+        profileType: profileType,
+        getDisplayedValue: getDisplayedValue,
+    };
 }
 
 export async function invokeMutationDataCount(
@@ -4479,7 +4433,7 @@ export async function getMutatedGenesDownloadData(
             ];
             if (oncokbCancerGeneFilterEnabled) {
                 rowData.push(
-                    this.oncokbCancerGeneFilterEnabled
+                    oncokbCancerGeneFilterEnabled
                         ? record.isCancerGene
                             ? 'Yes'
                             : 'No'
