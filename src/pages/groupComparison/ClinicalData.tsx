@@ -807,7 +807,11 @@ export default class ClinicalData extends React.Component<
         if (this.tableDataStore.allData.length === 0 || !this.highlightedRow) {
             return <span></span>;
         }
-        const promises = [this.horzAxisDataPromise, this.vertAxisDataPromise];
+        const promises = [
+            this.horzAxisDataPromise,
+            this.vertAxisDataPromise,
+            this.props.store.uidToGroup,
+        ];
         const groupStatus = getRemoteDataGroupStatus(...promises);
         const isPercentage =
             this.categoryPlotType === CategoryPlotType.PercentageStackedBar;
