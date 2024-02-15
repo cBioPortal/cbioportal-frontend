@@ -655,10 +655,14 @@ export class QueryStore {
     readonly cancerStudyTags = remoteData({
         await: () => [this.cancerStudies],
         invoke: async () => {
-            const studyIds = this.cancerStudies.result
-                .filter(s => s.readPermission)
-                .map(s => s.studyId);
-            return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+            if (getServerConfig().enable_study_tags) {
+                const studyIds = this.cancerStudies.result
+                    .filter(s => s.readPermission)
+                    .map(s => s.studyId);
+                return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+            } else {
+                return [];
+            }
         },
         default: [],
     });

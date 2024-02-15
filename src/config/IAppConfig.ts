@@ -181,4 +181,5 @@ export interface IServerConfig {
     vaf_sequential_mode_default: boolean; // this has a default
     vaf_log_scale_default: boolean; // this has a default
     skin_study_view_show_sv_table: boolean; // this has a default
+    enable_study_tags: boolean;
 }

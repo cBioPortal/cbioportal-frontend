@@ -127,6 +127,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     session_url_length_threshold: '1500',
 
+    enable_study_tags: true,
+
     study_view: {
         tableAttrs: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
         priority: {
