@@ -3,14 +3,15 @@ import { ResultsViewPathwaysSubTab } from 'pages/resultsView/ResultsViewPageHelp
 import { getServerConfig } from 'config/config';
 import ResultsViewPathwayMapper from 'pages/resultsView/pathwayMapper/ResultsViewPathwayMapper';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
-import React, { useEffect } from 'react';
+import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { AppStore } from 'AppStore';
 import { useLocalObservable } from 'mobx-react-lite';
-import { runInAction } from 'mobx';
+import { runInAction, autorun } from 'mobx';
 import request from 'superagent';
+import { remoteData } from 'cbioportal-frontend-commons';
 
 interface IPathwayMapperContainerProps {
     resultsViewPageStore: ResultsViewPageStore;
@@ -30,6 +31,44 @@ interface ApiResponse {
     results: ResultItem[];
 }
 
+function makeRemoteData() {
+    return remoteData<DatabaseItem[]>({
+        await: () => [],
+        invoke: async () => {
+            try {
+                const getResponse = await request
+                    .get(
+                        'https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/source'
+                    )
+                    .query({
+                        param1: 'value1',
+                        param2: 'value2',
+                        param3: 'value3',
+                    })
+                    .set('Accept', 'application/json')
+                    .timeout(60000)
+                    .redirects(0);
+                const jsonData: ApiResponse = getResponse.body;
+                const extractedData: DatabaseItem[] = jsonData.results[0].databases.map(
+                    result => ({
+                        name: result.name,
+                        numberOfNetworks: parseInt(
+                            result.numberOfNetworks,
+                            10
+                        ).toString(),
+                        url: result.url,
+                    })
+                );
+                return extractedData;
+            } catch (error) {
+                console.error('Error fetching tooltip content:', error);
+                return [];
+            }
+        },
+        default: [],
+    });
+}
+
 const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerProps> = observer(
     function({
         resultsViewPageStore,
@@ -42,48 +81,17 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                 ResultsViewPathwaysSubTab.PATHWAY_MAPPER,
             tooltipContent: null as DatabaseItem[] | null,
             isFetchingTooltip: false,
+            tooltipData: makeRemoteData(),
         }));
 
-        useEffect(() => {
-            // Load tooltip content using MobX actions
-            const fetchTooltipContent = async () => {
+        autorun(() => {
+            if (store.tooltipData.isComplete) {
                 runInAction(() => {
-                    store.isFetchingTooltip = true;
+                    store.tooltipContent = store.tooltipData.result;
+                    store.isFetchingTooltip = false;
                 });
-
-                try {
-                    const getResponse = await request
-                        .get(
-                            'https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/source'
-                        )
-                        .query({ param1: 'value1', param2: 'value2' })
-                        .set('Accept', 'application/json')
-                        .timeout(60000);
-                    const jsonData: ApiResponse = getResponse.body;
-                    const extractedData: DatabaseItem[] = jsonData.results[0].databases.map(
-                        result => ({
-                            name: result.name,
-                            numberOfNetworks: parseInt(
-                                result.numberOfNetworks,
-                                10
-                            ).toString(),
-                            url: result.url,
-                        })
-                    );
-                    runInAction(() => {
-                        store.tooltipContent = extractedData;
-                        store.isFetchingTooltip = false;
-                    });
-                } catch (error) {
-                    console.error('Error fetching tooltip content:', error);
-                    runInAction(() => {
-                        store.isFetchingTooltip = false;
-                    });
-                }
-            };
-
-            fetchTooltipContent();
-        }, []);
+            }
+        });
 
         return (
             <>
@@ -222,26 +230,34 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                                     NDEx
                                 </a>{' '}
                                 shows 1,352 pathways:
-                                {store.tooltipContent ? (
-                                    <ul>
-                                        {store.tooltipContent.map(
-                                            (item, index) => (
-                                                <li key={index}>
-                                                    {item.numberOfNetworks} from{' '}
-                                                    <a
-                                                        href={item.url}
-                                                        target="_blank"
-                                                    >
-                                                        {item.name}
-                                                    </a>
-                                                </li>
-                                            )
-                                        )}
-                                    </ul>
-                                ) : store.isFetchingTooltip ? (
-                                    'Loading tooltip content...'
+                                {store.tooltipData.isPending ? (
+                                    <div>Loading tooltip content...</div>
                                 ) : (
-                                    'No tooltip content available.'
+                                    <div>
+                                        {store.tooltipData.result && (
+                                            <ul>
+                                                {store.tooltipData.result.map(
+                                                    (
+                                                        item: DatabaseItem,
+                                                        index: number
+                                                    ) => (
+                                                        <li key={index}>
+                                                            {
+                                                                item.numberOfNetworks
+                                                            }{' '}
+                                                            from{' '}
+                                                            <a
+                                                                href={item.url}
+                                                                target="_blank"
+                                                            >
+                                                                {item.name}
+                                                            </a>
+                                                        </li>
+                                                    )
+                                                )}
+                                            </ul>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         }
@@ -251,7 +267,7 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                             !resultsViewPageStore.remoteNdexUrl.result
                         }
                     >
-                        {store.tooltipContent && (
+                        {store.tooltipData && (
                             <IFrameLoader
                                 height={800}
                                 url={`${resultsViewPageStore.remoteNdexUrl.result}`}
