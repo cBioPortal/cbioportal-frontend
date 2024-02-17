@@ -35,39 +35,78 @@ function makeRemoteData() {
     return remoteData<DatabaseItem[]>({
         await: () => [],
         invoke: async () => {
-            try {
-                const getResponse = await request
-                    .get(
-                        'https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/source'
-                    )
-                    .query({
-                        param1: 'value1',
-                        param2: 'value2',
-                        param3: 'value3',
-                    })
-                    .set('Accept', 'application/json')
-                    .timeout(60000)
-                    .redirects(0);
-                const jsonData: ApiResponse = getResponse.body;
-                const extractedData: DatabaseItem[] = jsonData.results[0].databases.map(
-                    result => ({
-                        name: result.name,
-                        numberOfNetworks: parseInt(
-                            result.numberOfNetworks,
-                            10
-                        ).toString(),
-                        url: result.url,
-                    })
-                );
-                return extractedData;
-            } catch (error) {
-                console.error('Error fetching tooltip content:', error);
-                return [];
-            }
+            const getResponse = await request
+                .get(
+                    'https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/source'
+                )
+                .query({
+                    param1: 'value1',
+                    param2: 'value2',
+                    param3: 'value3',
+                })
+                .set('Accept', 'application/json')
+                .timeout(60000)
+                .redirects(0);
+
+            const jsonData: ApiResponse = getResponse.body;
+            const extractedData: DatabaseItem[] = jsonData.results[0]?.databases.map(
+                result => ({
+                    name: result.name,
+                    numberOfNetworks: parseInt(
+                        result.numberOfNetworks,
+                        10
+                    ).toString(),
+                    url: result.url,
+                })
+            );
+            return extractedData;
         },
         default: [],
     });
 }
+
+const TooltipContent: React.FC = observer(() => {
+    const store = useLocalObservable(() => ({
+        tooltipContent: null as DatabaseItem[] | null,
+        isFetchingTooltip: false,
+        tooltipData: makeRemoteData(),
+    }));
+
+    return (
+        <div style={{ maxWidth: 400 }}>
+            <a href="https://www.ndexbio.org/" target="_blank">
+                NDEx
+            </a>{' '}
+            shows 1,352 pathways:
+            {store.tooltipData.isPending ? (
+                <div>Loading tooltip content...</div>
+            ) : (
+                <div>
+                    {store.tooltipData.result && (
+                        <ul>
+                            {store.tooltipData.result.map(
+                                (item: DatabaseItem, index: number) => (
+                                    <li key={index}>
+                                        {item.numberOfNetworks} from{' '}
+                                        <a
+                                            href={`https://www.${item.url}`}
+                                            target="_blank"
+                                        >
+                                            {item.name}
+                                        </a>
+                                    </li>
+                                )
+                            )}
+                        </ul>
+                    )}
+                    {store.tooltipData.isError && (
+                        <div>Error: Failed to load tooltip content.</div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+});
 
 const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerProps> = observer(
     function({
@@ -79,19 +118,7 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
             activeTab:
                 urlWrapper.query.pathways_source ||
                 ResultsViewPathwaysSubTab.PATHWAY_MAPPER,
-            tooltipContent: null as DatabaseItem[] | null,
-            isFetchingTooltip: false,
-            tooltipData: makeRemoteData(),
         }));
-
-        autorun(() => {
-            if (store.tooltipData.isComplete) {
-                runInAction(() => {
-                    store.tooltipContent = store.tooltipData.result;
-                    store.isFetchingTooltip = false;
-                });
-            }
-        });
 
         return (
             <>
@@ -221,58 +248,17 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                         key={ResultsViewPathwaysSubTab.NDEX}
                         id={ResultsViewPathwaysSubTab.NDEX}
                         linkText={ResultsViewPathwaysSubTab.NDEX}
-                        linkTooltip={
-                            <div style={{ maxWidth: 400 }}>
-                                <a
-                                    href="https://www.ndexbio.org/"
-                                    target="_blank"
-                                >
-                                    NDEx
-                                </a>{' '}
-                                shows 1,352 pathways:
-                                {store.tooltipData.isPending ? (
-                                    <div>Loading tooltip content...</div>
-                                ) : (
-                                    <div>
-                                        {store.tooltipData.result && (
-                                            <ul>
-                                                {store.tooltipData.result.map(
-                                                    (
-                                                        item: DatabaseItem,
-                                                        index: number
-                                                    ) => (
-                                                        <li key={index}>
-                                                            {
-                                                                item.numberOfNetworks
-                                                            }{' '}
-                                                            from{' '}
-                                                            <a
-                                                                href={item.url}
-                                                                target="_blank"
-                                                            >
-                                                                {item.name}
-                                                            </a>
-                                                        </li>
-                                                    )
-                                                )}
-                                            </ul>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        }
+                        linkTooltip={<TooltipContent />}
                         hide={
                             !getServerConfig().show_ndex ||
                             !resultsViewPageStore.remoteNdexUrl.isComplete ||
                             !resultsViewPageStore.remoteNdexUrl.result
                         }
                     >
-                        {store.tooltipData && (
-                            <IFrameLoader
-                                height={800}
-                                url={`${resultsViewPageStore.remoteNdexUrl.result}`}
-                            />
-                        )}
+                        <IFrameLoader
+                            height={800}
+                            url={`${resultsViewPageStore.remoteNdexUrl.result}`}
+                        />
                     </MSKTab>
                 </MSKTabs>
             </>
