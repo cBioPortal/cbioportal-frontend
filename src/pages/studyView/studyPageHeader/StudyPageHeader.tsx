@@ -95,8 +95,8 @@ export default class StudyPageHeader extends React.Component<
                         updateGenomicDataFilter={
                             this.props.store.updateGenomicDataFiltersByValues
                         }
-                        updateMutationDataFilter={
-                            this.props.store.updateMutationDataFilters
+                        removeMutationDataFilter={
+                            this.props.store.removeMutationDataFilter
                         }
                         updateGenericAssayDataFilter={
                             this.props.store

@@ -3121,6 +3121,37 @@ export class StudyViewPageStore
     }
 
     @action.bound
+    removeMutationDataFilter(
+        uniqueKey: string,
+        toBeRemoved: string,
+    ): void {
+        const dataFilterValues = toJS(this._mutationDataFilterSet.get(uniqueKey)!.values);
+        
+        const newDataFilterValues = _.reduce(dataFilterValues, (acc, next: DataFilterValue[]) => {
+            const newGroup = next.filter(dataFilterValue => dataFilterValue.value !== toBeRemoved);
+            if (newGroup.length > 0) {
+                acc.push(newGroup);
+            }
+
+            return acc;
+        }, [] as DataFilterValue[][]);
+
+        if (newDataFilterValues.length === 0) {
+            this._mutationDataFilterSet.delete(uniqueKey);
+        } else {
+            const chart = this._geneSpecificChartMap.get(uniqueKey);
+            const newMutationDataFilter: MutationDataFilter = {
+                hugoGeneSymbol: chart!.hugoGeneSymbol,
+                profileType: chart!.profileType,
+                values: newDataFilterValues,
+                categorization: chart!.mutationOptionType!,
+            };
+            
+            this._mutationDataFilterSet.set(uniqueKey, newMutationDataFilter);
+        }
+    }
+
+    @action.bound
     updateGenericAssayDataFilters(
         uniqueKey: string,
         dataBins: Pick<GenericAssayDataBin, 'start' | 'end' | 'specialValue'>[]

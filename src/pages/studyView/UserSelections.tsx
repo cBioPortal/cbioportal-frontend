@@ -77,7 +77,7 @@ export interface IUserSelectionsProps {
         uniqueKey: string,
         values: DataFilterValue[]
     ) => void;
-    updateMutationDataFilter: (uniqueKey: string, values: string[][]) => void;
+    removeMutationDataFilter: (uniqueKey: string, value: string) => void;
     updateGenericAssayDataFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
@@ -309,7 +309,6 @@ export default class UserSelections extends React.Component<
                                     components={[
                                         this.groupedMutationDataFilters(
                                             dataFilterValues,
-                                            this.props.updateMutationDataFilter,
                                             chartMeta
                                         ),
                                     ]}
@@ -1029,7 +1028,6 @@ export default class UserSelections extends React.Component<
 
     private groupedMutationDataFilters(
         dataFilterValues: DataFilterValue[],
-        onDelete: (chartUniqueKey: string, values: string[][]) => void,
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element {
         return (
@@ -1043,16 +1041,7 @@ export default class UserSelections extends React.Component<
                                     .clinicalFilterContent
                             }
                             onDelete={() =>
-                                onDelete(chartMeta.uniqueKey, [
-                                    _.remove(
-                                        dataFilterValues,
-                                        value =>
-                                            value.value !==
-                                            dataFilterValue.value
-                                    ).map(
-                                        dataFilterValue => dataFilterValue.value
-                                    ),
-                                ])
+                                this.props.removeMutationDataFilter(chartMeta.uniqueKey, dataFilterValue.value)
                             }
                             store={this.props.store}
                         />
