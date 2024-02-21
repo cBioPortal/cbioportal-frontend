@@ -705,26 +705,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 ]
                             }
                             selectedRowsKeys={this.selectedRowsKeys}
-                            onGeneSelect={this.props.onGeneSelect}
-                            selectedGenes={this.props.selectedGenes}
-                            genePanelCache={this.props.genePanelCache}
-                            cancerGeneFilterEnabled={
-                                this.props.cancerGeneFilterEnabled
-                            }
-                            filterByCancerGenes={
-                                this.props.filterByCancerGenes!
-                            }
                             onChangeCancerGeneFilter={
                                 this.props.onChangeCancerGeneFilter!
                             }
-                            alterationFilterEnabled={
-                                this.props.alterationFilterEnabled
-                            }
-                            filterAlterations={this.props.filterAlterations}
                             columns={[
                                 {
                                     columnKey:
-                                        MultiSelectionTableColumnKey.MUTATION_EVENT,
+                                        MultiSelectionTableColumnKey.MUTATION_TYPE,
                                 },
                                 {
                                     columnKey:

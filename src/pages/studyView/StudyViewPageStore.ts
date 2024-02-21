@@ -3091,6 +3091,36 @@ export class StudyViewPageStore
     }
 
     @action.bound
+    addMutationDataFilters(
+        uniqueKey: string,
+        valueArrays: string[][]
+    ): void {
+        trackStudyViewFilterEvent('mutationCategoricalData', this);
+
+        let dataFilterValues: DataFilterValue[][] = valueArrays.map(
+            valueArray =>
+                valueArray.map(value => {
+                    return { value: value } as DataFilterValue;
+                })
+        );
+
+        if (this._mutationDataFilterSet.has(uniqueKey)) {
+            const values = toJS(this._mutationDataFilterSet.get(uniqueKey)!.values);
+
+            dataFilterValues = values.concat(dataFilterValues);
+        }
+
+        const chart = this._geneSpecificChartMap.get(uniqueKey);
+        const mutationDataFilter: MutationDataFilter = {
+            hugoGeneSymbol: chart!.hugoGeneSymbol,
+            profileType: chart!.profileType,
+            values: dataFilterValues,
+            categorization: chart!.mutationOptionType!,
+        };
+        this._mutationDataFilterSet.set(uniqueKey, mutationDataFilter);
+    }
+
+    @action.bound
     updateGenericAssayDataFilters(
         uniqueKey: string,
         dataBins: Pick<GenericAssayDataBin, 'start' | 'end' | 'specialValue'>[]

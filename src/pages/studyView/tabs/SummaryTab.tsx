@@ -154,11 +154,20 @@ export class StudySummaryTab extends React.Component<
                     values
                 );
             },
-            onMutationDataValueSelection: (
+            onSetMutationDataValues: (
                 chartMeta: ChartMeta,
                 values: string[][]
             ) => {
                 this.store.updateMutationDataFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
+            onAddMutationDataValues: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.addMutationDataFilters(
                     chartMeta.uniqueKey,
                     values
                 );
@@ -450,11 +459,9 @@ export class StudySummaryTab extends React.Component<
                     chartMeta.uniqueKey
                 ),
                 promise: this.store.getMutationEventChartDataCount(chartMeta),
-                onValueSelection: this.handlers.onMutationDataValueSelection,
-                onResetSelection: this.handlers.onMutationDataValueSelection,
-                selectedGenes: this.store.selectedGenes,
-                onGeneSelect: this.store.onCheckGene,
-                id: 'mutation-event-counts-table',
+                onValueSelection: this.handlers.onAddMutationDataValues,
+                onResetSelection: this.handlers.onSetMutationDataValues,
+                id: 'mutation-type-counts-table',
                 title: this.store.getChartTitle(
                     ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE,
                     props.title
@@ -463,15 +470,9 @@ export class StudySummaryTab extends React.Component<
                     getMutationTypesDownloadData(
                         this.store.getMutationEventChartDataCount(chartMeta)
                     ),
-                genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
-                filterByCancerGenes: this.store
-                    .filterMutatedGenesTableByCancerGenes,
                 onChangeCancerGeneFilter: this.store
                     .updateMutatedGenesTableByCancerGenesFilter,
-                alterationFilterEnabled: getServerConfig()
-                    .skin_show_settings_menu,
-                filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
             [ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE]: () => ({
                 filters: this.store.getGeneFiltersByUniqueKey(
