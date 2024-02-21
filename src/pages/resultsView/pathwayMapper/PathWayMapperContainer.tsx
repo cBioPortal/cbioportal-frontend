@@ -65,6 +65,13 @@ const TooltipContent: React.FC = observer(() => {
         tooltipContent: null as DatabaseItem[] | null,
         tooltipData: makeRemoteData(),
     }));
+    const formatUrl = (url: string) => {
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        } else {
+            return 'http://' + url;
+        }
+    };
 
     return (
         <div style={{ maxWidth: 400 }}>
@@ -83,7 +90,7 @@ const TooltipContent: React.FC = observer(() => {
                                     <li key={index}>
                                         {item.numberOfNetworks} from{' '}
                                         <a
-                                            href={`https://${item.url}`}
+                                            href={formatUrl(item.url)}
                                             target="_blank"
                                         >
                                             {item.name}
