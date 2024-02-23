@@ -79,10 +79,12 @@ export class TherapyRecommendationFormAlterationInput extends React.Component<
                 mutation.referenceAllele +
                 ',' +
                 mutation.variantAllele;
-            const annotation = this.props.indexedVariantAnnotations![index];
-            const myVariantInfo = this.props.indexedMyVariantInfoAnnotations![
-                index
-            ];
+            const annotation = this.props.indexedVariantAnnotations
+                ? this.props.indexedVariantAnnotations[index]
+                : undefined;
+            const myVariantInfo = this.props.indexedMyVariantInfoAnnotations
+                ? this.props.indexedMyVariantInfoAnnotations[index]
+                : undefined;
             let dbsnp;
             let clinvar;
             let cosmic;
