@@ -845,7 +845,10 @@ export default class StudyViewPage extends React.Component<
                                                 this.store.allHugoGeneSymbols
                                                     .result
                                             }
-                                            selectedGenericAssayEntitiesGroupByMolecularProfileId={{}}
+                                            selectedGenericAssayEntitiesGroupByMolecularProfileId={
+                                                this.store
+                                                    .selectedGenericAssayEntitiesGroupByMolecularProfileId
+                                            }
                                             molecularProfileIdToMolecularProfile={
                                                 this.store
                                                     .molecularProfileIdToMolecularProfile

@@ -160,6 +160,7 @@ import { DriverAnnotationSettings } from 'shared/alterationFiltering/AnnotationF
 import StudyViewURLWrapper from 'pages/studyView/StudyViewURLWrapper';
 import { StudyViewURLQuery } from 'pages/studyView/StudyViewPageStore';
 import { fetchGenes } from 'shared/lib/StoreUtils';
+import { Else, If, Then } from 'react-if';
 
 enum EventKey {
     horz_logScale,
@@ -1988,16 +1989,25 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly horzGeneOptions = remoteData<{ value: number; label: string }[]>({
         await: () => [this.props.genes],
         invoke: () => {
-            return Promise.resolve(
-                this.props.genes
-                    .result!.map(gene => ({
+            if (this.props.hasNoQueriedGenes) {
+                return Promise.resolve(
+                    this.props.genes
+                        .result!.map(gene => ({
+                            value: gene.entrezGeneId,
+                            label: gene.hugoGeneSymbol,
+                        }))
+                        .sort((a, b) => {
+                            return a.label < b.label ? -1 : 1;
+                        })
+                );
+            } else {
+                return Promise.resolve(
+                    this.props.genes.result!.map(gene => ({
                         value: gene.entrezGeneId,
                         label: gene.hugoGeneSymbol,
                     }))
-                    .sort((a, b) => {
-                        return a.label < b.label ? -1 : 1;
-                    })
-            );
+                );
+            }
         },
     });
 
@@ -3708,18 +3718,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             ? this.vertAxisCategories
             : this.horzAxisCategories;
 
-        const loadOptions = async (inputText: string, callback: any) => {
-            if (!inputText) {
-                callback([]);
-            }
-            const stringCompare = (item: any) =>
-                item.label.startsWith(inputText.toUpperCase());
-            let options =
-                (vertical
-                    ? this.vertGeneOptions.result
-                    : this.horzGeneOptions.result) || [];
-            options = options.filter(stringCompare).slice(0, 10);
-            if (this.props.hasNoQueriedGenes) {
+        let optionsWithProfiledStatus, loadOptions;
+        if (this.props.hasNoQueriedGenes) {
+            loadOptions = async (inputText: string, callback: any) => {
+                if (!inputText) {
+                    callback([]);
+                }
+                const stringCompare = (item: any) =>
+                    item.label.startsWith(inputText.toUpperCase());
+                let options =
+                    (vertical
+                        ? this.vertGeneOptions.result
+                        : this.horzGeneOptions.result) || [];
+                options = options.filter(stringCompare).slice(0, 10);
                 const genes = await fetchGenes(options.map(o => o.label));
                 const coverageInformationPromise = getCoverageInformation(
                     this.props.genePanelDataForAllProfiles!,
@@ -3738,16 +3749,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         ? g.label
                         : g.label + ' (Not profiled)',
                 }));
-            } else {
-                options = options.map(g => ({
-                    value: g.value,
-                    label: this.isGeneProfiled(g.label)
-                        ? g.label
-                        : g.label + ' (Not profiled)',
-                }));
-            }
-            callback(options);
-        };
+                callback(options);
+            };
+        } else {
+            let options =
+                (vertical
+                    ? this.vertGeneOptions.result
+                    : this.horzGeneOptions.result) || [];
+            optionsWithProfiledStatus = options.map(g => ({
+                value: g.value,
+                label: this.isGeneProfiled(g.label)
+                    ? g.label
+                    : g.label + ' (Not profiled)',
+            }));
+        }
 
         return (
             <form className="main-form">
@@ -3917,38 +3932,82 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             >
                                 <label>Gene</label>
                                 <div className="Select">
-                                    <AsyncSelect
-                                        name={`${
-                                            vertical ? 'v' : 'h'
-                                        }-gene-selector`}
-                                        value={
-                                            axisSelection.selectedGeneOption
-                                                ? axisSelection.selectedGeneOption
-                                                : undefined
-                                        }
-                                        onChange={
-                                            vertical
-                                                ? this.onVerticalAxisGeneSelect
-                                                : this
-                                                      .onHorizontalAxisGeneSelect
-                                        }
-                                        isLoading={
-                                            this.horzGeneOptions.isPending
-                                        }
-                                        noOptionsMessage={() =>
-                                            'Search for gene'
-                                        }
-                                        clearable={false}
-                                        searchable={false}
-                                        disabled={
-                                            axisSelection.dataType ===
-                                                CLIN_ATTR_DATA_TYPE ||
-                                            axisSelection.dataType ===
-                                                GENESET_DATA_TYPE
-                                        }
-                                        loadOptions={loadOptions}
-                                        cacheOptions={true}
-                                    />
+                                    <If
+                                        condition={this.props.hasNoQueriedGenes}
+                                    >
+                                        <Then>
+                                            <AsyncSelect
+                                                name={`${
+                                                    vertical ? 'v' : 'h'
+                                                }-gene-selector`}
+                                                value={
+                                                    axisSelection.selectedGeneOption
+                                                        ? axisSelection.selectedGeneOption
+                                                        : undefined
+                                                }
+                                                onChange={
+                                                    vertical
+                                                        ? this
+                                                              .onVerticalAxisGeneSelect
+                                                        : this
+                                                              .onHorizontalAxisGeneSelect
+                                                }
+                                                isLoading={
+                                                    this.horzGeneOptions
+                                                        .isPending
+                                                }
+                                                noOptionsMessage={() =>
+                                                    'Search for gene'
+                                                }
+                                                clearable={false}
+                                                searchable={false}
+                                                disabled={
+                                                    axisSelection.dataType ===
+                                                        CLIN_ATTR_DATA_TYPE ||
+                                                    axisSelection.dataType ===
+                                                        GENESET_DATA_TYPE
+                                                }
+                                                loadOptions={loadOptions}
+                                                cacheOptions={true}
+                                            />
+                                        </Then>
+                                        <Else>
+                                            <ReactSelect
+                                                name={`${
+                                                    vertical ? 'v' : 'h'
+                                                }-gene-selector`}
+                                                value={
+                                                    axisSelection.selectedGeneOption
+                                                        ? axisSelection
+                                                              .selectedGeneOption
+                                                              .value
+                                                        : undefined
+                                                }
+                                                onChange={
+                                                    vertical
+                                                        ? this
+                                                              .onVerticalAxisGeneSelect
+                                                        : this
+                                                              .onHorizontalAxisGeneSelect
+                                                }
+                                                isLoading={
+                                                    this.horzGeneOptions
+                                                        .isPending
+                                                }
+                                                options={
+                                                    optionsWithProfiledStatus
+                                                }
+                                                clearable={false}
+                                                searchable={false}
+                                                disabled={
+                                                    axisSelection.dataType ===
+                                                        CLIN_ATTR_DATA_TYPE ||
+                                                    axisSelection.dataType ===
+                                                        GENESET_DATA_TYPE
+                                                }
+                                            />
+                                        </Else>
+                                    </If>
                                 </div>
                             </div>
                         )}

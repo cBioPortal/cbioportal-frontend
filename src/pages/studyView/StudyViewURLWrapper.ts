@@ -52,6 +52,8 @@ export default class StudyViewURLWrapper extends URLWrapper<
         | 'plots_horz_selection'
         | 'plots_vert_selection'
         | 'plots_coloring_selection'
+        | 'geneset_list'
+        | 'generic_assay_groups'
     >
 > {
     constructor(routing: ExtendedRouterStore) {
@@ -70,6 +72,8 @@ export default class StudyViewURLWrapper extends URLWrapper<
                 isSessionProp: false,
                 nestedObjectProps: PlotsColoringParamProps,
             },
+            geneset_list: { isSessionProp: true },
+            generic_assay_groups: { isSessionProp: false },
         });
         makeObservable(this);
     }

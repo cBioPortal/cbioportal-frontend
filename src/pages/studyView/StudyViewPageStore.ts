@@ -342,6 +342,7 @@ import {
     fetchPatients,
     getExtendsClinicalAttributesFromCustomData,
     getGeneAndProfileChunksForRequest,
+    parseGenericAssayGroups,
 } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import {
     parseSamplesSpecifications,
@@ -422,6 +423,8 @@ export type StudyViewURLQuery = {
     plots_horz_selection?: PlotsSelectionParam;
     plots_vert_selection?: PlotsSelectionParam;
     plots_coloring_selection?: PlotsColoringParam;
+    generic_assay_groups?: string;
+    geneset_list?: string;
 };
 
 export type XvsYScatterChart = {
@@ -11094,6 +11097,12 @@ export class StudyViewPageStore
         default: [],
     });
 
+    @computed get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
+        return parseGenericAssayGroups(
+            this.urlWrapper.query.generic_assay_groups || ''
+        );
+    }
+
     readonly molecularProfileIdSuffixToMolecularProfiles = remoteData<{
         [molecularProfileIdSuffix: string]: MolecularProfile[];
     }>(
@@ -11588,22 +11597,29 @@ export class StudyViewPageStore
         },
     });
 
+    readonly genesetCache = new GenesetCache();
+
+    @computed get genesetIds() {
+        return this.urlWrapper.query.geneset_list &&
+            this.urlWrapper.query.geneset_list.trim().length
+            ? this.urlWrapper.query.geneset_list.trim().split(/\s+/)
+            : [];
+    }
+
     readonly genesets = remoteData<Geneset[]>({
         invoke: () => {
-            // if (this.genesetIds && this.genesetIds.length > 0) {
-            //     return internalClient.fetchGenesetsUsingPOST({
-            //         genesetIds: this.genesetIds.slice(),
-            //     });
-            // } else {
-            return Promise.resolve([]);
-            // }
+            if (this.genesetIds && this.genesetIds.length > 0) {
+                return internalClient.fetchGenesetsUsingPOST({
+                    genesetIds: this.genesetIds.slice(),
+                });
+            } else {
+                return Promise.resolve([]);
+            }
         },
         onResult: (genesets: Geneset[]) => {
             this.genesetCache.addData(genesets);
         },
     });
-
-    readonly genesetCache = new GenesetCache();
 
     public structuralVariantCache = new MobxPromiseCache<
         { entrezGeneId: number },
