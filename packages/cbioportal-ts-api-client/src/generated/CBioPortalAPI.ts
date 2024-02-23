@@ -552,17 +552,6 @@ export type Mutation = {
         'variantType': string
 
 };
-export type MutationDataFilter = {
-    'categorization': "MUTATED" | "EVENT"
-
-        'hugoGeneSymbol': string
-
-        'profileType': string
-
-        'values': Array < Array < DataFilterValue >
-        >
-
-};
 export type MutationFilter = {
     'entrezGeneIds': Array < number >
 
