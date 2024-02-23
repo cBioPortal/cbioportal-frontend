@@ -38,8 +38,9 @@ const molecularProfileSubOptions = [
         profileType: AlterationTypeConstants.MUTATION_EXTENDED,
     },
     {
-        value: MutationOptionConstants.EVENT,
-        label: MutationOptionConstantsLabel[MutationOptionConstants.EVENT],
+        value: MutationOptionConstants.MUTATION_TYPE,
+        label:
+            MutationOptionConstantsLabel[MutationOptionConstants.MUTATION_TYPE],
         profileType: AlterationTypeConstants.MUTATION_EXTENDED,
     },
 ];

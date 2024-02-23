@@ -3091,10 +3091,7 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    addMutationDataFilters(
-        uniqueKey: string,
-        valueArrays: string[][]
-    ): void {
+    addMutationDataFilters(uniqueKey: string, valueArrays: string[][]): void {
         trackStudyViewFilterEvent('mutationCategoricalData', this);
 
         let dataFilterValues: DataFilterValue[][] = valueArrays.map(
@@ -3105,7 +3102,9 @@ export class StudyViewPageStore
         );
 
         if (this._mutationDataFilterSet.has(uniqueKey)) {
-            const values = toJS(this._mutationDataFilterSet.get(uniqueKey)!.values);
+            const values = toJS(
+                this._mutationDataFilterSet.get(uniqueKey)!.values
+            );
 
             dataFilterValues = values.concat(dataFilterValues);
         }
@@ -3121,20 +3120,25 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    removeMutationDataFilter(
-        uniqueKey: string,
-        toBeRemoved: string,
-    ): void {
-        const dataFilterValues = toJS(this._mutationDataFilterSet.get(uniqueKey)!.values);
-        
-        const newDataFilterValues = _.reduce(dataFilterValues, (acc, next: DataFilterValue[]) => {
-            const newGroup = next.filter(dataFilterValue => dataFilterValue.value !== toBeRemoved);
-            if (newGroup.length > 0) {
-                acc.push(newGroup);
-            }
+    removeMutationDataFilter(uniqueKey: string, toBeRemoved: string): void {
+        const dataFilterValues = toJS(
+            this._mutationDataFilterSet.get(uniqueKey)!.values
+        );
 
-            return acc;
-        }, [] as DataFilterValue[][]);
+        const newDataFilterValues = _.reduce(
+            dataFilterValues,
+            (acc, next: DataFilterValue[]) => {
+                const newGroup = next.filter(
+                    dataFilterValue => dataFilterValue.value !== toBeRemoved
+                );
+                if (newGroup.length > 0) {
+                    acc.push(newGroup);
+                }
+
+                return acc;
+            },
+            [] as DataFilterValue[][]
+        );
 
         if (newDataFilterValues.length === 0) {
             this._mutationDataFilterSet.delete(uniqueKey);
@@ -3146,7 +3150,7 @@ export class StudyViewPageStore
                 values: newDataFilterValues,
                 categorization: chart!.mutationOptionType!,
             };
-            
+
             this._mutationDataFilterSet.set(uniqueKey, newMutationDataFilter);
         }
     }
@@ -6308,7 +6312,7 @@ export class StudyViewPageStore
                 } else if (
                     newChart.mutationOptionType &&
                     newChart.mutationOptionType ===
-                        MutationOptionConstants.EVENT
+                        MutationOptionConstants.MUTATION_TYPE
                 ) {
                     this.chartsType.set(
                         uniqueKey,
@@ -7158,7 +7162,7 @@ export class StudyViewPageStore
                                       mutationOptionType:
                                           chartUserSettings.chartType ===
                                           ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE
-                                              ? MutationOptionConstants.EVENT
+                                              ? MutationOptionConstants.MUTATION_TYPE
                                               : MutationOptionConstants.MUTATED,
                                   }
                                 : {}),
