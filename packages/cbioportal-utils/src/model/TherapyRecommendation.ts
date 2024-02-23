@@ -38,7 +38,6 @@ export interface IMtb {
     geneticCounselingRecommendation: boolean;
     rebiopsyRecommendation: boolean;
     generalRecommendation: string;
-    diagnosis: string;
     date: string;
     mtbState: MtbState;
     samples: string[];

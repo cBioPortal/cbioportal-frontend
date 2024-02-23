@@ -484,7 +484,6 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             geneticCounselingRecommendation: false,
             rebiopsyRecommendation: false,
             therapyRecommendations: [],
-            diagnosis: '',
             date: now.toISOString().split('T')[0],
             mtbState: Object.keys(MtbState).find(
                 key =>
