@@ -317,6 +317,33 @@ export type CoExpressionFilter = {
         'sampleListId': string
 
 };
+export type ContentDisposition = {
+    'attachment': boolean
+
+        'charset': {
+        'registered': boolean
+
+    }
+
+        'creationDate': string
+
+        'filename': string
+
+        'formData': boolean
+
+        'inline': boolean
+
+        'modificationDate': string
+
+        'name': string
+
+        'readDate': string
+
+        'size': number
+
+        'type': string
+
+};
 export type CopyNumberCount = {
     'alteration': number
 
@@ -691,6 +718,8 @@ export type GenomicDataCount = {
 
         'label': string
 
+        'uniqueCount': number
+
         'value': string
 
 };
@@ -770,6 +799,45 @@ export type GroupStatistics = {
         'standardDeviation': number
 
 };
+export type HttpMethod = {};
+export type HttpRange = {};
+export type HttpStatusCode = {
+    'error': boolean
+
+        'is1xxInformational': boolean
+
+        'is2xxSuccessful': boolean
+
+        'is3xxRedirection': boolean
+
+        'is4xxClientError': boolean
+
+        'is5xxServerError': boolean
+
+};
+export type MediaType = {
+    'parameters': {}
+
+    'charset': {
+        'registered': boolean
+
+    }
+
+    'concrete': boolean
+
+        'qualityValue': number
+
+        'subtype': string
+
+        'subtypeSuffix': string
+
+        'type': string
+
+        'wildcardSubtype': boolean
+
+        'wildcardType': boolean
+
+};
 export type MolecularProfileCaseIdentifier = {
     'caseId': string
 
@@ -843,7 +911,7 @@ export type MutationDataFilter = {
 
         'categorization': string
         
-}
+};
 export type MutationPositionIdentifier = {
     'entrezGeneId': number
 
@@ -944,6 +1012,201 @@ export type ResourceDefinition = {
         'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
 
         'studyId': string
+
+};
+export type ResponseEntityListGenomicDataCountItem = {
+    'body': Array < GenomicDataCountItem >
+
+        'headers': {
+            'host': {
+                'address': {
+                    'address': Array < string >
+
+                        'anyLocalAddress': boolean
+
+                        'canonicalHostName': string
+
+                        'hostAddress': string
+
+                        'hostName': string
+
+                        'linkLocalAddress': boolean
+
+                        'loopbackAddress': boolean
+
+                        'mcglobal': boolean
+
+                        'mclinkLocal': boolean
+
+                        'mcnodeLocal': boolean
+
+                        'mcorgLocal': boolean
+
+                        'mcsiteLocal': boolean
+
+                        'multicastAddress': boolean
+
+                        'siteLocalAddress': boolean
+
+                }
+
+                'hostName': string
+
+                    'hostString': string
+
+                    'port': number
+
+                    'unresolved': boolean
+
+            }
+
+            'accept': Array < MediaType >
+
+                'acceptCharset': Array < {
+                    'registered': boolean
+
+                } >
+
+                'acceptLanguage': Array < {
+                    'range': string
+
+                        'weight': number
+
+                } >
+
+                'acceptLanguageAsLocales': Array < {
+                    'country': string
+
+                        'displayCountry': string
+
+                        'displayLanguage': string
+
+                        'displayName': string
+
+                        'displayScript': string
+
+                        'displayVariant': string
+
+                        'extensionKeys': Array < string >
+
+                        'iso3Country': string
+
+                        'iso3Language': string
+
+                        'language': string
+
+                        'script': string
+
+                        'unicodeLocaleAttributes': Array < string >
+
+                        'unicodeLocaleKeys': Array < string >
+
+                        'variant': string
+
+                } >
+
+                'acceptPatch': Array < MediaType >
+
+                'accessControlAllowCredentials': boolean
+
+                'accessControlAllowHeaders': Array < string >
+
+                'accessControlAllowMethods': Array < HttpMethod >
+
+                'accessControlAllowOrigin': string
+
+                'accessControlExposeHeaders': Array < string >
+
+                'accessControlMaxAge': number
+
+                'accessControlRequestHeaders': Array < string >
+
+                'accessControlRequestMethod': HttpMethod
+
+                'all': {}
+
+                'allow': Array < HttpMethod >
+
+                'basicAuth': string
+
+                'bearerAuth': string
+
+                'cacheControl': string
+
+                'connection': Array < string >
+
+                'contentDisposition': ContentDisposition
+
+                'contentLanguage': {
+                'country': string
+
+                    'displayCountry': string
+
+                    'displayLanguage': string
+
+                    'displayName': string
+
+                    'displayScript': string
+
+                    'displayVariant': string
+
+                    'extensionKeys': Array < string >
+
+                    'iso3Country': string
+
+                    'iso3Language': string
+
+                    'language': string
+
+                    'script': string
+
+                    'unicodeLocaleAttributes': Array < string >
+
+                    'unicodeLocaleKeys': Array < string >
+
+                    'variant': string
+
+            }
+
+                'contentLength': number
+
+                'contentType': MediaType
+
+                'date': number
+
+                'empty': boolean
+
+                'etag': string
+
+                'expires': number
+
+                'ifMatch': Array < string >
+
+                'ifModifiedSince': number
+
+                'ifNoneMatch': Array < string >
+
+                'ifUnmodifiedSince': number
+
+                'lastModified': number
+
+                'location': string
+
+                'origin': string
+
+                'pragma': string
+
+                'range': Array < HttpRange >
+
+                'upgrade': string
+
+                'vary': Array < string >
+
+        }
+
+        'statusCode': HttpStatusCode
+
+        'statusCodeValue': number
 
 };
 export type Sample = {
@@ -1149,7 +1412,7 @@ export type StudyViewFilter = {
         'genomicProfiles': Array < Array < string >
         >
 
-        'mutationDataFilters': Array < MutationDataFilter>
+        'mutationDataFilters': Array < MutationDataFilter >
 
         'patientTreatmentFilters': AndedPatientTreatmentFilters
 
@@ -5359,6 +5622,89 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchMutationDataCountsUsingPOSTURL(parameters: {
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genomicDataCountFilter' ? : GenomicDataCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/mutation-data-counts/fetch';
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch mutation data counts by GenomicDataCountFilter
+     * @method
+     * @name CBioPortalAPIInternal#fetchMutationDataCountsUsingPOST
+     * @param {string} projection - Level of detail of the response
+     * @param {} genomicDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchMutationDataCountsUsingPOSTWithHttpInfo(parameters: {
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genomicDataCountFilter' ? : GenomicDataCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/mutation-data-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['genomicDataCountFilter'] !== undefined) {
+                body = parameters['genomicDataCountFilter'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch mutation data counts by GenomicDataCountFilter
+     * @method
+     * @name CBioPortalAPIInternal#fetchMutationDataCountsUsingPOST
+     * @param {string} projection - Level of detail of the response
+     * @param {} genomicDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchMutationDataCountsUsingPOST(parameters: {
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genomicDataCountFilter' ? : GenomicDataCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ResponseEntityListGenomicDataCountItem > {
+        return this.fetchMutationDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     getAllReferenceGenomeGenesUsingGETURL(parameters: {
         'genomeName': string,
         $queryParameters ? : any
