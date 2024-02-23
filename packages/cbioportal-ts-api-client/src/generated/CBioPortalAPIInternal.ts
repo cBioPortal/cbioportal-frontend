@@ -718,6 +718,8 @@ export type GenomicDataCount = {
 
         'label': string
 
+        'value': string
+
 };
 export type GenomicDataCountFilter = {
     'genomicDataFilters': Array < GenomicDataFilter >
