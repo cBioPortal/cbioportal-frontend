@@ -97,7 +97,7 @@ export function getSpecimenCollectionDayMap(
         // should probably have some config to allow people to choose what
         // timeline tracks get labels
         const specimenEvents = events.filter((e: ClinicalEvent) => {
-            return /SPECIMEN|Sample Acquisition|sample_acquisition'/i.test(
+            return /SPECIMEN|Sample Acquisition|sample_acquisition|Sequencing'/i.test(
                 e.eventType
             );
         });
@@ -409,7 +409,7 @@ class SampleManager {
     }
 
     isOnlySequentialOrderingAvailable(events?: ClinicalEvent[]) {
-        let isOnlySequentialOrderingAvailable = true;
+        /*let isOnlySequentialOrderingAvailable = true;
         if (events) {
             // when all samples do NOT have "daysSinceDiagnosis" data points, force sequential mode
             isOnlySequentialOrderingAvailable = !(
@@ -417,8 +417,8 @@ class SampleManager {
                 getSpecimenCollectionDayMap(this.sampleOrder, events).size ===
                     this.sampleOrder.length
             );
-        }
-        return isOnlySequentialOrderingAvailable;
+        }*/
+        return false;
     }
 }
 
