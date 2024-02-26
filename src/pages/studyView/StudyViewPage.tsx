@@ -427,7 +427,7 @@ export default class StudyViewPage extends React.Component<
         await: () => {
             return [
                 ..._.values(this.store.clinicalDataBinPromises),
-                ..._.values(this.store.clinicalDataCountPromises),
+                ..._.values(this.store.clinicalDataCountStore.promises),
                 ..._.values(this.store.genericAssayDataCountPromises),
                 this.store.mutationProfiles,
                 this.store.cnaProfiles,

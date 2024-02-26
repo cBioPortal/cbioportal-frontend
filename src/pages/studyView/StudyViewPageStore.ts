@@ -298,6 +298,7 @@ import {
     getAllowedSurvivalClinicalDataFilterId,
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
+import { ChartStore } from 'pages/studyView/chartStores';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -500,6 +501,8 @@ export class StudyViewPageStore
         );
     }
 
+    clinicalDataCountStore: ChartStore;
+
     constructor(
         public appStore: AppStore,
         private sessionServiceIsEnabled: boolean,
@@ -509,6 +512,8 @@ export class StudyViewPageStore
 
         this.chartItemToColor = new Map();
         this.chartToUsedColors = new Map();
+
+        this.clinicalDataCountStore = new ChartStore(this);
 
         /*
         Note for future refactoring:
@@ -2361,9 +2366,9 @@ export class StudyViewPageStore
     public customDataBinPromises: {
         [id: string]: MobxPromise<DataBin[]>;
     } = {};
-    public clinicalDataCountPromises: {
-        [id: string]: MobxPromise<ClinicalDataCountSummary[]>;
-    } = {};
+    // public clinicalDataCountPromises: {
+    //     [id: string]: MobxPromise<ClinicalDataCountSummary[]>;
+    // } = {};
     public customDataCountPromises: {
         [id: string]: MobxPromise<ClinicalDataCountSummary[]>;
     } = {};
@@ -4400,13 +4405,13 @@ export class StudyViewPageStore
         chartMeta: ChartMeta
     ): MobxPromise<ClinicalDataCountSummary[]> {
         let uniqueKey: string = getUniqueKey(chartMeta.clinicalAttribute!);
-        if (!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
+        if (!this.clinicalDataCountStore.promises.hasOwnProperty(uniqueKey)) {
             const isDefaultAttr =
                 _.find(
                     this.defaultVisibleAttributes.result,
                     attr => getUniqueKey(attr) === uniqueKey
                 ) !== undefined;
-            this.clinicalDataCountPromises[uniqueKey] = remoteData<
+            this.clinicalDataCountStore.promises[uniqueKey] = remoteData<
                 ClinicalDataCountSummary[]
             >({
                 await: () => {
@@ -4482,7 +4487,7 @@ export class StudyViewPageStore
                 default: [],
             });
         }
-        return this.clinicalDataCountPromises[uniqueKey];
+        return this.clinicalDataCountStore.promises[uniqueKey];
     }
 
     private addColorToCategories(
