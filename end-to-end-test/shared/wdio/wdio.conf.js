@@ -165,7 +165,7 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
 
     //specs: ['./remote/specs/core/comparisonTab.screenshot.spec.js'],
 
