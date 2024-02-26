@@ -12,6 +12,7 @@ import { useLocalObservable } from 'mobx-react-lite';
 import { runInAction } from 'mobx';
 import request from 'superagent';
 import { remoteData } from 'cbioportal-frontend-commons';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 interface IPathwayMapperContainerProps {
     resultsViewPageStore: ResultsViewPageStore;
@@ -54,10 +55,19 @@ function makeRemoteData() {
                     url: result.url,
                 })
             );
+
             return extractedData;
         },
         default: [],
     });
+}
+
+function formatUrl(url: string) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    } else {
+        return 'http://' + url;
+    }
 }
 
 const TooltipContent: React.FC = observer(() => {
@@ -65,13 +75,6 @@ const TooltipContent: React.FC = observer(() => {
         tooltipContent: null as DatabaseItem[] | null,
         tooltipData: makeRemoteData(),
     }));
-    const formatUrl = (url: string) => {
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-            return url;
-        } else {
-            return 'http://' + url;
-        }
-    };
 
     return (
         <div style={{ maxWidth: 400 }}>
@@ -80,7 +83,14 @@ const TooltipContent: React.FC = observer(() => {
             </a>{' '}
             shows 1,352 pathways:
             {store.tooltipData.isPending ? (
-                <div>Loading tooltip content...</div>
+                <div>
+                    <LoadingIndicator
+                        isLoading={true}
+                        size={'small'}
+                        inline={true}
+                    />{' '}
+                    Loading networks
+                </div>
             ) : (
                 <div>
                     {store.tooltipData.result && (
@@ -101,7 +111,9 @@ const TooltipContent: React.FC = observer(() => {
                         </ul>
                     )}
                     {store.tooltipData.isError && (
-                        <div>Error: Failed to load tooltip content.</div>
+                        <div className={'text-warning'}>
+                            Error: Failed to load tooltip content.
+                        </div>
                     )}
                 </div>
             )}
