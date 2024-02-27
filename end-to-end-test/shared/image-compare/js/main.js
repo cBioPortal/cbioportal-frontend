@@ -24,8 +24,8 @@ function getRootUrl(href) {
 var rootUrl = getRootUrl(window.location.href);
 
 var reportUrl = isLocalHost
-    ? './results/customReport.json'
-    : `./customReport.json`;
+    ? './results/completeResults.json'
+    : `./completeResults.json`;
 
 var diffSliderMode = true;
 
@@ -46,7 +46,7 @@ $(document).on('click', '#toggleDiffModeBtn', () => {
 
 function buildData(reportData) {
     const data = reportData.map(test => {
-        const testName = test.title.replace(/\s/g, '_').toLowerCase();
+        const testName = test.name.replace(/\s/g, '_').toLowerCase();
         const imagePath = `/${testName}_element_chrome_1600x1000.png`;
         const rootUrl = isLocalHost
             ? `/${runMode}/screenshots/`
@@ -119,16 +119,26 @@ function renderList(data) {
 
 async function bootstrap() {
     const reportData = await getResultsReport();
-    //'https://circle-production-customer-artifacts.s3.amazonaws.com/picard/57cbb4ee69052f70a6140478/60021ce16cb7c3145511b486-0-build/artifacts'
 
     runMode = reportData.testHome || 'remote';
 
-    const filteredReportData = reportData.tests.filter(test => {
+    console.log('reportData', reportData);
+
+    const tests = _(reportData)
+        .flatMap(r => r.suites)
+        .flatMap(s => s.tests)
+        .value();
+
+    const filteredReportData = tests.filter(test => {
         return (
             test.state === 'failed' &&
-            /isWithinMisMatchTolerance/i.test(test.error.message)
+            /isWithinMisMatchTolerance/i.test(test.error)
         );
     });
+
+    //const filteredReportData = reportData[0].suites[0].tests;
+
+    console.log(filteredReportData);
 
     const data = buildData(filteredReportData);
 
