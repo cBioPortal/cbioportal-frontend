@@ -53,8 +53,6 @@ export interface ICBioWindow {
     FRONTEND_VERSION: string;
     FRONTEND_COMMIT: string;
     rawServerConfig: IServerConfig;
-
-    postLoadForMskCIS: () => void;
     isMSKCIS: boolean;
 }
 
@@ -138,13 +136,6 @@ browserWindow.FRONTEND_VERSION = VERSION;
 //@ts-ignore
 browserWindow.FRONTEND_COMMIT = COMMIT;
 
-// this is special function allowing MSKCC CIS to hide login UI in
-// portal header
-browserWindow.postLoadForMskCIS = function() {
-    getLoadConfig().hide_login = true;
-    browserWindow.isMSKCIS = true;
-};
-
 // this is the only supported way to disable tracking for the $3Dmol.js
 (browserWindow as any).$3Dmol = { notrack: true };
 
@@ -216,6 +207,11 @@ browserWindow.routingStore = routingStore;
 
 let render = (key?: number) => {
     if (!getBrowserWindow().navigator.webdriver) initializeTracking();
+
+    if (stores.appStore?.serverConfig.user_display_name === 'servcbioportal') {
+        getLoadConfig().hide_login = true;
+        browserWindow.isMSKCIS = true;
+    }
 
     if (stores.appStore.serverConfig.app_name === 'mskcc-portal') {
         datadogLogs.init({
