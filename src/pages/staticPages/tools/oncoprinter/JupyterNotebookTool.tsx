@@ -62,7 +62,7 @@ export default class JupyterNotebookTool extends React.Component<
                     <br />
                     <div style={{ marginTop: 10 }}>
                         <iframe
-                            src={`https://jupyterlite.github.io/demo/repl/index.html?kernel=python&code=${encodeURIComponent(
+                            src={`https://jupyterlite.github.io/demo/repl/index.html?toolbar=1&kernel=python&code=${encodeURIComponent(
                                 final_code
                             )}`}
                             width="100%"
