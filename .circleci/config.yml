@@ -343,10 +343,10 @@ jobs:
                 path: /tmp/repo/end-to-end-test/shared/imageCompare.html
                 destination: /imageCompare.html
             - store_artifacts:
-                path: /tmp/repo/end-to-end-test/local/junit/customReport.json
-                destination: /customReport.json
+                path: /tmp/repo/end-to-end-test/local/junit/completeResults.json
+                destination: /completeResults.json
             - store_artifacts:
-                path: /tmp/repo/end-to-end-test/remote/junit/errors
+                path: /tmp/repo/end-to-end-test/local/junit/errors
                 destination: /errors
       - unless:
           condition: << pipeline.parameters.enable_localdb_e2e >>
