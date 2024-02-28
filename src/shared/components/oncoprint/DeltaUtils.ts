@@ -1139,9 +1139,14 @@ function transitionGeneticTrack(
             $track_info_tooltip_elt: nextSpec.infoTooltip
                 ? $('<div>' + nextSpec.infoTooltip + '</div>')
                 : undefined,
+            removable: true,
             removeCallback: () => {
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
+            },
+            onClickRemoveInTrackMenu: () => {
+                nextProps.onDeleteGeneticTrack &&
+                    nextProps.onDeleteGeneticTrack(nextSpec.label);
             },
             expandCallback: nextSpec.expansionCallback || undefined,
             expandButtonTextGetter: () => 'Expand',

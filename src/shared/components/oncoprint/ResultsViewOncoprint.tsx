@@ -25,6 +25,8 @@ import Oncoprint, {
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
     ClinicalTrackConfigChange,
+    GeneticTrackConfigMap,
+    GeneticTrackConfig,
 } from './Oncoprint';
 import OncoprintControls, {
     IOncoprintControlsHandlers,
@@ -364,6 +366,23 @@ export default class ResultsViewOncoprint extends React.Component<
         ) as ClinicalTrackConfigMap;
     }
 
+    @computed get selectedGeneticTrackConfig(): GeneticTrackConfigMap {
+        let geneticTracks: GeneticTrackConfig[] | undefined = this.props.store
+            .pageUserSession.userSettings?.geneticlist;
+        if (geneticTracks) {
+            const userSettingsTracksMap = {} as GeneticTrackConfigMap;
+            geneticTracks.forEach(g => (userSettingsTracksMap[g.stableId] = g));
+            return userSettingsTracksMap;
+        }
+
+        geneticTracks = [];
+
+        _.forEach(this.props.store.genes.result, attr => {
+            geneticTracks!.push(new GeneticTrackConfig(attr.hugoGeneSymbol));
+        });
+        return _.keyBy(geneticTracks, a => a.stableId) as GeneticTrackConfigMap;
+    }
+
     public expansionsByGeneticTrackKey = observable.map<string, number[]>();
     public expansionsByGenesetHeatmapTrackKey = observable.map<
         string,
@@ -471,6 +490,7 @@ export default class ResultsViewOncoprint extends React.Component<
             this
         );
         this.onDeleteClinicalTrack = this.onDeleteClinicalTrack.bind(this);
+        this.onDeleteGeneticTrack = this.onDeleteGeneticTrack.bind(this);
         this.onMinimapClose = this.onMinimapClose.bind(this);
         this.oncoprintRef = this.oncoprintRef.bind(this);
         this.oncoprintJsRef = this.oncoprintJsRef.bind(this);
@@ -1335,6 +1355,27 @@ export default class ResultsViewOncoprint extends React.Component<
         }
     }
 
+    private onDeleteGeneticTrack(geneticTrackKey: string): void {
+        if (!this.isHidden) {
+            let json: GeneticTrackConfigMap = _.clone(
+                this.selectedGeneticTrackConfig
+            );
+            json = _.omitBy(
+                json,
+                entry => entry.stableId === geneticTrackKey
+            ) as GeneticTrackConfigMap;
+            const session = this.props.store.pageUserSession;
+            session.userSettings = {
+                ...session.userSettings,
+                geneticlist: _.values(json),
+            };
+            const updatedGeneList = Object.keys(json).join(' ');
+            this.urlWrapper.updateURL({
+                gene_list: updatedGeneList,
+            });
+        }
+    }
+
     /**
      * Called when a clinical or heatmap track is sorted a-Z or Z-a, selected from within oncoprintjs UI
      */
@@ -2065,6 +2106,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 onDeleteClinicalTrack={
                                     this.onDeleteClinicalTrack
                                 }
+                                onDeleteGeneticTrack={this.onDeleteGeneticTrack}
                                 onTrackSortDirectionChange={
                                     this.onTrackSortDirectionChange
                                 }
