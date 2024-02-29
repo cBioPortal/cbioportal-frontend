@@ -10,12 +10,116 @@ import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { AppStore } from 'AppStore';
 import { useLocalObservable } from 'mobx-react-lite';
 import { runInAction } from 'mobx';
+import request from 'superagent';
+import { remoteData } from 'cbioportal-frontend-commons';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 interface IPathwayMapperContainerProps {
     resultsViewPageStore: ResultsViewPageStore;
     appStore: AppStore;
     urlWrapper: ResultsViewURLWrapper;
 }
+
+interface ResultItem {
+    databases: DatabaseItem[];
+}
+interface DatabaseItem {
+    name: string;
+    numberOfNetworks: string;
+    url: string;
+}
+interface ApiResponse {
+    results: ResultItem[];
+}
+
+function makeRemoteData() {
+    return remoteData<DatabaseItem[]>({
+        await: () => [],
+        invoke: async () => {
+            const getResponse = await request
+                .get(
+                    'https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/source'
+                )
+                .set('Accept', 'application/json')
+                .timeout(60000)
+                .redirects(0);
+
+            const jsonData: ApiResponse = getResponse.body;
+            const extractedData: DatabaseItem[] = jsonData.results[0]?.databases.map(
+                result => ({
+                    name: result.name,
+                    numberOfNetworks: parseInt(
+                        result.numberOfNetworks,
+                        10
+                    ).toString(),
+                    url: result.url,
+                })
+            );
+
+            return extractedData;
+        },
+        default: [],
+    });
+}
+
+function formatUrl(url: string) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    } else {
+        return 'http://' + url;
+    }
+}
+
+const TooltipContent: React.FC = observer(() => {
+    const store = useLocalObservable(() => ({
+        tooltipContent: null as DatabaseItem[] | null,
+        tooltipData: makeRemoteData(),
+    }));
+
+    return (
+        <div style={{ maxWidth: 400 }}>
+            <a href="https://www.ndexbio.org/" target="_blank">
+                NDEx
+            </a>{' '}
+            shows 1,352 pathways:
+            {store.tooltipData.isPending ? (
+                <div>
+                    <LoadingIndicator
+                        isLoading={true}
+                        size={'small'}
+                        inline={true}
+                    />{' '}
+                    Loading networks
+                </div>
+            ) : (
+                <div>
+                    {store.tooltipData.result && (
+                        <ul>
+                            {store.tooltipData.result.map(
+                                (item: DatabaseItem, index: number) => (
+                                    <li key={index}>
+                                        {item.numberOfNetworks} from{' '}
+                                        <a
+                                            href={formatUrl(item.url)}
+                                            target="_blank"
+                                        >
+                                            {item.name}
+                                        </a>
+                                    </li>
+                                )
+                            )}
+                        </ul>
+                    )}
+                    {store.tooltipData.isError && (
+                        <div className={'text-warning'}>
+                            Error: Failed to load tooltip content.
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+});
 
 const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerProps> = observer(
     function({
@@ -84,64 +188,7 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                         key={ResultsViewPathwaysSubTab.NDEX}
                         id={ResultsViewPathwaysSubTab.NDEX}
                         linkText={ResultsViewPathwaysSubTab.NDEX}
-                        linkTooltip={
-                            <div style={{ maxWidth: 400 }}>
-                                <a
-                                    href="https://www.ndexbio.org/"
-                                    target="_blank"
-                                >
-                                    NDEx
-                                </a>{' '}
-                                shows 1,352 pathways:
-                                <ul>
-                                    <li>
-                                        207 from{' '}
-                                        <a
-                                            href="https://www.nlm.nih.gov/research/umls/sourcereleasedocs/current/NCI_PID/index.html"
-                                            target="_blank"
-                                        >
-                                            NCI-PID
-                                        </a>
-                                    </li>
-                                    <li>
-                                        83 from{' '}
-                                        <a
-                                            href="https://signor.uniroma2.it/"
-                                            target="_blank"
-                                        >
-                                            Signor
-                                        </a>
-                                    </li>
-                                    <li>
-                                        675 from{' '}
-                                        <a
-                                            href="https://www.wikipathways.org/"
-                                            target="_blank"
-                                        >
-                                            WikiPathways
-                                        </a>
-                                        <li>
-                                            11 from{' '}
-                                            <a
-                                                href="http://cptac.wikipathways.org/"
-                                                target="_blank"
-                                            >
-                                                CPTAC
-                                            </a>
-                                        </li>
-                                        <li>
-                                            30 from{' '}
-                                            <a
-                                                href="http://cptac.wikipathways.org/"
-                                                target="_blank"
-                                            >
-                                                CCMI
-                                            </a>
-                                        </li>
-                                    </li>
-                                </ul>
-                            </div>
-                        }
+                        linkTooltip={<TooltipContent />}
                         hide={
                             !getServerConfig().show_ndex ||
                             !resultsViewPageStore.remoteNdexUrl.isComplete ||
