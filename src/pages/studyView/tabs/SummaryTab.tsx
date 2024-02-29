@@ -167,10 +167,7 @@ export class StudySummaryTab extends React.Component<
                 chartMeta: ChartMeta,
                 values: string[][]
             ) => {
-                this.store.addMutationDataFilters(
-                    chartMeta.uniqueKey,
-                    values
-                );
+                this.store.addMutationDataFilters(chartMeta.uniqueKey, values);
             },
             onGenericAssayDataBinSelection: (
                 chartMeta: ChartMeta,
@@ -194,7 +191,7 @@ export class StudySummaryTab extends React.Component<
 
         this.chartTypeConfig = (chartMeta: ChartMeta, props: any) => ({
             [ChartTypeEnum.PIE_CHART]: () => ({
-                commonProps: () => ({
+                commonProps: {
                     onChangeChartType: this.handlers.onChangeChartType,
                     getData: (dataType?: DataType) =>
                         this.store.getChartDownloadableData(
@@ -202,7 +199,7 @@ export class StudySummaryTab extends React.Component<
                             dataType
                         ),
                     downloadTypes: ['Summary Data', 'Full Data', 'SVG', 'PDF'],
-                }),
+                },
                 [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
                     filters: this.store
                         .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
@@ -269,7 +266,7 @@ export class StudySummaryTab extends React.Component<
                 }),
             }),
             [ChartTypeEnum.BAR_CHART]: () => ({
-                commonProps: () => ({
+                commonProps: {
                     onToggleNAValue: this.handlers.onToggleNAValue,
                     logScaleChecked: this.store.isLogScaleChecked(
                         chartMeta.uniqueKey
@@ -278,7 +275,7 @@ export class StudySummaryTab extends React.Component<
                         chartMeta.uniqueKey
                     ),
                     downloadTypes: ['Data', 'SVG', 'PDF'],
-                }),
+                },
                 [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
                     promise: this.store.getGenomicChartDataBin(chartMeta),
                     filters: this.store.getGenomicDataFiltersByUniqueKey(
@@ -353,12 +350,12 @@ export class StudySummaryTab extends React.Component<
                 }),
             }),
             [ChartTypeEnum.TABLE]: () => ({
-                commonProps: () => ({
+                commonProps: {
                     onChangeChartType: this.handlers.onChangeChartType,
                     getData: () =>
                         this.store.getChartDownloadableData(chartMeta),
                     downloadTypes: ['Data'],
-                }),
+                },
                 [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
                     filters: this.store
                         .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
@@ -601,7 +598,7 @@ export class StudySummaryTab extends React.Component<
                     onToggleSurvivalPlotLeftTruncation: this.handlers
                         .onToggleSurvivalPlotLeftTruncation,
                     survivalPlotLeftTruncationChecked: this.store.survivalPlotLeftTruncationToggleMap?.get(
-                        chartMeta!.uniqueKey
+                        chartMeta.uniqueKey
                     ),
                     onDataBinSelection: this.handlers.onDataBinSelection,
                 };
@@ -620,10 +617,10 @@ export class StudySummaryTab extends React.Component<
             },
             [ChartTypeEnum.VIOLIN_PLOT_TABLE]: () => {
                 const chartInfo = this.store.getXvsYViolinChartInfo(
-                    chartMeta!.uniqueKey
+                    chartMeta.uniqueKey
                 )!;
                 const settings = this.store.getXvsYChartSettings(
-                    chartMeta!.uniqueKey
+                    chartMeta.uniqueKey
                 )!;
                 const props: any = {
                     filters: [
@@ -649,7 +646,7 @@ export class StudySummaryTab extends React.Component<
                     logScaleChecked: settings.violinLogScale,
                     onToggleLogScale: () => {
                         const settings = this.store.getXvsYChartSettings(
-                            props.chartMeta!.uniqueKey
+                            chartMeta.uniqueKey
                         )!;
                         settings.violinLogScale = !settings.violinLogScale;
                     },
@@ -657,7 +654,7 @@ export class StudySummaryTab extends React.Component<
                     violinPlotChecked: settings.showViolin,
                     onToggleViolinPlot: () => {
                         const settings = this.store.getXvsYChartSettings(
-                            props.chartMeta!.uniqueKey
+                            chartMeta.uniqueKey
                         )!;
                         settings.showViolin = !settings.showViolin;
                     },
@@ -665,7 +662,7 @@ export class StudySummaryTab extends React.Component<
                     boxPlotChecked: settings.showBox,
                     onToggleBoxPlot: () => {
                         const settings = this.store.getXvsYChartSettings(
-                            props.chartMeta!.uniqueKey
+                            chartMeta.uniqueKey
                         )!;
                         settings.showBox = !settings.showBox;
                     },
@@ -711,16 +708,16 @@ export class StudySummaryTab extends React.Component<
             },
             [ChartTypeEnum.SCATTER]: () => {
                 const chartInfo = this.store.getXvsYScatterChartInfo(
-                    chartMeta!.uniqueKey
+                    chartMeta.uniqueKey
                 )!;
                 const settings = this.store.getXvsYChartSettings(
-                    chartMeta!.uniqueKey
+                    chartMeta.uniqueKey
                 )!;
                 const props: any = {
                     filters: this.store.getScatterPlotFiltersByUniqueKey(
-                        chartMeta!.uniqueKey
+                        chartMeta.uniqueKey
                     ),
-                    title: chartMeta!.displayName,
+                    title: chartMeta.displayName,
                     promise: this.store.clinicalDataDensityCache.get({
                         chartInfo,
                         xAxisLogScale: !!settings.xLogScale,
@@ -736,20 +733,18 @@ export class StudySummaryTab extends React.Component<
                     logScaleYChecked: settings.yLogScale,
                     onToggleLogScaleX: () => {
                         const settings = this.store.getXvsYChartSettings(
-                            props.chartMeta!.uniqueKey
+                            chartMeta.uniqueKey
                         )!;
                         settings.xLogScale = !settings.xLogScale;
                     },
                     onToggleLogScaleY: () => {
                         const settings = this.store.getXvsYChartSettings(
-                            props.chartMeta!.uniqueKey
+                            chartMeta.uniqueKey
                         )!;
                         settings.yLogScale = !settings.yLogScale;
                     },
                     onSwapAxes: () => {
-                        this.store.swapXvsYChartAxes(
-                            props.chartMeta!.uniqueKey
-                        );
+                        this.store.swapXvsYChartAxes(chartMeta.uniqueKey);
                     },
                     plotDomain: chartInfo.plotDomain,
                     axisLabelX: `${chartInfo.xAttr.displayName}${
@@ -761,19 +756,19 @@ export class StudySummaryTab extends React.Component<
                     tooltip: makeDensityScatterPlotTooltip(chartInfo, settings),
                     onValueSelection: (bounds: RectangleBounds) => {
                         this.store.updateScatterPlotFilterByValues(
-                            props.chartMeta!.uniqueKey,
+                            chartMeta.uniqueKey,
                             bounds
                         );
                     },
                     onResetSelection: () => {
                         this.store.updateScatterPlotFilterByValues(
-                            props.chartMeta!.uniqueKey
+                            chartMeta.uniqueKey
                         );
                     },
                     sampleToAnalysisGroup: this.store.sampleToAnalysisGroup,
                     getData: () =>
                         getScatterDownloadData(
-                            props.chartMeta!.uniqueKey,
+                            chartInfo,
                             this.store.selectedSamples
                         ),
                     downloadTypes: ['Data', 'SVG', 'PDF'],

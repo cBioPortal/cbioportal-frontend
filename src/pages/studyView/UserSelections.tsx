@@ -1041,7 +1041,10 @@ export default class UserSelections extends React.Component<
                                     .clinicalFilterContent
                             }
                             onDelete={() =>
-                                this.props.removeMutationDataFilter(chartMeta.uniqueKey, dataFilterValue.value)
+                                this.props.removeMutationDataFilter(
+                                    chartMeta.uniqueKey,
+                                    dataFilterValue.value
+                                )
                             }
                             store={this.props.store}
                         />
