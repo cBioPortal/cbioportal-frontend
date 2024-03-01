@@ -189,7 +189,10 @@ export class StudySummaryTab extends React.Component<
             },
         };
 
-        this.chartTypeConfig = (chartMeta: ChartMeta, props: any) => ({
+        this.chartTypeConfig = (
+            chartMeta: ChartMeta,
+            props: Partial<IChartContainerProps>
+        ) => ({
             [ChartTypeEnum.PIE_CHART]: () => ({
                 commonProps: {
                     onChangeChartType: this.handlers.onChangeChartType,
@@ -575,7 +578,7 @@ export class StudySummaryTab extends React.Component<
                 },
             }),
             [ChartTypeEnum.SURVIVAL]: () => {
-                const props: any = {
+                const props: Partial<IChartContainerProps> = {
                     promise: this.store.survivalPlots,
                     getData: () =>
                         getSurvivalDownloadData(
@@ -622,7 +625,7 @@ export class StudySummaryTab extends React.Component<
                 const settings = this.store.getXvsYChartSettings(
                     chartMeta.uniqueKey
                 )!;
-                const props: any = {
+                const props: Partial<IChartContainerProps> = {
                     filters: [
                         ...this.store.getClinicalDataFiltersByUniqueKey(
                             chartInfo.categoricalAttr.clinicalAttributeId
@@ -713,7 +716,7 @@ export class StudySummaryTab extends React.Component<
                 const settings = this.store.getXvsYChartSettings(
                     chartMeta.uniqueKey
                 )!;
-                const props: any = {
+                const props: Partial<IChartContainerProps> = {
                     filters: this.store.getScatterPlotFiltersByUniqueKey(
                         chartMeta.uniqueKey
                     ),
