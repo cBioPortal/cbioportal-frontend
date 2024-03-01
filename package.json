@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend",
   "private": true,
-  "version": "3.3.271",
+  "version": "3.3.272",
   "workspaces": {
     "packages": [
       ".",
@@ -158,8 +158,8 @@
     "bootstrap-sass": "3.4.1",
     "bowser": "^1.7.1",
     "bundle-loader": "^0.5.4",
-    "cbioportal-clinical-timeline": "^0.3.77",
-    "cbioportal-frontend-commons": "^0.5.61",
+    "cbioportal-clinical-timeline": "^0.3.78",
+    "cbioportal-frontend-commons": "^0.5.62",
     "cbioportal-ts-api-client": "^0.9.67",
     "cbioportal-utils": "^0.3.38",
     "chart.js": "^2.6.0",
@@ -271,7 +271,7 @@
     "react-markdown": "^7.0.1",
     "react-mfb": "^0.6.0",
     "react-motion": "^0.4.7",
-    "react-mutation-mapper": "^0.8.104",
+    "react-mutation-mapper": "^0.8.105",
     "react-overlays": "0.7.4",
     "react-portal": "^4.2.0",
     "react-rangeslider": "^2.1.0",
