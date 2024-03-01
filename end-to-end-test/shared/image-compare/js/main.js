@@ -154,7 +154,7 @@ async function bootstrap() {
         .flatMap(s => s.tests)
         .value();
 
-    const de = deDupTests(mokeys);
+    const de = deDupTests(reportData);
 
     const filteredReportData = de.filter(test => {
         return (
