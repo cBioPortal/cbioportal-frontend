@@ -9,7 +9,6 @@ var getScreenshotName = require('./getScreenshotName');
 
 const TEST_TYPE = process.env.TEST_TYPE || 'remote';
 
-const CustomReporter = require('./customReporter.v6');
 const { transformJUNITFiles } = require('../edit-junit');
 
 const debug = process.env.DEBUG;
@@ -347,17 +346,6 @@ exports.config = {
                 },
             },
         ],
-        // [
-        //     CustomReporter,
-        //     {
-        //         testHome: TEST_TYPE,
-        //         outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-        //         outputFileFormat: function(opts) {
-        //             // optional
-        //             return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
-        //         },
-        //     },
-        // ],
     ],
 
     testHome: process.env.JUNIT_REPORT_PATH,
