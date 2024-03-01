@@ -1,7 +1,4 @@
-import {
-    DownloadControlOption,
-    DownloadControls,
-} from 'cbioportal-frontend-commons';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { IMutationMapperProps } from './MutationMapper';
 
 // This is a subset of IServerConfig containing config values used only in Mutation Mapper

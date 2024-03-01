@@ -5449,6 +5449,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     top: 10,
                                                 }}
                                                 type="button"
+                                                showDownload={this.showDownload}
                                             />
                                         );
                                     } else {
