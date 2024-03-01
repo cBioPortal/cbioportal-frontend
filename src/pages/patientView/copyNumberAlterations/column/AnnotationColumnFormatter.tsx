@@ -29,6 +29,7 @@ import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
+import { ICopyNumberTableWrapperProps } from '../CopyNumberTableWrapper';
 
 /**
  * @author Selcuk Onur Sumer

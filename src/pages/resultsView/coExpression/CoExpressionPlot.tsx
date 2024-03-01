@@ -6,7 +6,10 @@ import { getSampleViewUrl } from '../../../shared/api/urls';
 import './styles.scss';
 import { bind } from 'bind-decorator';
 import ScatterPlot from '../../../shared/components/plots/ScatterPlot';
-import { DownloadControls } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    DownloadControls,
+} from 'cbioportal-frontend-commons';
 import {
     axisLabel,
     getDownloadData,
@@ -17,6 +20,7 @@ import { scatterPlotSize } from '../../../shared/components/plots/PlotUtils';
 import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
 import autobind from 'autobind-decorator';
 import { GeneticEntity } from 'shared/model/GeneticEntity';
+import { getServerConfig } from 'config/config';
 
 export interface ICoExpressionPlotProps {
     xAxisGeneticEntity: GeneticEntity;
@@ -349,6 +353,10 @@ export default class CoExpressionPlot extends React.Component<
                     dontFade={true}
                     type="button"
                     style={{ position: 'absolute', top: 0, right: 0 }}
+                    showDownload={
+                        getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL
+                    }
                 />
             </div>
         );
