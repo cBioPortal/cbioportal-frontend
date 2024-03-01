@@ -1,5 +1,9 @@
 import Tooltip from 'rc-tooltip';
-import { ArticleAbstract, IndicatorQueryTreatment } from 'oncokb-ts-api-client';
+import {
+    ArticleAbstract,
+    IndicatorQueryTreatment,
+    Trial,
+} from 'oncokb-ts-api-client';
 import * as React from 'react';
 import ReactTable from 'react-table';
 
@@ -12,6 +16,7 @@ import { EvidenceReferenceContent } from './oncokbCard/EvidenceReferenceContent'
 
 import mainStyles from './main.module.scss';
 import './oncoKbTreatmentTable.scss';
+import { OncoKbTrialTable } from './OncoKbTrialTable';
 
 type OncoKbTreatmentTableProps = {
     variant: string;
@@ -55,6 +60,18 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
         );
     };
 
+    const trialTableContent = (trials: Trial[]) => {
+        return trials.length > 0 ? (
+            () => (
+                <div className={mainStyles['tooltip-refs']}>
+                    <OncoKbTrialTable trials={trials} />
+                </div>
+            )
+        ) : (
+            <span />
+        );
+    };
+
     const columns = [
         OncoKbHelper.getDefaultColumnDefinition('level'),
         {
@@ -88,7 +105,7 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
                 </span>
             ),
             accessor: 'levelAssociatedCancerType',
-            minWidth: 120,
+            minWidth: 100,
             Cell: (props: { original: IndicatorQueryTreatment }) => (
                 <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
                     {getTumorTypeNameWithExclusionInfo(
@@ -118,6 +135,40 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
                     >
                         <i className="fa fa-book" />
                     </Tooltip>
+                ),
+        },
+        {
+            id: 'clinicalTrials',
+            Header: (
+                <span>
+                    # of Clinical
+                    <br />
+                    Trials
+                </span>
+            ),
+            sortable: false,
+            minWidth: 50,
+            accessor: 'clinicalTrials',
+            Cell: (props: { original: IndicatorQueryTreatment }) =>
+                props.original.trials && props.original.trials.length > 0 ? (
+                    <div className={mainStyles['tooltip-refs']}>
+                        <Tooltip
+                            overlay={trialTableContent(props.original.trials)}
+                            placement="right"
+                            trigger={['hover', 'focus']}
+                            destroyTooltipOnHide={true}
+                        >
+                            <span>
+                                {props.original.trials
+                                    ? props.original.trials.length
+                                    : '0'}
+                            </span>
+                        </Tooltip>
+                    </div>
+                ) : (
+                    <div
+                        style={{ whiteSpace: 'normal', lineHeight: '1rem' }}
+                    ></div>
                 ),
         },
     ];

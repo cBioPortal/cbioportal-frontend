@@ -32,9 +32,6 @@
       "description": "OncoKB Levels"
     }
   ],
-  "schemes": [
-    "https"
-  ],
   "paths": {
     "/annotate/copyNumberAlterations": {
       "get": {
@@ -1007,26 +1004,6 @@
     }
   },
   "definitions": {
-    "Drug": {
-      "type": "object",
-      "properties": {
-        "drugName": {
-          "type": "string"
-        },
-        "ncitCode": {
-          "type": "string"
-        },
-        "synonyms": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "uuid": {
-          "type": "string"
-        }
-      }
-    },
     "AnnotateMutationByGenomicChangeQuery": {
       "type": "object",
       "properties": {
@@ -1072,48 +1049,17 @@
         }
       }
     },
-    "CuratedGene": {
+    "Eligibility": {
       "type": "object",
       "properties": {
-        "background": {
-          "type": "string"
+        "structured": {
+          "$ref": "#/definitions/StructuredEligibility"
         },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "grch37Isoform": {
-          "type": "string"
-        },
-        "grch37RefSeq": {
-          "type": "string"
-        },
-        "grch38Isoform": {
-          "type": "string"
-        },
-        "grch38RefSeq": {
-          "type": "string"
-        },
-        "highestResistancLevel": {
-          "type": "string"
-        },
-        "highestResistanceLevel": {
-          "type": "string"
-        },
-        "highestSensitiveLevel": {
-          "type": "string"
-        },
-        "hugoSymbol": {
-          "type": "string"
-        },
-        "oncogene": {
-          "type": "boolean"
-        },
-        "summary": {
-          "type": "string"
-        },
-        "tsg": {
-          "type": "boolean"
+        "unstructured": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnstructuredEligibility"
+          }
         }
       }
     },
@@ -1171,129 +1117,6 @@
         },
         "tumorType": {
           "type": "string"
-        }
-      }
-    },
-    "QueryGene": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoSymbol": {
-          "type": "string"
-        }
-      }
-    },
-    "CancerGene": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "foundation": {
-          "type": "boolean"
-        },
-        "foundationHeme": {
-          "type": "boolean"
-        },
-        "geneAliases": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "grch37Isoform": {
-          "type": "string"
-        },
-        "grch37RefSeq": {
-          "type": "string"
-        },
-        "grch38Isoform": {
-          "type": "string"
-        },
-        "grch38RefSeq": {
-          "type": "string"
-        },
-        "hugoSymbol": {
-          "type": "string"
-        },
-        "mSKHeme": {
-          "type": "boolean"
-        },
-        "mSKImpact": {
-          "type": "boolean"
-        },
-        "occurrenceCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "oncogene": {
-          "type": "boolean"
-        },
-        "oncokbAnnotated": {
-          "type": "boolean"
-        },
-        "sangerCGC": {
-          "type": "boolean"
-        },
-        "tsg": {
-          "type": "boolean"
-        },
-        "vogelstein": {
-          "type": "boolean"
-        }
-      }
-    },
-    "MainType": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "name": {
-          "type": "string"
-        },
-        "tumorForm": {
-          "type": "string",
-          "enum": [
-            "SOLID",
-            "LIQUID",
-            "MIXED"
-          ]
-        }
-      },
-      "description": "OncoTree Cancer Type"
-    },
-    "OncoKBInfo": {
-      "type": "object",
-      "properties": {
-        "apiVersion": {
-          "$ref": "#/definitions/SemVer"
-        },
-        "appVersion": {
-          "$ref": "#/definitions/SemVer"
-        },
-        "dataVersion": {
-          "$ref": "#/definitions/Version"
-        },
-        "levels": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/InfoLevel"
-          }
-        },
-        "ncitVersion": {
-          "type": "string"
-        },
-        "oncoTreeVersion": {
-          "type": "string"
-        },
-        "publicInstance": {
-          "type": "boolean"
         }
       }
     },
@@ -1377,153 +1200,20 @@
         }
       }
     },
-    "AnnotateMutationByProteinChangeQuery": {
+    "StructuredEligibility": {
       "type": "object",
       "properties": {
-        "alteration": {
+        "acceptsHealthyVolunteers": {
+          "type": "boolean"
+        },
+        "gender": {
           "type": "string"
         },
-        "consequence": {
+        "maxAgeInYears": {
           "type": "string"
         },
-        "evidenceTypes": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "GENE_SUMMARY",
-              "MUTATION_SUMMARY",
-              "TUMOR_TYPE_SUMMARY",
-              "GENE_TUMOR_TYPE_SUMMARY",
-              "PROGNOSTIC_SUMMARY",
-              "DIAGNOSTIC_SUMMARY",
-              "GENE_BACKGROUND",
-              "ONCOGENIC",
-              "MUTATION_EFFECT",
-              "VUS",
-              "PROGNOSTIC_IMPLICATION",
-              "DIAGNOSTIC_IMPLICATION",
-              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
-              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
-              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
-              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
-            ]
-          }
-        },
-        "gene": {
-          "$ref": "#/definitions/QueryGene"
-        },
-        "id": {
+        "minAgeInYears": {
           "type": "string"
-        },
-        "proteinEnd": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "proteinStart": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "referenceGenome": {
-          "type": "string",
-          "enum": [
-            "GRCh37",
-            "GRCh38"
-          ]
-        },
-        "tumorType": {
-          "type": "string"
-        }
-      }
-    },
-    "IndicatorQueryTreatment": {
-      "type": "object",
-      "properties": {
-        "abstracts": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ArticleAbstract"
-          }
-        },
-        "alterations": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "approvedIndications": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": {
-          "type": "string"
-        },
-        "drugs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Drug"
-          }
-        },
-        "fdaLevel": {
-          "type": "string",
-          "enum": [
-            "LEVEL_1",
-            "LEVEL_2",
-            "LEVEL_3A",
-            "LEVEL_3B",
-            "LEVEL_4",
-            "LEVEL_R1",
-            "LEVEL_R2",
-            "LEVEL_Px1",
-            "LEVEL_Px2",
-            "LEVEL_Px3",
-            "LEVEL_Dx1",
-            "LEVEL_Dx2",
-            "LEVEL_Dx3",
-            "LEVEL_Fda1",
-            "LEVEL_Fda2",
-            "LEVEL_Fda3",
-            "NO"
-          ]
-        },
-        "level": {
-          "type": "string",
-          "enum": [
-            "LEVEL_1",
-            "LEVEL_2",
-            "LEVEL_3A",
-            "LEVEL_3B",
-            "LEVEL_4",
-            "LEVEL_R1",
-            "LEVEL_R2",
-            "LEVEL_Px1",
-            "LEVEL_Px2",
-            "LEVEL_Px3",
-            "LEVEL_Dx1",
-            "LEVEL_Dx2",
-            "LEVEL_Dx3",
-            "LEVEL_Fda1",
-            "LEVEL_Fda2",
-            "LEVEL_Fda3",
-            "NO"
-          ]
-        },
-        "levelAssociatedCancerType": {
-          "$ref": "#/definitions/TumorType"
-        },
-        "levelExcludedCancerTypes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TumorType"
-          }
-        },
-        "pmids": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     },
@@ -1573,74 +1263,6 @@
       },
       "description": "OncoTree Detailed Cancer Type"
     },
-    "MutationEffectResp": {
-      "type": "object",
-      "properties": {
-        "citations": {
-          "$ref": "#/definitions/Citations"
-        },
-        "description": {
-          "type": "string"
-        },
-        "knownEffect": {
-          "type": "string"
-        }
-      }
-    },
-    "AnnotateCopyNumberAlterationQuery": {
-      "type": "object",
-      "properties": {
-        "copyNameAlterationType": {
-          "type": "string",
-          "enum": [
-            "AMPLIFICATION",
-            "DELETION",
-            "GAIN",
-            "LOSS"
-          ]
-        },
-        "evidenceTypes": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "GENE_SUMMARY",
-              "MUTATION_SUMMARY",
-              "TUMOR_TYPE_SUMMARY",
-              "GENE_TUMOR_TYPE_SUMMARY",
-              "PROGNOSTIC_SUMMARY",
-              "DIAGNOSTIC_SUMMARY",
-              "GENE_BACKGROUND",
-              "ONCOGENIC",
-              "MUTATION_EFFECT",
-              "VUS",
-              "PROGNOSTIC_IMPLICATION",
-              "DIAGNOSTIC_IMPLICATION",
-              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
-              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
-              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
-              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
-            ]
-          }
-        },
-        "gene": {
-          "$ref": "#/definitions/QueryGene"
-        },
-        "id": {
-          "type": "string"
-        },
-        "referenceGenome": {
-          "type": "string",
-          "enum": [
-            "GRCh37",
-            "GRCh38"
-          ]
-        },
-        "tumorType": {
-          "type": "string"
-        }
-      }
-    },
     "Version": {
       "type": "object",
       "properties": {
@@ -1648,51 +1270,6 @@
           "type": "string"
         },
         "version": {
-          "type": "string"
-        }
-      }
-    },
-    "AnnotateMutationByHGVSgQuery": {
-      "type": "object",
-      "properties": {
-        "evidenceTypes": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "GENE_SUMMARY",
-              "MUTATION_SUMMARY",
-              "TUMOR_TYPE_SUMMARY",
-              "GENE_TUMOR_TYPE_SUMMARY",
-              "PROGNOSTIC_SUMMARY",
-              "DIAGNOSTIC_SUMMARY",
-              "GENE_BACKGROUND",
-              "ONCOGENIC",
-              "MUTATION_EFFECT",
-              "VUS",
-              "PROGNOSTIC_IMPLICATION",
-              "DIAGNOSTIC_IMPLICATION",
-              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
-              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
-              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
-              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
-            ]
-          }
-        },
-        "hgvsg": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "referenceGenome": {
-          "type": "string",
-          "enum": [
-            "GRCh37",
-            "GRCh38"
-          ]
-        },
-        "tumorType": {
           "type": "string"
         }
       }
@@ -1988,23 +1565,6 @@
         }
       }
     },
-    "Citations": {
-      "type": "object",
-      "properties": {
-        "abstracts": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ArticleAbstract"
-          }
-        },
-        "pmids": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "ArticleAbstract": {
       "type": "object",
       "properties": {
@@ -2049,6 +1609,555 @@
             "LEVEL_Fda3",
             "NO"
           ]
+        }
+      }
+    },
+    "Drug": {
+      "type": "object",
+      "properties": {
+        "drugName": {
+          "type": "string"
+        },
+        "ncitCode": {
+          "type": "string"
+        }
+      }
+    },
+    "CuratedGene": {
+      "type": "object",
+      "properties": {
+        "background": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "grch37Isoform": {
+          "type": "string"
+        },
+        "grch37RefSeq": {
+          "type": "string"
+        },
+        "grch38Isoform": {
+          "type": "string"
+        },
+        "grch38RefSeq": {
+          "type": "string"
+        },
+        "highestResistancLevel": {
+          "type": "string"
+        },
+        "highestResistanceLevel": {
+          "type": "string"
+        },
+        "highestSensitiveLevel": {
+          "type": "string"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "oncogene": {
+          "type": "boolean"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "tsg": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Trial": {
+      "type": "object",
+      "properties": {
+        "arms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Arm"
+          }
+        },
+        "briefTitle": {
+          "type": "string"
+        },
+        "collaborators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Collaborator"
+          }
+        },
+        "currentTrialStatus": {
+          "type": "string"
+        },
+        "currentTrialStatusDate": {
+          "type": "string"
+        },
+        "eligibility": {
+          "$ref": "#/definitions/Eligibility"
+        },
+        "isUSTrial": {
+          "type": "boolean"
+        },
+        "nctId": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "principalInvestigator": {
+          "type": "string"
+        },
+        "sites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "QueryGene": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        }
+      }
+    },
+    "CancerGene": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "foundation": {
+          "type": "boolean"
+        },
+        "foundationHeme": {
+          "type": "boolean"
+        },
+        "geneAliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "grch37Isoform": {
+          "type": "string"
+        },
+        "grch37RefSeq": {
+          "type": "string"
+        },
+        "grch38Isoform": {
+          "type": "string"
+        },
+        "grch38RefSeq": {
+          "type": "string"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "mSKHeme": {
+          "type": "boolean"
+        },
+        "mSKImpact": {
+          "type": "boolean"
+        },
+        "occurrenceCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "oncogene": {
+          "type": "boolean"
+        },
+        "oncokbAnnotated": {
+          "type": "boolean"
+        },
+        "sangerCGC": {
+          "type": "boolean"
+        },
+        "tsg": {
+          "type": "boolean"
+        },
+        "vogelstein": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MainType": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "tumorForm": {
+          "type": "string",
+          "enum": [
+            "SOLID",
+            "LIQUID",
+            "MIXED"
+          ]
+        }
+      },
+      "description": "OncoTree Cancer Type"
+    },
+    "OncoKBInfo": {
+      "type": "object",
+      "properties": {
+        "apiVersion": {
+          "$ref": "#/definitions/SemVer"
+        },
+        "appVersion": {
+          "$ref": "#/definitions/SemVer"
+        },
+        "dataVersion": {
+          "$ref": "#/definitions/Version"
+        },
+        "levels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InfoLevel"
+          }
+        },
+        "ncitVersion": {
+          "type": "string"
+        },
+        "oncoTreeVersion": {
+          "type": "string"
+        },
+        "publicInstance": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AnnotateMutationByProteinChangeQuery": {
+      "type": "object",
+      "properties": {
+        "alteration": {
+          "type": "string"
+        },
+        "consequence": {
+          "type": "string"
+        },
+        "evidenceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GENE_SUMMARY",
+              "MUTATION_SUMMARY",
+              "TUMOR_TYPE_SUMMARY",
+              "GENE_TUMOR_TYPE_SUMMARY",
+              "PROGNOSTIC_SUMMARY",
+              "DIAGNOSTIC_SUMMARY",
+              "GENE_BACKGROUND",
+              "ONCOGENIC",
+              "MUTATION_EFFECT",
+              "VUS",
+              "PROGNOSTIC_IMPLICATION",
+              "DIAGNOSTIC_IMPLICATION",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+            ]
+          }
+        },
+        "gene": {
+          "$ref": "#/definitions/QueryGene"
+        },
+        "id": {
+          "type": "string"
+        },
+        "proteinEnd": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinStart": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referenceGenome": {
+          "type": "string",
+          "enum": [
+            "GRCh37",
+            "GRCh38"
+          ]
+        },
+        "tumorType": {
+          "type": "string"
+        }
+      }
+    },
+    "IndicatorQueryTreatment": {
+      "type": "object",
+      "properties": {
+        "abstracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArticleAbstract"
+          }
+        },
+        "alterations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "approvedIndications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "drugs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Drug"
+          }
+        },
+        "fdaLevel": {
+          "type": "string",
+          "enum": [
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
+            "NO"
+          ]
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "LEVEL_Fda1",
+            "LEVEL_Fda2",
+            "LEVEL_Fda3",
+            "NO"
+          ]
+        },
+        "levelAssociatedCancerType": {
+          "$ref": "#/definitions/TumorType"
+        },
+        "levelExcludedCancerTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TumorType"
+          }
+        },
+        "pmids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "trials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Trial"
+          }
+        }
+      }
+    },
+    "Collaborator": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "MutationEffectResp": {
+      "type": "object",
+      "properties": {
+        "citations": {
+          "$ref": "#/definitions/Citations"
+        },
+        "description": {
+          "type": "string"
+        },
+        "knownEffect": {
+          "type": "string"
+        }
+      }
+    },
+    "AnnotateCopyNumberAlterationQuery": {
+      "type": "object",
+      "properties": {
+        "copyNameAlterationType": {
+          "type": "string",
+          "enum": [
+            "AMPLIFICATION",
+            "DELETION",
+            "GAIN",
+            "LOSS"
+          ]
+        },
+        "evidenceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GENE_SUMMARY",
+              "MUTATION_SUMMARY",
+              "TUMOR_TYPE_SUMMARY",
+              "GENE_TUMOR_TYPE_SUMMARY",
+              "PROGNOSTIC_SUMMARY",
+              "DIAGNOSTIC_SUMMARY",
+              "GENE_BACKGROUND",
+              "ONCOGENIC",
+              "MUTATION_EFFECT",
+              "VUS",
+              "PROGNOSTIC_IMPLICATION",
+              "DIAGNOSTIC_IMPLICATION",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+            ]
+          }
+        },
+        "gene": {
+          "$ref": "#/definitions/QueryGene"
+        },
+        "id": {
+          "type": "string"
+        },
+        "referenceGenome": {
+          "type": "string",
+          "enum": [
+            "GRCh37",
+            "GRCh38"
+          ]
+        },
+        "tumorType": {
+          "type": "string"
+        }
+      }
+    },
+    "AnnotateMutationByHGVSgQuery": {
+      "type": "object",
+      "properties": {
+        "evidenceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GENE_SUMMARY",
+              "MUTATION_SUMMARY",
+              "TUMOR_TYPE_SUMMARY",
+              "GENE_TUMOR_TYPE_SUMMARY",
+              "PROGNOSTIC_SUMMARY",
+              "DIAGNOSTIC_SUMMARY",
+              "GENE_BACKGROUND",
+              "ONCOGENIC",
+              "MUTATION_EFFECT",
+              "VUS",
+              "PROGNOSTIC_IMPLICATION",
+              "DIAGNOSTIC_IMPLICATION",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+            ]
+          }
+        },
+        "hgvsg": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "referenceGenome": {
+          "type": "string",
+          "enum": [
+            "GRCh37",
+            "GRCh38"
+          ]
+        },
+        "tumorType": {
+          "type": "string"
+        }
+      }
+    },
+    "Citations": {
+      "type": "object",
+      "properties": {
+        "abstracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArticleAbstract"
+          }
+        },
+        "pmids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Arm": {
+      "type": "object",
+      "properties": {
+        "armDescription": {
+          "type": "string"
+        },
+        "drugs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Drug"
+          }
+        }
+      }
+    },
+    "UnstructuredEligibility": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "displayOrder": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "inclusionIndicator": {
+          "type": "boolean"
         }
       }
     }
