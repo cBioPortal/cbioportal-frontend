@@ -45,12 +45,22 @@ const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
                     paddingLeft,
                     height,
                     position: 'relative',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    minWidth: `${getTrackLabel(track).length * 7.5}px`,
                 }}
                 onMouseEnter={handleTrackHover}
                 onMouseLeave={handleTrackHover}
             >
                 <span>
-                    <TruncatedText text={getTrackLabel(track)} maxLength={20} />
+                    <TruncatedText
+                        text={getTrackLabel(track)}
+                        maxLength={
+                            getTrackLabel(track).length > 10
+                                ? getTrackLabel(track).length / 1.5
+                                : 8
+                        }
+                    />
                 </span>
                 {isLineChartTrack && (
                     <div
