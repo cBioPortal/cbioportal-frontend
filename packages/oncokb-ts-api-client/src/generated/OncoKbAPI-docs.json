@@ -1015,15 +1015,6 @@
         },
         "ncitCode": {
           "type": "string"
-        },
-        "synonyms": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "uuid": {
-          "type": "string"
         }
       }
     },
