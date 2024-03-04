@@ -370,17 +370,25 @@ export default class ResultsViewOncoprint extends React.Component<
         let geneticTracks: GeneticTrackConfig[] | undefined = this.props.store
             .pageUserSession.userSettings?.geneticlist;
         if (geneticTracks) {
-            const userSettingsTracksMap = {} as GeneticTrackConfigMap;
-            geneticTracks.forEach(g => (userSettingsTracksMap[g.stableId] = g));
-            return userSettingsTracksMap;
+            const userSettingsTrackMap = geneticTracks.reduce((acc, track) => {
+                acc[track.stableId] = track;
+                return acc;
+            }, {} as GeneticTrackConfigMap);
+            return userSettingsTrackMap;
         }
 
-        geneticTracks = [];
+        geneticTracks = (this.props.store.genes.result || []).map(
+            attr => new GeneticTrackConfig(attr.hugoGeneSymbol)
+        );
 
-        _.forEach(this.props.store.genes.result, attr => {
-            geneticTracks!.push(new GeneticTrackConfig(attr.hugoGeneSymbol));
-        });
-        return _.keyBy(geneticTracks, a => a.stableId) as GeneticTrackConfigMap;
+        return geneticTracks
+            .map(track => ({
+                [track.stableId]: track,
+            }))
+            .reduce((acc, obj) => {
+                Object.assign(acc, obj);
+                return acc;
+            }, {} as GeneticTrackConfigMap);
     }
 
     public expansionsByGeneticTrackKey = observable.map<string, number[]>();
