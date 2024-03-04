@@ -327,6 +327,7 @@ export default class SurvivalChartExtended
             this.props.sortedGroupedSurvivals,
             (survivals, group) => {
                 const survivalSummaries = this.survivalSummaries[group];
+
                 const groupName = this.analysisGroupsMap[group].name;
                 return {
                     numOfCases: survivals.length,
@@ -791,15 +792,25 @@ export default class SurvivalChartExtended
     }
 
     @computed get landmarkInformation() {
-        const initialGroupSize = Object.keys(
-            this.props.sortedGroupedSurvivals
-        ).map(item => this.props.sortedGroupedSurvivals[item].length);
+        // Calculate group size at time point 0
+        const initialGroupSampleSize = this.calculateGroupSize([0]);
+        // get the order of the groups
+        const orderOfLabels = this.analysisGroupsWithData.map(
+            item => item.value
+        );
+
+        const groupSizeAtTimePoint = this.calculateGroupSize(
+            this.landmarkPoint.map(item => item.xStart)
+        ).sort(
+            (a, b) =>
+                orderOfLabels.indexOf(a.groupName) -
+                orderOfLabels.indexOf(b.groupName)
+        );
         const landmarkPointInformation = _.groupBy(
-            this.calculateGroupSize(
-                this.landmarkPoint.map(item => item.xStart)
-            ),
+            groupSizeAtTimePoint,
             'timePoint'
         );
+
         const point = Object.keys(landmarkPointInformation).map(key =>
             landmarkPointInformation[key].map((value, i) => {
                 if (
@@ -813,7 +824,12 @@ export default class SurvivalChartExtended
                                 (
                                     (landmarkPointInformation[key][i]
                                         .aliveSamples /
-                                        initialGroupSize[i]) *
+                                        initialGroupSampleSize.filter(
+                                            x =>
+                                                x.groupName ==
+                                                landmarkPointInformation[key][i]
+                                                    .groupName
+                                        )[0].aliveSamples) *
                                     100
                                 ).toFixed(1) + '%'
                             }
@@ -848,16 +864,22 @@ export default class SurvivalChartExtended
         return point;
     }
     @computed get numberOfSamplesAtRisk() {
-        var timePoints = scaleLinear()
+        const orderOfLabels = this.analysisGroupsWithData.map(
+            item => item.value
+        );
+        const definedTimePoints: number[] = scaleLinear()
             .domain([0, this.sliderValue])
             .ticks(18);
-
         const numberAtRisk = _.groupBy(
-            this.calculateGroupSize(timePoints.map(item => item)),
+            this.calculateGroupSize(definedTimePoints).sort(
+                (a, b) =>
+                    orderOfLabels.indexOf(a.groupName) -
+                    orderOfLabels.indexOf(b.groupName)
+            ),
             'timePoint'
         );
 
-        const valueAtAxis = Object.keys(numberAtRisk).map(item =>
+        return Object.keys(numberAtRisk).map(item =>
             numberAtRisk[item].map((grp, i) => {
                 return (
                     <VictoryLabel
@@ -882,8 +904,6 @@ export default class SurvivalChartExtended
                 );
             })
         );
-
-        return valueAtAxis;
     }
     @observable _latestLandMarkPoint: number = 0;
     @action updatelatestLandMarkPoint(value: number) {
