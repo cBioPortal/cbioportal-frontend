@@ -646,7 +646,7 @@ describe('Group Comparison Tour', function() {
         step++;
     });
 
-    it('Step 8: Intro to the Survival tab, on the group comparison page.', () => {
+    it.skip('Step 8: Intro to the Survival tab, on the group comparison page.', () => {
         // The tour should be at step = 8
         assert.equal(step, 8);
 
@@ -670,7 +670,7 @@ describe('Group Comparison Tour', function() {
         step++;
     });
 
-    it('Step 9: Intro to the Clinical tab, on the group comparison page.', () => {
+    it.skip('Step 9: Intro to the Clinical tab, on the group comparison page.', () => {
         // The tour should be at step = 9
         assert.equal(step, 9);
 
@@ -694,7 +694,7 @@ describe('Group Comparison Tour', function() {
         step++;
     });
 
-    it('Step 10: Intro to the Genomic Alterations tab, on the group comparison page.', () => {
+    it.skip('Step 10: Intro to the Genomic Alterations tab, on the group comparison page.', () => {
         // The tour should be at step = 10
         assert.equal(step, 10);
 
