@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _, { uniq } from 'lodash';
 import { Sample } from 'cbioportal-ts-api-client';
 import { ClinicalDataType, ClinicalDataTypeEnum } from '../../StudyViewUtils';
 import Pluralize from 'pluralize';
@@ -132,6 +132,7 @@ export function validateLines(
 
     let occurrence: { [key: string]: number } = {};
     let validLines: { [key: string]: InputLine } = {};
+    let multiStudyCases: string[] = [];
 
     // Remove all dups, not necessary to mention in the message
     _.reduce(
@@ -141,27 +142,33 @@ export function validateLines(
         (acc, line) => {
             let _case = '';
             let validLine = true;
+            let newLines: InputLine[] = [];
             if (line.studyId === undefined || line.studyId === '') {
-                if (!isSingleStudy) {
-                    warningMessages.push({
-                        code: CodeEnum.INVALID_CASE_ID,
-                        message: new Error(
-                            `No study specified for ${caseType} id: ${line.caseId}, and more than one study selected for query. The case will be ignored.`
-                        ),
-                    });
-                    validLine = false;
-                } else {
-                    _case = getUniqueCaseId(selectedStudies[0], line.caseId);
+                // return true if at least one case is valid
+                validLine = _.some(selectedStudies, studyId => {
+                    _case = getUniqueCaseId(studyId, line.caseId);
+                    return validPair[_case];
+                });
+
+                if (selectedStudies.length > 1) {
+                    multiStudyCases.push(line.caseId);
+                }
+
+                selectedStudies.map(studyId => {
+                    _case = getUniqueCaseId(studyId, line.caseId);
                     if (!validPair[_case]) {
                         invalidCases.push(line.caseId);
-                        validLine = false;
                     } else {
                         if (occurrence[_case] === undefined) {
                             occurrence[_case] = 0;
                         }
                         occurrence[_case]++;
+
+                        let newLine = _.cloneDeep(line);
+                        newLine.studyId = studyId;
+                        newLines.push(newLine);
                     }
-                }
+                });
             } else {
                 if (!_.includes(selectedStudies, line.studyId)) {
                     errorMessages.push({
@@ -182,15 +189,30 @@ export function validateLines(
                         invalidCases.push(line.caseId);
                         validLine = false;
                     }
+                    newLines.push(_.cloneDeep(line));
                 }
             }
+
             if (validLine) {
-                acc[getInputLineKey(line)] = line;
+                _.forEach(newLines, newLine => {
+                    acc[getInputLineKey(newLine)] = newLine;
+                });
             }
             return acc;
         },
         validLines
     );
+
+    if (!isSingleStudy && !_.isEmpty(multiStudyCases)) {
+        warningMessages.push({
+            code: CodeEnum.INVALID_CASE_ID,
+            message: new Error(
+                `${caseType} id: ${multiStudyCases.join(', ')} 
+                belongs to multiple studies, all of them will be selected. Specify study id if you 
+                want to be more specific, Example: study_id:sample_id.`
+            ),
+        });
+    }
 
     // Find duplication cases
     const dups = _.reduce(
