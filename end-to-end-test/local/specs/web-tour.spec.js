@@ -353,7 +353,7 @@ describe('Virtual Study Tour', () => {
     });
 });
 
-describe.only('Group Comparison Tour', function() {
+describe('Group Comparison Tour', function() {
     let step = -1;
 
     this.retries(0);
@@ -366,11 +366,11 @@ describe.only('Group Comparison Tour', function() {
         browser.setWindowSize(1600, 1200);
     });
 
-    it.only('Initial step with -1.', () => {
+    it('Initial step with -1.', () => {
         assert.equal(step, -1);
     });
 
-    it.only('Click the entry to start tour.', () => {
+    it('Click the entry to start tour.', () => {
         // There should be a tour entry for virtual study, with the content `Compare User-defined Groups of Samples`.
         const groupComparisonTourEntry = $(
             'div[data-type="group-comparison-tour"]'
@@ -386,7 +386,7 @@ describe.only('Group Comparison Tour', function() {
         step++;
     });
 
-    it.only('Step 0: Type “glioma” in the search box automatically.', () => {
+    it('Step 0: Type “glioma” in the search box automatically.', () => {
         // The tour should be on the first step: step = 0
         assert.equal(step, 0);
 
@@ -414,7 +414,7 @@ describe.only('Group Comparison Tour', function() {
         step++;
     });
 
-    it.only('Step 1: Click on “View study summary” button, on the homepage.', () => {
+    it('Step 1: Click on “View study summary” button, on the homepage.', () => {
         // The tour should be at step = 1.
         assert.equal(step, 1);
 
@@ -447,7 +447,7 @@ describe.only('Group Comparison Tour', function() {
         step++;
     });
 
-    it.only('Step 2: Select more than one sample in the Mutated Genes table, on the study summary page.', () => {
+    it('Step 2: Select more than one sample in the Mutated Genes table, on the study summary page.', () => {
         // Should be on the Study Summary page.
         browser.waitUntil(() => browser.getUrl().includes('study/summary'), {
             timeout: 20000,
