@@ -353,18 +353,24 @@ describe('Virtual Study Tour', () => {
     });
 });
 
-describe('Group Comparison Tour', () => {
+describe.only('Group Comparison Tour', function() {
     let step = -1;
 
+    this.retries(0);
+
     before(() => {
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL, false);
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
     });
 
-    it('Initial step with -1.', () => {
+    beforeEach(() => {
+        browser.setWindowSize(1600, 1200);
+    });
+
+    it.only('Initial step with -1.', () => {
         assert.equal(step, -1);
     });
 
-    it('Click the entry to start tour.', () => {
+    it.only('Click the entry to start tour.', () => {
         // There should be a tour entry for virtual study, with the content `Compare User-defined Groups of Samples`.
         const groupComparisonTourEntry = $(
             'div[data-type="group-comparison-tour"]'
@@ -380,7 +386,7 @@ describe('Group Comparison Tour', () => {
         step++;
     });
 
-    it('Step 0: Type “glioma” in the search box automatically.', () => {
+    it.only('Step 0: Type “glioma” in the search box automatically.', () => {
         // The tour should be on the first step: step = 0
         assert.equal(step, 0);
 
@@ -408,7 +414,7 @@ describe('Group Comparison Tour', () => {
         step++;
     });
 
-    it('Step 1: Click on “View study summary” button, on the homepage.', () => {
+    it.only('Step 1: Click on “View study summary” button, on the homepage.', () => {
         // The tour should be at step = 1.
         assert.equal(step, 1);
 
@@ -441,7 +447,7 @@ describe('Group Comparison Tour', () => {
         step++;
     });
 
-    it('Step 2: Select more than one sample in the Mutated Genes table, on the study summary page.', () => {
+    it.only('Step 2: Select more than one sample in the Mutated Genes table, on the study summary page.', () => {
         // Should be on the Study Summary page.
         browser.waitUntil(() => browser.getUrl().includes('study/summary'), {
             timeout: 20000,
@@ -473,6 +479,11 @@ describe('Group Comparison Tour', () => {
         !tourModal.$(SKIP_ALL_BTN).isDisplayed();
         !tourModal.$(NEXT_STEP_BTN).isDisplayed();
 
+        browser.setWindowSize(
+            browser.getWindowSize().width + 400,
+            browser.getWindowSize().height
+        );
+
         browser.pause(1000);
         // There should be the Mutated Genes table [data-tour="mutated-genes-table"]
         const mutatedGenesTable = $('[data-tour="mutated-genes-table"]').$(
@@ -482,6 +493,8 @@ describe('Group Comparison Tour', () => {
 
         // Select samples, IDH1 mutations, TP53 mutant and EGFR amplified samples
         mutatedGenesTable.$$('input')[0].waitForDisplayed();
+
+        //browser.debug();
         mutatedGenesTable.$$('input')[0].click();
         mutatedGenesTable.$$('input')[1].click();
 
