@@ -141,24 +141,13 @@ export function validateLines(
         }),
         (acc, line) => {
             let _case = '';
-            let validLine = true;
+            let validLine = false;
             let newLines: InputLine[] = [];
             if (line.studyId === undefined || line.studyId === '') {
-                // return true if at least one case is valid
-                validLine = _.some(selectedStudies, studyId => {
-                    _case = getUniqueCaseId(studyId, line.caseId);
-                    return validPair[_case];
-                });
-
-                if (selectedStudies.length > 1) {
-                    multiStudyCases.push(line.caseId);
-                }
-
+                let validCaseCount = 0;
                 selectedStudies.map(studyId => {
                     _case = getUniqueCaseId(studyId, line.caseId);
-                    if (!validPair[_case]) {
-                        invalidCases.push(line.caseId);
-                    } else {
+                    if (validPair[_case]) {
                         if (occurrence[_case] === undefined) {
                             occurrence[_case] = 0;
                         }
@@ -167,8 +156,20 @@ export function validateLines(
                         let newLine = _.cloneDeep(line);
                         newLine.studyId = studyId;
                         newLines.push(newLine);
+
+                        validCaseCount += 1;
+                        validLine = true;
                     }
                 });
+
+                if (validCaseCount === 0) {
+                    invalidCases.push(line.caseId);
+                }
+
+                // case where it belongs to multiple studies
+                if (validCaseCount > 1) {
+                    multiStudyCases.push(line.caseId);
+                }
             } else {
                 if (!_.includes(selectedStudies, line.studyId)) {
                     errorMessages.push({
@@ -177,7 +178,6 @@ export function validateLines(
                             `Incorrect study id: ${line.studyId}`
                         ),
                     });
-                    validLine = false;
                 } else {
                     _case = getUniqueCaseId(line.studyId, line.caseId);
                     if (validPair[_case] !== undefined) {
@@ -185,9 +185,9 @@ export function validateLines(
                             occurrence[_case] = 0;
                         }
                         occurrence[_case]++;
+                        validLine = true;
                     } else {
                         invalidCases.push(line.caseId);
-                        validLine = false;
                     }
                     newLines.push(_.cloneDeep(line));
                 }
@@ -207,9 +207,9 @@ export function validateLines(
         warningMessages.push({
             code: CodeEnum.INVALID_CASE_ID,
             message: new Error(
-                `${caseType} id: ${multiStudyCases.join(', ')} 
-                belongs to multiple studies, all of them will be selected. Specify study id if you 
-                want to be more specific, Example: study_id:sample_id.`
+                `Some ${caseType} ID's belong to multiple studies, all of them will be selected. 
+                Specify study id if you want to be more specific, Example: study_id:sample_id. 
+                ${caseType} ID's: ${multiStudyCases.join(', ')}`
             ),
         });
     }
