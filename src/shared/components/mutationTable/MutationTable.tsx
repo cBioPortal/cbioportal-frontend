@@ -88,6 +88,8 @@ import {
     DEFAULT_ONCOKB_CONTENT_WIDTH,
 } from 'shared/lib/AnnotationColumnUtils';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
@@ -110,6 +112,7 @@ export interface IMutationTableProps {
     enableHotspot?: boolean;
     enableCivic?: boolean;
     enableRevue?: boolean;
+    enableCustomDriver?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -163,6 +166,10 @@ export interface IMutationTableProps {
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
     customControls?: JSX.Element;
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 }
 
 export enum MutationTableColumnType {
@@ -188,6 +195,8 @@ export enum MutationTableColumnType {
     NORMAL_ALLELE_FREQ = 'Allele Freq (N)',
     FUNCTIONAL_IMPACT = 'Functional Impact',
     ANNOTATION = 'Annotation',
+    CUSTOM_DRIVER = 'Custom Driver',
+    CUSTOM_DRIVER_TIER = 'Custom Driver Tier',
     HGVSG = 'HGVSg',
     COSMIC = 'COSMIC',
     COPY_NUM = 'Copy #',
@@ -1046,6 +1055,49 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
+        };
+
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
+            name: this.props.customDriverName!,
+            render: d => CustomDriverColumnFormatter.renderFunction(d),
+            download: CustomDriverColumnFormatter.getTextValue,
+            sortBy: (d: Mutation[]) => CustomDriverColumnFormatter.sortValue(d),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible:
+                this.props.dataStore &&
+                !_.isEmpty(this.props.dataStore.allData) &&
+                this.props.dataStore.allData.some(
+                    d =>
+                        d[0].driverFilter !== undefined ||
+                        d[0].driverFilterAnnotation !== undefined
+                ),
+            tooltip: <span>{this.props.customDriverDescription}</span>,
+            defaultSortDirection: 'desc',
+        };
+
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER] = {
+            name: this.props.customDriverTiersName!,
+            render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+            download: CustomDriverTierColumnFormatter.getTextValue,
+            sortBy: (d: Mutation[]) =>
+                CustomDriverTierColumnFormatter.getTextValue(d),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverTierColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible: false,
+            tooltip: <span>{this.props.customDriverTiersDescription}</span>,
         };
 
         this._columns[MutationTableColumnType.HGVSG] = {

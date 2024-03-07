@@ -18,10 +18,12 @@ import HoverablePoint from './HoverablePoint';
 import {
     axisLabelStyles,
     CBIOPORTAL_VICTORY_THEME,
+    DownloadControlOption,
     DownloadControls,
     getTextWidth,
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface IMiniFrequencyScatterChartData {
     x: number;
@@ -386,6 +388,10 @@ export default class MiniFrequencyScatterChart extends React.Component<
                             right: 10,
                             zIndex: 0,
                         }}
+                        showDownload={
+                            getServerConfig().skin_hide_download_controls ===
+                            DownloadControlOption.SHOW_ALL
+                        }
                     />
                 </div>
                 <Observer>{this.getTooltip}</Observer>

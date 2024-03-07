@@ -237,6 +237,10 @@ export default class Mutations extends React.Component<
                                 ? isPutativeDriver
                                 : undefined
                         }
+                        enableCustomDriver={
+                            this.props.store.driverAnnotationSettings
+                                .customBinary
+                        }
                         trackVisibility={
                             this.userSelectionStore.trackVisibility
                         }
