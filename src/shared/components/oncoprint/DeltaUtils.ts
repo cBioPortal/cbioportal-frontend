@@ -1139,7 +1139,7 @@ function transitionGeneticTrack(
             $track_info_tooltip_elt: nextSpec.infoTooltip
                 ? $('<div>' + nextSpec.infoTooltip + '</div>')
                 : undefined,
-            removable: true,
+            removable: nextProps.geneticTracks.length > 1 ? true : false,
             removeCallback: () => {
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
