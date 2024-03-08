@@ -38,13 +38,12 @@ export default class JupyterNotebookTool extends React.Component<
     }
 
     render() {
-        const clinical_data = JSON.stringify([700, 5, 300, 900, 850, 517]);
+        // const clinical_data = JSON.stringify([700, 5, 300, 900, 850, 517]);
 
-        const code0 = `import numpy as np\n`;
-        const code1 = `# Example analysis using NumPy\nmean = np.mean(${clinical_data})\nmedian = np.median(${clinical_data})\nstd = np.std(${clinical_data})\n`;
-        const code2 = `print("Mean:", mean)\nprint("Median:", median)\nprint("Standard Deviation:", std)`;
+        const code0 = `import pandas as pd\n`;
+        const code1 = `pd.read_csv('data/output.csv')\n`;
 
-        const final_code = [code0, code1, code2].join('\n');
+        const final_code = [code0, code1].join('\n');
 
         return (
             <PageLayout className={'whiteBackground staticPage'}>
@@ -62,7 +61,7 @@ export default class JupyterNotebookTool extends React.Component<
                     <br />
                     <div style={{ marginTop: 10 }}>
                         <iframe
-                            src={`https://jupyterlite.github.io/demo/repl/index.html?toolbar=1&kernel=python&code=${encodeURIComponent(
+                            src={`https://gautamsarawagi.github.io/my-custome-jupyterlite/repl/index.html?toolbar=1&kernel=python&code=${encodeURIComponent(
                                 final_code
                             )}`}
                             width="100%"
