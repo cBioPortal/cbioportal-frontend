@@ -1368,22 +1368,74 @@ export default class ResultsViewOncoprint extends React.Component<
             let json: GeneticTrackConfigMap = _.clone(
                 this.selectedGeneticTrackConfig
             );
-            json = _.omitBy(
-                json,
-                entry => entry.stableId === geneticTrackKey
+            const genesToDelete = geneticTrackKey.split(' ');
+            json = _.omitBy(json, entry =>
+                genesToDelete.some(gene => entry.stableId.includes(gene.trim()))
             ) as GeneticTrackConfigMap;
             const session = this.props.store.pageUserSession;
             session.userSettings = {
                 ...session.userSettings,
                 geneticlist: _.values(json),
             };
-            const updatedGeneList = Object.keys(json).join(' ');
+            const remainingGeneAfterDeletion = Object.keys(json).join(' ');
+            const updatedGeneList = this.calculateUpdatedGeneList(
+                remainingGeneAfterDeletion
+            );
             this.urlWrapper.updateURL({
-                gene_list: updatedGeneList,
+                gene_list: updatedGeneList.join(' '),
             });
         }
     }
 
+    private calculateUpdatedGeneList(
+        remainingGeneAfterDeletion: string
+    ): string[] {
+        const urlParams = new URLSearchParams(window.location.search);
+        const geneListFromURL = urlParams.get('gene_list') || '';
+        const geneListArrayFromURL = geneListFromURL
+            .split('%20')
+            .map(param => decodeURIComponent(param));
+
+        let insideSquareBrackets = false;
+        let updatedGeneList: string[] = [];
+        let withinQuotes = false;
+
+        const remainingGeneAfterDeletionString = remainingGeneAfterDeletion.split(
+            ' '
+        );
+        let startIdx = geneListArrayFromURL.indexOf('[');
+        let endIdx = geneListArrayFromURL.lastIndexOf(']');
+        let desiredArray = geneListArrayFromURL.slice(startIdx, endIdx + 1);
+        const containsBracketGenes = remainingGeneAfterDeletionString.some(
+            gene => desiredArray.includes(gene)
+        );
+        if (containsBracketGenes) {
+            for (const gene of geneListArrayFromURL) {
+                if (gene === '[') {
+                    insideSquareBrackets = true;
+                    updatedGeneList.push(gene);
+                    withinQuotes = false;
+                } else if (gene === ']') {
+                    insideSquareBrackets = false;
+                    updatedGeneList.push(gene);
+                    withinQuotes = false;
+                } else if (
+                    insideSquareBrackets &&
+                    gene.startsWith('"') &&
+                    !withinQuotes
+                ) {
+                    updatedGeneList.push(gene);
+                    withinQuotes = true;
+                } else if (remainingGeneAfterDeletion.includes(gene)) {
+                    updatedGeneList.push(gene);
+                }
+            }
+        } else {
+            updatedGeneList = [remainingGeneAfterDeletion];
+        }
+
+        return updatedGeneList;
+    }
     /**
      * Called when a clinical or heatmap track is sorted a-Z or Z-a, selected from within oncoprintjs UI
      */

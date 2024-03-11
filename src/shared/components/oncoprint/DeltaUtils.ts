@@ -1145,8 +1145,16 @@ function transitionGeneticTrack(
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
             },
             onClickRemoveInTrackMenu: () => {
-                nextProps.onDeleteGeneticTrack &&
-                    nextProps.onDeleteGeneticTrack(nextSpec.label);
+                const oql = nextSpec.oql;
+                if (oql) {
+                    const geneLabelsRegex = /[A-Z0-9]+(?=:)/g;
+                    const geneLabels = oql.match(geneLabelsRegex);
+                    if (geneLabels) {
+                        const geneLabelsString = geneLabels.join(' ');
+                        nextProps.onDeleteGeneticTrack &&
+                            nextProps.onDeleteGeneticTrack(geneLabelsString);
+                    }
+                }
             },
             expandCallback: nextSpec.expansionCallback || undefined,
             expandButtonTextGetter: () => 'Expand',
