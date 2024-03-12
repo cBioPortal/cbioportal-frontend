@@ -1,7 +1,12 @@
 import { CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
 import { getLoadConfig } from 'config/config';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 function proxyColumnStore(client: any, endpoint: string) {
+    if (getBrowserWindow().location.search.includes('legacy')) {
+        return;
+    }
+
     const method = `${endpoint}UsingPOSTWithHttpInfo`;
     const old = client[method];
     client[method] = function(params: any) {
