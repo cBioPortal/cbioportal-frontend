@@ -1146,13 +1146,17 @@ function transitionGeneticTrack(
             },
             onClickRemoveInTrackMenu: () => {
                 const oql = nextSpec.oql;
+                const sublabel = nextSpec.sublabel;
                 if (oql) {
                     const geneLabelsRegex = /[A-Z0-9]+(?=:)/g;
                     const geneLabels = oql.match(geneLabelsRegex);
                     if (geneLabels) {
                         const geneLabelsString = geneLabels.join(' ');
                         nextProps.onDeleteGeneticTrack &&
-                            nextProps.onDeleteGeneticTrack(geneLabelsString);
+                            nextProps.onDeleteGeneticTrack(
+                                geneLabelsString,
+                                sublabel || ''
+                            );
                     }
                 }
             },
