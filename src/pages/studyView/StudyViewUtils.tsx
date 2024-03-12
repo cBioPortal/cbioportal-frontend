@@ -1904,16 +1904,14 @@ export function getCNAColorByAlteration(alteration: string): string {
     }
 }
 
-export function transformMutatedType(eventType: string): string {
-    if (eventType === undefined || eventType === 'NA') return eventType;
+export function transformMutatedType(type: string): string {
+    if (type === undefined || type === 'NA') return type;
 
     // Split the input string by underscores
-    var words = eventType.split('_');
+    var words = type.split('_');
 
     // Capitalize the first letter of each word
-    var capitalizedWords = words.map(function(word) {
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-    });
+    var capitalizedWords = words.map(_.capitalize);
 
     // Join the words back together with a space between them
     return capitalizedWords.join(' ');
@@ -4086,19 +4084,19 @@ export async function invokeGenericAssayDataCount(
     chartInfo: GenericAssayChart,
     filters: StudyViewFilter
 ) {
-    let result: GenericAssayDataCountItem[] = [];
-
-    result = await internalClient.fetchGenericAssayDataCountsUsingPOST({
-        genericAssayDataCountFilter: {
-            genericAssayDataFilters: [
-                {
-                    stableId: chartInfo.genericAssayEntityId,
-                    profileType: chartInfo.profileType,
-                } as GenericAssayDataFilter,
-            ],
-            studyViewFilter: filters,
-        } as GenericAssayDataCountFilter,
-    });
+    const result: GenericAssayDataCountItem[] = await internalClient.fetchGenericAssayDataCountsUsingPOST(
+        {
+            genericAssayDataCountFilter: {
+                genericAssayDataFilters: [
+                    {
+                        stableId: chartInfo.genericAssayEntityId,
+                        profileType: chartInfo.profileType,
+                    } as GenericAssayDataFilter,
+                ],
+                studyViewFilter: filters,
+            } as GenericAssayDataCountFilter,
+        }
+    );
 
     let data = result.find(d => d.stableId === chartInfo.genericAssayEntityId);
     let counts: ClinicalDataCount[] = [];
@@ -4111,9 +4109,11 @@ export async function invokeGenericAssayDataCount(
             } as ClinicalDataCount;
         });
         stableId = data.stableId;
+
+        return { stableId: stableId, counts: counts };
     }
 
-    return { stableId: stableId, counts: counts };
+    return undefined;
 }
 
 export async function invokeGenomicDataCount(
@@ -4168,13 +4168,15 @@ export async function invokeGenomicDataCount(
             } as ClinicalDataCount;
         });
         profileType = data.profileType;
+
+        return {
+            counts: counts,
+            profileType: profileType,
+            getDisplayedValue: getDisplayedValue,
+        };
     }
 
-    return {
-        counts: counts,
-        profileType: profileType,
-        getDisplayedValue: getDisplayedValue,
-    };
+    return undefined;
 }
 
 export async function invokeMutationDataCount(

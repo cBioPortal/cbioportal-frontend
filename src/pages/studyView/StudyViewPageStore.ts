@@ -3631,7 +3631,7 @@ export class StudyViewPageStore
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this.resetGeneFilter(chartUniqueKey);
                     break;
-                case ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE:
+                case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE:
                     this.updateMutationDataFilters(chartUniqueKey, [[]]);
                     break;
                 case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
@@ -3717,7 +3717,7 @@ export class StudyViewPageStore
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             case ChartTypeEnum.CNA_GENES_TABLE:
                 return this._geneFilterSet.has(chartUniqueKey);
-            case ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE:
+            case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE:
                 return this._mutationDataFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                 return this._structVarFilterSet.has(chartUniqueKey);
@@ -4927,30 +4927,31 @@ export class StudyViewPageStore
             ] = remoteData<ClinicalDataCountSummary[]>({
                 await: () => [],
                 invoke: async () => {
-                    let res: ClinicalDataCountSummary[] = [];
+                    const res: ClinicalDataCountSummary[] = [];
                     const chartInfo = this._genericAssayChartMap.get(
                         chartMeta.uniqueKey
                     );
                     if (chartInfo) {
-                        let result = await invokeGenericAssayDataCount(
+                        const result = await invokeGenericAssayDataCount(
                             chartInfo,
                             this.filters
                         );
+
                         if (_.isEmpty(result)) {
                             return res;
-                        } else {
-                            if (!this.chartToUsedColors.has(result.stableId)) {
-                                this.chartToUsedColors.set(
-                                    result.stableId,
-                                    new Set()
-                                );
-                            }
+                        }
 
-                            return this.addColorToCategories(
-                                result.counts,
-                                result.stableId
+                        if (!this.chartToUsedColors.has(result!.stableId)) {
+                            this.chartToUsedColors.set(
+                                result!.stableId,
+                                new Set()
                             );
                         }
+
+                        return this.addColorToCategories(
+                            result!.counts,
+                            result!.stableId
+                        );
                     }
                     return res;
                 },
@@ -4971,21 +4972,25 @@ export class StudyViewPageStore
             >({
                 await: () => [this.selectedSamples],
                 invoke: async () => {
-                    let res: ClinicalDataCountSummary[] = [];
+                    const res: ClinicalDataCountSummary[] = [];
                     const chartInfo = this._geneSpecificChartMap.get(
                         chartMeta.uniqueKey
                     );
                     //only invoke if there are filtered samples
                     if (chartInfo && this.hasFilteredSamples) {
-                        let result = await invokeGenomicDataCount(
+                        const result = await invokeGenomicDataCount(
                             chartInfo,
                             this.filters
                         );
 
+                        if (_.isEmpty(result)) {
+                            return res;
+                        }
+
                         return this.addColorToCategories(
-                            result.counts,
-                            result.profileType,
-                            result.getDisplayedValue
+                            result!.counts,
+                            result!.profileType,
+                            result!.getDisplayedValue
                         );
                     }
                     return res;
@@ -4997,7 +5002,7 @@ export class StudyViewPageStore
         return this.genomicDataCountPromises[chartMeta.uniqueKey];
     }
 
-    public getMutationEventChartDataCount(
+    public getMutationTypeChartDataCount(
         chartMeta: ChartMeta
     ): MobxPromise<MultiSelectionTableRow[]> {
         if (
@@ -5008,7 +5013,7 @@ export class StudyViewPageStore
             >({
                 await: () => [this.selectedSamples],
                 invoke: async () => {
-                    let res: MultiSelectionTableRow[] = [];
+                    const res: MultiSelectionTableRow[] = [];
                     const chartInfo = this._geneSpecificChartMap.get(
                         chartMeta.uniqueKey
                     );
@@ -6316,12 +6321,12 @@ export class StudyViewPageStore
                 ) {
                     this.chartsType.set(
                         uniqueKey,
-                        ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE
+                        ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE
                     );
                     this.chartsDimension.set(
                         uniqueKey,
                         STUDY_VIEW_CONFIG.layout.dimensions[
-                            ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE
+                            ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE
                         ]
                     );
                 } else {
@@ -7161,7 +7166,7 @@ export class StudyViewPageStore
                                 ? {
                                       mutationOptionType:
                                           chartUserSettings.chartType ===
-                                          ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE
+                                          ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE
                                               ? MutationOptionConstants.MUTATION_TYPE
                                               : MutationOptionConstants.MUTATED,
                                   }
@@ -10010,7 +10015,7 @@ export class StudyViewPageStore
         if (this.molecularProfileSampleCountSet.result !== undefined) {
             switch (chartType) {
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
-                case ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE: {
+                case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE: {
                     count = this.molecularProfileSampleCountSet.result[
                         MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
                     ]

@@ -666,7 +666,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             }
-            case ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE: {
+            case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE: {
                 return () => {
                     const numColumn: MultiSelectionTableColumn = {
                         columnKey: MultiSelectionTableColumnKey.NUMBER,

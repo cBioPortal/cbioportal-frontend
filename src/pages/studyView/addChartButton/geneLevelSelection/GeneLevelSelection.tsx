@@ -194,16 +194,15 @@ export default class GeneLevelSelection extends React.Component<
     @computed
     private get molecularProfileOptions() {
         if (this.props.molecularProfileOptionsPromise.isComplete) {
-            let options: MolecularProfileOption[] = this.props
-                .molecularProfileOptionsPromise.result!;
-
-            options = options.map(option => {
-                return {
-                    ...option,
-                    label: `${option.label} (${option.count} samples)`,
-                    profileName: option.label,
-                };
-            });
+            const options: MolecularProfileOption[] = this.props.molecularProfileOptionsPromise.result!.map(
+                option => {
+                    return {
+                        ...option,
+                        label: `${option.label} (${option.count} samples)`,
+                        profileName: option.label,
+                    };
+                }
+            );
 
             const optionsMap = _.reduce(
                 options,
@@ -288,13 +287,12 @@ export default class GeneLevelSelection extends React.Component<
                             {this.props.submitButtonText}
                         </button>
                     </div>
-                    <div style={{ width: '70%', marginTop: '5px' }}>
-                        {this.selectedOption &&
-                            molecularProfileSubOptions
-                                .map(option => option.profileType)
-                                .includes(
-                                    this.selectedOption.alterationType
-                                ) && (
+
+                    {this.selectedOption &&
+                        molecularProfileSubOptions
+                            .map(option => option.profileType)
+                            .includes(this.selectedOption.alterationType) && (
+                            <div style={{ width: '70%', marginTop: '5px' }}>
                                 <ReactSelect
                                     value={this.selectedSubOption}
                                     onChange={this.handleSubSelect}
@@ -302,8 +300,8 @@ export default class GeneLevelSelection extends React.Component<
                                     isClearable={false}
                                     isSearchable={false}
                                 />
-                            )}
-                    </div>
+                            </div>
+                        )}
 
                     {/* <div className={styles.operations}>
                         

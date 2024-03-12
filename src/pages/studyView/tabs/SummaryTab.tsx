@@ -454,21 +454,21 @@ export class StudySummaryTab extends React.Component<
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
-            [ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE]: () => ({
+            [ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE]: () => ({
                 filters: this.store.getMutationDataFiltersByUniqueKey(
                     chartMeta.uniqueKey
                 ),
-                promise: this.store.getMutationEventChartDataCount(chartMeta),
+                promise: this.store.getMutationTypeChartDataCount(chartMeta),
                 onValueSelection: this.handlers.onAddMutationDataValues,
                 onResetSelection: this.handlers.onSetMutationDataValues,
                 id: 'mutation-type-counts-table',
                 title: this.store.getChartTitle(
-                    ChartTypeEnum.MUTATION_EVENT_TYPE_COUNTS_TABLE,
+                    ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE,
                     props.title
                 ),
                 getData: () =>
                     getMutationTypesDownloadData(
-                        this.store.getMutationEventChartDataCount(chartMeta)
+                        this.store.getMutationTypeChartDataCount(chartMeta)
                     ),
                 downloadTypes: ['Data'],
                 onChangeCancerGeneFilter: this.store
