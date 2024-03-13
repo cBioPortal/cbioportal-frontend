@@ -217,6 +217,11 @@ browserWindow.routingStore = routingStore;
 let render = (key?: number) => {
     if (!getBrowserWindow().navigator.webdriver) initializeTracking();
 
+    if (stores.appStore?.serverConfig.user_display_name === 'servcbioportal') {
+        getLoadConfig().hide_login = true;
+        browserWindow.isMSKCIS = true;
+    }
+
     if (stores.appStore.serverConfig.app_name === 'mskcc-portal') {
         datadogLogs.init({
             clientToken: 'pub9a94ebb002f105ff44d8e427b6549775',
