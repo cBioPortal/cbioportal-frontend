@@ -78,7 +78,7 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
-import PlotsFeature from 'pages/resultsView/plots/PlotsFeature';
+import PlotsFeature from 'pages/resultsView/plots/PlotsTab';
 
 export interface IStudyViewPageProps {
     routing: any;

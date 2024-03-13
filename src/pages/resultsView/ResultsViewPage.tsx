@@ -74,7 +74,6 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import PathWayMapperContainer from 'pages/resultsView/pathwayMapper/PathWayMapperContainer';
-import PlotsFeature from './plots/PlotsFeature';
 
 export function initStore(
     appStore: AppStore,
@@ -254,11 +253,7 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.PLOTS}
                             linkText={'Plots'}
                         >
-                            {/* <PlotsTab
-                                store={store}
-                                urlWrapper={this.urlWrapper}
-                            /> */}
-                            <PlotsFeature
+                            <PlotsTab
                                 filteredSamplesByDetailedCancerType={
                                     store.filteredSamplesByDetailedCancerType
                                 }
