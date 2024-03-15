@@ -15,7 +15,7 @@ services:
     networks:
     - cbio-net
     container_name: keycloak
-    image: jboss/keycloak:11.0.3
+    image: quay.io/keycloak/keycloak:11.0.3
     restart: unless-stopped
     depends_on:
     - kcdb
