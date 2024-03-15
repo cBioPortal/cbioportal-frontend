@@ -17,7 +17,7 @@ import {
 } from './CoExpressionPlotUtils';
 import _ from 'lodash';
 import { scatterPlotSize } from '../../../shared/components/plots/PlotUtils';
-import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
+import { IAxisLogScaleParams } from 'shared/components/plots/PlotsTabUtils';
 import autobind from 'autobind-decorator';
 import { GeneticEntity } from 'shared/model/GeneticEntity';
 import { getServerConfig } from 'config/config';

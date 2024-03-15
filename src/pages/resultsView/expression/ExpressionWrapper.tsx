@@ -36,7 +36,7 @@ import {
     scatterPlotZIndexSortBy,
     IAxisLogScaleParams,
     basicAppearance,
-} from '../plots/PlotsTabUtils';
+} from 'shared/components/plots/PlotsTabUtils';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import {
@@ -53,7 +53,7 @@ import {
     ColoringType,
     PlotType,
     SelectedColoringTypes,
-} from '../plots/PlotsTab';
+} from '../../../shared/components/plots/PlotsTab';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';

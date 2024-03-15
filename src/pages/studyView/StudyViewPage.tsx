@@ -78,7 +78,7 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
-import PlotsFeature from 'pages/resultsView/plots/PlotsTab';
+import PlotsTab from 'shared/components/plots/PlotsTab';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -738,10 +738,18 @@ export default class StudyViewPage extends React.Component<
                                         key={5}
                                         id={StudyViewPageTabKeyEnum.PLOTS}
                                         linkText={
-                                            StudyViewPageTabDescriptions.PLOTS
+                                            <>
+                                                {
+                                                    StudyViewPageTabDescriptions.PLOTS
+                                                }
+                                                &nbsp;
+                                                <strong className={'beta-text'}>
+                                                    Beta!
+                                                </strong>
+                                            </>
                                         }
                                     >
-                                        <PlotsFeature
+                                        <PlotsTab
                                             filteredSamplesByDetailedCancerType={
                                                 this.store
                                                     .filteredSamplesByDetailedCancerType

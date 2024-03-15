@@ -22,7 +22,7 @@ import StructuralVariants from 'pages/resultsView/structuralVariant/StructuralVa
 import './styles.scss';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
-import PlotsTab from './plots/PlotsTab';
+import PlotsTab from 'shared/components/plots/PlotsTab';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';

@@ -2,7 +2,7 @@ import BoxScatterPlot, {
     IBoxScatterPlotProps,
     toBoxPlotData,
 } from 'shared/components/plots/BoxScatterPlot';
-import { IBoxScatterPlotPoint } from 'pages/resultsView/plots/PlotsTabUtils';
+import { IBoxScatterPlotPoint } from 'shared/components/plots/PlotsTabUtils';
 import React from 'react';
 import { computed, makeObservable } from 'mobx';
 import { SummaryStatisticsTable } from './SummaryStatisticsTable';

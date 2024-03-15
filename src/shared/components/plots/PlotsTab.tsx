@@ -64,6 +64,8 @@ import {
     maybeSetLogScale,
     logScalePossibleForProfile,
     isGenericAssaySelected,
+    showWaterfallPlot,
+    getOption,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -105,20 +107,19 @@ import {
     scatterPlotSize,
 } from '../../../shared/components/plots/PlotUtils';
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
-import MultipleCategoryBarPlot from '../../groupComparison/MultipleCategoryBarPlot';
+import MultipleCategoryBarPlot from 'pages/groupComparison/MultipleCategoryBarPlot';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import {
     DownloadControlOption,
     onMobxPromise,
 } from 'cbioportal-frontend-commons';
-import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
 import Pluralize from 'pluralize';
 import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype';
 import { generateQuickPlots } from './QuickPlots';
 import ResultsViewURLWrapper, {
     PlotsSelectionParam,
     ResultsViewURLQuery,
-} from '../ResultsViewURLWrapper';
+} from 'pages/resultsView/ResultsViewURLWrapper';
 import ClinicalDataCache, {
     SpecialAttribute,
 } from '../../../shared/cache/ClinicalDataCache';
@@ -132,7 +133,7 @@ import {
     makeGenericAssayPlotsTabOption,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';
-import ScrollWrapper from '../cancerSummary/ScrollWrapper';
+import ScrollWrapper from 'pages/resultsView/cancerSummary/ScrollWrapper';
 import {
     DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
     MenuList,
@@ -141,7 +142,7 @@ import {
 import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { getServerConfig } from 'config/config';
-import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
+import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
@@ -866,12 +867,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     if (self.props.hasNoQueriedGenes) {
                         return undefined;
                     } else {
-                        return {
-                            value: geneOptions[0].value,
-                            label: self.isGeneProfiled(geneOptions[0].label)
-                                ? geneOptions[0].label
-                                : geneOptions[0].label + ' (Not profiled)',
-                        };
+                        return getOption(
+                            geneOptions[0],
+                            self.isGeneProfiled(geneOptions[0].label)
+                        );
                     }
                 } else if (
                     vertical &&
@@ -889,26 +888,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     const selectedGeneOption =
                         self.horzSelection.selectedGeneOption;
                     if (selectedGeneOption) {
-                        return {
-                            value: selectedGeneOption.value,
-                            label: self.isGeneProfiled(selectedGeneOption.label)
-                                ? selectedGeneOption.label
-                                : selectedGeneOption.label + ' (Not profiled)',
-                        };
+                        return getOption(
+                            selectedGeneOption,
+                            self.isGeneProfiled(selectedGeneOption.label)
+                        );
                     }
                     return selectedGeneOption;
                 } else {
                     // otherwise, return stored value for this variable
                     if (this._selectedGeneOption) {
-                        return {
-                            value: this._selectedGeneOption.value,
-                            label: self.isGeneProfiled(
-                                this._selectedGeneOption.label
-                            )
-                                ? this._selectedGeneOption.label
-                                : this._selectedGeneOption.label +
-                                  ' (Not profiled)',
-                        };
+                        return getOption(
+                            this._selectedGeneOption,
+                            self.isGeneProfiled(this._selectedGeneOption.label)
+                        );
                     }
                     return this._selectedGeneOption;
                 }
@@ -2053,7 +2045,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // add gene options
             allOptions.push({
                 label: 'Genes',
-                // options: this.props.genes.result!.filter(g => g.hugoGeneSymbol === 'KRAS').map(gene => ({
                 options: this.props.genes.result!.map(gene => ({
                     label: gene.hugoGeneSymbol,
                     info: {
@@ -3466,15 +3457,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         gene: string,
         coverageInformation?: CoverageInformation
     ) {
-        if (coverageInformation) {
-            return Object.values(coverageInformation.samples).some(
+        const samples =
+            coverageInformation?.samples ||
+            this.props.coverageInformation.result?.samples;
+        if (samples) {
+            return Object.values(samples).some(
                 s => !_.isEmpty(s.allGenes) || !!s.byGene[gene]
             );
-        }
-        if (this.props.coverageInformation.isComplete) {
-            return Object.values(
-                this.props.coverageInformation.result!.samples
-            ).some(s => !_.isEmpty(s.allGenes) || !!s.byGene[gene]);
         }
         return false;
     }
@@ -3738,12 +3727,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         return coverageInformation;
                     }
                 );
-                options = options.map(g => ({
-                    value: g.value,
-                    label: this.isGeneProfiled(g.label, coverageInformation)
-                        ? g.label
-                        : g.label + ' (Not profiled)',
-                }));
+                options = options.map(g =>
+                    getOption(
+                        g,
+                        this.isGeneProfiled(g.label, coverageInformation)
+                    )
+                );
                 callback(options);
             };
         } else {
@@ -3751,12 +3740,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 (vertical
                     ? this.vertGeneOptions.result
                     : this.horzGeneOptions.result) || [];
-            optionsWithProfiledStatus = options.map(g => ({
-                value: g.value,
-                label: this.isGeneProfiled(g.label)
-                    ? g.label
-                    : g.label + ' (Not profiled)',
-            }));
+            optionsWithProfiledStatus = options.map(g =>
+                getOption(g, this.isGeneProfiled(g.label))
+            );
         }
 
         return (
@@ -5071,7 +5057,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    @computed get showNoDataTypesSelectedWarning() {
+    @computed get shouldShowNoDataTypesSelectedWarning() {
         return (
             this.dataTypeOptions.isComplete &&
             this.dataTypeToDataSourceOptions.isComplete &&
@@ -5079,7 +5065,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    @computed get showNoGenesSelectedWarning() {
+    @computed get shouldShowNoGenesSelectedWarning() {
         return (
             this.dataTypeOptions.isComplete &&
             this.dataTypeToDataSourceOptions.isComplete &&
@@ -5212,14 +5198,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             );
         }
 
-        if (this.showNoDataTypesSelectedWarning) {
+        if (this.shouldShowNoDataTypesSelectedWarning) {
             return (
                 <div className={'alert alert-info'}>
                     Please select datatype(s).
                 </div>
             );
         }
-        if (this.showNoGenesSelectedWarning) {
+        if (this.shouldShowNoGenesSelectedWarning) {
             return (
                 <div className={'alert alert-info'}>Please select gene(s).</div>
             );
