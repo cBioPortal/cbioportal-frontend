@@ -38,12 +38,18 @@ export default class JupyterNotebookTool extends React.Component<
     }
 
     render() {
-        // const clinical_data = JSON.stringify([700, 5, 300, 900, 850, 517]);
-
         const code0 = `import pandas as pd\n`;
-        const code1 = `pd.read_csv('data/output.csv')\n`;
+        const code1 = `pd.read_csv('output.csv')\n`;
 
         const final_code = [code0, code1].join('\n');
+
+        function toggle() {
+            // Access the iframe using window.frames
+            const jupyterIframe = window.frames[0];
+            if (jupyterIframe) {
+                jupyterIframe.postMessage({ type: 'from-host-to-iframe' }, '*');
+            }
+        }
 
         return (
             <PageLayout className={'whiteBackground staticPage'}>
@@ -57,15 +63,16 @@ export default class JupyterNotebookTool extends React.Component<
                         Oncoprinter
                     </h1>{' '}
                     Jupyter Notebook for visualization and advance works.
+                    <button onClick={toggle}>Change Theme</button>
                     <br />
                     <br />
                     <div style={{ marginTop: 10 }}>
                         <iframe
-                            src={`https://gautamsarawagi.github.io/my-custome-jupyterlite/repl/index.html?toolbar=1&kernel=python&code=${encodeURIComponent(
+                            src={`https://master--regal-malabi-ea7e9f.netlify.app/lite/repl/index.html?toolbar=1&kernel=python&code=${encodeURIComponent(
                                 final_code
                             )}`}
                             width="100%"
-                            height="600px"
+                            height="900px"
                         ></iframe>
                     </div>
                 </div>
