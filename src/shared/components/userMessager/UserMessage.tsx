@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { remoteData, isWebdriver } from 'cbioportal-frontend-commons';
-import { action, computed, observable, makeObservable } from 'mobx';
+import { action, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
-import { MobxPromise } from 'mobxpromise';
 import { Portal } from 'react-portal';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, MobxPromise } from 'cbioportal-frontend-commons';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 
 export interface IUserMessage {

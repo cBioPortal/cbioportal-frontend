@@ -127,3 +127,5 @@ export const DataTypeConstants = {
     BINARY: 'BINARY',
     CATEGORICAL: 'CATEGORICAL',
 };
+
+export const SUPPORTED_DAT_METHODS = ['oauth2', 'uuid'];

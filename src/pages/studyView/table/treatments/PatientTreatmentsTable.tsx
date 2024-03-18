@@ -3,7 +3,6 @@ import { observer } from 'mobx-react';
 import _ from 'lodash';
 import FixedHeaderTable, { IFixedHeaderTableProps } from '../FixedHeaderTable';
 import { action, computed, observable, makeObservable } from 'mobx';
-import autobind from 'autobind-decorator';
 import {
     Column,
     SortDirection,
@@ -12,11 +11,7 @@ import { PatientTreatmentRow } from 'cbioportal-ts-api-client';
 import { correctColumnWidth } from 'pages/studyView/StudyViewUtils';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
-import MobxPromise from 'mobxpromise';
-import {
-    stringListToIndexSet,
-    stringListToSet,
-} from 'cbioportal-frontend-commons';
+import { MobxPromise, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import {
     treatmentUniqueKey,

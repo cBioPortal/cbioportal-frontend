@@ -7,21 +7,16 @@ import styles from './styles.module.scss';
 import { computed, observable, makeObservable } from 'mobx';
 import { MutualExclusivity } from '../../../shared/model/MutualExclusivity';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import DiscreteCNACache from '../../../shared/cache/DiscreteCNACache';
-import { If, Then, Else } from 'react-if';
 import Loader from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import {
     getTrackPairsCountText,
     getData,
     getFilteredData,
-    AlteredStatus,
     getSampleAlteredFilteredMap,
 } from './MutualExclusivityUtil';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
-import { OQLLineFilterOutput } from '../../../shared/lib/oql/oqlfilter';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { SampleAlteredMap } from '../ResultsViewPageStoreUtils';
-import Pluralize from 'pluralize';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 

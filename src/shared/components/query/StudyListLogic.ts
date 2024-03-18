@@ -11,7 +11,7 @@ import {
 import { QueryStore } from './QueryStore';
 import { computed, action, makeObservable } from 'mobx';
 import { performSearchSingle } from '../../lib/query/textQueryUtils';
-import { cached } from 'mobxpromise';
+import { cached } from 'cbioportal-frontend-commons';
 import { ServerConfigHelpers } from '../../../config/config';
 import memoize from 'memoize-weak-decorator';
 import { SearchResult } from 'shared/components/query/filteredSearch/SearchClause';

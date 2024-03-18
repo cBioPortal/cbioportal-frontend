@@ -339,6 +339,7 @@ export function tabs(
                 onSelectGenePanel={pageComponent.toggleGenePanelModal}
                 mergeOncoKbIcons={pageComponent.mergeMutationTableOncoKbIcons}
                 onOncoKbIconToggle={pageComponent.handleOncoKbIconToggle}
+                enableOncoKb={getServerConfig().show_oncokb}
                 sampleIds={
                     sampleManager
                         ? sampleManager.getActiveSampleIdsInOrder()
@@ -347,6 +348,22 @@ export function tabs(
                 namespaceColumns={
                     pageComponent.patientViewPageStore.namespaceColumnConfig
                         .structVar
+                }
+                customDriverName={
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_binary_menu_label!
+                }
+                customDriverDescription={
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_binary_menu_description!
+                }
+                customDriverTiersName={
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_tiers_menu_label!
+                }
+                customDriverTiersDescription={
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_tiers_menu_description!
                 }
             />
 
@@ -413,6 +430,22 @@ export function tabs(
                                     pageComponent.patientViewPageStore
                                         .namespaceColumnConfig.cna
                                 }
+                                customDriverName={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_binary_menu_label!
+                                }
+                                customDriverDescription={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_binary_menu_description!
+                                }
+                                customDriverTiersName={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_tiers_menu_label!
+                                }
+                                customDriverTiersDescription={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_tiers_menu_description!
+                                }
                             />
                         </If>
                     </div>
@@ -440,6 +473,22 @@ export function tabs(
                         pageComponent.mergeMutationTableOncoKbIcons
                     }
                     onOncoKbIconToggle={pageComponent.handleOncoKbIconToggle}
+                    customDriverName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_label!
+                    }
+                    customDriverDescription={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_description!
+                    }
+                    customDriverTiersName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_label!
+                    }
+                    customDriverTiersDescription={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_description!
+                    }
                 />
             </MSKTab>
         );
@@ -760,7 +809,7 @@ export function tabs(
             <MSKTab
                 key={8}
                 id="mutationalSignatures"
-                linkText="Mutational Signature Data"
+                linkText="Mutational Signatures"
                 hide={
                     pageComponent.patientViewPageStore
                         .mutationalSignatureMolecularProfiles.isPending ||
@@ -799,6 +848,10 @@ export function tabs(
                     samples={
                         pageComponent.patientViewPageStore
                             .samplesWithCountDataAvailable
+                    }
+                    samplesNotProfiled={
+                        pageComponent.patientViewPageStore
+                            .samplesNotProfiledForMutationalSignatures
                     }
                     onSampleChange={pageComponent.onSampleIdChange}
                 />

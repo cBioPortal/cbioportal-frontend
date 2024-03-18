@@ -27,9 +27,12 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     mygene_info_url:
         'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot',
 
-    oncoprint_custom_driver_annotation_binary_menu_label:
-        'Custom driver annotations',
-    oncoprint_custom_driver_annotation_tiers_menu_label: 'Driver tiers',
+    oncoprint_custom_driver_annotation_binary_menu_label: 'Custom Driver',
+    oncoprint_custom_driver_annotation_binary_menu_description:
+        'Custom driver annotation',
+    oncoprint_custom_driver_annotation_tiers_menu_label: 'Custom Driver Tiers',
+    oncoprint_custom_driver_annotation_tiers_menu_description:
+        'Custom driver tiers',
     oncoprint_custom_driver_annotation_binary_default: true,
     oncoprint_custom_driver_annotation_tiers_default: true,
     oncoprint_oncokb_default: true,
@@ -128,6 +131,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     session_url_length_threshold: '1500',
 
+    enable_study_tags: true,
+
     study_view: {
         tableAttrs: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
         priority: {
@@ -220,9 +225,15 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_patient_view_structural_variant_table_columns_show_on_init: '',
 
+    skin_results_view_tables_default_sort_column: 'Annotation',
+
+    skin_patient_view_tables_default_sort_column: 'Annotation',
+
     skin_patient_view_custom_sample_type_colors_json: '',
 
     studyview_max_samples_selected: 0,
+
+    studyview_clinical_attribute_chart_count: 20,
 
     study_download_url: '',
 

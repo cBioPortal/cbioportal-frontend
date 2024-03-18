@@ -77,11 +77,14 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
+import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 
 export interface IStudyViewPageProps {
     routing: any;
     appStore: AppStore;
 }
+
+export const MAX_URL_LENGTH = 300000;
 
 @observer
 export class StudyResultsSummary extends React.Component<
@@ -292,6 +295,14 @@ export default class StudyViewPage extends React.Component<
     toggleShareLinkModal() {
         this.shareLinkModal = !this.shareLinkModal;
         this.sharedGroups = [];
+    }
+
+    @observable showVirtualStudyModal = false;
+
+    @action.bound
+    toggleVirtualStudyModal() {
+        debugger;
+        this.showVirtualStudyModal = !this.showVirtualStudyModal;
     }
 
     @action.bound
@@ -554,19 +565,45 @@ export default class StudyViewPage extends React.Component<
         return buildCustomTabs(this.customTabsConfigs);
     }
 
+    @computed get bookmarkModal() {
+        // urls have a length limit after which browser will fail to read them
+        // when the url WITH FILTERS exceed this length, the only option is to make a virtual
+        // study with filtered cohort
+        // this will NOT show any fitlers, but it's the best we can do right now
+        if (this.studyViewFullUrlWithFilter.length > MAX_URL_LENGTH) {
+            return (
+                <VirtualStudyModal
+                    appStore={this.props.appStore}
+                    pageStore={this.store}
+                    message={
+                        <div className={'alert alert-warning'}>
+                            The url is too long to share. Please consider making
+                            a virtual study containing the selected samples.
+                        </div>
+                    }
+                    onHide={this.toggleBookmarkModal}
+                />
+            );
+        } else {
+            return (
+                <BookmarkModal
+                    onHide={this.toggleBookmarkModal}
+                    title={'Bookmark this filter'}
+                    urlPromise={this.getBookmarkUrl()}
+                />
+            );
+        }
+    }
+
     content() {
         return (
             <div className="studyView">
-                {this.showBookmarkModal && (
-                    <BookmarkModal
-                        onHide={this.toggleBookmarkModal}
-                        title={'Bookmark this filter'}
-                        urlPromise={this.getBookmarkUrl()}
-                    />
-                )}
+                {this.showBookmarkModal && this.bookmarkModal}
+
                 {this.shareLinkModal && (
                     <BookmarkModal
                         onHide={this.toggleShareLinkModal}
+                        //onRequestVirtualStudy={this.togg}
                         title={
                             this.sharedGroups.length > 1
                                 ? `Share ${this.sharedGroups.length} Groups`
@@ -595,6 +632,7 @@ export default class StudyViewPage extends React.Component<
                     this.store.unknownQueriedIds.isComplete &&
                     this.store.displayedStudies.isComplete &&
                     this.store.queriedPhysicalStudies.isComplete &&
+                    this.store.shouldDisplaySampleTreatments.isComplete &&
                     this.store.queriedPhysicalStudies.result.length > 0 && (
                         <div>
                             <StudyPageHeader

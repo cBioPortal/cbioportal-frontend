@@ -290,7 +290,16 @@ export default class ClinicalTable extends React.Component<
 
     @autobind
     addAll(selectedRows: ClinicalDataCountSummary[]) {
-        this.props.onUserSelection(selectedRows.map(row => row.value));
+        // To prevent the deselection of previously applied filters upon each "Select All" click,
+        // we retrieve the existing filters and concatenate them with the new ones.
+        let filters = toJS(this.props.filters);
+
+        let uniqueSelectedRows = selectedRows
+            .map(row => row.value)
+            .filter(item => !filters.includes(item));
+
+        filters = filters.concat(uniqueSelectedRows);
+        this.props.onUserSelection(filters);
     }
 
     @autobind

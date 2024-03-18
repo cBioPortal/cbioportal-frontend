@@ -1345,7 +1345,6 @@ function transitionClinicalTrack(
 
         // update ruleset if color has changed for selected track
         if (
-            nextProps.clinicalTrackColorChanged &&
             nextProps.trackKeySelectedForEdit &&
             getTrackSpecKeyToTrackId()[nextProps.trackKeySelectedForEdit] ===
                 trackId
@@ -1355,8 +1354,6 @@ function transitionClinicalTrack(
             rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
             rule_set_params.na_legend_label = nextSpec.na_legend_label;
             oncoprint.setRuleSet(trackId, rule_set_params);
-            nextProps.setClinicalTrackColorChanged &&
-                nextProps.setClinicalTrackColorChanged(false);
         }
     }
 }

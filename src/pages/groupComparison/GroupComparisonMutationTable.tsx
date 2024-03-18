@@ -66,6 +66,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
         ...MutationTable.defaultProps,
         columns: [
             MutationTableColumnType.ANNOTATION,
+            MutationTableColumnType.CUSTOM_DRIVER,
+            MutationTableColumnType.CUSTOM_DRIVER_TIER,
             MutationTableColumnType.MUTATION_STATUS,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
@@ -359,6 +361,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
         // order columns
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 10;
         this._columns[MutationTableColumnType.ANNOTATION].order = 20;
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER].order = 25;
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER].order = 26;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 30;
         this._columns[MutationTableColumnType.NUM_MUTATED_GROUP_A].order = 40;
         this._columns[MutationTableColumnType.NUM_MUTATED_GROUP_B].order = 50;

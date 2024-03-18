@@ -7,8 +7,6 @@ import {
     GeneticTrackDatum_Data,
 } from '../../../../shared/components/oncoprint/Oncoprint';
 import {
-    alterationInfoForOncoprintTrackData,
-    formatGeneticTrackLabel,
     formatPercent,
     percentAltered,
 } from '../../../../shared/components/oncoprint/OncoprintUtils';
@@ -38,7 +36,6 @@ import {
     OncoKbAPI,
 } from 'oncokb-ts-api-client';
 import {
-    cancerTypeForOncoKb,
     getOncoKbOncogenic,
     ONCOKB_DEFAULT,
     PUTATIVE_DRIVER,
@@ -46,7 +43,7 @@ import {
     queryOncoKbData,
 } from '../../../../shared/lib/StoreUtils';
 import { default as oncokbClient } from '../../../../shared/api/oncokbClientInstance';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { mutationCountByPositionKey } from '../../../resultsView/mutationCountHelpers';
 import { getAlterationString } from '../../../../shared/lib/CopyNumberUtils';
 import { GERMLINE_REGEXP } from '../../../../shared/lib/MutationUtils';

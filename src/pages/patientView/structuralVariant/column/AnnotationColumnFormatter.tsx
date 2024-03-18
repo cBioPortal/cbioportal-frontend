@@ -20,6 +20,7 @@ import {
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
+import { IStructuralVariantTableWrapperProps } from '../StructuralVariantTableWrapper';
 
 export default class AnnotationColumnFormatter {
     public static getData(

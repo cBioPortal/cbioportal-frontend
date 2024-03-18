@@ -30,11 +30,14 @@ import {
 import { Alteration } from '../../shared/lib/oql/oql-parser';
 import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
-import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    MobxPromise,
+    MobxPromise_await,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
-import MobxPromise, { MobxPromise_await } from 'mobxpromise';
 import { calculateQValues } from '../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { SpecialAttribute } from '../../shared/cache/ClinicalDataCache';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';

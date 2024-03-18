@@ -98,6 +98,8 @@ export type CancerStudy = {
 
         'status': number
 
+        'structuralVariantCount': number
+
         'studyId': string
 
         'treatmentCount': number
@@ -550,6 +552,17 @@ export type Mutation = {
         'variantType': string
 
 };
+export type MutationDataFilter = {
+    'categorization': "MUTATED" | "EVENT"
+
+        'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'values': Array < Array < DataFilterValue >
+        >
+
+};
 export type MutationFilter = {
     'entrezGeneIds': Array < number >
 
@@ -754,6 +767,8 @@ export type StudyViewFilter = {
 
         'genomicProfiles': Array < Array < string >
         >
+
+        'mutationDataFilters': Array < MutationDataFilter >
 
         'patientTreatmentFilters': AndedPatientTreatmentFilters
 

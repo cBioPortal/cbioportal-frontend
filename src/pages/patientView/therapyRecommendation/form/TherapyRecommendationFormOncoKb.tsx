@@ -106,7 +106,6 @@ export default class TherapyRecommendationFormOncoKb extends React.Component<
             therapyRecommendation.treatments.push({
                 name: drug.drugName,
                 ncit_code: drug.ncitCode,
-                synonyms: drug.synonyms.toString(),
             });
         });
 

@@ -27,6 +27,7 @@ import {
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
 import {
+    MobxPromise,
     stringListToIndexSet,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
@@ -34,7 +35,6 @@ import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
 import { StructVarCell } from 'pages/studyView/table/StructVarCell';
 import { BaseMultiSelectionTableProps } from 'pages/studyView/table/MultiSelectionTable';
-import MobxPromise from 'mobxpromise';
 import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
 import {
     STRUCTVARAnyGeneStr,

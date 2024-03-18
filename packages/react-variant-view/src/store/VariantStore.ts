@@ -1,8 +1,7 @@
-import { remoteData } from 'cbioportal-frontend-commons';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import { GenomeNexusAPI, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { computed, observable, makeObservable } from 'mobx';
-import MobxPromise from 'mobxpromise';
 import {
     CuratedGene,
     IndicatorQueryResp,

@@ -4,8 +4,6 @@ import {
     ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
     ClinicalData,
-    ClinicalDataMultiStudyFilter,
-    ClinicalDataSingleStudyFilter,
     CopyNumberSeg,
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
@@ -38,7 +36,9 @@ import {
 
 import client from 'shared/api/cbioportalClientInstance';
 import {
+    cached,
     CanonicalMutationType,
+    MobxPromise,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
@@ -57,8 +57,6 @@ import {
 } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { cached, MobxPromise } from 'mobxpromise';
-import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
@@ -77,12 +75,10 @@ import {
     fetchGenes,
     fetchGermlineConsentedSamples,
     fetchStructuralVariantOncoKbData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     fetchVariantAnnotationsIndexedByGenomicLocation,
     filterAndAnnotateMolecularData,
     filterAndAnnotateMutations,
     generateDataQueryFilter,
-    generateUniqueSampleKeyToTumorTypeMap,
     getAllGenes,
     getGenomeBuildFromStudies,
     getSurvivalClinicalAttributesPrefix,
@@ -101,7 +97,6 @@ import {
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import _ from 'lodash';
-import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import AccessorsForOqlFilter from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
@@ -180,7 +175,6 @@ import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import { AppStore } from '../../AppStore';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
-import autobind from 'autobind-decorator';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
@@ -206,7 +200,6 @@ import {
     getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
-import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import {
     ALTERED_COLOR,
@@ -435,6 +428,8 @@ interface IResultsViewExclusionSettings {
     ) => void;
 }
 
+const ONCOPRINT_COLOR_CONFIG = 'clinicalTracksColorConfig';
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
@@ -496,7 +491,7 @@ export class ResultsViewPageStore extends AnalysisStore
         );
 
         const clinicalTracksColorConfig = localStorage.getItem(
-            'clinicalTracksColorConfig'
+            ONCOPRINT_COLOR_CONFIG
         );
         if (clinicalTracksColorConfig !== null) {
             this._userSelectedStudiesToClinicalTracksColors = JSON.parse(
@@ -589,8 +584,8 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable _userSelectedStudiesToClinicalTracksColors: {
         [studies: string]: {
-            [label: string]: {
-                [value: string]: RGBAColor;
+            [trackLabel: string]: {
+                [attributeValue: string]: RGBAColor;
             };
         };
     } = { global: {} };
@@ -641,7 +636,7 @@ export class ResultsViewPageStore extends AnalysisStore
             ] = color;
         }
         localStorage.setItem(
-            'clinicalTracksColorConfig',
+            ONCOPRINT_COLOR_CONFIG,
             JSON.stringify(this._userSelectedStudiesToClinicalTracksColors)
         );
     }

@@ -39,6 +39,7 @@ describe('DataTypeFilter', () => {
                 status: 1,
                 studyId: 'teststudy1',
                 treatmentCount: 45,
+                structuralVariantCount: 10,
             },
             {
                 allSampleCount: 1500,
@@ -72,6 +73,7 @@ describe('DataTypeFilter', () => {
                 status: 1,
                 studyId: 'teststudy2',
                 treatmentCount: 45,
+                structuralVariantCount: 0,
             },
         ];
 
@@ -94,6 +96,7 @@ describe('DataTypeFilter', () => {
         const studies: CancerStudy[] = [
             {
                 allSampleCount: 1500,
+                structuralVariantCount: 0,
                 cancerType: {
                     cancerTypeId: 'biliary_tract',
                     dedicatedColor: 'Green',
@@ -115,7 +118,7 @@ describe('DataTypeFilter', () => {
                 mrnaRnaSeqSampleCount: 1500,
                 mrnaRnaSeqV2SampleCount: 0,
                 name: 'Test study 1',
-                pmid: '',
+                pmid: '', //
                 publicStudy: false,
                 readPermission: true,
                 referenceGenome: 'hg19',
@@ -134,6 +137,7 @@ describe('DataTypeFilter', () => {
                     parent: 'tissue',
                     shortName: 'BILIARY_TRACT',
                 },
+                structuralVariantCount: 0,
                 cancerTypeId: 'test2',
                 citation: 'No citation',
                 cnaSampleCount: 160,
@@ -145,7 +149,7 @@ describe('DataTypeFilter', () => {
                 methylationHm27SampleCount: 150,
                 miRnaSampleCount: 67,
                 mrnaMicroarraySampleCount: 750,
-                mrnaRnaSeqSampleCount: 1500,
+                mrnaRnaSeqSampleCount: 1500, //
                 mrnaRnaSeqV2SampleCount: 0,
                 name: 'Test study 2',
                 pmid: '',
@@ -209,8 +213,10 @@ describe('DataTypeFilter', () => {
                 status: 1,
                 studyId: 'teststudy1',
                 treatmentCount: 45,
+                structuralVariantCount: 10,
             },
             {
+                structuralVariantCount: 0,
                 allSampleCount: 1500,
                 cancerType: {
                     cancerTypeId: 'biliary_tract',

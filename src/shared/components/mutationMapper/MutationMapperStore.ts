@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import { computed, makeObservable } from 'mobx';
-import MobxPromise, { cached } from 'mobxpromise';
+import { MobxPromise, cached } from 'cbioportal-frontend-commons';
 import memoize from 'memoize-weak-decorator';
 
 import {

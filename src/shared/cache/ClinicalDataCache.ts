@@ -8,7 +8,7 @@ import {
     Patient,
     Sample,
 } from 'cbioportal-ts-api-client';
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { ExtendedClinicalAttribute } from '../../pages/resultsView/ResultsViewPageStoreUtils';
 import { CoverageInformation } from '../lib/GenePanelUtils';
 import _ from 'lodash';

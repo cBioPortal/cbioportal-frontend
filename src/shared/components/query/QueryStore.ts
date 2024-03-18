@@ -23,19 +23,20 @@ import {
 } from 'cbioportal-ts-api-client';
 import CancerStudyTreeData from './CancerStudyTreeData';
 import {
+    cached,
+    debounceAsync,
     getBrowserWindow,
     remoteData,
     stringListToIndexSet,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import { cached, debounceAsync } from 'mobxpromise';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import { SingleGeneQuery, SyntaxError } from '../../lib/oql/oql-parser';
 import { parseOQLQuery } from '../../lib/oql/oqlfilter';
 import memoize from 'memoize-weak-decorator';
 import { ComponentGetsStoreContext } from '../../lib/ContextUtils';
 import URL from 'url';
-import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
+import { redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
 import { categorizedSamplesCount, currentQueryParams } from './QueryStoreUtils';
@@ -56,7 +57,6 @@ import {
     getVolcanoPlotMinYValue,
 } from 'shared/components/query/GenesetsSelectorStore';
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
-import formSubmit from '../../lib/formSubmit';
 import { getServerConfig, ServerConfigHelpers } from '../../../config/config';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
@@ -655,10 +655,14 @@ export class QueryStore {
     readonly cancerStudyTags = remoteData({
         await: () => [this.cancerStudies],
         invoke: async () => {
-            const studyIds = this.cancerStudies.result
-                .filter(s => s.readPermission)
-                .map(s => s.studyId);
-            return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+            if (getServerConfig().enable_study_tags) {
+                const studyIds = this.cancerStudies.result
+                    .filter(s => s.readPermission)
+                    .map(s => s.studyId);
+                return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+            } else {
+                return [];
+            }
         },
         default: [],
     });

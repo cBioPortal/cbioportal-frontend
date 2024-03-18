@@ -15,19 +15,16 @@ import {
     rgbaToHex,
 } from 'shared/lib/Colors';
 import { COLORS } from 'pages/studyView/StudyViewUtils';
-import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 import { RGBAColor } from 'oncoprintjs';
 import _ from 'lodash';
 
 export interface IGroupCheckboxProps {
-    store: ResultsViewPageStore;
     handleClinicalTrackColorChange?: (
         value: string,
         color: RGBAColor | undefined
     ) => void;
     clinicalTrackValue: any;
     color: RGBAColor;
-    setClinicalTrackColorChanged: (changed: boolean) => void;
 }
 
 const COLOR_UNDEFINED = '#FFFFFF';
@@ -59,7 +56,6 @@ export default class ClinicalTrackColorPicker extends React.Component<
                 );
         }
         // set changed track key
-        this.props.setClinicalTrackColorChanged(true);
     };
 
     @computed get colorList() {

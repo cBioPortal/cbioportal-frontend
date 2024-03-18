@@ -21,7 +21,7 @@ import {
 import _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import {
     CancerStudy,
     ClinicalData,

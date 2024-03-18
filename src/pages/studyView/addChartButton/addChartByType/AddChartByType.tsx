@@ -8,7 +8,6 @@ import LabeledCheckbox from '../../../../shared/components/labeledCheckbox/Label
 import { Column } from '../../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { getFrequencyStr } from '../../StudyViewUtils';
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
-import MobxPromise from 'mobxpromise';
 import { ChartDataCountSet } from '../../StudyViewUtils';
 import FixedHeaderTable from '../../table/FixedHeaderTable';
 import autobind from 'autobind-decorator';
@@ -16,6 +15,7 @@ import classnames from 'classnames';
 import {
     EllipsisTextTooltip,
     DefaultTooltip,
+    MobxPromise,
 } from 'cbioportal-frontend-commons';
 import { Omit } from '../../../../shared/lib/TypeScriptUtils';
 import ifNotDefined from '../../../../shared/lib/ifNotDefined';

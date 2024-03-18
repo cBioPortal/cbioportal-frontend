@@ -101,6 +101,7 @@ import MultipleCategoryBarPlot from '../../groupComparison/MultipleCategoryBarPl
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import {
     DownloadControlOption,
+    MobxPromise,
     onMobxPromise,
 } from 'cbioportal-frontend-commons';
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
@@ -111,7 +112,6 @@ import { generateQuickPlots } from './QuickPlots';
 import ResultsViewURLWrapper, {
     PlotsSelectionParam,
 } from '../ResultsViewURLWrapper';
-import MobxPromise from 'mobxpromise';
 import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
@@ -5449,6 +5449,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     top: 10,
                                                 }}
                                                 type="button"
+                                                showDownload={this.showDownload}
                                             />
                                         );
                                     } else {

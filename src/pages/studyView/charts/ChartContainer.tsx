@@ -15,7 +15,6 @@ import { GenePanel, StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
-import MobxPromise from 'mobxpromise';
 import SurvivalChart, {
     LegendLocation,
 } from '../../resultsView/survival/SurvivalChart';
@@ -41,7 +40,11 @@ import {
     STUDY_VIEW_CONFIG,
 } from '../StudyViewConfig';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { DataType, DownloadControlsButton } from 'cbioportal-frontend-commons';
+import {
+    DataType,
+    DownloadControlsButton,
+    MobxPromise,
+} from 'cbioportal-frontend-commons';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';

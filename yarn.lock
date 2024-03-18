@@ -16739,18 +16739,6 @@ mobx@^6.0.0:
   resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.0.4.tgz#8fc3e3629a3346f8afddf5bd954411974744dad1"
   integrity sha512-wT2QJT9tW19VSHo9x7RPKU3z/I2Ps6wUS8Kb1OO+kzmg7UY3n4AkcaYG6jq95Lp1R9ohjC/NGYuT2PtuvBjhFg==
 
-"mobxpromise@github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f":
-  version "2.0.1"
-  resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/303db72588860bff0a6862a4f07a4e8a3578c94f"
-  dependencies:
-    mobx "^6.0.0"
-
-"mobxpromise@github:cbioportal/mobxpromise#c3429672eb39be54e54ce14a8636e8d843729db3":
-  version "2.0.1"
-  resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/c3429672eb39be54e54ce14a8636e8d843729db3"
-  dependencies:
-    mobx "^6.0.0"
-
 modify-values@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/modify-values/-/modify-values-1.0.1.tgz#b3939fa605546474e3e3e3c63d64bd43b4ee6022"

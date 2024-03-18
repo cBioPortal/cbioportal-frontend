@@ -1,7 +1,7 @@
 import * as ClinicalInformationMutationalSignatureTable from './ClinicalInformationMutationalSignatureTable';
 import React from 'react';
 import { assert } from 'chai';
-import { prepareMutationalSignatureDataForTable } from './ClinicalInformationMutationalSignatureTable';
+import { prepareMutationalSignatureDataForTable } from '../mutationalSignatures/MutationalSignatureBarChartUtils';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
 
 const sampleMutationalSignatureMeta = [
@@ -84,7 +84,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
     it('takes mutational signature sample data and formats it for mutational signature table to render', () => {
         let result = prepareMutationalSignatureDataForTable(
             sampleMutationalSignatureData,
-            samples
+            ['firstSample', 'secondSample']
         );
         assert.deepEqual(result, [
             {

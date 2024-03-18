@@ -7,6 +7,7 @@ import Helmet from 'react-helmet';
 import { getServerConfig } from 'config/config';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { buildCBioPortalAPIUrl } from 'shared/api/urls';
+import { SUPPORTED_DAT_METHODS } from 'shared/constants';
 
 export class UserDataAccessToken {
     @observable.ref token: string;
@@ -41,8 +42,7 @@ export default class WebAPIPage extends React.Component<{}, {}> {
     renderDataAccessTokensDiv() {
         if (
             getServerConfig().authenticationMethod === 'optional_oauth2' ||
-            // TODO: Potentially need to support other methods in the future, but for now only support oauth2
-            getServerConfig().dat_method !== 'oauth2'
+            !SUPPORTED_DAT_METHODS.includes(getServerConfig().dat_method)
         ) {
             return <div></div>;
         } else {

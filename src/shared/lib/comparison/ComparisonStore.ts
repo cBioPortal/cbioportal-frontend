@@ -14,6 +14,8 @@ import {
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import {
     findFirstMostCommonElt,
+    MobxPromise,
+    onMobxPromise,
     remoteData,
     stringListToMap,
 } from 'cbioportal-frontend-commons';
@@ -80,11 +82,9 @@ import {
     fetchSurvivalDataExists,
     getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
-import MobxPromise from 'mobxpromise';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
-import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
     cnaEventTypeSelectInit,
     CopyNumberEnrichmentEventType,
@@ -97,7 +97,6 @@ import {
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 import {
     buildDriverAnnotationSettings,
-    DriverAnnotationSettings,
     IAnnotationFilterSettings,
     IDriverAnnotationReport,
     initializeCustomDriverAnnotationSettings,

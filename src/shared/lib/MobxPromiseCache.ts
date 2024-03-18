@@ -1,4 +1,7 @@
-import { MobxPromise, MobxPromiseInputParams } from 'mobxpromise';
+import {
+    MobxPromise,
+    MobxPromiseInputParams,
+} from 'cbioportal-frontend-commons';
 import { logicalAnd } from './LogicUtils';
 
 export function stringifyObjectUnique(obj: { [k: string]: any }) {

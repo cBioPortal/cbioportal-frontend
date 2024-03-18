@@ -69,7 +69,7 @@
         ],
         "parameters": [
           {
-            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
+            "description": "Secret API key passed in HTTP header. The key is configured in application.properties of the portal instance.",
             "in": "header",
             "name": "X-API-KEY",
             "required": true,
@@ -2039,6 +2039,52 @@
         "operationId": "fetchMutationCountsByPositionUsingPOST"
       }
     },
+    "/api/mutation-data-counts/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "SUMMARY",
+            "description": "Level of detail of the response",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ],
+            "in": "query",
+            "name": "projection",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "genomicDataCountFilter",
+            "schema": {
+              "$ref": "#/definitions/GenomicDataCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ResponseEntityListGenomicDataCountItem"
+            }
+          }
+        },
+        "tags": [
+          "Study View"
+        ],
+        "description": "Fetch mutation data counts by GenomicDataCountFilter",
+        "operationId": "fetchMutationDataCountsUsingPOST"
+      }
+    },
     "/api/reference-genome-genes/{genomeName}": {
       "get": {
         "produces": [
@@ -3893,6 +3939,53 @@
       },
       "type": "object"
     },
+    "ContentDisposition": {
+      "properties": {
+        "attachment": {
+          "type": "boolean"
+        },
+        "charset": {
+          "properties": {
+            "registered": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "creationDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "formData": {
+          "type": "boolean"
+        },
+        "inline": {
+          "type": "boolean"
+        },
+        "modificationDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "readDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "CopyNumberCount": {
       "properties": {
         "alteration": {
@@ -4714,6 +4807,10 @@
         "label": {
           "type": "string"
         },
+        "uniqueCount": {
+          "format": "int32",
+          "type": "integer"
+        },
         "value": {
           "type": "string"
         }
@@ -4908,6 +5005,76 @@
       ],
       "type": "object"
     },
+    "HttpMethod": {
+      "type": "object"
+    },
+    "HttpRange": {
+      "type": "object"
+    },
+    "HttpStatusCode": {
+      "properties": {
+        "error": {
+          "type": "boolean"
+        },
+        "is1xxInformational": {
+          "type": "boolean"
+        },
+        "is2xxSuccessful": {
+          "type": "boolean"
+        },
+        "is3xxRedirection": {
+          "type": "boolean"
+        },
+        "is4xxClientError": {
+          "type": "boolean"
+        },
+        "is5xxServerError": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "MediaType": {
+      "properties": {
+        "parameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "charset": {
+          "properties": {
+            "registered": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "concrete": {
+          "type": "boolean"
+        },
+        "qualityValue": {
+          "format": "double",
+          "type": "number"
+        },
+        "subtype": {
+          "type": "string"
+        },
+        "subtypeSuffix": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "wildcardSubtype": {
+          "type": "boolean"
+        },
+        "wildcardType": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
     "MolecularProfileCaseIdentifier": {
       "properties": {
         "caseId": {
@@ -5058,6 +5225,36 @@
         "entrezGeneId",
         "proteinPosEnd",
         "proteinPosStart"
+      ],
+      "type": "object"
+    },
+    "MutationDataFilter": {
+      "properties": {
+        "categorization": {
+          "enum": [
+            "MUTATED",
+            "EVENT"
+          ],
+          "type": "string"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "items": {
+              "$ref": "#/definitions/DataFilterValue"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "categorization"
       ],
       "type": "object"
     },
@@ -5289,6 +5486,401 @@
         "resourceType",
         "studyId"
       ],
+      "type": "object"
+    },
+    "ResponseEntityListGenomicDataCountItem": {
+      "properties": {
+        "body": {
+          "items": {
+            "$ref": "#/definitions/GenomicDataCountItem"
+          },
+          "type": "array"
+        },
+        "headers": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "properties": {
+            "host": {
+              "properties": {
+                "address": {
+                  "properties": {
+                    "address": {
+                      "items": {
+                        "format": "byte",
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "anyLocalAddress": {
+                      "type": "boolean"
+                    },
+                    "canonicalHostName": {
+                      "type": "string"
+                    },
+                    "hostAddress": {
+                      "type": "string"
+                    },
+                    "hostName": {
+                      "type": "string"
+                    },
+                    "linkLocalAddress": {
+                      "type": "boolean"
+                    },
+                    "loopbackAddress": {
+                      "type": "boolean"
+                    },
+                    "mcglobal": {
+                      "type": "boolean"
+                    },
+                    "mclinkLocal": {
+                      "type": "boolean"
+                    },
+                    "mcnodeLocal": {
+                      "type": "boolean"
+                    },
+                    "mcorgLocal": {
+                      "type": "boolean"
+                    },
+                    "mcsiteLocal": {
+                      "type": "boolean"
+                    },
+                    "multicastAddress": {
+                      "type": "boolean"
+                    },
+                    "siteLocalAddress": {
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                },
+                "hostName": {
+                  "type": "string"
+                },
+                "hostString": {
+                  "type": "string"
+                },
+                "port": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "unresolved": {
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "accept": {
+              "items": {
+                "$ref": "#/definitions/MediaType"
+              },
+              "type": "array"
+            },
+            "acceptCharset": {
+              "items": {
+                "properties": {
+                  "registered": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "acceptLanguage": {
+              "items": {
+                "properties": {
+                  "range": {
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "acceptLanguageAsLocales": {
+              "items": {
+                "properties": {
+                  "country": {
+                    "type": "string"
+                  },
+                  "displayCountry": {
+                    "type": "string"
+                  },
+                  "displayLanguage": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "displayScript": {
+                    "type": "string"
+                  },
+                  "displayVariant": {
+                    "type": "string"
+                  },
+                  "extensionKeys": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "iso3Country": {
+                    "type": "string"
+                  },
+                  "iso3Language": {
+                    "type": "string"
+                  },
+                  "language": {
+                    "type": "string"
+                  },
+                  "script": {
+                    "type": "string"
+                  },
+                  "unicodeLocaleAttributes": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "unicodeLocaleKeys": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "variant": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "acceptPatch": {
+              "items": {
+                "$ref": "#/definitions/MediaType"
+              },
+              "type": "array"
+            },
+            "accessControlAllowCredentials": {
+              "type": "boolean"
+            },
+            "accessControlAllowHeaders": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "accessControlAllowMethods": {
+              "items": {
+                "$ref": "#/definitions/HttpMethod"
+              },
+              "type": "array"
+            },
+            "accessControlAllowOrigin": {
+              "type": "string"
+            },
+            "accessControlExposeHeaders": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "accessControlMaxAge": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "accessControlRequestHeaders": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "accessControlRequestMethod": {
+              "$ref": "#/definitions/HttpMethod"
+            },
+            "all": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "allow": {
+              "items": {
+                "$ref": "#/definitions/HttpMethod"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "basicAuth": {
+              "type": "string"
+            },
+            "bearerAuth": {
+              "type": "string"
+            },
+            "cacheControl": {
+              "type": "string"
+            },
+            "connection": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "contentDisposition": {
+              "$ref": "#/definitions/ContentDisposition"
+            },
+            "contentLanguage": {
+              "properties": {
+                "country": {
+                  "type": "string"
+                },
+                "displayCountry": {
+                  "type": "string"
+                },
+                "displayLanguage": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "displayScript": {
+                  "type": "string"
+                },
+                "displayVariant": {
+                  "type": "string"
+                },
+                "extensionKeys": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "iso3Country": {
+                  "type": "string"
+                },
+                "iso3Language": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "script": {
+                  "type": "string"
+                },
+                "unicodeLocaleAttributes": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "unicodeLocaleKeys": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "variant": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "contentLength": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "contentType": {
+              "$ref": "#/definitions/MediaType"
+            },
+            "date": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "empty": {
+              "type": "boolean"
+            },
+            "etag": {
+              "type": "string"
+            },
+            "expires": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "ifMatch": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "ifModifiedSince": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "ifNoneMatch": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "ifUnmodifiedSince": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "lastModified": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "location": {
+              "format": "uri",
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "pragma": {
+              "type": "string"
+            },
+            "range": {
+              "items": {
+                "$ref": "#/definitions/HttpRange"
+              },
+              "type": "array"
+            },
+            "upgrade": {
+              "type": "string"
+            },
+            "vary": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "statusCode": {
+          "$ref": "#/definitions/HttpStatusCode"
+        },
+        "statusCodeValue": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
       "type": "object"
     },
     "Sample": {
@@ -5706,6 +6298,12 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "type": "array"
+        },
+        "mutationDataFilters": {
+          "items": {
+            "$ref": "#/definitions/MutationDataFilter"
           },
           "type": "array"
         },

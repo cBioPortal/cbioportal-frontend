@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { action, makeObservable, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import LazyMobXTable, {
@@ -30,17 +30,24 @@ import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { ISharedTherapyRecommendationData } from 'cbioportal-utils';
+import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
+import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
     onSelectGenePanel?: (name: string) => void;
     mergeOncoKbIcons?: boolean;
     sampleIds: string[];
+    enableOncoKb: boolean;
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
     namespaceColumns?: NamespaceColumnConfig;
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 }
 
-type CNATableColumn = Column<StructuralVariant[]> & { order: number };
+type SVTableColumn = Column<StructuralVariant[]> & { order: number };
 
 class StructuralVariantTableComponent extends LazyMobXTable<
     StructuralVariant[]
@@ -92,7 +99,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
             this.props.store.getDiagnosisFromSamples,
         ],
         invoke: async () => {
-            const columns: CNATableColumn[] = [];
+            const columns: SVTableColumn[] = [];
             const numSamples = this.props.store.sampleIds.length;
 
             if (numSamples >= 2) {
@@ -298,8 +305,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             oncoKbContentPadding: calculateOncoKbContentPadding(
                                 this.oncokbWidth
                             ),
-                            enableOncoKb: getServerConfig()
-                                .show_oncokb as boolean,
+                            enableOncoKb: this.props.enableOncoKb,
                             pubMedCache: this.props.store.pubMedCache,
                             enableCivic: false,
                             enableMyCancerGenome: false,
@@ -337,6 +343,59 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     );
                 },
                 order: 45,
+            });
+
+            columns.push({
+                name: this.props.customDriverName!,
+                render: d => CustomDriverColumnFormatter.renderFunction(d),
+                download: CustomDriverColumnFormatter.getTextValue,
+                sortBy: (d: StructuralVariant[]) =>
+                    CustomDriverColumnFormatter.sortValue(d),
+                filter: (
+                    d: StructuralVariant[],
+                    filterString: string,
+                    filterStringUpper: string
+                ) =>
+                    CustomDriverColumnFormatter.getTextValue(d)
+                        .toUpperCase()
+                        .includes(filterStringUpper),
+                visible:
+                    this.props.store.groupedStructuralVariantData.result
+                        .length > 0 &&
+                    this.props.store.groupedStructuralVariantData.result.some(
+                        d =>
+                            d[0].driverFilter !== undefined ||
+                            d[0].driverFilterAnn !== undefined
+                    ),
+                tooltip: <span>{this.props.customDriverDescription!}</span>,
+                defaultSortDirection: 'desc',
+                order: 46,
+            });
+
+            columns.push({
+                name: this.props.customDriverTiersName!,
+                render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+                download: CustomDriverTierColumnFormatter.getTextValue,
+                sortBy: (d: StructuralVariant[]) =>
+                    CustomDriverTierColumnFormatter.getTextValue(d),
+                filter: (
+                    d: StructuralVariant[],
+                    filterString: string,
+                    filterStringUpper: string
+                ) =>
+                    CustomDriverTierColumnFormatter.getTextValue(d)
+                        .toUpperCase()
+                        .includes(filterStringUpper),
+                visible:
+                    this.props.store.groupedStructuralVariantData.result
+                        .length > 0 &&
+                    this.props.store.groupedStructuralVariantData.result.every(
+                        d =>
+                            d[0].driverFilter !== undefined ||
+                            d[0].driverFilterAnn !== undefined
+                    ),
+                tooltip: <span>{this.props.customDriverTiersDescription}</span>,
+                order: 47,
             });
 
             columns.push({
@@ -507,7 +566,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 });
             }
 
-            return _.sortBy(columns, (c: CNATableColumn) => c.order);
+            return _.sortBy(columns, (c: SVTableColumn) => c.order);
         },
         default: [],
     });
@@ -556,7 +615,10 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                 this.props.store.groupedStructuralVariantData
                                     .result!
                             }
-                            initialSortColumn="Annotation"
+                            initialSortColumn={
+                                getServerConfig()
+                                    .skin_patient_view_tables_default_sort_column
+                            }
                             initialSortDirection="desc"
                             initialItemsPerPage={10}
                             itemsLabel="Structural Variants"
@@ -587,11 +649,11 @@ export default class StructuralVariantTableWrapper extends React.Component<
 
 function createStructVarNamespaceColumns(
     config?: NamespaceColumnConfig
-): CNATableColumn[] {
+): SVTableColumn[] {
     const namespaceColumnRecords = createNamespaceColumns(config);
     const namespaceColumns = Object.values(
         namespaceColumnRecords
-    ) as CNATableColumn[];
+    ) as SVTableColumn[];
     namespaceColumns.forEach(c => (c.visible = false));
     return namespaceColumns;
 }

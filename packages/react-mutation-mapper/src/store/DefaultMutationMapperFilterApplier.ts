@@ -1,5 +1,5 @@
 import autobind from 'autobind-decorator';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import {
     defaultHotspotFilter,
     IHotspotIndex,
