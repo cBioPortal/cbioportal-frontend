@@ -868,9 +868,7 @@ export default class StudyViewPage extends React.Component<
                                                     .genePanelDataForAllProfiles
                                                     .result
                                             }
-                                            patients={
-                                                this.store.patients.result
-                                            }
+                                            patients={this.store.patients}
                                         />
                                     </MSKTab>
 

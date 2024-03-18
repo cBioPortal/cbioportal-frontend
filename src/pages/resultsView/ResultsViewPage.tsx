@@ -298,7 +298,6 @@ export default class ResultsViewPage extends React.Component<
                                     store.numericGeneMolecularDataCache
                                 }
                                 coverageInformation={store.coverageInformation}
-                                filteredSamples={store.filteredSamples}
                                 genesetMolecularDataCache={
                                     store.genesetMolecularDataCache
                                 }
@@ -323,6 +322,29 @@ export default class ResultsViewPage extends React.Component<
                                     store.molecularProfileIdToMolecularProfile
                                 }
                                 urlWrapper={this.urlWrapper}
+                                queryContainsOql={store.queryContainsOql}
+                                includeGermlineMutations={
+                                    store.includeGermlineMutations
+                                }
+                                mutationsReportByGene={
+                                    store.mutationsReportByGene
+                                }
+                                oqlFilteredMutationsReport={
+                                    store.oqlFilteredMutationsReport
+                                }
+                                oqlFilteredMolecularDataReport={
+                                    store.oqlFilteredMolecularDataReport
+                                }
+                                oqlFilteredStructuralVariantsReport={
+                                    store.oqlFilteredStructuralVariantsReport
+                                }
+                                samples={store.samples}
+                                filteredSamples={store.filteredSamples}
+                                patients={store.patients}
+                                filteredPatients={store.filteredPatients}
+                                hideUnprofiledSamples={
+                                    store.hideUnprofiledSamples
+                                }
                             />
                         </MSKTab>
                     );

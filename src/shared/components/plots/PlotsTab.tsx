@@ -145,7 +145,10 @@ import { getServerConfig } from 'config/config';
 import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
-import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+} from 'shared/model/AnnotatedMutation';
 import {
     CoverageInformation,
     getCoverageInformation,
@@ -157,6 +160,13 @@ import StudyViewURLWrapper from 'pages/studyView/StudyViewURLWrapper';
 import { StudyViewURLQuery } from 'pages/studyView/StudyViewPageStore';
 import { fetchGenes } from 'shared/lib/StoreUtils';
 import { Else, If, Then } from 'react-if';
+import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import OqlStatusBanner from '../banners/OqlStatusBanner';
+import AlterationFilterWarning from '../banners/AlterationFilterWarning';
+import { FilteredAndAnnotatedMutationsReport } from 'shared/lib/comparison/AnalysisStoreUtils';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
+import CaseFilterWarning from '../banners/CaseFilterWarning';
 
 enum EventKey {
     horz_logScale,
@@ -253,8 +263,7 @@ export type ColoringMenuSelection = {
 };
 
 export interface IPlotsTabProps {
-    // store: ResultsViewPageStore;
-    filteredSamplesByDetailedCancerType: MobxPromiseUnionType<{
+    filteredSamplesByDetailedCancerType: MobxPromise<{
         [cancerType: string]: Sample[];
     }>;
     mutations: MobxPromiseUnionType<Mutation[]>;
@@ -262,18 +271,18 @@ export interface IPlotsTabProps {
     molecularProfileIdSuffixToMolecularProfiles: MobxPromiseUnionTypeWithDefault<{
         [molecularProfileIdSuffix: string]: MolecularProfile[];
     }>;
-    entrezGeneIdToGene: MobxPromiseUnionType<{
+    entrezGeneIdToGene: MobxPromise<{
         [entrezGeneId: number]: Gene;
     }>;
-    sampleKeyToSample: MobxPromiseUnionType<_.Dictionary<Sample>>;
-    genes: MobxPromiseUnionType<Gene[]>;
-    clinicalAttributes: MobxPromiseUnionType<ExtendedClinicalAttribute[]>;
-    genesets: MobxPromiseUnionType<Geneset[]>;
-    genericAssayEntitiesGroupByMolecularProfileId: MobxPromiseUnionType<{
+    sampleKeyToSample: MobxPromise<_.Dictionary<Sample>>;
+    genes: MobxPromise<Gene[]>;
+    clinicalAttributes: MobxPromise<ExtendedClinicalAttribute[]>;
+    genesets: MobxPromise<Geneset[]>;
+    genericAssayEntitiesGroupByMolecularProfileId: MobxPromise<{
         [profileId: string]: GenericAssayMeta[];
     }>;
-    studyIds: MobxPromiseUnionTypeWithDefault<string[]>;
-    molecularProfilesWithData: MobxPromiseUnionType<MolecularProfile[]>;
+    studyIds: MobxPromise<string[]>;
+    molecularProfilesWithData: MobxPromise<MolecularProfile[]>;
     molecularProfilesInStudies: MobxPromiseUnionTypeWithDefault<
         MolecularProfile[]
     >;
@@ -295,14 +304,14 @@ export interface IPlotsTabProps {
         },
         StructuralVariant[]
     >;
-    studyToMutationMolecularProfile: MobxPromiseUnionTypeWithDefault<{
+    studyToMutationMolecularProfile: MobxPromise<{
         [studyId: string]: MolecularProfile;
     }>;
-    studyToMolecularProfileDiscreteCna: MobxPromiseUnionTypeWithDefault<{
+    studyToMolecularProfileDiscreteCna: MobxPromise<{
         [studyId: string]: MolecularProfile;
     }>;
     clinicalDataCache: ClinicalDataCache;
-    patientKeyToFilteredSamples: MobxPromiseUnionType<_.Dictionary<Sample[]>>;
+    patientKeyToFilteredSamples: MobxPromise<_.Dictionary<Sample[]>>;
     numericGeneMolecularDataCache: MobxPromiseCache<
         {
             entrezGeneId: number;
@@ -310,13 +319,10 @@ export interface IPlotsTabProps {
         },
         NumericGeneMolecularData[]
     >;
-    coverageInformation: MobxPromiseUnionType<CoverageInformation>;
-    filteredSamples: MobxPromiseUnionType<Sample[]>;
-    genesetMolecularDataCache: MobxPromiseUnionType<GenesetMolecularDataCache>;
-    genericAssayMolecularDataCache: MobxPromiseUnionType<
-        GenericAssayMolecularDataCache
-    >;
-    studyToStructuralVariantMolecularProfile: MobxPromiseUnionTypeWithDefault<{
+    coverageInformation: MobxPromise<CoverageInformation>;
+    genesetMolecularDataCache: MobxPromise<GenesetMolecularDataCache>;
+    genericAssayMolecularDataCache: MobxPromise<GenericAssayMolecularDataCache>;
+    studyToStructuralVariantMolecularProfile: MobxPromise<{
         [studyId: string]: MolecularProfile;
     }>;
     driverAnnotationSettings: DriverAnnotationSettings;
@@ -332,7 +338,34 @@ export interface IPlotsTabProps {
     urlWrapper: ResultsViewURLWrapper | StudyViewURLWrapper;
     hasNoQueriedGenes?: boolean;
     genePanelDataForAllProfiles?: GenePanelData[];
-    patients?: Patient[];
+    queryContainsOql?: boolean;
+    includeGermlineMutations?: boolean;
+    mutationsReportByGene?: MobxPromise<{
+        [hugeGeneSymbol: string]: FilteredAndAnnotatedMutationsReport<
+            AnnotatedMutation
+        >;
+    }>;
+    oqlFilteredMutationsReport?: MobxPromise<{
+        data: (AnnotatedMutation & ExtendedAlteration)[];
+        vus: (AnnotatedMutation & ExtendedAlteration)[];
+        germline: (AnnotatedMutation & ExtendedAlteration)[];
+        vusAndGermline: (AnnotatedMutation & ExtendedAlteration)[];
+    }>;
+    oqlFilteredMolecularDataReport?: MobxPromise<{
+        data: (AnnotatedNumericGeneMolecularData & ExtendedAlteration)[];
+        vus: (AnnotatedNumericGeneMolecularData & ExtendedAlteration)[];
+    }>;
+    oqlFilteredStructuralVariantsReport?: MobxPromise<{
+        data: (AnnotatedStructuralVariant & ExtendedAlteration)[];
+        vus: (AnnotatedStructuralVariant & ExtendedAlteration)[];
+        germline: (AnnotatedStructuralVariant & ExtendedAlteration)[];
+        vusAndGermline: (AnnotatedStructuralVariant & ExtendedAlteration)[];
+    }>;
+    samples?: MobxPromise<Sample[]>;
+    filteredSamples: MobxPromise<Sample[]>;
+    patients: MobxPromise<Patient[]>;
+    filteredPatients?: MobxPromise<Patient[]>;
+    hideUnprofiledSamples?: false | 'any' | 'totally';
 }
 
 export type PlotsTabDataSource = {
@@ -3719,7 +3752,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 const coverageInformationPromise = getCoverageInformation(
                     this.props.genePanelDataForAllProfiles!,
                     this.props.sampleKeyToSample.result!,
-                    this.props.patients!,
+                    this.props.patients.result!,
                     genes
                 );
                 const coverageInformation = await coverageInformationPromise.then(
@@ -5919,6 +5952,66 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     public render() {
         return (
             <div data-test="PlotsTabEntireDiv">
+                <div className={'tabMessageContainer'}>
+                    <OqlStatusBanner
+                        className="plots-oql-status-banner"
+                        queryContainsOql={!!this.props.queryContainsOql}
+                        tabReflectsOql={false}
+                    />
+
+                    {// we have always allowed expression data to be compared
+                    // across study in the plots tab
+                    // in portals other than our own.
+                    // only in our own portals have we imposed the rule
+                    // that all studies must be pan_can
+                    // so default to true
+                    !allowExpressionCrossStudy(
+                        this.props.studies.result,
+                        getServerConfig().enable_cross_study_expression,
+                        false
+                    ) && (
+                        <div className={'alert alert-info'}>
+                            Expression data cannot be compared across the
+                            selected studies.
+                        </div>
+                    )}
+
+                    {!this.props.hasNoQueriedGenes && (
+                        <>
+                            <AlterationFilterWarning
+                                driverAnnotationSettings={
+                                    this.props.driverAnnotationSettings
+                                }
+                                includeGermlineMutations={
+                                    !!this.props.includeGermlineMutations
+                                }
+                                mutationsReportByGene={
+                                    this.props.mutationsReportByGene!
+                                }
+                                oqlFilteredMutationsReport={
+                                    this.props.oqlFilteredMutationsReport!
+                                }
+                                oqlFilteredMolecularDataReport={
+                                    this.props.oqlFilteredMolecularDataReport!
+                                }
+                                oqlFilteredStructuralVariantsReport={
+                                    this.props
+                                        .oqlFilteredStructuralVariantsReport!
+                                }
+                                isUnaffected={true}
+                            />
+                            <CaseFilterWarning
+                                samples={this.props.samples!}
+                                filteredSamples={this.props.filteredSamples!}
+                                patients={this.props.patients!}
+                                filteredPatients={this.props.filteredPatients!}
+                                hideUnprofiledSamples={
+                                    this.props.hideUnprofiledSamples!
+                                }
+                            />
+                        </>
+                    )}
+                </div>
                 <div className={'plotsTab'}>
                     <div className="quickPlotsContainer">
                         <strong className="quickPlotsTitle">Examples: </strong>

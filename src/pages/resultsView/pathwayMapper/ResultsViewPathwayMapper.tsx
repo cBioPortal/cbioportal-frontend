@@ -209,7 +209,9 @@ export default class ResultsViewPathwayMapper extends React.Component<
                         <React.Fragment>
                             <OqlStatusBanner
                                 className="coexp-oql-status-banner"
-                                store={this.props.store}
+                                queryContainsOql={
+                                    this.props.store.queryContainsOql
+                                }
                                 tabReflectsOql={true}
                             />
                             {/*
