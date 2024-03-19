@@ -11148,10 +11148,11 @@ export class StudyViewPageStore
 
     readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>(
         {
+            await: () => [this.queriedPhysicalStudyIds],
             invoke: async () => {
                 let profiles = await client.fetchMolecularProfilesUsingPOST({
                     molecularProfileFilter: {
-                        studyIds: this.studyIds,
+                        studyIds: this.queriedPhysicalStudyIds.result,
                     } as MolecularProfileFilter,
                 });
 
@@ -11159,7 +11160,7 @@ export class StudyViewPageStore
                 // under some circumstances
                 if (
                     allowExpressionCrossStudy(
-                        this.displayedStudies.result,
+                        this.queriedPhysicalStudies.result,
                         getServerConfig().enable_cross_study_expression,
                         false
                     )

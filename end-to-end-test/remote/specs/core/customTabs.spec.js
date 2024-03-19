@@ -106,6 +106,11 @@ function runTests(pageName, url, tabLocation) {
 
             $('.mainTabs').waitForDisplayed();
 
+            if (tabLocation === 'STUDY_PAGE') {
+                $('i.fa-chevron-right').waitForDisplayed();
+                $('i.fa-chevron-right').click();
+            }
+
             assert.equal(
                 $('=Patient Tab').isDisplayed(),
                 false,
@@ -142,6 +147,11 @@ function runTests(pageName, url, tabLocation) {
             goToUrlWithCustomTabConfig(url, conf);
 
             $('.mainTabs').waitForDisplayed();
+
+            if (tabLocation === 'STUDY_PAGE') {
+                $('i.fa-chevron-right').waitForDisplayed();
+                $('i.fa-chevron-right').click();
+            }
 
             assert.equal(
                 $('=Hidden Tab').isDisplayed(),
@@ -235,7 +245,8 @@ function runTests(pageName, url, tabLocation) {
                 };
             });
 
-            $('=Async Tab').click();
+            // offset to avoid overlapping elements
+            $('=Async Tab').click({ x: -10 });
 
             browser.pause(1000);
 

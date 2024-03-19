@@ -5953,11 +5953,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             <div data-test="PlotsTabEntireDiv">
                 <div className={'tabMessageContainer'}>
-                    <OqlStatusBanner
-                        className="plots-oql-status-banner"
-                        queryContainsOql={!!this.props.queryContainsOql}
-                        tabReflectsOql={false}
-                    />
+                    {!this.props.hasNoQueriedGenes && (
+                        <OqlStatusBanner
+                            className="plots-oql-status-banner"
+                            queryContainsOql={!!this.props.queryContainsOql}
+                            tabReflectsOql={false}
+                        />
+                    )}
 
                     {// we have always allowed expression data to be compared
                     // across study in the plots tab
