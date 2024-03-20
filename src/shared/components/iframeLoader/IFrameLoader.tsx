@@ -45,9 +45,9 @@ export default class IFrameLoader extends React.Component<
                 <a
                     href={this.props.url}
                     target="_blank"
-                    style={{ float: 'right' }}
+                    style={{ position:"absolute", right:0, top:-25 }}
                 >
-                    Visit <FontAwesome name="external-link" />
+                    Open in new window <FontAwesome name="external-link" />
                 </a>
                 <iframe
                     id={this.props.iframeId || ''}
