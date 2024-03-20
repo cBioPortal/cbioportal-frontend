@@ -4,6 +4,7 @@ import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';
 import { makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
+import FontAwesome from 'react-fontawesome';
 interface FrameLoaderProps {
     url: string;
     className?: string;
@@ -41,6 +42,13 @@ export default class IFrameLoader extends React.Component<
                     size={'big'}
                     isLoading={!this.iframeLoaded}
                 />
+                <a
+                    href={this.props.url}
+                    target="_blank"
+                    style={{ float: 'right' }}
+                >
+                    Visit <FontAwesome name="external-link" />
+                </a>
                 <iframe
                     id={this.props.iframeId || ''}
                     className={this.props.className || ''}
