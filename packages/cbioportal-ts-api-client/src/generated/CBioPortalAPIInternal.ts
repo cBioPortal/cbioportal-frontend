@@ -187,12 +187,6 @@ export type ClinicalDataBinFilter = {
         'start': number
 
 };
-export type ClinicalDataCollection = {
-    'patientClinicalData': Array < ClinicalData >
-
-        'sampleClinicalData': Array < ClinicalData >
-
-};
 export type ClinicalDataCount = {
     'count': number
 
@@ -1226,6 +1220,10 @@ export type Sample = {
         'uniqueSampleKey': string
 
 };
+export type SampleClinicalDataCollection = {
+    'byUniqueSampleKey': {}
+
+};
 export type SampleIdentifier = {
     'sampleId': string
 
@@ -2242,7 +2240,7 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataClinicalTableUsingPOST
      * @param {integer} pageSize - Page size of the result list
-     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageNumber - Page number of the result list. Zero represents the first page.
      * @param {string} searchTerm - Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.
      * @param {string} sortBy - sampleId, patientId, or the ATTR_ID to sorted by
      * @param {string} direction - Direction of the sort
@@ -2311,7 +2309,7 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataClinicalTableUsingPOST
      * @param {integer} pageSize - Page size of the result list
-     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageNumber - Page number of the result list. Zero represents the first page.
      * @param {string} searchTerm - Search term to filter sample rows. Samples are returned with a partial match to the search term for any sample clinical attribute.
      * @param {string} sortBy - sampleId, patientId, or the ATTR_ID to sorted by
      * @param {string} direction - Direction of the sort
@@ -2326,7 +2324,7 @@ export default class CBioPortalAPIInternal {
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < ClinicalDataCollection > {
+    }): Promise < SampleClinicalDataCollection > {
         return this.fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
