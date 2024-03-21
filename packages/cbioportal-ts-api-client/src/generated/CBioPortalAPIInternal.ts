@@ -901,7 +901,7 @@ export type MutationCountByPosition = {
 
 };
 export type MutationDataFilter = {
-    'categorization': "MUTATED" | "EVENT"
+    'categorization': "MUTATED" | "MUTATION_TYPE"
 
         'hugoGeneSymbol': string
 
