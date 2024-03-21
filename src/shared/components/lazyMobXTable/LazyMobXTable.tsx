@@ -43,7 +43,6 @@ import {
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import { maxPage } from './utils';
 import { inputBoxChangeTimeoutEvent } from '../../lib/EventUtils';
-import _ from 'lodash';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -669,8 +668,15 @@ export class LazyMobXTableStore<T> {
                 classNames.push('clickable');
 
                 const onRowClick = this.onRowClick; // by the time its called this might be undefined again, so need to save ref
-                rowProps.onClick = () => {
-                    onRowClick(this.visibleData[i]);
+                rowProps.onClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                    // workaround to ignore the click if it happens outside the table component (e.g. within a tooltip)
+                    const isTargetWithinTheTable = $(e.target)
+                        .parents()
+                        .toArray()
+                        .includes(e.currentTarget);
+                    if (isTargetWithinTheTable) {
+                        onRowClick(this.visibleData[i]);
+                    }
                 };
             }
             if (this.onRowMouseEnter) {

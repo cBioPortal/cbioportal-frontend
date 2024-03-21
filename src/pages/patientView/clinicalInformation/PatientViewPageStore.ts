@@ -1,4 +1,4 @@
-import _, { result } from 'lodash';
+import _ from 'lodash';
 import {
     CBioPortalAPIInternal,
     ClinicalData,
@@ -25,9 +25,12 @@ import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
-import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    cached,
+    remoteData,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';
-import { cached, labelMobxPromises } from 'mobxpromise';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
@@ -169,7 +172,6 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     MIS_TYPE_VALUE,
     GENOME_NEXUS_ARG_FIELD_ENUM,
-    MSI_H_THRESHOLD,
     TMB_H_THRESHOLD,
     AlterationTypeConstants,
     DataTypeConstants,
@@ -191,9 +193,7 @@ import {
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 import {
-    MutationalSignaturesVersion,
     MutationalSignatureStableIdKeyWord,
-    validateMutationalSignatureRawData,
     retrieveMutationalSignatureVersionFromData,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
@@ -911,6 +911,15 @@ export class PatientViewPageStore {
             )
             .map(sample => sample.sampleId)
             .filter((value, index, self) => self.indexOf(value) === index);
+    }
+
+    @computed get samplesNotProfiledForMutationalSignatures(): string[] {
+        const allSamples = this.samplesWithUniqueKeys.result.map(
+            sample => sample.sampleId
+        );
+        return allSamples.filter(
+            element => !this.samplesWithCountDataAvailable.includes(element)
+        );
     }
 
     readonly samplesWithoutCancerTypeClinicalData = remoteData(

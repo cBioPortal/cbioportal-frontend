@@ -77,30 +77,6 @@ export type Alleles = {
     'allele': string
 
 };
-export type ClinVar = {
-    'alleleId': number
-
-        'alt': string
-
-        'chrom': string
-
-        'cytogenic': string
-
-        'gene': Gene
-
-        'hg19': Hg19
-
-        'hg38': Hg38
-
-        'hgvs': Hgvs
-
-        'license': string
-
-        'rcv': Array < Rcv >
-
-        'variantId': number
-
-};
 export type Cosmic = {
     'alt': string
 
@@ -390,7 +366,7 @@ export type Mutdb = {
 
 };
 export type MyVariantInfo = {
-    'clinVar': ClinVar
+    'clinVar': MyVariantInfoClinVar
 
         'cosmic': Cosmic
 
@@ -413,6 +389,30 @@ export type MyVariantInfo = {
         'vcf': Vcf
 
         'version': number
+
+};
+export type MyVariantInfoClinVar = {
+    'alleleId': number
+
+        'alt': string
+
+        'chrom': string
+
+        'cytogenic': string
+
+        'gene': Gene
+
+        'hg19': Hg19
+
+        'hg38': Hg38
+
+        'hgvs': Hgvs
+
+        'license': string
+
+        'rcv': Array < Rcv >
+
+        'variantId': number
 
 };
 export type NucleotideContext = {

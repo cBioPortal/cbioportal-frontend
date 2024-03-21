@@ -194,7 +194,9 @@ export default class ClinicalTable extends React.Component<
                 render: (data: ClinicalDataCountSummary) => (
                     <LabeledCheckbox
                         checked={_.includes(this.props.filters, data.value)}
-                        onChange={event => this.onUserSelection(data.value)}
+                        onChange={event => {
+                            this.onUserSelection(data.value);
+                        }}
                         labelProps={{
                             style: {
                                 display: 'flex',
@@ -267,7 +269,7 @@ export default class ClinicalTable extends React.Component<
         if (_.includes(filters, filter)) {
             filters = _.filter(filters, obj => obj !== filter);
         } else {
-            filters.push(filter);
+            filters = filters.concat([filter]);
         }
         this.props.onUserSelection(filters);
     }
@@ -288,7 +290,16 @@ export default class ClinicalTable extends React.Component<
 
     @autobind
     addAll(selectedRows: ClinicalDataCountSummary[]) {
-        this.props.onUserSelection(selectedRows.map(row => row.value));
+        // To prevent the deselection of previously applied filters upon each "Select All" click,
+        // we retrieve the existing filters and concatenate them with the new ones.
+        let filters = toJS(this.props.filters);
+
+        let uniqueSelectedRows = selectedRows
+            .map(row => row.value)
+            .filter(item => !filters.includes(item));
+
+        filters = filters.concat(uniqueSelectedRows);
+        this.props.onUserSelection(filters);
     }
 
     @autobind

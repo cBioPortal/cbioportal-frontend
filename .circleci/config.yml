@@ -240,7 +240,7 @@ jobs:
     working_directory: /tmp/repo
     machine:
       enabled: true
-      image: ubuntu-2004:202201-02
+      image: default
     resource_class: large
     steps:
       - when:
@@ -285,11 +285,6 @@ jobs:
                 name: Setup docker compose assets
                 command: |
                   $TEST_HOME/docker_compose/setup.sh
-                no_output_timeout: 25m
-            - run:
-                name: Generate checksum of data that populates the test database
-                command: |
-                  $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
                 no_output_timeout: 25m
             - run:
                 name: Create MySQL data directory

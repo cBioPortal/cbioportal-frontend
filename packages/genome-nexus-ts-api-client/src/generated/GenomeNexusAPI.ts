@@ -85,30 +85,6 @@ export type Citations = {
         'pmids': Array < string >
 
 };
-export type ClinVar = {
-    'alleleId': number
-
-        'alt': string
-
-        'chrom': string
-
-        'cytogenic': string
-
-        'gene': Gene
-
-        'hg19': Hg19
-
-        'hg38': Hg38
-
-        'hgvs': Hgvs
-
-        'license': string
-
-        'rcv': Array < Rcv >
-
-        'variantId': number
-
-};
 export type Clinvar = {
     'alternateAllele': string
 
@@ -209,10 +185,6 @@ export type Drug = {
     'drugName': string
 
         'ncitCode': string
-
-        'synonyms': Array < string >
-
-        'uuid': string
 
 };
 export type EnsemblFilter = {
@@ -605,7 +577,7 @@ export type Mutdb = {
 
 };
 export type MyVariantInfo = {
-    'clinVar': ClinVar
+    'clinVar': MyVariantInfoClinVar
 
         'cosmic': Cosmic
 
@@ -634,6 +606,30 @@ export type MyVariantInfoAnnotation = {
     'annotation': MyVariantInfo
 
         'license': string
+
+};
+export type MyVariantInfoClinVar = {
+    'alleleId': number
+
+        'alt': string
+
+        'chrom': string
+
+        'cytogenic': string
+
+        'gene': Gene
+
+        'hg19': Hg19
+
+        'hg38': Hg38
+
+        'hgvs': Hgvs
+
+        'license': string
+
+        'rcv': Array < Rcv >
+
+        'variantId': number
 
 };
 export type NucleotideContext = {
@@ -987,6 +983,8 @@ export type VariantAnnotation = {
         'colocatedVariants': Array < ColocatedVariant >
 
         'end': number
+
+        'errorMessage': string
 
         'genomicLocationExplanation': string
 

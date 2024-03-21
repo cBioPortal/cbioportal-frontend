@@ -4,8 +4,6 @@ import {
     ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
     ClinicalData,
-    ClinicalDataMultiStudyFilter,
-    ClinicalDataSingleStudyFilter,
     CopyNumberSeg,
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
@@ -38,7 +36,9 @@ import {
 
 import client from 'shared/api/cbioportalClientInstance';
 import {
+    cached,
     CanonicalMutationType,
+    MobxPromise,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
@@ -57,8 +57,6 @@ import {
 } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { cached, MobxPromise } from 'mobxpromise';
-import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
@@ -77,12 +75,10 @@ import {
     fetchGenes,
     fetchGermlineConsentedSamples,
     fetchStructuralVariantOncoKbData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     fetchVariantAnnotationsIndexedByGenomicLocation,
     filterAndAnnotateMolecularData,
     filterAndAnnotateMutations,
     generateDataQueryFilter,
-    generateUniqueSampleKeyToTumorTypeMap,
     getAllGenes,
     getGenomeBuildFromStudies,
     getSurvivalClinicalAttributesPrefix,
@@ -101,7 +97,6 @@ import {
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import _ from 'lodash';
-import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import AccessorsForOqlFilter from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
@@ -180,7 +175,6 @@ import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import { AppStore } from '../../AppStore';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
-import autobind from 'autobind-decorator';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
@@ -206,7 +200,6 @@ import {
     getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
-import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import {
     ALTERED_COLOR,
@@ -304,6 +297,7 @@ import {
     ONCOKB_DEFAULT_INFO,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
+import { RGBAColor } from 'oncoprintjs';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -434,6 +428,8 @@ interface IResultsViewExclusionSettings {
     ) => void;
 }
 
+const ONCOPRINT_COLOR_CONFIG = 'clinicalTracksColorConfig';
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
@@ -493,6 +489,15 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
             )
         );
+
+        const clinicalTracksColorConfig = localStorage.getItem(
+            ONCOPRINT_COLOR_CONFIG
+        );
+        if (clinicalTracksColorConfig !== null) {
+            this._userSelectedStudiesToClinicalTracksColors = JSON.parse(
+                clinicalTracksColorConfig
+            );
+        }
     }
 
     destroy() {
@@ -524,6 +529,10 @@ export class ResultsViewPageStore extends AnalysisStore
     @computed
     get cancerStudyIds() {
         return this.urlWrapper.query.cancer_study_list.split(',');
+    }
+    @computed
+    get cancerStudyListSorted() {
+        return this.cancerStudyIds.sort().join(',');
     }
 
     @computed
@@ -573,6 +582,14 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable queryFormVisible: boolean = false;
 
+    @observable _userSelectedStudiesToClinicalTracksColors: {
+        [studies: string]: {
+            [trackLabel: string]: {
+                [attributeValue: string]: RGBAColor;
+            };
+        };
+    } = { global: {} };
+
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
             this.nonSelectedDownloadableMolecularProfilesGroupByName.result &&
@@ -585,6 +602,48 @@ export class ResultsViewPageStore extends AnalysisStore
     @observable public modifyQueryParams:
         | ModifyQueryParams
         | undefined = undefined;
+
+    @action.bound
+    public setUserSelectedClinicalTrackColor(
+        label: string,
+        value: string,
+        color: RGBAColor | undefined
+    ) {
+        // if color is undefined, delete color from userSelectedClinicalAttributeColors if exists
+        // else, set the color in userSelectedClinicalAttributeColors
+        if (
+            !color &&
+            this._userSelectedStudiesToClinicalTracksColors['global'][label] &&
+            this._userSelectedStudiesToClinicalTracksColors['global'][label][
+                value
+            ]
+        ) {
+            delete this._userSelectedStudiesToClinicalTracksColors['global'][
+                label
+            ][value];
+        } else if (color) {
+            if (
+                !this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ]
+            ) {
+                this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ] = {};
+            }
+            this._userSelectedStudiesToClinicalTracksColors['global'][label][
+                value
+            ] = color;
+        }
+        localStorage.setItem(
+            ONCOPRINT_COLOR_CONFIG,
+            JSON.stringify(this._userSelectedStudiesToClinicalTracksColors)
+        );
+    }
+
+    @computed get userSelectedStudiesToClinicalTracksColors() {
+        return this._userSelectedStudiesToClinicalTracksColors;
+    }
 
     @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {

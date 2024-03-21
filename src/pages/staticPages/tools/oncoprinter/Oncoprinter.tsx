@@ -8,7 +8,7 @@ import OncoprintControls, {
 } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
 import { getServerConfig } from 'config/config';
-import { OncoprintJS } from 'oncoprintjs';
+import { OncoprintJS, RGBAColor } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import { FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
@@ -19,11 +19,33 @@ import WindowStore from '../../../../shared/components/window/WindowStore';
 import { getGeneticTrackKey } from './OncoprinterGeneticUtils';
 import InfoBanner from '../../../../shared/components/banners/InfoBanner';
 import '../../../../globalStyles/oncoprintStyles.scss';
+import _ from 'lodash';
+import {
+    MUTATION_SPECTRUM_CATEGORIES,
+    MUTATION_SPECTRUM_FILLS,
+} from 'shared/cache/ClinicalDataCache';
+import {
+    hexToRGBA,
+    RESERVED_CLINICAL_VALUE_COLORS,
+    rgbaToHex,
+} from 'shared/lib/Colors';
+import {
+    getClinicalTrackColor,
+    getClinicalTrackValues,
+} from 'shared/components/oncoprint/ResultsViewOncoprint';
+import { Modal } from 'react-bootstrap';
+import ClinicalTrackColorPicker from 'shared/components/oncoprint/ClinicalTrackColorPicker';
+import classnames from 'classnames';
+import { getDefaultClinicalAttributeColoringForStringDatatype } from './OncoprinterToolUtils';
+import { OncoprintColorModal } from 'shared/components/oncoprint/OncoprintColorModal';
 
 interface IOncoprinterProps {
     divId: string;
     store: OncoprinterStore;
 }
+
+const DEFAULT_UNKNOWN_COLOR = [255, 255, 255, 1];
+const DEFAULT_MIXED_COLOR = [220, 57, 18, 1];
 
 @observer
 export default class Oncoprinter extends React.Component<
@@ -379,9 +401,92 @@ export default class Oncoprinter extends React.Component<
         return WindowStore.size.width - 75;
     }
 
+    @action.bound
+    public handleSelectedClinicalTrackColorChange(
+        value: string,
+        color: RGBAColor | undefined
+    ) {
+        if (this.selectedClinicalTrack) {
+            this.props.store.setUserSelectedClinicalTrackColor(
+                this.selectedClinicalTrack.label,
+                value,
+                color
+            );
+        }
+    }
+
+    @observable trackKeySelectedForEdit: string | null = null;
+
+    @action.bound
+    setTrackKeySelectedForEdit(key: string | null) {
+        this.trackKeySelectedForEdit = key;
+    }
+
+    // if trackKeySelectedForEdit is null ('Edit Colors' has not been selected in an individual track menu),
+    // selectedClinicalTrack will be undefined
+    @computed get selectedClinicalTrack() {
+        return _.find(
+            this.props.store.clinicalTracks,
+            t => t.key === this.trackKeySelectedForEdit
+        );
+    }
+
+    @computed get defaultClinicalAttributeColoringForStringDatatype() {
+        if (this.selectedClinicalTrack) {
+            return _.mapValues(
+                getDefaultClinicalAttributeColoringForStringDatatype(
+                    this.selectedClinicalTrack.data
+                ),
+                hexToRGBA
+            );
+        }
+        return _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA);
+    }
+
+    @autobind
+    private getSelectedClinicalTrackDefaultColorForValue(
+        attributeValue: string
+    ) {
+        if (!this.selectedClinicalTrack) {
+            return DEFAULT_UNKNOWN_COLOR;
+        }
+        switch (this.selectedClinicalTrack.datatype) {
+            case 'counts':
+                return MUTATION_SPECTRUM_FILLS[
+                    _.indexOf(MUTATION_SPECTRUM_CATEGORIES, attributeValue)
+                ];
+            case 'string':
+                // Mixed refers to when an event has multiple values (i.e. Sample Type for a patient event may have both Primary and Recurrence values)
+                if (attributeValue === 'Mixed') {
+                    return DEFAULT_MIXED_COLOR;
+                } else {
+                    return this
+                        .defaultClinicalAttributeColoringForStringDatatype[
+                        attributeValue
+                    ];
+                }
+            default:
+                return DEFAULT_UNKNOWN_COLOR;
+        }
+    }
+
     public render() {
         return (
             <div className="posRelative">
+                {this.selectedClinicalTrack && (
+                    <OncoprintColorModal
+                        setTrackKeySelectedForEdit={
+                            this.setTrackKeySelectedForEdit
+                        }
+                        selectedClinicalTrack={this.selectedClinicalTrack}
+                        handleSelectedClinicalTrackColorChange={
+                            this.handleSelectedClinicalTrackColorChange
+                        }
+                        getSelectedClinicalTrackDefaultColorForValue={
+                            this.getSelectedClinicalTrackDefaultColorForValue
+                        }
+                    />
+                )}
                 <div
                     className={classNames('oncoprintContainer', {
                         fadeIn: !this.isHidden,
@@ -454,6 +559,12 @@ export default class Oncoprinter extends React.Component<
                                 }
                                 showMinimap={this.showMinimap}
                                 onMinimapClose={this.onMinimapClose}
+                                trackKeySelectedForEdit={
+                                    this.trackKeySelectedForEdit
+                                }
+                                setTrackKeySelectedForEdit={
+                                    this.setTrackKeySelectedForEdit
+                                }
                             />
                         </div>
                     </div>

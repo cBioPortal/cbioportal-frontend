@@ -8,7 +8,8 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import {
     SURVIVAL_NOT_ENOUGH_GROUPS_MSG,
     SURVIVAL_TOO_MANY_GROUPS_MSG,
-    getStatisticalCautionInfo,
+    GetStatisticalCautionInfo,
+    GetHazardRatioCautionInfo,
 } from './GroupComparisonUtils';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { blendColors } from './OverlapUtils';
@@ -641,7 +642,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         className={'tabMessageContainer'}
                         style={{ paddingBottom: 0 }}
                     >
-                        {getStatisticalCautionInfo()}
+                        <GetStatisticalCautionInfo />
+                        <GetHazardRatioCautionInfo />
                         {isGenieBpcStudy &&
                             !this.props.store.isLeftTruncationAvailable
                                 .result && (
@@ -1075,8 +1077,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 />
                             )}
                             <div
+                                data-test={'survivalTabView'}
                                 className="borderedChart"
-                                style={{ width: '920px' }}
+                                style={{ width: 'auto' }}
                             >
                                 <SurvivalChart
                                     key={key}

@@ -1121,6 +1121,7 @@ export default class DownloadTab extends React.Component<
             caseAlteration =>
                 `${caseAlteration.studyId}:${caseAlteration.sampleId}`
         );
+        const alteredSampleCaseIdsSet = new Set(alteredSampleCaseIds);
         const handleDownload = () => alteredSampleCaseIds.join('\n');
         const handleQuery = () =>
             this.handleQueryButtonClick(alteredSampleCaseIds);
@@ -1138,7 +1139,7 @@ export default class DownloadTab extends React.Component<
             selectedSamples: _.filter(
                 virtualStudyParams.selectedSamples,
                 (sample: Sample) =>
-                    alteredSampleCaseIds.includes(
+                    alteredSampleCaseIdsSet.has(
                         `${sample.studyId}:${sample.sampleId}`
                     )
             ),
@@ -1164,6 +1165,7 @@ export default class DownloadTab extends React.Component<
             caseAlteration =>
                 `${caseAlteration.studyId}:${caseAlteration.sampleId}`
         );
+        const unalteredSampleCaseIdsSet = new Set(unalteredSampleCaseIds);
 
         let description = `${unalteredSampleCaseIds.length} unaltered samples from:\n\n`;
         virtualStudyParams.studyWithSamples.forEach(s => {
@@ -1181,7 +1183,7 @@ export default class DownloadTab extends React.Component<
             selectedSamples: _.filter(
                 virtualStudyParams.selectedSamples,
                 (sample: Sample) =>
-                    unalteredSampleCaseIds.includes(
+                    unalteredSampleCaseIdsSet.has(
                         `${sample.studyId}:${sample.sampleId}`
                     )
             ),

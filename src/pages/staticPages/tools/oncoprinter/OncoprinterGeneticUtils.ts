@@ -6,7 +6,10 @@ import {
     GeneticTrackDatum,
     GeneticTrackDatum_Data,
 } from '../../../../shared/components/oncoprint/Oncoprint';
-import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
+import {
+    formatPercent,
+    percentAltered,
+} from '../../../../shared/components/oncoprint/OncoprintUtils';
 import { AlterationTypeConstants } from 'shared/constants';
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {
@@ -33,7 +36,6 @@ import {
     OncoKbAPI,
 } from 'oncokb-ts-api-client';
 import {
-    cancerTypeForOncoKb,
     getOncoKbOncogenic,
     ONCOKB_DEFAULT,
     PUTATIVE_DRIVER,
@@ -41,13 +43,14 @@ import {
     queryOncoKbData,
 } from '../../../../shared/lib/StoreUtils';
 import { default as oncokbClient } from '../../../../shared/api/oncokbClientInstance';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { mutationCountByPositionKey } from '../../../resultsView/mutationCountHelpers';
 import { getAlterationString } from '../../../../shared/lib/CopyNumberUtils';
 import { GERMLINE_REGEXP } from '../../../../shared/lib/MutationUtils';
 import { parseOQLQuery } from '../../../../shared/lib/oql/oqlfilter';
 import { Alteration, MUTCommand } from '../../../../shared/lib/oql/oql-parser';
 import { MUTATION_STATUS_GERMLINE } from '../../../../shared/constants';
+import { OncoprintModel } from 'oncoprintjs';
 
 export type OncoprinterGeneticTrackDatum = Pick<
     GeneticTrackDatum,
@@ -508,7 +511,12 @@ function getPercentAltered(data: OncoprinterGeneticTrackDatum[]) {
         .filter(isAltered)
         .size()
         .value();
-    return percentAltered(numAltered, data.length);
+
+    return {
+        totalCount: data.length,
+        altered: numAltered,
+        percent: percentAltered(numAltered, data.length),
+    };
 }
 
 export function getSampleGeneticTrackData(
@@ -608,8 +616,13 @@ export function getGeneticTracks(
         data.filter(d => !(d.sample in excludedSampleIdsMap))
     );
 
+    // note to AARON.  we need to fill out gapLels function for each track
+    // but note that the sequencing maps aren't important because
+    // in oncoprinter, we ignore when something has been sequenced.  it's data
+    // which is not pertinent in this context.
+
     const geneToPercentAltered: {
-        [hugoGeneSymbol: string]: string;
+        [hugoGeneSymbol: string]: any;
     } = _.mapValues(geneToOncoprintData, getPercentAltered);
     const genes = geneOrder
         ? geneOrder.filter(gene => gene in geneToOncoprintData)
@@ -617,8 +630,34 @@ export function getGeneticTracks(
     return genes.map(gene => ({
         key: getGeneticTrackKey(gene),
         label: gene,
-        info: geneToPercentAltered[gene],
+        info: geneToPercentAltered[gene].percent,
         data: geneToOncoprintData[gene],
+        customOptions: [
+            {
+                gapLabelsFn: (model: OncoprintModel) => {
+                    // this is required to actually invoke the data groups function
+                    // if we just use get it will not compute anything
+                    model.data_groups.update(model);
+
+                    const groupsByTrackMap = model.data_groups.get();
+
+                    const percentagesForGroups = groupsByTrackMap[gene][0].map(
+                        getPercentAltered
+                    );
+
+                    return percentagesForGroups.map(info => {
+                        return {
+                            labelFormatter: function() {
+                                return formatPercent(info.percent);
+                            },
+                            tooltipFormatter: function() {
+                                return `${info.altered} altered of ${info.totalCount}`;
+                            },
+                        };
+                    });
+                },
+            },
+        ],
     }));
 }
 

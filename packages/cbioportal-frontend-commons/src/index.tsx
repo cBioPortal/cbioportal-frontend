@@ -13,6 +13,7 @@ export {
     default as DownloadControls,
     DataType,
     DownloadControlsButton,
+    DownloadControlOption,
 } from './components/downloadControls/DownloadControls';
 export { default as EditableSpan } from './components/editableSpan/EditableSpan';
 export { default as EllipsisTextTooltip } from './components/ellipsisTextTooltip/EllipsisTextTooltip';
@@ -53,6 +54,8 @@ export * from './lib/TextTruncationUtils';
 export * from './lib/urls';
 export * from './lib/webdriverUtils';
 export * from './lib/TickUtils';
+export * from './lib/MobxPromise';
+export * from './lib/mobxPromiseUtils';
 
 export { default as CBIOPORTAL_VICTORY_THEME } from './theme/cBioPortalTheme';
 export * from './theme/cBioPortalTheme';

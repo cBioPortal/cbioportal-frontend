@@ -587,7 +587,9 @@ function hasGeneticTrackRuleSetChanged(
             prevProps.distinguishMutationType ||
         nextProps.distinguishDrivers !== prevProps.distinguishDrivers ||
         nextProps.distinguishGermlineMutations !==
-            prevProps.distinguishGermlineMutations
+            prevProps.distinguishGermlineMutations ||
+        nextProps.isWhiteBackgroundForGlyphsEnabled !==
+            prevProps.isWhiteBackgroundForGlyphsEnabled
     );
 }
 
@@ -744,6 +746,7 @@ function transitionTracks(
         );
         delete prevGeneticTracks[track.key];
     }
+
     for (const track of prevProps.geneticTracks || []) {
         if (prevGeneticTracks.hasOwnProperty(track.key)) {
             // if its still there, then this track no longer exists, we need to remove it
@@ -957,7 +960,6 @@ function transitionHeatmapTrackOrder(
 
             if (!_.isEqual(nextOrder, prevOrder)) {
                 const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
-                // debugger;
                 oncoprint.setTrackGroupOrder(
                     parseInt(trackGroupIndex, 10),
                     nextOrder.map(key => trackSpecKeyToTrackId[key])
@@ -1118,7 +1120,8 @@ function transitionGeneticTrack(
             rule_set_params: getGeneticTrackRuleSetParams(
                 nextProps.distinguishMutationType,
                 nextProps.distinguishDrivers,
-                nextProps.distinguishGermlineMutations
+                nextProps.distinguishGermlineMutations,
+                nextProps.isWhiteBackgroundForGlyphsEnabled
             ),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
@@ -1217,7 +1220,8 @@ function transitionGeneticTrack(
                     getGeneticTrackRuleSetParams(
                         nextProps.distinguishMutationType,
                         nextProps.distinguishDrivers,
-                        nextProps.distinguishGermlineMutations
+                        nextProps.distinguishGermlineMutations,
+                        nextProps.isWhiteBackgroundForGlyphsEnabled
                     )
                 );
             }
@@ -1296,7 +1300,22 @@ function transitionClinicalTrack(
             target_group: CLINICAL_TRACK_GROUP_INDEX,
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             onGapChange: nextProps.onTrackGapChange,
-            custom_track_options: nextSpec.custom_options,
+            custom_track_options:
+                (nextSpec.datatype === 'string' ||
+                    nextSpec.datatype === 'counts') &&
+                nextProps.setTrackKeySelectedForEdit
+                    ? // add edit color option that opens color config modal to custom options
+                      [
+                          {
+                              label: 'Edit Colors',
+                              onClick: () =>
+                                  nextProps.setTrackKeySelectedForEdit!(
+                                      nextSpec.key
+                                  ),
+                          },
+                          ...(nextSpec.custom_options || []),
+                      ]
+                    : nextSpec.custom_options,
             track_can_show_gaps: nextSpec.datatype === 'string',
             show_gaps_on_init: nextSpec.gapOn,
         };
@@ -1322,6 +1341,19 @@ function transitionClinicalTrack(
         // set custom track options if they've shallow changed - its cheap
         if (prevSpec.custom_options !== nextSpec.custom_options) {
             oncoprint.setTrackCustomOptions(trackId, nextSpec.custom_options);
+        }
+
+        // update ruleset if color has changed for selected track
+        if (
+            nextProps.trackKeySelectedForEdit &&
+            getTrackSpecKeyToTrackId()[nextProps.trackKeySelectedForEdit] ===
+                trackId
+        ) {
+            let rule_set_params = getClinicalTrackRuleSetParams(nextSpec);
+            rule_set_params.legend_label = nextSpec.label;
+            rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
+            rule_set_params.na_legend_label = nextSpec.na_legend_label;
+            oncoprint.setRuleSet(trackId, rule_set_params);
         }
     }
 }

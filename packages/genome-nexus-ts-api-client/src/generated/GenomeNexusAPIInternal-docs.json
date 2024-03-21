@@ -1104,59 +1104,6 @@
         }
       }
     },
-    "ClinVar": {
-      "type": "object",
-      "properties": {
-        "alleleId": {
-          "type": "integer",
-          "format": "int32",
-          "description": "allele_id"
-        },
-        "alt": {
-          "type": "string",
-          "description": "alt"
-        },
-        "chrom": {
-          "type": "string",
-          "description": "chrom"
-        },
-        "cytogenic": {
-          "type": "string",
-          "description": "cytogenic"
-        },
-        "gene": {
-          "description": "gene",
-          "$ref": "#/definitions/Gene"
-        },
-        "hg19": {
-          "description": "hg19",
-          "$ref": "#/definitions/Hg19"
-        },
-        "hg38": {
-          "description": "hg38",
-          "$ref": "#/definitions/Hg38"
-        },
-        "hgvs": {
-          "description": "hgvs",
-          "$ref": "#/definitions/Hgvs"
-        },
-        "license": {
-          "type": "string",
-          "description": "license"
-        },
-        "rcv": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Rcv"
-          }
-        },
-        "variantId": {
-          "type": "integer",
-          "format": "int32",
-          "description": "variant_id"
-        }
-      }
-    },
     "Cosmic": {
       "type": "object",
       "properties": {
@@ -1846,7 +1793,7 @@
       "properties": {
         "clinVar": {
           "description": "clinvar",
-          "$ref": "#/definitions/ClinVar"
+          "$ref": "#/definitions/MyVariantInfoClinVar"
         },
         "cosmic": {
           "description": "cosmic",
@@ -1890,6 +1837,59 @@
           "type": "integer",
           "format": "int32",
           "description": "version"
+        }
+      }
+    },
+    "MyVariantInfoClinVar": {
+      "type": "object",
+      "properties": {
+        "alleleId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "allele_id"
+        },
+        "alt": {
+          "type": "string",
+          "description": "alt"
+        },
+        "chrom": {
+          "type": "string",
+          "description": "chrom"
+        },
+        "cytogenic": {
+          "type": "string",
+          "description": "cytogenic"
+        },
+        "gene": {
+          "description": "gene",
+          "$ref": "#/definitions/Gene"
+        },
+        "hg19": {
+          "description": "hg19",
+          "$ref": "#/definitions/Hg19"
+        },
+        "hg38": {
+          "description": "hg38",
+          "$ref": "#/definitions/Hg38"
+        },
+        "hgvs": {
+          "description": "hgvs",
+          "$ref": "#/definitions/Hgvs"
+        },
+        "license": {
+          "type": "string",
+          "description": "license"
+        },
+        "rcv": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Rcv"
+          }
+        },
+        "variantId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "variant_id"
         }
       }
     },

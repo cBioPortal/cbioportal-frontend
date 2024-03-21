@@ -62,9 +62,9 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                     <div
                         data-test="geneNameCell"
                         className={classnames(styles.displayFlex)}
-                        onClick={() =>
-                            this.props.onGeneSelect(this.props.hugoGeneSymbol)
-                        }
+                        onClick={() => {
+                            this.props.onGeneSelect(this.props.hugoGeneSymbol);
+                        }}
                     >
                         <EllipsisTextTooltip
                             text={this.props.hugoGeneSymbol}
@@ -93,6 +93,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         </If>
 
                         <div
+                            style={{ paddingTop: '3px' }}
                             className={classnames({
                                 [styles.addGeneUI]: true,
                                 [styles.selected]: geneIsSelected,

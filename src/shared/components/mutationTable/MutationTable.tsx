@@ -1,12 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import {
-    action,
-    observable,
-    computed,
-    makeObservable,
-    makeAutoObservable,
-} from 'mobx';
+import { action, observable, computed, makeObservable } from 'mobx';
 import _ from 'lodash';
 import {
     default as LazyMobXTable,
@@ -66,6 +60,10 @@ import {
     extractGenomicLocation,
     genomicLocationString,
 } from 'cbioportal-utils';
+import {
+    DownloadControlOption,
+    MobxPromise,
+} from 'cbioportal-frontend-commons';
 import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
@@ -82,10 +80,21 @@ import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutation
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
+import { getServerConfig } from 'config/config';
+import {
+    calculateOncoKbContentPadding,
+    calculateOncoKbContentWidthOnNextFrame,
+    calculateOncoKbContentWidthWithInterval,
+    DEFAULT_ONCOKB_CONTENT_WIDTH,
+} from 'shared/lib/AnnotationColumnUtils';
+import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
     uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string };
+    uniqueSampleKeyToCancerType?: { [uniqueSampleKey: string]: string };
     molecularProfileIdToMolecularProfile?: {
         [molecularProfileId: string]: MolecularProfile;
     };
@@ -103,6 +112,7 @@ export interface IMutationTableProps {
     enableHotspot?: boolean;
     enableCivic?: boolean;
     enableRevue?: boolean;
+    enableCustomDriver?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -114,6 +124,7 @@ export interface IMutationTableProps {
     >;
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    oncoKbDataForCancerType?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataForUnknownPrimary?: RemoteData<IOncoKbData | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
@@ -155,17 +166,11 @@ export interface IMutationTableProps {
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
     customControls?: JSX.Element;
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 }
-import MobxPromise from 'mobxpromise';
-import { getServerConfig } from 'config/config';
-import {
-    calculateOncoKbContentPadding,
-    calculateOncoKbContentWidthOnNextFrame,
-    calculateOncoKbContentWidthWithInterval,
-    DEFAULT_ONCOKB_CONTENT_WIDTH,
-} from 'shared/lib/AnnotationColumnUtils';
-import { DownloadControlOption } from 'cbioportal-frontend-commons';
-import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -190,6 +195,8 @@ export enum MutationTableColumnType {
     NORMAL_ALLELE_FREQ = 'Allele Freq (N)',
     FUNCTIONAL_IMPACT = 'Functional Impact',
     ANNOTATION = 'Annotation',
+    CUSTOM_DRIVER = 'Custom Driver',
+    CUSTOM_DRIVER_TIER = 'Custom Driver Tier',
     HGVSG = 'HGVSg',
     COSMIC = 'COSMIC',
     COPY_NUM = 'Copy #',
@@ -333,6 +340,28 @@ export default class MutationTable<
         // first, try to get it from uniqueSampleKeyToTumorType map
         if (this.props.uniqueSampleKeyToTumorType) {
             return this.props.uniqueSampleKeyToTumorType[
+                mutation.uniqueSampleKey
+            ];
+        }
+
+        // second, try the study cancer type
+        if (this.props.studyIdToStudy) {
+            const studyMetaData = this.props.studyIdToStudy[mutation.studyId];
+
+            if (studyMetaData.cancerTypeId !== 'mixed') {
+                return studyMetaData.cancerType.name;
+            }
+        }
+
+        // return Unknown, this should not happen...
+        return 'Unknown';
+    }
+
+    @autobind
+    protected resolveCancerType(mutation: Mutation) {
+        // first, try to get it from uniqueSampleKeyToCancerType map
+        if (this.props.uniqueSampleKeyToCancerType) {
+            return this.props.uniqueSampleKeyToCancerType[
                 mutation.uniqueSampleKey
             ];
         }
@@ -1026,6 +1055,49 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
+        };
+
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
+            name: this.props.customDriverName!,
+            render: d => CustomDriverColumnFormatter.renderFunction(d),
+            download: CustomDriverColumnFormatter.getTextValue,
+            sortBy: (d: Mutation[]) => CustomDriverColumnFormatter.sortValue(d),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible:
+                this.props.dataStore &&
+                !_.isEmpty(this.props.dataStore.allData) &&
+                this.props.dataStore.allData.some(
+                    d =>
+                        d[0].driverFilter !== undefined ||
+                        d[0].driverFilterAnnotation !== undefined
+                ),
+            tooltip: <span>{this.props.customDriverDescription}</span>,
+            defaultSortDirection: 'desc',
+        };
+
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER] = {
+            name: this.props.customDriverTiersName!,
+            render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+            download: CustomDriverTierColumnFormatter.getTextValue,
+            sortBy: (d: Mutation[]) =>
+                CustomDriverTierColumnFormatter.getTextValue(d),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                CustomDriverTierColumnFormatter.getTextValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible: false,
+            tooltip: <span>{this.props.customDriverTiersDescription}</span>,
         };
 
         this._columns[MutationTableColumnType.HGVSG] = {

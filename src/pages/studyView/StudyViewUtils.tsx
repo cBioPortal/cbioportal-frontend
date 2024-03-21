@@ -52,15 +52,16 @@ import {
     STUDY_VIEW_CONFIG,
 } from './StudyViewConfig';
 import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
-import MobxPromise from 'mobxpromise';
 import {
     CNA_COLOR_AMP,
+    CNA_COLOR_DEFAULT,
     CNA_COLOR_DIPLOID,
     CNA_COLOR_GAIN,
     CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
     EditableSpan,
     getTextWidth,
+    MobxPromise,
     stringListToIndexSet,
     toPromise,
 } from 'cbioportal-frontend-commons';
@@ -90,7 +91,7 @@ import { BoundType, NumberRange } from 'range-ts';
 import { ClinicalEventTypeCount } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
 import { toast } from 'react-toastify';
-import { value } from 'numeral';
+import { useCallback } from 'react';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -1115,7 +1116,6 @@ export function toSvgDomNodeWithLegend(
         .find(params.legendGroupSelector)
         .get(0);
     const legendBBox = legend.getBoundingClientRect();
-
     if (params.selectorToHide) {
         $(svg)
             .find(params.selectorToHide)
@@ -1843,9 +1843,7 @@ export function getCNAByAlteration(alteration: string | number) {
     return !isNaN(numberValue) ? CNA_TO_ALTERATION[numberValue] || '' : 'NA';
 }
 
-export function getCNAColorByAlteration(
-    alteration: string
-): string | undefined {
+export function getCNAColorByAlteration(alteration: string): string {
     switch (alteration) {
         case 'HOMDEL':
             return CNA_COLOR_HOMDEL;
@@ -1858,7 +1856,7 @@ export function getCNAColorByAlteration(
         case 'AMP':
             return CNA_COLOR_AMP;
         default:
-            return undefined;
+            return CNA_COLOR_DEFAULT;
     }
 }
 
@@ -2873,12 +2871,23 @@ export function getGroupedClinicalDataByBins(
             // Check if the ClinicalData value is number
             if (!isNaN(datum.value as any)) {
                 //find if it belongs to any of numeric bins.
-                dataBin = _.find(
-                    numericDataBins,
-                    dataBin =>
-                        parseFloat(datum.value) > dataBin.start &&
-                        parseFloat(datum.value) <= dataBin.end
-                );
+                dataBin = _.find(numericDataBins, dataBin => {
+                    if (dataBin.start === dataBin.end) {
+                        // this is a special case where the buckets are single integers, end
+                        // is the same value as the start
+                        // ideally this would never be the case--it should be handled in bin creation
+                        // but this is simplest way to resolve problem
+                        return (
+                            parseFloat(datum.value) === dataBin.start ||
+                            parseFloat(datum.value) === dataBin.end
+                        );
+                    } else {
+                        return (
+                            parseFloat(datum.value) > dataBin.start &&
+                            parseFloat(datum.value) <= dataBin.end
+                        );
+                    }
+                });
             }
 
             //If ClinicalData value is not a number of does not belong to any number bins
@@ -3650,7 +3659,6 @@ export function findInvalidMolecularProfileIds(
         molecularProfilesInFilters,
         molecularProfiles.map(p => p.molecularProfileId)
     );
-    console.log({ geneFilters, result });
     return result;
 }
 
@@ -3960,16 +3968,41 @@ export function transformSampleDataToSelectedSampleClinicalData(
     return clinicalDataSamples;
 }
 
+const TOAST_SUPPRESS_KEY = 'SV-update-query';
+
 export function showQueryUpdatedToast(message: string) {
-    toast.success(message, {
-        delay: 0,
-        position: 'top-right',
-        autoClose: 1500,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'light',
-    } as any);
+    if (localStorage.getItem(TOAST_SUPPRESS_KEY) === null) {
+        toast.success(
+            () => (
+                <ToastSuppressor
+                    message={message}
+                    toastKey={TOAST_SUPPRESS_KEY}
+                />
+            ),
+            {
+                delay: 0,
+                position: 'top-right',
+                autoClose: 4000,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: 'light',
+            } as any
+        );
+    }
+}
+
+function ToastSuppressor(props: any) {
+    const suppressToast = useCallback(() => {
+        localStorage.setItem(props.toastKey, 'true');
+    }, []);
+
+    return (
+        <>
+            <p>{props.message}</p>
+            <a onClick={suppressToast}>Don't show this again</a>
+        </>
+    );
 }

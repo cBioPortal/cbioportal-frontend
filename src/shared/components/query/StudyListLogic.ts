@@ -11,11 +11,10 @@ import {
 import { QueryStore } from './QueryStore';
 import { computed, action, makeObservable } from 'mobx';
 import { performSearchSingle } from '../../lib/query/textQueryUtils';
-import { cached } from 'mobxpromise';
+import { cached } from 'cbioportal-frontend-commons';
 import { ServerConfigHelpers } from '../../../config/config';
 import memoize from 'memoize-weak-decorator';
 import { SearchResult } from 'shared/components/query/filteredSearch/SearchClause';
-
 export const PAN_CAN_SIGNATURE = 'pan_can_atlas';
 
 export default class StudyListLogic {
@@ -45,7 +44,6 @@ export default class StudyListLogic {
     @cached @computed get map_node_filterBySearchText() {
         // first compute individual node match results
         let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
-
         for (const [
             study,
             meta,
@@ -59,11 +57,9 @@ export default class StudyListLogic {
                 )
             );
         }
-
         let map_node_filter = new Map<CancerTreeNode, boolean>();
         for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
             if (map_node_filter.has(node)) continue;
-
             let filter = false;
             for (let item of [
                 node,
@@ -89,6 +85,51 @@ export default class StudyListLogic {
                         map_node_filter.set(cancerType, true);
         }
         return map_node_filter;
+    }
+
+    @cached @computed get map_node_filtered_by_datatype() {
+        // Create a map with all the studies and set all to true (no filter applied)
+        let map_node_filter = new Map<CancerTreeNode, boolean>();
+        for (let node of this.store.treeData.map_node_meta.keys()) {
+            map_node_filter.set(node, true);
+        }
+        let map_node_dataTypeResult = new Map<CancerTreeNode, boolean>();
+        for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
+            if (this.store.dataTypeFilters.length == 0) {
+                map_node_dataTypeResult.set(node, true);
+            } else {
+                let nodeStudy = this.store.cancerStudies.result.filter(
+                    study => study.name === node.name
+                );
+                let filterValue: boolean[] = [];
+                const keys = Object.keys(node) as (keyof typeof node)[];
+                const filterToApply = this.store.dataTypeFilters;
+                for (const filter in filterToApply) {
+                    for (const x in keys) {
+                        if (keys[x] === filterToApply[filter]) {
+                            Object.values(node)[x]! > 0
+                                ? filterValue.push(true)
+                                : filterValue.push(false);
+                        }
+                    }
+                }
+                const filterBoolean =
+                    filterValue.length == 0
+                        ? false
+                        : filterValue.every(v => v === true);
+                map_node_dataTypeResult.set(node, filterBoolean);
+
+                // include ancestors of matching studies
+                if (filterBoolean && !meta.isCancerType)
+                    for (let cancerTypes of [
+                        meta.ancestors,
+                        meta.priorityCategories,
+                    ])
+                        for (let cancerType of cancerTypes)
+                            map_node_dataTypeResult.set(cancerType, true);
+            }
+        }
+        return map_node_dataTypeResult;
     }
 
     @cached @computed get map_node_filterBySelectedCancerTypes() {
@@ -144,6 +185,7 @@ export default class StudyListLogic {
             this.map_node_filterByDepth,
             this.map_node_filterBySearchText,
             this.map_node_filterBySelectedCancerTypes,
+            this.map_node_filtered_by_datatype,
         ]);
     }
 
@@ -151,6 +193,7 @@ export default class StudyListLogic {
         return new FilteredCancerTreeView(this.store, [
             this.map_node_filterByDepth,
             this.map_node_filterBySearchText,
+            this.map_node_filtered_by_datatype,
         ]);
     }
 
@@ -183,7 +226,8 @@ export default class StudyListLogic {
     isHighlighted(node: CancerTreeNode): boolean {
         return (
             !!this.store.searchText &&
-            !!this.map_node_filterBySearchText.get(node)
+            !!this.map_node_filterBySearchText.get(node) &&
+            !!this.map_node_filtered_by_datatype.get(node)
         );
     }
 }
@@ -353,7 +397,8 @@ export class FilteredCancerTreeView {
     @computed get isFiltered() {
         return (
             this.store.selectedCancerTypeIds.length > 0 ||
-            this.store.searchText.length > 0
+            this.store.searchText.length > 0 ||
+            this.store.dataTypeFilters.length > 0
         );
     }
 

@@ -17,14 +17,16 @@ if [ ! "$(ls -A $CBIO_DB_DATA_DIR)" ]; then
 fi
 
 compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml"
-if [ $CUSTOM_BACKEND -eq 1 ]; then
-  compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
-fi
+#if [ $CUSTOM_BACKEND -eq 1 ]; then
+  #compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
+#fi
 
-sudo rm -rf $CBIO_DB_DATA_DIR/*
+rm -rf $CBIO_DB_DATA_DIR/*
 mkdir -p $CBIO_DB_DATA_DIR
 docker-compose $compose_extensions up -d cbioportal
 echo
+
+echo "Init DB"
 
 # wait for up to 15m until all services are up and running
 healthy=
@@ -36,24 +38,29 @@ done
 
 # import study_es_0
 echo "Loading study_es_0 geneset and GSVA data"
-docker-compose $compose_extensions run --rm cbioportal sh -c '\
-  cd /cbioportal/core/src/main/scripts/ \
-  && ./importGenePanel.pl --data /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel1.txt \
-  && ./importGenePanel.pl --data /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel2.txt \
-  && ./importGenesetData.pl --data /cbioportal/core/src/test/resources/genesets/study_es_0_genesets.gmt --new-version msigdb_7.5.1 \
-      --sup /cbioportal/core/src/test/resources/genesets/study_es_0_supp-genesets.txt --confirm-delete-all-genesets-hierarchy-genesetprofiles\
-  && ./importGenesetHierarchy.pl --data /cbioportal/core/src/test/resources/genesets/study_es_0_tree.yaml'
+docker-compose $compose_extensions run --rm \
+  -v "$TEST_HOME/test_data:/test_data" \
+  cbioportal \
+  sh -c 'cd /core/scripts/ \
+  && ./importGenePanel.pl --data /test_data/study_es_0/data_gene_panel_testpanel1.txt \
+  && ./importGenePanel.pl --data /test_data/study_es_0/data_gene_panel_testpanel2.txt \
+  && ./importGenesetData.pl --data /test_data/genesets/study_es_0_genesets.gmt --new-version msigdb_7.5.1 \
+      --sup /test_data/genesets/study_es_0_supp-genesets.txt --confirm-delete-all-genesets-hierarchy-genesetprofiles\
+  && ./importGenesetHierarchy.pl --data /test_data/genesets/study_es_0_tree.yaml'
 
 # dump portalInfo
 echo "Exporting cBioPortal data                      ..."
 docker-compose $compose_extensions run --rm \
-        cbioportal sh -c 'cd /cbioportal/core/src/main/scripts/ && ./dumpPortalInfo.pl /portalInfo/'
+        -v "$TEST_HOME/test_data:/test_data" \
+        cbioportal sh -c 'cd /core/scripts/ && ./dumpPortalInfo.pl /portalInfo/'
 echo "Exporting cBioPortal data                      ... done"
 
 # import study_es_0
 echo "Loading study_es_0"
-docker-compose $compose_extensions run --rm cbioportal sh -c '\
-  cd /cbioportal/core/src/main/scripts/importer && ./metaImport.py -o -p /portalInfo -s /cbioportal/core/src/test/scripts/test_data/study_es_0'
+docker-compose $compose_extensions run --rm \
+  -v "$TEST_HOME/test_data:/test_data" \
+  cbioportal sh -c '\
+  cd /core/scripts/importer && ./metaImport.py -o -p /portalInfo -s /test_data/study_es_0'
 
 for DIR in "$TEST_HOME"/studies/*/; do
 
@@ -61,7 +68,7 @@ for DIR in "$TEST_HOME"/studies/*/; do
     docker-compose $compose_extensions run --rm \
         -v "$DIR:/study-to-import:rw" \
         cbioportal \
-        sh -c 'cd /cbioportal/core/src/main/scripts/importer && ./metaImport.py \
+        sh -c 'docker-entrypoint.sh && cd /core/scripts/importer && ./metaImport.py \
           -o \
           -p /portalInfo \
           -s /study-to-import'

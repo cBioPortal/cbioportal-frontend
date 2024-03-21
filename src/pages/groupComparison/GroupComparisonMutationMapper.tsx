@@ -59,6 +59,9 @@ interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     uniqueSampleKeyToTumorType: {
         [uniqueSampleKey: string]: string;
     };
+    uniqueSampleKeyToCancerType: {
+        [uniqueSampleKey: string]: string;
+    };
 }
 
 @observer
@@ -95,6 +98,9 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 uniqueSampleKeyToTumorType={
                     this.props.uniqueSampleKeyToTumorType
                 }
+                uniqueSampleKeyToCancerType={
+                    this.props.uniqueSampleKeyToCancerType
+                }
                 oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
                 pubMedCache={this.props.pubMedCache}
                 genomeNexusCache={this.props.genomeNexusCache}
@@ -112,6 +118,9 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                     this.props.store.indexedMyVariantInfoAnnotations
                 }
                 oncoKbData={this.props.store.oncoKbData}
+                oncoKbDataForCancerType={
+                    this.props.store.oncoKbDataForCancerType
+                }
                 oncoKbDataForUnknownPrimary={
                     this.props.store.oncoKbDataForUnknownPrimary
                 }
@@ -144,6 +153,12 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 rowDataByProteinChange={this.rowDataByProteinChange}
                 initialSortColumn={'p-Value'}
                 initialSortDirection={'asc'}
+                customDriverName={this.props.customDriverName}
+                customDriverDescription={this.props.customDriverDescription}
+                customDriverTiersName={this.props.customDriverTiersName}
+                customDriverTiersDescription={
+                    this.props.customDriverTiersDescription
+                }
             />
         );
     }

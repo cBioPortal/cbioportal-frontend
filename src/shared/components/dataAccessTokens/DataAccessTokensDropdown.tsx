@@ -6,6 +6,7 @@ import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';
 import { observable, computed, makeObservable } from 'mobx';
 import { buildCBioPortalPageUrl } from '../../api/urls';
+import { SUPPORTED_DAT_METHODS } from 'shared/constants';
 
 export class UserDataAccessToken {
     @observable.ref token: string;
@@ -75,9 +76,9 @@ export class DataAccessTokensDropdown extends React.Component<
                 ),
                 hide:
                     this.props.appStore.isSocialAuthenticated ||
-                    (getServerConfig().dat_method !== 'uuid' &&
-                        getServerConfig().dat_method !== 'jwt' &&
-                        getServerConfig().dat_method !== 'oauth2'),
+                    !SUPPORTED_DAT_METHODS.includes(
+                        getServerConfig().dat_method
+                    ),
             },
         ];
         const shownListItems = listItems.filter(l => {

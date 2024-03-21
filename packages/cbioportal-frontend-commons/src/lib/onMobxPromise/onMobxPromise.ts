@@ -1,5 +1,5 @@
-import { MobxPromise } from 'mobxpromise';
 import { autorun, IReactionDisposer } from 'mobx';
+import { MobxPromise } from '../MobxPromise';
 
 export function onMobxPromise<T>(
     promise: MobxPromise<T> | Array<MobxPromise<T>>,

@@ -6,6 +6,8 @@ import { Router } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
+import { datadogLogs } from '@datadog/browser-logs';
+
 import {
     fetchServerConfig,
     getLoadConfig,
@@ -25,7 +27,7 @@ import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import { initializeTracking, sendToLoggly } from 'shared/lib/tracking';
 import superagentCache from 'superagent-cache';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, onMobxPromise } from 'cbioportal-frontend-commons';
 import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
@@ -51,8 +53,6 @@ export interface ICBioWindow {
     FRONTEND_VERSION: string;
     FRONTEND_COMMIT: string;
     rawServerConfig: IServerConfig;
-
-    postLoadForMskCIS: () => void;
     isMSKCIS: boolean;
 }
 
@@ -136,13 +136,6 @@ browserWindow.FRONTEND_VERSION = VERSION;
 //@ts-ignore
 browserWindow.FRONTEND_COMMIT = COMMIT;
 
-// this is special function allowing MSKCC CIS to hide login UI in
-// portal header
-browserWindow.postLoadForMskCIS = function() {
-    getLoadConfig().hide_login = true;
-    browserWindow.isMSKCIS = true;
-};
-
 // this is the only supported way to disable tracking for the $3Dmol.js
 (browserWindow as any).$3Dmol = { notrack: true };
 
@@ -215,6 +208,29 @@ browserWindow.routingStore = routingStore;
 let render = (key?: number) => {
     if (!getBrowserWindow().navigator.webdriver) initializeTracking();
 
+    if (stores.appStore?.serverConfig.user_display_name === 'servcbioportal') {
+        getLoadConfig().hide_login = true;
+        browserWindow.isMSKCIS = true;
+    }
+
+    if (stores.appStore.serverConfig.app_name === 'mskcc-portal') {
+        datadogLogs.init({
+            clientToken: 'pub9a94ebb002f105ff44d8e427b6549775',
+            site: 'datadoghq.com',
+            service: 'cbioportalinternal',
+            forwardErrorsToLogs: true,
+            sessionSampleRate: 100,
+            beforeSend: (log: any) => {
+                switch (log.origin) {
+                    case 'console':
+                        return false;
+                    default:
+                    // let dd send log
+                }
+            },
+        } as any);
+    }
+
     const rootNode = document.getElementById('reactRoot');
 
     ReactDOM.render(
@@ -269,6 +285,8 @@ $(document).ready(async () => {
     // need to use jsonp, so use jquery
     let initialServerConfig =
         browserWindow.rawServerConfig || (await fetchServerConfig());
+
+    getBrowserWindow().onMobxPromise = onMobxPromise;
 
     initializeServerConfiguration(initialServerConfig);
 

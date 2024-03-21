@@ -2,7 +2,6 @@ import * as React from 'react';
 import _ from 'lodash';
 import { GenomicChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
-import autobind from 'autobind-decorator';
 import { action, computed, makeObservable, observable } from 'mobx';
 import styles from './styles.module.scss';
 import ReactSelect from 'react-select';
@@ -12,7 +11,7 @@ import OQLTextArea, {
     GeneBoxType,
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import classnames from 'classnames';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';

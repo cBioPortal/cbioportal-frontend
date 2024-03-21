@@ -736,8 +736,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             </If>
                             <If
                                 condition={
-                                    !!this.props.chartMeta.clinicalAttribute ||
-                                    !!this.props.chartMeta.description
+                                    !!!this.props.description &&
+                                    (!!this.props.chartMeta.clinicalAttribute ||
+                                        !!this.props.chartMeta.description)
                                 }
                             >
                                 <DefaultTooltip

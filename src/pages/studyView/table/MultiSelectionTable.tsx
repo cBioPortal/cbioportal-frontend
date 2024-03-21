@@ -31,11 +31,11 @@ import {
 import { GeneCell } from 'pages/studyView/table/GeneCell';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
-import MobxPromise from 'mobxpromise';
 import {
     stringListToIndexSet,
     stringListToSet,
     EllipsisTextTooltip,
+    MobxPromise,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';

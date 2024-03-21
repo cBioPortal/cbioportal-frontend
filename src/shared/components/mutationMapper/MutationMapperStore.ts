@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import { computed, makeObservable } from 'mobx';
-import MobxPromise, { cached } from 'mobxpromise';
+import { MobxPromise, cached } from 'cbioportal-frontend-commons';
 import memoize from 'memoize-weak-decorator';
 
 import {
@@ -73,6 +73,9 @@ export interface IMutationMapperStoreConfig {
     countUniqueMutations?: (mutations: Mutation[], group?: string) => number;
     mergeMutationsBy?: (m: Mutation) => string;
     uniqueSampleKeyToTumorType?: {
+        [uniqueSampleKey: string]: string;
+    };
+    uniqueSampleKeyToCancerType?: {
         [uniqueSampleKey: string]: string;
     };
 }
@@ -237,6 +240,15 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     }
 
     @autobind
+    protected getDefaultCancerType(mutation: Mutation): string {
+        return this.mutationMapperStoreConfig.uniqueSampleKeyToCancerType
+            ? this.mutationMapperStoreConfig.uniqueSampleKeyToCancerType[
+                  mutation.uniqueSampleKey
+              ]
+            : 'Unknown';
+    }
+
+    @autobind
     protected getDefaultEntrezGeneId(mutation: Mutation): number {
         return mutation.gene.entrezGeneId;
     }
@@ -376,6 +388,28 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         // return true if transcript dropdown is disabled
         return true;
     }
+
+    readonly oncoKbDataForCancerType: MobxPromise<
+        IOncoKbData | Error
+    > = remoteData(
+        {
+            await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
+            invoke: () => {
+                return this.config.enableOncoKb
+                    ? this.dataFetcher.fetchOncoKbData(
+                          this.mutations,
+                          this.oncoKbAnnotatedGenes.result!,
+                          this.getDefaultCancerType,
+                          this.getDefaultEntrezGeneId
+                      )
+                    : Promise.resolve(ONCOKB_DEFAULT_DATA);
+            },
+            onError: () => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        },
+        ONCOKB_DEFAULT_DATA
+    );
 
     readonly oncoKbDataForUnknownPrimary: MobxPromise<
         IOncoKbData | Error

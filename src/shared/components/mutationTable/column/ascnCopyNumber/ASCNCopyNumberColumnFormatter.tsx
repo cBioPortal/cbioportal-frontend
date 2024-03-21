@@ -12,7 +12,7 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     MUTATION_DATA_FIELD_ENUM,
 } from 'shared/constants';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { errorIcon, loaderIcon } from 'oncokb-frontend-commons';
 
 /**

@@ -639,7 +639,7 @@ describe('Group Comparison Tour', () => {
 
         // There should be a tour modal
         const tourModal = $(GROUP_COMPARISON_TOUR_MODAL);
-        tourModal.waitForExist();
+        tourModal.waitForExist({ timeout: 1000 });
 
         // On the modal, the title of the content should be `The Survival tab`
         assert.equal(tourModal.$('.title').getText(), 'The Survival tab');
@@ -663,7 +663,7 @@ describe('Group Comparison Tour', () => {
 
         // There should be a tour modal
         const tourModal = $(GROUP_COMPARISON_TOUR_MODAL);
-        tourModal.waitForExist();
+        tourModal.waitForExist({ timeout: 1000 });
 
         // On the modal, the title of the content should be `The Clinical tab`
         assert.equal(tourModal.$('.title').getText(), 'The Clinical tab');
@@ -687,7 +687,7 @@ describe('Group Comparison Tour', () => {
 
         // There should be a tour modal
         const tourModal = $(GROUP_COMPARISON_TOUR_MODAL);
-        tourModal.waitForExist();
+        tourModal.waitForExist({ timeout: 1000 });
 
         // On the modal, the title of the content should be `The Genomic Alterations tab`
         assert.equal(

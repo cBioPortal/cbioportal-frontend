@@ -8,11 +8,11 @@ export function getCivicVariantData() {
     return {
         id: 0,
         name: 'variantdata',
-        geneId: 124,
         description: 'descr',
         url: 'http://',
-        evidenceCounts: { type1: 1 },
-        evidences: [],
+        evidenceCounts: {
+            predictiveCount: 1,
+        },
     };
 }
 

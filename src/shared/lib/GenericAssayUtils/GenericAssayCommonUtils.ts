@@ -145,11 +145,11 @@ export async function fetchGenericAssayData(
 ) {
     const params: {
         molecularProfileId: string;
-        genericAssayDataFilter: GenericAssayFilter;
+        genericAssayFilter: GenericAssayFilter;
     }[] = _.map(entityIdsByProfile, (entityIds, profileId) => {
         return {
             molecularProfileId: profileId,
-            genericAssayDataFilter: {
+            genericAssayFilter: {
                 genericAssayStableIds: entityIds,
                 ...sampleFilterByProfile[profileId],
                 // the Swagger-generated type expected by the client method below
@@ -161,8 +161,8 @@ export async function fetchGenericAssayData(
     const dataPromises = params.map(param => {
         // do not request data by using empty sample list
         if (
-            _.isEmpty(param.genericAssayDataFilter.sampleIds) &&
-            !param.genericAssayDataFilter.sampleListId
+            _.isEmpty(param.genericAssayFilter.sampleIds) &&
+            !param.genericAssayFilter.sampleListId
         ) {
             return Promise.resolve([]);
         } else {

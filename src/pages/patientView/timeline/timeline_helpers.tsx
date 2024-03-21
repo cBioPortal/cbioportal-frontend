@@ -143,7 +143,9 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
         'Lab_test',
         'Status',
         'IMAGING',
+        'MEDONC',
         'Med Onc Assessment',
+        'Pathology',
     ];
 
     const legend: TimelineLegendItem[] = [
@@ -275,8 +277,8 @@ export function buildBaseConfig(
     let baseConfig: ITimelineConfig = {
         sortOrder: [
             'Specimen',
-            'Sequencing',
             'Sample Acquisition',
+            'Sequencing',
             'Surgery',
             'Med Onc',
             'Med Onc Assessment',
@@ -292,6 +294,7 @@ export function buildBaseConfig(
             ['TREATMENT', 'TREATMENT_TYPE', 'SUBTYPE', 'AGENT'],
             ['LAB_TEST', 'TEST'],
             ['DIAGNOSIS', 'SUBTYPE'],
+            ['PATHOLOGY', 'SUBTYPE'],
         ],
         trackEventRenderers: [
             {

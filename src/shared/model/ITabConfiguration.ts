@@ -1,5 +1,5 @@
 import { ResultsViewTab } from '../../pages/resultsView/ResultsViewPageHelpers';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 export interface ITabConfiguration {
     id: ResultsViewTab;
     getTab: () => JSX.Element;
