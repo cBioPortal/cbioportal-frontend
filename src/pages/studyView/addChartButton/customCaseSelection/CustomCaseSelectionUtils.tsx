@@ -207,8 +207,8 @@ export function validateLines(
         warningMessages.push({
             code: CodeEnum.INVALID_CASE_ID,
             message: new Error(
-                `Some ${caseType} ID's belong to multiple studies, all of them will be selected. 
-                Specify study id if you want to be more specific, Example: study_id:sample_id. 
+                `The ${caseType} ID's below belong to multiple studies. All of them in the different studies will be selected. 
+                To select specific ${caseType}, pelase specify study_id, Example: study_id:sample_id. 
                 ${caseType} ID's: ${multiStudyCases.join(', ')}`
             ),
         });
