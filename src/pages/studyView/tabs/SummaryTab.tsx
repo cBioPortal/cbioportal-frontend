@@ -33,6 +33,15 @@ import {
     DataBin,
     makeDensityScatterPlotTooltip,
     logScalePossible,
+    ChartMetaDataTypeEnum,
+    getMutationTypesDownloadData,
+    getScatterDownloadData,
+    getSurvivalDownloadData,
+    getMutatedGenesDownloadData,
+    getStructuralVariantGenesDownloadData,
+    getGenesCNADownloadData,
+    getPatientTreatmentDownloadData,
+    getSampleTreatmentDownloadData,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import DelayedRender from 'shared/components/DelayedRender';
@@ -53,6 +62,7 @@ export class StudySummaryTab extends React.Component<
 > {
     private store: StudyViewPageStore;
     private handlers: any;
+    private chartTypeConfig: any;
 
     @observable showErrorMessage = true;
 
@@ -144,6 +154,21 @@ export class StudySummaryTab extends React.Component<
                     values
                 );
             },
+            onSetMutationDataValues: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.updateMutationDataFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
+            onAddMutationDataValues: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.addMutationDataFilters(chartMeta.uniqueKey, values);
+            },
             onGenericAssayDataBinSelection: (
                 chartMeta: ChartMeta,
                 dataBins: GenericAssayDataBin[]
@@ -163,10 +188,665 @@ export class StudySummaryTab extends React.Component<
                 );
             },
         };
+
+        this.chartTypeConfig = (
+            chartMeta: ChartMeta,
+            props: Partial<IChartContainerProps>
+        ) => ({
+            [ChartTypeEnum.PIE_CHART]: () => ({
+                commonProps: {
+                    onChangeChartType: this.handlers.onChangeChartType,
+                    getData: (dataType?: DataType) =>
+                        this.store.getChartDownloadableData(
+                            chartMeta,
+                            dataType
+                        ),
+                    downloadTypes: ['Summary Data', 'Full Data', 'SVG', 'PDF'],
+                },
+                [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
+                    filters: this.store
+                        .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            clinicalDataFilterValue =>
+                                clinicalDataFilterValue.value
+                        ),
+                    onValueSelection: this.handlers
+                        .setCustomChartCategoricalFilters,
+                    onResetSelection: this.handlers
+                        .setCustomChartCategoricalFilters,
+                    promise: this.store.getCustomDataCount(chartMeta),
+                }),
+                [ChartMetaDataTypeEnum.GENERIC_ASSAY]: () => ({
+                    filters: this.store
+                        .getGenericAssayDataFiltersByUniqueKey(
+                            chartMeta.uniqueKey
+                        )
+                        .map(
+                            genericAssayDataFilter =>
+                                genericAssayDataFilter.value
+                        ),
+                    onValueSelection: this.handlers
+                        .onGenericAssayCategoricalValueSelection,
+                    onResetSelection: this.handlers
+                        .onGenericAssayCategoricalValueSelection,
+                    promise: this.store.getGenericAssayChartDataCount(
+                        chartMeta
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
+                    promise: this.store.getGenomicChartDataCount(chartMeta),
+                    filters: chartMeta.mutationOptionType
+                        ? this.store.getMutationDataFiltersByUniqueKey(
+                              chartMeta.uniqueKey
+                          ).length > 0
+                            ? this.store.getMutationDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )[0]
+                            : []
+                        : this.store
+                              .getGenomicDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )
+                              .map(
+                                  genomicDataFilterValue =>
+                                      genomicDataFilterValue.value
+                              ),
+                    onValueSelection: this.handlers
+                        .onGenomicDataCategoricalValueSelection,
+                    onResetSelection: this.handlers
+                        .onGenomicDataCategoricalValueSelection,
+                }),
+                [ChartMetaDataTypeEnum.CLINICAL]: () => ({
+                    promise: this.store.getClinicalDataCount(chartMeta),
+                    filters: this.store
+                        .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            clinicalDataFilterValue =>
+                                clinicalDataFilterValue.value
+                        ),
+                    onValueSelection: this.handlers.onValueSelection,
+                    onResetSelection: this.handlers.onValueSelection,
+                }),
+            }),
+            [ChartTypeEnum.BAR_CHART]: () => ({
+                commonProps: {
+                    onToggleNAValue: this.handlers.onToggleNAValue,
+                    logScaleChecked: this.store.isLogScaleChecked(
+                        chartMeta.uniqueKey
+                    ),
+                    isShowNAChecked: this.store.isShowNAChecked(
+                        chartMeta.uniqueKey
+                    ),
+                    downloadTypes: ['Data', 'SVG', 'PDF'],
+                },
+                [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
+                    promise: this.store.getGenomicChartDataBin(chartMeta),
+                    filters: this.store.getGenomicDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onDataBinSelection: this.handlers.onGenomicDataBinSelection,
+                    onResetSelection: this.handlers.onGenomicDataBinSelection,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    showLogScaleToggle: this.store.isLogScaleToggleVisible(
+                        chartMeta.uniqueKey,
+                        this.store.getGenomicChartDataBin(chartMeta).result
+                    ),
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        this.store.getGenomicChartDataBin(chartMeta).result!
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.GENERIC_ASSAY]: () => ({
+                    promise: this.store.getGenericAssayChartDataBin(chartMeta),
+                    filters: this.store.getGenericAssayDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onDataBinSelection: this.handlers
+                        .onGenericAssayDataBinSelection,
+                    onResetSelection: this.handlers
+                        .onGenericAssayDataBinSelection,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    showLogScaleToggle: this.store.isLogScaleToggleVisible(
+                        chartMeta.uniqueKey,
+                        this.store.getGenericAssayChartDataBin(chartMeta).result
+                    ),
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        this.store.getGenericAssayChartDataBin(chartMeta)
+                            .result!
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
+                    promise: this.store.getCustomDataNumerical(chartMeta),
+                    onDataBinSelection: this.handlers
+                        .onCustomChartDataBinSelection,
+                    filters: this.store.getCustomDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onResetSelection: this.handlers.onDataBinSelection,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    showLogScaleToggle: this.store.isLogScaleToggleVisible(
+                        chartMeta.uniqueKey,
+                        this.store.getCustomDataNumerical(chartMeta).result
+                    ),
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        this.store.getCustomDataNumerical(chartMeta).result!
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.CLINICAL]: () => ({
+                    promise: this.store.getClinicalDataBin(chartMeta),
+                    onDataBinSelection: this.handlers.onDataBinSelection,
+                    filters: this.store.getClinicalDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onResetSelection: this.handlers.onDataBinSelection,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    showLogScaleToggle: this.store.isLogScaleToggleVisible(
+                        chartMeta.uniqueKey,
+                        this.store.getClinicalDataBin(chartMeta).result
+                    ),
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        this.store.getClinicalDataBin(chartMeta).result!
+                    ),
+                }),
+            }),
+            [ChartTypeEnum.TABLE]: () => ({
+                commonProps: {
+                    onChangeChartType: this.handlers.onChangeChartType,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    downloadTypes: ['Data'],
+                },
+                [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
+                    filters: this.store
+                        .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            clinicalDataFilterValue =>
+                                clinicalDataFilterValue.value
+                        ),
+                    onValueSelection: this.handlers
+                        .setCustomChartCategoricalFilters,
+                    onResetSelection: this.handlers
+                        .setCustomChartCategoricalFilters,
+                    promise: this.store.getCustomDataCount(chartMeta),
+                }),
+                [ChartMetaDataTypeEnum.GENERIC_ASSAY]: () => ({
+                    filters: this.store
+                        .getGenericAssayDataFiltersByUniqueKey(
+                            chartMeta.uniqueKey
+                        )
+                        .map(
+                            genericAssayDataFilter =>
+                                genericAssayDataFilter.value
+                        ),
+                    onValueSelection: this.handlers
+                        .onGenericAssayCategoricalValueSelection,
+                    onResetSelection: this.handlers
+                        .onGenericAssayCategoricalValueSelection,
+                    promise: this.store.getGenericAssayChartDataCount(
+                        chartMeta
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
+                    promise: this.store.getGenomicChartDataCount(chartMeta),
+                    filters: chartMeta.mutationOptionType
+                        ? this.store.getMutationDataFiltersByUniqueKey(
+                              chartMeta.uniqueKey
+                          ).length > 0
+                            ? this.store.getMutationDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )[0]
+                            : []
+                        : this.store
+                              .getGenomicDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )
+                              .map(
+                                  genomicDataFilterValue =>
+                                      genomicDataFilterValue.value
+                              ),
+                    onValueSelection: this.handlers
+                        .onGenomicDataCategoricalValueSelection,
+                    onResetSelection: this.handlers
+                        .onGenomicDataCategoricalValueSelection,
+                }),
+                [ChartMetaDataTypeEnum.CLINICAL]: () => ({
+                    filters: this.store
+                        .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            clinicalDataFilterValue =>
+                                clinicalDataFilterValue.value
+                        ),
+                    promise: this.store.getClinicalDataCount(chartMeta),
+                    onValueSelection: this.handlers.onValueSelection,
+                    onResetSelection: this.handlers.onValueSelection,
+                }),
+            }),
+            [ChartTypeEnum.MUTATED_GENES_TABLE]: () => ({
+                filters: this.store.getGeneFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
+                promise: this.store.mutatedGeneTableRowData,
+                onValueSelection: this.store.addGeneFilters,
+                onResetSelection: () =>
+                    this.store.resetGeneFilter(chartMeta.uniqueKey),
+                selectedGenes: this.store.selectedGenes,
+                onGeneSelect: this.store.onCheckGene,
+                id: 'mutated-genes-table',
+                title: this.store.getChartTitle(
+                    ChartTypeEnum.MUTATED_GENES_TABLE,
+                    props.title
+                ),
+                getData: () =>
+                    getMutatedGenesDownloadData(
+                        this.store.mutatedGeneTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
+                genePanelCache: this.store.genePanelCache,
+                downloadTypes: ['Data'],
+                filterByCancerGenes: this.store
+                    .filterMutatedGenesTableByCancerGenes,
+                onChangeCancerGeneFilter: this.store
+                    .updateMutatedGenesTableByCancerGenesFilter,
+                alterationFilterEnabled: getServerConfig()
+                    .skin_show_settings_menu,
+                filterAlterations: this.store.isGlobalMutationFilterActive,
+            }),
+            [ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE]: () => ({
+                filters: this.store.getMutationDataFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
+                promise: this.store.getMutationTypeChartDataCount(chartMeta),
+                onValueSelection: this.handlers.onAddMutationDataValues,
+                onResetSelection: this.handlers.onSetMutationDataValues,
+                id: 'mutation-type-counts-table',
+                title: this.store.getChartTitle(
+                    ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE,
+                    props.title
+                ),
+                getData: () =>
+                    getMutationTypesDownloadData(
+                        this.store.getMutationTypeChartDataCount(chartMeta)
+                    ),
+                downloadTypes: ['Data'],
+                onChangeCancerGeneFilter: this.store
+                    .updateMutatedGenesTableByCancerGenesFilter,
+            }),
+            [ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE]: () => ({
+                filters: this.store.getGeneFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
+                promise: this.store.structuralVariantGeneTableRowData,
+                onValueSelection: this.store.addGeneFilters,
+                onResetSelection: () =>
+                    this.store.resetGeneFilter(chartMeta.uniqueKey),
+                selectedGenes: this.store.selectedGenes,
+                onGeneSelect: this.store.onCheckGene,
+                title: this.store.getChartTitle(
+                    ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
+                    props.title
+                ),
+                getData: () =>
+                    getStructuralVariantGenesDownloadData(
+                        this.store.structuralVariantGeneTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
+                genePanelCache: this.store.genePanelCache,
+                downloadTypes: ['Data'],
+                filterByCancerGenes: this.store.filterSVGenesTableByCancerGenes,
+                onChangeCancerGeneFilter: this.store
+                    .updateSVGenesTableByCancerGenesFilter,
+                alterationFilterEnabled: getServerConfig()
+                    .skin_show_settings_menu,
+                filterAlterations: this.store.isGlobalMutationFilterActive,
+            }),
+            [ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE]: () => ({
+                filters: this.store.getGeneFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
+                promise: this.store.structuralVariantTableRowData,
+                onValueSelection: this.store.addStructVarFilters,
+                onResetSelection: () =>
+                    this.store.resetGeneFilter(chartMeta.uniqueKey),
+                selectedStructuralVariants: this.store
+                    .selectedStructuralVariants,
+                onStructuralVariantSelect: this.store.onCheckStructuralVariant,
+                title: this.store.getChartTitle(
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
+                    props.title
+                ),
+                getData: () =>
+                    getStructuralVariantGenesDownloadData(
+                        this.store.structuralVariantTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
+                genePanelCache: this.store.genePanelCache,
+                downloadTypes: ['Data'],
+                filterByCancerGenes: this.store
+                    .filterStructVarsTableByCancerGenes,
+                onChangeCancerGeneFilter: this.store
+                    .updateStructVarsTableByCancerGenesFilter,
+                alterationFilterEnabled: getServerConfig()
+                    .skin_show_settings_menu,
+                filterAlterations: this.store.isGlobalMutationFilterActive,
+            }),
+            [ChartTypeEnum.CNA_GENES_TABLE]: () => ({
+                filters: this.store.getGeneFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
+                promise: this.store.cnaGeneTableRowData,
+                onValueSelection: this.store.addGeneFilters,
+                onResetSelection: () =>
+                    this.store.resetGeneFilter(chartMeta.uniqueKey),
+                selectedGenes: this.store.selectedGenes,
+                onGeneSelect: this.store.onCheckGene,
+                title: this.store.getChartTitle(
+                    ChartTypeEnum.CNA_GENES_TABLE,
+                    props.title
+                ),
+                getData: () =>
+                    getGenesCNADownloadData(
+                        this.store.cnaGeneTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
+                genePanelCache: this.store.genePanelCache,
+                downloadTypes: ['Data'],
+                filterByCancerGenes: this.store
+                    .filterCNAGenesTableByCancerGenes,
+                onChangeCancerGeneFilter: this.store
+                    .updateCNAGenesTableByCancerGenesFilter,
+                alterationFilterEnabled: getServerConfig()
+                    .skin_show_settings_menu,
+                filterAlterations: this.store.isGlobalAlterationFilterActive,
+            }),
+            [ChartTypeEnum.GENOMIC_PROFILES_TABLE]: () => ({
+                filters: toJS(this.store.genomicProfilesFilter),
+                promise: this.store.molecularProfileSampleCounts,
+                onValueSelection: this.store.addGenomicProfilesFilter,
+                onResetSelection: () => {
+                    this.store.setGenomicProfilesFilter([]);
+                },
+            }),
+            [ChartTypeEnum.CASE_LIST_TABLE]: () => ({
+                filters: toJS(this.store.caseListsFilter),
+                promise: this.store.caseListSampleCounts,
+                onValueSelection: this.store.addCaseListsFilter,
+                onResetSelection: () => {
+                    this.store.setCaseListsFilter([]);
+                },
+            }),
+            [ChartTypeEnum.SURVIVAL]: () => {
+                const props: Partial<IChartContainerProps> = {
+                    promise: this.store.survivalPlots,
+                    getData: () =>
+                        getSurvivalDownloadData(
+                            chartMeta,
+                            this.store.survivalPlots.result,
+                            this.store.survivalData.result,
+                            this.store.selectedPatients,
+                            this.store.selectedPatientKeys.result
+                        ),
+                    patientToAnalysisGroup: this.store.patientToAnalysisGroup,
+                    downloadTypes: ['Data', 'SVG', 'PDF'],
+                    description: this.store.survivalDescriptions.result
+                        ? this.store.survivalDescriptions.result[
+                              chartMeta.uniqueKey.substring(
+                                  0,
+                                  chartMeta.uniqueKey.lastIndexOf('_SURVIVAL')
+                              )
+                          ][0]
+                        : undefined,
+                    onToggleSurvivalPlotLeftTruncation: this.handlers
+                        .onToggleSurvivalPlotLeftTruncation,
+                    survivalPlotLeftTruncationChecked: this.store.survivalPlotLeftTruncationToggleMap?.get(
+                        chartMeta.uniqueKey
+                    ),
+                    onDataBinSelection: this.handlers.onDataBinSelection,
+                };
+
+                if (
+                    this.store.isLeftTruncationAvailable.result &&
+                    new RegExp('OS_SURVIVAL').test(chartMeta.uniqueKey)
+                ) {
+                    props.isLeftTruncationAvailable = true;
+                    props.patientSurvivalsWithoutLeftTruncation = this.store.survivalPlotDataById.result[
+                        'OS_SURVIVAL'
+                    ]?.survivalDataWithoutLeftTruncation;
+                }
+
+                return props;
+            },
+            [ChartTypeEnum.VIOLIN_PLOT_TABLE]: () => {
+                const chartInfo = this.store.getXvsYViolinChartInfo(
+                    chartMeta.uniqueKey
+                )!;
+                const settings = this.store.getXvsYChartSettings(
+                    chartMeta.uniqueKey
+                )!;
+                const props: Partial<IChartContainerProps> = {
+                    filters: [
+                        ...this.store.getClinicalDataFiltersByUniqueKey(
+                            chartInfo.categoricalAttr.clinicalAttributeId
+                        ),
+                        ...this.store.getClinicalDataFiltersByUniqueKey(
+                            chartInfo.numericalAttr.clinicalAttributeId
+                        ),
+                    ],
+                    title: `${chartInfo.numericalAttr.displayName}${
+                        settings.violinLogScale ? ' (log)' : ''
+                    } vs ${chartInfo.categoricalAttr.displayName}`,
+                    promise: this.store.clinicalViolinDataCache.get({
+                        chartInfo,
+                        violinLogScale: !!settings.violinLogScale,
+                    }),
+                    axisLabelX: chartInfo.categoricalAttr.displayName,
+                    axisLabelY: chartInfo.numericalAttr.displayName,
+                    showLogScaleToggle: logScalePossible(
+                        chartInfo.numericalAttr.clinicalAttributeId
+                    ),
+                    logScaleChecked: settings.violinLogScale,
+                    onToggleLogScale: () => {
+                        const settings = this.store.getXvsYChartSettings(
+                            chartMeta.uniqueKey
+                        )!;
+                        settings.violinLogScale = !settings.violinLogScale;
+                    },
+                    showViolinPlotToggle: true,
+                    violinPlotChecked: settings.showViolin,
+                    onToggleViolinPlot: () => {
+                        const settings = this.store.getXvsYChartSettings(
+                            chartMeta.uniqueKey
+                        )!;
+                        settings.showViolin = !settings.showViolin;
+                    },
+                    showBoxPlotToggle: true,
+                    boxPlotChecked: settings.showBox,
+                    onToggleBoxPlot: () => {
+                        const settings = this.store.getXvsYChartSettings(
+                            chartMeta.uniqueKey
+                        )!;
+                        settings.showBox = !settings.showBox;
+                    },
+                    onValueSelection: (
+                        type: 'categorical' | 'numerical',
+                        values: string[] | { start: number; end: number }
+                    ) => {
+                        switch (type) {
+                            case 'categorical':
+                                this.store.updateClinicalAttributeFilterByValues(
+                                    chartInfo.categoricalAttr
+                                        .clinicalAttributeId,
+                                    (values as string[]).map(
+                                        value => ({ value } as DataFilterValue)
+                                    )
+                                );
+                                break;
+                            case 'numerical':
+                                this.store.updateClinicalDataCustomIntervalFilter(
+                                    chartInfo.numericalAttr.clinicalAttributeId,
+                                    values as { start: number; end: number }
+                                );
+                                break;
+                        }
+                    },
+                    selectedCategories: this.store
+                        .getClinicalDataFiltersByUniqueKey(
+                            chartInfo.categoricalAttr.clinicalAttributeId
+                        )
+                        .map(x => x.value),
+                    onResetSelection: () => {
+                        this.store.updateClinicalAttributeFilterByValues(
+                            chartInfo.categoricalAttr.clinicalAttributeId,
+                            []
+                        );
+                        this.store.updateClinicalAttributeFilterByValues(
+                            chartInfo.numericalAttr.clinicalAttributeId,
+                            []
+                        );
+                    },
+                };
+                return props;
+            },
+            [ChartTypeEnum.SCATTER]: () => {
+                const chartInfo = this.store.getXvsYScatterChartInfo(
+                    chartMeta.uniqueKey
+                )!;
+                const settings = this.store.getXvsYChartSettings(
+                    chartMeta.uniqueKey
+                )!;
+                const props: Partial<IChartContainerProps> = {
+                    filters: this.store.getScatterPlotFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    title: chartMeta.displayName,
+                    promise: this.store.clinicalDataDensityCache.get({
+                        chartInfo,
+                        xAxisLogScale: !!settings.xLogScale,
+                        yAxisLogScale: !!settings.yLogScale,
+                    }),
+                    showLogScaleXToggle: logScalePossible(
+                        chartInfo.xAttr.clinicalAttributeId
+                    ),
+                    showLogScaleYToggle: logScalePossible(
+                        chartInfo.yAttr.clinicalAttributeId
+                    ),
+                    logScaleXChecked: settings.xLogScale,
+                    logScaleYChecked: settings.yLogScale,
+                    onToggleLogScaleX: () => {
+                        const settings = this.store.getXvsYChartSettings(
+                            chartMeta.uniqueKey
+                        )!;
+                        settings.xLogScale = !settings.xLogScale;
+                    },
+                    onToggleLogScaleY: () => {
+                        const settings = this.store.getXvsYChartSettings(
+                            chartMeta.uniqueKey
+                        )!;
+                        settings.yLogScale = !settings.yLogScale;
+                    },
+                    onSwapAxes: () => {
+                        this.store.swapXvsYChartAxes(chartMeta.uniqueKey);
+                    },
+                    plotDomain: chartInfo.plotDomain,
+                    axisLabelX: `${chartInfo.xAttr.displayName}${
+                        settings.xLogScale ? ' (log)' : ''
+                    }`,
+                    axisLabelY: `${chartInfo.yAttr.displayName}${
+                        settings.yLogScale ? ' (log)' : ''
+                    }`,
+                    tooltip: makeDensityScatterPlotTooltip(chartInfo, settings),
+                    onValueSelection: (bounds: RectangleBounds) => {
+                        this.store.updateScatterPlotFilterByValues(
+                            chartMeta.uniqueKey,
+                            bounds
+                        );
+                    },
+                    onResetSelection: () => {
+                        this.store.updateScatterPlotFilterByValues(
+                            chartMeta.uniqueKey
+                        );
+                    },
+                    sampleToAnalysisGroup: this.store.sampleToAnalysisGroup,
+                    getData: () =>
+                        getScatterDownloadData(
+                            chartInfo,
+                            this.store.selectedSamples
+                        ),
+                    downloadTypes: ['Data', 'SVG', 'PDF'],
+                };
+                return props;
+            },
+            [ChartTypeEnum.SAMPLE_TREATMENTS_TABLE]: () => ({
+                filters: this.store.sampleTreatmentFiltersAsStrings,
+                promise: this.store.sampleTreatments,
+                onValueSelection: this.store.onTreatmentSelection,
+                getData: () =>
+                    getSampleTreatmentDownloadData(this.store.sampleTreatments),
+                downloadTypes: ['Data'],
+                onResetSelection: () => {
+                    this.store.clearSampleTreatmentFilters();
+                },
+            }),
+            [ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE]: () => ({
+                filters: this.store.sampleTreatmentGroupFiltersAsStrings,
+                promise: this.store.sampleTreatmentGroups,
+                onValueSelection: this.store.onTreatmentSelection,
+                onResetSelection: () => {
+                    this.store.clearSampleTreatmentGroupFilters();
+                },
+            }),
+            [ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE]: () => ({
+                filters: this.store.sampleTreatmentTargetFiltersAsStrings,
+                promise: this.store.sampleTreatmentTarget,
+                onValueSelection: this.store.onTreatmentSelection,
+                onResetSelection: () => {
+                    this.store.clearSampleTreatmentTargetFilters();
+                },
+            }),
+            [ChartTypeEnum.PATIENT_TREATMENTS_TABLE]: () => ({
+                filters: this.store.patientTreatmentFiltersAsStrings,
+                promise: this.store.patientTreatments,
+                onValueSelection: this.store.onTreatmentSelection,
+                getData: () =>
+                    getPatientTreatmentDownloadData(
+                        this.store.patientTreatments
+                    ),
+                downloadTypes: ['Data'],
+                onResetSelection: () => {
+                    this.store.clearPatientTreatmentFilters();
+                },
+            }),
+            [ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE]: () => ({
+                filters: this.store.patientTreatmentGroupFiltersAsStrings,
+                promise: this.store.patientTreatmentGroups,
+                onValueSelection: this.store.onTreatmentSelection,
+                onResetSelection: () => {
+                    this.store.clearPatientTreatmentGroupFilters();
+                },
+            }),
+            [ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE]: () => ({
+                filters: this.store.patientTreatmentTargetFiltersAsStrings,
+                promise: this.store.patientTreatmentTarget,
+                onValueSelection: this.store.onTreatmentSelection,
+                onResetSelection: () => {
+                    this.store.clearPatientTreatmentTargetFilters();
+                },
+            }),
+            [ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE]: () => ({
+                filters: this.store.clinicalEventTypeFiltersRawStrings,
+                promise: this.store.clinicalEventTypeCounts,
+                onValueSelection: this.store.addClinicalEventTypeFilter,
+                onResetSelection: () => {
+                    this.store.resetClinicalEventTypeFilter();
+                },
+            }),
+        });
     }
 
     renderAttributeChart = (chartMeta: ChartMeta) => {
-        const props: Partial<IChartContainerProps> = {
+        let props: Partial<IChartContainerProps> = {
             chartMeta: chartMeta,
             chartType: this.props.store.chartsType.get(chartMeta.uniqueKey),
             store: this.props.store,
@@ -182,576 +862,19 @@ export class StudySummaryTab extends React.Component<
                 .setComparisonConfirmationModal,
         };
 
-        switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
-            case ChartTypeEnum.PIE_CHART: {
-                //if the chart is one of the custom charts then get the appropriate promise
-                if (
-                    this.store.isUserDefinedCustomDataChart(chartMeta.uniqueKey)
-                ) {
-                    props.filters = this.store
-                        .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            clinicalDataFilterValue =>
-                                clinicalDataFilterValue.value
-                        );
-                    props.onValueSelection = this.handlers.setCustomChartCategoricalFilters;
-                    props.onResetSelection = this.handlers.setCustomChartCategoricalFilters;
-                    props.promise = this.store.getCustomDataCount(chartMeta);
-                } else if (
-                    this.store.isGenericAssayChart(chartMeta.uniqueKey)
-                ) {
-                    props.filters = this.store
-                        .getGenericAssayDataFiltersByUniqueKey(
-                            props.chartMeta!.uniqueKey
-                        )
-                        .map(
-                            genericAssayDataFilter =>
-                                genericAssayDataFilter.value
-                        );
-                    props.onValueSelection = this.handlers.onGenericAssayCategoricalValueSelection;
-                    props.onResetSelection = this.handlers.onGenericAssayCategoricalValueSelection;
-                    props.promise = this.store.getGenericAssayChartDataCount(
-                        chartMeta
-                    );
-                } else if (
-                    this.store.isGeneSpecificChart(chartMeta.uniqueKey)
-                ) {
-                    props.promise = this.store.getGenomicChartDataCount(
-                        chartMeta
-                    );
-                    props.filters = this.store
-                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            genomicDataFilterValue =>
-                                genomicDataFilterValue.value
-                        );
-                    props.onValueSelection = this.handlers.onGenomicDataCategoricalValueSelection;
-                    props.onResetSelection = this.handlers.onGenomicDataCategoricalValueSelection;
-                } else {
-                    props.promise = this.store.getClinicalDataCount(chartMeta);
-                    props.filters = this.store
-                        .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            clinicalDataFilterValue =>
-                                clinicalDataFilterValue.value
-                        );
-                    props.onValueSelection = this.handlers.onValueSelection;
-                    props.onResetSelection = this.handlers.onValueSelection;
-                }
-                props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = (dataType?: DataType) =>
-                    this.store.getChartDownloadableData(chartMeta, dataType);
-                props.downloadTypes = [
-                    'Summary Data',
-                    'Full Data',
-                    'SVG',
-                    'PDF',
-                ];
-                break;
-            }
-            case ChartTypeEnum.BAR_CHART: {
-                //if the chart is one of the custom charts then get the appropriate promise
-                if (this.store.isGeneSpecificChart(chartMeta.uniqueKey)) {
-                    props.promise = this.store.getGenomicChartDataBin(
-                        chartMeta
-                    );
-                    props.filters = this.store.getGenomicDataFiltersByUniqueKey(
-                        props.chartMeta!.uniqueKey
-                    );
-                    props.onDataBinSelection = this.handlers.onGenomicDataBinSelection;
-                    props.onResetSelection = this.handlers.onGenomicDataBinSelection;
-                    props.getData = () =>
-                        this.store.getChartDownloadableData(chartMeta);
-                } else if (
-                    this.store.isGenericAssayChart(chartMeta.uniqueKey)
-                ) {
-                    props.promise = this.store.getGenericAssayChartDataBin(
-                        chartMeta
-                    );
-                    props.filters = this.store.getGenericAssayDataFiltersByUniqueKey(
-                        props.chartMeta!.uniqueKey
-                    );
-                    props.onDataBinSelection = this.handlers.onGenericAssayDataBinSelection;
-                    props.onResetSelection = this.handlers.onGenericAssayDataBinSelection;
-                    props.getData = () =>
-                        this.store.getChartDownloadableData(chartMeta);
-                } else {
-                    if (
-                        this.store.isUserDefinedCustomDataChart(
-                            chartMeta.uniqueKey
-                        )
-                    ) {
-                        props.promise = this.store.getCustomDataNumerical(
-                            chartMeta
-                        );
-                        props.onDataBinSelection = this.handlers.onCustomChartDataBinSelection;
-                        props.filters = this.store.getCustomDataFiltersByUniqueKey(
-                            chartMeta.uniqueKey
-                        );
-                    } else {
-                        props.promise = this.store.getClinicalDataBin(
-                            chartMeta
-                        );
-                        props.onDataBinSelection = this.handlers.onDataBinSelection;
-                        props.filters = this.store.getClinicalDataFiltersByUniqueKey(
-                            chartMeta.uniqueKey
-                        );
-                    }
-                    props.onResetSelection = this.handlers.onDataBinSelection;
-                    props.getData = () =>
-                        this.store.getChartDownloadableData(chartMeta);
-                }
-                props.onToggleLogScale = this.handlers.onToggleLogScale;
-                props.onToggleNAValue = this.handlers.onToggleNAValue;
-                props.showLogScaleToggle = this.store.isLogScaleToggleVisible(
-                    chartMeta.uniqueKey,
-                    props.promise!.result
-                );
-                props.logScaleChecked = this.store.isLogScaleChecked(
-                    chartMeta.uniqueKey
-                );
-                props.isShowNAChecked = this.store.isShowNAChecked(
-                    chartMeta.uniqueKey
-                );
-                props.showNAToggle = this.store.isShowNAToggleVisible(
-                    props.promise!.result
-                );
-                props.downloadTypes = ['Data', 'SVG', 'PDF'];
-                break;
-            }
-            case ChartTypeEnum.TABLE: {
-                if (
-                    this.store.isUserDefinedCustomDataChart(chartMeta.uniqueKey)
-                ) {
-                    props.filters = this.store
-                        .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            clinicalDataFilterValue =>
-                                clinicalDataFilterValue.value
-                        );
-                    props.onValueSelection = this.handlers.setCustomChartCategoricalFilters;
-                    props.onResetSelection = this.handlers.setCustomChartCategoricalFilters;
-                    props.promise = this.store.getCustomDataCount(chartMeta);
-                } else if (
-                    this.store.isGenericAssayChart(chartMeta.uniqueKey)
-                ) {
-                    props.filters = this.store
-                        .getGenericAssayDataFiltersByUniqueKey(
-                            props.chartMeta!.uniqueKey
-                        )
-                        .map(
-                            genericAssayDataFilter =>
-                                genericAssayDataFilter.value
-                        );
-                    props.onValueSelection = this.handlers.onGenericAssayCategoricalValueSelection;
-                    props.onResetSelection = this.handlers.onGenericAssayCategoricalValueSelection;
-                    props.promise = this.store.getGenericAssayChartDataCount(
-                        chartMeta
-                    );
-                } else if (
-                    this.store.isGeneSpecificChart(chartMeta.uniqueKey)
-                ) {
-                    props.promise = this.store.getGenomicChartDataCount(
-                        chartMeta
-                    );
-                    props.filters = this.store
-                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            genomicDataFilterValue =>
-                                genomicDataFilterValue.value
-                        );
-                    props.onValueSelection = this.handlers.onGenomicDataCategoricalValueSelection;
-                    props.onResetSelection = this.handlers.onGenomicDataCategoricalValueSelection;
-                } else {
-                    props.filters = this.store
-                        .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            clinicalDataFilterValue =>
-                                clinicalDataFilterValue.value
-                        );
-                    props.promise = this.store.getClinicalDataCount(chartMeta);
-                    props.onValueSelection = this.handlers.onValueSelection;
-                    props.onResetSelection = this.handlers.onValueSelection;
-                }
-                props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = dataType =>
-                    this.store.getChartDownloadableData(chartMeta, dataType);
-                props.downloadTypes = ['Summary Data', 'Full Data'];
-                break;
-            }
-            case ChartTypeEnum.MUTATED_GENES_TABLE: {
-                props.filters = this.store.getGeneFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
-                props.promise = this.store.mutatedGeneTableRowData;
-                props.onValueSelection = this.store.addGeneFilters;
-                props.onResetSelection = () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey);
-                props.selectedGenes = this.store.selectedGenes;
-                props.onGeneSelect = this.store.onCheckGene;
-                props.id = 'mutated-genes-table';
-                props.title = this.store.getChartTitle(
-                    ChartTypeEnum.MUTATED_GENES_TABLE,
-                    props.title
-                );
-                props.getData = () => this.store.getMutatedGenesDownloadData();
-                props.genePanelCache = this.store.genePanelCache;
-                props.downloadTypes = ['Data'];
-                props.filterByCancerGenes = this.store.filterMutatedGenesTableByCancerGenes;
-                props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter;
-                props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
-                props.filterAlterations = this.store.isGlobalMutationFilterActive;
-                break;
-            }
-            case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE: {
-                props.filters = this.store.getGeneFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
-                props.promise = this.store.structuralVariantGeneTableRowData;
-                props.onValueSelection = this.store.addGeneFilters;
-                props.onResetSelection = () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey);
-                props.selectedGenes = this.store.selectedGenes;
-                props.onGeneSelect = this.store.onCheckGene;
-                props.title = this.store.getChartTitle(
-                    ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
-                    props.title
-                );
-                props.getData = () =>
-                    this.store.getStructuralVariantGenesDownloadData();
-                props.genePanelCache = this.store.genePanelCache;
-                props.downloadTypes = ['Data'];
-                props.filterByCancerGenes = this.store.filterSVGenesTableByCancerGenes;
-                props.onChangeCancerGeneFilter = this.store.updateSVGenesTableByCancerGenesFilter;
-                props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
-                props.filterAlterations = this.store.isGlobalMutationFilterActive;
-                break;
-            }
-            case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
-                props.filters = this.store.getGeneFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
-                props.promise = this.store.structuralVariantTableRowData;
-                props.onValueSelection = this.store.addStructVarFilters;
-                props.onResetSelection = () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey);
-                props.selectedStructuralVariants = this.store.selectedStructuralVariants;
-                props.onStructuralVariantSelect = this.store.onCheckStructuralVariant;
-                props.title = this.store.getChartTitle(
-                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
-                    props.title
-                );
-                props.getData = () =>
-                    this.store.getStructuralVariantGenesDownloadData();
-                props.genePanelCache = this.store.genePanelCache;
-                props.downloadTypes = ['Data'];
-                props.filterByCancerGenes = this.store.filterStructVarsTableByCancerGenes;
-                props.onChangeCancerGeneFilter = this.store.updateStructVarsTableByCancerGenesFilter;
-                props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
-                props.filterAlterations = this.store.isGlobalMutationFilterActive;
-                break;
-            }
-            case ChartTypeEnum.CNA_GENES_TABLE: {
-                props.filters = this.store.getGeneFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
-                props.promise = this.store.cnaGeneTableRowData;
-                props.onValueSelection = this.store.addGeneFilters;
-                props.onResetSelection = () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey);
-                props.selectedGenes = this.store.selectedGenes;
-                props.onGeneSelect = this.store.onCheckGene;
-                props.title = this.store.getChartTitle(
-                    ChartTypeEnum.CNA_GENES_TABLE,
-                    props.title
-                );
-                props.getData = () => this.store.getGenesCNADownloadData();
-                props.genePanelCache = this.store.genePanelCache;
-                props.downloadTypes = ['Data'];
-                props.filterByCancerGenes = this.store.filterCNAGenesTableByCancerGenes;
-                props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter;
-                props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
-                props.filterAlterations = this.store.isGlobalAlterationFilterActive;
-                break;
-            }
-            case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
-                props.filters = toJS(this.store.genomicProfilesFilter);
-                props.promise = this.store.molecularProfileSampleCounts;
-                props.onValueSelection = this.store.addGenomicProfilesFilter;
-                props.onResetSelection = () => {
-                    this.store.setGenomicProfilesFilter([]);
-                };
-                break;
-            }
-            case ChartTypeEnum.CASE_LIST_TABLE: {
-                props.filters = toJS(this.store.caseListsFilter);
-                props.promise = this.store.caseListSampleCounts;
-                props.onValueSelection = this.store.addCaseListsFilter;
-                props.onResetSelection = () => {
-                    this.store.setCaseListsFilter([]);
-                };
-                break;
-            }
-            case ChartTypeEnum.SURVIVAL: {
-                props.promise = this.store.survivalPlots;
-                props.getData = () =>
-                    this.store.getSurvivalDownloadData(chartMeta);
-                props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
-                props.downloadTypes = ['Data', 'SVG', 'PDF'];
-                props.description = this.store.survivalDescriptions.result
-                    ? this.store.survivalDescriptions.result![
-                          chartMeta.uniqueKey.substring(
-                              0,
-                              chartMeta.uniqueKey.lastIndexOf('_SURVIVAL')
-                          )
-                      ][0]
-                    : undefined;
-                props.onToggleSurvivalPlotLeftTruncation = this.handlers.onToggleSurvivalPlotLeftTruncation;
-                props.survivalPlotLeftTruncationChecked = this.store.survivalPlotLeftTruncationToggleMap?.get(
-                    chartMeta!.uniqueKey
-                );
-                /* start of left truncation adjustment related settings */
-                // Currently, left truncation is only appliable for Overall Survival data
-                if (
-                    this.store.isLeftTruncationAvailable.result &&
-                    new RegExp('OS_SURVIVAL').test(chartMeta.uniqueKey)
-                ) {
-                    props.isLeftTruncationAvailable = true;
-                    props.patientSurvivalsWithoutLeftTruncation = this.store.survivalPlotDataById.result[
-                        'OS_SURVIVAL'
-                    ]?.survivalDataWithoutLeftTruncation;
-                }
-                props.onDataBinSelection = this.handlers.onDataBinSelection;
-                /* end of left truncation adjustment related settings */
-                break;
-            }
-            case ChartTypeEnum.VIOLIN_PLOT_TABLE:
-                const chartInfo = this.store.getXvsYViolinChartInfo(
-                    props.chartMeta!.uniqueKey
-                )!;
-                const settings = this.store.getXvsYChartSettings(
-                    props.chartMeta!.uniqueKey
-                )!;
-                props.filters = [
-                    ...this.store.getClinicalDataFiltersByUniqueKey(
-                        chartInfo.categoricalAttr.clinicalAttributeId
-                    ),
-                    ...this.store.getClinicalDataFiltersByUniqueKey(
-                        chartInfo.numericalAttr.clinicalAttributeId
-                    ),
-                ];
-                props.title = `${chartInfo.numericalAttr.displayName}${
-                    settings.violinLogScale ? ' (log)' : ''
-                } vs ${chartInfo.categoricalAttr.displayName}`;
-                props.promise = this.store.clinicalViolinDataCache.get({
-                    chartInfo,
-                    violinLogScale: !!settings.violinLogScale,
-                });
-                props.axisLabelX = chartInfo.categoricalAttr.displayName;
-                props.axisLabelY = chartInfo.numericalAttr.displayName;
-                props.showLogScaleToggle = logScalePossible(
-                    chartInfo.numericalAttr.clinicalAttributeId
-                );
-                props.logScaleChecked = settings.violinLogScale;
-                props.onToggleLogScale = () => {
-                    const settings = this.store.getXvsYChartSettings(
-                        props.chartMeta!.uniqueKey
-                    )!;
-                    settings.violinLogScale = !settings.violinLogScale;
-                };
-                props.showViolinPlotToggle = true;
-                props.violinPlotChecked = settings.showViolin;
-                props.onToggleViolinPlot = () => {
-                    const settings = this.store.getXvsYChartSettings(
-                        props.chartMeta!.uniqueKey
-                    )!;
-                    settings.showViolin = !settings.showViolin;
-                };
-                props.showBoxPlotToggle = true;
-                props.boxPlotChecked = settings.showBox;
-                props.onToggleBoxPlot = () => {
-                    const settings = this.store.getXvsYChartSettings(
-                        props.chartMeta!.uniqueKey
-                    )!;
-                    settings.showBox = !settings.showBox;
-                };
-                props.onValueSelection = (
-                    type: 'categorical' | 'numerical',
-                    values: string[] | { start: number; end: number }
-                ) => {
-                    switch (type) {
-                        case 'categorical':
-                            this.store.updateClinicalAttributeFilterByValues(
-                                chartInfo.categoricalAttr.clinicalAttributeId,
-                                (values as string[]).map(
-                                    value => ({ value } as DataFilterValue)
-                                )
-                            );
-                            break;
-                        case 'numerical':
-                            this.store.updateClinicalDataCustomIntervalFilter(
-                                chartInfo.numericalAttr.clinicalAttributeId,
-                                values as { start: number; end: number }
-                            );
-                            break;
-                    }
-                };
-                props.selectedCategories = this.store
-                    .getClinicalDataFiltersByUniqueKey(
-                        chartInfo.categoricalAttr.clinicalAttributeId
-                    )
-                    .map(x => x.value);
-                props.onResetSelection = () => {
-                    this.store.updateClinicalAttributeFilterByValues(
-                        chartInfo.categoricalAttr.clinicalAttributeId,
-                        []
-                    );
-                    this.store.updateClinicalAttributeFilterByValues(
-                        chartInfo.numericalAttr.clinicalAttributeId,
-                        []
-                    );
-                };
-                break;
-            case ChartTypeEnum.SCATTER: {
-                props.filters = this.store.getScatterPlotFiltersByUniqueKey(
-                    props.chartMeta!.uniqueKey
-                );
-                const chartInfo = this.store.getXvsYScatterChartInfo(
-                    props.chartMeta!.uniqueKey
-                )!;
-                const settings = this.store.getXvsYChartSettings(
-                    props.chartMeta!.uniqueKey
-                )!;
-                props.title = props.chartMeta!.displayName;
-                props.promise = this.store.clinicalDataDensityCache.get({
-                    chartInfo,
-                    xAxisLogScale: !!settings.xLogScale,
-                    yAxisLogScale: !!settings.yLogScale,
-                });
-                props.showLogScaleXToggle = logScalePossible(
-                    chartInfo.xAttr.clinicalAttributeId
-                );
-                props.showLogScaleYToggle = logScalePossible(
-                    chartInfo.yAttr.clinicalAttributeId
-                );
-                props.logScaleXChecked = settings.xLogScale;
-                props.logScaleYChecked = settings.yLogScale;
-                props.onToggleLogScaleX = () => {
-                    const settings = this.store.getXvsYChartSettings(
-                        props.chartMeta!.uniqueKey
-                    )!;
-                    settings.xLogScale = !settings.xLogScale;
-                };
-                props.onToggleLogScaleY = () => {
-                    const settings = this.store.getXvsYChartSettings(
-                        props.chartMeta!.uniqueKey
-                    )!;
-                    settings.yLogScale = !settings.yLogScale;
-                };
-                props.onSwapAxes = () => {
-                    this.store.swapXvsYChartAxes(props.chartMeta!.uniqueKey);
-                };
-                props.plotDomain = chartInfo.plotDomain;
-                props.axisLabelX = `${chartInfo.xAttr.displayName}${
-                    settings.xLogScale ? ' (log)' : ''
-                }`;
-                props.axisLabelY = `${chartInfo.yAttr.displayName}${
-                    settings.yLogScale ? ' (log)' : ''
-                }`;
-                props.tooltip = makeDensityScatterPlotTooltip(
-                    chartInfo,
-                    settings
-                );
-                props.onValueSelection = (bounds: RectangleBounds) => {
-                    this.store.updateScatterPlotFilterByValues(
-                        props.chartMeta!.uniqueKey,
-                        bounds
-                    );
-                };
-                props.onResetSelection = () => {
-                    this.store.updateScatterPlotFilterByValues(
-                        props.chartMeta!.uniqueKey
-                    );
-                };
-                props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
-                props.getData = () =>
-                    this.store.getScatterDownloadData(
-                        props.chartMeta!.uniqueKey
-                    );
-                props.downloadTypes = ['Data', 'SVG', 'PDF'];
-                break;
-            }
-            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE: {
-                props.filters = this.store.sampleTreatmentFiltersAsStrings;
-                props.promise = this.store.sampleTreatments;
-                props.onValueSelection = this.store.onTreatmentSelection;
-                props.getData = () =>
-                    this.store.getSampleTreatmentDownloadData();
-                props.downloadTypes = ['Data'];
-                props.onResetSelection = () => {
-                    this.store.clearSampleTreatmentFilters();
-                };
-                break;
-            }
-            case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE: {
-                props.filters = this.store.sampleTreatmentGroupFiltersAsStrings;
-                props.promise = this.store.sampleTreatmentGroups;
-                props.onValueSelection = this.store.onTreatmentSelection;
-                props.onResetSelection = () => {
-                    this.store.clearSampleTreatmentGroupFilters();
-                };
-                break;
-            }
-            case ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE: {
-                props.filters = this.store.sampleTreatmentTargetFiltersAsStrings;
-                props.promise = this.store.sampleTreatmentTarget;
-                props.onValueSelection = this.store.onTreatmentSelection;
-                props.onResetSelection = () => {
-                    this.store.clearSampleTreatmentTargetFilters();
-                };
-                break;
-            }
-            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
-                props.filters = this.store.patientTreatmentFiltersAsStrings;
-                props.promise = this.store.patientTreatments;
-                props.onValueSelection = this.store.onTreatmentSelection;
-                props.getData = () =>
-                    this.store.getPatientTreatmentDownloadData();
-                props.downloadTypes = ['Data'];
-                props.onResetSelection = () => {
-                    this.store.clearPatientTreatmentFilters();
-                };
-                break;
-            }
-            case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE: {
-                props.filters = this.store.patientTreatmentGroupFiltersAsStrings;
-                props.promise = this.store.patientTreatmentGroups;
-                props.onValueSelection = this.store.onTreatmentSelection;
-                props.onResetSelection = () => {
-                    this.store.clearPatientTreatmentGroupFilters();
-                };
-                break;
-            }
-            case ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE: {
-                props.filters = this.store.patientTreatmentTargetFiltersAsStrings;
-                props.promise = this.store.patientTreatmentTarget;
-                props.onValueSelection = this.store.onTreatmentSelection;
-                props.onResetSelection = () => {
-                    this.store.clearPatientTreatmentTargetFilters();
-                };
-                break;
-            }
-            case ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE: {
-                props.filters = this.store.clinicalEventTypeFiltersRawStrings;
-                props.promise = this.store.clinicalEventTypeCounts;
-                props.onValueSelection = this.store.addClinicalEventTypeFilter;
-                props.onResetSelection = () => {
-                    this.store.resetClinicalEventTypeFilter();
-                };
-                break;
-            }
-            default:
-                break;
+        const chartType = this.store.chartsType.get(chartMeta.uniqueKey)!;
+        const subTypeProps = this.chartTypeConfig(chartMeta, props)[
+            chartType
+        ]();
+
+        if (subTypeProps.commonProps) {
+            // charts that have sub types
+            const subProps = subTypeProps[
+                this.store.getChartMetaDataType(chartMeta.uniqueKey)
+            ]();
+            props = { ...props, ...subProps, ...subTypeProps.commonProps };
+        } else {
+            props = { ...props, ...subTypeProps };
         }
 
         // Using custom component inside of the GridLayout creates too many chaos as mentioned here
