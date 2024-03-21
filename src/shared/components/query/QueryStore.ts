@@ -8,6 +8,7 @@ import {
     observable,
     ObservableMap,
     reaction,
+    runInAction,
     toJS,
 } from 'mobx';
 import {
@@ -22,19 +23,20 @@ import {
 } from 'cbioportal-ts-api-client';
 import CancerStudyTreeData from './CancerStudyTreeData';
 import {
+    cached,
+    debounceAsync,
     getBrowserWindow,
     remoteData,
     stringListToIndexSet,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import { cached, debounceAsync } from 'mobxpromise';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import { SingleGeneQuery, SyntaxError } from '../../lib/oql/oql-parser';
 import { parseOQLQuery } from '../../lib/oql/oqlfilter';
 import memoize from 'memoize-weak-decorator';
 import { ComponentGetsStoreContext } from '../../lib/ContextUtils';
 import URL from 'url';
-import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
+import { redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
 import { categorizedSamplesCount, currentQueryParams } from './QueryStoreUtils';
@@ -55,7 +57,6 @@ import {
     getVolcanoPlotMinYValue,
 } from 'shared/components/query/GenesetsSelectorStore';
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
-import formSubmit from '../../lib/formSubmit';
 import { getServerConfig, ServerConfigHelpers } from '../../../config/config';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
@@ -71,6 +72,7 @@ import { SearchClause } from 'shared/components/query/filteredSearch/SearchClaus
 import { QueryParser } from 'shared/lib/query/QueryParser';
 import { AppStore } from 'AppStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
+import { CaseSetId } from 'shared/components/query/CaseSetSelectorUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -124,6 +126,26 @@ export class QueryStore {
 
         makeObservable(this);
 
+        /**
+         * Reset selectedSampleListId when sampleLists and sampleListInSelectedStudies have finished
+         */
+        reaction(
+            () => [this.sampleLists, this.sampleListInSelectedStudies],
+            () => {
+                if (
+                    !this.sampleLists.isComplete ||
+                    !this.sampleListInSelectedStudies.isComplete
+                ) {
+                    return;
+                }
+                if (
+                    !this.initiallySelected.sampleListId ||
+                    this.studiesHaveChangedSinceInitialization
+                ) {
+                    this._selectedSampleListId = undefined;
+                }
+            }
+        );
         this.initialize(urlWithInitialParams);
     }
 
@@ -269,8 +291,14 @@ export class QueryStore {
 
     @observable.ref searchClauses: SearchClause[] = [];
 
+    @observable.ref dataTypeFilters: string[] = [];
+
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);
+    }
+
+    @computed get filterType(): string[] {
+        return this.dataTypeFilters;
     }
 
     @observable private _allSelectedStudyIds: ObservableMap<
@@ -296,7 +324,10 @@ export class QueryStore {
     }
 
     set selectableSelectedStudyIds(val: string[]) {
-        this._allSelectedStudyIds = observable.map(stringListToSet(val));
+        runInAction(() => {
+            this.selectedSampleListId = undefined;
+            this._allSelectedStudyIds = observable.map(stringListToSet(val));
+        });
     }
 
     @action
@@ -474,9 +505,24 @@ export class QueryStore {
     @observable private _selectedSampleListId?: string = undefined; // user selection
     @computed
     public get selectedSampleListId() {
-        if (this._selectedSampleListId !== undefined)
-            return this._selectedSampleListId;
-        return this.defaultSelectedSampleListId;
+        // check to make sure selected sample list belongs to study
+        // OR is custom list
+        const matchesSelectedStudy =
+            // custom list
+            this._selectedSampleListId === CUSTOM_CASE_LIST_ID ||
+            // if multiple studies selected, then we look for list classes enumerated in CaseSetId enum
+            _.values(CaseSetId).includes(
+                this._selectedSampleListId as CaseSetId
+            ) ||
+            // otherwise, we check that this sample list belongs to a selected study
+            this.sampleListInSelectedStudies.result.some(
+                sampleList =>
+                    sampleList.sampleListId === this._selectedSampleListId
+            );
+
+        return matchesSelectedStudy
+            ? this._selectedSampleListId
+            : this.defaultSelectedSampleListId;
     }
 
     public set selectedSampleListId(value) {
@@ -592,7 +638,7 @@ export class QueryStore {
     );
 
     readonly cancerStudies = remoteData(
-        client.getAllStudiesUsingGET({ projection: 'SUMMARY' }),
+        client.getAllStudiesUsingGET({ projection: 'DETAILED' }),
         []
     );
 
@@ -609,8 +655,14 @@ export class QueryStore {
     readonly cancerStudyTags = remoteData({
         await: () => [this.cancerStudies],
         invoke: async () => {
-            const studyIds = this.cancerStudies.result.map(s => s.studyId);
-            return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+            if (getServerConfig().enable_study_tags) {
+                const studyIds = this.cancerStudies.result
+                    .filter(s => s.readPermission)
+                    .map(s => s.studyId);
+                return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+            } else {
+                return [];
+            }
         },
         default: [],
     });
@@ -1004,14 +1056,6 @@ export class QueryStore {
             );
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly validProfileIdSetForSelectedStudies = remoteData({
@@ -1075,7 +1119,7 @@ export class QueryStore {
         return _.sumBy(this.selectableSelectedStudies, s => s.allSampleCount);
     }
 
-    readonly sampleLists = remoteData({
+    readonly sampleLists = remoteData<SampleList[]>({
         invoke: async () => {
             if (!this.isSingleNonVirtualStudySelected) {
                 return [];
@@ -1088,14 +1132,6 @@ export class QueryStore {
             return _.sortBy(sampleLists, sampleList => sampleList.name);
         },
         default: [],
-        onResult: () => {
-            if (
-                !this.initiallySelected.sampleListId ||
-                this.studiesHaveChangedSinceInitialization
-            ) {
-                this._selectedSampleListId = undefined;
-            }
-        },
     });
 
     readonly mutSigForSingleStudy = remoteData({
@@ -2198,6 +2234,10 @@ export class QueryStore {
         this.searchClauses = this.queryParser.parseSearchQuery(searchText);
     }
 
+    @action setFilterType(filter: string) {
+        this.dataTypeFilters.push(filter);
+    }
+
     @action clearSelectedCancerType() {
         this.selectedCancerTypeIds = [];
     }
@@ -2295,16 +2335,7 @@ export class QueryStore {
 
         let urlParams = this.asyncUrlParams.result;
 
-        if (this.forDownloadTab) {
-            formSubmit(
-                buildCBioPortalPageUrl('data_download'),
-                urlParams.query,
-                undefined,
-                'smart'
-            );
-        } else {
-            this.singlePageAppSubmitRoutine(urlParams.query, currentTab);
-        }
+        this.singlePageAppSubmitRoutine(urlParams.query, currentTab);
 
         return true;
     }

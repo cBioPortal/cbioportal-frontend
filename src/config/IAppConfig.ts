@@ -39,9 +39,13 @@ export interface IServerConfig {
     app_version: string | null; // default: "1.0"
     authenticationMethod: string | undefined;
     bitly_access_token: string | null;
-    oncoprint_custom_driver_annotation_binary_menu_label: string | null; // default:
+    oncoprint_custom_driver_annotation_binary_menu_label: string | null;
+    oncoprint_custom_driver_annotation_binary_menu_description: string | null;
+    oncoprint_custom_driver_annotation_tiers_menu_label: string | null;
+    oncoprint_custom_driver_annotation_tiers_menu_description: string | null;
     disabled_tabs: string | null;
     custom_tabs: any[];
+    custom_js_urls: string; // comma delimited string
     oncoprint_custom_driver_annotation_binary_default: boolean;
     oncoprint_custom_driver_annotation_tiers_default: boolean;
     oncoprint_oncokb_default: boolean;
@@ -98,12 +102,14 @@ export interface IServerConfig {
     skin_documentation_news: string | null;
     skin_documentation_oql: string | null;
     skin_query_max_tree_depth: string;
+    skin_left_logo: string | null;
     skin_right_logo: string | null;
     skin_right_nav_show_data_sets: boolean;
     skin_right_nav_show_examples: boolean;
     skin_right_nav_show_testimonials: boolean;
     skin_right_nav_show_whats_new: boolean;
     skin_right_nav_show_twitter: boolean;
+    skin_right_nav_show_web_tours: boolean;
     skin_right_nav_whats_new_blurb: string | null;
     skin_show_about_tab: boolean;
     skin_show_data_tab: boolean;
@@ -117,10 +123,11 @@ export interface IServerConfig {
     skin_show_tissue_image_tab: boolean;
     skin_hide_logout_button: boolean;
     skin_show_settings_menu: boolean;
+    skin_show_study_help_button: boolean;
     skin_title: string;
     skin_authorization_message: string | null;
     skin_patientview_filter_genes_profiled_all_samples: boolean;
-    skin_hide_download_controls: boolean;
+    skin_hide_download_controls: string;
     show_mdacc_heatmap: boolean;
     quick_search_enabled: boolean;
     default_cross_cancer_study_list: string; // this has a default
@@ -133,7 +140,6 @@ export interface IServerConfig {
     studiesWithGermlineConsentedSamples: string[] | undefined;
     mdacc_heatmap_study_meta_url: string | null;
     mdacc_heatmap_study_url: string | null;
-    oncoprint_custom_driver_annotation_tiers_menu_label: string | null;
     enable_darwin: boolean;
     query_sets_of_genes: string | null;
     skin_quick_select_buttons: string | null;
@@ -163,11 +169,21 @@ export interface IServerConfig {
     skin_mutation_table_namespace_column_show_by_default: boolean;
     skin_patient_view_mutation_table_columns_show_on_init: string;
     skin_results_view_mutation_table_columns_show_on_init: string;
+    skin_comparison_view_mutation_table_columns_show_on_init: string;
     skin_patient_view_copy_number_table_columns_show_on_init: string;
     skin_patient_view_structural_variant_table_columns_show_on_init: string;
+    skin_results_view_tables_default_sort_column: string;
+    skin_patient_view_tables_default_sort_column: string;
+    skin_patient_view_custom_sample_type_colors_json: string;
     comparison_categorical_na_values: string;
     oncoprint_clinical_tracks_config_json: string;
+    oncoprint_clustered_default: boolean; // this has a default
     enable_cross_study_expression: string;
     studyview_max_samples_selected: number;
     study_download_url: string;
+    studyview_clinical_attribute_chart_count: number;
+    vaf_sequential_mode_default: boolean; // this has a default
+    vaf_log_scale_default: boolean; // this has a default
+    skin_study_view_show_sv_table: boolean; // this has a default
+    enable_study_tags: boolean;
 }

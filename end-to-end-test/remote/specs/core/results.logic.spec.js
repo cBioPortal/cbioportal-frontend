@@ -295,6 +295,24 @@ describe('case set selection in modify query form', function() {
     });
 });
 
+describe('gene list input', function() {
+    beforeEach(function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
+        goToUrlAndSetLocalStorage(url);
+        $('#modifyQueryBtn').waitForExist({ timeout: 60000 });
+    });
+
+    // we're testing this because it was broken
+    it('allows gene textarea update', () => {
+        $('#modifyQueryBtn').click();
+        const textarea = getElementByTestHandle('geneSet');
+        textarea.waitForDisplayed();
+        textarea.setValue('TP53 BRAF');
+
+        assert(textarea.getValue() === 'TP53 BRAF');
+    });
+});
+
 describe('genetic profile selection in modify query form', function() {
     beforeEach(function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;

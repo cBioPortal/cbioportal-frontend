@@ -37,7 +37,7 @@ import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import g2sClient from 'shared/api/g2sClientInstance';
-import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import { MobxPromise, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import {
     Alignment,
     Genome2StructureAPI,
@@ -61,7 +61,6 @@ import {
     OtherBiomarkersQueryType,
 } from 'oncokb-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
-import { MobxPromise } from 'mobxpromise';
 import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
 import { indexPdbAlignments } from 'shared/lib/PdbUtils';
 import { IGisticData } from 'shared/model/Gistic';
@@ -1122,25 +1121,36 @@ export function findMrnaRankMolecularProfileId(
 export function generateUniqueSampleKeyToTumorTypeMap(
     clinicalDataForSamples: MobxPromise<ClinicalData[]>,
     studies?: MobxPromise<CancerStudy[]>,
-    samples?: MobxPromise<Sample[]>
+    samples?: MobxPromise<Sample[]>,
+    useCancerTypeAttribute?: boolean
 ): { [sampleId: string]: string } {
     const map: { [sampleId: string]: string } = {};
 
     if (clinicalDataForSamples.result) {
-        // first priority is CANCER_TYPE_DETAILED in clinical data
-        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-            if (clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
-                map[clinicalData.uniqueSampleKey] = clinicalData.value;
-            }
-        });
-
-        // // second priority is CANCER_TYPE in clinical data
-        // _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-        //     // update map with CANCER_TYPE value only if it is not already updated
-        //     if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
-        //         map[clinicalData.uniqueSampleKey] = clinicalData.value;
-        //     }
-        // });
+        // if useCancerTypeAttribute is true, use CANCER_TYPE in clinical data
+        // else, use CANCER_TYPE_DETAILED in clinical data
+        if (useCancerTypeAttribute) {
+            _.each(
+                clinicalDataForSamples.result,
+                (clinicalData: ClinicalData) => {
+                    if (clinicalData.clinicalAttributeId === 'CANCER_TYPE') {
+                        map[clinicalData.uniqueSampleKey] = clinicalData.value;
+                    }
+                }
+            );
+        } else {
+            _.each(
+                clinicalDataForSamples.result,
+                (clinicalData: ClinicalData) => {
+                    if (
+                        clinicalData.clinicalAttributeId ===
+                        'CANCER_TYPE_DETAILED'
+                    ) {
+                        map[clinicalData.uniqueSampleKey] = clinicalData.value;
+                    }
+                }
+            );
+        }
     }
 
     // last resort: fall back to the study cancer type
@@ -1175,7 +1185,7 @@ export function mergeDiscreteCNAData(
 }
 
 export function mergeMutations(
-    mutationData: MobxPromise<Mutation[]>,
+    mutationData: Mutation[],
     generateMutationId: MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent
 ) {
     const idToMutations: { [key: string]: Mutation[] } = {};
@@ -1203,13 +1213,13 @@ export function mergeMutationsIncludingUncalled(
 
     updateIdToMutationsMap(
         idToMutations,
-        mutationData,
+        mutationData.result,
         generateMutationId,
         false
     );
     updateIdToMutationsMap(
         idToMutations,
-        uncalledMutationData,
+        uncalledMutationData.result,
         generateMutationId,
         true
     );
@@ -1219,12 +1229,12 @@ export function mergeMutationsIncludingUncalled(
 
 function updateIdToMutationsMap(
     idToMutations: { [key: string]: Mutation[] },
-    mutationData: MobxPromise<Mutation[]>,
+    mutationData: Mutation[] | undefined,
     generateMutationId: MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent,
     onlyUpdateExistingIds: boolean
 ) {
-    if (mutationData.result) {
-        for (const mutation of mutationData.result) {
+    if (mutationData) {
+        for (const mutation of mutationData) {
             const mutationId = generateMutationId(mutation);
             if (!onlyUpdateExistingIds || mutationId in idToMutations) {
                 idToMutations[mutationId] = idToMutations[mutationId] || [];
@@ -1279,6 +1289,10 @@ export function generateStructuralVariantId(s: StructuralVariant): string {
     ]
         .sort()
         .join('_');
+}
+
+export function generateMutationIdByGeneAndProteinChange(m: Mutation): string {
+    return `${m.gene.hugoGeneSymbol}_${m.proteinChange}`;
 }
 
 export function generateMutationIdByGeneAndProteinChangeAndEvent(
@@ -1862,6 +1876,13 @@ export function tumorTypeResolver(cancerTypeMap: SampleCancerTypeMap) {
 
 export const PUTATIVE_DRIVER = 'Putative_Driver';
 export const PUTATIVE_PASSENGER = 'Putative_Passenger';
+
+export const DriverFilterOrder = {
+    PUTATIVE_DRIVER: 3,
+    PUTATIVE_PASSENGER: 2,
+    UNKNOWN: 1,
+    NA: 0,
+};
 
 export function getOncoKbOncogenic(response: IndicatorQueryResp): string {
     if (

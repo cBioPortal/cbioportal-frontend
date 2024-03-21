@@ -11,7 +11,6 @@ import { saveSvg, saveSvgAsPng } from 'save-svg-as-png';
 import svgToPdfDownload from '../../lib/svgToPdfDownload';
 import { CSSProperties } from 'react';
 import { isPromiseLike } from 'cbioportal-utils';
-import { AppContext } from '../appContext/AppContext';
 
 type ButtonSpec = {
     key: string;
@@ -30,6 +29,12 @@ export type DownloadControlsButton =
 
 export type DataType = 'summary' | 'full';
 
+export enum DownloadControlOption {
+    SHOW_ALL = 'show',
+    HIDE_DATA = 'data',
+    HIDE_ALL = 'hide',
+}
+
 interface IDownloadControlsProps {
     getSvg?: () => SVGElement | null | PromiseLike<SVGElement | null>;
     getData?: (
@@ -44,6 +49,7 @@ interface IDownloadControlsProps {
     style?: CSSProperties;
     className?: any;
     dataExtension?: string;
+    showDownload?: boolean;
 }
 
 function makeButton(spec: ButtonSpec) {
@@ -104,7 +110,7 @@ export default class DownloadControls extends React.Component<
 
     @autobind
     private download(
-        saveMethod: (svg: SVGElement, fileName: string) => void,
+        saveMethod: (svg: SVGElement, fileName: string, options?: any) => void,
         fileExtension: string
     ) {
         if (this.props.getSvg) {
@@ -115,14 +121,16 @@ export default class DownloadControls extends React.Component<
                         if (svg) {
                             saveMethod(
                                 svg,
-                                `${this.props.filename}.${fileExtension}`
+                                `${this.props.filename}.${fileExtension}`,
+                                { excludeCss: true }
                             );
                         }
                     });
                 } else {
                     saveMethod(
                         result,
-                        `${this.props.filename}.${fileExtension}`
+                        `${this.props.filename}.${fileExtension}`,
+                        { excludeCss: true }
                     );
                 }
             }
@@ -151,6 +159,16 @@ export default class DownloadControls extends React.Component<
         );
     }
 
+    private buildFileName(dataType?: string) {
+        return (
+            `${this.props.filename}${
+                typeof dataType === 'string' ? `.${dataType}` : ''
+            }` +
+            `.` +
+            `${this.props.dataExtension ? this.props.dataExtension : 'txt'}`
+        );
+    }
+
     @autobind
     private downloadData(dataType?: DataType) {
         if (this.props.getData) {
@@ -159,15 +177,7 @@ export default class DownloadControls extends React.Component<
                 if (isPromiseLike<string | null>(result)) {
                     result.then(data => {
                         if (data) {
-                            fileDownload(
-                                data,
-                                `${this.props.filename}.` +
-                                    `${
-                                        this.props.dataExtension
-                                            ? this.props.dataExtension
-                                            : 'txt'
-                                    }`
-                            );
+                            fileDownload(data, this.buildFileName(dataType));
                         }
                     });
                 } else {
@@ -245,20 +255,6 @@ export default class DownloadControls extends React.Component<
                 onClick: this.downloadData,
                 disabled: !this.props.getData,
             },
-            'Summary Data': {
-                key: 'Summary Data',
-                content: (
-                    <span>
-                        Summary Data{' '}
-                        <i
-                            className="fa fa-cloud-download"
-                            aria-hidden="true"
-                        />
-                    </span>
-                ),
-                onClick: () => this.downloadData('summary'),
-                disabled: !this.props.getData,
-            },
             'Full Data': {
                 key: 'Full Data',
                 content: (
@@ -273,13 +269,37 @@ export default class DownloadControls extends React.Component<
                 onClick: () => this.downloadData('full'),
                 disabled: !this.props.getData,
             },
+            'Summary Data': {
+                key: 'Summary Data',
+                content: (
+                    <span>
+                        Summary Data{' '}
+                        <i
+                            className="fa fa-cloud-download"
+                            aria-hidden="true"
+                        />
+                    </span>
+                ),
+                onClick: () => this.downloadData('summary'),
+                disabled: !this.props.getData,
+            },
         };
     }
 
+    @computed get showDownload() {
+        return this.props.showDownload !== undefined
+            ? this.props.showDownload
+            : true;
+    }
+
     @computed get buttonSpecs() {
-        const middleButtons = (this.props.buttons || ['SVG', 'PNG', 'PDF']).map(
-            x => this.downloadControlsButtons[x]
-        );
+        const middleButtons = this.showDownload
+            ? (this.props.buttons || ['SVG', 'PNG', 'PDF']).map(
+                  x => this.downloadControlsButtons[x]
+              )
+            : (this.props.buttons || ['SVG', 'PNG', 'PDF'])
+                  .filter(x => x !== 'Data' && x !== 'Full Data')
+                  .map(x => this.downloadControlsButtons[x]);
         return (this.props.additionalLeftButtons || [])
             .concat(middleButtons)
             .concat(this.props.additionalRightButtons || []);
@@ -291,7 +311,7 @@ export default class DownloadControls extends React.Component<
     }
 
     render() {
-        if (this.context.showDownloadControls === false) {
+        if (this.showDownload === false) {
             return null;
         }
 
@@ -375,7 +395,7 @@ export default class DownloadControls extends React.Component<
                 </div>
             );
         } else if (this.props.type === 'dropdown') {
-            element = (
+            element = this.buttonSpecs.length > 0 && (
                 <ul
                     className={classnames(
                         'dropdown-menu',
@@ -387,7 +407,7 @@ export default class DownloadControls extends React.Component<
                 </ul>
             );
         } else {
-            element = (
+            element = this.buttonSpecs.length > 0 && (
                 <div
                     role="group"
                     className="btn-group chartDownloadButtons"
@@ -404,5 +424,3 @@ export default class DownloadControls extends React.Component<
         }
     }
 }
-
-DownloadControls.contextType = AppContext;

@@ -5,13 +5,9 @@ import * as React from 'react';
 import {
     ICustomTabConfiguration,
     ICustomTabWrapper,
-    ITabConfiguration,
 } from 'shared/model/ITabConfiguration';
-import MobxPromise from 'mobxpromise';
-import autobind from 'autobind-decorator';
 import { showCustomTab } from 'shared/lib/customTabs';
 import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
-import { getServerConfig } from 'config/config';
 
 function customTabCallback(div: HTMLDivElement, tab: any, isUnmount = false) {
     showCustomTab(div, tab, getBrowserWindow().location.href, null, isUnmount);
@@ -120,7 +116,7 @@ export function prepareCustomTabConfigurations(
             return t as ICustomTabConfiguration;
         });
 
-        // only show these on results_page
+        // Select appropriate tab configurations for the requested page.
         const customResultsTabs = custom_tabs.filter(
             (tab: ICustomTabConfiguration) => tab.location === pageLocation
         );

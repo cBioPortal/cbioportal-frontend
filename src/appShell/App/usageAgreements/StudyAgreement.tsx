@@ -76,10 +76,11 @@ export const StudyAgreement: React.FunctionComponent<{}> = function({}) {
                 <>
                     I have read the{' '}
                     <a
-                        href="https://cmo.mskcc.org/cmo/initiatives/msk-impact/"
+                        href="https://cmo.mskcc.org/index.php/msk-impact/"
                         target="_blank"
                     >
-                        MSK-IMPACT Data publication guidelines
+                        MSK-IMPACT Data publication guidelines (intranet/VPN
+                        only)
                     </a>
                     .
                 </>,

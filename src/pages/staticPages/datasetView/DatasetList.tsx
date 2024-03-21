@@ -94,6 +94,7 @@ export default class DataSetsPageTable extends React.Component<
                     massSpectrometry: study.massSpectrometrySampleCount || '',
                     complete: study.completeSampleCount || '',
                     treatmentCount: study.treatmentCount || '',
+                    structuralVariantCount: study.structuralVariantCount || '',
                 })
             );
             return (
@@ -179,6 +180,11 @@ export default class DataSetsPageTable extends React.Component<
                                     Number(data.mrnaRnaSeqV2) ||
                                     Number(data.mrnaRnaSeq) ||
                                     0,
+                            },
+                            {
+                                name: 'Structural Variants',
+                                type: 'structuralVariantCount',
+                                visible: false,
                             },
                             {
                                 name: 'Tumor mRNA (microarray)',

@@ -1,14 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import {
-    action,
-    computed,
-    observable,
-    toJS,
-    reaction,
-    IReactionDisposer,
-    makeObservable,
-} from 'mobx';
+import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
@@ -21,7 +13,6 @@ import {
     getClinicalAttributeOverlay,
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
-    getFrequencyStr,
 } from '../StudyViewUtils';
 import { SortDirection } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
@@ -152,7 +143,7 @@ export default class ClinicalTable extends React.Component<
                                 </g>
                             </svg>
                             <EllipsisTextTooltip
-                                text={data.value}
+                                text={data.displayedValue || data.value}
                             ></EllipsisTextTooltip>
                         </div>
                     );
@@ -203,7 +194,9 @@ export default class ClinicalTable extends React.Component<
                 render: (data: ClinicalDataCountSummary) => (
                     <LabeledCheckbox
                         checked={_.includes(this.props.filters, data.value)}
-                        onChange={event => this.onUserSelection(data.value)}
+                        onChange={event => {
+                            this.onUserSelection(data.value);
+                        }}
                         labelProps={{
                             style: {
                                 display: 'flex',
@@ -276,7 +269,7 @@ export default class ClinicalTable extends React.Component<
         if (_.includes(filters, filter)) {
             filters = _.filter(filters, obj => obj !== filter);
         } else {
-            filters.push(filter);
+            filters = filters.concat([filter]);
         }
         this.props.onUserSelection(filters);
     }
@@ -297,7 +290,16 @@ export default class ClinicalTable extends React.Component<
 
     @autobind
     addAll(selectedRows: ClinicalDataCountSummary[]) {
-        this.props.onUserSelection(selectedRows.map(row => row.value));
+        // To prevent the deselection of previously applied filters upon each "Select All" click,
+        // we retrieve the existing filters and concatenate them with the new ones.
+        let filters = toJS(this.props.filters);
+
+        let uniqueSelectedRows = selectedRows
+            .map(row => row.value)
+            .filter(item => !filters.includes(item));
+
+        filters = filters.concat(uniqueSelectedRows);
+        this.props.onUserSelection(filters);
     }
 
     @autobind

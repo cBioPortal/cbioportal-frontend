@@ -30,8 +30,8 @@ const exampleData = [
         bNotACount: 5,
         bothCount: 0,
         logOddsRatio: -Infinity,
-        pValue: 0.003968253968253951,
-        qValue: 0.023809523809523704,
+        pValue: 0.007936507936507901,
+        qValue: 0.04761904761904741,
         association: 'Mutual exclusivity',
     },
     {
@@ -54,8 +54,8 @@ const exampleData = [
         bNotACount: 3,
         bothCount: 0,
         logOddsRatio: -Infinity,
-        pValue: 0.08333333333333293,
-        qValue: 0.12499999999999939,
+        pValue: 0.16666666666666585,
+        qValue: 0.24999999999999878,
         association: 'Mutual exclusivity',
     },
     {
@@ -66,8 +66,8 @@ const exampleData = [
         bNotACount: 0,
         bothCount: 3,
         logOddsRatio: Infinity,
-        pValue: 0.08333333333333293,
-        qValue: 0.12499999999999939,
+        pValue: 0.16666666666666585,
+        qValue: 0.24999999999999878,
         association: 'Co-occurrence',
     },
     {
@@ -78,8 +78,8 @@ const exampleData = [
         bNotACount: 3,
         bothCount: 1,
         logOddsRatio: -2.584962500721156,
-        pValue: 0.2619047619047609,
-        qValue: 0.2619047619047609,
+        pValue: 0.5238095238095218,
+        qValue: 0.5238095238095218,
         association: 'Mutual exclusivity',
     },
     {
@@ -90,8 +90,8 @@ const exampleData = [
         bNotACount: 1,
         bothCount: 3,
         logOddsRatio: 2.584962500721156,
-        pValue: 0.2619047619047609,
-        qValue: 0.2619047619047609,
+        pValue: 0.5238095238095218,
+        qValue: 0.5238095238095218,
         association: 'Co-occurrence',
     },
 ];
@@ -265,12 +265,12 @@ describe('MutualExclusivityUtil', () => {
     });
 
     describe('#calculatePValue()', () => {
-        it('returns 0.3653846153846146 for 4, 3, 7, 2', () => {
-            assert.equal(calculatePValue(4, 3, 7, 2), 0.3653846153846146);
+        it('returns 0.5961538461538457 for 4, 3, 7, 2', () => {
+            assert.equal(calculatePValue(4, 3, 7, 2), 0.5961538461538457);
         });
 
-        it('returns 0.07706146926536687 for 13, 7, 3, 7', () => {
-            assert.equal(calculatePValue(13, 7, 3, 7), 0.07706146926536687);
+        it('returns 0.12163918040979466 for 13, 7, 3, 7', () => {
+            assert.equal(calculatePValue(13, 7, 3, 7), 0.12163918040979466);
         });
     });
 
@@ -445,8 +445,8 @@ describe('MutualExclusivityUtil', () => {
                     bNotACount: 5,
                     bothCount: 0,
                     logOddsRatio: -Infinity,
-                    pValue: 0.003968253968253951,
-                    qValue: 0.023809523809523704,
+                    pValue: 0.007936507936507901,
+                    qValue: 0.04761904761904741,
                     association: 'Mutual exclusivity',
                 },
             ]);

@@ -291,12 +291,16 @@ export interface IOncoprintProps {
     };
     showClinicalTrackLegends?: boolean;
     showWhitespaceBetweenColumns?: boolean;
+    isWhiteBackgroundForGlyphsEnabled?: boolean;
     showMinimap?: boolean;
 
     onMinimapClose?: () => void;
     onDeleteClinicalTrack?: (key: string) => void;
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
     onTrackGapChange?: (trackId: TrackId, gap: boolean) => void;
+
+    trackKeySelectedForEdit?: string | null;
+    setTrackKeySelectedForEdit?: (key: string | null) => void;
 
     suppressRendering?: boolean;
     onSuppressRendering?: () => void;

@@ -161,6 +161,7 @@ describe('treatment feature', function() {
             $(GENERIC_ASSAY_PROFILE_SELECTOR).click();
             selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
             selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
+
             // Select treatments
             $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
             $('[data-test="GenericAssayEntitySelection"] input').setValue(
@@ -183,6 +184,7 @@ describe('treatment feature', function() {
             $('button=Add Track').click();
             waitForOncoprint();
             var url = browser.getUrl();
+
             var regex = /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
             assert(url.match(regex));
         });

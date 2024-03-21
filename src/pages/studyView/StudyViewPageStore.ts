@@ -61,7 +61,9 @@ import {
     SampleIdentifier,
     SampleMolecularIdentifier,
     SampleTreatmentRow,
+    StructuralVariantFilterQuery,
     StudyViewFilter,
+    StudyViewStructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
@@ -105,8 +107,8 @@ import {
     getChartMetaDataType,
     getChartSettingsMap,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
+    getCNAColorByAlteration,
     getCNASamplesCount,
     getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
@@ -130,6 +132,7 @@ import {
     getSampleToClinicalData,
     getStructuralVariantSamplesCount,
     getUniqueKey,
+    getUniqueKeyFromGeneFilterMolecularProfileIds,
     getUniqueKeyFromMolecularProfileIds,
     getUserGroupColor,
     isFiltered,
@@ -143,6 +146,7 @@ import {
     RectangleBounds,
     shouldShowChart,
     showOriginStudiesInSummaryDescription,
+    showQueryUpdatedToast,
     SPECIAL_CHARTS,
     SpecialChartsUniqueKeyEnum,
     statusFilterActive,
@@ -151,7 +155,6 @@ import {
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
 } from './StudyViewUtils';
-import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import {
@@ -159,7 +162,12 @@ import {
     updateGeneQuery,
 } from 'pages/studyView/StudyViewUtils';
 import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
-import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
+import {
+    convertToGene1Gene2String,
+    parseOQLQuery,
+    queryContainsStructVarAlteration,
+    unparseOQLQueryLine,
+} from 'shared/lib/oql/oqlfilter';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import windowStore from 'shared/components/window/WindowStore';
 import { getHeatmapMeta } from '../../shared/lib/MDACCUtils';
@@ -177,6 +185,7 @@ import {
 } from '../../shared/api/urls';
 import {
     DataType as DownloadDataType,
+    MobxPromise,
     onMobxPromise,
     pluralize,
     remoteData,
@@ -194,7 +203,7 @@ import {
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
 import { LoadingPhase } from '../groupComparison/GroupComparisonLoading';
-import { sleepUntil } from '../../shared/lib/TimeUtils';
+import { sleep, sleepUntil } from '../../shared/lib/TimeUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { CancerGene } from 'oncokb-ts-api-client';
@@ -267,11 +276,28 @@ import {
 import { PageType } from 'shared/userSession/PageType';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import intersect from 'fast_array_intersect';
+import { StructVarMultiSelectionTableRow } from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
 import { PillStore } from 'shared/components/PillTag/PillTag';
 import {
-    PatientIdentifier,
-    PatientIdentifierFilter,
-} from 'shared/model/PatientIdentifierFilter';
+    doesStructVarMatchSingleGeneQuery,
+    generateStructVarTableCellKey,
+    oqlQueryToStructVarGenePair,
+    StructuralVariantFilterQueryFromOql,
+    structVarFilterQueryToOql,
+    StructVarGenePair,
+    updateStructuralVariantQuery,
+} from 'pages/studyView/StructVarUtils';
+import {
+    ClinicalAttributeQueryExtractor,
+    SharedGroupsAndCustomDataQueryExtractor,
+    StudyIdQueryExtractor,
+    StudyViewFilterQueryExtractor,
+    StudyViewQueryExtractor,
+} from './StudyViewQueryExtractor';
+import {
+    getAllowedSurvivalClinicalDataFilterId,
+    isSurvivalChart,
+} from './charts/survival/StudyViewSurvivalUtils';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -353,6 +379,7 @@ export type GenomicChart = {
     description?: string;
     profileType: string;
     hugoGeneSymbol: string;
+    dataType?: string;
 };
 
 export type GenericAssayChart = {
@@ -380,6 +407,17 @@ export type OncokbCancerGene = {
     isOncokbOncogene: boolean;
     isOncokbTumorSuppressorGene: boolean;
     isCancerGene: boolean;
+};
+
+export type OncokbCancerStructVar = {
+    gene1OncokbAnnotated: boolean;
+    gene1IsOncokbOncogene: boolean;
+    gene1IsOncokbTumorSuppressorGene: boolean;
+    gene1IsCancerGene: boolean;
+    gene2OncokbAnnotated: boolean;
+    gene2IsOncokbOncogene: boolean;
+    gene2IsOncokbTumorSuppressorGene: boolean;
+    gene2IsCancerGene: boolean;
 };
 
 export enum BinMethodOption {
@@ -1482,7 +1520,8 @@ export class StudyViewPageStore
     private createCnaGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
-        statusCallback: (phase: LoadingPhase) => void
+        statusCallback: (phase: LoadingPhase) => void,
+        alterationTypes?: number[]
     ): Promise<string> {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
 
@@ -1502,11 +1541,11 @@ export class StudyViewPageStore
                         hugoGeneSymbols
                     );
                     const cnaByGeneAndAlteration = _.groupBy(
-                        cnaData.filter(
-                            d =>
-                                d.value === CNA_AMP_VALUE ||
-                                d.value === CNA_HOMDEL_VALUE
-                        ),
+                        alterationTypes
+                            ? cnaData.filter(d =>
+                                  alterationTypes.includes(d.value)
+                              )
+                            : cnaData,
                         (d: NumericGeneMolecularData) =>
                             `${d.gene.hugoGeneSymbol}:${getCNAByAlteration(
                                 d.value
@@ -1852,13 +1891,26 @@ export class StudyViewPageStore
         switch (chartType) {
             case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
-                comparisonId = await this.createCategoricalAttributeComparisonSession(
-                    chartMeta,
-                    params.clinicalAttributeValues!,
-                    statusCallback
+                const isGeneSpecificChart = this.isGeneSpecificChart(
+                    chartMeta.uniqueKey
                 );
+                if (isGeneSpecificChart) {
+                    const chartInfo = this._geneSpecificChartMap.get(
+                        chartMeta.uniqueKey
+                    )!;
+                    comparisonId = await this.createCnaGeneComparisonSession(
+                        chartMeta,
+                        [chartInfo.hugoGeneSymbol],
+                        statusCallback
+                    );
+                } else {
+                    comparisonId = await this.createCategoricalAttributeComparisonSession(
+                        chartMeta,
+                        params.clinicalAttributeValues!,
+                        statusCallback
+                    );
+                }
                 break;
-
             case ChartTypeEnum.MUTATED_GENES_TABLE:
                 comparisonId = await this.createMutatedGeneComparisonSession(
                     chartMeta,
@@ -1870,7 +1922,8 @@ export class StudyViewPageStore
                 comparisonId = await this.createCnaGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
-                    statusCallback
+                    statusCallback,
+                    [CNA_AMP_VALUE, CNA_HOMDEL_VALUE]
                 );
                 break;
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
@@ -1947,7 +2000,7 @@ export class StudyViewPageStore
         ChartUniqueKey,
         number[]
     >({}, { deep: false });
-    private _genomicDataIntervalFilterSet = observable.map<
+    private _genomicDataFilterSet = observable.map<
         ChartUniqueKey,
         GenomicDataFilter
     >({}, { deep: false });
@@ -1955,7 +2008,6 @@ export class StudyViewPageStore
         ChartUniqueKey,
         GenericAssayDataFilter
     >({}, { deep: false });
-
     @observable private _clinicalDataBinFilterSet = observable.map<
         ChartUniqueKey,
         ClinicalDataBinFilter & { showNA?: boolean }
@@ -1975,6 +2027,11 @@ export class StudyViewPageStore
     @observable.ref private _geneFilterSet = observable.map<
         string,
         GeneFilterQuery[][]
+    >();
+
+    @observable private _structVarFilterSet = observable.map<
+        string,
+        StructuralVariantFilterQuery[][]
     >();
 
     // TODO: make it computed
@@ -2073,10 +2130,21 @@ export class StudyViewPageStore
 
         if (!_.isEmpty(filters.geneFilters)) {
             filters.geneFilters!.forEach(geneFilter => {
-                const key = getUniqueKeyFromMolecularProfileIds(
+                const key = getUniqueKeyFromGeneFilterMolecularProfileIds(
                     geneFilter.molecularProfileIds
                 );
                 this._geneFilterSet.set(key, _.clone(geneFilter.geneQueries));
+            });
+        }
+        if (!_.isEmpty(filters.structuralVariantFilters)) {
+            filters.structuralVariantFilters!.forEach(structVarFilter => {
+                const key = getUniqueKeyFromMolecularProfileIds(
+                    structVarFilter.molecularProfileIds
+                );
+                this._structVarFilterSet.set(
+                    key,
+                    _.clone(structVarFilter.structVarQueries)
+                );
             });
         }
         if (!_.isEmpty(filters.sampleIdentifiers)) {
@@ -2108,7 +2176,7 @@ export class StudyViewPageStore
                     genomicDataFilter.hugoGeneSymbol,
                     genomicDataFilter.profileType
                 );
-                this._genomicDataIntervalFilterSet.set(
+                this._genomicDataFilterSet.set(
                     uniqueKey,
                     _.clone(genomicDataFilter)
                 );
@@ -2135,114 +2203,27 @@ export class StudyViewPageStore
 
     @action
     async updateStoreFromURL(query: StudyViewURLQuery): Promise<void> {
-        let studyIdsString: string = '';
-        let studyIds: string[] = [];
-        if (query.studyId) {
-            studyIdsString = query.studyId;
-        }
-        if (query.cancer_study_id) {
-            studyIdsString = query.cancer_study_id;
-        }
-        if (query.id) {
-            studyIdsString = query.id;
-        }
-        if (studyIdsString) {
-            studyIds = studyIdsString.trim().split(',');
-            if (!_.isEqual(studyIds, toJS(this.studyIds))) {
-                // update if different
-                this.studyIds = studyIds;
-            }
-        }
-        if (query.sharedGroups) {
-            this.sharedGroupSet = stringListToSet(
-                query.sharedGroups.trim().split(',')
-            );
-            // Open group comparison manager if there are shared groups in the url
-            this.showComparisonGroupUI = true;
-        }
-        if (query.sharedCustomData) {
-            this.sharedCustomChartSet = stringListToSet(
-                query.sharedCustomData.trim().split(',')
-            );
-            this.showCustomDataSelectionUI = true;
-        }
+        const queryExtractors: Array<StudyViewQueryExtractor<void>> = [
+            new StudyIdQueryExtractor(),
+            new SharedGroupsAndCustomDataQueryExtractor(),
+        ];
 
-        // We do not support studyIds in the query filters
-        let filters: Partial<StudyViewFilter> = {};
+        const asyncQueryExtractors: Array<StudyViewQueryExtractor<
+            Promise<void>
+        >> = [];
         if (query.filterJson) {
-            const parsedFilterJson = this.parseRawFilterJson(query.filterJson);
-            if (query.filterJson.includes('patientIdentifiers')) {
-                const sampleListIds = studyIds.map(s => s.concat('', '_all'));
-                const samples = await this.fetchSamplesWithSampleListIds(
-                    sampleListIds
-                );
-                filters = this.getStudyViewFilterFromPatientIdentifierFilter(
-                    parsedFilterJson as PatientIdentifierFilter,
-                    samples
-                );
-            } else {
-                filters = parsedFilterJson as Partial<StudyViewFilter>;
-            }
-            this.updateStoreByFilters(filters);
+            asyncQueryExtractors.push(new StudyViewFilterQueryExtractor());
         } else if (query.filterAttributeId && query.filterValues) {
-            const clinicalAttributes = _.uniqBy(
-                await defaultClient.fetchClinicalAttributesUsingPOST({
-                    studyIds: studyIds,
-                }),
-                clinicalAttribute =>
-                    `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
-            );
-
-            const matchedAttr = _.find(
-                clinicalAttributes,
-                (attr: ClinicalAttribute) =>
-                    attr.clinicalAttributeId.toUpperCase() ===
-                    query.filterAttributeId!.toUpperCase()
-            );
-            if (matchedAttr !== undefined) {
-                if (matchedAttr.datatype == DataType.NUMBER) {
-                    filters.clinicalDataFilters = [
-                        {
-                            attributeId: matchedAttr.clinicalAttributeId,
-                            values: query
-                                .filterValues!.split(',')
-                                .map(range => {
-                                    const convertResult = range.split('-');
-                                    return {
-                                        start: Number(convertResult[0]),
-                                        end: Number(convertResult[1]),
-                                    } as DataFilterValue;
-                                }),
-                        } as ClinicalDataFilter,
-                    ];
-                } else {
-                    filters.clinicalDataFilters = [
-                        {
-                            attributeId: matchedAttr.clinicalAttributeId,
-                            values: getClinicalEqualityFilterValuesByString(
-                                query.filterValues
-                            ).map(value => ({ value })),
-                        } as ClinicalDataFilter,
-                    ];
-                }
-                this.updateStoreByFilters(filters);
-            } else {
-                this.pageStatusMessages['unknownClinicalAttribute'] = {
-                    message: `The clinical attribute ${query.filterAttributeId} is not available for this study`,
-                    status: 'danger',
-                };
-            }
+            asyncQueryExtractors.push(new ClinicalAttributeQueryExtractor());
         }
-    }
 
-    parseRawFilterJson(filterJson: string): any {
-        let rawJson;
-        try {
-            rawJson = JSON.parse(decodeURIComponent(filterJson));
-        } catch (e) {
-            console.error('FilterJson invalid Json: error: ', e);
+        for (const extractor of queryExtractors) {
+            extractor.accept(query, this);
         }
-        return rawJson;
+
+        await Promise.all(
+            asyncQueryExtractors.map(ex => ex.accept(query, this))
+        );
     }
 
     fetchSamplesWithSampleListIds(sampleListIds: string[]) {
@@ -2252,38 +2233,6 @@ export class StudyViewPageStore
             } as SampleFilter,
             projection: 'SUMMARY',
         });
-    }
-
-    getStudyViewFilterFromPatientIdentifierFilter(
-        patientIdentifierFilter: PatientIdentifierFilter,
-        samples: Sample[]
-    ): Partial<StudyViewFilter> {
-        const filters: Partial<StudyViewFilter> = {};
-        const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
-            patientIdentifierFilter.patientIdentifiers,
-            samples
-        );
-        if (sampleIdentifiers.length > 0) {
-            filters.sampleIdentifiers = sampleIdentifiers;
-        }
-        return filters;
-    }
-
-    convertPatientIdentifiersToSampleIdentifiers(
-        patientIdentifiers: Array<PatientIdentifier>,
-        samples: Sample[]
-    ): SampleIdentifier[] {
-        const patientIdentifiersMap = new Map<string, PatientIdentifier>(
-            patientIdentifiers.map(p => [p.studyId.concat('_', p.patientId), p])
-        );
-        return samples
-            .filter(s =>
-                patientIdentifiersMap.has(s.studyId.concat('_', s.patientId))
-            )
-            .map(s => ({
-                sampleId: s.sampleId,
-                studyId: s.studyId,
-            }));
     }
 
     @computed
@@ -2372,13 +2321,10 @@ export class StudyViewPageStore
             this.visibleAttributes,
             this.columns,
             _.fromPairs(this.chartsDimension.toJSON()),
-            this.useCurrentGridLayout ? this.currentGridLayout : [],
+            this.currentGridLayout,
             this.currentFocusedChartByUser,
             this.currentFocusedChartByUserDimension
         );
-        if (this.useCurrentGridLayout) {
-            this.useCurrentGridLayout = false;
-        }
     }
 
     // Minus the margin width
@@ -2397,9 +2343,6 @@ export class StudyViewPageStore
     updateCurrentGridLayout(newGridLayout: ReactGridLayout.Layout[]): void {
         this.currentGridLayout = newGridLayout;
     }
-
-    //this variable is acts as flag whether to use it as a currentGridLayout in updating layout
-    private useCurrentGridLayout = false;
 
     @observable.ref private currentGridLayout: ReactGridLayout.Layout[] = [];
     //@observable private currentGridLayoutUpdated = false;
@@ -2427,6 +2370,9 @@ export class StudyViewPageStore
     public genomicChartPromises: {
         [id: string]: MobxPromise<DataBin[]>;
     } = {};
+    public genomicDataCountPromises: {
+        [id: string]: MobxPromise<ClinicalDataCountSummary[]>;
+    } = {};
     public genericAssayChartPromises: {
         [id: string]: MobxPromise<DataBin[]>;
     } = {};
@@ -2450,6 +2396,7 @@ export class StudyViewPageStore
 
     @observable private _filterMutatedGenesTableByCancerGenes: boolean = false;
     @observable private _filterSVGenesTableByCancerGenes: boolean = false;
+    @observable private _filterStructVarsTableByCancerGenes: boolean = false;
     @observable private _filterCNAGenesTableByCancerGenes: boolean = false;
 
     @action.bound
@@ -2459,6 +2406,10 @@ export class StudyViewPageStore
     @action.bound
     updateSVGenesTableByCancerGenesFilter(filtered: boolean): void {
         this._filterSVGenesTableByCancerGenes = filtered;
+    }
+    @action.bound
+    updateStructVarsTableByCancerGenesFilter(filtered: boolean): void {
+        this._filterStructVarsTableByCancerGenes = filtered;
     }
 
     @action.bound
@@ -2477,6 +2428,13 @@ export class StudyViewPageStore
         return (
             this.oncokbCancerGeneFilterEnabled &&
             this._filterSVGenesTableByCancerGenes
+        );
+    }
+
+    @computed get filterStructVarsTableByCancerGenes(): boolean {
+        return (
+            this.oncokbCancerGeneFilterEnabled &&
+            this._filterStructVarsTableByCancerGenes
         );
     }
 
@@ -2621,8 +2579,49 @@ export class StudyViewPageStore
 
     @action.bound
     onCheckGene(hugoGeneSymbol: string): void {
+        let message = '';
+        if (this.geneQueries.find(q => q.gene === hugoGeneSymbol)) {
+            message = `${hugoGeneSymbol} removed from query queue`;
+        } else {
+            message = `${hugoGeneSymbol} queued for query (see top right of page for submit)`;
+        }
+
+        showQueryUpdatedToast(message);
+
         //only update geneQueryStr whenever a table gene is clicked.
         this.geneQueries = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
+        this.geneQueryStr = this.geneQueries
+            .map(query => unparseOQLQueryLine(query))
+            .join(' ');
+    }
+
+    @action.bound
+    onCheckStructuralVariant(
+        gene1SymbolOrOql: string,
+        gene2SymbolOrOql: string
+    ): void {
+        let message = '';
+        if (
+            this.geneQueries.find(q =>
+                doesStructVarMatchSingleGeneQuery(
+                    q,
+                    gene1SymbolOrOql,
+                    gene1SymbolOrOql
+                )
+            )
+        ) {
+            message = `${gene1SymbolOrOql}::${gene2SymbolOrOql} removed from query queue`;
+        } else {
+            message = `${gene1SymbolOrOql}::${gene2SymbolOrOql} queued for query (see top right of page for submit)`;
+        }
+
+        showQueryUpdatedToast(message);
+
+        this.geneQueries = updateStructuralVariantQuery(
+            this.geneQueries,
+            gene1SymbolOrOql,
+            gene2SymbolOrOql
+        );
         this.geneQueryStr = this.geneQueries
             .map(query => unparseOQLQueryLine(query))
             .join(' ');
@@ -2636,7 +2635,24 @@ export class StudyViewPageStore
     }
 
     @computed get selectedGenes(): string[] {
-        return this.geneQueries.map(singleGeneQuery => singleGeneQuery.gene);
+        return _(this.geneQueries)
+            .filter(query => !queryContainsStructVarAlteration(query))
+            .map(query => query.gene)
+            .value();
+    }
+
+    @computed get selectedStructuralVariants(): StructVarGenePair[] {
+        return _(this.geneQueries)
+            .filter(query => queryContainsStructVarAlteration(query))
+            .map(query => oqlQueryToStructVarGenePair(query))
+            .flatten()
+            .compact() // Remove falsy elements.
+            .uniqWith(
+                (repr1, repr2) =>
+                    repr1.gene1HugoSymbolOrOql === repr2.gene1HugoSymbolOrOql &&
+                    repr1.gene2HugoSymbolOrOql === repr2.gene2HugoSymbolOrOql
+            ) // Remove duplicate elements.
+            .value();
     }
 
     @action.bound
@@ -2711,7 +2727,8 @@ export class StudyViewPageStore
         this._clinicalDataFilterSet.clear();
         this._customDataFilterSet.clear();
         this._geneFilterSet.clear();
-        this._genomicDataIntervalFilterSet.clear();
+        this._structVarFilterSet.clear();
+        this._genomicDataFilterSet.clear();
         this._genericAssayDataFilterSet.clear();
         this._chartSampleIdentifiersFilterSet.clear();
         this.preDefinedCustomChartFilterSet.clear();
@@ -2857,10 +2874,12 @@ export class StudyViewPageStore
         if (this.chartMetaSet[chartUniqueKey]) {
             let chartMeta = this.chartMetaSet[chartUniqueKey];
             trackStudyViewFilterEvent('clinicalDataFilters', this);
-            this.updateClinicalAttributeFilterByValues(
-                chartMeta.clinicalAttribute!.clinicalAttributeId,
-                values
-            );
+
+            const attributeId: string = isSurvivalChart(chartMeta.uniqueKey)
+                ? getAllowedSurvivalClinicalDataFilterId(chartMeta.uniqueKey)
+                : chartMeta.clinicalAttribute!.clinicalAttributeId;
+
+            this.updateClinicalAttributeFilterByValues(attributeId, values);
         }
     }
     @action.bound
@@ -2981,7 +3000,23 @@ export class StudyViewPageStore
         trackStudyViewFilterEvent('genomicDataInterval', this);
 
         const values: DataFilterValue[] = getDataIntervalFilterValues(dataBins);
-        this.updateGenomicDataIntervalFiltersByValues(uniqueKey, values);
+        this.updateGenomicDataFiltersByValues(uniqueKey, values);
+    }
+
+    @action.bound
+    updateCategoricalGenomicDataFilters(
+        uniqueKey: string,
+        values: string[]
+    ): void {
+        trackStudyViewFilterEvent('genomicCategoricalData', this);
+
+        const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
+            values
+        );
+        this.updateGenomicDataFiltersByValues(
+            uniqueKey,
+            _.cloneDeep(dataFilterValues)
+        );
     }
 
     @action.bound
@@ -3100,23 +3135,53 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    updateGenomicDataIntervalFiltersByValues(
+    addStructVarFilters(
+        chartMeta: ChartMeta,
+        seletedStructVarRows: string[][]
+    ): void {
+        trackStudyViewFilterEvent('structVarFilter', this);
+        let structVarFilter =
+            toJS(this._structVarFilterSet.get(chartMeta.uniqueKey)) || [];
+        // convert structVarRowKeys to GeneFilterObjects accepted by the backend.
+        const queries: StructuralVariantFilterQuery[][] = _.map(
+            seletedStructVarRows,
+            structVarRowKeys =>
+                _.map(structVarRowKeys, structVarRowKey =>
+                    StructuralVariantFilterQueryFromOql(
+                        structVarRowKey,
+                        this.driverAnnotationSettings.includeDriver,
+                        this.driverAnnotationSettings.includeVUS,
+                        this.driverAnnotationSettings
+                            .includeUnknownOncogenicity,
+                        this.selectedDriverTiersMap.isComplete
+                            ? this.selectedDriverTiersMap.result!
+                            : {},
+                        this.driverAnnotationSettings.includeUnknownTier,
+                        this.includeGermlineMutations,
+                        this.includeSomaticMutations,
+                        this.includeUnknownStatusMutations
+                    )
+                )
+        );
+        structVarFilter = structVarFilter.concat(queries);
+        this._structVarFilterSet.set(chartMeta.uniqueKey, structVarFilter);
+    }
+
+    @action.bound
+    updateGenomicDataFiltersByValues(
         uniqueKey: string,
         values: DataFilterValue[]
     ): void {
         if (values.length > 0) {
             const chart = this._geneSpecificChartMap.get(uniqueKey);
-            const genomicDataIntervalFilter: GenomicDataFilter = {
+            const genomicDataFilter: GenomicDataFilter = {
                 hugoGeneSymbol: chart!.hugoGeneSymbol,
                 profileType: chart!.profileType,
                 values: values,
             };
-            this._genomicDataIntervalFilterSet.set(
-                uniqueKey,
-                genomicDataIntervalFilter
-            );
+            this._genomicDataFilterSet.set(uniqueKey, genomicDataFilter);
         } else {
-            this._genomicDataIntervalFilterSet.delete(uniqueKey);
+            this._genomicDataFilterSet.delete(uniqueKey);
         }
     }
 
@@ -3183,8 +3248,47 @@ export class StudyViewPageStore
     }
 
     @action.bound
+    removeStructVarFilter(chartUniqueKey: string, toBeRemoved: string): void {
+        const oqlQuery = parseOQLQuery(toBeRemoved + ';')[0];
+        const gene1Gene2Str = convertToGene1Gene2String(oqlQuery)[0];
+        const [
+            gene1HugoSymbol,
+            gene2HugoSymbol,
+        ]: string[] = gene1Gene2Str.split('::');
+        let structVarFilters: StructuralVariantFilterQuery[][] =
+            toJS(this._structVarFilterSet.get(chartUniqueKey)) || [];
+        structVarFilters = _.reduce(
+            structVarFilters,
+            (acc, next) => {
+                const newGroup = next.filter(
+                    StructuralVariantFilterQuery =>
+                        StructuralVariantFilterQuery.gene1Query.hugoSymbol !==
+                            gene1HugoSymbol &&
+                        StructuralVariantFilterQuery.gene2Query.hugoSymbol !==
+                            gene2HugoSymbol
+                );
+                if (newGroup.length > 0) {
+                    acc.push(newGroup);
+                }
+                return acc;
+            },
+            [] as StructuralVariantFilterQuery[][]
+        );
+        if (structVarFilters.length === 0) {
+            this._structVarFilterSet.delete(chartUniqueKey);
+        } else {
+            this._structVarFilterSet.set(chartUniqueKey, structVarFilters);
+        }
+    }
+
+    @action.bound
     resetGeneFilter(chartUniqueKey: string): void {
         this._geneFilterSet.delete(chartUniqueKey);
+    }
+
+    @action.bound
+    resetStructVarFilter(chartUniqueKey: string): void {
+        this._structVarFilterSet.delete(chartUniqueKey);
     }
 
     @action.bound
@@ -3298,6 +3402,15 @@ export class StudyViewPageStore
         return this._genericAssayChartMap.has(uniqueKey);
     }
 
+    public getMolecularChartDataType(uniqueKey: string): string {
+        if (this.isGeneSpecificChart(uniqueKey)) {
+            return this._geneSpecificChartMap.get(uniqueKey)!.dataType!;
+        } else if (this.isGenericAssayChart(uniqueKey)) {
+            return this._genericAssayChartMap.get(uniqueKey)!.dataType!;
+        }
+        return DataType.NUMBER;
+    }
+
     @action
     changeChartVisibility(uniqueKey: string, visible: boolean): void {
         if (visible) {
@@ -3323,6 +3436,11 @@ export class StudyViewPageStore
                         );
                     } else if (this.isGenericAssayChart(chartUniqueKey)) {
                         this.updateGenericAssayDataFilters(chartUniqueKey, []);
+                    } else if (this.isGeneSpecificChart(chartUniqueKey)) {
+                        this.updateCategoricalGenomicDataFilters(
+                            chartUniqueKey,
+                            []
+                        );
                     } else {
                         this.updateClinicalDataFilterByValues(
                             chartUniqueKey,
@@ -3357,6 +3475,7 @@ export class StudyViewPageStore
                     break;
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this.resetGeneFilter(chartUniqueKey);
                     break;
@@ -3395,7 +3514,7 @@ export class StudyViewPageStore
                         chartUniqueKey
                     );
                     this.preDefinedCustomChartFilterSet.delete(chartUniqueKey);
-                    this._genomicDataIntervalFilterSet.delete(chartUniqueKey);
+                    this._genomicDataFilterSet.delete(chartUniqueKey);
                     this._genericAssayDataFilterSet.delete(chartUniqueKey);
 
                     break;
@@ -3408,7 +3527,9 @@ export class StudyViewPageStore
         switch (this.chartsType.get(chartUniqueKey)) {
             case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
-                if (this.isUserDefinedCustomDataChart(chartUniqueKey)) {
+                if (this.isGeneSpecificChart(chartUniqueKey)) {
+                    return this._genomicDataFilterSet.has(chartUniqueKey);
+                } else if (this.isUserDefinedCustomDataChart(chartUniqueKey)) {
                     return (
                         this._customDataFilterSet.has(chartUniqueKey) ||
                         this.preDefinedCustomChartFilterSet.has(chartUniqueKey)
@@ -3420,7 +3541,7 @@ export class StudyViewPageStore
                 }
             case ChartTypeEnum.BAR_CHART:
                 if (this.isGeneSpecificChart(chartUniqueKey)) {
-                    this._genomicDataIntervalFilterSet.has(chartUniqueKey);
+                    return this._genomicDataFilterSet.has(chartUniqueKey);
                 } else if (this.isUserDefinedCustomDataChart(chartUniqueKey)) {
                     return this._customDataFilterSet.has(chartUniqueKey);
                 } else {
@@ -3440,6 +3561,8 @@ export class StudyViewPageStore
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             case ChartTypeEnum.CNA_GENES_TABLE:
                 return this._geneFilterSet.has(chartUniqueKey);
+            case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
+                return this._structVarFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
                 return !_.isEmpty(this._genomicProfilesFilter);
             case ChartTypeEnum.CASE_LIST_TABLE:
@@ -3723,8 +3846,17 @@ export class StudyViewPageStore
         });
     }
 
-    @computed get genomicDataIntervalFilters(): GenomicDataFilter[] {
-        return Array.from(this._genomicDataIntervalFilterSet.values());
+    @computed get structVarFilters(): StudyViewStructuralVariantFilter[] {
+        return _.map(this._structVarFilterSet.toJSON(), ([key, value]) => {
+            return {
+                molecularProfileIds: getMolecularProfileIdsFromUniqueKey(key),
+                structVarQueries: value,
+            };
+        });
+    }
+
+    @computed get genomicDataFilters(): GenomicDataFilter[] {
+        return Array.from(this._genomicDataFilterSet.values());
     }
 
     @computed get genericAssayDataFilters(): GenericAssayDataFilter[] {
@@ -3740,9 +3872,10 @@ export class StudyViewPageStore
     get filtersProxy(): StudyViewFilter {
         const filters: Partial<StudyViewFilter> = {};
 
-        const genomicDataIntervalFilters = this.genomicDataIntervalFilters;
-        if (genomicDataIntervalFilters.length > 0) {
-            filters.genomicDataFilters = genomicDataIntervalFilters;
+        const genomicDataFilters = this.genomicDataFilters;
+
+        if (genomicDataFilters.length > 0) {
+            filters.genomicDataFilters = genomicDataFilters;
         }
 
         const genericAssayDataFilters = this.genericAssayDataFilters;
@@ -3760,6 +3893,10 @@ export class StudyViewPageStore
 
         if (this.geneFilters.length > 0) {
             filters.geneFilters = this.geneFilters;
+        }
+
+        if (this.structVarFilters.length > 0) {
+            filters.structuralVariantFilters = this.structVarFilters;
         }
 
         if (this.genomicProfilesFilter.length > 0) {
@@ -3890,6 +4027,14 @@ export class StudyViewPageStore
         return toJS(filters);
     }
 
+    public getStructVarFiltersByUniqueKey(uniqueKey: string): string[][] {
+        const filters = _.map(
+            this._structVarFilterSet.get(uniqueKey),
+            filterSet => _.map(filterSet, structVarFilterQueryToOql)
+        );
+        return toJS(filters);
+    }
+
     @autobind
     public getClinicalDataFiltersByUniqueKey(
         uniqueKey: string
@@ -3946,11 +4091,11 @@ export class StudyViewPageStore
     }
 
     @autobind
-    public getGenomicDataIntervalFiltersByUniqueKey(
+    public getGenomicDataFiltersByUniqueKey(
         uniqueKey: string
     ): DataFilterValue[] {
-        return this._genomicDataIntervalFilterSet.has(uniqueKey)
-            ? this._genomicDataIntervalFilterSet.get(uniqueKey)!.values
+        return this._genomicDataFilterSet.has(uniqueKey)
+            ? this._genomicDataFilterSet.get(uniqueKey)!.values
             : [];
     }
 
@@ -4342,10 +4487,23 @@ export class StudyViewPageStore
 
     private addColorToCategories(
         counts: ClinicalDataCount[],
-        attributeId: string
+        attributeId: string,
+        getDisplayedValue?: (value: string) => string,
+        getDisplayedColor?: (value: string) => string
     ): ClinicalDataCountSummary[] {
         return getClinicalDataCountWithColorByClinicalDataCount(counts).map(
             item => {
+                if (getDisplayedValue) {
+                    item.displayedValue = getDisplayedValue(item.value);
+                }
+
+                if (getDisplayedColor) {
+                    return {
+                        ...item,
+                        color: getDisplayedColor(item.value),
+                    };
+                }
+
                 let colorMapKey = this.generateColorMapKey(
                     attributeId,
                     item.value
@@ -4650,6 +4808,75 @@ export class StudyViewPageStore
         return this.genericAssayDataCountPromises[chartMeta.uniqueKey];
     }
 
+    public getGenomicChartDataCount(
+        chartMeta: ChartMeta
+    ): MobxPromise<ClinicalDataCountSummary[]> {
+        if (
+            !this.genomicDataCountPromises.hasOwnProperty(chartMeta.uniqueKey)
+        ) {
+            this.genomicDataCountPromises[chartMeta.uniqueKey] = remoteData<
+                ClinicalDataCountSummary[]
+            >({
+                await: () => [this.selectedSamples],
+                invoke: async () => {
+                    let res: ClinicalDataCountSummary[] = [];
+                    const chartInfo = this._geneSpecificChartMap.get(
+                        chartMeta.uniqueKey
+                    );
+                    //only invoke if there are filtered samples
+                    if (chartInfo && this.hasFilteredSamples) {
+                        const result = await internalClient.fetchGenomicDataCountsUsingPOST(
+                            {
+                                genomicDataCountFilter: {
+                                    genomicDataFilters: [
+                                        {
+                                            hugoGeneSymbol:
+                                                chartInfo.hugoGeneSymbol,
+                                            profileType: chartInfo.profileType,
+                                        },
+                                    ] as any,
+                                    studyViewFilter: this.filters,
+                                },
+                            }
+                        );
+
+                        let data = result.find(
+                            d =>
+                                d.hugoGeneSymbol === chartInfo.hugoGeneSymbol &&
+                                d.profileType === chartInfo.profileType
+                        );
+
+                        let counts: ClinicalDataCount[] = [];
+                        let profileType: string = '';
+                        if (data !== undefined) {
+                            counts = data.counts.map(c => {
+                                return {
+                                    count: c.count,
+                                    value: c.value,
+                                } as ClinicalDataCount;
+                            });
+                            profileType = data.profileType;
+                        }
+
+                        return this.addColorToCategories(
+                            counts,
+                            profileType,
+                            getCNAByAlteration,
+                            value =>
+                                getCNAColorByAlteration(
+                                    getCNAByAlteration(value)
+                                )
+                        );
+                    }
+                    return res;
+                },
+                onError: () => {},
+                default: [],
+            });
+        }
+        return this.genomicDataCountPromises[chartMeta.uniqueKey];
+    }
+
     private generateColorMapKey(id: string, value: string): string {
         return `${id}.${value}`;
     }
@@ -4767,6 +4994,7 @@ export class StudyViewPageStore
         }
         return this.clinicalDataBinPromises[uniqueKey];
     }
+
     @autobind
     public getGenomicChartDataBin(
         chartMeta: ChartMeta
@@ -5710,12 +5938,12 @@ export class StudyViewPageStore
                 )
                 .uniq()
                 .value();
-            if (newChart.datatype === 'STRING') {
+            if (newChart.datatype === DataType.STRING) {
                 this.setCustomChartCategoricalFilters(
                     chartMeta.uniqueKey,
                     filters
                 );
-            } else if (newChart.datatype === 'NUMBER') {
+            } else if (newChart.datatype === DataType.NUMBER) {
                 // Create a dummy filter with min and max values as start and end
                 const numericalValues = filters.map(item => Number(item));
                 const valueMin = _.min(numericalValues)! - 1;
@@ -5930,15 +6158,26 @@ export class StudyViewPageStore
 
                 this._geneSpecificChartMap.set(uniqueKey, newChart);
                 this.changeChartVisibility(uniqueKey, true);
-                this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
-                this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
 
-                this._genomicDataBinFilterSet.set(uniqueKey, {
-                    clinicalDataType: 'SAMPLE',
-                    disableLogScale: false,
-                    hugoGeneSymbol: newChart.hugoGeneSymbol,
-                    profileType: newChart.profileType,
-                } as any);
+                if (newChart.dataType === DataType.NUMBER) {
+                    this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
+
+                    this._genomicDataBinFilterSet.set(uniqueKey, {
+                        clinicalDataType: 'SAMPLE',
+                        disableLogScale: false,
+                        hugoGeneSymbol: newChart.hugoGeneSymbol,
+                        profileType: newChart.profileType,
+                    } as any);
+                    this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
+                } else {
+                    this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
+                    this.chartsDimension.set(
+                        uniqueKey,
+                        STUDY_VIEW_CONFIG.layout.dimensions[
+                            ChartTypeEnum.PIE_CHART
+                        ]
+                    );
+                }
             }
 
             if (!loadedfromUserSettings) {
@@ -6111,6 +6350,7 @@ export class StudyViewPageStore
                     dataType: getChartMetaDataType(survivalPlot.id),
                     patientAttribute: true,
                     displayName: survivalPlot.title,
+                    clinicalAttribute: survivalPlot.survivalStatusAttribute,
                     // use survival status attribute's priority as KM plot's priority for non-reserved plots
                     priority:
                         STUDY_VIEW_CONFIG.priority[survivalPlot.id] ||
@@ -6250,11 +6490,12 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.structuralVariantProfiles.result)) {
             const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                 this.structuralVariantProfiles.result.map(
-                    profile => profile.molecularProfileId
-                )
+                    p => p.molecularProfileId
+                ),
+                ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
             );
             _chartMetaSet[uniqueKey] = {
-                uniqueKey: uniqueKey,
+                uniqueKey,
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 displayName: 'Structural Variant Genes',
@@ -6264,6 +6505,25 @@ export class StudyViewPageStore
                 renderWhenDataChange: true,
                 description: '',
             };
+            if (this.isStructVarTableFeatureEnabled) {
+                const structVarGenesUniqueKey = getUniqueKeyFromMolecularProfileIds(
+                    this.structuralVariantProfiles.result.map(
+                        p => p.molecularProfileId
+                    ),
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                );
+                _chartMetaSet[structVarGenesUniqueKey] = {
+                    uniqueKey: structVarGenesUniqueKey,
+                    dataType: ChartMetaDataTypeEnum.GENOMIC,
+                    patientAttribute: false,
+                    displayName: 'Structural Variants',
+                    priority: getDefaultPriorityByUniqueKey(
+                        ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                    ),
+                    renderWhenDataChange: true,
+                    description: '',
+                };
+            }
         }
 
         if (!_.isEmpty(this.cnaProfiles.result)) {
@@ -6273,7 +6533,7 @@ export class StudyViewPageStore
                 )
             );
             _chartMetaSet[uniqueKey] = {
-                uniqueKey: uniqueKey,
+                uniqueKey,
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 displayName: 'CNA Genes',
@@ -6318,6 +6578,10 @@ export class StudyViewPageStore
             },
             [] as ChartMeta[]
         );
+    }
+
+    get isStructVarTableFeatureEnabled() {
+        return getServerConfig().skin_study_view_show_sv_table;
     }
 
     @computed
@@ -6381,7 +6645,9 @@ export class StudyViewPageStore
             this.survivalEntryMonths.isPending ||
             this.shouldDisplayPatientTreatments.isPending ||
             this.sharedCustomData.isPending ||
-            this.shouldDisplayClinicalEventTypeCounts.isPending;
+            this.shouldDisplayClinicalEventTypeCounts.isPending ||
+            this.shouldDisplaySampleTreatments.isPending ||
+            this.shouldDisplayPatientTreatments.isPending;
         if (
             this.clinicalAttributes.isComplete &&
             !_.isEmpty(this.clinicalAttributes.result)
@@ -6398,7 +6664,7 @@ export class StudyViewPageStore
             pending = pending || this.userSavedCustomData.isPending;
         }
         if (!_.isEmpty(this.initialFilters.genomicDataFilters)) {
-            pending = pending || this.molecularProfileSampleCounts.isPending;
+            pending = pending || this.molecularProfileOptions.isPending;
         }
         if (!_.isEmpty(this.initialFilters.genericAssayDataFilters)) {
             pending =
@@ -6715,6 +6981,13 @@ export class StudyViewPageStore
                 chartUserSettings.hugoGeneSymbol &&
                 chartUserSettings.profileType
             ) {
+                const molecularProfileOption = _.find(
+                    this.molecularProfileOptions.result,
+                    molecularProfileOption =>
+                        molecularProfileOption.value ===
+                        chartUserSettings.profileType
+                );
+
                 this.addGeneSpecificCharts(
                     [
                         {
@@ -6722,6 +6995,9 @@ export class StudyViewPageStore
                             description: chartUserSettings.description,
                             profileType: chartUserSettings.profileType,
                             hugoGeneSymbol: chartUserSettings.hugoGeneSymbol,
+                            dataType:
+                                molecularProfileOption?.dataType ||
+                                DataType.NUMBER,
                         },
                     ],
                     true
@@ -6794,6 +7070,12 @@ export class StudyViewPageStore
                             ? true
                             : chartUserSettings.filterByCancerGenes;
                     break;
+                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
+                    this._filterStructVarsTableByCancerGenes =
+                        chartUserSettings.filterByCancerGenes === undefined
+                            ? true
+                            : chartUserSettings.filterByCancerGenes;
+                    break;
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this._filterCNAGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
@@ -6831,7 +7113,6 @@ export class StudyViewPageStore
                 }
             }
         });
-        this.useCurrentGridLayout = true;
     }
 
     @action.bound
@@ -6947,8 +7228,9 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.structuralVariantProfiles.result)) {
             const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                 this.structuralVariantProfiles.result.map(
-                    profile => profile.molecularProfileId
-                )
+                    p => p.molecularProfileId
+                ),
+                ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
             );
             const structuralVariantGeneMeta = _.find(
                 this.chartMetaSet,
@@ -6973,6 +7255,37 @@ export class StudyViewPageStore
                     ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
                 ]
             );
+            if (this.isStructVarTableFeatureEnabled) {
+                const structVarUniqueKey = getUniqueKeyFromMolecularProfileIds(
+                    this.structuralVariantProfiles.result.map(
+                        p => p.molecularProfileId
+                    ),
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                );
+                const structuralVariantsMeta = _.find(
+                    this.chartMetaSet,
+                    chartMeta => chartMeta.uniqueKey === structVarUniqueKey
+                );
+                if (
+                    structuralVariantsMeta &&
+                    structuralVariantsMeta.priority !== 0
+                ) {
+                    this.changeChartVisibility(
+                        structuralVariantsMeta.uniqueKey,
+                        true
+                    );
+                }
+                this.chartsType.set(
+                    structVarUniqueKey,
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                );
+                this.chartsDimension.set(
+                    structVarUniqueKey,
+                    STUDY_VIEW_CONFIG.layout.dimensions[
+                        ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                    ]
+                );
+            }
         }
         if (!_.isEmpty(this.cnaProfiles.result)) {
             const uniqueKey = getUniqueKeyFromMolecularProfileIds(
@@ -7175,9 +7488,12 @@ export class StudyViewPageStore
                 data = this.getCustomDataCount(attr);
             } else if (this.isGenericAssayChart(attr.uniqueKey)) {
                 data = this.getGenericAssayChartDataCount(attr);
+            } else if (this.isGeneSpecificChart(attr.uniqueKey)) {
+                data = this.getGenomicChartDataCount(attr);
             } else {
                 data = this.getClinicalDataCount(attr);
             }
+
             if (data !== undefined) {
                 this.chartsDimension.set(
                     attr.uniqueKey,
@@ -7196,7 +7512,6 @@ export class StudyViewPageStore
         this.currentFocusedChartByUserDimension = this.chartsDimension.get(
             attr.uniqueKey
         );
-        this.useCurrentGridLayout = true;
     }
 
     readonly defaultVisibleAttributes = remoteData({
@@ -7207,9 +7522,16 @@ export class StudyViewPageStore
                 return attr;
             });
 
+            // by default we the first 20 charts which have priority greater than 0
+            // priority zero will be hidden by default, but appear in the add chart menu
+            // priorty negative
             let filterAttributes: ClinicalAttribute[] = queriedAttributes
+                .filter(attr => (parseInt(attr.priority) || 0) > 0)
                 .sort(clinicalAttributeComparator)
-                .slice(0, 20);
+                .slice(
+                    0,
+                    getServerConfig().studyview_clinical_attribute_chart_count
+                );
 
             // Also check the initial filters, make sure all clinical attributes in initial filters will be added in default visible attributes
             let initialFilteredAttributeIds: string[] = [];
@@ -7336,8 +7658,8 @@ export class StudyViewPageStore
     initializeGeneSpecificCharts(): void {
         if (!_.isEmpty(this.initialFilters.genomicDataFilters)) {
             const molecularProfileOptionByTypeMap = _.keyBy(
-                this.molecularProfileSampleCounts.result,
-                molecularProfileOption => molecularProfileOption.uniqueKey
+                this.molecularProfileOptions.result,
+                molecularProfileOption => molecularProfileOption.value
             );
             _.each(
                 this.initialFilters.genomicDataFilters,
@@ -7359,6 +7681,7 @@ export class StudyViewPageStore
                                     profileType: genomicDataFilter.profileType,
                                     hugoGeneSymbol:
                                         genomicDataFilter.hugoGeneSymbol,
+                                    dataType: molecularProfileOption.dataType,
                                 },
                             ],
                             true
@@ -7980,6 +8303,85 @@ export class StudyViewPageStore
         default: [],
     });
 
+    readonly structuralVariantTableRowData = remoteData<
+        StructVarMultiSelectionTableRow[]
+    >({
+        await: () =>
+            this.oncokbCancerGeneFilterEnabled
+                ? [
+                      this.structuralVariantProfiles,
+                      this.oncokbAnnotatedGeneEntrezGeneIds,
+                      this.oncokbOncogeneEntrezGeneIds,
+                      this.oncokbTumorSuppressorGeneEntrezGeneIds,
+                      this.oncokbCancerGeneEntrezGeneIds,
+                  ]
+                : [this.structuralVariantProfiles],
+        invoke: async () => {
+            if (!_.isEmpty(this.structuralVariantProfiles.result)) {
+                const structuralVariantCounts = await internalClient.fetchStructuralVariantCountsUsingPOST(
+                    {
+                        studyViewFilter: this.filters,
+                    }
+                );
+                return structuralVariantCounts.map(item => {
+                    return {
+                        ...item,
+                        label1: item.gene1HugoGeneSymbol,
+                        label2: item.gene2HugoGeneSymbol,
+                        uniqueKey: generateStructVarTableCellKey(
+                            item.gene1HugoGeneSymbol,
+                            item.gene2HugoGeneSymbol
+                        ),
+                        gene1OncokbAnnotated:
+                            this.oncokbCancerGeneFilterEnabled &&
+                            this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(
+                                item.gene1EntrezGeneId
+                            ),
+                        gene2OncokbAnnotated:
+                            this.oncokbCancerGeneFilterEnabled &&
+                            this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(
+                                item.gene2EntrezGeneId
+                            ),
+                        gene1IsOncokbOncogene:
+                            this.oncokbCancerGeneFilterEnabled &&
+                            this.oncokbOncogeneEntrezGeneIds.result.includes(
+                                item.gene1EntrezGeneId
+                            ),
+                        gene2IsOncokbOncogene:
+                            this.oncokbCancerGeneFilterEnabled &&
+                            this.oncokbOncogeneEntrezGeneIds.result.includes(
+                                item.gene2EntrezGeneId
+                            ),
+                        gene1IsOncokbTumorSuppressorGene:
+                            this.oncokbCancerGeneFilterEnabled &&
+                            this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(
+                                item.gene1EntrezGeneId
+                            ),
+                        gene2IsOncokbTumorSuppressorGene:
+                            this.oncokbCancerGeneFilterEnabled &&
+                            this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(
+                                item.gene2EntrezGeneId
+                            ),
+                        gene1IsCancerGene:
+                            this.oncokbCancerGeneFilterEnabled &&
+                            this.oncokbCancerGeneEntrezGeneIds.result.includes(
+                                item.gene1EntrezGeneId
+                            ),
+                        gene2IsCancerGene:
+                            this.oncokbCancerGeneFilterEnabled &&
+                            this.oncokbCancerGeneEntrezGeneIds.result.includes(
+                                item.gene2EntrezGeneId
+                            ),
+                    };
+                });
+            } else {
+                return [];
+            }
+        },
+        onError: () => {},
+        default: [],
+    });
+
     readonly cnaGeneTableRowData = remoteData<MultiSelectionTableRow[]>({
         await: () =>
             this.oncokbCancerGeneFilterEnabled
@@ -8160,36 +8562,34 @@ export class StudyViewPageStore
         default: [],
     });
 
-    public async getPieChartDataDownload(
+    public async getChartSummaryDataDownload(
         chartMeta: ChartMeta,
         dataType?: DownloadDataType
     ): Promise<string> {
         const isCustomChart = this.isUserDefinedCustomDataChart(
             chartMeta.uniqueKey
         );
-        if (dataType && dataType === 'summary') {
-            if (isCustomChart) {
-                return this.getClinicalDataCountSummary(
-                    chartMeta,
-                    this.getCustomDataCount(chartMeta).result!
-                );
-            } else if (this.isGenericAssayChart(chartMeta.uniqueKey)) {
-                return this.getClinicalDataCountSummary(
-                    chartMeta,
-                    this.getGenericAssayChartDataCount(chartMeta).result!
-                );
-            } else {
-                return this.getClinicalDataCountSummary(
-                    chartMeta,
-                    this.getClinicalDataCount(chartMeta).result!
-                );
-            }
+
+        if (isCustomChart) {
+            return this.getClinicalDataCountSummary(
+                chartMeta,
+                this.getCustomDataCount(chartMeta).result!
+            );
+        } else if (this.isGenericAssayChart(chartMeta.uniqueKey)) {
+            return this.getClinicalDataCountSummary(
+                chartMeta,
+                this.getGenericAssayChartDataCount(chartMeta).result!
+            );
+        } else if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
+            return this.getClinicalDataCountSummary(
+                chartMeta,
+                this.getGenomicChartDataCount(chartMeta).result!
+            );
         } else {
-            if (isCustomChart) {
-                return this.getCustomChartDownloadData(chartMeta);
-            } else {
-                return this.getChartDownloadableData(chartMeta);
-            }
+            return this.getClinicalDataCountSummary(
+                chartMeta,
+                this.getClinicalDataCount(chartMeta).result!
+            );
         }
     }
 
@@ -8216,9 +8616,15 @@ export class StudyViewPageStore
         return data.join('\n');
     }
 
-    public async getChartDownloadableData(
-        chartMeta: ChartMeta
-    ): Promise<string> {
+    // this returns all/full data as opposed to summary
+    // "summary" means the frequency of various values
+    // "full" means the underlying data rows which are then aggregated into summary
+    public async getChartAllDataDownload(chartMeta: ChartMeta) {
+        // handle custom chart
+        if (this.isUserDefinedCustomDataChart(chartMeta.uniqueKey)) {
+            return this.getCustomChartDownloadData(chartMeta);
+        }
+
         let clinicalDataList: ClinicalData[] = [];
         if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
             clinicalDataList = await getGenomicDataAsClinicalData(
@@ -8287,6 +8693,19 @@ export class StudyViewPageStore
         );
 
         return data.join('\n');
+    }
+
+    public async getChartDownloadableData(
+        chartMeta: ChartMeta,
+        dataType?: DownloadDataType
+    ): Promise<string> {
+        switch (dataType) {
+            case 'summary':
+                return this.getChartSummaryDataDownload(chartMeta, dataType);
+                break;
+            default:
+                return this.getChartAllDataDownload(chartMeta);
+        }
     }
 
     @computed get molecularProfileMapByType(): _.Dictionary<
@@ -8904,42 +9323,62 @@ export class StudyViewPageStore
         ],
         invoke: async () => {
             return this.molecularProfiles.result.filter(molecularProfile => {
-                return (
-                    [
-                        AlterationTypeConstants.MRNA_EXPRESSION,
-                        AlterationTypeConstants.PROTEIN_LEVEL,
-                        AlterationTypeConstants.METHYLATION,
-                    ].includes(molecularProfile.molecularAlterationType) ||
-                    (molecularProfile.molecularAlterationType ===
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-                        molecularProfile.datatype ===
-                            DataTypeConstants.CONTINUOUS)
-                );
+                return [
+                    AlterationTypeConstants.MRNA_EXPRESSION,
+                    AlterationTypeConstants.PROTEIN_LEVEL,
+                    AlterationTypeConstants.METHYLATION,
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                ].includes(molecularProfile.molecularAlterationType);
             });
         },
         default: [],
     });
 
+    readonly molecularProfileTypeToDataType = remoteData({
+        await: () => [this.molecularProfileForGeneCharts],
+        invoke: async () => {
+            return this.molecularProfileForGeneCharts.result.reduce(
+                (acc, molecularProfile) => {
+                    const profileType = getSuffixOfMolecularProfile(
+                        molecularProfile
+                    );
+                    if (!acc.has(profileType)) {
+                        acc.set(
+                            profileType,
+                            DataTypeConstants.DISCRETE ===
+                                molecularProfile.datatype
+                                ? DataType.STRING
+                                : DataType.NUMBER
+                        );
+                    }
+                    return acc;
+                },
+                new Map<string, string>()
+            );
+        },
+        default: new Map(),
+    });
+
     readonly molecularProfileOptions = remoteData<MolecularProfileOption[]>({
         await: () => [
-            this.molecularProfileForGeneCharts,
+            this.molecularProfileTypeToDataType,
             this.molecularProfileSampleCounts,
         ],
         invoke: async () => {
-            let filterProfileTypes = this.molecularProfileForGeneCharts.result.map(
-                molecularProfile =>
-                    getSuffixOfMolecularProfile(molecularProfile)
-            );
+            const profileTypeToDataTypeSet = this.molecularProfileTypeToDataType
+                .result;
 
             return this.molecularProfileSampleCounts.result
-                .filter(datum => filterProfileTypes.includes(datum.uniqueKey))
+                .filter(datum => profileTypeToDataTypeSet.has(datum.uniqueKey))
                 .map(datum => {
                     return {
                         value: datum.uniqueKey,
                         count: datum.numberOfAlteredCases,
                         label: datum.label,
                         description: datum.label,
-                        dataType: 'STRING',
+                        dataType:
+                            profileTypeToDataTypeSet.get(datum.uniqueKey) ||
+                            DataType.STRING,
                     };
                 });
         },
@@ -9208,11 +9647,19 @@ export class StudyViewPageStore
                     );
                 }
                 if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-                    const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                    const structVarGenesUniqueKey = getUniqueKeyFromMolecularProfileIds(
                         this.structuralVariantProfiles.result.map(
                             profile => profile.molecularProfileId
-                        )
+                        ),
+                        ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
                     );
+                    const structVarUniqueKey = getUniqueKeyFromMolecularProfileIds(
+                        this.structuralVariantProfiles.result.map(
+                            profile => profile.molecularProfileId
+                        ),
+                        ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                    );
+
                     // samples countaing this data would be the samples profiled for these molecular profiles
                     let count = _.sumBy(
                         this.structuralVariantProfiles.result,
@@ -9230,7 +9677,8 @@ export class StudyViewPageStore
                         );
                         count = ret[key];
                     }
-                    ret[uniqueKey] = count;
+                    ret[structVarGenesUniqueKey] = count;
+                    ret[structVarUniqueKey] = count;
                 }
 
                 if (!_.isEmpty(this.cnaProfiles.result)) {
@@ -9691,7 +10139,8 @@ export class StudyViewPageStore
                         : 0;
                     break;
                 }
-                case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE: {
+                case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
                     count = getStructuralVariantSamplesCount(
                         this.molecularProfileSampleCountSet.result
                     );

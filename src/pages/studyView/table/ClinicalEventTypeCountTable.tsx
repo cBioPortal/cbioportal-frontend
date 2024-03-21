@@ -5,7 +5,6 @@ import FixedHeaderTable, {
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
-import MobxPromise from 'mobxpromise';
 import React, { CSSProperties } from 'react';
 import styles from 'pages/studyView/table/tables.module.scss';
 import {
@@ -14,6 +13,7 @@ import {
 } from 'pages/studyView/table/treatments/treatmentsTableUtil';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import {
+    MobxPromise,
     stringListToIndexSet,
     stringListToSet,
 } from 'cbioportal-frontend-commons';

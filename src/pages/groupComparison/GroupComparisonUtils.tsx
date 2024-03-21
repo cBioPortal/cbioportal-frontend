@@ -1,10 +1,8 @@
-import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
 import {
-    MolecularProfile,
+    Mutation,
     PatientIdentifier,
     Sample,
     SampleIdentifier,
-    SampleMolecularIdentifier,
 } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
@@ -26,6 +24,7 @@ import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import {
     DefaultTooltip,
+    MobxPromise,
     stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
 import { GroupComparisonTab } from './GroupComparisonTabs';
@@ -45,6 +44,9 @@ import {
     GroupData,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
+import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
+import { getTwoTailedPValue } from 'shared/lib/calculation/FisherExactTestCalculator';
+import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -929,7 +931,7 @@ export function getGroupsDownloadData(
     return lines.map(line => line.join('\t')).join('\n');
 }
 
-export function getStatisticalCautionInfo() {
+export const GetStatisticalCautionInfo: React.FunctionComponent = () => {
     return (
         <div className="alert alert-info">
             <i
@@ -945,7 +947,25 @@ export function getStatisticalCautionInfo() {
             analyses. Consider consulting a statistician.
         </div>
     );
-}
+};
+
+export const GetHazardRatioCautionInfo: React.FunctionComponent = () => {
+    return (
+        <div className="alert alert-info">
+            <i
+                className="fa fa-md fa-info-circle"
+                style={{
+                    verticalAlign: 'middle !important',
+                    marginRight: 6,
+                    marginBottom: 1,
+                }}
+            />
+            The log-rank test is used to test the null hypothesis that there is
+            no difference between the groups in the probability of an event at
+            any time point. Hazard ratios are derived from the log-rank test.
+        </div>
+    );
+};
 
 export const AlterationFilterMenuSection: React.FunctionComponent<{
     store: ComparisonStore;
@@ -1063,3 +1083,103 @@ const AlterationMenuHeader: React.FunctionComponent<{
         );
     }
 );
+
+// Benjamini-Hochberg procedure q-value, used to show significant association of mutations enriched in a group
+export const SIGNIFICANT_QVALUE_THRESHOLD = 0.05;
+
+export function getProteinChangeToMutationRowData(
+    tableData: Mutation[][],
+    mutationsGroupedByProteinChangeForGroup: (
+        groupIndex: number
+    ) => _.Dictionary<{
+        group: string;
+        data: any[];
+    }>,
+    profiledPatientsCounts: number[],
+    groups: ComparisonGroup[]
+): {
+    [proteinChange: string]: GroupComparisonMutation;
+} {
+    const mutationsGroupedByProteinChangeForGroupA = mutationsGroupedByProteinChangeForGroup(
+        0
+    );
+    const mutationsGroupedByProteinChangeForGroupB = mutationsGroupedByProteinChangeForGroup(
+        1
+    );
+    const countsByProteinChangeForGroupA = getCountsByAttribute(
+        mutationsGroupedByProteinChangeForGroupA
+    );
+    const countsByProteinChangeForGroupB = getCountsByAttribute(
+        mutationsGroupedByProteinChangeForGroupB
+    );
+    let rowData = tableData.map(proteinChangeRow => {
+        const groupAMutatedCount: number =
+            countsByProteinChangeForGroupA[proteinChangeRow[0].proteinChange] ||
+            0;
+        const groupBMutatedCount: number =
+            countsByProteinChangeForGroupB[proteinChangeRow[0].proteinChange] ||
+            0;
+        const groupAMutatedPercentage: number =
+            (groupAMutatedCount / profiledPatientsCounts[0]) * 100;
+        const groupBMutatedPercentage: number =
+            (groupBMutatedCount / profiledPatientsCounts[1]) * 100;
+        const logRatio: number = Math.log2(
+            groupAMutatedPercentage / groupBMutatedPercentage
+        );
+        const pValue: number = getTwoTailedPValue(
+            groupAMutatedCount,
+            profiledPatientsCounts[0] - groupAMutatedCount,
+            groupBMutatedCount,
+            profiledPatientsCounts[1] - groupBMutatedCount
+        );
+        const enrichedGroup: string =
+            logRatio > 0
+                ? groups[0].nameWithOrdinal
+                : groups[1].nameWithOrdinal;
+
+        return {
+            proteinChange: proteinChangeRow[0].proteinChange,
+            groupAMutatedCount,
+            groupBMutatedCount,
+            groupAMutatedPercentage,
+            groupBMutatedPercentage,
+            logRatio,
+            pValue,
+            qValue: 0,
+            enrichedGroup,
+        };
+    });
+
+    rowData = _.sortBy(rowData, r => r.pValue);
+    const qValues = calculateQValues(_.map(rowData, d => d.pValue));
+    rowData.forEach((d, i) => {
+        d.qValue = qValues[i];
+    });
+
+    return _.keyBy(rowData, d => d.proteinChange);
+}
+
+export function getCountsByAttribute(
+    mutationsGroupedByAttribute: _.Dictionary<{
+        group: string;
+        data: any[];
+    }>,
+    mutationCounts?: boolean
+): {
+    [attribute: string]: number;
+} {
+    const map: { [attribute: string]: number } = {};
+
+    // if true get mutation counts, else get mutated counts
+    mutationCounts
+        ? _.forIn(mutationsGroupedByAttribute, (v, k) => {
+              map[v.group] = v.data.length;
+          })
+        : _.forIn(mutationsGroupedByAttribute, (v, k) => {
+              // mutations are unique by gene, protein change, patientId. mutations by gene and protein change are already grouped
+              const uniqueMutations = _.uniqBy(v.data, d => d[0].patientId);
+              map[v.group] = uniqueMutations.length;
+          });
+
+    return map;
+}

@@ -11,6 +11,7 @@ import RightBar from '../../shared/components/rightbar/RightBar';
 import './homePage.scss';
 import autobind from 'autobind-decorator';
 import { createQueryStore } from 'shared/lib/createQueryStore';
+import { setTourLocalStorageFromURL } from 'tours';
 
 const win = window as any;
 
@@ -35,6 +36,10 @@ export default class HomePage extends React.Component<
 
     componentWillMount() {
         this.queryStore = createQueryStore();
+    }
+
+    componentDidMount() {
+        setTourLocalStorageFromURL();
     }
 
     private handleTabChange(id: string) {

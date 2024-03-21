@@ -105,6 +105,11 @@ export interface IMutationMapperProps {
     enableCivic?: boolean;
     enableRevue?: boolean;
     ptmSources?: string[];
+    showDownload?: boolean;
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 }
 
 export default class MutationMapper<
@@ -422,6 +427,7 @@ export default class MutationMapper<
                 axisMode={this.props.axisMode}
                 onScaleToggle={this.props.onScaleToggle}
                 showPercentToggle={this.props.showPlotPercentToggle}
+                showDownloadControls={this.props.showDownload}
             />
         );
     }
@@ -482,19 +488,36 @@ export default class MutationMapper<
         );
     }
 
+    protected resetFilters() {
+        const dataStore = this.props.store.dataStore as MutationMapperDataStore;
+        dataStore.resetFilters();
+    }
+
     protected get filterResetPanel(): JSX.Element | null {
         const dataStore = this.props.store.dataStore as MutationMapperDataStore;
 
         return (
             <FilterResetPanel
-                resetFilters={() => dataStore.resetFilters()}
-                filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
+                resetFilters={this.resetFilters}
+                filterInfo={`Showing ${
+                    _.flatten(dataStore.tableData).length
+                } of ${_.flatten(dataStore.allData).length} mutations.`}
+                additionalInfo={
+                    dataStore.sortedFilteredSelectedData.length > 0
+                        ? ' (Shift click to select multiple residues)'
+                        : ''
+                }
                 className={classnames(
-                    'alert',
                     'alert-success',
+                    'small',
                     styles.filterResetPanel
                 )}
-                buttonClass="btn btn-default btn-xs"
+                buttonClass={classnames(
+                    'btn',
+                    'btn-default',
+                    'btn-xs',
+                    styles.removeFilterButton
+                )}
             />
         );
     }
@@ -506,6 +529,11 @@ export default class MutationMapper<
 
     protected get mutationTableComponent(): JSX.Element | null {
         // Child classes should override this method to return an instance of MutationTable
+        return null;
+    }
+
+    protected get plotFooter(): JSX.Element | null {
+        // Child classes should override this method to return a plot footer if needed
         return null;
     }
 
@@ -527,6 +555,7 @@ export default class MutationMapper<
                         >
                             <div style={{ marginRight: 10 }}>
                                 {this.mutationPlot}
+                                {this.plotFooter}
                                 {this.proteinChainPanel}
                             </div>
 

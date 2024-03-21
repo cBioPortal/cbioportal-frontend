@@ -27,7 +27,11 @@ import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';
 import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
-import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    getBrowserWindow,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import {
@@ -69,7 +73,6 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { AppContext } from 'cbioportal-frontend-commons';
 import PathWayMapperContainer from 'pages/resultsView/pathwayMapper/PathWayMapperContainer';
 
 export function initStore(
@@ -280,16 +283,12 @@ export default class ResultsViewPage extends React.Component<
             {
                 id: ResultsViewTab.STRUCTURALVARIANTS,
                 hide: () => {
-                    if (this.appStore.featureFlagStore.has('SVTAB')) {
-                        return (
-                            !this.resultsViewPageStore.structuralVariants
-                                .isComplete ||
-                            this.resultsViewPageStore.structuralVariants.result
-                                .length === 0
-                        );
-                    } else {
-                        return true;
-                    }
+                    return (
+                        !this.resultsViewPageStore.structuralVariants
+                            .isComplete ||
+                        this.resultsViewPageStore.structuralVariants.result
+                            .length === 0
+                    );
                 },
                 getTab: () => {
                     return (
@@ -469,7 +468,10 @@ export default class ResultsViewPage extends React.Component<
             },
         ];
 
-        if (this.context.showDownloadControls === true) {
+        if (
+            getServerConfig().skin_hide_download_controls !==
+            DownloadControlOption.HIDE_ALL
+        ) {
             tabMap.push({
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {
@@ -798,5 +800,3 @@ export default class ResultsViewPage extends React.Component<
         }
     }
 }
-
-ResultsViewPage.contextType = AppContext;

@@ -47,6 +47,7 @@ export default class LabeledCheckbox extends React.Component<
                         (this.props.inputProps && this.props.inputProps.type) ||
                         'checkbox'
                     }
+                    data-test={'labeledCheckbox'}
                     checked={this.props.checked}
                     onChange={this.props.onChange}
                     disabled={this.props.disabled}

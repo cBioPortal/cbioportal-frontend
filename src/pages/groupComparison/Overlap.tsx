@@ -5,7 +5,11 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import Venn from './OverlapVenn';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
-import { DownloadControls, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    DownloadControls,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
@@ -20,6 +24,7 @@ import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import OverlapUpset from './OverlapUpset';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import { getServerConfig } from 'config/config';
 
 export interface IOverlapProps {
     store: ComparisonStore;
@@ -387,6 +392,10 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                         dontFade={true}
                         style={{ position: 'absolute', right: 10, top: 10 }}
                         type="button"
+                        showDownload={
+                            getServerConfig().skin_hide_download_controls ===
+                            DownloadControlOption.SHOW_ALL
+                        }
                     />
                 )}
                 <div style={{ position: 'relative', display: 'inline-block' }}>

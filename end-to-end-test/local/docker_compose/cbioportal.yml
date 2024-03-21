@@ -2,8 +2,13 @@ version: '3'
 
 services:
   cbioportal:
+    environment:
+      # TODO: properties need to be in both PORTAL_HOME and
+      # PORTAL_WEB_HOME. Db connection failes if the properties are not in
+      # /cbioportal-webapp/. Do we still need /cbioportal/?
+      PORTAL_HOME: "/cbioportal-webapp"
     volumes:
-    - $TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro
+    - $TEST_HOME/runtime-config/portal.properties:/cbioportal-webapp/application.properties:ro
     - $E2E_WORKSPACE/portalInfo:/portalInfo
 
 volumes:

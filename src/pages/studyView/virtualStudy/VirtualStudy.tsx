@@ -18,6 +18,7 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
 import { serializeEvent } from '../../../shared/lib/tracking';
+import FontAwesome from 'react-fontawesome';
 
 const Clipboard = require('clipboard');
 
@@ -192,6 +193,9 @@ export default class VirtualStudy extends React.Component<
     private copyLinkRef(el: HTMLAnchorElement | null) {
         if (el) {
             new Clipboard(el, {
+                container: document.getElementsByClassName(
+                    styles.virtualStudy
+                )[0],
                 text: () => this.virtualStudyUrl,
             });
         }
@@ -229,7 +233,10 @@ export default class VirtualStudy extends React.Component<
 
     render() {
         return (
-            <div className={styles.virtualStudy}>
+            <div
+                data-tour="virtual-study-summary-panel"
+                className={styles.virtualStudy}
+            >
                 <If condition={this.virtualStudy.isError}>
                     <Then>
                         <div style={{ textAlign: 'center' }}>
@@ -260,9 +267,11 @@ export default class VirtualStudy extends React.Component<
                                                 : undefined
                                         )}
                                     >
-                                        <div className="input-group">
+                                        <div className="form-group">
+                                            <label>Title:</label>
                                             <input
                                                 type="text"
+                                                id={'sniglet'}
                                                 className="form-control"
                                                 value={this.name}
                                                 placeholder={
@@ -274,178 +283,204 @@ export default class VirtualStudy extends React.Component<
                                                         event.currentTarget.value)
                                                 }
                                             />
-                                            <div className="input-group-btn">
-                                                {this.showSaveButton && (
-                                                    <button
-                                                        className={classnames(
-                                                            'btn btn-default',
-                                                            styles.saveButton
-                                                        )}
-                                                        data-event={serializeEvent(
-                                                            {
-                                                                category:
-                                                                    'studyPage',
-                                                                action:
-                                                                    'saveVirtualStudy',
-                                                            }
-                                                        )}
-                                                        type="button"
-                                                        disabled={
-                                                            this.buttonsDisabled
-                                                        }
-                                                        onClick={event => {
-                                                            this.saving = true;
-                                                        }}
-                                                    >
-                                                        {this.saving ? (
-                                                            <i
-                                                                className="fa fa-spinner fa-spin"
-                                                                aria-hidden="true"
-                                                            ></i>
-                                                        ) : (
-                                                            'Save'
-                                                        )}
-                                                    </button>
-                                                )}
+                                        </div>
+                                        <div className={'form-group'}>
+                                            <label>Description:</label>
+                                            <textarea
+                                                className="form-control"
+                                                rows={5}
+                                                placeholder="Virtual study description (Optional)"
+                                                value={this.description}
+                                                onChange={event =>
+                                                    (this.description =
+                                                        event.currentTarget.value)
+                                                }
+                                            />
+                                        </div>
+
+                                        <div>
+                                            {this.showSaveButton && (
                                                 <button
+                                                    data-tour="virtual-study-summary-save-btn"
                                                     className={classnames(
                                                         'btn btn-default',
                                                         styles.saveButton
                                                     )}
+                                                    data-event={serializeEvent({
+                                                        category: 'studyPage',
+                                                        action:
+                                                            'saveVirtualStudy',
+                                                    })}
                                                     type="button"
                                                     disabled={
                                                         this.buttonsDisabled
                                                     }
-                                                    data-event={serializeEvent({
-                                                        category: 'studyPage',
-                                                        action:
-                                                            'shareVirtualStudy',
-                                                    })}
                                                     onClick={event => {
-                                                        this.sharing = true;
+                                                        this.saving = true;
                                                     }}
                                                 >
-                                                    {this.sharing ? (
+                                                    {this.saving ? (
                                                         <i
                                                             className="fa fa-spinner fa-spin"
                                                             aria-hidden="true"
                                                         ></i>
                                                     ) : (
-                                                        'Share'
+                                                        'Save'
                                                     )}
                                                 </button>
-                                            </div>
+                                            )}
+                                            <button
+                                                data-tour="virtual-study-summary-share-btn"
+                                                className={classnames(
+                                                    'btn btn-default',
+                                                    styles.saveButton
+                                                )}
+                                                type="button"
+                                                disabled={this.buttonsDisabled}
+                                                data-event={serializeEvent({
+                                                    category: 'studyPage',
+                                                    action: 'shareVirtualStudy',
+                                                })}
+                                                onClick={event => {
+                                                    this.sharing = true;
+                                                }}
+                                            >
+                                                {this.sharing ? (
+                                                    <i
+                                                        className="fa fa-spinner fa-spin"
+                                                        aria-hidden="true"
+                                                    ></i>
+                                                ) : (
+                                                    'Create'
+                                                )}
+                                            </button>
                                         </div>
-                                        <textarea
-                                            className="form-control"
-                                            rows={10}
-                                            placeholder="Virtual study description (Optional)"
-                                            value={this.description}
-                                            onChange={event =>
-                                                (this.description =
-                                                    event.currentTarget.value)
-                                            }
-                                        />
                                     </div>
-                                    <span
-                                        style={{
-                                            display: 'block',
-                                            fontWeight: 'bold',
-                                        }}
-                                    >
-                                        This virtual study was derived from:
-                                    </span>
-                                    <div className={styles.studiesSummaryInfo}>
-                                        {this.props.studyWithSamples.map(
-                                            study => (
-                                                <StudySummaryRecord
-                                                    {...study}
-                                                />
-                                            )
-                                        )}
-                                    </div>
+                                    {/*<span*/}
+                                    {/*    style={{*/}
+                                    {/*        display: 'block',*/}
+                                    {/*        fontWeight: 'bold',*/}
+                                    {/*    }}*/}
+                                    {/*>*/}
+                                    {/*    This virtual study was derived from:*/}
+                                    {/*</span>*/}
+                                    {/*<div className={styles.studiesSummaryInfo}>*/}
+                                    {/*    {this.props.studyWithSamples.map(*/}
+                                    {/*        study => (*/}
+                                    {/*            <StudySummaryRecord*/}
+                                    {/*                {...study}*/}
+                                    {/*            />*/}
+                                    {/*        )*/}
+                                    {/*    )}*/}
+                                    {/*</div>*/}
                                 </div>
                             </Then>
                             <Else>
-                                <div className={classnames(styles.result)}>
-                                    <div className={styles.name}>
-                                        <a
-                                            target="_blank"
-                                            href={`${this.virtualStudyUrl}`}
-                                            style={{ width: '220px' }}
+                                <div>
+                                    <p className={'text-success'}>
+                                        Success! Copy the following link to view
+                                        virtual study.
+                                    </p>
+
+                                    <div className="form-group">
+                                        <label
+                                            className="sr-only"
+                                            htmlFor="exampleInputAmount"
                                         >
-                                            {this.virtualStudyUrl}
-                                        </a>
-                                    </div>
-                                    <div
-                                        className={classnames(
-                                            'btn-group btn-group-xs',
-                                            styles.controls
-                                        )}
-                                    >
-                                        <DefaultTooltip
-                                            overlay={
-                                                <If condition={this.copied}>
-                                                    <Then>
-                                                        <span className="alert-success">
-                                                            Copied!
-                                                        </span>
-                                                    </Then>
-                                                    <Else>
-                                                        <span>Copy</span>
-                                                    </Else>
-                                                </If>
-                                            }
-                                            placement="top"
-                                            onVisibleChange={
-                                                this.onTooltipVisibleChange
-                                            }
-                                        >
-                                            <span
-                                                className="btn btn-default"
-                                                ref={this.copyLinkRef}
-                                                onClick={this.onCopyClick}
-                                            >
-                                                Copy
-                                            </span>
-                                        </DefaultTooltip>
-                                        <span
-                                            className="btn btn-default"
-                                            onClick={event =>
-                                                window.open(
-                                                    this.virtualStudyUrl,
-                                                    '_blank'
-                                                )
-                                            }
-                                        >
-                                            View
-                                        </span>
-                                        {this.saving && (
-                                            <span
-                                                className="btn btn-default"
-                                                onClick={event => {
-                                                    if (
-                                                        this.virtualStudy.result
-                                                    ) {
-                                                        window.open(
-                                                            buildCBioPortalPageUrl(
-                                                                'results',
-                                                                {
-                                                                    cancer_study_id: this
-                                                                        .virtualStudy
-                                                                        .result
-                                                                        .id,
+                                            Amount (in dollars)
+                                        </label>
+                                        <div className="input-group">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={this.virtualStudyUrl}
+                                                style={{ width: 400 }}
+                                            />
+                                            <div className="input-group-addon">
+                                                <a
+                                                    ref={this.copyLinkRef}
+                                                    onClick={this.onCopyClick}
+                                                >
+                                                    {this.copied ? (
+                                                        <FontAwesome
+                                                            name={'thumbs-up'}
+                                                        />
+                                                    ) : (
+                                                        <DefaultTooltip
+                                                            placement={'top'}
+                                                            overlay={
+                                                                'Copy to clipboard'
+                                                            }
+                                                        >
+                                                            <FontAwesome
+                                                                name={
+                                                                    'clipboard'
                                                                 }
-                                                            ),
-                                                            '_blank'
-                                                        );
+                                                            />
+                                                        </DefaultTooltip>
+                                                    )}
+                                                </a>
+                                            </div>
+                                            <div className="input-group-addon">
+                                                <DefaultTooltip
+                                                    placement={'top'}
+                                                    overlay={
+                                                        'Open virtual study in a new tab'
                                                     }
-                                                }}
-                                            >
-                                                Query
-                                            </span>
-                                        )}
+                                                >
+                                                    <a
+                                                        onClick={event =>
+                                                            window.open(
+                                                                this
+                                                                    .virtualStudyUrl,
+                                                                '_blank'
+                                                            )
+                                                        }
+                                                    >
+                                                        <FontAwesome
+                                                            name={
+                                                                'external-link'
+                                                            }
+                                                        />
+                                                    </a>
+                                                </DefaultTooltip>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {/*<div*/}
+                                    {/*    className={classnames(*/}
+                                    {/*        'btn-group btn-group-xs',*/}
+                                    {/*        styles.controls*/}
+                                    {/*    )}*/}
+                                    {/*>*/}
+                                    {/*    {this.saving && (*/}
+                                    {/*        <span*/}
+                                    {/*            data-tour="virtual-study-summary-query-btn"*/}
+                                    {/*            className="btn btn-default"*/}
+                                    {/*            onClick={event => {*/}
+                                    {/*                if (*/}
+                                    {/*                    this.virtualStudy.result*/}
+                                    {/*                ) {*/}
+                                    {/*                    window.open(*/}
+                                    {/*                        buildCBioPortalPageUrl(*/}
+                                    {/*                            'results',*/}
+                                    {/*                            {*/}
+                                    {/*                                cancer_study_id: this*/}
+                                    {/*                                    .virtualStudy*/}
+                                    {/*                                    .result*/}
+                                    {/*                                    .id,*/}
+                                    {/*                            }*/}
+                                    {/*                        ),*/}
+                                    {/*                        '_blank'*/}
+                                    {/*                    );*/}
+                                    {/*                }*/}
+                                    {/*            }}*/}
+                                    {/*        >*/}
+                                    {/*            Query*/}
+                                    {/*        </span>*/}
+                                    {/*    )}*/}
+                                    {/*</div>*/}
                                 </div>
                             </Else>
                         </If>

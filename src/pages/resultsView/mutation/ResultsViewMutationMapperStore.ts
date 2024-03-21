@@ -8,14 +8,13 @@ import {
     MolecularProfile,
     SampleIdentifier,
 } from 'cbioportal-ts-api-client';
-import { remoteData } from 'cbioportal-frontend-commons';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 import {
     VariantAnnotation,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
-import { MobxPromise } from 'mobxpromise';
 import { fetchCosmicData } from 'shared/lib/StoreUtils';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
@@ -152,19 +151,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             this.getClinicalAttributeCache,
             this.getDiscreteCNACache
         );
-    }
-
-    @computed
-    get isCanonicalTranscript(): boolean {
-        if (this.canonicalTranscript.result && this.activeTranscript.result) {
-            // if transcript dropdown is enabled, return true for canonical transcript
-            return (
-                this.activeTranscript.result ===
-                this.canonicalTranscript.result.transcriptId
-            );
-        }
-        // return true if transcript dropdown is disabled
-        return true;
     }
 
     @computed get numericalFilterColumns() {

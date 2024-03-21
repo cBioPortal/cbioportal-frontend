@@ -77,12 +77,12 @@ SingleGeneQuery
 StructuralVariantQuery
     = geneName1:String "::" geneName2:String msp ":" msp mods:StructuralVariantModifiers { return {"gene": geneName1, "alterations": [{alteration_type: 'downstream_fusion', gene: geneName2, modifiers: mods}]}; }
     / geneName1:String "::" geneName2:String { return {"gene": geneName1, "alterations": [{alteration_type: 'downstream_fusion', gene: geneName2, modifiers: []}]}; }
-    / geneName1:String "::-" msp ":" msp mods:StructuralVariantModifiers { return {"gene": geneName1, "alterations": [{alteration_type: 'downstream_fusion', gene: undefined, modifiers: mods}]}; }
-    / geneName1:String "::-" { return {"gene": geneName1, "alterations": [{alteration_type: 'downstream_fusion', gene: undefined, modifiers: []}]}; }
+    / geneName1:String "::-" msp ":" msp mods:StructuralVariantModifiers { return {"gene": geneName1, "alterations": [{alteration_type: 'downstream_fusion', gene: '-', modifiers: mods}]}; }
+    / geneName1:String "::-" { return {"gene": geneName1, "alterations": [{alteration_type: 'downstream_fusion', gene: '-', modifiers: []}]}; }
     / geneName1:String "::" msp ":" msp mods:StructuralVariantModifiers { return {"gene": geneName1, "alterations": [{alteration_type: 'downstream_fusion', gene: '*', modifiers: mods}]}; }
     / geneName1:String "::" { return {"gene": geneName1, "alterations": [{alteration_type: 'downstream_fusion', gene: '*', modifiers: []}]}; }
-    / "-::" geneName2:String msp ":" msp mods:StructuralVariantModifiers { return {"gene": geneName2, "alterations": [{alteration_type: 'upstream_fusion', gene: undefined, modifiers: mods}]}; }
-    / "-::" geneName2:String { return {"gene": geneName2, "alterations": [{alteration_type: 'upstream_fusion', gene: undefined, modifiers: []}]}; }
+    / "-::" geneName2:String msp ":" msp mods:StructuralVariantModifiers { return {"gene": geneName2, "alterations": [{alteration_type: 'upstream_fusion', gene: '-', modifiers: mods}]}; }
+    / "-::" geneName2:String { return {"gene": geneName2, "alterations": [{alteration_type: 'upstream_fusion', gene: '-', modifiers: []}]}; }
     / "::" geneName2:String msp ":" msp mods:StructuralVariantModifiers { return {"gene": geneName2, "alterations": [{alteration_type: 'upstream_fusion', gene: '*', modifiers: mods}]}; }
     / "::" geneName2:String { return {"gene": geneName2, "alterations": [{alteration_type: 'upstream_fusion', gene: '*', modifiers: []}]}; }
 
@@ -152,8 +152,8 @@ FUSIONWithGene
         / "FUSION::"i geneName:AlphaNumeric { return {gene: geneName, type: 'downstream_fusion'}; }
 
 FUSIONWithUndefinedGene
-        = "-::FUSION"i {return {gene: undefined, type: 'upstream_fusion'}; }
-        / "FUSION::-"i {return {gene: undefined, type: 'downstream_fusion'}; }
+        = "-::FUSION"i {return {gene: '-', type: 'upstream_fusion'}; }
+        / "FUSION::-"i {return {gene: '-', type: 'downstream_fusion'}; }
 
 FUSIONWithAnyGene
         = "::FUSION"i {return {gene: '*', type: 'upstream_fusion'}; }

@@ -7,7 +7,7 @@ import {
     IAnnotationFilterSettings,
     IDriverAnnotationReport,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
-import { MobxPromiseUnionType } from 'mobxpromise';
+import { MobxPromiseUnionType } from 'cbioportal-frontend-commons';
 import { observable } from 'mobx';
 import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 

@@ -12,6 +12,7 @@ export interface IOncoKbTooltipProps {
     isCancerGene: boolean;
     geneNotExist: boolean;
     usingPublicOncoKbInstance: boolean;
+    hasMultipleCancerTypes?: boolean;
 }
 
 export const OncoKbTooltip: React.FunctionComponent<IOncoKbTooltipProps> = (
@@ -48,6 +49,7 @@ export const OncoKbTooltip: React.FunctionComponent<IOncoKbTooltipProps> = (
                 indicator={props.indicator}
                 handleFeedbackOpen={props.handleFeedbackOpen}
                 displayHighestLevelInTabTitle={true}
+                hasMultipleCancerTypes={props.hasMultipleCancerTypes}
             />
         );
     }

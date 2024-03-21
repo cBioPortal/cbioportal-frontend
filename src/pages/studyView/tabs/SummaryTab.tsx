@@ -135,6 +135,15 @@ export class StudySummaryTab extends React.Component<
                     dataBins
                 );
             },
+            onGenomicDataCategoricalValueSelection: (
+                chartMeta: ChartMeta,
+                values: string[]
+            ) => {
+                this.store.updateCategoricalGenomicDataFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
             onGenericAssayDataBinSelection: (
                 chartMeta: ChartMeta,
                 dataBins: GenericAssayDataBin[]
@@ -204,6 +213,20 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenericAssayChartDataCount(
                         chartMeta
                     );
+                } else if (
+                    this.store.isGeneSpecificChart(chartMeta.uniqueKey)
+                ) {
+                    props.promise = this.store.getGenomicChartDataCount(
+                        chartMeta
+                    );
+                    props.filters = this.store
+                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            genomicDataFilterValue =>
+                                genomicDataFilterValue.value
+                        );
+                    props.onValueSelection = this.handlers.onGenomicDataCategoricalValueSelection;
+                    props.onResetSelection = this.handlers.onGenomicDataCategoricalValueSelection;
                 } else {
                     props.promise = this.store.getClinicalDataCount(chartMeta);
                     props.filters = this.store
@@ -217,7 +240,7 @@ export class StudySummaryTab extends React.Component<
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
                 props.getData = (dataType?: DataType) =>
-                    this.store.getPieChartDataDownload(chartMeta, dataType);
+                    this.store.getChartDownloadableData(chartMeta, dataType);
                 props.downloadTypes = [
                     'Summary Data',
                     'Full Data',
@@ -232,7 +255,7 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenomicChartDataBin(
                         chartMeta
                     );
-                    props.filters = this.store.getGenomicDataIntervalFiltersByUniqueKey(
+                    props.filters = this.store.getGenomicDataFiltersByUniqueKey(
                         props.chartMeta!.uniqueKey
                     );
                     props.onDataBinSelection = this.handlers.onGenomicDataBinSelection;
@@ -325,6 +348,20 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenericAssayChartDataCount(
                         chartMeta
                     );
+                } else if (
+                    this.store.isGeneSpecificChart(chartMeta.uniqueKey)
+                ) {
+                    props.promise = this.store.getGenomicChartDataCount(
+                        chartMeta
+                    );
+                    props.filters = this.store
+                        .getGenomicDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            genomicDataFilterValue =>
+                                genomicDataFilterValue.value
+                        );
+                    props.onValueSelection = this.handlers.onGenomicDataCategoricalValueSelection;
+                    props.onResetSelection = this.handlers.onGenomicDataCategoricalValueSelection;
                 } else {
                     props.filters = this.store
                         .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
@@ -337,9 +374,9 @@ export class StudySummaryTab extends React.Component<
                     props.onResetSelection = this.handlers.onValueSelection;
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = () =>
-                    this.store.getChartDownloadableData(chartMeta);
-                props.downloadTypes = ['Data'];
+                props.getData = dataType =>
+                    this.store.getChartDownloadableData(chartMeta, dataType);
+                props.downloadTypes = ['Summary Data', 'Full Data'];
                 break;
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
@@ -352,6 +389,7 @@ export class StudySummaryTab extends React.Component<
                     this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
+                props.id = 'mutated-genes-table';
                 props.title = this.store.getChartTitle(
                     ChartTypeEnum.MUTATED_GENES_TABLE,
                     props.title
@@ -385,6 +423,30 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterSVGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateSVGenesTableByCancerGenesFilter;
+                props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
+                props.filterAlterations = this.store.isGlobalMutationFilterActive;
+                break;
+            }
+            case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
+                props.filters = this.store.getGeneFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                );
+                props.promise = this.store.structuralVariantTableRowData;
+                props.onValueSelection = this.store.addStructVarFilters;
+                props.onResetSelection = () =>
+                    this.store.resetGeneFilter(chartMeta.uniqueKey);
+                props.selectedStructuralVariants = this.store.selectedStructuralVariants;
+                props.onStructuralVariantSelect = this.store.onCheckStructuralVariant;
+                props.title = this.store.getChartTitle(
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
+                    props.title
+                );
+                props.getData = () =>
+                    this.store.getStructuralVariantGenesDownloadData();
+                props.genePanelCache = this.store.genePanelCache;
+                props.downloadTypes = ['Data'];
+                props.filterByCancerGenes = this.store.filterStructVarsTableByCancerGenes;
+                props.onChangeCancerGeneFilter = this.store.updateStructVarsTableByCancerGenesFilter;
                 props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
                 props.filterAlterations = this.store.isGlobalMutationFilterActive;
                 break;
@@ -459,6 +521,7 @@ export class StudySummaryTab extends React.Component<
                         'OS_SURVIVAL'
                     ]?.survivalDataWithoutLeftTruncation;
                 }
+                props.onDataBinSelection = this.handlers.onDataBinSelection;
                 /* end of left truncation adjustment related settings */
                 break;
             }
@@ -703,7 +766,7 @@ export class StudySummaryTab extends React.Component<
         // 2.   The maintainer of RGL repo currently not actively accepts pull requests. So we don't know when the
         //      issue will be solved.
         return (
-            <div key={chartMeta.uniqueKey}>
+            <div key={chartMeta.uniqueKey} data-tour={props.id}>
                 <DelayedRender>
                     {/* Delay the render after a setTimeout, because synchronous rendering would jam UI updates
                     and make things laggy */}

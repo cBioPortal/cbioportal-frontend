@@ -9,11 +9,14 @@ import { StudySummaryRecord } from '../../virtualStudy/VirtualStudy';
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import { getStudySummaryUrl } from '../../../../shared/api/urls';
 import { DefaultTooltip, getNCBIlink } from 'cbioportal-frontend-commons';
-import MobxPromise from 'mobxpromise';
 import { StudyDataDownloadLink } from '../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 import { serializeEvent } from '../../../../shared/lib/tracking';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
-import { AppContext } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    MobxPromise,
+} from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 interface IStudySummaryProps {
     studies: CancerStudy[];
@@ -119,7 +122,8 @@ export default class StudySummary extends React.Component<
     get showDownload() {
         return (
             this.props.hasRawDataForDownload &&
-            this.context.showDownloadControls === true
+            getServerConfig().skin_hide_download_controls ===
+                DownloadControlOption.SHOW_ALL
         );
     }
 
@@ -170,6 +174,7 @@ export default class StudySummary extends React.Component<
                         {this.descriptionFirstLine}
                         {this.hasMoreDescription && (
                             <i
+                                data-tour="show-more-description-icon"
                                 className={`fa fa-${
                                     this.showMoreDescription ? 'minus' : 'plus'
                                 }-circle`}
@@ -229,5 +234,3 @@ export default class StudySummary extends React.Component<
         );
     }
 }
-
-StudySummary.contextType = AppContext;

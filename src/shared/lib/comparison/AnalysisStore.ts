@@ -1,32 +1,38 @@
-import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    cached,
+    MobxPromise,
+    MobxPromiseUnionTypeWithDefault,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import {
     CancerStudy,
+    ClinicalData,
+    ClinicalDataMultiStudyFilter,
+    ClinicalDataSingleStudyFilter,
     Gene,
     Mutation,
     MutationCountByPosition,
     Sample,
 } from 'cbioportal-ts-api-client';
-import { computed, makeObservable, observable } from 'mobx';
+import { computed, observable } from 'mobx';
 import _ from 'lodash';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import {
-    evaluatePutativeDriverInfo,
     evaluatePutativeDriverInfoWithHotspots,
     fetchOncoKbCancerGenes,
     fetchOncoKbDataForOncoprint,
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     filterAndAnnotateMutations,
+    generateUniqueSampleKeyToTumorTypeMap,
     getGenomeNexusUrl,
     makeGetOncoKbMutationAnnotationForOncoprint,
     makeIsHotspotForOncoprint,
     ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
-import MobxPromise, { MobxPromiseUnionTypeWithDefault } from 'mobxpromise';
 import { DriverAnnotationSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { getServerConfig } from 'config/config';
-import { CoverageInformation } from '../GenePanelUtils';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
-    getProteinPositionFromProteinChange,
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
@@ -40,11 +46,16 @@ import {
     countMutations,
     mutationCountByPositionKey,
 } from 'pages/resultsView/mutationCountHelpers';
-import ComplexKeyCounter from '../complexKeyDataStructures/ComplexKeyCounter';
 import GeneCache from 'shared/cache/GeneCache';
 import eventBus from 'shared/events/eventBus';
 import { SiteError } from 'shared/model/appMisc';
 import { ErrorMessages } from 'shared/errorMessages';
+import client from 'shared/api/cbioportalClientInstance';
+import { CLINICAL_ATTRIBUTE_ID_ENUM, REQUEST_ARG_ENUM } from 'shared/constants';
+import { toSampleUuid } from '../UuidUtils';
+import PubMedCache from 'shared/cache/PubMedCache';
+import autobind from 'autobind-decorator';
+import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 
 export default abstract class AnalysisStore {
     @observable driverAnnotationSettings: DriverAnnotationSettings;
@@ -54,6 +65,7 @@ export default abstract class AnalysisStore {
     abstract get includeGermlineMutations(): boolean;
     abstract get studies(): MobxPromiseUnionTypeWithDefault<CancerStudy[]>;
     abstract genes: MobxPromise<Gene[]>;
+    abstract get samples(): MobxPromise<Sample[]>;
 
     // everything below taken from the results view page store in order to get the annotated mutations
     readonly oncoKbCancerGenes = remoteData(
@@ -304,4 +316,148 @@ export default abstract class AnalysisStore {
     });
 
     readonly geneCache = new GeneCache();
+
+    @computed get ensemblLink() {
+        return this.referenceGenomeBuild ===
+            getServerConfig().genomenexus_url_grch38
+            ? getServerConfig().ensembl_transcript_grch38_url
+            : getServerConfig().ensembl_transcript_url;
+    }
+
+    //OncoKb
+    readonly uniqueSampleKeyToTumorType = remoteData<{
+        [uniqueSampleKey: string]: string;
+    }>({
+        await: () => [
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.samplesWithoutCancerTypeClinicalData,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                generateUniqueSampleKeyToTumorTypeMap(
+                    this.clinicalDataForSamples,
+                    this.studiesForSamplesWithoutCancerTypeClinicalData,
+                    this.samplesWithoutCancerTypeClinicalData
+                )
+            );
+        },
+    });
+
+    readonly uniqueSampleKeyToCancerType = remoteData<{
+        [uniqueSampleKey: string]: string;
+    }>({
+        await: () => [
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.samplesWithoutCancerTypeClinicalData,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                generateUniqueSampleKeyToTumorTypeMap(
+                    this.clinicalDataForSamples,
+                    this.studiesForSamplesWithoutCancerTypeClinicalData,
+                    this.samplesWithoutCancerTypeClinicalData,
+                    true
+                )
+            );
+        },
+    });
+
+    readonly clinicalDataForSamples = remoteData<ClinicalData[]>(
+        {
+            await: () => [this.studies, this.samples],
+            invoke: () =>
+                this.getClinicalData(
+                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
+                    this.studies.result!,
+                    this.samples.result!,
+                    [
+                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED,
+                    ]
+                ),
+        },
+        []
+    );
+
+    protected getClinicalData(
+        clinicalDataType: 'SAMPLE' | 'PATIENT',
+        studies: any[],
+        entities: any[],
+        attributeIds: string[]
+    ): Promise<Array<ClinicalData>> {
+        // single study query endpoint is optimal so we should use it
+        // when there's only one study
+        if (studies.length === 1) {
+            const study = this.studies.result[0];
+            const filter: ClinicalDataSingleStudyFilter = {
+                attributeIds: attributeIds,
+                ids: _.map(
+                    entities,
+                    clinicalDataType === 'SAMPLE' ? 'sampleId' : 'patientId'
+                ),
+            };
+            return client.fetchAllClinicalDataInStudyUsingPOST({
+                studyId: study.studyId,
+                clinicalDataSingleStudyFilter: filter,
+                clinicalDataType: clinicalDataType,
+            });
+        } else {
+            const filter: ClinicalDataMultiStudyFilter = {
+                attributeIds: attributeIds,
+                identifiers: entities.map((s: any) =>
+                    clinicalDataType === 'SAMPLE'
+                        ? { entityId: s.sampleId, studyId: s.studyId }
+                        : { entityId: s.patientId, studyId: s.studyId }
+                ),
+            };
+            return client.fetchClinicalDataUsingPOST({
+                clinicalDataType: clinicalDataType,
+                clinicalDataMultiStudyFilter: filter,
+            });
+        }
+    }
+
+    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData(
+        {
+            await: () => [this.samplesWithoutCancerTypeClinicalData],
+            invoke: async () =>
+                fetchStudiesForSamplesWithoutCancerTypeClinicalData(
+                    this.samplesWithoutCancerTypeClinicalData
+                ),
+        },
+        []
+    );
+
+    readonly samplesWithoutCancerTypeClinicalData = remoteData<Sample[]>(
+        {
+            await: () => [this.samples, this.clinicalDataForSamples],
+            invoke: () => {
+                const sampleHasData: { [sampleUid: string]: boolean } = {};
+                for (const data of this.clinicalDataForSamples.result) {
+                    sampleHasData[
+                        toSampleUuid(data.studyId, data.sampleId)
+                    ] = true;
+                }
+                return Promise.resolve(
+                    this.samples.result!.filter(sample => {
+                        return !sampleHasData[
+                            toSampleUuid(sample.studyId, sample.sampleId)
+                        ];
+                    })
+                );
+            },
+        },
+        []
+    );
+
+    @cached @computed get pubMedCache() {
+        return new PubMedCache();
+    }
+
+    @autobind
+    generateGenomeNexusHgvsgUrl(hgvsg: string) {
+        return getGenomeNexusHgvsgUrl(hgvsg, this.referenceGenomeBuild);
+    }
 }

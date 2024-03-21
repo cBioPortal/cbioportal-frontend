@@ -145,11 +145,11 @@ export async function fetchGenericAssayData(
 ) {
     const params: {
         molecularProfileId: string;
-        genericAssayDataFilter: GenericAssayFilter;
+        genericAssayFilter: GenericAssayFilter;
     }[] = _.map(entityIdsByProfile, (entityIds, profileId) => {
         return {
             molecularProfileId: profileId,
-            genericAssayDataFilter: {
+            genericAssayFilter: {
                 genericAssayStableIds: entityIds,
                 ...sampleFilterByProfile[profileId],
                 // the Swagger-generated type expected by the client method below
@@ -161,8 +161,8 @@ export async function fetchGenericAssayData(
     const dataPromises = params.map(param => {
         // do not request data by using empty sample list
         if (
-            _.isEmpty(param.genericAssayDataFilter.sampleIds) &&
-            !param.genericAssayDataFilter.sampleListId
+            _.isEmpty(param.genericAssayFilter.sampleIds) &&
+            !param.genericAssayFilter.sampleListId
         ) {
             return Promise.resolve([]);
         } else {
@@ -286,6 +286,18 @@ export function getGenericAssayMetaPropertyOrDefault(
     );
 }
 
+export function getGenericAssayCategoryFromName(
+    name: string,
+    defaultValue: string
+) {
+    // TODO: should we add additional property 'CATEGORY' in data file
+    // currently, category can be derived from name
+    // name format: ENTITY_NAME (CATEGORY)
+    // we can get category between '(' and ')'
+    const regExpName = /\(([^)]+)\)/;
+    return name ? regExpName.exec(name)![1] : 'No category';
+}
+
 export function getCategoryOrderByGenericAssayType(genericAssayType: string) {
     // return category order for reserved generic assay type
     // return undefined for other types
@@ -384,4 +396,21 @@ export function getSortedGenericAssayTabSpecs(
     );
 
     return _.sortBy(genericAssayTabSpecs, specs => specs.linkText);
+}
+
+export function getSortedGenericAssayAllTabSpecs(
+    genericAssayAllEnrichmentProfilesGroupedByGenericAssayType: {
+        [key: string]: MolecularProfile[];
+    } = {}
+): { genericAssayType: string; linkText: string }[] {
+    const genericAssayAllTabSpecs: {
+        genericAssayType: string;
+        linkText: string;
+    }[] = _.keys(
+        genericAssayAllEnrichmentProfilesGroupedByGenericAssayType
+    ).map(genericAssayType => ({
+        genericAssayType,
+        linkText: deriveDisplayTextFromGenericAssayType(genericAssayType),
+    }));
+    return _.sortBy(genericAssayAllTabSpecs, specs => specs.linkText);
 }

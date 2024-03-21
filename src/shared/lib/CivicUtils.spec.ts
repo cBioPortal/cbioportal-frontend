@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { getCivicEntry } from 'cbioportal-utils';
 
 import { Mutation } from 'cbioportal-ts-api-client';

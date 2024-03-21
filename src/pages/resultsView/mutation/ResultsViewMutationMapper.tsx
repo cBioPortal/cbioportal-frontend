@@ -39,10 +39,14 @@ import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary'
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 import { submitToStudyViewPage } from '../querySummary/QuerySummaryUtils';
-import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import {
+    ExtendedMutationTableColumnType,
+    MutationTableColumnType,
+} from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
 import { getServerConfig } from 'config/config';
+import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -53,6 +57,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
     userDisplayName: string;
     onClickSettingMenu?: (visible: boolean) => void;
+    enableCustomDriver: boolean;
 }
 
 @observer
@@ -74,6 +79,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         let filterInfo:
             | JSX.Element
             | string = `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
+        const shiftClickMessage: string =
+            dataStore.sortedFilteredSelectedData.length > 0
+                ? ' (Shift click to select multiple residues)'
+                : '';
         if (this.props.store.queriedStudies.isComplete) {
             const linkToFilteredStudyView = (
                 <a
@@ -104,12 +113,18 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             <FilterResetPanel
                 resetFilters={() => dataStore.resetFilters()}
                 filterInfo={filterInfo}
+                additionalInfo={shiftClickMessage}
                 className={classnames(
-                    'alert',
                     'alert-success',
+                    'small',
                     styles.filterResetPanel
                 )}
-                buttonClass="btn btn-default btn-xs"
+                buttonClass={classnames(
+                    'btn',
+                    'btn-default',
+                    'btn-xs',
+                    styles.removeFilterButton
+                )}
             />
         );
     }
@@ -230,6 +245,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 enableMyCancerGenome={this.props.enableMyCancerGenome}
                 enableCivic={this.props.enableCivic}
                 enableRevue={this.props.enableRevue}
+                enableCustomDriver={this.props.enableCustomDriver}
                 totalNumberOfExons={this.totalExonNumber}
                 generateGenomeNexusHgvsgUrl={
                     this.props.store.generateGenomeNexusHgvsgUrl
@@ -256,6 +272,16 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 deactivateColumnFilter={this.deactivateColumnFilter}
                 namespaceColumns={this.props.store.namespaceColumnConfig}
                 columns={this.columns}
+                initialSortColumn={
+                    getServerConfig()
+                        .skin_results_view_tables_default_sort_column
+                }
+                customDriverName={this.props.customDriverName}
+                customDriverDescription={this.props.customDriverDescription}
+                customDriverTiersName={this.props.customDriverTiersName}
+                customDriverTiersDescription={
+                    this.props.customDriverTiersDescription
+                }
             />
         );
     }

@@ -4,8 +4,6 @@ import {
     ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
     ClinicalData,
-    ClinicalDataMultiStudyFilter,
-    ClinicalDataSingleStudyFilter,
     CopyNumberSeg,
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
@@ -38,7 +36,9 @@ import {
 
 import client from 'shared/api/cbioportalClientInstance';
 import {
+    cached,
     CanonicalMutationType,
+    MobxPromise,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
@@ -57,8 +57,6 @@ import {
 } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { cached, MobxPromise } from 'mobxpromise';
-import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
@@ -77,12 +75,10 @@ import {
     fetchGenes,
     fetchGermlineConsentedSamples,
     fetchStructuralVariantOncoKbData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     fetchVariantAnnotationsIndexedByGenomicLocation,
     filterAndAnnotateMolecularData,
     filterAndAnnotateMutations,
     generateDataQueryFilter,
-    generateUniqueSampleKeyToTumorTypeMap,
     getAllGenes,
     getGenomeBuildFromStudies,
     getSurvivalClinicalAttributesPrefix,
@@ -101,7 +97,6 @@ import {
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import _ from 'lodash';
-import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import AccessorsForOqlFilter from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
@@ -180,7 +175,6 @@ import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import { AppStore } from '../../AppStore';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
-import autobind from 'autobind-decorator';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
@@ -206,7 +200,6 @@ import {
     getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
-import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import {
     ALTERED_COLOR,
@@ -304,6 +297,7 @@ import {
     ONCOKB_DEFAULT_INFO,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
+import { RGBAColor } from 'oncoprintjs';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -434,6 +428,8 @@ interface IResultsViewExclusionSettings {
     ) => void;
 }
 
+const ONCOPRINT_COLOR_CONFIG = 'clinicalTracksColorConfig';
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
@@ -493,6 +489,15 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
             )
         );
+
+        const clinicalTracksColorConfig = localStorage.getItem(
+            ONCOPRINT_COLOR_CONFIG
+        );
+        if (clinicalTracksColorConfig !== null) {
+            this._userSelectedStudiesToClinicalTracksColors = JSON.parse(
+                clinicalTracksColorConfig
+            );
+        }
     }
 
     destroy() {
@@ -524,6 +529,10 @@ export class ResultsViewPageStore extends AnalysisStore
     @computed
     get cancerStudyIds() {
         return this.urlWrapper.query.cancer_study_list.split(',');
+    }
+    @computed
+    get cancerStudyListSorted() {
+        return this.cancerStudyIds.sort().join(',');
     }
 
     @computed
@@ -573,6 +582,14 @@ export class ResultsViewPageStore extends AnalysisStore
 
     @observable queryFormVisible: boolean = false;
 
+    @observable _userSelectedStudiesToClinicalTracksColors: {
+        [studies: string]: {
+            [trackLabel: string]: {
+                [attributeValue: string]: RGBAColor;
+            };
+        };
+    } = { global: {} };
+
     @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
             this.nonSelectedDownloadableMolecularProfilesGroupByName.result &&
@@ -585,6 +602,48 @@ export class ResultsViewPageStore extends AnalysisStore
     @observable public modifyQueryParams:
         | ModifyQueryParams
         | undefined = undefined;
+
+    @action.bound
+    public setUserSelectedClinicalTrackColor(
+        label: string,
+        value: string,
+        color: RGBAColor | undefined
+    ) {
+        // if color is undefined, delete color from userSelectedClinicalAttributeColors if exists
+        // else, set the color in userSelectedClinicalAttributeColors
+        if (
+            !color &&
+            this._userSelectedStudiesToClinicalTracksColors['global'][label] &&
+            this._userSelectedStudiesToClinicalTracksColors['global'][label][
+                value
+            ]
+        ) {
+            delete this._userSelectedStudiesToClinicalTracksColors['global'][
+                label
+            ][value];
+        } else if (color) {
+            if (
+                !this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ]
+            ) {
+                this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ] = {};
+            }
+            this._userSelectedStudiesToClinicalTracksColors['global'][label][
+                value
+            ] = color;
+        }
+        localStorage.setItem(
+            ONCOPRINT_COLOR_CONFIG,
+            JSON.stringify(this._userSelectedStudiesToClinicalTracksColors)
+        );
+    }
+
+    @computed get userSelectedStudiesToClinicalTracksColors() {
+        return this._userSelectedStudiesToClinicalTracksColors;
+    }
 
     @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {
@@ -1285,6 +1344,13 @@ export class ResultsViewPageStore extends AnalysisStore
         {}
     );
 
+    /**
+     * All molecular data that is 'special', i.e. not a:
+     * - structural variant
+     * - mutation
+     * - generic essay
+     * See also {@link excludeSpecialMolecularProfiles}
+     */
     readonly molecularData = remoteData<NumericGeneMolecularData[]>({
         await: () => [
             this.sampleKeyToSample,
@@ -1785,8 +1851,9 @@ export class ResultsViewPageStore extends AnalysisStore
     readonly nonOqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
+            this.filteredAndAnnotatedNonGenomicData,
             this.selectedMolecularProfiles,
             this.entrezGeneIdToGene,
         ],
@@ -1797,8 +1864,9 @@ export class ResultsViewPageStore extends AnalysisStore
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let result = [
                 ...this.filteredAndAnnotatedMutations.result!,
-                ...this.filteredAndAnnotatedMolecularData.result!,
+                ...this.filteredAndAnnotatedCnaData.result!,
                 ...this.filteredAndAnnotatedStructuralVariants.result!,
+                ...this.filteredAndAnnotatedNonGenomicData.result!,
             ];
             return Promise.resolve(
                 result.map(d => {
@@ -1909,29 +1977,23 @@ export class ResultsViewPageStore extends AnalysisStore
     readonly oqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedNonGenomicData,
+            this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
         ],
         invoke: () => {
             if (this.oqlText.trim() != '') {
-                let data: (
-                    | AnnotatedMutation
-                    | AnnotatedNumericGeneMolecularData
-                )[] = [];
-                data = data.concat(this.filteredAndAnnotatedMutations.result!);
-                data = data.concat(
-                    this.filteredAndAnnotatedMolecularData.result!
-                );
                 return Promise.resolve(
                     filterCBioPortalWebServiceData(
                         this.oqlText,
                         [
                             ...this.filteredAndAnnotatedMutations.result!,
-                            ...this.filteredAndAnnotatedMolecularData.result!,
+                            ...this.filteredAndAnnotatedCnaData.result!,
                             ...this.filteredAndAnnotatedStructuralVariants
                                 .result!,
+                            ...this.filteredAndAnnotatedNonGenomicData.result!,
                         ],
                         new AccessorsForOqlFilter(
                             this.selectedMolecularProfiles.result!
@@ -1994,8 +2056,9 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
+            this.filteredAndAnnotatedNonGenomicData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.samples,
@@ -2004,8 +2067,9 @@ export class ResultsViewPageStore extends AnalysisStore
         invoke: () => {
             const data = [
                 ...this.filteredAndAnnotatedMutations.result!,
-                ...this.filteredAndAnnotatedMolecularData.result!,
+                ...this.filteredAndAnnotatedCnaData.result!,
                 ...this.filteredAndAnnotatedStructuralVariants.result!,
+                ...this.filteredAndAnnotatedNonGenomicData.result!,
             ];
             const accessorsInstance = new AccessorsForOqlFilter(
                 this.selectedMolecularProfiles.result!
@@ -2099,8 +2163,9 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedCnaData,
             this.filteredAndAnnotatedStructuralVariants,
+            this.filteredAndAnnotatedNonGenomicData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.samples,
@@ -2116,8 +2181,9 @@ export class ResultsViewPageStore extends AnalysisStore
                     this.oqlText,
                     [
                         ...this.filteredAndAnnotatedMutations.result!,
-                        ...this.filteredAndAnnotatedMolecularData.result!,
+                        ...this.filteredAndAnnotatedCnaData.result!,
                         ...this.filteredAndAnnotatedStructuralVariants.result!,
+                        ...this.filteredAndAnnotatedNonGenomicData.result!,
                     ],
                     new AccessorsForOqlFilter(
                         this.selectedMolecularProfiles.result!
@@ -3386,9 +3452,14 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
 
                 if (sv.site2HugoSymbol) {
-                    svByGene[sv.site2HugoSymbol] =
-                        svByGene[sv.site2HugoSymbol] || [];
-                    svByGene[sv.site2HugoSymbol].push(sv);
+                    if (
+                        !sv.site1HugoSymbol ||
+                        sv.site2HugoSymbol !== sv.site1HugoSymbol
+                    ) {
+                        svByGene[sv.site2HugoSymbol] =
+                            svByGene[sv.site2HugoSymbol] || [];
+                        svByGene[sv.site2HugoSymbol].push(sv);
+                    }
                 }
             });
             return svByGene;
@@ -3422,33 +3493,65 @@ export class ResultsViewPageStore extends AnalysisStore
                 ret[structuralVariant.site1HugoSymbol]?.data.push(
                     structuralVariant
                 );
-                ret[structuralVariant.site2HugoSymbol]?.data.push(
-                    structuralVariant
-                );
+                if (structuralVariant.site2HugoSymbol) {
+                    if (
+                        !structuralVariant.site1HugoSymbol ||
+                        structuralVariant.site2HugoSymbol !==
+                            structuralVariant.site1HugoSymbol
+                    ) {
+                        ret[structuralVariant.site2HugoSymbol]?.data.push(
+                            structuralVariant
+                        );
+                    }
+                }
             }
             for (const structuralVariant of structuralVariantsGroups.vus) {
                 ret[structuralVariant.site1HugoSymbol]?.vus.push(
                     structuralVariant
                 );
-                ret[structuralVariant.site2HugoSymbol]?.vus.push(
-                    structuralVariant
-                );
+                if (structuralVariant.site2HugoSymbol) {
+                    if (
+                        !structuralVariant.site1HugoSymbol ||
+                        structuralVariant.site2HugoSymbol !==
+                            structuralVariant.site1HugoSymbol
+                    ) {
+                        ret[structuralVariant.site2HugoSymbol]?.vus.push(
+                            structuralVariant
+                        );
+                    }
+                }
             }
             for (const structuralVariant of structuralVariantsGroups.germline) {
                 ret[structuralVariant.site1HugoSymbol]?.germline.push(
                     structuralVariant
                 );
-                ret[structuralVariant.site2HugoSymbol]?.germline.push(
-                    structuralVariant
-                );
+                if (structuralVariant.site2HugoSymbol) {
+                    if (
+                        !structuralVariant.site1HugoSymbol ||
+                        structuralVariant.site2HugoSymbol !==
+                            structuralVariant.site1HugoSymbol
+                    ) {
+                        ret[structuralVariant.site2HugoSymbol]?.germline.push(
+                            structuralVariant
+                        );
+                    }
+                }
             }
             for (const structuralVariant of structuralVariantsGroups.vusAndGermline) {
                 ret[structuralVariant.site1HugoSymbol]?.vusAndGermline.push(
                     structuralVariant
                 );
-                ret[structuralVariant.site2HugoSymbol]?.vusAndGermline.push(
-                    structuralVariant
-                );
+                if (structuralVariant.site2HugoSymbol) {
+                    if (
+                        !structuralVariant.site1HugoSymbol ||
+                        structuralVariant.site2HugoSymbol !==
+                            structuralVariant.site1HugoSymbol
+                    ) {
+                        ret[
+                            structuralVariant.site2HugoSymbol
+                        ]?.vusAndGermline.push(structuralVariant);
+                    }
+                }
             }
             return Promise.resolve(ret);
         },
@@ -3771,23 +3874,6 @@ export class ResultsViewPageStore extends AnalysisStore
         }`;
     }
 
-    readonly clinicalDataForSamples = remoteData<ClinicalData[]>(
-        {
-            await: () => [this.studies, this.samples],
-            invoke: () =>
-                this.getClinicalData(
-                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
-                    this.studies.result!,
-                    this.samples.result,
-                    [
-                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE,
-                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED,
-                    ]
-                ),
-        },
-        []
-    );
-
     readonly ascnClinicalDataForSamples = remoteData<ClinicalData[]>(
         {
             await: () => [this.studies, this.samples],
@@ -3834,44 +3920,6 @@ export class ResultsViewPageStore extends AnalysisStore
         },
         {}
     );
-
-    private getClinicalData(
-        clinicalDataType: 'SAMPLE' | 'PATIENT',
-        studies: any[],
-        entities: any[],
-        attributeIds: string[]
-    ): Promise<Array<ClinicalData>> {
-        // single study query endpoint is optimal so we should use it
-        // when there's only one study
-        if (studies.length === 1) {
-            const study = this.studies.result[0];
-            const filter: ClinicalDataSingleStudyFilter = {
-                attributeIds: attributeIds,
-                ids: _.map(
-                    entities,
-                    clinicalDataType === 'SAMPLE' ? 'sampleId' : 'patientId'
-                ),
-            };
-            return client.fetchAllClinicalDataInStudyUsingPOST({
-                studyId: study.studyId,
-                clinicalDataSingleStudyFilter: filter,
-                clinicalDataType: clinicalDataType,
-            });
-        } else {
-            const filter: ClinicalDataMultiStudyFilter = {
-                attributeIds: attributeIds,
-                identifiers: entities.map((s: any) =>
-                    clinicalDataType === 'SAMPLE'
-                        ? { entityId: s.sampleId, studyId: s.studyId }
-                        : { entityId: s.patientId, studyId: s.studyId }
-                ),
-            };
-            return client.fetchClinicalDataUsingPOST({
-                clinicalDataType: clinicalDataType,
-                clinicalDataMultiStudyFilter: filter,
-            });
-        }
-    }
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>(
         {
@@ -4193,39 +4241,6 @@ export class ResultsViewPageStore extends AnalysisStore
         default: [],
     });
 
-    readonly samplesWithoutCancerTypeClinicalData = remoteData<Sample[]>(
-        {
-            await: () => [this.samples, this.clinicalDataForSamples],
-            invoke: () => {
-                const sampleHasData: { [sampleUid: string]: boolean } = {};
-                for (const data of this.clinicalDataForSamples.result) {
-                    sampleHasData[
-                        toSampleUuid(data.studyId, data.sampleId)
-                    ] = true;
-                }
-                return Promise.resolve(
-                    this.samples.result.filter(sample => {
-                        return !sampleHasData[
-                            toSampleUuid(sample.studyId, sample.sampleId)
-                        ];
-                    })
-                );
-            },
-        },
-        []
-    );
-
-    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData(
-        {
-            await: () => [this.samplesWithoutCancerTypeClinicalData],
-            invoke: async () =>
-                fetchStudiesForSamplesWithoutCancerTypeClinicalData(
-                    this.samplesWithoutCancerTypeClinicalData
-                ),
-        },
-        []
-    );
-
     readonly studies = remoteData(
         {
             await: () => [this.studyIds],
@@ -4244,18 +4259,6 @@ export class ResultsViewPageStore extends AnalysisStore
             throw new Error('Failed to get studies');
         }
         return getGenomeBuildFromStudies(this.studies.result);
-    }
-
-    @autobind
-    generateGenomeNexusHgvsgUrl(hgvsg: string) {
-        return getGenomeNexusHgvsgUrl(hgvsg, this.referenceGenomeBuild);
-    }
-
-    @computed get ensemblLink() {
-        return this.referenceGenomeBuild ===
-            getServerConfig().genomenexus_url_grch38
-            ? getServerConfig().ensembl_transcript_grch38_url
-            : getServerConfig().ensembl_transcript_url;
     }
 
     //this is only required to show study name and description on the results page
@@ -5114,7 +5117,16 @@ export class ResultsViewPageStore extends AnalysisStore
             ),
     });
 
-    readonly filteredAndAnnotatedMolecularData = remoteData<
+    /**
+     * All molecular data that is no
+     * - mutation
+     * - structural variant
+     * - copy number alteration
+     * - generic assay
+     *
+     * For example mRNA and Proteomic data
+     */
+    readonly filteredAndAnnotatedNonGenomicData = remoteData<
         AnnotatedNumericGeneMolecularData[]
     >({
         await: () => [
@@ -5122,6 +5134,43 @@ export class ResultsViewPageStore extends AnalysisStore
             this.filteredSampleKeyToSample,
         ],
         invoke: () => {
+            const data = this._filteredAndAnnotatedMolecularDataReport.result!.data.concat(
+                this._filteredAndAnnotatedMolecularDataReport.result!.vus
+            );
+            const filteredSampleKeyToSample = this.filteredSampleKeyToSample
+                .result!;
+            const cnaProfiles = this.selectedMolecularProfiles
+                .result!.filter(
+                    v =>
+                        v.molecularAlterationType ===
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                )
+                .map(p => p.molecularProfileId);
+            const filteredData = data.filter(
+                d =>
+                    d.uniqueSampleKey in filteredSampleKeyToSample &&
+                    !cnaProfiles.includes(d.molecularProfileId)
+            );
+            return Promise.resolve(filteredData);
+        },
+    });
+
+    readonly filteredAndAnnotatedCnaData = remoteData<
+        AnnotatedNumericGeneMolecularData[]
+    >({
+        await: () => [
+            this._filteredAndAnnotatedMolecularDataReport,
+            this.filteredSampleKeyToSample,
+            this.selectedMolecularProfiles,
+        ],
+        invoke: () => {
+            const cnaProfiles = this.selectedMolecularProfiles
+                .result!.filter(
+                    v =>
+                        v.molecularAlterationType ===
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                )
+                .map(p => p.molecularProfileId);
             let data = this._filteredAndAnnotatedMolecularDataReport.result!
                 .data;
             if (this.driverAnnotationSettings.includeVUS) {
@@ -5131,9 +5180,12 @@ export class ResultsViewPageStore extends AnalysisStore
             }
             const filteredSampleKeyToSample = this.filteredSampleKeyToSample
                 .result!;
-            return Promise.resolve(
-                data.filter(d => d.uniqueSampleKey in filteredSampleKeyToSample)
+            const filteredData = data.filter(
+                d =>
+                    d.uniqueSampleKey in filteredSampleKeyToSample &&
+                    cnaProfiles.includes(d.molecularProfileId)
             );
+            return Promise.resolve(filteredData);
         },
     });
 
@@ -5305,26 +5357,6 @@ export class ResultsViewPageStore extends AnalysisStore
         undefined
     );
 
-    //OncoKb
-    readonly uniqueSampleKeyToTumorType = remoteData<{
-        [uniqueSampleKey: string]: string;
-    }>({
-        await: () => [
-            this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData,
-            this.samplesWithoutCancerTypeClinicalData,
-        ],
-        invoke: () => {
-            return Promise.resolve(
-                generateUniqueSampleKeyToTumorTypeMap(
-                    this.clinicalDataForSamples,
-                    this.studiesForSamplesWithoutCancerTypeClinicalData,
-                    this.samplesWithoutCancerTypeClinicalData
-                )
-            );
-        },
-    });
-
     readonly structuralVariantOncoKbDataForOncoprint = remoteData<
         IOncoKbData | Error
     >(
@@ -5487,10 +5519,6 @@ export class ResultsViewPageStore extends AnalysisStore
                 this.genomeNexusClient
             )
         );
-    }
-
-    @cached @computed get pubMedCache() {
-        return new PubMedCache();
     }
 
     @cached @computed get discreteCNACache() {

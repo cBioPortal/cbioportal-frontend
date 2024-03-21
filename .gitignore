@@ -63,3 +63,5 @@ cert.pem
 end
 e2e-localdb-workspace/
 junit.xml
+.nvim.lua
+.luarc.json

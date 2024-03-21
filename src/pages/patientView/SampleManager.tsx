@@ -12,6 +12,7 @@ import naturalSort from 'javascript-natural-sort';
 import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import { computed, makeObservable } from 'mobx';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 
 // sort samples based on event, clinical data and id
 // 1. based on sample collection data (timeline event)
@@ -177,6 +178,7 @@ class SampleManager {
     clinicalDataLegacyCleanAndDerived: { [s: string]: any };
     sampleColors: { [s: string]: string };
     commonClinicalDataLegacyCleanAndDerived: { [s: string]: string };
+    private customSampleTypeToColor: any;
 
     constructor(
         public samples: Array<ClinicalDataBySampleId>,
@@ -194,6 +196,9 @@ class SampleManager {
         // clinical attributes that should be displayed at patient level, since
         // they are the same in all samples
         this.commonClinicalDataLegacyCleanAndDerived = {};
+        this.customSampleTypeToColor = ServerConfigHelpers.parseCustomSampleTypeColors(
+            getServerConfig().skin_patient_view_custom_sample_type_colors_json
+        ).customSampleTypeToColor;
 
         samples.forEach((sample, i) => {
             // add legacy clinical data
@@ -209,6 +214,16 @@ class SampleManager {
             // determine color based on DERIVED_NORMALIZED_CASE_TYPE
             let color = 'black';
             if (
+                this.customSampleTypeToColor[
+                    this.clinicalDataLegacyCleanAndDerived[sample.id]
+                        .DERIVED_NORMALIZED_CASE_TYPE
+                ]
+            ) {
+                color = this.customSampleTypeToColor[
+                    this.clinicalDataLegacyCleanAndDerived[sample.id]
+                        .DERIVED_NORMALIZED_CASE_TYPE
+                ];
+            } else if (
                 this.clinicalDataLegacyCleanAndDerived[sample.id][
                     'DERIVED_NORMALIZED_CASE_TYPE'
                 ] === 'Primary'
@@ -236,6 +251,31 @@ class SampleManager {
                     .DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
             ) {
                 color = styles.sampleColorXenograft;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'Plasma'
+            ) {
+                color = styles.sampleColorPlasma;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'ctDNA'
+            ) {
+                color = styles.sampleColorCtdna;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'Urine'
+            ) {
+                color = styles.sampleColorUrine;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'Exosome'
+            ) {
+                color = styles.sampleColorExosome;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'total RNA'
+            ) {
+                color = styles.sampleColorRna;
             }
 
             this.sampleColors[sample.id] = color;

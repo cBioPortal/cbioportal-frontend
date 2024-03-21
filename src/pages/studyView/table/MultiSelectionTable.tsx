@@ -31,11 +31,11 @@ import {
 import { GeneCell } from 'pages/studyView/table/GeneCell';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
-import MobxPromise from 'mobxpromise';
 import {
     stringListToIndexSet,
     stringListToSet,
     EllipsisTextTooltip,
+    MobxPromise,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
@@ -70,29 +70,32 @@ export type MultiSelectionTableColumn = {
     columnTooltip?: JSX.Element;
 };
 
-export type MultiSelectionTableProps = {
+export type BaseMultiSelectionTableProps = {
     tableType: FreqColumnTypeEnum;
-    promise: MobxPromise<MultiSelectionTableRow[]>;
     width: number;
     height: number;
     filters: string[][];
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
-    extraButtons?: IFixedHeaderTableProps<
-        MultiSelectionTableRow
-    >['extraButtons'];
     selectedRowsKeys: string[];
-    onGeneSelect: (hugoGeneSymbol: string) => void;
-    selectedGenes: string[];
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
-    defaultSortBy: MultiSelectionTableColumnKey;
-    columns: MultiSelectionTableColumn[];
     setOperationsButtonText: string;
+};
+
+export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
+    defaultSortBy: MultiSelectionTableColumnKey;
+    extraButtons?: IFixedHeaderTableProps<
+        MultiSelectionTableRow
+    >['extraButtons'];
+    selectedGenes: string[];
+    onGeneSelect: (hugoGeneSymbol: string) => void;
+    columns: MultiSelectionTableColumn[];
+    promise: MobxPromise<MultiSelectionTableRow[]>;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {

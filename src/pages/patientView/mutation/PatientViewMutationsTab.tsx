@@ -39,6 +39,10 @@ export interface IPatientViewMutationsTabProps {
     sampleIds: string[];
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
+    customDriverName?: string;
+    customDriverDescription?: string;
+    customDriverTiersName?: string;
+    customDriverTiersDescription?: string;
 }
 
 enum PlotTab {
@@ -335,6 +339,7 @@ export default class PatientViewMutationsTab extends React.Component<
                     enableHotspot={getServerConfig().show_hotspot}
                     enableMyCancerGenome={getServerConfig().mycancergenome_show}
                     enableCivic={getServerConfig().show_civic}
+                    enableRevue={getServerConfig().show_revue}
                     columnVisibility={this.props.mutationTableColumnVisibility}
                     columnVisibilityProps={{
                         onColumnToggled: this.props
@@ -362,6 +367,26 @@ export default class PatientViewMutationsTab extends React.Component<
                     }
                     namespaceColumns={this.dataStore.namespaceColumnConfig}
                     columns={this.columns}
+                    initialSortColumn={
+                        getServerConfig()
+                            .skin_patient_view_tables_default_sort_column
+                    }
+                    customDriverName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_label!
+                    }
+                    customDriverDescription={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_binary_menu_description!
+                    }
+                    customDriverTiersName={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_label!
+                    }
+                    customDriverTiersDescription={
+                        getServerConfig()
+                            .oncoprint_custom_driver_annotation_tiers_menu_description!
+                    }
                 />
             </div>
         ),

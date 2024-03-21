@@ -26,7 +26,7 @@ import {
     clinicalAttributeIsPROFILEDIN,
 } from 'shared/cache/ClinicalDataCache';
 import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
-import { ClinicalAttribute } from 'cbioportal-ts-api-client';
+import { ClinicalAttribute, GenericAssayMeta } from 'cbioportal-ts-api-client';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import SaveClinicalTracksButton from 'pages/resultsView/oncoprint/SaveClinicalTracksButton';
@@ -60,9 +60,21 @@ export const COUNT_PADDING_WIDTH = 17;
 export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     @observable tabId: Tab | string = Tab.CLINICAL;
 
+    private selectedGenericAssayProfileIdByType = observable.map<
+        string,
+        string
+    >({}, { deep: true });
+
+    private tracksDropdown: CustomDropdown;
+
     constructor(props: IAddTrackProps) {
         super(props);
         makeObservable(this);
+    }
+
+    @autobind
+    private tracksDropdownRef(dropdown: CustomDropdown) {
+        this.tracksDropdown = dropdown;
     }
 
     @action.bound
@@ -88,7 +100,10 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     // make sure data from generic assay endpoints fetched
     @computed get isGenericAssayDataComplete() {
         return (
-            this.props.store && this.props.store.genericAssayProfiles.isComplete
+            this.props.store &&
+            this.props.store.genericAssayProfiles.isComplete &&
+            this.props.store.genericAssayEntitiesGroupByMolecularProfileId
+                .isComplete
         );
     }
 
@@ -280,6 +295,9 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 clinicalAttributeIds.map(id => new ClinicalTrackConfig(id))
             )
         );
+        this.props.handlers.onChangeClinicalTracksPendingSubmission!(
+            this.getSelectedClinicalAttributes()
+        );
     }
 
     @action.bound
@@ -291,30 +309,64 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 'stableId'
             )
         );
+        this.props.handlers.onChangeClinicalTracksPendingSubmission!(
+            this.getSelectedClinicalAttributes()
+        );
+    }
+
+    @action.bound
+    private submit() {
+        this.props.handlers.onChangeSelectedClinicalTracks!(
+            this.props.state.clinicalTracksPendingSubmission!
+        );
+        this.tracksDropdown.hide();
     }
 
     @action.bound
     private toggleClinicalTrack(clinicalAttributeId: string) {
-        const toggled = toggleIncluded(
-            new ClinicalTrackConfig(clinicalAttributeId),
-            this.getSelectedClinicalAttributes(),
-            track => track.stableId === clinicalAttributeId
+        this.props.handlers.onChangeClinicalTracksPendingSubmission!(
+            toggleIncluded(
+                new ClinicalTrackConfig(clinicalAttributeId),
+                this.props.state.clinicalTracksPendingSubmission!,
+                track => track.stableId === clinicalAttributeId
+            )
         );
-        this.props.handlers.onChangeSelectedClinicalTracks!(toggled);
+    }
+
+    @computed get showSubmit() {
+        return (
+            _.xorBy(
+                this.getSelectedClinicalAttributes(),
+                this.props.state.clinicalTracksPendingSubmission!,
+                'stableId'
+            ).length !== 0
+        );
     }
 
     readonly addClinicalTracksMenu = MakeMobxView({
         await: () => [this.trackOptionsByType],
         render: () => (
-            <AddChartByType
-                options={this.trackOptionsByType.result!.clinical}
-                freqPromise={this.clinicalAttributeIdToAvailableFrequency}
-                onAddAll={this.addAll}
-                onClearAll={this.clear}
-                onToggleOption={this.toggleClinicalTrack}
-                optionsGivenInSortedOrder={true}
-                width={this.dropdownWidth}
-            />
+            <>
+                <AddChartByType
+                    options={this.trackOptionsByType.result!.clinical}
+                    freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                    onAddAll={this.addAll}
+                    onClearAll={this.clear}
+                    onToggleOption={this.toggleClinicalTrack}
+                    optionsGivenInSortedOrder={true}
+                    width={this.dropdownWidth}
+                />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="update-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Update tracks'}
+                    </button>
+                )}
+            </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
         showLastRenderWhenPending: true,
@@ -341,6 +393,16 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     frequencyHeaderTooltip="% samples in group"
                     width={this.dropdownWidth}
                 />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="update-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Update tracks'}
+                    </button>
+                )}
             </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
@@ -368,6 +430,16 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     frequencyHeaderTooltip="% samples in group"
                     width={this.dropdownWidth}
                 />
+                {this.showSubmit && (
+                    <button
+                        className="btn btn-primary btn-sm"
+                        data-test="update-tracks"
+                        style={{ marginTop: '10px', marginBottom: '0px' }}
+                        onClick={this.submit}
+                    >
+                        {'Update tracks'}
+                    </button>
+                )}
             </>
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
@@ -384,7 +456,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                         selected:
                             option.key in
                             _.keyBy(
-                                this.getSelectedClinicalAttributes().map(
+                                this.props.state.clinicalTracksPendingSubmission!.map(
                                     a => a.stableId
                                 )
                             ),
@@ -394,12 +466,23 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         },
     });
 
+    @action.bound
+    private onSelectGenericAssayProfileByType(
+        genericAssayType: string,
+        profileId: string
+    ) {
+        this.selectedGenericAssayProfileIdByType.set(
+            genericAssayType,
+            profileId
+        );
+    }
+
     @computed
     private get genericAssayTabs() {
         let tabs = [];
         if (this.isGenericAssayDataComplete && this.showGenericAssayTabs) {
-            const genericAssayEntitiesGroupedByGenericAssayType = this.props
-                .store.genericAssayEntitiesGroupedByGenericAssayType.result;
+            const genericAssayEntitiesGroupByMolecularProfileId = this.props
+                .store.genericAssayEntitiesGroupByMolecularProfileId.result;
             // create one tab for each generic assay type
             tabs = _.map(this.profilesByGenericAssayType, (profiles, type) => {
                 const profileOptions = _.map(profiles, profile => {
@@ -409,20 +492,40 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     };
                 });
 
+                let selectedProfileId = this.selectedGenericAssayProfileIdByType.get(
+                    type
+                );
+                // Add the first type if there is no selected Generic Assay Profile (on init)
+                selectedProfileId =
+                    typeof selectedProfileId === 'undefined'
+                        ? profileOptions[0].value
+                        : selectedProfileId;
+
+                let genericEntitiesOfSelectedProfile: GenericAssayMeta[] = [];
+                if (
+                    genericAssayEntitiesGroupByMolecularProfileId &&
+                    selectedProfileId
+                ) {
+                    genericEntitiesOfSelectedProfile =
+                        genericAssayEntitiesGroupByMolecularProfileId[
+                            selectedProfileId
+                        ];
+                }
+
                 // bring gene related options to the front
-                let entities = [];
+                let entities;
                 const filteredEntities = GENERIC_ASSAY_CONFIG
                     .genericAssayConfigByType[type]?.globalConfig
                     ?.geneRelatedGenericAssayType
                     ? filterGenericAssayEntitiesByGenes(
-                          genericAssayEntitiesGroupedByGenericAssayType[type],
+                          genericEntitiesOfSelectedProfile,
                           this.props.store.hugoGeneSymbols
                       )
                     : [];
                 entities = [
                     ...filteredEntities,
                     ..._.difference(
-                        genericAssayEntitiesGroupedByGenericAssayType[type],
+                        genericEntitiesOfSelectedProfile,
                         filteredEntities
                     ),
                 ];
@@ -461,8 +564,11 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                                       ]
                                     : []
                             }
-                            onSelectGenericAssayProfile={
-                                this.props.handlers.onSelectGenericAssayProfile
+                            onSelectGenericAssayProfile={profileId =>
+                                this.onSelectGenericAssayProfileByType(
+                                    type,
+                                    profileId
+                                )
                             }
                             onTrackSubmit={this.onGenericAssaySubmit}
                             allowEmptySubmission={true}
@@ -635,6 +741,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 id="addTracksDropdown"
                 className="oncoprintAddTracksDropdown"
                 styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}
+                ref={this.tracksDropdownRef}
             >
                 <div
                     style={{

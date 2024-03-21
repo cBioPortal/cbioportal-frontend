@@ -4,6 +4,8 @@ import {
     ClinicalData,
     DiscreteCopyNumberData,
     GenericAssayEnrichment,
+    GenericAssayBinaryEnrichment,
+    GenericAssayCategoricalEnrichment,
     MolecularProfile,
     Mutation,
     NumericGeneMolecularData,
@@ -28,11 +30,14 @@ import {
 import { Alteration } from '../../shared/lib/oql/oql-parser';
 import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
-import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    MobxPromise,
+    MobxPromise_await,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
-import MobxPromise, { MobxPromise_await } from 'mobxpromise';
 import { calculateQValues } from '../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { SpecialAttribute } from '../../shared/cache/ClinicalDataCache';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
@@ -742,6 +747,61 @@ export function makeGenericAssayEnrichmentDataPromise(params: {
                     data,
                     sortGenericAssayEnrichmentData
                 );
+            } else {
+                return [];
+            }
+        },
+    });
+}
+
+export function makeGenericAssayBinaryEnrichmentDataPromise(params: {
+    resultViewPageStore?: ResultsViewPageStore;
+    await: MobxPromise_await;
+    getSelectedProfileMap: () => { [studyId: string]: MolecularProfile };
+    fetchData: () => Promise<GenericAssayBinaryEnrichment[]>;
+}): MobxPromise<GenericAssayBinaryEnrichment[]> {
+    return remoteData({
+        await: () => {
+            const ret = params.await();
+            if (params.resultViewPageStore) {
+                ret.push(params.resultViewPageStore.selectedMolecularProfiles);
+            }
+            return ret;
+        },
+        invoke: async () => {
+            const profileMap = params.getSelectedProfileMap();
+            if (profileMap) {
+                let data = await params.fetchData();
+                return calculateQValuesAndSortEnrichmentData(
+                    data,
+                    sortGenericAssayEnrichmentData
+                );
+            } else {
+                return [];
+            }
+        },
+    });
+}
+
+export function makeGenericAssayCategoricalEnrichmentDataPromise(params: {
+    resultViewPageStore?: ResultsViewPageStore;
+    await: MobxPromise_await;
+    getSelectedProfileMap: () => { [studyId: string]: MolecularProfile };
+    fetchData: () => Promise<GenericAssayCategoricalEnrichment[]>;
+}): MobxPromise<GenericAssayCategoricalEnrichment[]> {
+    return remoteData({
+        await: () => {
+            const ret = params.await();
+            if (params.resultViewPageStore) {
+                ret.push(params.resultViewPageStore.selectedMolecularProfiles);
+            }
+            return ret;
+        },
+        invoke: async () => {
+            const profileMap = params.getSelectedProfileMap();
+            if (profileMap) {
+                let data = await params.fetchData();
+                return data;
             } else {
                 return [];
             }

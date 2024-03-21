@@ -937,7 +937,7 @@ type PQValueLabelProps = {
     qValue: number | null;
 };
 
-const PQValueLabel: React.FunctionComponent<PQValueLabelProps> = props => {
+export const PQValueLabel: React.FunctionComponent<PQValueLabelProps> = props => {
     const pFormatted = formatLabel('p', props.pValue);
     const qFormatted = formatLabel('q', props.qValue);
     return (

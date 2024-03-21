@@ -7,7 +7,7 @@ import {
     numberOfLeadingDecimalZeros,
 } from 'cbioportal-utils';
 import { AxisScale } from 'react-mutation-mapper';
-import { countUniqueMutations } from 'shared/lib/MutationUtils';
+import _ from 'lodash';
 
 interface ILollipopTooltipCountInfoProps {
     count: number;
@@ -24,12 +24,12 @@ export const LollipopTooltipCountInfo: React.FC<ILollipopTooltipCountInfoProps> 
 }: ILollipopTooltipCountInfoProps) => {
     const decimalZeros = numberOfLeadingDecimalZeros(count);
     const fractionDigits = decimalZeros < 0 ? 1 : decimalZeros + 2;
+    const mutatedPatientCount = _.uniq(mutations.map(m => m.patientId)).length;
 
     return axisMode === AxisScale.PERCENT ? (
         <strong>
-            {formatPercentValue(count, fractionDigits)}% (
-            {countUniqueMutations(mutations)} mutated of {patientCount} profiled
-            patients)
+            {formatPercentValue(count, fractionDigits)}% ({mutatedPatientCount}{' '}
+            mutated of {patientCount} profiled patients)
         </strong>
     ) : (
         <strong>

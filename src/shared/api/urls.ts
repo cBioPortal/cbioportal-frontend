@@ -86,7 +86,7 @@ export function buildCBioLink(path: string) {
 
 export function getCbioPortalApiUrl() {
     const root = trimTrailingSlash(getLoadConfig().apiRoot!);
-    return `${root}/api`;
+    return `${root}`;
 }
 
 export function getFrontendAssetUrl(path: string) {
@@ -214,18 +214,21 @@ export function getOncoKbApiUrl() {
     );
 }
 
+export function getcBioPortalLogoUrl() {
+    return getLogoUrl(getServerConfig().skin_left_logo);
+}
+
 export function getInstituteLogoUrl() {
-    if (getServerConfig().skin_right_logo) {
-        if (/^http/.test(getServerConfig().skin_right_logo || '')) {
-            return getServerConfig().skin_right_logo!;
-        } else {
-            return buildCBioPortalPageUrl(
-                `images/${getServerConfig().skin_right_logo}`
-            );
-        }
-    } else {
-        return undefined;
+    return getLogoUrl(getServerConfig().skin_right_logo);
+}
+
+function getLogoUrl(logo_path: string | null) {
+    if (logo_path) {
+        return /^http/.test(logo_path || '')
+            ? logo_path!
+            : buildCBioPortalPageUrl(`images/${logo_path}`);
     }
+    return undefined;
 }
 
 export function getGenomeNexusApiUrl() {
@@ -262,7 +265,7 @@ export function getEncodedRedirectUrl(targetUrl: string) {
 export function getConfigurationServiceApiUrl() {
     return (
         getLoadConfig().configurationServiceUrl ||
-        buildCBioPortalAPIUrl('config_service.jsp')
+        buildCBioPortalAPIUrl('config_service')
     );
 }
 
@@ -283,7 +286,7 @@ export function getDigitalSlideArchiveIFrameUrl(patientId: string) {
 }
 
 export function getDarwinUrl(sampleIds: string[], caseId: string) {
-    return buildCBioPortalAPIUrl('checkDarwinAccess.do', {
+    return buildCBioPortalAPIUrl('proxy/checkDarwinAccess', {
         sample_id: sampleIds.join(','),
         case_id: caseId,
     });

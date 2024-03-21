@@ -22,6 +22,7 @@ import { CancerStudy, Mutation } from 'cbioportal-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import AnnotationHeader from './annotation/AnnotationHeader';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import _ from 'lodash';
 
 export interface IAnnotationColumnProps extends AnnotationProps {
     pubMedCache?: OncokbPubMedCache;
@@ -71,7 +72,8 @@ export default class AnnotationColumnFormatter {
         indexedVariantAnnotations?: RemoteData<
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >,
-        resolveTumorType?: (mutation: Mutation) => string
+        resolveTumorType?: (mutation: Mutation) => string,
+        shouldShowRevue?: boolean
     ) {
         const annotationData: IAnnotation = getAnnotationData(
             mutations ? mutations[0] : undefined,
@@ -86,29 +88,38 @@ export default class AnnotationColumnFormatter {
             resolveTumorType
         );
 
-        return [
+        const annotationDownloadContent = [
             `OncoKB: ${oncoKbAnnotationDownload(
                 annotationData.oncoKbIndicator
             )}`,
-            `reVUE: ${
-                annotationData.vue
-                    ? `${annotationData.vue.comment},PubmedId:${annotationData.vue.pubmedIds[0]},PredictedEffect:${annotationData.vue.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue.variantClassification},RevisedProteinEffect:${annotationData.vue.revisedProteinEffect}`
-                    : 'no'
-            }`,
+        ];
+        // only add reVUE to download when it's enabled and there are reVUE mutations in the query
+        if (shouldShowRevue) {
+            annotationDownloadContent.push(
+                `reVUE: ${
+                    annotationData.vue
+                        ? `${annotationData.vue.comment},PubmedId:${annotationData.vue.pubmedId},PredictedEffect:${annotationData.vue.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue.revisedVariantClassification},RevisedProteinEffect:${annotationData.vue.revisedProteinEffect}`
+                        : 'no'
+                }`
+            );
+        }
+        annotationDownloadContent.push(
             `CIViC: ${civicDownload(annotationData.civicEntry)}`,
             `MyCancerGenome: ${myCancerGenomeDownload(
                 annotationData.myCancerGenomeLinks
             )}`,
             `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,
-            `3DHotspot: ${annotationData.is3dHotspot ? 'yes' : 'no'}`,
-        ].join(';');
+            `3DHotspot: ${annotationData.is3dHotspot ? 'yes' : 'no'}`
+        );
+        return annotationDownloadContent.join(';');
     }
 
     public static headerRender(
         name: string,
         width: number,
         mergeOncoKbIcons?: boolean,
-        onOncoKbIconToggle?: (mergeIcons: boolean) => void
+        onOncoKbIconToggle?: (mergeIcons: boolean) => void,
+        enableRevue?: boolean
     ) {
         return (
             <AnnotationHeader
@@ -116,17 +127,20 @@ export default class AnnotationColumnFormatter {
                 width={width}
                 mergeOncoKbIcons={mergeOncoKbIcons}
                 onOncoKbIconToggle={onOncoKbIconToggle}
+                showRevueIcon={enableRevue}
             />
         );
     }
 
     public static renderFunction(
         mutations: Mutation[],
-        columnProps: IAnnotationColumnProps
+        columnProps: IAnnotationColumnProps,
+        hasMultipleCancerTypes?: boolean
     ) {
         return (
             <Annotation
                 mutation={mutations ? mutations[0] : undefined}
+                hasMultipleCancerTypes={hasMultipleCancerTypes}
                 {...columnProps}
             />
         );
