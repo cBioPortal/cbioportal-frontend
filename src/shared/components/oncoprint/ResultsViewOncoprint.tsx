@@ -57,7 +57,7 @@ import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { OncoprintJS, RGBAColor, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import tabularDownload from './tabularDownload';
+import tabularDownload, { getTabularDownloadData } from './tabularDownload';
 import classNames from 'classnames';
 import {
     clinicalAttributeIsLocallyComputed,
@@ -1098,80 +1098,38 @@ export default class ResultsViewOncoprint extends React.Component<
                     case 'jupyterNoteBook':
                         onMobxPromise(
                             [
-                                this.props.store.samples,
-                                this.props.store.patients,
-                                this.geneticTracks,
-                                this.clinicalTracks,
-                                this.heatmapTracks,
-                                this.genesetHeatmapTracks,
-                                this.props.store
-                                    .clinicalAttributeIdToClinicalAttribute,
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
                             ],
                             (
-                                samples: Sample[],
-                                patients: Patient[],
-                                geneticTracks: GeneticTrackSpec[],
-                                clinicalTracks: ClinicalTrackSpec[],
-                                heatmapTracks: IHeatmapTrackSpec[],
-                                genesetHeatmapTracks: IGenesetHeatmapTrackSpec[],
-                                attributeIdToAttribute: {
-                                    [attributeId: string]: ClinicalAttribute;
-                                }
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any
                             ) => {
-                                const caseIds =
+                                const fileContent = getTabularDownloadData(
+                                    this.geneticTracks.result,
+                                    this.clinicalTracks.result,
+                                    this.heatmapTracks.result,
+                                    this.genericAssayHeatmapTracks.result,
+                                    this.genesetHeatmapTracks.result,
+                                    this.oncoprintJs.getIdOrder(),
                                     this.oncoprintAnalysisCaseType ===
-                                    OncoprintAnalysisCaseType.SAMPLE
-                                        ? samples.map(s => s.sampleId)
-                                        : patients.map(p => p.patientId);
-
-                                let geneticInput = '';
-                                if (geneticTracks.length > 0) {
-                                    geneticInput = getOncoprinterGeneticInput(
-                                        geneticTracks,
-                                        caseIds,
-                                        this.oncoprintAnalysisCaseType
-                                    );
-                                }
-
-                                let clinicalInput = '';
-                                if (clinicalTracks.length > 0) {
-                                    const oncoprintClinicalData = _.flatMap(
-                                        clinicalTracks,
-                                        (track: ClinicalTrackSpec) => track.data
-                                    );
-                                    clinicalInput = getOncoprinterClinicalInput(
-                                        oncoprintClinicalData,
-                                        caseIds,
-                                        clinicalTracks.map(
-                                            track => track.attributeId
-                                        ),
-                                        attributeIdToAttribute,
-                                        this.oncoprintAnalysisCaseType
-                                    );
-                                }
-
-                                let heatmapInput = '';
-                                if (heatmapTracks.length > 0) {
-                                    heatmapInput = getOncoprinterHeatmapInput(
-                                        heatmapTracks,
-                                        caseIds,
-                                        this.oncoprintAnalysisCaseType
-                                    );
-                                }
-
-                                if (genesetHeatmapTracks.length > 0) {
-                                    alert(
-                                        'Oncoprinter does not support geneset heatmaps - all other tracks will still be exported.'
-                                    );
-                                }
+                                        OncoprintAnalysisCaseType.SAMPLE
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
+                                    this.oncoprintAnalysisCaseType,
+                                    this.distinguishDrivers
+                                );
 
                                 const jupyterNotebookTool = window.open(
                                     buildCBioPortalPageUrl('/jupyternotebook')
                                 ) as any;
                                 jupyterNotebookTool.clientPostedData = {
-                                    genetic: geneticInput,
-                                    clinical: clinicalInput,
-                                    heatmap: heatmapInput,
+                                    data: fileContent,
                                 };
                             }
                         );

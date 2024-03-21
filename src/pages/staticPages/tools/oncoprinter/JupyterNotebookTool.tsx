@@ -14,12 +14,7 @@ export default class JupyterNotebookTool extends React.Component<
     {}
 > {
     private store = new OncoprinterStore();
-
-    @observable geneticDataInput = '';
-    @observable clinicalDataInput = '';
-    @observable heatmapDataInput = '';
-    @observable geneOrderInput = '';
-    @observable sampleOrderInput = '';
+    private jupyterIframe: Window | null = null;
 
     constructor(props: IOncoprinterToolProps) {
         super(props);
@@ -28,28 +23,44 @@ export default class JupyterNotebookTool extends React.Component<
     }
 
     componentDidMount() {
-        const postData = getBrowserWindow().clientPostedData;
-        if (postData) {
-            this.geneticDataInput = postData.genetic;
-            this.clinicalDataInput = postData.clinical;
-            this.heatmapDataInput = postData.heatmap;
-            getBrowserWindow().clientPostedData = null;
-        }
+        const iframe = document.getElementById(
+            'jupyterIframe'
+        ) as HTMLIFrameElement;
+        this.jupyterIframe = iframe.contentWindow;
+        window.addEventListener('message', this.handleMessageFromIframe);
     }
+
+    componentWillUnmount() {
+        window.removeEventListener('message', this.handleMessageFromIframe);
+    }
+
+    sendFileToJupyter = () => {
+        const data = getBrowserWindow().clientPostedData;
+        if (data && data.data && this.jupyterIframe) {
+            this.jupyterIframe.postMessage(
+                {
+                    type: 'from-host-to-iframe-for-file',
+                    filePath: 'output.csv',
+                    fileContent: data.data,
+                },
+                '*'
+            );
+        }
+    };
+
+    handleMessageFromIframe = (event: MessageEvent) => {
+        if (event.data.type === 'from-iframe-to-host-for-file') {
+            const messageElement = document.getElementById('message');
+            if (messageElement) {
+                messageElement.innerText = event.data.message;
+            }
+        }
+    };
 
     render() {
         const code0 = `import pandas as pd\n`;
         const code1 = `pd.read_csv('output.csv')\n`;
-
         const final_code = [code0, code1].join('\n');
-
-        function toggle() {
-            // Access the iframe using window.frames
-            const jupyterIframe = window.frames[0];
-            if (jupyterIframe) {
-                jupyterIframe.postMessage({ type: 'from-host-to-iframe' }, '*');
-            }
-        }
 
         return (
             <PageLayout className={'whiteBackground staticPage'}>
@@ -62,15 +73,14 @@ export default class JupyterNotebookTool extends React.Component<
                     <h1 style={{ display: 'inline', marginRight: 10 }}>
                         Oncoprinter
                     </h1>{' '}
-                    Jupyter Notebook for visualization and advance works.
-                    <button onClick={toggle}>Change Theme</button>
-                    <br />
-                    <br />
+                    <button onClick={this.sendFileToJupyter}>
+                        Send File to JupyterLite
+                    </button>
+                    <div id="message"></div>
                     <div style={{ marginTop: 10 }}>
                         <iframe
-                            src={`https://master--regal-malabi-ea7e9f.netlify.app/lite/repl/index.html?toolbar=1&kernel=python&code=${encodeURIComponent(
-                                final_code
-                            )}`}
+                            id="jupyterIframe"
+                            src={`https://master--regal-malabi-ea7e9f.netlify.app/lite/lab/index.html`}
                             width="100%"
                             height="900px"
                         ></iframe>
