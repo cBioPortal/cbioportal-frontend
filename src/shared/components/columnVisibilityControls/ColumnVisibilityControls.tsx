@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { Dropdown, Checkbox } from 'react-bootstrap';
 import { DropdownToggleProps } from 'react-bootstrap/lib/DropdownToggle';
 import { DropdownMenuProps } from 'react-bootstrap/lib/DropdownMenu';
+import { action, computed } from 'mobx';
 
 export interface IColumnVisibilityDef {
     id: string;
@@ -40,6 +41,8 @@ export class ColumnVisibilityControls extends React.Component<
     constructor(props: IColumnVisibilityControlsProps) {
         super(props);
         this.handleSelect = this.handleSelect.bind(this);
+        this.selectAll = this.selectAll.bind(this);
+        this.deselectAll = this.deselectAll.bind(this);
     }
 
     public render() {
@@ -48,6 +51,59 @@ export class ColumnVisibilityControls extends React.Component<
                 {this.props.customDropdown
                     ? this.props.customDropdown(this.props)
                     : this.defaultDropdown}
+            </div>
+        );
+    }
+
+    private toggleAllColumns(select: boolean) {
+        if (!this.props.columnVisibility) return;
+
+        const toggledColumns = new Set<string>();
+        this.props.columnVisibility.forEach(column => {
+            if (column.visible !== select) {
+                toggledColumns.add(column.id);
+            }
+        });
+
+        toggledColumns.forEach(columnId => {
+            if (this.props.onColumnToggled && columnId) {
+                this.props.onColumnToggled(
+                    columnId,
+                    this.props.columnVisibility
+                );
+            }
+        });
+    }
+
+    private selectAll() {
+        this.toggleAllColumns(true);
+    }
+
+    private deselectAll() {
+        this.toggleAllColumns(false);
+    }
+
+    get selectDeselectAllButtons() {
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: '3px',
+                }}
+            >
+                <button
+                    className="btn btn-default btn-xs"
+                    onClick={this.selectAll}
+                >
+                    {`Select all`}
+                </button>
+                <button
+                    className="btn btn-default btn-xs"
+                    onClick={this.deselectAll}
+                >
+                    {'Deselect all'}
+                </button>
             </div>
         );
     }
@@ -70,6 +126,9 @@ export class ColumnVisibilityControls extends React.Component<
                         whiteSpace: 'nowrap',
                     }}
                 >
+                    <div style={{ marginTop: 10, marginBottom: 10 }}>
+                        {this.selectDeselectAllButtons}
+                    </div>
                     <ul className="list-unstyled">
                         {this.props.columnVisibility &&
                             _.map(
