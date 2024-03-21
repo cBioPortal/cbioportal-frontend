@@ -34,6 +34,8 @@ import ErrorMessage from 'shared/components/ErrorMessage';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import { MutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on an mutation to zoom in on the gene in the IGV browser above';
@@ -296,6 +298,26 @@ export default class MutationTableWrapper extends React.Component<
                                 columns={this.props.columns}
                                 alleleFreqHeaderRender={
                                     this.props.alleleFreqHeaderRender
+                                }
+                                initialSortColumn={
+                                    getServerConfig()
+                                        .skin_patient_view_tables_default_sort_column
+                                }
+                                customDriverName={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_binary_menu_label!
+                                }
+                                customDriverDescription={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_binary_menu_description!
+                                }
+                                customDriverTiersName={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_tiers_menu_label!
+                                }
+                                customDriverTiersDescription={
+                                    getServerConfig()
+                                        .oncoprint_custom_driver_annotation_tiers_menu_description!
                                 }
                             />
                         </FeatureInstruction>

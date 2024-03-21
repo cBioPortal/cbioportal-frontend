@@ -28,10 +28,15 @@ import {
     getPercentageOfMutationalCount,
     prepareMutationalSignatureDataForTable,
 } from './MutationalSignatureBarChartUtils';
-import { DefaultTooltip, DownloadControls } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+    DownloadControls,
+} from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
 import { MutationalSignatureTableDataStore } from 'pages/patientView/mutationalSignatures/MutationalSignaturesDataStore';
 import WindowStore from 'shared/components/window/WindowStore';
+import { getServerConfig } from 'config/config';
 
 export interface IMutationalSignaturesContainerProps {
     data: { [version: string]: IMutationalSignature[] };
@@ -509,6 +514,11 @@ export default class MutationalSignaturesContainer extends React.Component<
                                         buttons={['SVG', 'PNG', 'PDF']}
                                         type="button"
                                         dontFade
+                                        showDownload={
+                                            getServerConfig()
+                                                .skin_hide_download_controls ===
+                                            DownloadControlOption.SHOW_ALL
+                                        }
                                     />
                                 </div>
                                 <div style={{ overflow: 'auto' }}>

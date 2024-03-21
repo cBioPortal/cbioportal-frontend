@@ -254,6 +254,7 @@ describe('hide download controls feature', function() {
                     it('global check for icon and occurrence of "Download" as a word', () => {
                         $('.tabAnchor_clinical').click();
                         $('[data-test=ClinicalTabPlotDiv]').waitForExist();
+                        $('[data-test=LazyMobXTable]').waitForExist();
                         globalCheck();
                     });
                 });
@@ -609,6 +610,7 @@ describe('hide download controls feature', function() {
             describe('clinical tab', () => {
                 it('global check for icon and occurrence of "Download" as a word', () => {
                     $('.tabAnchor_clinical').click();
+                    $('[data-test=LazyMobXTable]').waitForExist();
                     $('[data-test=ClinicalTabPlotDiv]').waitForExist();
                     globalCheck();
                 });

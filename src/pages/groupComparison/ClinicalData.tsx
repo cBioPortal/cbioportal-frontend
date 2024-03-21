@@ -13,7 +13,11 @@ import {
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import ClinicalDataEnrichmentsTable from './ClinicalDataEnrichmentsTable';
 import _ from 'lodash';
-import { DownloadControls, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    DownloadControls,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import client from 'shared/api/cbioportalClientInstance';
 import {
@@ -60,6 +64,7 @@ import CategoryPlot, {
     CategoryPlotType,
 } from 'pages/groupComparison/CategoryPlot';
 import { OncoprintJS } from 'oncoprintjs';
+import { getServerConfig } from 'config/config';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -975,6 +980,10 @@ export default class ClinicalData extends React.Component<
                     dontFade={true}
                     type="button"
                     style={{ position: 'absolute', right: 0, top: 0 }}
+                    showDownload={
+                        getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL
+                    }
                 />
             </div>
         );

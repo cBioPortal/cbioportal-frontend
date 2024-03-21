@@ -44,6 +44,8 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.ASCN_METHOD,
             MutationTableColumnType.ASCN_COPY_NUM,
             MutationTableColumnType.ANNOTATION,
+            MutationTableColumnType.CUSTOM_DRIVER,
+            MutationTableColumnType.CUSTOM_DRIVER_TIER,
             MutationTableColumnType.HGVSG,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.REF_READS_N,
@@ -221,7 +223,8 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.CANCER_TYPE_DETAILED].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
-
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER].order = 33;
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER].order = 34;
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 45;
@@ -256,6 +259,18 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.SIGNAL].order = 290;
 
         // exclude
+        this._columns[
+            MutationTableColumnType.CUSTOM_DRIVER
+        ].shouldExclude = () => {
+            return !this.props.enableCustomDriver;
+        };
+
+        this._columns[
+            MutationTableColumnType.CUSTOM_DRIVER_TIER
+        ].shouldExclude = () => {
+            return !this.props.enableCustomDriver;
+        };
+
         this._columns[
             MutationTableColumnType.CANCER_TYPE_DETAILED
         ].shouldExclude = () => {

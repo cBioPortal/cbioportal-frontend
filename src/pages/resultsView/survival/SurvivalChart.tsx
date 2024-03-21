@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ReactNode } from 'react';
 import { observer } from 'mobx-react';
 import { PatientSurvival } from '../../../shared/model/PatientSurvival';
 import { action, computed, observable, makeObservable } from 'mobx';
@@ -31,6 +32,7 @@ import {
     SurvivalPlotFilters,
     SurvivalSummary,
     ScatterData,
+    calculateLabelWidth,
 } from './SurvivalUtil';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
@@ -38,6 +40,7 @@ import {
     DefaultTooltip,
     DownloadControlOption,
     DownloadControls,
+    setArrowLeft,
 } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { AnalysisGroup, DataBin } from '../../studyView/StudyViewUtils';
@@ -58,12 +61,12 @@ import {
 } from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
 import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
-import * as victory from 'victory';
 import { scaleLinear } from 'd3-scale';
 import ReactSelect from 'react-select1';
 import { categoryPlotTypeOptions } from 'pages/groupComparison/ClinicalData';
 import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import $ from 'jquery';
+import SettingsMenu from 'shared/alterationFiltering/SettingsMenu';
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
     CHART = 'chart',
@@ -81,6 +84,12 @@ export type HazardRatioInformation = {
 export type HazardInformationLegend = {
     name: string;
     hazardInformation: string;
+};
+
+export type RiskPerGroup = {
+    groupName: string;
+    aliveSamples: number;
+    timePoint: number;
 };
 
 export interface LandmarkLineValues {
@@ -298,6 +307,7 @@ export default class SurvivalChartExtended
             this.props.analysisGroups.map((item: any) => item.name.length)
         );
     }
+
     @computed
     get downSamplingDenominators() {
         return {
@@ -327,6 +337,7 @@ export default class SurvivalChartExtended
             this.props.sortedGroupedSurvivals,
             (survivals, group) => {
                 const survivalSummaries = this.survivalSummaries[group];
+
                 const groupName = this.analysisGroupsMap[group].name;
                 return {
                     numOfCases: survivals.length,
@@ -423,6 +434,7 @@ export default class SurvivalChartExtended
             return null;
         }
     }
+
     @computed get getOrderGroups() {
         const selectedGroup = this.analysisGroupsWithData.filter(
             item => item.legendText == this._controlGroup!.value
@@ -499,6 +511,7 @@ export default class SurvivalChartExtended
             return null;
         }
     }
+
     @action hazardRatioAtLandmark(threshold: number[]) {
         const landmarkGroups: any = [];
         const survivalData = this.props.sortedGroupedSurvivals;
@@ -738,6 +751,7 @@ export default class SurvivalChartExtended
 
         return lines;
     }
+
     @computed get groupLandMarkLine() {
         const landmarkLineLegend = this.analysisGroupsWithData.map(
             (item: any) => item.name
@@ -791,15 +805,25 @@ export default class SurvivalChartExtended
     }
 
     @computed get landmarkInformation() {
-        const initialGroupSize = Object.keys(
-            this.props.sortedGroupedSurvivals
-        ).map(item => this.props.sortedGroupedSurvivals[item].length);
+        // Calculate group size at time point 0
+        const initialGroupSampleSize = this.calculateGroupSize([0]);
+        // get the order of the groups
+        const orderOfLabels = this.analysisGroupsWithData.map(
+            item => item.value
+        );
+
+        const groupSizeAtTimePoint = this.calculateGroupSize(
+            this.landmarkPoint.map(item => item.xStart)
+        ).sort(
+            (a, b) =>
+                orderOfLabels.indexOf(a.groupName) -
+                orderOfLabels.indexOf(b.groupName)
+        );
         const landmarkPointInformation = _.groupBy(
-            this.calculateGroupSize(
-                this.landmarkPoint.map(item => item.xStart)
-            ),
+            groupSizeAtTimePoint,
             'timePoint'
         );
+
         const point = Object.keys(landmarkPointInformation).map(key =>
             landmarkPointInformation[key].map((value, i) => {
                 if (
@@ -813,7 +837,12 @@ export default class SurvivalChartExtended
                                 (
                                     (landmarkPointInformation[key][i]
                                         .aliveSamples /
-                                        initialGroupSize[i]) *
+                                        initialGroupSampleSize.filter(
+                                            x =>
+                                                x.groupName ==
+                                                landmarkPointInformation[key][i]
+                                                    .groupName
+                                        )[0].aliveSamples) *
                                     100
                                 ).toFixed(1) + '%'
                             }
@@ -847,46 +876,132 @@ export default class SurvivalChartExtended
         );
         return point;
     }
-    @computed get numberOfSamplesAtRisk() {
-        var timePoints = scaleLinear()
+
+    @computed get timePointsForNumberAtRiskLabels() {
+        return scaleLinear()
             .domain([0, this.sliderValue])
             .ticks(18);
+    }
 
+    @computed get numberOfSamplesAtRisk(): ReactNode[] {
+        const orderOfLabels = this.analysisGroupsWithData.map(
+            item => item.value
+        );
+        const timePoints: number[] = scaleLinear()
+            .domain([0, this.sliderValue])
+            .ticks(18);
         const numberAtRisk = _.groupBy(
-            this.calculateGroupSize(timePoints.map(item => item)),
+            this.calculateGroupSize(timePoints).sort(
+                (a, b) =>
+                    orderOfLabels.indexOf(a.groupName) -
+                    orderOfLabels.indexOf(b.groupName)
+            ),
             'timePoint'
         );
+        const labelComponents: ReactNode[] = [];
+        let someTimePointsOverlap: boolean = false;
 
-        const valueAtAxis = Object.keys(numberAtRisk).map(item =>
-            numberAtRisk[item].map((grp, i) => {
-                return (
-                    <VictoryLabel
-                        text={numberAtRisk[item][i].aliveSamples}
-                        x={
-                            numberAtRisk[item][i].timePoint * this.scaleFactor +
-                            this.styleOpts.padding.left
-                        }
-                        y={
-                            this.styleOptsDefaultProps.height -
-                            this.styleOpts.padding.bottom +
-                            80 +
-                            i * 20
-                        }
-                        style={{
-                            fontFamily:
-                                CBIOPORTAL_VICTORY_THEME.legend.style.labels
-                                    .fontFamily,
-                        }}
-                        textAnchor="middle"
-                    />
-                );
-            })
-        );
+        // Hide overlapping labels of necessary -> start with time point at index 0 and check
+        // if time point (index 0) and the second time point (index 1) overlap.
+        // If yes -> remove all labels at index 1,3,5, and so on
+        const checkOverlap = (
+            labelX: number,
+            labelWidth: number,
+            existingLabel: ReactNode
+        ): boolean => {
+            const existingLabelX: number = (existingLabel as any).props.x; // Assuming VictoryLabel has an x attribute
+            const existingLabelWidth: number = calculateLabelWidth(
+                (existingLabel as any).props.text,
+                CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontFamily,
+                CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontSize
+            );
 
-        return valueAtAxis;
+            return !(
+                labelX + labelWidth < existingLabelX ||
+                labelX > existingLabelX + existingLabelWidth
+            );
+        };
+
+        const addLabelsForTimePoint = (
+            timePoint: number,
+            index: number
+        ): void => {
+            const rowLabels: ReactNode[] = numberAtRisk[timePoint].map(
+                (grp, i) => {
+                    const labelX: number =
+                        grp.timePoint * this.scaleFactor +
+                        this.styleOpts.padding.left;
+
+                    const labelY: number =
+                        this.styleOptsDefaultProps.height -
+                        this.styleOpts.padding.bottom +
+                        80 +
+                        i * 20;
+
+                    const labelWidth: number = calculateLabelWidth(
+                        numberAtRisk[timePoint][i].aliveSamples,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontFamily,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontSize
+                    );
+
+                    const labelComponent: ReactNode = (
+                        <VictoryLabel
+                            key={`${timePoint}-${i}`}
+                            text={numberAtRisk[timePoint][i].aliveSamples}
+                            x={labelX}
+                            y={labelY}
+                            style={{
+                                fontFamily:
+                                    CBIOPORTAL_VICTORY_THEME.legend.style.labels
+                                        .fontFamily,
+                            }}
+                            textAnchor="middle"
+                        />
+                    );
+
+                    labelComponents.push(labelComponent);
+                    return labelComponent;
+                }
+            );
+        };
+        timePoints.forEach((timePoint, index) => {
+            const timePointOverlap: boolean = numberAtRisk[timePoint].some(
+                (grp, i) => {
+                    const labelX: number =
+                        grp.timePoint * this.scaleFactor +
+                        this.styleOpts.padding.left;
+
+                    const labelWidth: number = calculateLabelWidth(
+                        numberAtRisk[timePoint][i].aliveSamples,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontFamily,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontSize
+                    );
+
+                    return labelComponents.some(existingLabel =>
+                        checkOverlap(labelX, labelWidth, existingLabel)
+                    );
+                }
+            );
+
+            if (!timePointOverlap) {
+                if (
+                    !someTimePointsOverlap ||
+                    (index % 2 === 0 && index + 1 !== timePoints.length - 1) ||
+                    index === timePoints.length - 1
+                ) {
+                    addLabelsForTimePoint(timePoint, index);
+                }
+            } else {
+                someTimePointsOverlap = true;
+            }
+        });
+
+        return labelComponents;
     }
+
     @observable _latestLandMarkPoint: number = 0;
-    @action updatelatestLandMarkPoint(value: number) {
+
+    @action updateLatestLandMarkPoint(value: number) {
         this._latestLandMarkPoint = value;
     }
 
@@ -985,6 +1100,7 @@ export default class SurvivalChartExtended
                 this.styleOpts.padding.right) /
             value;
     }
+
     @observable _inputFieldVisible: boolean = false;
     @observable _calculateHazardRatio: boolean = false;
     @observable landmarkPoint: LandmarkLineValues[];
@@ -1001,12 +1117,15 @@ export default class SurvivalChartExtended
     @observable hazardRatio: HazardRatioInformation[];
     @observable labelOffset: number =
         65 + (Object.keys(this.props.sortedGroupedSurvivals).length + 1) * 20;
+
     @action openHooverBox() {
         return (this.hooverBoxVisible = true);
     }
+
     @action closeHooverBox() {
         return (this.hooverBoxVisible = false);
     }
+
     @action landmarkLinesChecked() {
         if (!this._inputFieldVisible) {
             return (this._inputFieldVisible = true);
@@ -1053,11 +1172,12 @@ export default class SurvivalChartExtended
                     yEnd: 103,
                 } as LandmarkLineValues)
         );
-        this.updatelatestLandMarkPoint(landmarkArray[0].xStart);
+        this.updateLatestLandMarkPoint(landmarkArray[0].xStart);
         this.updateVisibilityLandmarkLines();
         this.calculateGroupSize(landmarkArray.map(obj => obj.xStart));
         return (this.landmarkPoint = landmarkArray);
     }
+
     @action calculateHazardRatio() {
         if (!this.showHazardRatio) {
             this.showNormalLegend = false;
@@ -1095,6 +1215,7 @@ export default class SurvivalChartExtended
     @action updateVisibilityLandmarkLines() {
         return (this.showLandmarkLine = true);
     }
+
     @action.bound
     onSliderTextChange(text: string) {
         this.sliderValue = Number.parseFloat(text);
@@ -1104,13 +1225,16 @@ export default class SurvivalChartExtended
                 this.styleOpts.padding.right) /
             Number.parseFloat(text);
     }
+
     @observable _controlGroup: { label: string; value: string } = {
         label: this.availableGroups[0].label,
         value: this.availableGroups[0].value,
     };
+
     @computed get selectedControlGroup() {
         return this._controlGroup;
     }
+
     @computed get availableGroups() {
         if (Object.keys(this.props.sortedGroupedSurvivals).length > 1) {
             const filteredObjects = Object.keys(
@@ -1142,6 +1266,7 @@ export default class SurvivalChartExtended
             ];
         }
     }
+
     @action.bound changeControlGroup(groupValue: {
         label: string;
         value: string;
