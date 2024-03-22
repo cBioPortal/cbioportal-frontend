@@ -457,6 +457,7 @@ describe('hide download controls feature', function() {
                 'Clinical Data',
                 'CN Segments',
                 'Files & Links',
+                'Plots Beta!',
                 'Study Sponsors',
             ];
             before(() => {

@@ -5655,39 +5655,83 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             className="gene-select-background"
                                         >
                                             <div className="checkbox gene-select-container">
-                                                <AsyncSelect
-                                                    className={
-                                                        'color-samples-toolbar-elt gene-select'
+                                                <If
+                                                    condition={
+                                                        this.props
+                                                            .hasNoQueriedGenes
                                                     }
-                                                    name={`utilities_geneSelectionBox`}
-                                                    value={
-                                                        this
-                                                            .coloringMenuSelection
-                                                            .selectedOption
-                                                    }
-                                                    onChange={
-                                                        this
-                                                            .onColoringMenuOptionSelect
-                                                    }
-                                                    isLoading={
-                                                        this.horzGeneOptions
-                                                            .isPending
-                                                    }
-                                                    noOptionsMessage={() =>
-                                                        'Search for gene or clinical attribute'
-                                                    }
-                                                    clearable={false}
-                                                    searchable={true}
-                                                    disabled={
-                                                        !this
-                                                            .coloringMenuOmnibarOptions
-                                                            .isComplete
-                                                    }
-                                                    loadOptions={
-                                                        loadColoringOptions
-                                                    }
-                                                    cacheOptions={true}
-                                                />
+                                                >
+                                                    <Then>
+                                                        <AsyncSelect
+                                                            className={
+                                                                'color-samples-toolbar-elt gene-select'
+                                                            }
+                                                            name={`utilities_geneSelectionBox`}
+                                                            value={
+                                                                this
+                                                                    .coloringMenuSelection
+                                                                    .selectedOption
+                                                            }
+                                                            onChange={
+                                                                this
+                                                                    .onColoringMenuOptionSelect
+                                                            }
+                                                            isLoading={
+                                                                this
+                                                                    .horzGeneOptions
+                                                                    .isPending
+                                                            }
+                                                            noOptionsMessage={() =>
+                                                                'Search for gene or clinical attribute'
+                                                            }
+                                                            clearable={false}
+                                                            searchable={true}
+                                                            disabled={
+                                                                !this
+                                                                    .coloringMenuOmnibarOptions
+                                                                    .isComplete
+                                                            }
+                                                            loadOptions={
+                                                                loadColoringOptions
+                                                            }
+                                                            cacheOptions={true}
+                                                        />
+                                                    </Then>
+                                                    <Else>
+                                                        <Select
+                                                            className={
+                                                                'color-samples-toolbar-elt gene-select'
+                                                            }
+                                                            name={`utilities_geneSelectionBox`}
+                                                            value={
+                                                                this
+                                                                    .coloringMenuSelection
+                                                                    .selectedOption
+                                                            }
+                                                            onChange={
+                                                                this
+                                                                    .onColoringMenuOptionSelect
+                                                            }
+                                                            isLoading={
+                                                                this
+                                                                    .horzGeneOptions
+                                                                    .isPending
+                                                            }
+                                                            options={
+                                                                this
+                                                                    .coloringMenuOmnibarOptions
+                                                                    .result
+                                                            }
+                                                            clearable={false}
+                                                            searchable={true}
+                                                            disabled={
+                                                                !this
+                                                                    .coloringMenuOmnibarOptions
+                                                                    .isComplete
+                                                            }
+                                                        />
+                                                    </Else>
+                                                </If>
                                             </div>
                                         </div>
                                         {this.coloringLogScalePossible && (

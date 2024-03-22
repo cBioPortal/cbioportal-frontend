@@ -738,15 +738,14 @@ export default class StudyViewPage extends React.Component<
                                         key={5}
                                         id={StudyViewPageTabKeyEnum.PLOTS}
                                         linkText={
-                                            <>
+                                            <span>
                                                 {
                                                     StudyViewPageTabDescriptions.PLOTS
-                                                }
-                                                &nbsp;
+                                                }{' '}
                                                 <strong className={'beta-text'}>
                                                     Beta!
                                                 </strong>
-                                            </>
+                                            </span>
                                         }
                                     >
                                         <PlotsTab
