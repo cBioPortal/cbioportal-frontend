@@ -27,7 +27,17 @@ export default class JupyterNotebookTool extends React.Component<
             'jupyterIframe'
         ) as HTMLIFrameElement;
         this.jupyterIframe = iframe.contentWindow;
+
         window.addEventListener('message', this.handleMessageFromIframe);
+        window.addEventListener('message', event => {
+            if (
+                event.data.type === 'file-communication' &&
+                event.data.message ===
+                    'JupyterLab extension jupyterlab-iframe-bridge-example is activated!'
+            ) {
+                this.sendFileToJupyter();
+            }
+        });
     }
 
     componentWillUnmount() {
@@ -40,7 +50,7 @@ export default class JupyterNotebookTool extends React.Component<
             this.jupyterIframe.postMessage(
                 {
                     type: 'from-host-to-iframe-for-file',
-                    filePath: 'output.csv',
+                    filePath: 'output.tsv',
                     fileContent: data.data,
                 },
                 '*'
@@ -71,11 +81,9 @@ export default class JupyterNotebookTool extends React.Component<
                 </Helmet>
                 <div className="cbioportal-frontend">
                     <h1 style={{ display: 'inline', marginRight: 10 }}>
-                        Oncoprinter
+                        {' '}
+                        Oncoprinter{' '}
                     </h1>{' '}
-                    <button onClick={this.sendFileToJupyter}>
-                        Send File to JupyterLite
-                    </button>
                     <div id="message"></div>
                     <div style={{ marginTop: 10 }}>
                         <iframe
