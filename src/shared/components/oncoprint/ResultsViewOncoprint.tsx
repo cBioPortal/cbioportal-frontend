@@ -1171,6 +1171,9 @@ export default class ResultsViewOncoprint extends React.Component<
                                         'https://www.cbioportal.org',
                                     {
                                         file: fileContent,
+                                        studies: JSON.stringify(
+                                            this.props.store.studies.result
+                                        ),
                                     }
                                 );
                                 // const jupyterNotebookTool = window.open(
