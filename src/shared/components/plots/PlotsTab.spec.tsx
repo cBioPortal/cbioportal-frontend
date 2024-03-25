@@ -1,5 +1,4 @@
 import { assert } from 'chai';
-import { AxisMenuSelection } from 'pages/resultsView/plots/PlotsTab';
 import { AlterationTypeConstants } from 'shared/constants';
 
 describe('PlotsTab', () => {

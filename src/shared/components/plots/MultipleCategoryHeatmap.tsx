@@ -9,7 +9,7 @@ import Oncoprint, {
 import autobind from 'autobind-decorator';
 import { InitParams, OncoprintJS } from 'oncoprintjs';
 import _ from 'lodash';
-import { IStringAxisData } from 'pages/resultsView/plots/PlotsTabUtils';
+import { IStringAxisData } from './PlotsTabUtils';
 
 export type IOncoprintHeatmapProps = {
     horzData?: IStringAxisData['data'];

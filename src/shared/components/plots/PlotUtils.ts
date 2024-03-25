@@ -1,10 +1,6 @@
 import _ from 'lodash';
 import jStat from 'jStat';
-import {
-    IPlotSampleData,
-    IThreshold1D,
-    IThreshold2D,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+import { IPlotSampleData, IThreshold1D, IThreshold2D } from './PlotsTabUtils';
 import {
     CBIOPORTAL_VICTORY_THEME,
     getTextHeight,

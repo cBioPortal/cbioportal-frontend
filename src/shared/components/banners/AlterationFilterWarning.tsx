@@ -1,12 +1,42 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import { computed, makeObservable } from 'mobx';
 import { MakeMobxView } from '../MobxView';
 import classnames from 'classnames';
+import { DriverAnnotationSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import { MobxPromise } from 'cbioportal-frontend-commons';
+import { FilteredAndAnnotatedMutationsReport } from 'shared/lib/comparison/AnalysisStoreUtils';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+} from 'shared/model/AnnotatedMutation';
+import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
+import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 
 export interface IAlterationFilterWarningProps {
-    store: ResultsViewPageStore;
+    driverAnnotationSettings: DriverAnnotationSettings;
+    includeGermlineMutations: boolean;
+    mutationsReportByGene: MobxPromise<{
+        [hugeGeneSymbol: string]: FilteredAndAnnotatedMutationsReport<
+            AnnotatedMutation
+        >;
+    }>;
+    oqlFilteredMutationsReport: MobxPromise<{
+        data: (AnnotatedMutation & ExtendedAlteration)[];
+        vus: (AnnotatedMutation & ExtendedAlteration)[];
+        germline: (AnnotatedMutation & ExtendedAlteration)[];
+        vusAndGermline: (AnnotatedMutation & ExtendedAlteration)[];
+    }>;
+    oqlFilteredMolecularDataReport: MobxPromise<{
+        data: (AnnotatedNumericGeneMolecularData & ExtendedAlteration)[];
+        vus: (AnnotatedNumericGeneMolecularData & ExtendedAlteration)[];
+    }>;
+    oqlFilteredStructuralVariantsReport: MobxPromise<{
+        data: (AnnotatedStructuralVariant & ExtendedAlteration)[];
+        vus: (AnnotatedStructuralVariant & ExtendedAlteration)[];
+        germline: (AnnotatedStructuralVariant & ExtendedAlteration)[];
+        vusAndGermline: (AnnotatedStructuralVariant & ExtendedAlteration)[];
+    }>;
     isUnaffected?: boolean;
     mutationsTabModeSettings?: {
         // if set, then we show in "mutations tab mode" - different text, different source of exclude state, and toggleable exclude state
@@ -48,7 +78,7 @@ export default class AlterationFilterWarning extends React.Component<
         if (this.props.mutationsTabModeSettings) {
             return this.props.mutationsTabModeSettings.excludeVUS;
         } else {
-            return !this.props.store.driverAnnotationSettings.includeVUS;
+            return !this.props.driverAnnotationSettings.includeVUS;
         }
     }
 
@@ -56,33 +86,33 @@ export default class AlterationFilterWarning extends React.Component<
         if (this.props.mutationsTabModeSettings) {
             return this.props.mutationsTabModeSettings.excludeGermline;
         } else {
-            return !this.props.store.includeGermlineMutations;
+            return !this.props.includeGermlineMutations;
         }
     }
 
     @computed get vusToggleable() {
         return (
             this.props.mutationsTabModeSettings &&
-            !this.props.store.driverAnnotationSettings.includeVUS
+            !this.props.driverAnnotationSettings.includeVUS
         );
     }
 
     @computed get germlineToggleable() {
         return (
             this.props.mutationsTabModeSettings &&
-            !this.props.store.includeGermlineMutations
+            !this.props.includeGermlineMutations
         );
     }
 
     readonly vusWarning = MakeMobxView({
         await: () => {
             if (this.props.mutationsTabModeSettings) {
-                return [this.props.store.mutationsReportByGene];
+                return [this.props.mutationsReportByGene];
             } else {
                 return [
-                    this.props.store.oqlFilteredMutationsReport,
-                    this.props.store.oqlFilteredMolecularDataReport,
-                    this.props.store.oqlFilteredStructuralVariantsReport,
+                    this.props.oqlFilteredMutationsReport,
+                    this.props.oqlFilteredMolecularDataReport,
+                    this.props.oqlFilteredStructuralVariantsReport,
                 ];
             }
         },
@@ -94,7 +124,7 @@ export default class AlterationFilterWarning extends React.Component<
                 structuralVariant: false,
             };
             if (this.props.mutationsTabModeSettings) {
-                const report = this.props.store.mutationsReportByGene.result![
+                const report = this.props.mutationsReportByGene.result![
                     this.props.mutationsTabModeSettings.hugoGeneSymbol
                 ];
                 vusCount = report.vus.length + report.vusAndGermline.length;
@@ -102,14 +132,14 @@ export default class AlterationFilterWarning extends React.Component<
                     vusTypes.mutation = true;
                 }
             } else {
-                const mutationReport = this.props.store
-                    .oqlFilteredMutationsReport.result!;
+                const mutationReport = this.props.oqlFilteredMutationsReport
+                    .result!;
                 const mutationVusCount =
                     mutationReport.vus.length +
                     mutationReport.vusAndGermline.length;
-                const cnaVusCount = this.props.store
-                    .oqlFilteredMolecularDataReport.result!.vus.length;
-                const structuralVariantVusCount = this.props.store
+                const cnaVusCount = this.props.oqlFilteredMolecularDataReport
+                    .result!.vus.length;
+                const structuralVariantVusCount = this.props
                     .oqlFilteredStructuralVariantsReport.result!.vus.length;
                 vusCount =
                     mutationVusCount + cnaVusCount + structuralVariantVusCount;
@@ -204,19 +234,19 @@ export default class AlterationFilterWarning extends React.Component<
     readonly germlineWarning = MakeMobxView({
         await: () => {
             if (this.props.mutationsTabModeSettings) {
-                return [this.props.store.mutationsReportByGene];
+                return [this.props.mutationsReportByGene];
             } else {
-                return [this.props.store.oqlFilteredMutationsReport];
+                return [this.props.oqlFilteredMutationsReport];
             }
         },
         render: () => {
             let report;
             if (this.props.mutationsTabModeSettings) {
-                report = this.props.store.mutationsReportByGene.result![
+                report = this.props.mutationsReportByGene.result![
                     this.props.mutationsTabModeSettings.hugoGeneSymbol
                 ];
             } else {
-                report = this.props.store.oqlFilteredMutationsReport.result!;
+                report = this.props.oqlFilteredMutationsReport.result!;
             }
 
             const germlineCount =

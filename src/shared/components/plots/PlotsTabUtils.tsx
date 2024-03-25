@@ -3616,3 +3616,16 @@ export function maybeSetLogScale(axisSelection: AxisMenuSelection) {
 export function isGenericAssaySelected(selection: AxisMenuSelection) {
     return selection.genericAssayDataType !== undefined;
 }
+
+export function getOption(
+    option: {
+        value: number;
+        label: string;
+    },
+    profiled: boolean
+) {
+    return {
+        value: option.value,
+        label: profiled ? option.label : option.label + ' (Not profiled)',
+    };
+}

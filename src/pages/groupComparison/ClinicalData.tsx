@@ -31,7 +31,7 @@ import {
     isStringData,
     IStringAxisData,
     makeBoxScatterPlotData,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+} from 'shared/components/plots/PlotsTabUtils';
 import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
 import { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
 import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
