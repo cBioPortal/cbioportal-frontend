@@ -76,6 +76,7 @@ export interface IOncoprintControlsHandlers
             | 'tabular'
             | 'oncoprinter'
             | 'jupyterNoteBook'
+            | 'textQLNotebook'
     ) => void;
     onChangeSelectedClinicalTracks?: (
         trackConfigs: ClinicalTrackConfig[]
@@ -191,6 +192,7 @@ const EVENT_KEY = {
     downloadTabular: '29',
     downloadOncoprinter: '29.1',
     openJupyterNotebook: '32',
+    openTextQLNotebook: '33',
     horzZoomSlider: '30',
     viewNGCHM: '31',
 };
@@ -440,6 +442,11 @@ export default class OncoprintControls extends React.Component<
             case EVENT_KEY.openJupyterNotebook:
                 this.props.handlers.onClickDownload &&
                     this.props.handlers.onClickDownload('jupyterNoteBook');
+                break;
+            case EVENT_KEY.openTextQLNotebook:
+                this.props.handlers.onClickDownload &&
+                    this.props.handlers.onClickDownload('textQLNotebook');
+                break;
             case EVENT_KEY.viewNGCHM:
                 if (
                     this.props.state.ngchmButtonActive &&
@@ -1163,6 +1170,18 @@ export default class OncoprintControls extends React.Component<
                             onClick={this.onButtonClick}
                         >
                             Open in JupyterNoteBook
+                        </button>
+                    )}
+
+                {!this.props.jupyterNotebookMode &&
+                    getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL && (
+                        <button
+                            className="btn btn-sm btn-default"
+                            name={EVENT_KEY.openTextQLNotebook}
+                            onClick={this.onButtonClick}
+                        >
+                            Open in TextQL Notebook
                         </button>
                     )}
             </CustomDropdown>

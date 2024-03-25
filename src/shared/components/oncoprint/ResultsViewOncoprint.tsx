@@ -97,6 +97,8 @@ import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
+import { handlePostedSubmission } from 'shared/lib/redirectHelpers';
+import { openWindowWithPost } from 'shared/lib/send_post';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1131,6 +1133,52 @@ export default class ResultsViewOncoprint extends React.Component<
                                 jupyterNotebookTool.clientPostedData = {
                                     data: fileContent,
                                 };
+                            }
+                        );
+                        break;
+                    case 'textQLNotebook':
+                        onMobxPromise(
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any
+                            ) => {
+                                const fileContent = getTabularDownloadData(
+                                    this.geneticTracks.result,
+                                    this.clinicalTracks.result,
+                                    this.heatmapTracks.result,
+                                    this.genericAssayHeatmapTracks.result,
+                                    this.genesetHeatmapTracks.result,
+                                    this.oncoprintJs.getIdOrder(),
+                                    this.oncoprintAnalysisCaseType ===
+                                        OncoprintAnalysisCaseType.SAMPLE
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
+                                    this.oncoprintAnalysisCaseType,
+                                    this.distinguishDrivers
+                                );
+                                console.log(fileContent);
+                                openWindowWithPost(
+                                    localStorage.textQLAddress ||
+                                        'https://www.cbioportal.org',
+                                    {
+                                        file: fileContent,
+                                    }
+                                );
+                                // const jupyterNotebookTool = window.open(
+                                //     buildCBioPortalPageUrl('/jupyternotebook')
+                                // ) as any;
+                                // jupyterNotebookTool.clientPostedData = {
+                                //     data: fileContent,
+                                // };
                             }
                         );
                         break;
