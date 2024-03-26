@@ -236,14 +236,12 @@ export function formatGenericAssayCommonLabel(meta: GenericAssayMeta) {
     const uniqueDesc = description !== meta.stableId && description !== name;
     // set stableId as default label
     let label = meta.stableId;
-    if (!uniqueName && !uniqueDesc) {
-        label = meta.stableId;
-    } else if (!uniqueName) {
+    if (uniqueName && uniqueDesc) {
+        label = `${name}: ${description}`;
+    } else if (uniqueName) {
+        label = name;
+    } else if (uniqueDesc) {
         label = `${meta.stableId}: ${description}`;
-    } else if (!uniqueDesc) {
-        label = `${name} (${meta.stableId})`;
-    } else {
-        label = `${name} (${meta.stableId}): ${description}`;
     }
     return label;
 }
@@ -255,7 +253,7 @@ export function formatGenericAssayCompactLabelByNameAndId(
     const uniqueName = name !== stableId;
     let label = stableId;
     if (uniqueName) {
-        label = `${name} (${stableId})`;
+        label = name;
     }
     return label;
 }
