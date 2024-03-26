@@ -184,7 +184,15 @@ export default class CNSegments extends React.Component<
                     }
                 />
                 <div className={'tabMessageContainer'}>
-                    <CaseFilterWarning store={this.props.store} />
+                    <CaseFilterWarning
+                        samples={this.props.store.samples}
+                        filteredSamples={this.props.store.filteredSamples}
+                        patients={this.props.store.patients}
+                        filteredPatients={this.props.store.filteredPatients}
+                        hideUnprofiledSamples={
+                            this.props.store.hideUnprofiledSamples
+                        }
+                    />
                 </div>
                 <Nav
                     bsStyle="pills"

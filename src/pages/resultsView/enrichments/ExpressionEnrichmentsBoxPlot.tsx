@@ -17,7 +17,7 @@ import {
     INumberAxisData,
     makeBoxScatterPlotData,
     getBoxPlotDownloadData,
-} from '../plots/PlotsTabUtils';
+} from 'shared/components/plots/PlotsTabUtils';
 import BoxScatterPlot, {
     IBoxScatterPlotData,
 } from 'shared/components/plots/BoxScatterPlot';

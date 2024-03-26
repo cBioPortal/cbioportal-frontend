@@ -31,7 +31,7 @@ import * as ReactDOM from 'react-dom';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
-import { IStringAxisData } from 'pages/resultsView/plots/PlotsTabUtils';
+import { IStringAxisData } from 'shared/components/plots/PlotsTabUtils';
 import WindowStore from 'shared/components/window/WindowStore';
 
 export interface IMultipleCategoryBarPlotProps {

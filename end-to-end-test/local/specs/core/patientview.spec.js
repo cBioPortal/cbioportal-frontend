@@ -365,13 +365,13 @@ describe('patient view page', function() {
             const mutationsTable = '[data-test=patientview-mutation-table]';
             $(`${mutationsTable} button#dropdown-custom-1`).click();
             $(`${mutationsTable} ul.dropdown-menu`)
-                .$$('li label input')[19]
-                .click();
-            $(`${mutationsTable} ul.dropdown-menu`)
-                .$$('li label input')[20]
-                .click();
-            $(`${mutationsTable} ul.dropdown-menu`)
                 .$$('li label input')[21]
+                .click();
+            $(`${mutationsTable} ul.dropdown-menu`)
+                .$$('li label input')[22]
+                .click();
+            $(`${mutationsTable} ul.dropdown-menu`)
+                .$$('li label input')[23]
                 .click();
             $(`${mutationsTable} button#dropdown-custom-1`).click();
         });

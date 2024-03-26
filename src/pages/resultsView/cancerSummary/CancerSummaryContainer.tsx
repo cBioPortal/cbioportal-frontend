@@ -235,11 +235,46 @@ export default class CancerSummaryContainer extends React.Component<
                         <div className={'tabMessageContainer'}>
                             <OqlStatusBanner
                                 className="cancer-types-summary-oql-status-banner"
-                                store={this.props.store}
+                                queryContainsOql={
+                                    this.props.store.queryContainsOql
+                                }
                                 tabReflectsOql={true}
                             />
-                            <AlterationFilterWarning store={this.props.store} />
-                            <CaseFilterWarning store={this.props.store} />
+                            <AlterationFilterWarning
+                                driverAnnotationSettings={
+                                    this.props.store.driverAnnotationSettings
+                                }
+                                includeGermlineMutations={
+                                    this.props.store.includeGermlineMutations
+                                }
+                                mutationsReportByGene={
+                                    this.props.store.mutationsReportByGene
+                                }
+                                oqlFilteredMutationsReport={
+                                    this.props.store.oqlFilteredMutationsReport
+                                }
+                                oqlFilteredMolecularDataReport={
+                                    this.props.store
+                                        .oqlFilteredMolecularDataReport
+                                }
+                                oqlFilteredStructuralVariantsReport={
+                                    this.props.store
+                                        .oqlFilteredStructuralVariantsReport
+                                }
+                            />
+                            <CaseFilterWarning
+                                samples={this.props.store.samples}
+                                filteredSamples={
+                                    this.props.store.filteredSamples
+                                }
+                                patients={this.props.store.patients}
+                                filteredPatients={
+                                    this.props.store.filteredPatients
+                                }
+                                hideUnprofiledSamples={
+                                    this.props.store.hideUnprofiledSamples
+                                }
+                            />
                         </div>
                         <MSKTabs
                             onTabClick={this.handleTabClick}

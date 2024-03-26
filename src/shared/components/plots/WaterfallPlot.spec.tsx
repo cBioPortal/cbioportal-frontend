@@ -1,5 +1,5 @@
 // need to mock this module to prevent circular references from breaking the tests
-jest.mock('pages/resultsView/plots/PlotsTab.tsx');
+jest.mock('shared/components/plots/PlotsTab.tsx');
 
 import React from 'react';
 import { assert } from 'chai';
