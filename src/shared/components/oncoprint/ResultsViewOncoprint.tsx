@@ -1125,11 +1125,16 @@ export default class ResultsViewOncoprint extends React.Component<
                                     this.distinguishDrivers
                                 );
 
+                                const prefixName =
+                                    this.oncoprintAnalysisCaseType === 'sample'
+                                        ? 'SAMPLE_DATA_'
+                                        : 'PATIENT_DATA_';
                                 const jupyterNotebookTool = window.open(
                                     buildCBioPortalPageUrl('/jupyternotebook')
                                 ) as any;
                                 jupyterNotebookTool.clientPostedData = {
-                                    data: fileContent,
+                                    fileContent: fileContent,
+                                    fileName: prefixName + 'oncoprint.tsv',
                                 };
                             }
                         );
