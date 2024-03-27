@@ -99,6 +99,7 @@ import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
 import { handlePostedSubmission } from 'shared/lib/redirectHelpers';
 import { openWindowWithPost } from 'shared/lib/send_post';
+import jQuery from 'jquery';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1165,23 +1166,131 @@ export default class ResultsViewOncoprint extends React.Component<
                                     this.oncoprintAnalysisCaseType,
                                     this.distinguishDrivers
                                 );
-                                console.log(fileContent);
-                                openWindowWithPost(
-                                    localStorage.textQLAddress ||
-                                        'https://www.cbioportal.org',
-                                    {
-                                        file: fileContent,
-                                        studies: JSON.stringify(
-                                            this.props.store.studies.result
-                                        ),
-                                    }
+
+                                const clinicalFile = getTabularDownloadData(
+                                    [],
+                                    this.clinicalTracks.result,
+                                    [],
+                                    [],
+                                    [],
+                                    this.oncoprintJs.getIdOrder(),
+                                    this.oncoprintAnalysisCaseType ===
+                                        OncoprintAnalysisCaseType.SAMPLE
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
+                                    this.oncoprintAnalysisCaseType,
+                                    this.distinguishDrivers
                                 );
-                                // const jupyterNotebookTool = window.open(
-                                //     buildCBioPortalPageUrl('/jupyternotebook')
-                                // ) as any;
-                                // jupyterNotebookTool.clientPostedData = {
-                                //     data: fileContent,
-                                // };
+
+                                const geneticFile = getTabularDownloadData(
+                                    this.geneticTracks.result,
+                                    [],
+                                    [],
+                                    [],
+                                    [],
+                                    this.oncoprintJs.getIdOrder(),
+                                    this.oncoprintAnalysisCaseType ===
+                                        OncoprintAnalysisCaseType.SAMPLE
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
+                                    this.oncoprintAnalysisCaseType,
+                                    this.distinguishDrivers
+                                );
+
+                                const heatmapFile = getTabularDownloadData(
+                                    [],
+                                    [],
+                                    this.heatmapTracks.result,
+                                    [],
+                                    [],
+                                    this.oncoprintJs.getIdOrder(),
+                                    this.oncoprintAnalysisCaseType ===
+                                        OncoprintAnalysisCaseType.SAMPLE
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
+                                    this.oncoprintAnalysisCaseType,
+                                    this.distinguishDrivers
+                                );
+
+                                const genericAssayFile = getTabularDownloadData(
+                                    [],
+                                    [],
+                                    [],
+                                    this.genericAssayHeatmapTracks.result,
+                                    [],
+                                    this.oncoprintJs.getIdOrder(),
+                                    this.oncoprintAnalysisCaseType ===
+                                        OncoprintAnalysisCaseType.SAMPLE
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
+                                    this.oncoprintAnalysisCaseType,
+                                    this.distinguishDrivers
+                                );
+
+                                const fileData = [
+                                    {
+                                        description: 'genetic data',
+                                        data: geneticFile,
+                                    },
+                                    {
+                                        description: 'heatmap data',
+                                        data: heatmapFile,
+                                    },
+                                    {
+                                        description: 'clinical data',
+                                        data: clinicalFile,
+                                    },
+                                    {
+                                        description: 'generic assay',
+                                        data: genericAssayFile,
+                                    },
+                                ];
+
+                                const d = {
+                                    files: fileData,
+                                    studies: JSON.stringify(
+                                        this.props.store.studies.result
+                                    ),
+                                };
+
+                                console.log(d);
+
+                                jQuery
+                                    .ajax({
+                                        type: 'POST',
+                                        url:
+                                            'https://staging.textql.com/api/dataset/csv/upload_and_run',
+                                        data: d,
+                                        beforeSend: function(xhr) {
+                                            xhr.setRequestHeader(
+                                                'Authorization',
+                                                'Basic ' +
+                                                    btoa(
+                                                        'member-test-f09ea9c1-de20-4408-be41-a37d878b5d67' +
+                                                            ':' +
+                                                            '6la3nrpz4sfe7hcmnrvdq9'
+                                                    )
+                                            );
+                                        },
+                                    })
+                                    .then(resp => {
+                                        console.log('resp', resp);
+                                        window.open(
+                                            `https://staging.textql.com${resp.path}`
+                                        );
+                                    });
                             }
                         );
                         break;
