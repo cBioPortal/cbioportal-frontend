@@ -57,7 +57,7 @@ import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { OncoprintJS, RGBAColor, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import tabularDownload from './tabularDownload';
+import tabularDownload, { getTabularDownloadData } from './tabularDownload';
 import classNames from 'classnames';
 import {
     clinicalAttributeIsLocallyComputed,
@@ -1091,6 +1091,50 @@ export default class ResultsViewOncoprint extends React.Component<
                                     genetic: geneticInput,
                                     clinical: clinicalInput,
                                     heatmap: heatmapInput,
+                                };
+                            }
+                        );
+                        break;
+                    case 'jupyterNoteBook':
+                        onMobxPromise(
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any
+                            ) => {
+                                const fileContent = getTabularDownloadData(
+                                    this.geneticTracks.result,
+                                    this.clinicalTracks.result,
+                                    this.heatmapTracks.result,
+                                    this.genericAssayHeatmapTracks.result,
+                                    this.genesetHeatmapTracks.result,
+                                    this.oncoprintJs.getIdOrder(),
+                                    this.oncoprintAnalysisCaseType ===
+                                        OncoprintAnalysisCaseType.SAMPLE
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
+                                    this.oncoprintAnalysisCaseType,
+                                    this.distinguishDrivers
+                                );
+
+                                const prefixName =
+                                    this.oncoprintAnalysisCaseType === 'sample'
+                                        ? 'SAMPLE_DATA_'
+                                        : 'PATIENT_DATA_';
+                                const jupyterNotebookTool = window.open(
+                                    buildCBioPortalPageUrl('/jupyternotebook')
+                                ) as any;
+                                jupyterNotebookTool.clientPostedData = {
+                                    fileContent: fileContent,
+                                    fileName: prefixName + 'oncoprint.tsv',
                                 };
                             }
                         );
