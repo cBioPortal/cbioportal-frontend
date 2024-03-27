@@ -1161,17 +1161,17 @@ export default class OncoprintControls extends React.Component<
                         </button>
                     )}
 
-                {!this.props.jupyterNotebookMode &&
-                    getServerConfig().skin_hide_download_controls ===
-                        DownloadControlOption.SHOW_ALL && (
-                        <button
-                            className="btn btn-sm btn-default"
-                            name={EVENT_KEY.openJupyterNotebook}
-                            onClick={this.onButtonClick}
-                        >
-                            Open in JupyterNoteBook
-                        </button>
-                    )}
+                {/*{!this.props.jupyterNotebookMode &&*/}
+                {/*    getServerConfig().skin_hide_download_controls ===*/}
+                {/*        DownloadControlOption.SHOW_ALL && (*/}
+                {/*        <button*/}
+                {/*            className="btn btn-sm btn-default"*/}
+                {/*            name={EVENT_KEY.openJupyterNotebook}*/}
+                {/*            onClick={this.onButtonClick}*/}
+                {/*        >*/}
+                {/*            Open in JupyterNoteBook*/}
+                {/*        </button>*/}
+                {/*    )}*/}
 
                 {!this.props.jupyterNotebookMode &&
                     getServerConfig().skin_hide_download_controls ===
