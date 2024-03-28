@@ -417,7 +417,9 @@ describe('sorting', function() {
         $(overallSurvivalElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        overallSurvivalElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
+        overallSurvivalElements.dropdown.$('li=Sort a-Z').click(); // Click sort a-Z
+
+        browser.debug();
 
         browser.pause(100); // give time to sort
 
@@ -440,7 +442,7 @@ describe('sorting', function() {
             overallSurvivalElements.dropdown_selector,
             'couldnt show overall survival dropdown'
         );
-        overallSurvivalElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+        overallSurvivalElements.dropdown.$('li=Sort Z-a').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -455,7 +457,7 @@ describe('sorting', function() {
         $(karnofskyPerformanceElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        karnofskyPerformanceElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+        karnofskyPerformanceElements.dropdown.$('li=Sort Z-a').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -472,7 +474,7 @@ describe('sorting', function() {
             karnofskyPerformanceElements.dropdown_selector,
             'couldnt show karnofsky performance dropdown'
         );
-        karnofskyPerformanceElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
+        karnofskyPerformanceElements.dropdown.$('li=Sort a-Z').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -505,7 +507,7 @@ describe('sorting', function() {
         $(diseaseFreeElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        diseaseFreeElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
+        diseaseFreeElements.dropdown.$('li=Sort a-Z').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
