@@ -246,7 +246,7 @@ describe('track group headers', function() {
     });
 });
 
-describe.only('sorting', function() {
+describe('sorting', function() {
     const eventsPerSampleRadioButton =
         '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]';
     const eventsPerPatientRadioButton =
@@ -577,25 +577,13 @@ describe.only('sorting', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it.only('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 1', function() {
+    it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 1', function() {
         goToUrlAndSetLocalStorage(
             CBIOPORTAL_URL +
                 '/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true'
         );
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
-
-        // // first get rid of the Profiled track
-        // var profiledElements = getNthOncoprintTrackOptionsElements(5);
-        // $(profiledElements.button_selector).click();
-        // $(profiledElements.dropdown_selector).waitForDisplayed({
-        //     timeout: 1000,
-        // }); // wait for menu to appear
-
-        // $(`${profiledElements.dropdown_selector}`)
-        //     .$('li=Remove track')
-        //     .click(); // Click Remove Track
-        // browser.pause(100); // give time to take effect
 
         // Sort heatmap tracks
         var TP53HeatmapElements = getNthOncoprintTrackOptionsElements(8);
@@ -612,7 +600,7 @@ describe.only('sorting', function() {
         assertScreenShotMatch(res);
     });
 
-    it.only('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 2', function() {
+    it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 2', function() {
         var TP53HeatmapElements = getNthOncoprintTrackOptionsElements(8);
         setDropdownOpen(
             true,
@@ -627,7 +615,7 @@ describe.only('sorting', function() {
         assertScreenShotMatch(res);
     });
 
-    it.only('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 3', function() {
+    it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 3', function() {
         var TP53HeatmapElements = getNthOncoprintTrackOptionsElements(8);
         setDropdownOpen(
             false,
