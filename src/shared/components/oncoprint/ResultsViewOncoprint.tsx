@@ -1288,9 +1288,9 @@ export default class ResultsViewOncoprint extends React.Component<
                                                 'Authorization',
                                                 'Basic ' +
                                                     btoa(
-                                                        'member-test-f09ea9c1-de20-4408-be41-a37d878b5d67' +
+                                                        'member-test-55f419c0-c96d-4938-884d-383a5de7a8e3' +
                                                             ':' +
-                                                            '6la3nrpz4sfe7hcmnrvdq9'
+                                                            '9qizfm2io1yyj1txziuq'
                                                     )
                                             );
                                         },
