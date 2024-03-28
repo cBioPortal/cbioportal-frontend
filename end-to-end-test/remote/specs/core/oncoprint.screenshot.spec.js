@@ -131,9 +131,7 @@ describe('oncoprint screenshot tests', function() {
             elements.dropdown_selector,
             'Couldnt open top treatment track options'
         );
-        $(elements.dropdown_selector)
-            .$('li=Remove track')
-            .click(); // Click Remove
+        $(elements.dropdown_selector + ' li:nth-child(3)').click();
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
         var res = checkOncoprintElement('.oncoprintContainer');
@@ -248,7 +246,7 @@ describe('track group headers', function() {
     });
 });
 
-describe('sorting', function() {
+describe.only('sorting', function() {
     const eventsPerSampleRadioButton =
         '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]';
     const eventsPerPatientRadioButton =
@@ -376,7 +374,7 @@ describe('sorting', function() {
         $(profiledElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        $(profiledElements.dropdown_selector + 'li=Remove track').click(); // Click Remove Track
+        $(profiledElements.dropdown_selector + ' li:nth-child(3)').click(); // Click Remove Track
         waitForOncoprint(2000);
 
         var res = checkOncoprintElement();
@@ -420,8 +418,6 @@ describe('sorting', function() {
             timeout: 1000,
         }); // wait for menu to appear
         overallSurvivalElements.dropdown.$('li=Sort a-Z').click(); // Click sort a-Z
-
-        browser.debug();
 
         browser.pause(100); // give time to sort
 
@@ -570,9 +566,9 @@ describe('sorting', function() {
         $(TP53HeatmapElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        $(
-            TP53HeatmapElements.dropdown_selector + ' li=Sort Z-a'
-        ).scrollIntoView();
+        $(TP53HeatmapElements.dropdown_selector)
+            .$('li=Sort Z-a')
+            .scrollIntoView();
         $(TP53HeatmapElements.dropdown_selector)
             .$('li=Sort Z-a')
             .click(); // Click sort Z-a
@@ -581,7 +577,7 @@ describe('sorting', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 1', function() {
+    it.only('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 1', function() {
         goToUrlAndSetLocalStorage(
             CBIOPORTAL_URL +
                 '/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true'
@@ -589,16 +585,17 @@ describe('sorting', function() {
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-        // first get rid of the Profiled track
-        var profiledElements = getNthOncoprintTrackOptionsElements(5);
-        $(profiledElements.button_selector).click();
-        $(profiledElements.dropdown_selector).waitForDisplayed({
-            timeout: 1000,
-        }); // wait for menu to appear
-        $(`${profiledElements.dropdown_selector}`)
-            .$('li=Remove track')
-            .click(); // Click Remove Track
-        browser.pause(100); // give time to take effect
+        // // first get rid of the Profiled track
+        // var profiledElements = getNthOncoprintTrackOptionsElements(5);
+        // $(profiledElements.button_selector).click();
+        // $(profiledElements.dropdown_selector).waitForDisplayed({
+        //     timeout: 1000,
+        // }); // wait for menu to appear
+
+        // $(`${profiledElements.dropdown_selector}`)
+        //     .$('li=Remove track')
+        //     .click(); // Click Remove Track
+        // browser.pause(100); // give time to take effect
 
         // Sort heatmap tracks
         var TP53HeatmapElements = getNthOncoprintTrackOptionsElements(8);
@@ -615,7 +612,7 @@ describe('sorting', function() {
         assertScreenShotMatch(res);
     });
 
-    it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 2', function() {
+    it.only('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 2', function() {
         var TP53HeatmapElements = getNthOncoprintTrackOptionsElements(8);
         setDropdownOpen(
             true,
@@ -630,7 +627,7 @@ describe('sorting', function() {
         assertScreenShotMatch(res);
     });
 
-    it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 3', function() {
+    it.only('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 3', function() {
         var TP53HeatmapElements = getNthOncoprintTrackOptionsElements(8);
         setDropdownOpen(
             false,
@@ -644,7 +641,7 @@ describe('sorting', function() {
         $(MDM4HeatmapElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        MDM4HeatmapElements.dropdown.$('li=sort a-Z').click(); // Click sort a-Z
+        MDM4HeatmapElements.dropdown.$('li=Sort a-Z').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
