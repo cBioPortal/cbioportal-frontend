@@ -733,7 +733,9 @@ export default abstract class ComparisonStore extends AnalysisStore
 
     @observable customClinicalAttributes: ClinicalAttribute[] = [];
 
-    readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
+    readonly selectedStudyMutationEnrichmentProfileMap = remoteData<{
+        [studyId: string]: MolecularProfile;
+    }>({
         await: () => [this.mutationEnrichmentProfiles],
         invoke: () => {
             //Only return Mutation profile if any mutation type is selected, otherwise return {}
@@ -764,7 +766,9 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    readonly selectedStudyStructuralVariantEnrichmentProfileMap = remoteData({
+    readonly selectedStudyStructuralVariantEnrichmentProfileMap = remoteData<{
+        [studyId: string]: MolecularProfile;
+    }>({
         await: () => [this.structuralVariantEnrichmentProfiles],
         invoke: () => {
             // set default enrichmentProfileMap if not selected yet
@@ -796,7 +800,9 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    readonly selectedStudyCopyNumberEnrichmentProfileMap = remoteData({
+    readonly selectedStudyCopyNumberEnrichmentProfileMap = remoteData<{
+        [studyId: string]: MolecularProfile;
+    }>({
         await: () => [this.copyNumberEnrichmentProfiles],
         invoke: () => {
             //Only return Copy Number profile if any copy number type is selected, otherwise return {}
@@ -2679,6 +2685,11 @@ export default abstract class ComparisonStore extends AnalysisStore
                                         .map(x => x.key + '::' + x.value)
                                         .sort((a, b) => a.localeCompare(b))
                                         .join(' ') || '';
+                                const censoredIdentifier =
+                                    x.censoredEventRequestIdentifier?.clinicalEventRequests[0].attributes
+                                        .map(x => x.key + '::' + x.value)
+                                        .sort((a, b) => a.localeCompare(b))
+                                        .join(' ') || '';
 
                                 var title = `${
                                     x.startEventRequestIdentifier?.position
@@ -2697,6 +2708,13 @@ export default abstract class ComparisonStore extends AnalysisStore
                                 }${
                                     endIdentifier.length > 0
                                         ? ' - ' + endIdentifier
+                                        : ''
+                                } censored by ${
+                                    x.censoredEventRequestIdentifier
+                                        ?.clinicalEventRequests[0].eventType
+                                }${
+                                    censoredIdentifier.length > 0
+                                        ? ' - ' + censoredIdentifier
                                         : ''
                                 }`;
                                 var months_attribute: ClinicalAttribute = {
@@ -3219,13 +3237,20 @@ export default abstract class ComparisonStore extends AnalysisStore
         startClinicalEventAttributes: ClinicalEventDataWithKey[],
         endClinicalEventType: string,
         endEventPosition: 'FIRST' | 'LAST',
-        endClinicalEventAttributes: ClinicalEventDataWithKey[]
+        endClinicalEventAttributes: ClinicalEventDataWithKey[],
+        censoredClinicalEventType: string,
+        censoredEventPosition: 'FIRST' | 'LAST',
+        censoredClinicalEventAttributes: ClinicalEventDataWithKey[]
     ) {
         const startIdentifier = startClinicalEventAttributes
             .sort((a, b) => a.label.localeCompare(b.label))
             .map(x => x.label)
             .join(' ');
-        const endIdentifier = startClinicalEventAttributes
+        const endIdentifier = endClinicalEventAttributes
+            .sort((a, b) => a.label.localeCompare(b.label))
+            .map(x => x.label)
+            .join(' ');
+        const censoredIdentifier = censoredClinicalEventAttributes
             .sort((a, b) => a.label.localeCompare(b.label))
             .map(x => x.label)
             .join(' ');
@@ -3234,6 +3259,8 @@ export default abstract class ComparisonStore extends AnalysisStore
             startIdentifier.length > 0 ? ' - ' + startIdentifier : ''
         } and ${endEventPosition} of ${endClinicalEventType}${
             endIdentifier.length > 0 ? ' - ' + endIdentifier : ''
+        } and censored by ${censoredClinicalEventType}${
+            censoredIdentifier.length > 0 ? ' - ' + censoredIdentifier : ''
         }`;
         const prefix = title.replace(/\s/g, '_');
 
@@ -3263,6 +3290,18 @@ export default abstract class ComparisonStore extends AnalysisStore
                 ],
                 position: startEventPosition,
             },
+            censoredEventRequestIdentifier: {
+                clinicalEventRequests: [
+                    {
+                        attributes: censoredClinicalEventAttributes.map(x => ({
+                            key: x.key,
+                            value: x.value,
+                        })),
+                        eventType: censoredClinicalEventType,
+                    },
+                ],
+                position: censoredEventPosition,
+            },
         };
 
         if (!this.customSurvivalDataPromises.hasOwnProperty(prefix)) {
@@ -3279,6 +3318,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                         attributeIdPrefix: prefix,
                         startEventRequestIdentifier: attr.startEventRequestIdentifier!,
                         endEventRequestIdentifier: attr.endEventRequestIdentifier!,
+                        censoredEventRequestIdentifier: attr.censoredEventRequestIdentifier!,
                         patientIdentifiers: this.activeSamplesNotOverlapRemoved.result!.map(
                             (s: any) => ({
                                 patientId: s.patientId,

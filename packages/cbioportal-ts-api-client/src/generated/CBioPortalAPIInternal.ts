@@ -1472,6 +1472,8 @@ export type SurvivalRequest = {
 
         'startEventRequestIdentifier': ClinicalEventRequestIdentifier
 
+        'censoredEventRequestIdentifier': ClinicalEventRequestIdentifier
+
 };
 export type VariantCount = {
     'entrezGeneId': number

@@ -69,13 +69,13 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     private selectedSurvivalPlotPrefix: string | undefined = undefined;
 
     @observable
-    private _selectedStartClinicalEventType: string | undefined = undefined;
-
-    @observable
     private startEventPosition: 'FIRST' | 'LAST' = 'FIRST';
 
     @observable
     private endEventPosition: 'FIRST' | 'LAST' = 'LAST';
+
+    @observable
+    private _selectedStartClinicalEventType: string | undefined = undefined;
 
     @observable
     private selectedStartClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
@@ -85,6 +85,12 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     @observable
     private selectedEndClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
+
+    @observable
+    private _selectedCensoredClinicalEventType: string | undefined = undefined;
+
+    @observable
+    private selectedCensoredClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
 
     constructor(props: ISurvivalProps) {
         super(props);
@@ -335,10 +341,26 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         return undefined;
     }
 
+    @action.bound
+    private onCensoredClinicalEventSelection(option: any) {
+        this._selectedCensoredClinicalEventType = option.value;
+        this.selectedCensoredClinicalEventAttributes = [];
+    }
+
+    @computed get selectedCensoredClinicalEventType() {
+        if (this._selectedCensoredClinicalEventType !== undefined) {
+            return this.props.store.clinicalEventOptions.result[
+                this._selectedCensoredClinicalEventType
+            ];
+        }
+        return undefined;
+    }
+
     @computed get isAddSurvivalPlotDisabled() {
         return (
             this._selectedStartClinicalEventType === undefined ||
-            this._selectedEndClinicalEventType === undefined
+            this._selectedEndClinicalEventType === undefined ||
+            this._selectedCensoredClinicalEventType === undefined
         );
     }
 
@@ -573,6 +595,106 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 </tr>
                                 <tr>
                                     <td>
+                                        <ControlLabel>Censored:</ControlLabel>
+                                    </td>
+                                    <td
+                                        className={
+                                            survivalPlotStyle['event-type']
+                                        }
+                                    >
+                                        <Select
+                                            placeholder="Select clinical event type"
+                                            name="clinical-event"
+                                            value={
+                                                this
+                                                    .selectedCensoredClinicalEventType
+                                            }
+                                            onChange={
+                                                this
+                                                    .onCensoredClinicalEventSelection
+                                            }
+                                            options={_.values(
+                                                this.props.store
+                                                    .clinicalEventOptions.result
+                                            )}
+                                            clearable={false}
+                                            searchable={false}
+                                        />
+                                    </td>
+                                    {this._selectedCensoredClinicalEventType !==
+                                        undefined &&
+                                        this.props.store.clinicalEventOptions
+                                            .result[
+                                            this
+                                                ._selectedCensoredClinicalEventType
+                                        ].attributes.length > 0 && (
+                                            <td
+                                                className={
+                                                    survivalPlotStyle[
+                                                        'event-attributes'
+                                                    ]
+                                                }
+                                            >
+                                                <Select
+                                                    placeholder="Select clinical event type attributes"
+                                                    name="clinical-event-attributes"
+                                                    closeMenuOnSelect={false}
+                                                    isMulti
+                                                    value={
+                                                        this
+                                                            .selectedCensoredClinicalEventAttributes
+                                                    }
+                                                    onChange={(
+                                                        selectedOptions: any
+                                                    ) => {
+                                                        this.selectedCensoredClinicalEventAttributes = selectedOptions;
+                                                    }}
+                                                    options={
+                                                        this.props.store
+                                                            .clinicalEventOptions
+                                                            .result[
+                                                            this
+                                                                ._selectedCensoredClinicalEventType
+                                                        ].attributes
+                                                    }
+                                                    isClearable={false}
+                                                    noOptionsMessage={() =>
+                                                        'No results'
+                                                    }
+                                                />
+                                            </td>
+                                        )}
+                                    {/* <td>
+                                        <ButtonGroup>
+                                            {POSITIONS.map((option, i) => {
+                                                return (
+                                                    <Radio
+                                                        checked={
+                                                            option.value ===
+                                                            this
+                                                                .startEventPosition
+                                                        }
+                                                        onChange={e => {
+                                                            this.startEventPosition = $(
+                                                                e.target
+                                                            ).attr(
+                                                                'data-value'
+                                                            ) as any;
+                                                        }}
+                                                        inline
+                                                        data-value={
+                                                            option.value
+                                                        }
+                                                    >
+                                                        {option.label}
+                                                    </Radio>
+                                                );
+                                            })}
+                                        </ButtonGroup>
+                                    </td> */}
+                                </tr>
+                                <tr>
+                                    <td>
                                         <button
                                             className={'btn btn-primary btn-sm'}
                                             disabled={
@@ -589,7 +711,12 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                         ._selectedEndClinicalEventType!,
                                                     this.endEventPosition,
                                                     this
-                                                        .selectedEndClinicalEventAttributes
+                                                        .selectedEndClinicalEventAttributes,
+                                                    this
+                                                        ._selectedCensoredClinicalEventType!, //TODO: Last Event
+                                                    this.endEventPosition,
+                                                    this
+                                                        .selectedCensoredClinicalEventAttributes
                                                 );
                                             }}
                                         >
