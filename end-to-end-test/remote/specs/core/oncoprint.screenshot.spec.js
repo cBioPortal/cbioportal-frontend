@@ -131,7 +131,9 @@ describe('oncoprint screenshot tests', function() {
             elements.dropdown_selector,
             'Couldnt open top treatment track options'
         );
-        $(elements.dropdown_selector + ' li:nth-child(3)').click(); // Click Remove
+        $(elements.dropdown_selector)
+            .$('li=Remove track')
+            .click(); // Click Remove
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
         var res = checkOncoprintElement('.oncoprintContainer');
@@ -374,7 +376,7 @@ describe('sorting', function() {
         $(profiledElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        $(profiledElements.dropdown_selector + ' li:nth-child(3)').click(); // Click Remove Track
+        $(profiledElements.dropdown_selector + 'li=Remove track').click(); // Click Remove Track
         waitForOncoprint(2000);
 
         var res = checkOncoprintElement();
@@ -522,7 +524,7 @@ describe('sorting', function() {
             diseaseFreeElements.dropdown_selector,
             'couldnt show disease free dropdown'
         );
-        diseaseFreeElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+        diseaseFreeElements.dropdown.$('li=Sort Z-a').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -537,7 +539,7 @@ describe('sorting', function() {
         $(fractionGenomeAlteredElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        fractionGenomeAlteredElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+        fractionGenomeAlteredElements.dropdown.$('li=Sort Z-a').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -554,7 +556,7 @@ describe('sorting', function() {
             fractionGenomeAlteredElements.dropdown_selector,
             'couldnt show fraction genome altered dropdown'
         );
-        fractionGenomeAlteredElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
+        fractionGenomeAlteredElements.dropdown.$('li=Sort a-Z').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -569,9 +571,11 @@ describe('sorting', function() {
             timeout: 1000,
         }); // wait for menu to appear
         $(
-            TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'
+            TP53HeatmapElements.dropdown_selector + ' li=Sort Z-a'
         ).scrollIntoView();
-        $(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)').click(); // Click sort Z-a
+        $(TP53HeatmapElements.dropdown_selector)
+            .$('li=Sort Z-a')
+            .click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -591,7 +595,9 @@ describe('sorting', function() {
         $(profiledElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        $(`${profiledElements.dropdown_selector} li:nth-child(3)`).click(); // Click Remove Track
+        $(`${profiledElements.dropdown_selector}`)
+            .$('li=Remove track')
+            .click(); // Click Remove Track
         browser.pause(100); // give time to take effect
 
         // Sort heatmap tracks
@@ -600,7 +606,9 @@ describe('sorting', function() {
         $(TP53HeatmapElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        $(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)').click(); // Click sort Z-a
+        $(TP53HeatmapElements.dropdown_selector)
+            .$('li=Sort Z-a')
+            .click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -615,7 +623,7 @@ describe('sorting', function() {
             TP53HeatmapElements.dropdown_selector,
             'couldnt show TP53 heatmap dropdown'
         );
-        TP53HeatmapElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
+        TP53HeatmapElements.dropdown.$('li=Sort a-Z').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -636,7 +644,7 @@ describe('sorting', function() {
         $(MDM4HeatmapElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        MDM4HeatmapElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
+        MDM4HeatmapElements.dropdown.$('li=sort a-Z').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -651,7 +659,7 @@ describe('sorting', function() {
             MDM4HeatmapElements.dropdown_selector,
             'couldnt show MDM4 heatmap dropdown'
         );
-        MDM4HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+        MDM4HeatmapElements.dropdown.$('li=Sort Z-a').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
@@ -664,7 +672,7 @@ describe('sorting', function() {
         $(TP53HeatmapElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        TP53HeatmapElements.dropdown.$('li:nth-child(7)').click(); // Click Don't sort
+        TP53HeatmapElements.dropdown.$(`li=Don't sort track`).click(); // Click Don't sort
         browser.pause(100); // give time to sort
 
         var res = checkOncoprintElement();
