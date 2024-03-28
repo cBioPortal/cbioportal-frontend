@@ -57,7 +57,7 @@ import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { OncoprintJS, RGBAColor, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import tabularDownload from './tabularDownload';
+import tabularDownload, { getTabularDownloadData } from './tabularDownload';
 import classNames from 'classnames';
 import {
     clinicalAttributeIsLocallyComputed,
@@ -97,6 +97,9 @@ import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
+import { handlePostedSubmission } from 'shared/lib/redirectHelpers';
+import { openWindowWithPost } from 'shared/lib/send_post';
+import jQuery from 'jquery';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1092,6 +1095,212 @@ export default class ResultsViewOncoprint extends React.Component<
                                     clinical: clinicalInput,
                                     heatmap: heatmapInput,
                                 };
+                            }
+                        );
+                        break;
+                    case 'jupyterNoteBook':
+                        onMobxPromise(
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any
+                            ) => {
+                                const fileContent = getTabularDownloadData(
+                                    this.geneticTracks.result,
+                                    this.clinicalTracks.result,
+                                    this.heatmapTracks.result,
+                                    this.genericAssayHeatmapTracks.result,
+                                    this.genesetHeatmapTracks.result,
+                                    this.oncoprintJs.getIdOrder(),
+                                    this.oncoprintAnalysisCaseType ===
+                                        OncoprintAnalysisCaseType.SAMPLE
+                                        ? (key: string) =>
+                                              sampleKeyToSample[key].sampleId
+                                        : (key: string) =>
+                                              patientKeyToPatient[key]
+                                                  .patientId,
+                                    this.oncoprintAnalysisCaseType,
+                                    this.distinguishDrivers
+                                );
+
+                                const jupyterNotebookTool = window.open(
+                                    buildCBioPortalPageUrl('/jupyternotebook')
+                                ) as any;
+                                jupyterNotebookTool.clientPostedData = {
+                                    data: fileContent,
+                                };
+                            }
+                        );
+                        break;
+                    case 'textQLNotebook':
+                        const self = this;
+                        onMobxPromise(
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any
+                            ) => {
+                                const clinicalFile = self.clinicalTracks.result
+                                    .length
+                                    ? getTabularDownloadData(
+                                          [],
+                                          self.clinicalTracks.result,
+                                          [],
+                                          [],
+                                          [],
+                                          this.oncoprintJs.getIdOrder(),
+                                          this.oncoprintAnalysisCaseType ===
+                                              OncoprintAnalysisCaseType.SAMPLE
+                                              ? (key: string) =>
+                                                    sampleKeyToSample[key]
+                                                        .sampleId
+                                              : (key: string) =>
+                                                    patientKeyToPatient[key]
+                                                        .patientId,
+                                          this.oncoprintAnalysisCaseType,
+                                          this.distinguishDrivers
+                                      )
+                                    : undefined;
+
+                                const geneticFile = self.geneticTracks.result
+                                    .length
+                                    ? getTabularDownloadData(
+                                          self.geneticTracks.result,
+                                          [],
+                                          [],
+                                          [],
+                                          [],
+                                          this.oncoprintJs.getIdOrder(),
+                                          this.oncoprintAnalysisCaseType ===
+                                              OncoprintAnalysisCaseType.SAMPLE
+                                              ? (key: string) =>
+                                                    sampleKeyToSample[key]
+                                                        .sampleId
+                                              : (key: string) =>
+                                                    patientKeyToPatient[key]
+                                                        .patientId,
+                                          this.oncoprintAnalysisCaseType,
+                                          this.distinguishDrivers
+                                      )
+                                    : undefined;
+
+                                const heatmapFile = self.heatmapTracks.result
+                                    .length
+                                    ? getTabularDownloadData(
+                                          [],
+                                          [],
+                                          self.heatmapTracks.result,
+                                          [],
+                                          [],
+                                          this.oncoprintJs.getIdOrder(),
+                                          this.oncoprintAnalysisCaseType ===
+                                              OncoprintAnalysisCaseType.SAMPLE
+                                              ? (key: string) =>
+                                                    sampleKeyToSample[key]
+                                                        .sampleId
+                                              : (key: string) =>
+                                                    patientKeyToPatient[key]
+                                                        .patientId,
+                                          this.oncoprintAnalysisCaseType,
+                                          this.distinguishDrivers
+                                      )
+                                    : undefined;
+
+                                const genericAssayFile = this
+                                    .genericAssayHeatmapTracks.result.length
+                                    ? getTabularDownloadData(
+                                          [],
+                                          [],
+                                          [],
+                                          this.genericAssayHeatmapTracks.result,
+                                          [],
+                                          this.oncoprintJs.getIdOrder(),
+                                          this.oncoprintAnalysisCaseType ===
+                                              OncoprintAnalysisCaseType.SAMPLE
+                                              ? (key: string) =>
+                                                    sampleKeyToSample[key]
+                                                        .sampleId
+                                              : (key: string) =>
+                                                    patientKeyToPatient[key]
+                                                        .patientId,
+                                          this.oncoprintAnalysisCaseType,
+                                          this.distinguishDrivers
+                                      )
+                                    : undefined;
+
+                                let fileData = [
+                                    geneticFile
+                                        ? {
+                                              description: 'genetic data',
+                                              data: geneticFile,
+                                          }
+                                        : undefined,
+                                    heatmapFile
+                                        ? {
+                                              description: 'heatmap data',
+                                              data: heatmapFile,
+                                          }
+                                        : undefined,
+                                    clinicalFile
+                                        ? {
+                                              description: 'clinical data',
+                                              data: clinicalFile,
+                                          }
+                                        : undefined,
+                                    genericAssayFile
+                                        ? {
+                                              description: 'generic assay',
+                                              data: genericAssayFile,
+                                          }
+                                        : undefined,
+                                ];
+
+                                fileData = _.compact(fileData);
+
+                                const d = {
+                                    files: fileData,
+                                    studies: JSON.stringify(
+                                        this.props.store.studies.result
+                                    ),
+                                };
+
+                                const prompt =
+                                    'What are the mutation frequencies for the gene tracks in the provided genetic data?';
+
+                                jQuery
+                                    .ajax({
+                                        type: 'POST',
+                                        url:
+                                            'https://staging.textql.com/api/dataset/csv/upload_and_run',
+                                        data: d,
+                                        beforeSend: function(xhr) {
+                                            xhr.setRequestHeader(
+                                                'Authorization',
+                                                'Basic ' +
+                                                    btoa(
+                                                        'member-test-55f419c0-c96d-4938-884d-383a5de7a8e3' +
+                                                            ':' +
+                                                            '9qizfm2io1yyj1txziuq'
+                                                    )
+                                            );
+                                        },
+                                    })
+                                    .then(resp => {
+                                        console.log('resp', resp);
+                                        window.open(
+                                            `https://staging.textql.com${resp.path}&init_msg=${prompt}`
+                                        );
+                                    });
                             }
                         );
                         break;
