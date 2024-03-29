@@ -239,7 +239,9 @@ export class ClinicalDataTab extends React.Component<
                 });
             }
             return _.reduce(
-                this.props.store.visibleAttributes.sort(chartMetaComparator),
+                this.props.store.visibleAttributesForClinicalDataTab.sort(
+                    chartMetaComparator
+                ),
                 (
                     acc: Column<{ [id: string]: string }>[],
                     chartMeta: ChartMeta,

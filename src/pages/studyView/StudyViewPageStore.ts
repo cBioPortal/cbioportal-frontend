@@ -6577,6 +6577,37 @@ export class StudyViewPageStore
         );
     }
 
+    @computed get chartMetaSetForClinicalAttributes(): {
+        [id: string]: ChartMeta;
+    } {
+        let ret = {};
+        // Add meta information for clinical attributes (includes survival attributes)
+        // Convert to a Set for easy access and to update attribute meta information (would be useful while adding new features)
+        _.reduce(
+            this.clinicalAttributes.result,
+            (acc: { [id: string]: ChartMeta }, attribute) => {
+                const uniqueKey = getUniqueKey(attribute);
+                const priority = getPriorityByClinicalAttribute(attribute);
+                if (priority > -1) {
+                    acc[uniqueKey] = {
+                        displayName: attribute.displayName,
+                        uniqueKey: uniqueKey,
+                        dataType: getChartMetaDataType(uniqueKey),
+                        patientAttribute: attribute.patientAttribute,
+                        description: attribute.description,
+                        priority: priority,
+                        renderWhenDataChange: false,
+                        clinicalAttribute: attribute,
+                    };
+                }
+                return acc;
+            },
+            ret
+        );
+
+        return ret;
+    }
+
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
         // Only add Mobx Promises that are not dependent on StudyViewFilter will force re-render
@@ -6593,7 +6624,7 @@ export class StudyViewPageStore
             _.fromPairs(this._XvsYCharts.toJSON())
         );
 
-        // Add meta information for each of the clinical attribute
+        // Add meta information for chart clinical attributes (doesn't include survival attributes except 'OS_STATUS')
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(
             this.chartClinicalAttributes.result,
@@ -6837,6 +6868,26 @@ export class StudyViewPageStore
                 return acc;
             },
             {} as any
+        );
+    }
+
+    @computed
+    get visibleAttributesForClinicalDataTab(): ChartMeta[] {
+        return _.reduce(
+            Array.from(this._chartVisibility.entries() || []),
+            (acc, [chartUniqueKey, visible]) => {
+                if (
+                    visible &&
+                    this.chartMetaSetForClinicalAttributes[chartUniqueKey]
+                ) {
+                    let chartMeta = this.chartMetaSetForClinicalAttributes[
+                        chartUniqueKey
+                    ];
+                    acc.push(chartMeta);
+                }
+                return acc;
+            },
+            [] as ChartMeta[]
         );
     }
 
