@@ -165,9 +165,9 @@ exports.config = {
     //
     //
 
-    //specs: [SPEC_FILE_PATTERN],
+    specs: [SPEC_FILE_PATTERN],
 
-    specs: ['./local/specs/web-tour.spec.js'],
+    exclude: ['./local/specs/web-tour.spec.js'],
 
     // Patterns to exclude.
     //exclude: ['./local/specs/web-tour.spec.js'],
