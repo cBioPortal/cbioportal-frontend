@@ -144,9 +144,11 @@ function deDupTests(reports) {
 async function bootstrap() {
     const reportData = await getResultsReport();
 
-    runMode = reportData.testHome || 'remote';
+    runMode =
+        reportData.length && reportData[0]?.specs[1]?.includes('/remote/')
+            ? 'remote'
+            : 'local';
 
-    //runMode = 'remote';
     console.log('reportData', reportData);
 
     var tests = _(reportData)
