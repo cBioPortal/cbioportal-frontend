@@ -6580,7 +6580,12 @@ export class StudyViewPageStore
     @computed get chartMetaSetForClinicalAttributes(): {
         [id: string]: ChartMeta;
     } {
-        let ret = {};
+        let _chartMetaSet = _.fromPairs(this._customCharts.toJSON());
+        if (_.isEmpty(this.molecularProfiles.result)) {
+            delete _chartMetaSet[
+                SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT
+            ];
+        }
         // Add meta information for clinical attributes (includes survival attributes)
         // Convert to a Set for easy access and to update attribute meta information (would be useful while adding new features)
         _.reduce(
@@ -6602,10 +6607,33 @@ export class StudyViewPageStore
                 }
                 return acc;
             },
-            ret
+            _chartMetaSet
         );
 
-        return ret;
+        _.reduce(
+            this.survivalPlots.result,
+            (acc: { [id: string]: ChartMeta }, survivalPlot) => {
+                acc[survivalPlot.id] = {
+                    uniqueKey: survivalPlot.id,
+                    dataType: getChartMetaDataType(survivalPlot.id),
+                    patientAttribute: true,
+                    displayName: survivalPlot.title,
+                    clinicalAttribute: survivalPlot.survivalStatusAttribute,
+                    // use survival status attribute's priority as KM plot's priority for non-reserved plots
+                    priority:
+                        STUDY_VIEW_CONFIG.priority[survivalPlot.id] ||
+                        getPriorityByClinicalAttribute(
+                            survivalPlot.survivalStatusAttribute
+                        ),
+                    renderWhenDataChange: false,
+                    description: '',
+                };
+                return acc;
+            },
+            _chartMetaSet
+        );
+
+        return _chartMetaSet;
     }
 
     @computed
@@ -6873,13 +6901,28 @@ export class StudyViewPageStore
 
     @computed
     get visibleAttributesForClinicalDataTab(): ChartMeta[] {
+        // keep track of clinical attributes in case of duplicates
+        let clinicalAttributes: {
+            [id: string]: ChartMeta;
+        } = {};
         return _.reduce(
             Array.from(this._chartVisibility.entries() || []),
             (acc, [chartUniqueKey, visible]) => {
                 if (
                     visible &&
+                    this.chartMetaSetForClinicalAttributes[chartUniqueKey] &&
                     this.chartMetaSetForClinicalAttributes[chartUniqueKey]
+                        .clinicalAttribute &&
+                    !clinicalAttributes[
+                        this.chartMetaSetForClinicalAttributes[chartUniqueKey]
+                            .clinicalAttribute!.clinicalAttributeId
+                    ]
                 ) {
+                    clinicalAttributes[
+                        this.chartMetaSetForClinicalAttributes[
+                            chartUniqueKey
+                        ].clinicalAttribute!.clinicalAttributeId
+                    ] = this.chartMetaSetForClinicalAttributes[chartUniqueKey];
                     let chartMeta = this.chartMetaSetForClinicalAttributes[
                         chartUniqueKey
                     ];
