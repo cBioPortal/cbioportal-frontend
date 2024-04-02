@@ -145,7 +145,7 @@ async function bootstrap() {
     const reportData = await getResultsReport();
 
     runMode =
-        reportData.length && reportData[0]?.specs[1]?.includes('/remote/')
+        reportData.length && reportData[0]?.specs[0]?.includes('/remote/')
             ? 'remote'
             : 'local';
 
