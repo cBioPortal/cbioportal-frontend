@@ -26,7 +26,6 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
-    '--window-size=1600,1000',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'

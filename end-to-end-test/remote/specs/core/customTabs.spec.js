@@ -239,6 +239,8 @@ function runTests(pageName, url, tabLocation) {
 
             goToUrlWithCustomTabConfig(url, conf);
 
+            browser.setWindowSize(1600, browser.getWindowSize().height);
+
             browser.execute(() => {
                 window.renderCustomTab1 = function(div, tab) {
                     $(div).append(`<div>First render</div>`);
@@ -402,10 +404,10 @@ describe('Patient Cohort View Custom Tab Tests', () => {
     });
 });
 
-//runTests('ResultsView', resultsUrl, 'RESULTS_PAGE');
+runTests('ResultsView', resultsUrl, 'RESULTS_PAGE');
 
 runTests('StudyView', studyUrl, 'STUDY_PAGE');
 
-//runTests('PatientView', patientUrl, 'PATIENT_PAGE');
+runTests('PatientView', patientUrl, 'PATIENT_PAGE');
 
-//runTests('ComparisonPage', comparisonUrl, 'COMPARISON_PAGE');
+runTests('ComparisonPage', comparisonUrl, 'COMPARISON_PAGE');
