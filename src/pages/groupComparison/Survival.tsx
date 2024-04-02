@@ -47,6 +47,7 @@ import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
 import { ControlLabel, FormControl, ButtonGroup, Radio } from 'react-bootstrap';
 import Select from 'react-select';
+import { getSurvivalPlotPrefixText } from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export interface ISurvivalProps {
     store: ComparisonStore;
@@ -65,14 +66,17 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     private differentDescriptionExistMessage =
         'Different descriptions of survival data were used for different studies.';
 
-    @observable
-    private selectedSurvivalPlotPrefix: string | undefined = undefined;
+    // @observable
+    // private selectedSurvivalPlotPrefix: string | undefined = undefined;
 
     @observable
     private startEventPosition: 'FIRST' | 'LAST' = 'FIRST';
 
     @observable
     private endEventPosition: 'FIRST' | 'LAST' = 'LAST';
+
+    @observable
+    private censoredEventPosition: 'FIRST' | 'LAST' = 'FIRST';
 
     @observable
     private _selectedStartClinicalEventType: string | undefined = undefined;
@@ -99,8 +103,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     @action.bound
     private setSurvivalPlotPrefix(prefix: string) {
-        //
-        this.selectedSurvivalPlotPrefix = prefix;
+        this.props.store.selectedSurvivalPlotPrefix = prefix;
     }
 
     public readonly analysisGroupsComputations = remoteData({
@@ -310,6 +313,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             return Promise.resolve(ret);
         },
     });
+
+    @computed get selectedSurvivalPlotPrefix() {
+        return this.props.store.selectedSurvivalPlotPrefix;
+    }
 
     @action.bound
     private onStartClinicalEventSelection(option: any) {
@@ -664,7 +671,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                 />
                                             </td>
                                         )}
-                                    {/* <td>
+                                    <td>
                                         <ButtonGroup>
                                             {POSITIONS.map((option, i) => {
                                                 return (
@@ -672,10 +679,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                         checked={
                                                             option.value ===
                                                             this
-                                                                .startEventPosition
+                                                                .censoredEventPosition
                                                         }
                                                         onChange={e => {
-                                                            this.startEventPosition = $(
+                                                            this.censoredEventPosition = $(
                                                                 e.target
                                                             ).attr(
                                                                 'data-value'
@@ -691,7 +698,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                 );
                                             })}
                                         </ButtonGroup>
-                                    </td> */}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -713,10 +720,30 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                     this
                                                         .selectedEndClinicalEventAttributes,
                                                     this
-                                                        ._selectedCensoredClinicalEventType!, //TODO: Last Event
-                                                    this.endEventPosition,
+                                                        ._selectedCensoredClinicalEventType!,
+                                                    this.censoredEventPosition,
                                                     this
                                                         .selectedCensoredClinicalEventAttributes
+                                                );
+                                                this.setSurvivalPlotPrefix(
+                                                    getSurvivalPlotPrefixText(
+                                                        this
+                                                            ._selectedStartClinicalEventType!,
+                                                        this.startEventPosition,
+                                                        this
+                                                            .selectedStartClinicalEventAttributes,
+                                                        this
+                                                            ._selectedEndClinicalEventType!,
+                                                        this.endEventPosition,
+                                                        this
+                                                            .selectedEndClinicalEventAttributes,
+                                                        this
+                                                            ._selectedCensoredClinicalEventType!,
+                                                        this
+                                                            .censoredEventPosition,
+                                                        this
+                                                            .selectedCensoredClinicalEventAttributes
+                                                    )
                                                 );
                                             }}
                                         >

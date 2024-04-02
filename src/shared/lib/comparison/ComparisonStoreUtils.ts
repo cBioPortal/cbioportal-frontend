@@ -1,4 +1,6 @@
-import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
+import ComparisonStore, {
+    ClinicalEventDataWithKey,
+} from 'shared/lib/comparison/ComparisonStore';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { stringListToMap } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
@@ -251,4 +253,39 @@ export function doEnrichmentEventTypeMapsMatch<T>(
             }
         })
     );
+}
+
+export function getSurvivalPlotPrefixText(
+    startClinicalEventType: string,
+    startEventPosition: 'FIRST' | 'LAST',
+    startClinicalEventAttributes: ClinicalEventDataWithKey[],
+    endClinicalEventType: string,
+    endEventPosition: 'FIRST' | 'LAST',
+    endClinicalEventAttributes: ClinicalEventDataWithKey[],
+    censoredClinicalEventType: string,
+    censoredEventPosition: 'FIRST' | 'LAST',
+    censoredClinicalEventAttributes: ClinicalEventDataWithKey[]
+) {
+    const startIdentifier = startClinicalEventAttributes
+        .sort((a, b) => a.label.localeCompare(b.label))
+        .map(x => x.label)
+        .join(' ');
+    const endIdentifier = endClinicalEventAttributes
+        .sort((a, b) => a.label.localeCompare(b.label))
+        .map(x => x.label)
+        .join(' ');
+    const censoredIdentifier = censoredClinicalEventAttributes
+        .sort((a, b) => a.label.localeCompare(b.label))
+        .map(x => x.label)
+        .join(' ');
+
+    const title = `${startEventPosition} of ${startClinicalEventType}${
+        startIdentifier.length > 0 ? ' - ' + startIdentifier : ''
+    } and ${endEventPosition} of ${endClinicalEventType}${
+        endIdentifier.length > 0 ? ' - ' + endIdentifier : ''
+    } and censored by ${censoredEventPosition} of ${censoredClinicalEventType}${
+        censoredIdentifier.length > 0 ? ' - ' + censoredIdentifier : ''
+    }`;
+    const prefix = title.replace(/\s/g, '_');
+    return prefix;
 }

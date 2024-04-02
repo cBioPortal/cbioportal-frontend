@@ -95,6 +95,7 @@ import {
     EnrichmentEventType,
     getCopyNumberEventTypesAPIParameter,
     getMutationEventTypesAPIParameter,
+    getSurvivalPlotPrefixText,
     MutationEnrichmentEventType,
     mutationEventTypeSelectInit,
     StructuralVariantEnrichmentEventType,
@@ -136,6 +137,8 @@ export default abstract class ComparisonStore extends AnalysisStore
     @observable includeUnknownStatusMutations = true;
 
     @observable public adjustForLeftTruncation = true;
+
+    @observable selectedSurvivalPlotPrefix: string | undefined = undefined;
 
     public customSurvivalDataPromises: {
         [id: string]: MobxPromise<ClinicalData[]>;
@@ -2710,6 +2713,8 @@ export default abstract class ComparisonStore extends AnalysisStore
                                         ? ' - ' + endIdentifier
                                         : ''
                                 } censored by ${
+                                    x.censoredEventRequestIdentifier?.position
+                                } of ${
                                     x.censoredEventRequestIdentifier
                                         ?.clinicalEventRequests[0].eventType
                                 }${
@@ -3242,27 +3247,17 @@ export default abstract class ComparisonStore extends AnalysisStore
         censoredEventPosition: 'FIRST' | 'LAST',
         censoredClinicalEventAttributes: ClinicalEventDataWithKey[]
     ) {
-        const startIdentifier = startClinicalEventAttributes
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .map(x => x.label)
-            .join(' ');
-        const endIdentifier = endClinicalEventAttributes
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .map(x => x.label)
-            .join(' ');
-        const censoredIdentifier = censoredClinicalEventAttributes
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .map(x => x.label)
-            .join(' ');
-
-        const title = `${startEventPosition} of ${startClinicalEventType}${
-            startIdentifier.length > 0 ? ' - ' + startIdentifier : ''
-        } and ${endEventPosition} of ${endClinicalEventType}${
-            endIdentifier.length > 0 ? ' - ' + endIdentifier : ''
-        } and censored by ${censoredClinicalEventType}${
-            censoredIdentifier.length > 0 ? ' - ' + censoredIdentifier : ''
-        }`;
-        const prefix = title.replace(/\s/g, '_');
+        const prefix = getSurvivalPlotPrefixText(
+            startClinicalEventType,
+            startEventPosition,
+            startClinicalEventAttributes,
+            endClinicalEventType,
+            endEventPosition,
+            endClinicalEventAttributes,
+            censoredClinicalEventType,
+            censoredEventPosition,
+            censoredClinicalEventAttributes
+        );
 
         this.customSurvivalPlots[prefix] = {
             attributeIdPrefix: prefix,

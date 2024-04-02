@@ -337,12 +337,22 @@ export default class SurvivalPrefixTable extends React.Component<
         );
     }
 
+    @computed get currentPage() {
+        const rowIndex = this.dataStore
+            .getSortedFilteredData()
+            .findIndex(row => row.prefix === this.props.getSelectedPrefix());
+        const pageNumber = Math.floor(rowIndex / 15);
+
+        return pageNumber;
+    }
+
     @action.bound
     private onPatientMinThresholdChange(val: number) {
         this.dataStore.patientMinThreshold = val;
     }
 
     public render() {
+        this.dataStore.page = this.currentPage;
         return (
             <LazyMobXTable
                 columns={this.columns}
