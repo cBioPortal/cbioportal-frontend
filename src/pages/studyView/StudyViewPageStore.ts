@@ -1,4 +1,4 @@
-import _, { invoke } from 'lodash';
+import _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -99,7 +99,6 @@ import {
     findInvalidMolecularProfileIds,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
-    generateXvsYScatterPlotDownloadData,
     getAllClinicalDataByStudyViewFilter,
     getBinBounds,
     getCategoricalFilterValues,
@@ -107,7 +106,6 @@ import {
     getChartSettingsMap,
     getClinicalDataCountWithColorByClinicalDataCount,
     getCNAByAlteration,
-    getCNAColorByAlteration,
     getCNASamplesCount,
     getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
@@ -115,7 +113,6 @@ import {
     getFilteredMolecularProfilesByAlterationType,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
-    getFrequencyStr,
     getGenericAssayChartUniqueKey,
     getGenericAssayDataAsClinicalData,
     getGenomicChartUniqueKey,
@@ -125,10 +122,8 @@ import {
     getMolecularProfileIdsFromUniqueKey,
     getNonZeroUniqueBins,
     getPriorityByClinicalAttribute,
-    getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
-    getSampleToClinicalData,
     getStructuralVariantSamplesCount,
     getUniqueKey,
     getUniqueKeyFromGeneFilterMolecularProfileIds,
@@ -208,7 +203,7 @@ import {
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
 import { LoadingPhase } from '../groupComparison/GroupComparisonLoading';
-import { sleep, sleepUntil } from '../../shared/lib/TimeUtils';
+import { sleepUntil } from '../../shared/lib/TimeUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { CancerGene } from 'oncokb-ts-api-client';
@@ -308,8 +303,6 @@ import {
     getAllowedSurvivalClinicalDataFilterId,
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
-import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
-import { Chart } from 'chart.js';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -4990,7 +4983,8 @@ export class StudyViewPageStore
                         return this.addColorToCategories(
                             result!.counts,
                             result!.profileType,
-                            result!.getDisplayedValue
+                            result!.getDisplayedValue,
+                            result!.getDisplayedColor
                         );
                     }
                     return res;

@@ -60,6 +60,7 @@ export default class GeneLevelSelection extends React.Component<
         profileName: string;
         description: string;
         dataType: string;
+        alterationType: string;
     };
 
     @observable private _selectedSubProfileOption?: {
@@ -138,7 +139,7 @@ export default class GeneLevelSelection extends React.Component<
             return this._selectedProfileOption;
         }
         if (this.props.molecularProfileOptionsPromise.isComplete) {
-            return this.molecularProfileOptions[0].options[0];
+            return this.molecularProfileOptions[0];
         }
         return undefined;
     }
@@ -194,7 +195,7 @@ export default class GeneLevelSelection extends React.Component<
     @computed
     private get molecularProfileOptions() {
         if (this.props.molecularProfileOptionsPromise.isComplete) {
-            const options: MolecularProfileOption[] = this.props.molecularProfileOptionsPromise.result!.map(
+            return this.props.molecularProfileOptionsPromise.result!.map(
                 option => {
                     return {
                         ...option,
@@ -203,27 +204,6 @@ export default class GeneLevelSelection extends React.Component<
                     };
                 }
             );
-
-            const optionsMap = _.reduce(
-                options,
-                (acc, molecularProfileOption) => {
-                    if (!acc.has(molecularProfileOption.alterationType)) {
-                        acc.set(molecularProfileOption.alterationType, []);
-                    }
-                    let prevOptions = acc.get(
-                        molecularProfileOption.alterationType
-                    )!;
-                    prevOptions.push(molecularProfileOption);
-                    acc.set(molecularProfileOption.alterationType, prevOptions);
-                    return acc;
-                },
-                new Map<String, Array<any>>()
-            );
-
-            return Array.from(optionsMap, ([label, options]) => ({
-                label,
-                options,
-            }));
         }
         return [];
     }

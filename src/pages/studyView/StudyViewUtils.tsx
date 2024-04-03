@@ -4122,6 +4122,7 @@ export async function invokeGenomicDataCount(
 ) {
     let result = [];
     let getDisplayedValue;
+    let getDisplayedColor;
     let params = {
         genomicDataCountFilter: {
             genomicDataFilters: [
@@ -4150,6 +4151,8 @@ export async function invokeGenomicDataCount(
     } else {
         result = await internalClient.fetchGenomicDataCountsUsingPOST(params);
         getDisplayedValue = getCNAByAlteration;
+        getDisplayedColor = (value: string | number) =>
+            getCNAColorByAlteration(getCNAByAlteration(value));
     }
 
     const data = result.find(
@@ -4173,6 +4176,7 @@ export async function invokeGenomicDataCount(
             counts: counts,
             profileType: profileType,
             getDisplayedValue: getDisplayedValue,
+            getDisplayedColor: getDisplayedColor,
         };
     }
 
