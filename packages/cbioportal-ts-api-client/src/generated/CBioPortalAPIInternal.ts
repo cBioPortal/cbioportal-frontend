@@ -901,13 +901,13 @@ export type MutationCountByPosition = {
 
 };
 export type MutationDataFilter = {
-    'hugoGeneSymbol': string
+    'categorization': "MUTATED" | "MUTATION_TYPE"
+
+        'hugoGeneSymbol': string
 
         'profileType': string
 
         'values': Array < Array< DataFilterValue > >
-
-        'categorization': string
         
 };
 export type MutationPositionIdentifier = {

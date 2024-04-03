@@ -1,5 +1,9 @@
 import * as React from 'react';
-import { DownloadControls } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    DownloadControls,
+} from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 interface IChartContainer {
     getSVGElement?: () => SVGElement | null;
@@ -24,6 +28,10 @@ export default class ChartContainer extends React.Component<
                         right: 10,
                         zIndex: 10,
                     }}
+                    showDownload={
+                        getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL
+                    }
                 />
                 <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
                     {this.props.children}

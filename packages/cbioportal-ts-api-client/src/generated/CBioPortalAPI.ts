@@ -552,6 +552,17 @@ export type Mutation = {
         'variantType': string
 
 };
+export type MutationDataFilter = {
+    'categorization': "MUTATED" | "MUTATION_TYPE"
+
+        'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'values': Array < Array < DataFilterValue >
+        >
+
+};
 export type MutationFilter = {
     'entrezGeneIds': Array < number >
 
@@ -568,15 +579,6 @@ export type MutationMultipleStudyFilter = {
         'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
-export type MutationDataFilter = {
-    'hugoGeneSymbol': string
-
-        'profileType': string
-
-        'values': Array < Array< DataFilterValue > >
-
-        'categorization': string
-}
 export type NumericGeneMolecularData = {
     'entrezGeneId': number
 

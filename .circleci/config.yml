@@ -240,7 +240,7 @@ jobs:
     working_directory: /tmp/repo
     machine:
       enabled: true
-      image: ubuntu-2004:202201-02
+      image: default
     resource_class: large
     steps:
       - when:

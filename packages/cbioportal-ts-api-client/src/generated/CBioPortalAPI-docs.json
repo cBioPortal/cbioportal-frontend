@@ -5423,7 +5423,7 @@
         "categorization": {
           "enum": [
             "MUTATED",
-            "EVENT"
+            "MUTATION_TYPE"
           ],
           "type": "string"
         },

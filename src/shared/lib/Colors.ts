@@ -12,7 +12,6 @@ import {
     MUT_COLOR_TRUNC,
     STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
-import { MUT_PROFILE_COUNT_NOT_MUTATED } from 'pages/resultsView/plots/PlotsTabUtils';
 import { RGBAColor } from 'oncoprintjs';
 // Default grey
 export const BLACK = '#000000';

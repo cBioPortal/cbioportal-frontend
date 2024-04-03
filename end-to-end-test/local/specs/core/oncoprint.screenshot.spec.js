@@ -132,8 +132,6 @@ describe('oncoprint', function() {
             const urlWithUserConfig = createUrlWithSettingsQueryParam(
                 MANUAL_TRACK_CONFIG
             );
-            // go to home page first because navigating to same page with hash params doesn't cause change
-            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, false);
             goToUrlAndSetLocalStorage(urlWithUserConfig, false);
             waitForOncoprint(ONCOPRINT_TIMEOUT);
 
@@ -172,9 +170,7 @@ describe('oncoprint', function() {
             const urlWithUserConfig = createUrlWithSettingsQueryParam(
                 customConfig
             );
-            // go to home page first because navigating to same page with hash params doesn't cause change
-            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, false);
-            browser.url(urlWithUserConfig);
+            goToUrlAndSetLocalStorage(urlWithUserConfig, false);
 
             waitForOncoprint(ONCOPRINT_TIMEOUT);
 

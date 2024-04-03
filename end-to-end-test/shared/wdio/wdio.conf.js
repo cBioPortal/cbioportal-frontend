@@ -165,9 +165,11 @@ exports.config = {
     //
     //
 
+    //port: 9515,
+
     specs: [SPEC_FILE_PATTERN],
 
-    //specs: ['./remote/specs/core/comparisonTab.screenshot.spec.js'],
+    //specs: ['./remote/specs/core/oncoprint.screenshot.spec.js'],
 
     // Patterns to exclude.
     exclude: [

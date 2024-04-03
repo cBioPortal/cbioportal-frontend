@@ -27,6 +27,7 @@ import {
 import autobind from 'autobind-decorator';
 import {
     DefaultTooltip,
+    DownloadControlOption,
     DownloadControls,
     remoteData,
 } from 'cbioportal-frontend-commons';
@@ -669,6 +670,10 @@ export default class MutationOncoprint extends React.Component<
                     style={{
                         marginLeft: 10,
                     }}
+                    showDownload={
+                        getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL
+                    }
                 />
             </div>
         );

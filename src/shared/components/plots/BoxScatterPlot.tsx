@@ -36,10 +36,7 @@ import {
 import autobind from 'autobind-decorator';
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
 import _ from 'lodash';
-import {
-    IAxisLogScaleParams,
-    IBoxScatterPlotPoint,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+import { IAxisLogScaleParams, IBoxScatterPlotPoint } from './PlotsTabUtils';
 import { Popover } from 'react-bootstrap';
 import * as ReactDOM from 'react-dom';
 import classnames from 'classnames';

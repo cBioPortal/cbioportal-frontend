@@ -13,6 +13,7 @@ export {
     default as DownloadControls,
     DataType,
     DownloadControlsButton,
+    DownloadControlOption,
 } from './components/downloadControls/DownloadControls';
 export { default as EditableSpan } from './components/editableSpan/EditableSpan';
 export { default as EllipsisTextTooltip } from './components/ellipsisTextTooltip/EllipsisTextTooltip';

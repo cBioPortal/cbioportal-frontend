@@ -21,6 +21,7 @@ import {
     Option,
     DownloadControls,
     remoteData,
+    DownloadControlOption,
 } from 'cbioportal-frontend-commons';
 import GenericAssayCategoricalEnrichmentsTable, {
     GenericAssayCategoricalEnrichmentTableColumnType,
@@ -33,7 +34,7 @@ import {
     IAxisData,
     IAxisLogScaleParams,
     IStringAxisData,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+} from 'shared/components/plots/PlotsTabUtils';
 import CategoryPlot, {
     CategoryPlotType,
 } from 'pages/groupComparison/CategoryPlot';
@@ -46,6 +47,7 @@ import {
     filterSampleList,
     getComparisonCategoricalNaValue,
 } from 'pages/groupComparison/ClinicalDataUtils';
+import { getServerConfig } from 'config/config';
 
 export interface IGenericAssayCategoricalEnrichmentsContainerProps {
     data: GenericAssayCategoricalEnrichment[];
@@ -247,6 +249,10 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
                     dontFade={true}
                     type="button"
                     style={{ position: 'absolute', right: 0, top: 0 }}
+                    showDownload={
+                        getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL
+                    }
                 />
             </div>
         );

@@ -153,6 +153,12 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 rowDataByProteinChange={this.rowDataByProteinChange}
                 initialSortColumn={'p-Value'}
                 initialSortDirection={'asc'}
+                customDriverName={this.props.customDriverName}
+                customDriverDescription={this.props.customDriverDescription}
+                customDriverTiersName={this.props.customDriverTiersName}
+                customDriverTiersDescription={
+                    this.props.customDriverTiersDescription
+                }
             />
         );
     }
