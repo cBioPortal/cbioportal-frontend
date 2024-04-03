@@ -181,6 +181,7 @@ import {
     getDefaultClinicalDataBinFilter,
     getCustomChartDownloadData,
     generateColorMapKey,
+    MutationCategorization,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -3163,7 +3164,8 @@ export class StudyViewPageStore
                 hugoGeneSymbol: chart!.hugoGeneSymbol,
                 profileType: chart!.profileType,
                 values: dataFilterValues,
-                categorization: chart!.mutationOptionType!,
+                categorization: chart!
+                    .mutationOptionType! as MutationCategorization,
             };
             this._mutationDataFilterSet.set(uniqueKey, mutationDataFilter);
         } else {
@@ -3196,7 +3198,8 @@ export class StudyViewPageStore
             hugoGeneSymbol: chart!.hugoGeneSymbol,
             profileType: chart!.profileType,
             values: dataFilterValues,
-            categorization: chart!.mutationOptionType!,
+            categorization: chart!
+                .mutationOptionType! as MutationCategorization,
         };
         this._mutationDataFilterSet.set(uniqueKey, mutationDataFilter);
     }
@@ -3230,7 +3233,8 @@ export class StudyViewPageStore
                 hugoGeneSymbol: chart!.hugoGeneSymbol,
                 profileType: chart!.profileType,
                 values: newDataFilterValues,
-                categorization: chart!.mutationOptionType!,
+                categorization: chart!
+                    .mutationOptionType! as MutationCategorization,
             };
 
             this._mutationDataFilterSet.set(uniqueKey, newMutationDataFilter);
@@ -4121,7 +4125,16 @@ export class StudyViewPageStore
         }
 
         if (this.mutationDataFilters.length > 0) {
-            filters.mutationDataFilters = this.mutationDataFilters;
+            filters.mutationDataFilters = this.mutationDataFilters.map(
+                filter => {
+                    return {
+                        ...filter,
+                        categorization: filter.categorization as
+                            | 'MUTATED'
+                            | 'MUTATION_TYPE',
+                    };
+                }
+            );
         }
 
         if (this.genericAssayDataFilters.length > 0) {

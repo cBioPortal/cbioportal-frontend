@@ -219,6 +219,8 @@ export type DataBin = {
     start: number;
 };
 
+export type MutationCategorization = 'MUTATED' | 'MUTATION_TYPE';
+
 export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
     {
         uniqueKey: SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
@@ -4072,7 +4074,7 @@ export function getDefaultClinicalDataBinFilter(
     return {
         attributeId: attribute.clinicalAttributeId,
         disableLogScale: false,
-        showNA: true,
+        showNA: false,
     } as ClinicalDataBinFilter & { showNA?: boolean };
 }
 
