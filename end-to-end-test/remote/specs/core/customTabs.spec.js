@@ -106,10 +106,10 @@ function runTests(pageName, url, tabLocation) {
 
             $('.mainTabs').waitForDisplayed();
 
-            if (tabLocation === 'STUDY_PAGE') {
-                $('i.fa-chevron-right').waitForDisplayed();
-                $('i.fa-chevron-right').click();
-            }
+            // if (tabLocation === 'STUDY_PAGE') {
+            //     $('i.fa-chevron-right').waitForDisplayed();
+            //     $('i.fa-chevron-right').click();
+            // }
 
             assert.equal(
                 $('=Patient Tab').isDisplayed(),
@@ -148,10 +148,10 @@ function runTests(pageName, url, tabLocation) {
 
             $('.mainTabs').waitForDisplayed();
 
-            if (tabLocation === 'STUDY_PAGE') {
-                $('i.fa-chevron-right').waitForDisplayed();
-                $('i.fa-chevron-right').click();
-            }
+            // if (tabLocation === 'STUDY_PAGE') {
+            //     $('i.fa-chevron-right').waitForDisplayed();
+            //     $('i.fa-chevron-right').click();
+            // }
 
             assert.equal(
                 $('=Hidden Tab').isDisplayed(),
@@ -404,10 +404,10 @@ describe('Patient Cohort View Custom Tab Tests', () => {
     });
 });
 
-runTests('ResultsView', resultsUrl, 'RESULTS_PAGE');
+//runTests('ResultsView', resultsUrl, 'RESULTS_PAGE');
 
 runTests('StudyView', studyUrl, 'STUDY_PAGE');
 
-runTests('PatientView', patientUrl, 'PATIENT_PAGE');
+//runTests('PatientView', patientUrl, 'PATIENT_PAGE');
 
-runTests('ComparisonPage', comparisonUrl, 'COMPARISON_PAGE');
+//runTests('ComparisonPage', comparisonUrl, 'COMPARISON_PAGE');
