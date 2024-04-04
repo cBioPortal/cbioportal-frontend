@@ -104,6 +104,8 @@ function runTests(pageName, url, tabLocation) {
 
             goToUrlWithCustomTabConfig(url, conf);
 
+            browser.setWindowSize(2000, browser.getWindowSize().height);
+
             $('.mainTabs').waitForDisplayed();
 
             // if (tabLocation === 'STUDY_PAGE') {
@@ -145,6 +147,8 @@ function runTests(pageName, url, tabLocation) {
             ];
 
             goToUrlWithCustomTabConfig(url, conf);
+
+            browser.setWindowSize(2000, browser.getWindowSize().height);
 
             $('.mainTabs').waitForDisplayed();
 
