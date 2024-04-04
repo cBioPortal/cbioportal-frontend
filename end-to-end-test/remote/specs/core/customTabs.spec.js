@@ -408,10 +408,10 @@ describe('Patient Cohort View Custom Tab Tests', () => {
     });
 });
 
-//runTests('ResultsView', resultsUrl, 'RESULTS_PAGE');
+runTests('ResultsView', resultsUrl, 'RESULTS_PAGE');
 
 runTests('StudyView', studyUrl, 'STUDY_PAGE');
 
-//runTests('PatientView', patientUrl, 'PATIENT_PAGE');
+runTests('PatientView', patientUrl, 'PATIENT_PAGE');
 
-//runTests('ComparisonPage', comparisonUrl, 'COMPARISON_PAGE');
+runTests('ComparisonPage', comparisonUrl, 'COMPARISON_PAGE');
