@@ -714,9 +714,9 @@ export type GenomicDataBinFilter = {
 export type GenomicDataCount = {
     'count': number
 
-        'label': string
-
         'uniqueCount': number
+
+        'label': string
 
         'value': string
 
@@ -907,9 +907,8 @@ export type MutationDataFilter = {
 
         'profileType': string
 
-        'values': Array < Array < DataFilterValue >
-        >
-
+        'values': Array < Array< DataFilterValue > >
+        
 };
 export type MutationPositionIdentifier = {
     'entrezGeneId': number
@@ -4815,6 +4814,85 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+
+    fetchMutationDataCountsUsingPOSTURL(parameters: {
+        'genomicDataCountFilter': GenomicDataCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/mutation-data-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+    
+    /**
+     * Fetch mutation data counts by GenomicDataCountFilter
+     * @method
+     * @name CBioPortalAPIInternal#fetchMutationDataCountsUsingPOST
+     * @param {} genomicDataCountFilter - Genomic data count filter
+     */
+    fetchMutationDataCountsUsingPOSTWithHttpInfo(parameters: {
+        'genomicDataCountFilter': GenomicDataCountFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/mutation-data-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['genomicDataCountFilter'] !== undefined) {
+                body = parameters['genomicDataCountFilter'];
+            }
+
+            if (parameters['genomicDataCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genomicDataCountFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+    
+    /**
+     * Fetch mutation data counts by GenomicDataCountFilter
+     * @method
+     * @name CBioPortalAPIInternal#fetchMutationDataCountsUsingPOST
+     * @param {} genomicDataCountFilter - Genomic data count filter
+     */
+    fetchMutationDataCountsUsingPOST(parameters: {
+            'genomicDataCountFilter': GenomicDataCountFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenomicDataCountItem >
+        > {
+            return this.fetchMutationDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
     fetchMolecularProfileSampleCountsUsingPOSTURL(parameters: {
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any
@@ -5542,89 +5620,6 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-    fetchMutationDataCountsUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'genomicDataCountFilter' ? : GenomicDataCountFilter,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/api/mutation-data-counts/fetch';
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch mutation data counts by GenomicDataCountFilter
-     * @method
-     * @name CBioPortalAPIInternal#fetchMutationDataCountsUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} genomicDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchMutationDataCountsUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'genomicDataCountFilter' ? : GenomicDataCountFilter,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/api/mutation-data-counts/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['projection'] !== undefined) {
-                queryParameters['projection'] = parameters['projection'];
-            }
-
-            if (parameters['genomicDataCountFilter'] !== undefined) {
-                body = parameters['genomicDataCountFilter'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch mutation data counts by GenomicDataCountFilter
-     * @method
-     * @name CBioPortalAPIInternal#fetchMutationDataCountsUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} genomicDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchMutationDataCountsUsingPOST(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'genomicDataCountFilter' ? : GenomicDataCountFilter,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < ResponseEntityListGenomicDataCountItem > {
-        return this.fetchMutationDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
     getAllReferenceGenomeGenesUsingGETURL(parameters: {
         'genomeName': string,
         $queryParameters ? : any
