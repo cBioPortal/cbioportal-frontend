@@ -206,7 +206,7 @@ describe('track group headers', function() {
         );
 
         $(mrnaElements.dropdown_selector + ' li:nth-child(4)').click(); // Click Delete
-        waitForOncoprint(10000);
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -222,7 +222,7 @@ describe('track group headers', function() {
             'could not open mrna group options dropdown'
         );
         $(methylElements.dropdown_selector + ' li:nth-child(4)').click(); // Click Delete
-        waitForOncoprint(10000);
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -375,7 +375,7 @@ describe('sorting', function() {
             timeout: 1000,
         }); // wait for menu to appear
         $(profiledElements.dropdown_selector + ' li:nth-child(3)').click(); // Click Remove Track
-        waitForOncoprint(2000);
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
