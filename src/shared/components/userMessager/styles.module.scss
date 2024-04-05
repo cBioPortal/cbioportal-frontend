@@ -15,7 +15,8 @@
     a {
         color: lightblue;
 
-        &:hover {
+        &:hover,
+        &:visited {
             color: lightblue;
             opacity: 0.6;
         }
