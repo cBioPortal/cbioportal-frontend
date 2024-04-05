@@ -70,7 +70,13 @@ import {
     stringListToIndexSet,
     toPromise,
 } from 'cbioportal-frontend-commons';
-import { DEFAULT_NA_COLOR, getClinicalValueColor } from 'shared/lib/Colors';
+import {
+    CLI_NO_COLOR,
+    CLI_YES_COLOR,
+    DEFAULT_NA_COLOR,
+    DEFAULT_UNKNOWN_COLOR,
+    getClinicalValueColor,
+} from 'shared/lib/Colors';
 import { StudyViewComparisonGroup } from '../groupComparison/GroupComparisonUtils';
 import styles from './styles.module.scss';
 import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
@@ -1917,6 +1923,19 @@ export function transformMutatedType(type: string): string {
 
     // Join the words back together with a space between them
     return capitalizedWords.join(' ');
+}
+
+export function getMutationColorByCategorization(type: string): string {
+    switch (type) {
+        case 'Mutated':
+            return CLI_YES_COLOR;
+        case 'Not Mutated':
+            return CLI_NO_COLOR;
+        case 'Not Profiled':
+            return DEFAULT_NA_COLOR;
+        default:
+            return DEFAULT_UNKNOWN_COLOR;
+    }
 }
 
 export function getDefaultChartTypeByClinicalAttribute(
@@ -4150,6 +4169,8 @@ export async function invokeGenomicDataCount(
         };
         result = await internalClient.fetchMutationDataCountsUsingPOST(params);
         getDisplayedValue = transformMutatedType;
+        getDisplayedColor = (value: string) =>
+            getMutationColorByCategorization(transformMutatedType(value));
     } else {
         result = await internalClient.fetchGenomicDataCountsUsingPOST(params);
         getDisplayedValue = getCNAByAlteration;
