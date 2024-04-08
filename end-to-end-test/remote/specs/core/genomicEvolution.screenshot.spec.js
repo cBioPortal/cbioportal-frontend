@@ -75,20 +75,17 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     it('pvge only show highlighted in line chart', function() {
         setCheckboxChecked(false, 'input[data-test="VAFSequentialMode"]');
         setCheckboxChecked(true, 'input[data-test="VAFOnlyHighlighted"]');
-        //$('input[data-test="VAFOnlyHighlighted"]').click();
 
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart log scale', function() {
-        //$('input[data-test="VAFLogScale"]').click();
         jsApiClick('input[data-test="VAFLogScale"]');
 
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart with data range y axis', function() {
-        //$('input[data-test="VAFDataRange"]').click();
         jsApiClick('input[data-test="VAFDataRange"]');
 
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
