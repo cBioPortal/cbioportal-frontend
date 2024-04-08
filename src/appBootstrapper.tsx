@@ -53,6 +53,7 @@ export interface ICBioWindow {
     FRONTEND_VERSION: string;
     FRONTEND_COMMIT: string;
     rawServerConfig: IServerConfig;
+    postLoadForMskCIS: () => void;
     isMSKCIS: boolean;
 }
 
@@ -135,6 +136,9 @@ if (/cbioportal\.org/.test(getBrowserWindow().location.href)) {
 browserWindow.FRONTEND_VERSION = VERSION;
 //@ts-ignore
 browserWindow.FRONTEND_COMMIT = COMMIT;
+
+// this is a NOOP to fix CIS issue
+browserWindow.postLoadForMskCIS = () => {};
 
 // this is the only supported way to disable tracking for the $3Dmol.js
 (browserWindow as any).$3Dmol = { notrack: true };
