@@ -27,28 +27,28 @@ describe('oncoprint screenshot tests', function() {
     it('ov_tcga_pub with germline mutations', function() {
         var url = `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&gene_list=BRCA1%20BRCA2&gene_set_choice=user-defined-list`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('coadread_tcga_pub with clinical and heatmap tracks', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=coadread_tcga_pub_rna_seq_mrna_median_Zscores&show_samples=false&clinicallist=0%2C2%2CMETHYLATION_SUBTYPE&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF&`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('acc_tcga with clinical and heatmap tracks', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=acc_tcga&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=1&data_priority=0&case_set_id=acc_tcga_all&gene_list=SOX9%20RAN%20TNK2%20EP300%20PXN%20NCOA2%20AR%20NRIP1%20NCOR1%20NCOR2&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=acc_tcga_rna_seq_v2_mrna_median_Zscores&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=acc_tcga_rppa_Zscores&show_samples=false&clinicallist=0%2C1%2CMETASTATIC_DX_CONFIRMED_BY&heatmap_track_groups=acc_tcga_rna_seq_v2_mrna_median_Zscores%2CSOX9%2CRAN%2CTNK2%2CEP300%2CPXN%2CNCOA2%2CAR%2CNRIP1%2CNCOR1%2CNCOR2`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('blca_tcga with clinical and heatmap tracks', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=blca_tcga_pub&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=1&data_priority=0&case_set_id=blca_tcga_pub_all&gene_list=SOX9%20RAN%20TNK2%20EP300%20PXN%20NCOA2%20AR%20NRIP1%20NCOR1%20NCOR2&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=blca_tcga_pub_rna_seq_mrna_median_Zscores&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=blca_tcga_pub_rppa_Zscores&show_samples=false&heatmap_track_groups=blca_tcga_pub_rna_seq_mrna_median_Zscores%2CSOX9%2CRAN%2CTNK2%2CEP300%2CPXN%2CNCOA2%2CAR%2CNRIP1%2CNCOR1%2CNCOR2&clinicallist=CANCER_TYPE_DETAILED%2CMETASTATIC_SITE_OTHER%2CNEW_TUMOR_EVENT_AFTER_INITIAL_TREATMENT`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
@@ -56,42 +56,42 @@ describe('oncoprint screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/index.do?cancer_study_id=hcc_inserm_fr_2015&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=hcc_inserm_fr_2015_sequenced&gene_list=SOX9%2520RAN%2520TNK2%2520EP300%2520PXN%2520NCOA2%2520AR%2520NRIP1%2520NCOR1%2520NCOR2%2520TERT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=hcc_inserm_fr_2015_mutations`
         );
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('msk_impact_2017 with SOS1 - SOS1 should be not sequenced', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('msk_impact_2017 with SOS1 with CNA profile - SOS1 should not be sequenced', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('brca_tcga_pub with KRAS NRAS BRAF and methylation heatmap tracks', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=brca_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF%2CTP53%2CBRCA1%2CBRCA2`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('profiled in tracks in msk impact with 3 not profiled genes', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=msk_impact_2017_cnaseq&gene_list=AKR1C1%2520AKR1C2%2520AKR1C4&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
@@ -99,14 +99,14 @@ describe('oncoprint screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?session_id=5c38e4c0e4b05228701fb0c9&show_samples=false`
         );
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it('profiled in tracks in multiple study with SOS1', function() {
         var url = `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=msk_impact_2017%2Cbrca_tcga_pub&case_set_id=all&data_priority=0&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
@@ -114,7 +114,7 @@ describe('oncoprint screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=acc_tcga_pan_can_atlas_2018&case_set_id=acc_tcga_pan_can_atlas_2018_cnaseq&data_priority=0&gene_list=EGFR%253AAMP%253BEGFR%253AMUT%253B%2520PTEN%253B%2520EGFR%2520EGFR&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_pan_can_atlas_2018_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_pan_can_atlas_2018_mutations&tab_index=tab_visualize`
         );
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
@@ -122,7 +122,7 @@ describe('oncoprint screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ccle_broad_2019&case_set_id=ccle_broad_2019_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ccle_broad_2019_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ccle_broad_2019_mutations&profileFilter=0&tab_index=tab_visualize&heatmap_track_groups=ccle_broad_2019_CCLE_drug_treatment_IC50%2CAfatinib-2%2CAKTinhibitorVIII-1&treatment_list=Afatinib-2%3BAKTinhibitorVIII-1`
         );
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         const elements = getNthOncoprintTrackOptionsElements(2);
         setDropdownOpen(
@@ -132,7 +132,7 @@ describe('oncoprint screenshot tests', function() {
             'Couldnt open top treatment track options'
         );
         $(elements.dropdown_selector + ' li:nth-child(3)').click();
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
@@ -141,7 +141,7 @@ describe('oncoprint screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&clinicallist=CANCER_TYPE_DETAILED&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
         );
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         const cancerTypeDetailedElements = getNthOncoprintTrackOptionsElements(
             1
@@ -177,7 +177,7 @@ describe('track group headers', function() {
             `${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bcoadread_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF&show_samples=false`
         );
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         // Cluster the mrna heatmap group
         var mrnaElements = getGroupHeaderOptionsElements(2);
@@ -206,7 +206,7 @@ describe('track group headers', function() {
         );
 
         $(mrnaElements.dropdown_selector + ' li:nth-child(4)').click(); // Click Delete
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -222,7 +222,7 @@ describe('track group headers', function() {
             'could not open mrna group options dropdown'
         );
         $(methylElements.dropdown_selector + ' li:nth-child(4)').click(); // Click Delete
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -280,7 +280,7 @@ describe('sorting', function() {
 
         $('[data-test="queryButton"]').click();
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -294,7 +294,7 @@ describe('sorting', function() {
         );
         $(eventsPerSampleRadioButton).click(); // go to sample mode
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         setDropdownOpen(
             false,
@@ -334,7 +334,7 @@ describe('sorting', function() {
 
         $('[data-test="queryButton"]').click();
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -348,7 +348,7 @@ describe('sorting', function() {
         );
         $(eventsPerSampleRadioButton).click(); // go to sample mode
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         setDropdownOpen(
             false,
@@ -366,7 +366,7 @@ describe('sorting', function() {
                 '/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%20MDM2%20MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4'
         );
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         // first get rid of the Profiled track
         var profiledElements = getNthOncoprintTrackOptionsElements(5);
@@ -375,7 +375,7 @@ describe('sorting', function() {
             timeout: 1000,
         }); // wait for menu to appear
         $(profiledElements.dropdown_selector + ' li:nth-child(3)').click(); // Click Remove Track
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -389,7 +389,7 @@ describe('sorting', function() {
         );
         $(eventsPerSampleRadioButton).click(); // go to sample mode
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         $(eventsPerPatientRadioButton).waitForDisplayed({ timeout: 2000 });
         setDropdownOpen(
@@ -410,7 +410,7 @@ describe('sorting', function() {
         );
         $(eventsPerPatientRadioButton).click(); // go to patient mode
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         var overallSurvivalElements = getNthOncoprintTrackOptionsElements(4);
         overallSurvivalElements.button.click();
@@ -487,7 +487,7 @@ describe('sorting', function() {
         );
         $(eventsPerSampleRadioButton).click(); // go to sample mode
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         setDropdownOpen(
             false,
@@ -583,7 +583,7 @@ describe('sorting', function() {
                 '/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true'
         );
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         // Sort heatmap tracks
         var TP53HeatmapElements = getNthOncoprintTrackOptionsElements(8);
@@ -671,7 +671,7 @@ describe('sorting', function() {
             eventsPerPatientRadioButton
         );
         $(eventsPerPatientRadioButton).click(); // go to patient mode
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         setDropdownOpen(
             false,

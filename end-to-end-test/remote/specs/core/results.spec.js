@@ -255,7 +255,7 @@ describe('Results Page', function() {
 
         before(() => {
             goToUrlAndSetLocalStorage(simpleQueryUrl);
-            waitForOncoprint(10000);
+            waitForOncoprint();
         });
 
         it('should not be present in oncoprint tab with simple query', function() {
@@ -382,7 +382,7 @@ describe('Results Page', function() {
 
         it('should be present in oncoprint tab with explicit query', function() {
             goToUrlAndSetLocalStorage(explicitOqlQueryUrl);
-            waitForOncoprint(10000);
+            waitForOncoprint();
             assert(
                 $(
                     `${yesBannerSelector}.oncoprint-oql-status-banner`

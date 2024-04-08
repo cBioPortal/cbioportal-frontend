@@ -136,7 +136,7 @@ describe('results page', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?session_id=5bc64b48498eb8b3d5685af7`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             assert(!$('a.tabAnchor_coexpression').isDisplayed());
             assert(!$('a.tabAnchor_cnSegments').isDisplayed());
         });
@@ -171,13 +171,13 @@ describe('results page', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
 
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
         it('should not appear in a multiple study query with one gene', function() {
@@ -506,6 +506,6 @@ describe('invalid query from url', function() {
         $('[data-test="queryButton"]').click();
 
         $('#modifyQueryBtn').waitForExist({ timeout: 3000 });
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
     });
 });

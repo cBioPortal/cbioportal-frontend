@@ -28,7 +28,7 @@ describe('oncoprint gap screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_cna&gene_list=BCHE%252CCDK8%252CCTBP1%252CACKR3&gene_set_choice=user-defined-list&&clinicallist=SEX,CANCER_TYPE_DETAILED&profileFilter=mutations%2Cgistic&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
     });
     it('shows gaps for sex track with correct subgroup percentages', function() {
         const sexElements = getNthOncoprintTrackOptionsElements(1);
@@ -41,7 +41,7 @@ describe('oncoprint gap screenshot tests', function() {
         $(`${sexElements.dropdown_selector} li:nth-child(9)`).click(); // Click "show gaps"
         browser.pause(100); // give time to sort and insert gaps
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         $('.oncoprint__zoom-controls .fa-search-minus').click();
         $('.oncoprint__zoom-controls .fa-search-minus').click();
@@ -67,7 +67,7 @@ describe('oncoprint gap screenshot tests', function() {
         ).click(); // Click "show gaps"
         browser.pause(100); // give time to sort and insert gaps
 
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         const res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);

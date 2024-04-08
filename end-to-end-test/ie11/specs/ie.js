@@ -16,6 +16,6 @@ describe('Application in IE11', function() {
     //     $('.exampleQueries')
     //         .$$('a')[1]
     //         .click();
-    //     waitForOncoprint(10000);
+    //     waitForOncoprint();
     // });
 });
