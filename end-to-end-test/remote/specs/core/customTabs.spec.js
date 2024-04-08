@@ -108,11 +108,6 @@ function runTests(pageName, url, tabLocation) {
 
             $('.mainTabs').waitForDisplayed();
 
-            // if (tabLocation === 'STUDY_PAGE') {
-            //     $('i.fa-chevron-right').waitForDisplayed();
-            //     $('i.fa-chevron-right').click();
-            // }
-
             assert.equal(
                 $('=Patient Tab').isDisplayed(),
                 false,
@@ -151,11 +146,6 @@ function runTests(pageName, url, tabLocation) {
             browser.setWindowSize(2000, browser.getWindowSize().height);
 
             $('.mainTabs').waitForDisplayed();
-
-            // if (tabLocation === 'STUDY_PAGE') {
-            //     $('i.fa-chevron-right').waitForDisplayed();
-            //     $('i.fa-chevron-right').click();
-            // }
 
             assert.equal(
                 $('=Hidden Tab').isDisplayed(),
