@@ -128,10 +128,13 @@ export default class DownloadControls extends React.Component<
                         }
                     });
                 } else {
+                    // using serlizer to convert svg to string
                     let serializer = new XMLSerializer();
                     const inlinedSVG = juice(
                         serializer.serializeToString(result)
                     );
+
+                    // parsing as SVGElement after css inlining
                     let parser = new DOMParser();
                     let svg = (parser.parseFromString(
                         inlinedSVG,
