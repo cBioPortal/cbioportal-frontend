@@ -144,15 +144,24 @@ export default class RightBar extends React.Component<
                         <div>
                             <div style={{ paddingTop: 5 }}>
                                 <p style={{ textAlign: 'center' }}>
-                                    Sign up for low-volume email news alerts
+                                    Read the latest cBioPortal Newsletter!
+                                    Subscribe via:
                                 </p>
                                 <a
                                     target="_blank"
                                     className="btn btn-default btn-sm"
-                                    href="http://groups.google.com/group/cbioportal-news/boxsubscribe"
-                                    style={{ width: '100%' }}
+                                    href="https://www.linkedin.com/pulse/april-update-hello-cbioportal-community-cbioportal-22vle/"
+                                    style={{ width: '49%', marginRight: '3px' }}
                                 >
-                                    Subscribe
+                                    LinkedIn
+                                </a>
+                                <a
+                                    target="_blank"
+                                    className="btn btn-default btn-sm"
+                                    href="https://groups.google.com/g/cbioportal-news"
+                                    style={{ width: '50%' }}
+                                >
+                                    Google Groups
                                 </a>
                             </div>
                         </div>
