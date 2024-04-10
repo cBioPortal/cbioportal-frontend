@@ -22,7 +22,7 @@ describe('custom driver annotations feature in result view', function() {
     describe('oncoprint tab - mutations', () => {
         beforeEach(() => {
             goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
-            waitForOncoprint(100000);
+            waitForOncoprint();
             setSettingsMenuOpen(true, 'GlobalSettingsButton');
         });
 

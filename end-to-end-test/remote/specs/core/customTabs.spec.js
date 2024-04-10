@@ -104,12 +104,9 @@ function runTests(pageName, url, tabLocation) {
 
             goToUrlWithCustomTabConfig(url, conf);
 
-            $('.mainTabs').waitForDisplayed();
+            browser.setWindowSize(2000, browser.getWindowSize().height);
 
-            if (tabLocation === 'STUDY_PAGE') {
-                $('i.fa-chevron-right').waitForDisplayed();
-                $('i.fa-chevron-right').click();
-            }
+            $('.mainTabs').waitForDisplayed();
 
             assert.equal(
                 $('=Patient Tab').isDisplayed(),
@@ -146,12 +143,9 @@ function runTests(pageName, url, tabLocation) {
 
             goToUrlWithCustomTabConfig(url, conf);
 
-            $('.mainTabs').waitForDisplayed();
+            browser.setWindowSize(2000, browser.getWindowSize().height);
 
-            if (tabLocation === 'STUDY_PAGE') {
-                $('i.fa-chevron-right').waitForDisplayed();
-                $('i.fa-chevron-right').click();
-            }
+            $('.mainTabs').waitForDisplayed();
 
             assert.equal(
                 $('=Hidden Tab').isDisplayed(),
@@ -220,7 +214,7 @@ function runTests(pageName, url, tabLocation) {
             );
         });
 
-        it('Remounts tab only when tracked url param changes (part of hash in url wrapper)', () => {
+        it('Remounts tab only when tracked url param changes (part of hash in url wrapper)', function() {
             const conf = [
                 {
                     title: 'Async Tab',
@@ -239,6 +233,8 @@ function runTests(pageName, url, tabLocation) {
 
             goToUrlWithCustomTabConfig(url, conf);
 
+            browser.setWindowSize(1600, browser.getWindowSize().height);
+
             browser.execute(() => {
                 window.renderCustomTab1 = function(div, tab) {
                     $(div).append(`<div>First render</div>`);
@@ -246,7 +242,7 @@ function runTests(pageName, url, tabLocation) {
             });
 
             // offset to avoid overlapping elements
-            $('=Async Tab').click({ x: -10 });
+            $('=Async Tab').click();
 
             browser.pause(1000);
 

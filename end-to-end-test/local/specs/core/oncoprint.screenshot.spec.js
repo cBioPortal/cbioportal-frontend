@@ -78,7 +78,7 @@ describe('oncoprint', function() {
     describe('generic assay categorical tracks', () => {
         it('shows binary and multiple category tracks', () => {
             goToUrlAndSetLocalStorage(genericArrayUrl, true);
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             const res = checkOncoprintElement();
             assertScreenShotMatch(res);
         });
@@ -95,7 +95,7 @@ describe('oncoprint', function() {
                     ),
                 }
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
         });
 
         it('initializes as configured by default', () => {
@@ -133,7 +133,7 @@ describe('oncoprint', function() {
                 MANUAL_TRACK_CONFIG
             );
             goToUrlAndSetLocalStorage(urlWithUserConfig, false);
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
 
             const res = checkOncoprintElement();
             assertScreenShotMatch(res);
@@ -172,7 +172,7 @@ describe('oncoprint', function() {
             );
             goToUrlAndSetLocalStorage(urlWithUserConfig, false);
 
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
 
             // Check save button enabled
             openTracksMenu();
@@ -183,7 +183,7 @@ describe('oncoprint', function() {
 
             // Click save button
             $saveSessionBtn.click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             // Check save button disabled
             classes = $saveSessionBtn.getAttribute('class').split(' ');
             const saveBtnIsDisabled = classes.includes('disabled');
@@ -245,7 +245,7 @@ describe('oncoprint', function() {
                     SERVER_CLINICAL_TRACK_CONFIG
                 ),
             });
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
         });
 
         it('shows oql structural variant variations', function() {
@@ -265,7 +265,7 @@ function createUrlWithSettingsQueryParam(config) {
 function openTracksMenu() {
     const $tracksDropdown = $('#addTracksDropdown');
     $tracksDropdown.click();
-    waitForOncoprint(2000);
+    waitForOncoprint();
 }
 
 function changeNthTrack(track, menuOptionButtonText) {
@@ -275,7 +275,7 @@ function changeNthTrack(track, menuOptionButtonText) {
         timeout: 1000,
     });
     $(`li=${menuOptionButtonText}`).click();
-    waitForOncoprint(2000);
+    waitForOncoprint();
 }
 
 function getBookmarkUrl(browser) {
@@ -308,6 +308,6 @@ function createOncoprintFromLegacyFormat() {
     ).join(',');
     const legacyUrl = `${studyes0_oncoprintTabUrl}&clinicallist=${legacyFormatQueryParam}`;
     goToUrlAndSetLocalStorage(legacyUrl, false);
-    waitForOncoprint(ONCOPRINT_TIMEOUT);
+    waitForOncoprint();
     return legacyFormatQueryParam;
 }
