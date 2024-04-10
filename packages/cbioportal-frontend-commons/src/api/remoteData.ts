@@ -3,8 +3,8 @@ import {
     MobxPromise,
     MobxPromiseFactory,
     MobxPromiseInputUnion,
-    hasObservers,
-} from 'mobxpromise';
+} from '../lib/MobxPromise';
+import { hasObservers } from '../lib/mobxPromiseUtils';
 
 type errorHandler = (error: Error) => void;
 

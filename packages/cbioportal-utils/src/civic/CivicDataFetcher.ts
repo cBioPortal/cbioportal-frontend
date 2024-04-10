@@ -1,201 +1,274 @@
-import * as request from 'superagent';
-
 import {
-    EvidenceLevel,
-    ICivicEvidenceSummary,
+    ICivivEvidenceCountsByType,
     ICivicGeneSummary,
     ICivicVariantSummary,
 } from '../model/Civic';
+import _ from 'lodash';
+
+type CivicAPIGenes = {
+    pageInfo: PageInfo;
+    nodes: Array<CivicAPIGene>;
+};
+
+type PageInfo = {
+    endCursor: string;
+    hasNextPage: boolean;
+    startCursor: string;
+    hasPreviousPage: boolean;
+};
 
 type CivicAPIGene = {
     id: number;
     name: string;
+    link: string;
     description: string;
-    variants: Array<CivicAPIGeneVariant>;
+    variants: CivicVariantCollection;
 };
 
-type CivicAPIGeneVariant = {
+type CivicVariantCollection = {
+    pageInfo: PageInfo;
+    nodes: Array<CivicVariant>;
+};
+
+type CivicVariant = {
     id: number;
     name: string;
-    evidence_items: Evidence[];
+    link: string;
+    singleVariantMolecularProfile: CivicMolecularProfile;
 };
 
-type Evidence = {
-    id: number;
-    name: string;
-    evidence_type: string;
-    clinical_significance: string;
-    evidence_direction: EvidenceDirection;
-    evidence_level: EvidenceLevel;
-    drugs: Drug[];
-    disease: Disease;
+type CivicMolecularProfile = {
+    description: string;
+    evidenceCountsByType: ICivivEvidenceCountsByType;
 };
 
-type Disease = {
-    id: number;
-    name: string;
-    display_name: string;
-    url: string;
-};
-
-type Drug = {
-    id: number;
-    name: string;
-    ncit_id: string;
-    aliases: string[];
-};
-
-enum EvidenceDirection {
-    Supports = 'Supports',
-    DoesNotSupport = 'Does Not Support',
-}
-
-enum ClinicalSignificance {
-    // Clinical Significance For Predictive Evidence
-    Sensitivity = 'Sensitivity/Response',
-    Resistance = 'Resistance',
-    AdverseResponse = 'Adverse Response',
-    ReducedSensitivity = 'Reduced Sensitivity',
-    NA = 'N/A',
-}
-
-/**
- * Returns a map with the different types of evidence and the number of times that each evidence happens.
- */
-function countEvidenceTypes(
-    evidenceItems: Evidence[]
-): { [evidenceType: string]: number } {
-    const counts: { [evidenceType: string]: number } = {};
-
-    evidenceItems.forEach(function(evidenceItem: Evidence) {
-        const evidenceType = evidenceItem.evidence_type;
-        if (counts.hasOwnProperty(evidenceType)) {
-            counts[evidenceType] += 1;
-        } else {
-            counts[evidenceType] = 1;
-        }
-    });
-
-    return counts;
-}
-
-function findSupportingEvidences(
-    evidences: Evidence[],
-    filter: (evidence: Evidence) => boolean = () => true
-): Evidence[] {
-    const filteredEvidences = evidences.filter(
-        evidence =>
-            evidence.evidence_direction === EvidenceDirection.Supports &&
-            filter(evidence)
-    );
-
-    filteredEvidences.sort((a, b) => {
-        const aLevel = a.evidence_level;
-        const bLevel = b.evidence_level;
-
-        if (aLevel === undefined && bLevel === undefined) {
-            return 0;
-        } else if (aLevel === undefined) {
-            return -1;
-        } else if (bLevel === undefined) {
-            return 1;
-        } else if (bLevel > aLevel) {
-            return -1;
-        } else if (aLevel > bLevel) {
-            return 1;
-        } else {
-            return 0;
-        }
-    });
-
-    return filteredEvidences;
-}
-
-function summarizeEvidence(evidence: Evidence): ICivicEvidenceSummary {
-    return {
-        id: evidence.id,
-        type: evidence.evidence_type,
-        clinicalSignificance: evidence.clinical_significance,
-        level: evidence.evidence_level,
-        drugs: (evidence.drugs || []).map(d => d.name),
-        disease: evidence.disease?.display_name || evidence.disease?.name,
-    };
-}
-
-/**
- * Returns a map with the different variant names and their variant id.
- */
-function createVariantMap(
-    variantArray: CivicAPIGeneVariant[]
-): { [variantName: string]: number } {
-    let variantMap: { [variantName: string]: number } = {};
-    if (variantArray && variantArray.length > 0) {
-        variantArray.forEach(function(variant) {
-            variantMap[variant.name] = variant.id;
-        });
+function transformCivicVariantsToEvidenceCountMap(
+    variants: CivicVariantCollection
+): { [variantName: string]: ICivicVariantSummary } {
+    // Transform the variants into the desired map format
+    const map: { [variantName: string]: ICivicVariantSummary } = {};
+    for (const variant of variants.nodes) {
+        map[variant.name] = {
+            id: variant.id,
+            name: variant.name,
+            url: 'https://civicdb.org' + variant.link + '/summary',
+            description: variant.singleVariantMolecularProfile.description,
+            evidenceCounts:
+                variant.singleVariantMolecularProfile.evidenceCountsByType,
+        };
     }
-    return variantMap;
+    return map;
 }
 
-/**
- * CIViC
- */
 export class CivicAPI {
     /**
-     * Retrieves the gene entries for the ids given, if they are in the Civic API.
+     * Retrieves the gene entries for the hugo symbols given, if they are in the Civic API.
+     * If more than 100 variants available for the gene, send new query for Variants.
      */
-    getCivicGenesBatch(ids: string): Promise<ICivicGeneSummary[]> {
-        return request
-            .get('https://civicdb.org/api/genes/' + ids)
-            .query({ identifier_type: 'entrez_id' })
-            .then(res => {
-                const response = res.body;
-                const result: CivicAPIGene[] =
-                    response instanceof Array ? response : [response];
-                return result.map((record: CivicAPIGene) => ({
+
+    async createCivicVariantSummaryMap(
+        variants: CivicVariantCollection,
+        geneId: number
+    ): Promise<{ [variantName: string]: ICivicVariantSummary }> {
+        // Check if hasNextPage is false, if true, call fetchCivicAPIVariants and update the map
+        if (!variants.pageInfo.hasNextPage) {
+            return transformCivicVariantsToEvidenceCountMap(variants);
+        }
+
+        // Call fetchCivicAPIVariants with geneId
+        let after: string | null = null;
+        let civicVariantSummaryMap: {
+            [variantName: string]: ICivicVariantSummary;
+        } = {};
+        let needToFetch = true;
+
+        while (needToFetch) {
+            const variantsByGeneId: CivicVariantCollection = await this.fetchCivicAPIVariants(
+                geneId,
+                after
+            );
+            civicVariantSummaryMap = {
+                ...civicVariantSummaryMap,
+                ...transformCivicVariantsToEvidenceCountMap(variantsByGeneId),
+            };
+
+            if (variantsByGeneId.pageInfo.hasNextPage) {
+                after = variantsByGeneId.pageInfo.endCursor;
+            } else {
+                needToFetch = false;
+            }
+        }
+        return civicVariantSummaryMap;
+    }
+
+    async getCivicGeneSummaries(
+        hugoGeneSymbols: string[]
+    ): Promise<ICivicGeneSummary[]> {
+        let result: ICivicGeneSummary[] = [];
+        // civic genes api can return up to 100 civic genes in a single request (no limit on sending)
+        // if result contains more than 100 genes, the first 100 genes will be returned, other queries (genes after 100) will need to be sent again
+        // the next query will start from the last gene of previous query (by giving "after" parameter), which is the "endCursor" field returned in previous query
+        // set needToFetch to true to make sure the query will be sent at least for the first time
+        let needToFetch = true;
+        let after = null;
+        while (needToFetch) {
+            const civicGenes: CivicAPIGenes = await this.fetchCivicAPIGenes(
+                hugoGeneSymbols,
+                after
+            );
+            // hasNextPage is true means there are more than 100 genes in the return, and need to make another request
+            if (civicGenes.pageInfo?.hasNextPage) {
+                // Update endCursor when next page is available
+                after = civicGenes.pageInfo.endCursor;
+                needToFetch = true;
+            } else {
+                needToFetch = false;
+            }
+            const filteredCivicGenes = _.compact(civicGenes.nodes);
+            const geneSummaries = _.map(filteredCivicGenes, async record => {
+                const variants = await this.createCivicVariantSummaryMap(
+                    record.variants,
+                    record.id
+                );
+                const geneSummary: ICivicGeneSummary = {
                     id: record.id,
                     name: record.name,
                     description: record.description,
-                    url:
-                        'https://civicdb.org/events/genes/' +
-                        record.id +
-                        '/summary',
-                    variants: createVariantMap(record.variants),
-                }));
+                    url: 'https://civicdb.org/genes/' + record.id + '/summary',
+                    variants,
+                };
+                return geneSummary;
             });
+            result.push(...(await Promise.all(geneSummaries)));
+        }
+        return Promise.resolve(result);
     }
 
-    /**
-     * Returns a promise that resolves with the variants for the parameters given.
-     */
-    getCivicVariantSummary(
-        id: number,
-        name: string,
-        geneId: number
-    ): Promise<ICivicVariantSummary> {
-        return request
-            .get('https://civicdb.org/api/variants/' + id)
+    // Call Variants if have more than 100 variants. The Variants query can return up to 300 variants in a single query.
+    fetchCivicAPIVariants(
+        geneId: number,
+        after: string | null
+    ): Promise<CivicVariantCollection> {
+        const url = 'https://civicdb.org/api/graphql';
+        const headers = {
+            'content-type': 'application/json',
+        };
+        const body = JSON.stringify({
+            variables: {
+                geneId: geneId,
+                after: after,
+            },
+            query: `query variants($after: String, $geneId: Int) {
+                variants(after: $after, geneId: $geneId) {
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        startCursor
+                        hasPreviousPage
+                    }
+                    nodes {
+                        id
+                        name
+                        link
+                        singleVariantMolecularProfile {
+                            description
+                            evidenceCountsByType {
+                                diagnosticCount
+                                predictiveCount
+                                prognosticCount
+                                predisposingCount
+                                oncogenicCount
+                                functionalCount
+                            }
+                        }
+                    }
+                }
+            }`,
+        });
+        return fetch(url, {
+            headers,
+            body,
+            method: 'POST',
+        })
             .then(response => {
-                const result = response.body;
-                const supportingEvidences = findSupportingEvidences(
-                    result.evidence_items
-                );
+                if (!response.ok) {
+                    throw new Error(`Civic error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result =>
+                Promise.resolve(result.data.variants as CivicVariantCollection)
+            );
+    }
 
-                return {
-                    id,
-                    name,
-                    geneId,
-                    description: result.description,
-                    url:
-                        'https://civicdb.org/events/genes/' +
-                        geneId +
-                        '/summary/variants/' +
-                        id +
-                        '/summary#variant',
-                    evidenceCounts: countEvidenceTypes(result.evidence_items),
-                    evidences: supportingEvidences.map(summarizeEvidence),
-                };
-            });
+    fetchCivicAPIGenes(
+        entrezSymbols: string[],
+        after: string | null
+    ): Promise<CivicAPIGenes> {
+        const url = 'https://civicdb.org/api/graphql';
+        const headers = {
+            'content-type': 'application/json',
+        };
+        const body = JSON.stringify({
+            variables: {
+                entrezSymbols: entrezSymbols,
+                after: after,
+            },
+            query: `query genes($after: String, $entrezSymbols: [String!]) {
+                genes(after: $after, entrezSymbols: $entrezSymbols) {
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        startCursor
+                        hasPreviousPage
+                    }
+                    nodes {
+                        id
+                        description
+                        link
+                        name
+                        variants {
+                            pageInfo {
+                                endCursor
+                                hasNextPage
+                                startCursor
+                                hasPreviousPage
+                            }
+                            nodes {
+                                name
+                                id
+                                link
+                                singleVariantMolecularProfile {
+                                    description
+                                    evidenceCountsByType {
+                                        diagnosticCount
+                                        predictiveCount
+                                        prognosticCount
+                                        predisposingCount
+                                        oncogenicCount
+                                        functionalCount
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }`,
+        });
+        return fetch(url, {
+            headers,
+            body,
+            method: 'POST',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Civic error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result =>
+                Promise.resolve(result.data.genes as CivicAPIGenes)
+            );
     }
 }
 

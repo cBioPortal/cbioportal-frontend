@@ -19,6 +19,7 @@ import {
 } from 'oncokb-frontend-commons';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
+import { IStructuralVariantTableWrapperProps } from '../StructuralVariantTableWrapper';
 
 export default class AnnotationColumnFormatter {
     public static getData(
@@ -153,17 +154,14 @@ export default class AnnotationColumnFormatter {
         uniqueSampleKeyToTumorType?: { [sampleId: string]: string },
         studyIdToStudy?: { [studyId: string]: CancerStudy }
     ): IndicatorQueryResp | undefined {
-        if (
-            uniqueSampleKeyToTumorType === null ||
-            oncoKbData.indicatorMap === null
-        ) {
+        if (!uniqueSampleKeyToTumorType || !oncoKbData.indicatorMap) {
             return undefined;
         }
 
         const id = generateQueryStructuralVariantId(
             structuralVariantData[0].site1EntrezGeneId,
             structuralVariantData[0].site2EntrezGeneId,
-            uniqueSampleKeyToTumorType![
+            uniqueSampleKeyToTumorType[
                 structuralVariantData[0].uniqueSampleKey
             ],
             deriveStructuralVariantType(structuralVariantData[0])

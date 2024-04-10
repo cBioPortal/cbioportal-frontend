@@ -20,6 +20,8 @@ import WindowStore from 'shared/components/window/WindowStore';
 
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { StudyViewPageStore } from '../StudyViewPageStore';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 @observer
 export default class CNSegments extends React.Component<
@@ -161,6 +163,11 @@ export default class CNSegments extends React.Component<
                         <CNSegmentsDownloader
                             promise={this.activePromise!}
                             filename={this.filename}
+                            showDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
                         />
                     )}
                 </div>

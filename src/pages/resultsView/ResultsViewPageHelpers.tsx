@@ -15,6 +15,7 @@ export enum ResultsViewTab {
     MUTUAL_EXCLUSIVITY = 'mutualExclusivity',
     PLOTS = 'plots',
     MUTATIONS = 'mutations',
+    STRUCTURALVARIANTS = 'structuralVariants',
     COEXPRESSION = 'coexpression',
     COMPARISON = 'comparison',
     CN_SEGMENTS = 'cnSegments',
@@ -26,7 +27,7 @@ export enum ResultsViewTab {
 
 export enum ResultsViewPathwaysSubTab {
     PATHWAY_MAPPER = 'PathwayMapper',
-    NDEX = 'NDEx',
+    NDEX = 'NDEx Cancer Pathways',
 }
 
 export enum LegacyResultsViewComparisonSubTab {

@@ -2,13 +2,8 @@ import * as React from 'react';
 import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import {
-    action,
-    computed,
-    makeObservable,
-    observable,
-    runInAction,
-} from 'mobx';
+import 'react-toastify/dist/ReactToastify.css';
+import { action, computed, makeObservable, observable } from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -75,11 +70,22 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import { Tour } from 'tours';
+import QueryString from 'qs';
+import setWindowVariable from 'shared/lib/setWindowVariable';
+import {
+    buildCustomTabs,
+    prepareCustomTabConfigurations,
+} from 'shared/lib/customTabs/customTabHelpers';
+import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
+import PlotsTab from 'shared/components/plots/PlotsTab';
 
 export interface IStudyViewPageProps {
     routing: any;
     appStore: AppStore;
 }
+
+export const MAX_URL_LENGTH = 300000;
 
 @observer
 export class StudyResultsSummary extends React.Component<
@@ -142,6 +148,9 @@ export default class StudyViewPage extends React.Component<
             this.urlWrapper
         );
 
+        // Expose store to window for use in custom tabs.
+        setWindowVariable('studyViewPageStore', this.store);
+
         const openResourceId =
             this.urlWrapper.tabId &&
             extractResourceIdFromTabId(this.urlWrapper.tabId);
@@ -189,23 +198,33 @@ export default class StudyViewPage extends React.Component<
                 newStudyViewFilter.sharedCustomData = params.sharedCustomData;
             }
         }
+
+        // Overrite filterJson from URL with what is defined in postData
+        const postDataFilterJson = this.getFilterJsonFromPostData();
+        if (postDataFilterJson) {
+            newStudyViewFilter.filterJson = postDataFilterJson;
+        }
+
+        let updateStoreFromURLPromise = remoteData(() => Promise.resolve([]));
         if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
-            this.store.updateStoreFromURL(newStudyViewFilter);
             this.store.studyViewQueryFilter = newStudyViewFilter;
+            updateStoreFromURLPromise = remoteData(async () => {
+                await this.store.updateStoreFromURL(newStudyViewFilter);
+                return [];
+            });
         }
 
         onMobxPromise(
-            this.store.queriedPhysicalStudyIds,
+            [this.store.queriedPhysicalStudyIds, updateStoreFromURLPromise],
             (strArr: string[]) => {
                 this.store.initializeReaction();
                 trackEvent({
-                    category: 'studyPage',
-                    action: 'studyPageLoad',
-                    label: strArr.join(',') + ',',
-                    fieldsObject: {
-                        [GACustomFieldsEnum.VirtualStudy]: (
-                            this.store.filteredVirtualStudies.result!.length > 0
-                        ).toString(),
+                    eventName: 'studyPageLoad',
+                    parameters: {
+                        studies:
+                            this.store.queriedPhysicalStudies.result
+                                .map(s => s.studyId)
+                                .join(',') + ',',
                     },
                 });
             }
@@ -226,6 +245,33 @@ export default class StudyViewPage extends React.Component<
                 this.toolbarLeft = $(this.toolbar).position().left;
             }
         }, 500);
+    }
+
+    private getFilterJsonFromPostData(): string | undefined {
+        let filterJson: string | undefined;
+
+        const parsedFilterJson = _.unescape(
+            getBrowserWindow()?.postData?.filterJson
+        );
+
+        if (parsedFilterJson) {
+            try {
+                JSON.parse(parsedFilterJson);
+                filterJson = parsedFilterJson;
+            } catch (error) {
+                console.error(
+                    `PostData.filterJson does not have valid JSON, error: ${error}`
+                );
+            }
+        }
+        return filterJson;
+    }
+
+    @computed get customTabsConfigs() {
+        return prepareCustomTabConfigurations(
+            getServerConfig().custom_tabs,
+            'STUDY_PAGE'
+        );
     }
 
     @autobind
@@ -250,6 +296,14 @@ export default class StudyViewPage extends React.Component<
     toggleShareLinkModal() {
         this.shareLinkModal = !this.shareLinkModal;
         this.sharedGroups = [];
+    }
+
+    @observable showVirtualStudyModal = false;
+
+    @action.bound
+    toggleVirtualStudyModal() {
+        debugger;
+        this.showVirtualStudyModal = !this.showVirtualStudyModal;
     }
 
     @action.bound
@@ -332,6 +386,21 @@ export default class StudyViewPage extends React.Component<
         } else {
             return false;
         }
+    }
+
+    @computed get isLoading() {
+        return (
+            this.store.queriedSampleIdentifiers.isPending ||
+            this.store.invalidSampleIds.isPending ||
+            this.body.isPending
+        );
+    }
+
+    @computed get isAnySampleSelected() {
+        return this.store.selectedSamples.result.length !==
+            this.store.samples.result.length
+            ? 1
+            : 0;
     }
 
     @computed get studyViewFullUrlWithFilter() {
@@ -493,19 +562,49 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
+    @computed get customTabs() {
+        return buildCustomTabs(this.customTabsConfigs);
+    }
+
+    @computed get bookmarkModal() {
+        // urls have a length limit after which browser will fail to read them
+        // when the url WITH FILTERS exceed this length, the only option is to make a virtual
+        // study with filtered cohort
+        // this will NOT show any fitlers, but it's the best we can do right now
+        if (this.studyViewFullUrlWithFilter.length > MAX_URL_LENGTH) {
+            return (
+                <VirtualStudyModal
+                    appStore={this.props.appStore}
+                    pageStore={this.store}
+                    message={
+                        <div className={'alert alert-warning'}>
+                            The url is too long to share. Please consider making
+                            a virtual study containing the selected samples.
+                        </div>
+                    }
+                    onHide={this.toggleBookmarkModal}
+                />
+            );
+        } else {
+            return (
+                <BookmarkModal
+                    onHide={this.toggleBookmarkModal}
+                    title={'Bookmark this filter'}
+                    urlPromise={this.getBookmarkUrl()}
+                />
+            );
+        }
+    }
+
     content() {
         return (
             <div className="studyView">
-                {this.showBookmarkModal && (
-                    <BookmarkModal
-                        onHide={this.toggleBookmarkModal}
-                        title={'Bookmark this filter'}
-                        urlPromise={this.getBookmarkUrl()}
-                    />
-                )}
+                {this.showBookmarkModal && this.bookmarkModal}
+
                 {this.shareLinkModal && (
                     <BookmarkModal
                         onHide={this.toggleShareLinkModal}
+                        //onRequestVirtualStudy={this.togg}
                         title={
                             this.sharedGroups.length > 1
                                 ? `Share ${this.sharedGroups.length} Groups`
@@ -534,6 +633,7 @@ export default class StudyViewPage extends React.Component<
                     this.store.unknownQueriedIds.isComplete &&
                     this.store.displayedStudies.isComplete &&
                     this.store.queriedPhysicalStudies.isComplete &&
+                    this.store.shouldDisplaySampleTreatments.isComplete &&
                     this.store.queriedPhysicalStudies.result.length > 0 && (
                         <div>
                             <StudyPageHeader
@@ -634,8 +734,145 @@ export default class StudyViewPage extends React.Component<
                                             />
                                         </div>
                                     </MSKTab>
+                                    <MSKTab
+                                        key={5}
+                                        id={StudyViewPageTabKeyEnum.PLOTS}
+                                        linkText={
+                                            <span>
+                                                {
+                                                    StudyViewPageTabDescriptions.PLOTS
+                                                }{' '}
+                                                <strong className={'beta-text'}>
+                                                    Beta!
+                                                </strong>
+                                            </span>
+                                        }
+                                    >
+                                        <PlotsTab
+                                            filteredSamplesByDetailedCancerType={
+                                                this.store
+                                                    .filteredSamplesByDetailedCancerType
+                                            }
+                                            mutations={this.store.mutations}
+                                            studies={
+                                                this.store
+                                                    .queriedPhysicalStudies
+                                            }
+                                            molecularProfileIdSuffixToMolecularProfiles={
+                                                this.store
+                                                    .molecularProfileIdSuffixToMolecularProfiles
+                                            }
+                                            entrezGeneIdToGene={
+                                                this.store.entrezGeneIdToGeneAll
+                                            }
+                                            sampleKeyToSample={
+                                                this.store.sampleSetByKey
+                                            }
+                                            genes={this.store.allGenes}
+                                            clinicalAttributes={
+                                                this.store.clinicalAttributes
+                                            }
+                                            genesets={this.store.genesets}
+                                            genericAssayEntitiesGroupByMolecularProfileId={
+                                                this.store
+                                                    .genericAssayEntitiesGroupedByProfileId
+                                            }
+                                            studyIds={
+                                                this.store
+                                                    .queriedPhysicalStudyIds
+                                            }
+                                            molecularProfilesWithData={
+                                                this.store
+                                                    .molecularProfilesInStudies
+                                            }
+                                            molecularProfilesInStudies={
+                                                this.store
+                                                    .molecularProfilesInStudies
+                                            }
+                                            annotatedCnaCache={
+                                                this.store.annotatedCnaCache
+                                            }
+                                            annotatedMutationCache={
+                                                this.store
+                                                    .annotatedMutationCache
+                                            }
+                                            structuralVariantCache={
+                                                this.store
+                                                    .structuralVariantCache
+                                            }
+                                            studyToMutationMolecularProfile={
+                                                this.store
+                                                    .studyToMutationMolecularProfile
+                                            }
+                                            studyToMolecularProfileDiscreteCna={
+                                                this.store
+                                                    .studyToMolecularProfileDiscreteCna
+                                            }
+                                            clinicalDataCache={
+                                                this.store.clinicalDataCache
+                                            }
+                                            patientKeyToFilteredSamples={
+                                                this.store
+                                                    .patientKeyToFilteredSamples
+                                            }
+                                            numericGeneMolecularDataCache={
+                                                this.store
+                                                    .numericGeneMolecularDataCache
+                                            }
+                                            coverageInformation={
+                                                this.store.coverageInformation
+                                            }
+                                            filteredSamples={
+                                                this.store.selectedSamples
+                                            }
+                                            genesetMolecularDataCache={
+                                                this.store
+                                                    .genesetMolecularDataCache
+                                            }
+                                            genericAssayMolecularDataCache={
+                                                this.store
+                                                    .genericAssayMolecularDataCache
+                                            }
+                                            studyToStructuralVariantMolecularProfile={
+                                                this.store
+                                                    .studyToStructuralVariantMolecularProfile
+                                            }
+                                            driverAnnotationSettings={
+                                                this.store
+                                                    .driverAnnotationSettings
+                                            }
+                                            studyIdToStudy={
+                                                this.store.studyIdToStudy.result
+                                            }
+                                            structuralVariants={
+                                                this.store.structuralVariants
+                                                    .result
+                                            }
+                                            hugoGeneSymbols={
+                                                this.store.allHugoGeneSymbols
+                                                    .result
+                                            }
+                                            selectedGenericAssayEntitiesGroupByMolecularProfileId={
+                                                this.store
+                                                    .selectedGenericAssayEntitiesGroupByMolecularProfileId
+                                            }
+                                            molecularProfileIdToMolecularProfile={
+                                                this.store
+                                                    .molecularProfileIdToMolecularProfile
+                                            }
+                                            urlWrapper={this.urlWrapper}
+                                            hasNoQueriedGenes={true}
+                                            genePanelDataForAllProfiles={
+                                                this.store
+                                                    .genePanelDataForAllProfiles
+                                                    .result
+                                            }
+                                            patients={this.store.patients}
+                                        />
+                                    </MSKTab>
 
                                     {this.resourceTabs.component}
+                                    {this.customTabs}
                                 </MSKTabs>
 
                                 <div
@@ -991,14 +1228,16 @@ export default class StudyViewPage extends React.Component<
             >
                 <LoadingIndicator
                     size={'big'}
-                    isLoading={
-                        this.store.queriedSampleIdentifiers.isPending ||
-                        this.store.invalidSampleIds.isPending ||
-                        this.body.isPending
-                    }
+                    isLoading={this.isLoading}
                     center={true}
                 />
                 {this.body.component}
+                {!this.isLoading && (
+                    <Tour
+                        studies={this.isAnySampleSelected}
+                        isLoggedIn={this.props.appStore.isLoggedIn}
+                    />
+                )}
             </PageLayout>
         );
     }

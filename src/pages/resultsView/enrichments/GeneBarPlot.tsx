@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
-import { DownloadControls, DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    DownloadControls,
+    DefaultTooltip,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import MultipleCategoryBarPlot from 'pages/groupComparison/MultipleCategoryBarPlot';
 import ReactSelect from 'react-select';
@@ -23,6 +27,7 @@ import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { FormControl } from 'react-bootstrap';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
 import { EnrichmentsTableDataStore } from './EnrichmentsTableDataStore';
+import { getServerConfig } from 'config/config';
 
 export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
@@ -272,6 +277,11 @@ export default class GeneBarPlot extends React.Component<
                             filename={'GroupComparisonGeneFrequencyPlot'}
                             dontFade={true}
                             type="button"
+                            showDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
                         />
                     </div>
                 </div>

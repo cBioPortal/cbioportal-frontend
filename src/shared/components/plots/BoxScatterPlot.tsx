@@ -36,16 +36,14 @@ import {
 import autobind from 'autobind-decorator';
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
 import _ from 'lodash';
-import {
-    IAxisLogScaleParams,
-    IBoxScatterPlotPoint,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+import { IAxisLogScaleParams, IBoxScatterPlotPoint } from './PlotsTabUtils';
 import { Popover } from 'react-bootstrap';
 import * as ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
+import { PQValueLabel } from 'pages/groupComparison/MultipleCategoryBarPlot';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;
@@ -91,6 +89,8 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     svgRef?: (svgContainer: SVGElement | null) => void;
     compressXAxis?: boolean;
     legendTitle?: string | string[];
+    pValue?: number | null;
+    qValue?: number | null;
 }
 
 type BoxModel = {
@@ -818,6 +818,12 @@ export default class BoxScatterPlot<
                         >
                             {this.title}
                             {this.legend}
+                            <PQValueLabel
+                                x={this.chartWidth - 40}
+                                y={50}
+                                pValue={this.props.pValue || null}
+                                qValue={this.props.qValue || null}
+                            />
                             {this.horzAxis}
                             {this.vertAxis}
                             <VictoryBoxPlot

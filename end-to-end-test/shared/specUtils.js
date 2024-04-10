@@ -47,7 +47,7 @@ function waitForPatientView(timeout) {
     });
 }
 
-function waitForOncoprint(timeout) {
+function waitForOncoprint() {
     browser.pause(200); // give oncoprint time to disappear
     browser.waitUntil(
         () => {
@@ -57,7 +57,7 @@ function waitForOncoprint(timeout) {
                 $('.oncoprint__controls').isExisting()
             ); // oncoprint controls are showing
         },
-        { timeout }
+        { timeout: 60000 }
     );
     browser.pause(200);
 }
@@ -189,10 +189,28 @@ function setDropdownOpen(
     );
 }
 
+/**
+ * @param {string} url
+ * @returns {string} modifiedUrl
+ */
+function getUrl(url) {
+    if (!useExternalFrontend) {
+        console.log('Connecting to: ' + url);
+    } else {
+        const urlparam = 'localdev';
+        const prefix = url.indexOf('?') > 0 ? '&' : '?';
+        console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
+        url = `${url}${prefix}${urlparam}=true`;
+    }
+    return url;
+}
+
 function goToUrlAndSetLocalStorage(url, authenticated = false) {
     const currentUrl = browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
+    // navigate to blank page first to prevent issues with url hash params
+    browser.url('about:blank');
     if (!useExternalFrontend) {
         browser.url(url);
         console.log('Connecting to: ' + url);
@@ -528,7 +546,7 @@ function clickQueryByGeneButton() {
     $('.disabled[data-test=queryByGeneButton]').waitForExist({
         reverse: true,
     });
-    $('a=Query By Gene').click();
+    getElementByTestHandle('queryByGeneButton').click();
     $('body').scrollIntoView();
 }
 
@@ -554,12 +572,20 @@ function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
     };
 }
 
+/**
+ *
+ * @param {string} url
+ * @param {any} data
+ * @param {boolean} authenticated
+ */
 function postDataToUrl(url, data, authenticated = true) {
     const currentUrl = browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
+
+    url = getUrl(url);
     browser.execute(
-        (url, data) => {
+        (/** @type {string} */ url, /** @type {any} */ data) => {
             function formSubmit(url, params) {
                 // method="smart" means submit with GET iff the URL wouldn't be too long
 

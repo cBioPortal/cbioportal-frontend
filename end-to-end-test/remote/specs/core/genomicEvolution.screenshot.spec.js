@@ -7,7 +7,7 @@ var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
 var waitForNetworkQuiet = require('../../../shared/specUtils')
     .waitForNetworkQuiet;
-var { setCheckboxChecked } = require('../../../shared/specUtils');
+var { setCheckboxChecked, jsApiClick } = require('../../../shared/specUtils');
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 var { jsApiHover } = require('../../../shared/specUtils');
@@ -74,17 +74,20 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
 
     it('pvge only show highlighted in line chart', function() {
         setCheckboxChecked(false, 'input[data-test="VAFSequentialMode"]');
-        $('input[data-test="VAFOnlyHighlighted"]').click();
+        setCheckboxChecked(true, 'input[data-test="VAFOnlyHighlighted"]');
+
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart log scale', function() {
-        $('input[data-test="VAFLogScale"]').click();
+        jsApiClick('input[data-test="VAFLogScale"]');
+
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart with data range y axis', function() {
-        $('input[data-test="VAFDataRange"]').click();
+        jsApiClick('input[data-test="VAFDataRange"]');
+
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });

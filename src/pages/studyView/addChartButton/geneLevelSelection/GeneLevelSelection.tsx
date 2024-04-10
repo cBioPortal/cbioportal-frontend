@@ -1,8 +1,7 @@
 import * as React from 'react';
-import _ from 'lodash';
+import _, { List } from 'lodash';
 import { GenomicChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
-import autobind from 'autobind-decorator';
 import { action, computed, makeObservable, observable } from 'mobx';
 import styles from './styles.module.scss';
 import ReactSelect from 'react-select';
@@ -12,12 +11,18 @@ import OQLTextArea, {
     GeneBoxType,
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import classnames from 'classnames';
-import MobxPromise from 'mobxpromise';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { Gene } from 'cbioportal-ts-api-client';
 import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
+import {
+    AlterationTypeConstants,
+    MutationOptionConstants,
+    MutationOptionConstantsLabel,
+} from 'shared/constants';
+import autobind from 'autobind-decorator';
 
 export interface IGeneLevelSelectionProps {
     molecularProfileOptionsPromise: MobxPromise<MolecularProfileOption[]>;
@@ -25,6 +30,20 @@ export interface IGeneLevelSelectionProps {
     onSubmit: (charts: GenomicChart[]) => void;
     containerWidth: number;
 }
+
+const molecularProfileSubOptions = [
+    {
+        value: MutationOptionConstants.MUTATED,
+        label: MutationOptionConstantsLabel[MutationOptionConstants.MUTATED],
+        profileType: AlterationTypeConstants.MUTATION_EXTENDED,
+    },
+    {
+        value: MutationOptionConstants.MUTATION_TYPE,
+        label:
+            MutationOptionConstantsLabel[MutationOptionConstants.MUTATION_TYPE],
+        profileType: AlterationTypeConstants.MUTATION_EXTENDED,
+    },
+];
 
 @observer
 export default class GeneLevelSelection extends React.Component<
@@ -40,6 +59,13 @@ export default class GeneLevelSelection extends React.Component<
         label: string;
         profileName: string;
         description: string;
+        dataType: string;
+        alterationType: string;
+    };
+
+    @observable private _selectedSubProfileOption?: {
+        value: string;
+        label: string;
     };
 
     @observable private _oql?: {
@@ -61,13 +87,14 @@ export default class GeneLevelSelection extends React.Component<
         if (this.selectedOption !== undefined) {
             const charts = this.validGenes.map(gene => {
                 return {
-                    name:
-                        gene.hugoGeneSymbol +
-                        ': ' +
-                        this.selectedOption!.profileName,
+                    name: this.getChartName(gene.hugoGeneSymbol),
                     description: this.selectedOption!.description,
                     profileType: this.selectedOption!.value,
                     hugoGeneSymbol: gene.hugoGeneSymbol,
+                    dataType: this.selectedOption!.dataType,
+                    ...(this.selectedSubOption
+                        ? { mutationOptionType: this.selectedSubOption.value }
+                        : {}),
                 };
             });
             this.props.onSubmit(charts);
@@ -79,6 +106,31 @@ export default class GeneLevelSelection extends React.Component<
         if (option && option.value) {
             this._selectedProfileOption = option;
         }
+
+        if (
+            !molecularProfileSubOptions
+                .map(subOption => subOption.label)
+                .includes(option.alterationType)
+        ) {
+            this._selectedSubProfileOption = undefined;
+        }
+    }
+
+    @action.bound
+    private handleSubSelect(option: any) {
+        if (option && option.value) {
+            this._selectedSubProfileOption = option;
+        }
+    }
+
+    @autobind
+    private getChartName(hugoGeneSymbol: string): string {
+        return (
+            hugoGeneSymbol +
+            ': ' +
+            this.selectedOption!.profileName +
+            (this.selectedSubOption ? ': ' + this.selectedSubOption!.label : '')
+        );
     }
 
     @computed
@@ -89,6 +141,24 @@ export default class GeneLevelSelection extends React.Component<
         if (this.props.molecularProfileOptionsPromise.isComplete) {
             return this.molecularProfileOptions[0];
         }
+        return undefined;
+    }
+
+    @computed
+    private get selectedSubOption() {
+        if (this._selectedSubProfileOption !== undefined) {
+            return this._selectedSubProfileOption;
+        }
+
+        if (
+            this.selectedOption !== undefined &&
+            molecularProfileSubOptions
+                .map(option => option.profileType)
+                .includes(this.selectedOption.alterationType)
+        ) {
+            return molecularProfileSubOptions[0];
+        }
+
         return undefined;
     }
 
@@ -174,7 +244,8 @@ export default class GeneLevelSelection extends React.Component<
                         <div
                             style={{
                                 flex: 1,
-                                marginRight: 15,
+                                width: '50%',
+                                marginRight: '5%',
                             }}
                         >
                             <ReactSelect
@@ -183,6 +254,7 @@ export default class GeneLevelSelection extends React.Component<
                                 options={this.molecularProfileOptions}
                                 isClearable={false}
                                 isSearchable={false}
+                                style={{ width: '100%' }}
                             />
                         </div>
                         <button
@@ -190,10 +262,27 @@ export default class GeneLevelSelection extends React.Component<
                             className="btn btn-primary btn-sm"
                             data-test="GeneLevelSelectionSubmitButton"
                             onClick={this.onAddChart}
+                            style={{ width: '25%' }}
                         >
                             {this.props.submitButtonText}
                         </button>
                     </div>
+
+                    {this.selectedOption &&
+                        molecularProfileSubOptions
+                            .map(option => option.profileType)
+                            .includes(this.selectedOption.alterationType) && (
+                            <div style={{ width: '70%', marginTop: '5px' }}>
+                                <ReactSelect
+                                    value={this.selectedSubOption}
+                                    onChange={this.handleSubSelect}
+                                    options={molecularProfileSubOptions}
+                                    isClearable={false}
+                                    isSearchable={false}
+                                />
+                            </div>
+                        )}
+
                     {/* <div className={styles.operations}>
                         
                     </div> */}

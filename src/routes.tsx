@@ -110,7 +110,7 @@ import {
     PatientViewResourceTabPrefix,
 } from 'pages/patientView/PatientViewPageTabs';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
-import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
+import { CLIN_ATTR_DATA_TYPE } from 'shared/components/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
@@ -252,14 +252,16 @@ function comparisonTabParamValidator() {
  * @param location
  */
 function customTabParamValidator(location: Location) {
-    const patientViewRegex = new RegExp(
+    const patientViewResourceTabRegex = new RegExp(
         `patient\/${PatientViewResourceTabPrefix}.+`
     );
-    const studyViewRegex = new RegExp(`study\/${StudyViewResourceTabPrefix}.+`);
+    const studyViewResourceTabRegex = new RegExp(
+        `study\/${StudyViewResourceTabPrefix}.+`
+    );
     const customTabRegex = /.+\/customTab\d/;
     return (
-        patientViewRegex.test(location.pathname) ||
-        studyViewRegex.test(location.pathname) ||
+        patientViewResourceTabRegex.test(location.pathname) ||
+        studyViewResourceTabRegex.test(location.pathname) ||
         customTabRegex.test(location.pathname)
     );
 }

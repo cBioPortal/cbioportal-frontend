@@ -31,11 +31,11 @@ import {
 import { GeneCell } from 'pages/studyView/table/GeneCell';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
-import MobxPromise from 'mobxpromise';
 import {
     stringListToIndexSet,
     stringListToSet,
     EllipsisTextTooltip,
+    MobxPromise,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
@@ -56,6 +56,7 @@ export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
     MOLECULAR_PROFILE = 'Molecular Profile',
     CASE_LIST = 'Name',
+    MUTATION_TYPE = 'Mutation Type',
     NUMBER_STRUCTURAL_VARIANTS = '# SV',
     NUMBER_MUTATIONS = '# Mut',
     CYTOBAND = 'Cytoband',
@@ -70,29 +71,32 @@ export type MultiSelectionTableColumn = {
     columnTooltip?: JSX.Element;
 };
 
-export type MultiSelectionTableProps = {
+export type BaseMultiSelectionTableProps = {
     tableType: FreqColumnTypeEnum;
-    promise: MobxPromise<MultiSelectionTableRow[]>;
     width: number;
     height: number;
     filters: string[][];
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
-    extraButtons?: IFixedHeaderTableProps<
-        MultiSelectionTableRow
-    >['extraButtons'];
     selectedRowsKeys: string[];
-    onGeneSelect: (hugoGeneSymbol: string) => void;
-    selectedGenes: string[];
     cancerGeneFilterEnabled?: boolean;
-    genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
-    filterByCancerGenes: boolean;
+    genePanelCache?: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
+    filterByCancerGenes?: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
-    defaultSortBy: MultiSelectionTableColumnKey;
-    columns: MultiSelectionTableColumn[];
     setOperationsButtonText: string;
+};
+
+export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
+    defaultSortBy: MultiSelectionTableColumnKey;
+    extraButtons?: IFixedHeaderTableProps<
+        MultiSelectionTableRow
+    >['extraButtons'];
+    selectedGenes?: string[];
+    onGeneSelect?: (hugoGeneSymbol: string) => void;
+    columns: MultiSelectionTableColumn[];
+    promise: MobxPromise<MultiSelectionTableRow[]>;
 };
 
 const DEFAULT_COLUMN_WIDTH_RATIO: {
@@ -101,6 +105,7 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [MultiSelectionTableColumnKey.GENE]: 0.35,
     [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0.6,
     [MultiSelectionTableColumnKey.CASE_LIST]: 0.6,
+    [MultiSelectionTableColumnKey.MUTATION_TYPE]: 0.35,
     [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
     [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.2,
     [MultiSelectionTableColumnKey.NUMBER]: 0.25,
@@ -171,7 +176,7 @@ export class MultiSelectionTable extends React.Component<
                     return (
                         <GeneCell
                             tableType={this.props.tableType}
-                            selectedGenes={this.props.selectedGenes}
+                            selectedGenes={this.props.selectedGenes!}
                             hugoGeneSymbol={data.label}
                             qValue={data.qValue}
                             isCancerGene={data.isCancerGene}
@@ -180,7 +185,7 @@ export class MultiSelectionTable extends React.Component<
                             isTumorSuppressorGene={
                                 data.isOncokbTumorSuppressorGene
                             }
-                            onGeneSelect={this.props.onGeneSelect}
+                            onGeneSelect={this.props.onGeneSelect!}
                         />
                     );
                 },
@@ -229,6 +234,39 @@ export class MultiSelectionTable extends React.Component<
                 width: columnWidth,
             },
             [MultiSelectionTableColumnKey.CASE_LIST]: {
+                name: columnKey,
+                headerRender: () => {
+                    return (
+                        <div
+                            style={{ marginLeft: cellMargin }}
+                            className={styles.displayFlex}
+                            data-test="profile-column-header"
+                        >
+                            {columnKey}
+                        </div>
+                    );
+                },
+                render: (data: MultiSelectionTableRow) => {
+                    return (
+                        <div className={styles.labelContent}>
+                            <EllipsisTextTooltip
+                                text={data.label}
+                            ></EllipsisTextTooltip>
+                        </div>
+                    );
+                },
+                sortBy: (data: MultiSelectionTableRow) => data.label,
+                defaultSortDirection: 'asc' as 'asc',
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string,
+                    filterStringUpper: string
+                ) => {
+                    return data.label.toUpperCase().includes(filterStringUpper);
+                },
+                width: columnWidth,
+            },
+            [MultiSelectionTableColumnKey.MUTATION_TYPE]: {
                 name: columnKey,
                 headerRender: () => {
                     return (
@@ -479,6 +517,7 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.GENE]: 0,
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0,
             [MultiSelectionTableColumnKey.CASE_LIST]: 0,
+            [MultiSelectionTableColumnKey.MUTATION_TYPE]: 0,
             [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,
@@ -745,9 +784,14 @@ export class MultiSelectionTable extends React.Component<
         return _.reduce(
             this.props.filters,
             (acc, next, index) => {
-                next.forEach(key => {
-                    acc[key] = index;
-                });
+                if (Array.isArray(next)) {
+                    next.forEach(key => {
+                        acc[key] = index;
+                    });
+                } else {
+                    acc[next] = index;
+                }
+
                 return acc;
             },
             {} as { [id: string]: number }

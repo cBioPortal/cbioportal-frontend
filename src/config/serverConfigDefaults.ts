@@ -27,9 +27,12 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     mygene_info_url:
         'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot',
 
-    oncoprint_custom_driver_annotation_binary_menu_label:
+    oncoprint_custom_driver_annotation_binary_menu_label: 'Custom Driver',
+    oncoprint_custom_driver_annotation_binary_menu_description:
         'Custom driver annotation',
-    oncoprint_custom_driver_annotation_tiers_menu_label: 'Custom driver tiers',
+    oncoprint_custom_driver_annotation_tiers_menu_label: 'Custom Driver Tiers',
+    oncoprint_custom_driver_annotation_tiers_menu_description:
+        'Custom driver tiers',
     oncoprint_custom_driver_annotation_binary_default: true,
     oncoprint_custom_driver_annotation_tiers_default: true,
     oncoprint_oncokb_default: true,
@@ -75,9 +78,10 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_right_nav_show_examples: true,
     skin_right_nav_show_testimonials: true,
     skin_right_nav_show_whats_new: true,
+    skin_right_nav_show_web_tours: false,
     skin_right_nav_show_twitter: false,
     skin_citation_rule_text:
-        'Please cite: <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract" target="_blank">Cerami et al., 2012</a> &amp; <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210" target="_blank">Gao et al., 2013</a>',
+        'Please cite <a href="https://docs.cbioportal.org/user-guide/faq/#how-do-i-cite-the-cbioportal" target="_blank">cBioPortal <i class="fa fa-book"></i></a>',
     skin_show_about_tab: true,
     skin_show_data_tab: true,
     skin_show_faqs_tab: true,
@@ -86,6 +90,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_show_tools_tab: true,
     skin_show_web_api_tab: true,
     skin_show_tweet_button: false,
+    skin_show_study_help_button: false,
     skin_show_tissue_image_tab: true,
     quick_search_enabled: false,
     default_cross_cancer_study_list:
@@ -101,7 +106,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     default_cross_cancer_study_list_name: 'TCGA PanCancer Atlas studies',
     skin_title: 'cBioPortal for Cancer Genomics',
 
-    skin_data_sets_header: `The portal currently contains data from the following 
+    skin_data_sets_header: `The portal currently contains data from the following
             cancer genomics studies.  The table below lists the number of available samples per data type and tumor.`,
 
     skin_example_study_queries: `tcga pancancer atlas\n
@@ -125,6 +130,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     session_url_length_threshold: '1500',
 
+    enable_study_tags: true,
+
     study_view: {
         tableAttrs: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
         priority: {
@@ -139,6 +146,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
             MUTATION_COUNT_CNA_FRACTION: 200,
             MUTATED_GENES_TABLE: 90,
             STRUCTURAL_VARIANT_GENES_TABLE: 85,
+            STRUCTURAL_VARIANTS_TABLE: 85,
             CNA_GENES_TABLE: 80,
             PATIENT_TREATMENTS_TABLE: 75,
             PATIENT_TREATMENT_GROUPS_TABLE: 75,
@@ -202,7 +210,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_home_page_unauthorized_studies_global_message:
         'The study is unauthorized. You need to request access.',
     comparison_categorical_na_values: 'NA',
-    skin_hide_download_controls: false,
+    skin_hide_download_controls: 'show',
 
     oncoprint_clinical_tracks_config_json: '',
 
@@ -210,11 +218,31 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_results_view_mutation_table_columns_show_on_init: '',
 
+    skin_comparison_view_mutation_table_columns_show_on_init: '',
+
     skin_patient_view_copy_number_table_columns_show_on_init: '',
 
     skin_patient_view_structural_variant_table_columns_show_on_init: '',
 
+    skin_results_view_tables_default_sort_column: 'Annotation',
+
+    skin_patient_view_tables_default_sort_column: 'Annotation',
+
+    skin_patient_view_custom_sample_type_colors_json: '',
+
     studyview_max_samples_selected: 0,
+
+    studyview_clinical_attribute_chart_count: 20,
+
+    study_download_url: '',
+
+    oncoprint_clustered_default: true,
+
+    vaf_sequential_mode_default: false,
+
+    vaf_log_scale_default: false,
+
+    skin_study_view_show_sv_table: false,
 };
 
 export default ServerConfigDefaults;

@@ -11,7 +11,13 @@ export function setCurrentURLHeader() {
 
     XMLHttpRequest.prototype.send = function() {
         if (this._url && /www\.cbioportal\.org\/api/.test(this._url)) {
-            this.setRequestHeader('X-CURRENT-URL', window.location.href);
+            this.setRequestHeader(
+                'X-CURRENT-URL',
+                window.location.href.substr(
+                    0,
+                    window.location.href.indexOf('#')
+                )
+            );
         }
         old_send.apply(this, arguments);
     };

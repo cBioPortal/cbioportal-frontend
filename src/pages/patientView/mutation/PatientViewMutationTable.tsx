@@ -65,6 +65,8 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.ASCN_METHOD,
             MutationTableColumnType.ASCN_COPY_NUM,
             MutationTableColumnType.ANNOTATION,
+            MutationTableColumnType.CUSTOM_DRIVER,
+            MutationTableColumnType.CUSTOM_DRIVER_TIER,
             MutationTableColumnType.HGVSG,
             MutationTableColumnType.REF_READS_N,
             MutationTableColumnType.VAR_READS_N,
@@ -289,6 +291,9 @@ export default class PatientViewMutationTable extends MutationTable<
                     width={this.oncokbWidth}
                     mergeOncoKbIcons={this.props.mergeOncoKbIcons}
                     onOncoKbIconToggle={this.handleOncoKbIconModeToggle}
+                    showRevueIcon={
+                        this.props.enableRevue && this.shouldShowRevue
+                    }
                 />
             );
         };
@@ -299,6 +304,8 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.GENE_PANEL].order = 25;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 30;
         this._columns[MutationTableColumnType.ANNOTATION].order = 35;
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER].order = 36;
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER].order = 37;
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.CHROMOSOME].order = 40;
         this._columns[MutationTableColumnType.START_POS].order = 50;

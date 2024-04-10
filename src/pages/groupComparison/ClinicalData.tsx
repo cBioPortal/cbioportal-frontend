@@ -13,7 +13,11 @@ import {
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import ClinicalDataEnrichmentsTable from './ClinicalDataEnrichmentsTable';
 import _ from 'lodash';
-import { DownloadControls, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    DownloadControls,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import client from 'shared/api/cbioportalClientInstance';
 import {
@@ -27,14 +31,14 @@ import {
     isStringData,
     IStringAxisData,
     makeBoxScatterPlotData,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+} from 'shared/components/plots/PlotsTabUtils';
 import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
 import { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
 import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
 import {
     CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
     ClinicalDataEnrichmentWithQ,
-    getStatisticalCautionInfo,
+    GetStatisticalCautionInfo,
 } from './GroupComparisonUtils';
 import ReactSelect from 'react-select1';
 import { MakeMobxView } from 'shared/components/MobxView';
@@ -60,6 +64,7 @@ import CategoryPlot, {
     CategoryPlotType,
 } from 'pages/groupComparison/CategoryPlot';
 import { OncoprintJS } from 'oncoprintjs';
+import { getServerConfig } from 'config/config';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -170,7 +175,7 @@ export default class ClinicalData extends React.Component<
             } else {
                 content.push(
                     <div className={'tabMessageContainer'}>
-                        {getStatisticalCautionInfo()}
+                        <GetStatisticalCautionInfo />
                         <OverlapExclusionIndicator store={this.props.store} />
                     </div>
                 );
@@ -807,7 +812,11 @@ export default class ClinicalData extends React.Component<
         if (this.tableDataStore.allData.length === 0 || !this.highlightedRow) {
             return <span></span>;
         }
-        const promises = [this.horzAxisDataPromise, this.vertAxisDataPromise];
+        const promises = [
+            this.horzAxisDataPromise,
+            this.vertAxisDataPromise,
+            this.props.store.uidToGroup,
+        ];
         const groupStatus = getRemoteDataGroupStatus(...promises);
         const isPercentage =
             this.categoryPlotType === CategoryPlotType.PercentageStackedBar;
@@ -861,6 +870,16 @@ export default class ClinicalData extends React.Component<
                                 symbol="circle"
                                 useLogSpaceTicks={true}
                                 legendLocationWidthThreshold={550}
+                                pValue={
+                                    this.showPAndQ
+                                        ? this.highlightedRow.pValue
+                                        : null
+                                }
+                                qValue={
+                                    this.showPAndQ
+                                        ? this.highlightedRow.qValue
+                                        : null
+                                }
                             />
                         );
                     } else if (this.boxPlotData.isError) {
@@ -961,6 +980,10 @@ export default class ClinicalData extends React.Component<
                     dontFade={true}
                     type="button"
                     style={{ position: 'absolute', right: 0, top: 0 }}
+                    showDownload={
+                        getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL
+                    }
                 />
             </div>
         );

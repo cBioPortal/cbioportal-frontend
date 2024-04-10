@@ -18,15 +18,20 @@ import MutualExclusivityTab from './mutualExclusivity/MutualExclusivityTab';
 import DownloadTab from './download/DownloadTab';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import CNSegments from './cnSegments/CNSegments';
+import StructuralVariants from 'pages/resultsView/structuralVariant/StructuralVariants';
 import './styles.scss';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
-import PlotsTab from './plots/PlotsTab';
+import PlotsTab from 'shared/components/plots/PlotsTab';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';
 import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
-import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    getBrowserWindow,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import {
@@ -68,7 +73,6 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { AppContext } from 'cbioportal-frontend-commons';
 import PathWayMapperContainer from 'pages/resultsView/pathwayMapper/PathWayMapperContainer';
 
 export function initStore(
@@ -250,8 +254,97 @@ export default class ResultsViewPage extends React.Component<
                             linkText={'Plots'}
                         >
                             <PlotsTab
-                                store={store}
+                                filteredSamplesByDetailedCancerType={
+                                    store.filteredSamplesByDetailedCancerType
+                                }
+                                mutations={store.mutations}
+                                studies={store.studies}
+                                molecularProfileIdSuffixToMolecularProfiles={
+                                    store.molecularProfileIdSuffixToMolecularProfiles
+                                }
+                                entrezGeneIdToGene={store.entrezGeneIdToGene}
+                                sampleKeyToSample={store.sampleKeyToSample}
+                                genes={store.genes}
+                                clinicalAttributes={store.clinicalAttributes}
+                                genesets={store.genesets}
+                                genericAssayEntitiesGroupByMolecularProfileId={
+                                    store.genericAssayEntitiesGroupByMolecularProfileId
+                                }
+                                studyIds={store.studyIds}
+                                molecularProfilesWithData={
+                                    store.molecularProfilesWithData
+                                }
+                                molecularProfilesInStudies={
+                                    store.molecularProfilesInStudies
+                                }
+                                annotatedCnaCache={store.annotatedCnaCache}
+                                annotatedMutationCache={
+                                    store.annotatedMutationCache
+                                }
+                                structuralVariantCache={
+                                    store.structuralVariantCache
+                                }
+                                studyToMutationMolecularProfile={
+                                    store.studyToMutationMolecularProfile
+                                }
+                                studyToMolecularProfileDiscreteCna={
+                                    store.studyToMolecularProfileDiscreteCna
+                                }
+                                clinicalDataCache={store.clinicalDataCache}
+                                patientKeyToFilteredSamples={
+                                    store.patientKeyToFilteredSamples
+                                }
+                                numericGeneMolecularDataCache={
+                                    store.numericGeneMolecularDataCache
+                                }
+                                coverageInformation={store.coverageInformation}
+                                genesetMolecularDataCache={
+                                    store.genesetMolecularDataCache
+                                }
+                                genericAssayMolecularDataCache={
+                                    store.genericAssayMolecularDataCache
+                                }
+                                studyToStructuralVariantMolecularProfile={
+                                    store.studyToStructuralVariantMolecularProfile
+                                }
+                                driverAnnotationSettings={
+                                    store.driverAnnotationSettings
+                                }
+                                studyIdToStudy={store.studyIdToStudy.result}
+                                structuralVariants={
+                                    store.structuralVariants.result
+                                }
+                                hugoGeneSymbols={store.hugoGeneSymbols}
+                                selectedGenericAssayEntitiesGroupByMolecularProfileId={
+                                    store.selectedGenericAssayEntitiesGroupByMolecularProfileId
+                                }
+                                molecularProfileIdToMolecularProfile={
+                                    store.molecularProfileIdToMolecularProfile
+                                }
                                 urlWrapper={this.urlWrapper}
+                                queryContainsOql={store.queryContainsOql}
+                                includeGermlineMutations={
+                                    store.includeGermlineMutations
+                                }
+                                mutationsReportByGene={
+                                    store.mutationsReportByGene
+                                }
+                                oqlFilteredMutationsReport={
+                                    store.oqlFilteredMutationsReport
+                                }
+                                oqlFilteredMolecularDataReport={
+                                    store.oqlFilteredMolecularDataReport
+                                }
+                                oqlFilteredStructuralVariantsReport={
+                                    store.oqlFilteredStructuralVariantsReport
+                                }
+                                samples={store.samples}
+                                filteredSamples={store.filteredSamples}
+                                patients={store.patients}
+                                filteredPatients={store.filteredPatients}
+                                hideUnprofiledSamples={
+                                    store.hideUnprofiledSamples
+                                }
                             />
                         </MSKTab>
                     );
@@ -276,7 +369,38 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-
+            {
+                id: ResultsViewTab.STRUCTURALVARIANTS,
+                hide: () => {
+                    return (
+                        !this.resultsViewPageStore.structuralVariants
+                            .isComplete ||
+                        this.resultsViewPageStore.structuralVariants.result
+                            .length === 0
+                    );
+                },
+                getTab: () => {
+                    return (
+                        <MSKTab
+                            key={13}
+                            id={ResultsViewTab.STRUCTURALVARIANTS}
+                            linkText={
+                                <>
+                                    Structural Variants&nbsp;
+                                    <strong className={'beta-text'}>
+                                        Beta!
+                                    </strong>
+                                </>
+                            }
+                        >
+                            <StructuralVariants
+                                store={store}
+                                urlWrapper={this.urlWrapper}
+                            />
+                        </MSKTab>
+                    );
+                },
+            },
             {
                 id: ResultsViewTab.COEXPRESSION,
                 hide: () => {
@@ -433,7 +557,10 @@ export default class ResultsViewPage extends React.Component<
             },
         ];
 
-        if (this.context.showDownloadControls === true) {
+        if (
+            getServerConfig().skin_hide_download_controls !==
+            DownloadControlOption.HIDE_ALL
+        ) {
             tabMap.push({
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {
@@ -762,5 +889,3 @@ export default class ResultsViewPage extends React.Component<
         }
     }
 }
-
-ResultsViewPage.contextType = AppContext;

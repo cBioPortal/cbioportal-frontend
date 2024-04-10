@@ -2,7 +2,7 @@ import BoxScatterPlot, {
     IBoxScatterPlotProps,
     toBoxPlotData,
 } from 'shared/components/plots/BoxScatterPlot';
-import { IBoxScatterPlotPoint } from 'pages/resultsView/plots/PlotsTabUtils';
+import { IBoxScatterPlotPoint } from 'shared/components/plots/PlotsTabUtils';
 import React from 'react';
 import { computed, makeObservable } from 'mobx';
 import { SummaryStatisticsTable } from './SummaryStatisticsTable';
@@ -18,6 +18,8 @@ export type ClinicalNumericalDataVisualisationProps = IBoxScatterPlotProps<
     IBoxScatterPlotPoint
 > & {
     type: ClinicalNumericalVisualisationType;
+    pValue: number | null;
+    qValue: number | null;
 };
 
 export class ClinicalNumericalDataVisualisation extends React.Component<
@@ -70,6 +72,8 @@ export class ClinicalNumericalDataVisualisation extends React.Component<
                 legendLocationWidthThreshold={
                     this.props.legendLocationWidthThreshold
                 }
+                pValue={this.props.pValue}
+                qValue={this.props.qValue}
             />
         );
     }

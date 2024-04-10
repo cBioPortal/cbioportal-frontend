@@ -18,7 +18,7 @@ export interface IPaginationControlsProps {
     showAllOption?: boolean;
     showMoreButton?: boolean;
     textBeforeButtons?: string;
-    textBetweenButtons?: string;
+    textBetweenButtons?: string | JSX.Element;
     firstButtonContent?: string | JSX.Element;
     previousButtonContent?: string | JSX.Element;
     nextButtonContent?: string | JSX.Element;

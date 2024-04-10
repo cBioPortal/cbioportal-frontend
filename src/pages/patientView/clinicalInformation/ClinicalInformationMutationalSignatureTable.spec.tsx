@@ -1,10 +1,7 @@
 import * as ClinicalInformationMutationalSignatureTable from './ClinicalInformationMutationalSignatureTable';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
-import sinon from 'sinon';
-
-import { prepareMutationalSignatureDataForTable } from './ClinicalInformationMutationalSignatureTable';
+import { prepareMutationalSignatureDataForTable } from '../mutationalSignatures/MutationalSignatureBarChartUtils';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
 
 const sampleMutationalSignatureMeta = [
@@ -12,7 +9,7 @@ const sampleMutationalSignatureMeta = [
         mutationalSignatureId: 'firstMutationalSignature',
         name: 'Mutational Signature 1',
         description: 'Mutational Signature 1',
-        url: 'url 1',
+        url: 'COSMIC/FakeMutationalSignature1',
         category: 'category 1',
         confidenceStatement:
             'Signature 1, the aging signature, is detected in this case.',
@@ -21,7 +18,7 @@ const sampleMutationalSignatureMeta = [
         mutationalSignatureId: 'secondMutationalSignature',
         name: 'Mutational Signature 2',
         description: 'Mutational Signature 2',
-        url: 'url 2',
+        url: 'COSMIC/FakeMutationalSignature2',
         category: 'category 2',
         confidenceStatement:
             'Signature 2, the APOBEC signature, is detected in this case.  This signature often coccurs with signature 13, the other APOBEC signature',
@@ -68,14 +65,27 @@ const sampleMutationalSignatureData = [
         numberOfMutationsForSample: 20,
         meta: sampleMutationalSignatureMeta[1],
     } as IMutationalSignature,
+    {
+        sampleId: 'secondSample',
+        uniqueSampleKey: 'secondSample',
+        patientId: 'firstPatient',
+        uniquePatientKey: 'firstPatient',
+        studyId: 'firstStudy',
+        mutationalSignatureId: 'secondMutationalSignature',
+        version: 'v2',
+        value: 10,
+        confidence: 0.01,
+        numberOfMutationsForSample: 20,
+        meta: sampleMutationalSignatureMeta[1],
+    } as IMutationalSignature,
 ];
-
+const samples = [{ id: 'firstSample' }, { id: 'secondSample' }];
 describe('ClinicalInformationMutationalSignatureTable', () => {
     it('takes mutational signature sample data and formats it for mutational signature table to render', () => {
         let result = prepareMutationalSignatureDataForTable(
-            sampleMutationalSignatureData
+            sampleMutationalSignatureData,
+            ['firstSample', 'secondSample']
         );
-
         assert.deepEqual(result, [
             {
                 name: 'Mutational Signature 1',
@@ -89,6 +99,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                         confidence: 0.8,
                     },
                 },
+                url: 'COSMIC/FakeMutationalSignature1',
             },
             {
                 name: 'Mutational Signature 2',
@@ -97,7 +108,12 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                         value: 3,
                         confidence: 0.4,
                     },
+                    secondSample: {
+                        value: 10,
+                        confidence: 0.01,
+                    },
                 },
+                url: 'COSMIC/FakeMutationalSignature2',
             },
         ]);
     });

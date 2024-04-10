@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { If } from 'react-if';
 import { Button, ButtonGroup } from 'react-bootstrap';
-import { AppContext, DefaultTooltip } from 'cbioportal-frontend-commons';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
@@ -91,5 +91,3 @@ export class CopyDownloadButtons extends React.Component<
         );
     }
 }
-
-CopyDownloadButtons.contextType = AppContext;

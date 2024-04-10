@@ -86,6 +86,7 @@ describe('study select page', function() {
             });
             it('updates reference genome form elements and study filter when entering search shorthand in text input', () => {
                 $(searchTextInput).click();
+                $(referenceGenomeFormSection).waitForExist();
                 assert($(referenceGenomeFormSection).isDisplayed());
                 assert(!$(hg38StudyEntry).isDisplayed());
                 assert(!$(hg38Checkbox).isSelected());

@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { remoteData, isWebdriver } from 'cbioportal-frontend-commons';
-import { action, computed, observable, makeObservable } from 'mobx';
+import { action, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
-import { MobxPromise } from 'mobxpromise';
 import { Portal } from 'react-portal';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, MobxPromise } from 'cbioportal-frontend-commons';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
+import { getServerConfig } from 'config/config';
 
 export interface IUserMessage {
     dateStart?: number;
@@ -36,7 +36,27 @@ if (
         // ADD MESSAGE IN FOLLOWING FORMAT
         // UNIQUE ID IS IMPORTANT B/C WE REMEMBER A MESSAGE HAS BEEN SHOWN
         // BASED ON USERS LOCALSTORAGE
+
+        {
+            dateEnd: 100000000000000,
+            content: `Re-introducing the cBioPortal Newsletter! Subscribe via <a href="https://www.linkedin.com/pulse/april-update-hello-cbioportal-community-cbioportal-22vle/" target="_blank">LinkedIn</a> or <a href="https://groups.google.com/g/cbioportal-news" target="_blank">Google Groups</a>`,
+            showCondition: routingStore => {
+                return getServerConfig().app_name === 'public-portal';
+            },
+            id: '2024_newsletter_intro',
+        },
     ];
+
+    // MSK specific messaging
+    if (
+        ['cbioportal.mskcc.org'].includes(getBrowserWindow().location.hostname)
+    ) {
+        MESSAGE_DATA.push({
+            dateEnd: 100000000000000,
+            content: `The <a href="https://cbioportal.mskcc.org/study/summary?id=mskimpact" _target="_blank">MSK-IMPACT cohort</a> now includes additional NLP-derived data elements from the Cancer Data Science Initiative (<a href="https://mskcc.sharepoint.com/sites/pub-CDSI" target="_blank">Read more</a>)`,
+            id: '2023_msk_chord_release',
+        });
+    }
 }
 
 interface IUserMessagerProps {

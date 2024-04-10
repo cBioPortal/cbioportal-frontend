@@ -4,7 +4,6 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import CustomDropdown from './CustomDropdown';
 import ConfirmNgchmModal from './ConfirmNgchmModal';
 import ReactSelect from 'react-select1';
-import { MobxPromise } from 'mobxpromise';
 import { action, computed, observable, reaction, makeObservable } from 'mobx';
 import _ from 'lodash';
 import { SortMode } from '../ResultsViewOncoprint';
@@ -14,12 +13,16 @@ import {
     GenericAssayMeta,
 } from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { DefaultTooltip, EditableSpan } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+    EditableSpan,
+    MobxPromise,
+} from 'cbioportal-frontend-commons';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
 import './styles.scss';
 import classNames from 'classnames';
-import { SpecialAttribute } from '../../../cache/ClinicalDataCache';
 import { ResultsViewPageStore } from '../../../../pages/resultsView/ResultsViewPageStore';
 import {
     OncoprintAnalysisCaseType,
@@ -35,11 +38,11 @@ import {
     IDriverAnnotationControlsState,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
-import { AppContext } from 'cbioportal-frontend-commons';
 import {
     ClinicalTrackConfig,
     ClinicalTrackConfigMap,
 } from 'shared/components/oncoprint/Oncoprint';
+import { getServerConfig } from 'config/config';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -54,6 +57,7 @@ export interface IOncoprintControlsHandlers
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
+    onSelectIsWhiteBackgroundForGlyphsEnabled?: (use: boolean) => void;
 
     onSelectHideVUS: (hide: boolean) => void;
     onSelectHideGermlineMutations: (hide: boolean) => void;
@@ -67,6 +71,9 @@ export interface IOncoprintControlsHandlers
         type: 'pdf' | 'png' | 'svg' | 'order' | 'tabular' | 'oncoprinter'
     ) => void;
     onChangeSelectedClinicalTracks?: (
+        trackConfigs: ClinicalTrackConfig[]
+    ) => void;
+    onChangeClinicalTracksPendingSubmission?: (
         trackConfigs: ClinicalTrackConfig[]
     ) => void;
     onClickAddGenesToHeatmap?: () => void;
@@ -86,6 +93,7 @@ export interface IOncoprintControlsState
     showClinicalTrackLegends?: boolean;
     onlyShowClinicalLegendForAlteredCases?: boolean;
     showOqlInLabels?: boolean;
+    isWhiteBackgroundForGlyphsEnabled?: boolean;
     showMinimap: boolean;
     isClinicalTrackConfigDirty: boolean;
     isLoggedIn: boolean;
@@ -104,6 +112,7 @@ export interface IOncoprintControlsState
         [clinicalAttributeId: string]: number;
     }>;
     selectedClinicalAttributeSpecInits?: ClinicalTrackConfigMap;
+    clinicalTracksPendingSubmission?: ClinicalTrackConfig[];
     heatmapProfilesPromise?: MobxPromise<MolecularProfile[]>;
     genericAssayEntitiesGroupedByGenericAssayTypePromise?: MobxPromise<{
         [genericAssayType: string]: GenericAssayMeta[];
@@ -147,6 +156,7 @@ const EVENT_KEY = {
     showClinicalTrackLegends: '4',
     onlyShowClinicalLegendForAlteredCases: '4.1',
     showOqlInLabels: '4.2',
+    isWhiteBackgroundForGlyphsEnabled: '4.3',
     distinguishMutationType: '5',
     distinguishGermlineMutations: '5.1',
     sortByMutationType: '6',
@@ -270,6 +280,12 @@ export default class OncoprintControls extends React.Component<
                 this.props.handlers.onSelectShowOqlInLabels &&
                     this.props.handlers.onSelectShowOqlInLabels(
                         !this.props.state.showOqlInLabels
+                    );
+                break;
+            case EVENT_KEY.isWhiteBackgroundForGlyphsEnabled:
+                this.props.handlers.onSelectIsWhiteBackgroundForGlyphsEnabled &&
+                    this.props.handlers.onSelectIsWhiteBackgroundForGlyphsEnabled(
+                        !this.props.state.isWhiteBackgroundForGlyphsEnabled
                     );
                 break;
             case EVENT_KEY.columnTypeSample:
@@ -1042,12 +1058,30 @@ export default class OncoprintControls extends React.Component<
                         Show OQL filters
                     </label>
                 </div>
+                <div className="checkbox">
+                    <label>
+                        <input
+                            type="checkbox"
+                            data-test="toggleWhiteBackgroundForGlyphs"
+                            value={EVENT_KEY.isWhiteBackgroundForGlyphsEnabled}
+                            checked={
+                                this.props.state
+                                    .isWhiteBackgroundForGlyphsEnabled
+                            }
+                            onClick={this.onInputClick}
+                        />{' '}
+                        Use white background (Caution: profiled and unprofiled
+                        samples look identical and germline mutations might be
+                        hidden)
+                    </label>
+                </div>
             </CustomDropdown>
         );
     });
 
     private DownloadMenu = observer(() => {
-        return this.context.showDownloadControls === true ? (
+        return getServerConfig().skin_hide_download_controls !==
+            DownloadControlOption.HIDE_ALL ? (
             <CustomDropdown
                 bsStyle="default"
                 title="Download"
@@ -1085,24 +1119,28 @@ export default class OncoprintControls extends React.Component<
                         'Sample'}{' '}
                     order
                 </button>
-                {!this.props.oncoprinterMode && (
-                    <button
-                        className="btn btn-sm btn-default"
-                        name={EVENT_KEY.downloadTabular}
-                        onClick={this.onButtonClick}
-                    >
-                        Tabular
-                    </button>
-                )}
-                {!this.props.oncoprinterMode && (
-                    <button
-                        className="btn btn-sm btn-default"
-                        name={EVENT_KEY.downloadOncoprinter}
-                        onClick={this.onButtonClick}
-                    >
-                        Open in Oncoprinter
-                    </button>
-                )}
+                {!this.props.oncoprinterMode &&
+                    getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL && (
+                        <button
+                            className="btn btn-sm btn-default"
+                            name={EVENT_KEY.downloadTabular}
+                            onClick={this.onButtonClick}
+                        >
+                            Tabular
+                        </button>
+                    )}
+                {!this.props.oncoprinterMode &&
+                    getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL && (
+                        <button
+                            className="btn btn-sm btn-default"
+                            name={EVENT_KEY.downloadOncoprinter}
+                            onClick={this.onButtonClick}
+                        >
+                            Open in Oncoprinter
+                        </button>
+                    )}
             </CustomDropdown>
         ) : null;
     });
@@ -1220,5 +1258,3 @@ export default class OncoprintControls extends React.Component<
         );
     }
 }
-
-OncoprintControls.contextType = AppContext;

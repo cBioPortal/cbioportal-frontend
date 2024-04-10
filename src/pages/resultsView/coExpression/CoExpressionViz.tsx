@@ -18,10 +18,9 @@ import {
 } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
-import { logScalePossibleForProfile } from '../plots/PlotsTabUtils';
+import { logScalePossibleForProfile } from 'shared/components/plots/PlotsTabUtils';
 import CoExpressionPlot, { ICoExpressionPlotProps } from './CoExpressionPlot';
-import { remoteData } from 'cbioportal-frontend-commons';
-import { MobxPromise } from 'mobxpromise';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import { computePlotData, requestAllDataMessage } from './CoExpressionVizUtils';
 import { Button } from 'react-bootstrap';
 import { CoExpressionCache } from './CoExpressionTab';

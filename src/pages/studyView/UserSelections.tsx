@@ -1,9 +1,12 @@
 import * as React from 'react';
-import _ from 'lodash';
+import _, { filter } from 'lodash';
 import { observer } from 'mobx-react';
 import { computed, makeObservable, runInAction } from 'mobx';
 import styles from './styles.module.scss';
 import {
+    OredPatientTreatmentFilters,
+    OredSampleTreatmentFilters,
+    DataFilter,
     DataFilterValue,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
@@ -11,7 +14,7 @@ import {
     PatientTreatmentFilter,
     SampleTreatmentFilter,
     ClinicalDataFilter,
-    DataFilter,
+    StructuralVariantFilterQuery,
 } from 'cbioportal-ts-api-client';
 import {
     DataType,
@@ -21,16 +24,16 @@ import {
     getGenericAssayChartUniqueKey,
     updateCustomIntervalFilter,
     SpecialChartsUniqueKeyEnum,
-} from 'pages/studyView/StudyViewUtils';
-import {
-    ChartMeta,
     geneFilterQueryToOql,
+    getCNAByAlteration,
     getCNAColorByAlteration,
     getPatientIdentifiers,
     getSelectedGroupNames,
     getUniqueKeyFromMolecularProfileIds,
     intervalFiltersDisplayValue,
     StudyViewFilterWithSampleIdentifierFilters,
+    ChartMeta,
+    getUniqueKeyFromGeneFilterMolecularProfileIds,
 } from 'pages/studyView/StudyViewUtils';
 import { PillTag } from '../../shared/components/PillTag/PillTag';
 import { GroupLogic } from './filters/groupLogic/GroupLogic';
@@ -42,18 +45,19 @@ import {
     getSampleIdentifiers,
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
-import { DefaultTooltip, getBrowserWindow } from 'cbioportal-frontend-commons';
 import {
-    OredPatientTreatmentFilters,
-    OredSampleTreatmentFilters,
-} from 'cbioportal-ts-api-client';
-import {
-    STRUCTURAL_VARIANT_COLOR,
+    DefaultTooltip,
     MUT_COLOR_MISSENSE,
+    STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { structVarFilterQueryToOql } from 'pages/studyView/StructVarUtils';
 import classNames from 'classnames';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
+import {
+    getSurvivalChartMetaId,
+    isSurvivalAttributeId,
+} from './charts/survival/StudyViewSurvivalUtils';
 
 export interface IUserSelectionsProps {
     store: StudyViewPageStore;
@@ -68,10 +72,12 @@ export interface IUserSelectionsProps {
     ) => void;
     updateCustomChartFilter: (uniqueKey: string, values: string[]) => void;
     removeGeneFilter: (uniqueKey: string, oql: string) => void;
-    updateGenomicDataIntervalFilter: (
+    removeStructVarFilter: (uniqueKey: string, oql: string) => void;
+    updateGenomicDataFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
     ) => void;
+    removeMutationDataFilter: (uniqueKey: string, value: string) => void;
     updateGenericAssayDataFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
@@ -215,16 +221,52 @@ export default class UserSelections extends React.Component<
             }
         );
 
-        // Genomic Bar chart filters
+        // Genomic chart filters
         _.reduce(
             this.props.filter.genomicDataFilters || [],
-            (acc, genomicDataIntervalFilter) => {
+            (acc, genomicDataFilter) => {
                 const uniqueKey = getGenomicChartUniqueKey(
-                    genomicDataIntervalFilter.hugoGeneSymbol,
-                    genomicDataIntervalFilter.profileType
+                    genomicDataFilter.hugoGeneSymbol,
+                    genomicDataFilter.profileType
                 );
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                const dataType = this.props.store.getMolecularChartDataType(
+                    uniqueKey
+                );
                 if (chartMeta) {
+                    let dataFilterComponent =
+                        dataType === DataType.STRING
+                            ? this.renderCategoricalDataFilter(
+                                  genomicDataFilter.values,
+                                  this.props.updateGenomicDataFilter,
+                                  chartMeta,
+                                  getCNAByAlteration
+                              )
+                            : this.renderDataBinFilter(
+                                  genomicDataFilter.values,
+                                  (
+                                      chartUniqueKey: string,
+                                      newRange: {
+                                          start?: number;
+                                          end?: number;
+                                      }
+                                  ) => {
+                                      updateCustomIntervalFilter(
+                                          newRange,
+                                          chartMeta,
+                                          this.props.store
+                                              .getGenomicChartDataBin,
+                                          this.props.store
+                                              .getGenomicDataFiltersByUniqueKey,
+                                          this.props.store.updateCustomBins,
+                                          this.props.store
+                                              .updateGenomicDataIntervalFilters
+                                      );
+                                  },
+                                  this.props.updateGenomicDataFilter,
+                                  chartMeta
+                              );
+
                     acc.push(
                         <div className={styles.parentGroupLogic}>
                             <GroupLogic
@@ -236,32 +278,63 @@ export default class UserSelections extends React.Component<
                                     >
                                         {chartMeta.displayName}
                                     </span>,
-                                    this.renderDataBinFilter(
-                                        genomicDataIntervalFilter.values,
-                                        (
-                                            chartUniqueKey: string,
-                                            newRange: {
-                                                start?: number;
-                                                end?: number;
-                                            }
-                                        ) => {
-                                            updateCustomIntervalFilter(
-                                                newRange,
-                                                chartMeta,
-                                                this.props.store
-                                                    .getGenomicChartDataBin,
-                                                this.props.store
-                                                    .getGenomicDataIntervalFiltersByUniqueKey,
-                                                this.props.store
-                                                    .updateCustomBins,
-                                                this.props.store
-                                                    .updateGenomicDataIntervalFilters
-                                            );
-                                        },
-                                        this.props
-                                            .updateGenomicDataIntervalFilter,
-                                        chartMeta
-                                    ),
+                                    dataFilterComponent,
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
+                return acc;
+            },
+            components
+        );
+
+        // Mutation chart filters
+        _.reduce(
+            this.props.filter.mutationDataFilters || [],
+            (acc, mutationDataFilter) => {
+                const uniqueKey = getGenomicChartUniqueKey(
+                    mutationDataFilter.hugoGeneSymbol,
+                    mutationDataFilter.profileType,
+                    mutationDataFilter.categorization
+                );
+                const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                if (chartMeta) {
+                    const filters = mutationDataFilter.values.map(
+                        dataFilterValues => {
+                            return (
+                                <GroupLogic
+                                    components={[
+                                        this.groupedMutationDataFilters(
+                                            dataFilterValues,
+                                            chartMeta
+                                        ),
+                                    ]}
+                                    operation=":"
+                                    group={dataFilterValues.length > 1}
+                                />
+                            );
+                        }
+                    );
+
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
+                                    >
+                                        {chartMeta.displayName}
+                                    </span>,
+                                    <GroupLogic
+                                        components={filters}
+                                        operation={'and'}
+                                        group={filters.length > 1}
+                                    />,
                                 ]}
                                 operation={':'}
                                 group={false}
@@ -360,7 +433,7 @@ export default class UserSelections extends React.Component<
         _.reduce(
             this.props.filter.geneFilters || [],
             (acc, geneFilter) => {
-                const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                const uniqueKey = getUniqueKeyFromGeneFilterMolecularProfileIds(
                     geneFilter.molecularProfileIds
                 );
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
@@ -373,6 +446,43 @@ export default class UserSelections extends React.Component<
                                         return (
                                             <GroupLogic
                                                 components={this.groupedGeneQueries(
+                                                    queries,
+                                                    chartMeta
+                                                )}
+                                                operation="or"
+                                                group={queries.length > 1}
+                                            />
+                                        );
+                                    }
+                                )}
+                                operation={'and'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
+                return acc;
+            },
+            components
+        );
+
+        _.reduce(
+            this.props.filter.structuralVariantFilters || [],
+            (acc, structuralVariantFilter) => {
+                const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                    structuralVariantFilter.molecularProfileIds,
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                );
+                const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                if (chartMeta) {
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={structuralVariantFilter.structVarQueries.map(
+                                    queries => {
+                                        return (
+                                            <GroupLogic
+                                                components={this.groupedStructVarQueries(
                                                     queries,
                                                     chartMeta
                                                 )}
@@ -547,9 +657,12 @@ export default class UserSelections extends React.Component<
         return _.reduce(
             filters || [],
             (acc, clinicalDataFilter) => {
-                const chartMeta = this.props.attributesMetaSet[
+                const attributeId = isSurvivalAttributeId(
                     clinicalDataFilter.attributeId
-                ];
+                )
+                    ? getSurvivalChartMetaId(clinicalDataFilter.attributeId)
+                    : clinicalDataFilter.attributeId;
+                const chartMeta = this.props.attributesMetaSet[attributeId];
                 if (chartMeta) {
                     const dataType = this.props.clinicalAttributeIdToDataType[
                         clinicalDataFilter.attributeId
@@ -557,7 +670,7 @@ export default class UserSelections extends React.Component<
                     let dataFilterComponent =
                         dataType === DataType.STRING
                             ? this.renderCategoricalDataFilter(
-                                  clinicalDataFilter,
+                                  clinicalDataFilter.values,
                                   onDelete,
                                   chartMeta
                               )
@@ -638,37 +751,40 @@ export default class UserSelections extends React.Component<
 
     // Pie chart filter
     private renderCategoricalDataFilter(
-        clinicalDataFilter: ClinicalDataFilter,
+        dataFilterValues: DataFilterValue[],
         onDelete: (chartUniqueKey: string, values: DataFilterValue[]) => void,
-        chartMeta: ChartMeta & { chartType: ChartType }
+        chartMeta: ChartMeta & { chartType: ChartType },
+        transformLabel?: (value: string) => string
     ): JSX.Element {
         return (
             <GroupLogic
-                components={clinicalDataFilter.values.map(
-                    clinicalDataFilterValue => {
-                        return (
-                            <PillTag
-                                content={clinicalDataFilterValue.value}
-                                backgroundColor={
-                                    STUDY_VIEW_CONFIG.colors.theme
-                                        .clinicalFilterContent
-                                }
-                                onDelete={() =>
-                                    onDelete(
-                                        chartMeta.uniqueKey,
-                                        _.remove(
-                                            clinicalDataFilter.values,
-                                            value =>
-                                                value.value !==
-                                                clinicalDataFilterValue.value
-                                        )
+                components={dataFilterValues.map(dataFilterValue => {
+                    return (
+                        <PillTag
+                            content={
+                                transformLabel
+                                    ? transformLabel(dataFilterValue.value)
+                                    : dataFilterValue.value
+                            }
+                            backgroundColor={
+                                STUDY_VIEW_CONFIG.colors.theme
+                                    .clinicalFilterContent
+                            }
+                            onDelete={() =>
+                                onDelete(
+                                    chartMeta.uniqueKey,
+                                    _.remove(
+                                        dataFilterValues,
+                                        value =>
+                                            value.value !==
+                                            dataFilterValue.value
                                     )
-                                }
-                                store={this.props.store}
-                            />
-                        );
-                    }
-                )}
+                                )
+                            }
+                            store={this.props.store}
+                        />
+                    );
+                })}
                 operation={'or'}
                 group={false}
             />
@@ -795,35 +911,18 @@ export default class UserSelections extends React.Component<
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element[] {
         return geneQueries.map(geneQuery => {
-            let color = DEFAULT_NA_COLOR;
-            let displayGeneSymbol = geneQuery.hugoGeneSymbol;
-            switch (chartMeta.chartType) {
-                case ChartTypeEnum.MUTATED_GENES_TABLE:
-                    color = MUT_COLOR_MISSENSE;
-                    break;
-                case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
-                    color = STRUCTURAL_VARIANT_COLOR;
-                    break;
-                case ChartTypeEnum.CNA_GENES_TABLE: {
-                    if (geneQuery.alterations.length === 1) {
-                        let tagColor = getCNAColorByAlteration(
-                            geneQuery.alterations[0]
-                        );
-                        if (tagColor) {
-                            color = tagColor;
-                        }
-                    }
-                    break;
-                }
-            }
+            const color = this.getQueryFilterPillTagColor(
+                chartMeta,
+                geneQuery.alterations
+            );
             return (
                 <PillTag
-                    content={displayGeneSymbol}
+                    content={geneQuery.hugoGeneSymbol}
                     backgroundColor={color}
                     infoSection={
                         <FilterIconMessage
                             chartType={chartMeta.chartType}
-                            geneFilterQuery={geneQuery}
+                            annotatedFilterQuery={geneQuery}
                         />
                     }
                     onDelete={() =>
@@ -836,6 +935,61 @@ export default class UserSelections extends React.Component<
                 />
             );
         });
+    }
+
+    private groupedStructVarQueries(
+        structVarFilterQueries: StructuralVariantFilterQuery[],
+        chartMeta: ChartMeta & { chartType: ChartType }
+    ): JSX.Element[] {
+        return structVarFilterQueries.map(structVarQuery => {
+            let color = this.getQueryFilterPillTagColor(chartMeta);
+            const gene1 = structVarQuery.gene1Query.hugoSymbol || '';
+            const gene2 = structVarQuery.gene2Query.hugoSymbol || '';
+            let displayLabel = `${gene1}::${gene2}`;
+            return (
+                <PillTag
+                    content={displayLabel}
+                    backgroundColor={color}
+                    infoSection={
+                        <FilterIconMessage
+                            chartType={chartMeta.chartType}
+                            annotatedFilterQuery={structVarQuery}
+                        />
+                    }
+                    onDelete={() =>
+                        this.props.removeStructVarFilter(
+                            chartMeta.uniqueKey,
+                            structVarFilterQueryToOql(structVarQuery)
+                        )
+                    }
+                    store={this.props.store}
+                />
+            );
+        });
+    }
+
+    private getQueryFilterPillTagColor(
+        chartMeta: ChartMeta & { chartType: ChartType },
+        cnaAlterations?: string[]
+    ): string {
+        switch (chartMeta.chartType) {
+            case ChartTypeEnum.MUTATED_GENES_TABLE:
+                return MUT_COLOR_MISSENSE;
+            case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+            case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
+                return STRUCTURAL_VARIANT_COLOR;
+            case ChartTypeEnum.CNA_GENES_TABLE: {
+                if (cnaAlterations && cnaAlterations.length === 1) {
+                    const tagGColor = getCNAColorByAlteration(
+                        cnaAlterations[0]
+                    );
+                    return tagGColor || DEFAULT_NA_COLOR;
+                }
+                return DEFAULT_NA_COLOR;
+            }
+            default:
+                return DEFAULT_NA_COLOR;
+        }
     }
 
     private groupedGenomicProfiles(genomicProfiles: string[]): JSX.Element[] {
@@ -870,6 +1024,36 @@ export default class UserSelections extends React.Component<
                 />
             );
         });
+    }
+
+    private groupedMutationDataFilters(
+        dataFilterValues: DataFilterValue[],
+        chartMeta: ChartMeta & { chartType: ChartType }
+    ): JSX.Element {
+        return (
+            <GroupLogic
+                components={dataFilterValues.map(dataFilterValue => {
+                    return (
+                        <PillTag
+                            content={dataFilterValue.value.split('_').join(' ')}
+                            backgroundColor={
+                                STUDY_VIEW_CONFIG.colors.theme
+                                    .clinicalFilterContent
+                            }
+                            onDelete={() =>
+                                this.props.removeMutationDataFilter(
+                                    chartMeta.uniqueKey,
+                                    dataFilterValue.value
+                                )
+                            }
+                            store={this.props.store}
+                        />
+                    );
+                })}
+                operation={'or'}
+                group={false}
+            />
+        );
     }
 
     submitHesitantFilters() {

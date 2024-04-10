@@ -36,12 +36,15 @@ import {
     scatterPlotZIndexSortBy,
     IAxisLogScaleParams,
     basicAppearance,
-} from '../plots/PlotsTabUtils';
+} from 'shared/components/plots/PlotsTabUtils';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
-import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    MobxPromise,
+    remoteData,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
-import { MobxPromise } from 'mobxpromise';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import BoxScatterPlot, {
     IBoxScatterPlotData,
@@ -50,7 +53,7 @@ import {
     ColoringType,
     PlotType,
     SelectedColoringTypes,
-} from '../plots/PlotsTab';
+} from '../../../shared/components/plots/PlotsTab';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';
@@ -718,12 +721,39 @@ export default class ExpressionWrapper extends React.Component<
                 <div className={'tabMessageContainer'}>
                     <OqlStatusBanner
                         className="expression-oql-status-banner"
-                        store={this.props.store}
+                        queryContainsOql={this.props.store.queryContainsOql}
                         tabReflectsOql={false}
                         style={{ marginTop: -1, marginBottom: 12 }}
                     />
-                    <AlterationFilterWarning store={this.props.store} />
-                    <CaseFilterWarning store={this.props.store} />
+                    <AlterationFilterWarning
+                        driverAnnotationSettings={
+                            this.props.store.driverAnnotationSettings
+                        }
+                        includeGermlineMutations={
+                            this.props.store.includeGermlineMutations
+                        }
+                        mutationsReportByGene={
+                            this.props.store.mutationsReportByGene
+                        }
+                        oqlFilteredMutationsReport={
+                            this.props.store.oqlFilteredMutationsReport
+                        }
+                        oqlFilteredMolecularDataReport={
+                            this.props.store.oqlFilteredMolecularDataReport
+                        }
+                        oqlFilteredStructuralVariantsReport={
+                            this.props.store.oqlFilteredStructuralVariantsReport
+                        }
+                    />
+                    <CaseFilterWarning
+                        samples={this.props.store.samples}
+                        filteredSamples={this.props.store.filteredSamples}
+                        patients={this.props.store.patients}
+                        filteredPatients={this.props.store.filteredPatients}
+                        hideUnprofiledSamples={
+                            this.props.store.hideUnprofiledSamples
+                        }
+                    />
                 </div>
                 {this.studySelectorModalVisible && this.studySelectionModal}
                 <div style={{ marginBottom: 15 }}>

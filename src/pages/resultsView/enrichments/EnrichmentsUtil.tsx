@@ -2,6 +2,8 @@ import * as React from 'react';
 import {
     AlterationEnrichment,
     GenericAssayEnrichment,
+    GenericAssayBinaryEnrichment,
+    GenericAssayCategoricalEnrichment,
     GenomicEnrichment,
     MolecularProfile,
 } from 'cbioportal-ts-api-client';
@@ -9,6 +11,8 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import {
     ExpressionEnrichmentRow,
     GenericAssayEnrichmentRow,
+    GenericAssayBinaryEnrichmentRow,
+    GenericAssayCategoricalEnrichmentRow,
 } from 'shared/model/EnrichmentRow';
 import { formatLogOddsRatio, roundLogRatio } from 'shared/lib/FormatUtils';
 import _ from 'lodash';
@@ -23,7 +27,7 @@ import styles from './styles.module.scss';
 import classNames from 'classnames';
 import { IMultipleCategoryBarPlotData } from 'pages/groupComparison/MultipleCategoryBarPlot';
 import { getTextColor } from '../../groupComparison/OverlapUtils';
-import { TruncatedText } from 'cbioportal-frontend-commons';
+import { DefaultTooltip, TruncatedText } from 'cbioportal-frontend-commons';
 import {
     ExpressionEnrichmentTableColumn,
     ExpressionEnrichmentTableColumnType,
@@ -33,6 +37,11 @@ import {
     GenericAssayEnrichmentTableColumn,
     GenericAssayEnrichmentTableColumnType,
 } from './GenericAssayEnrichmentsTable';
+import {
+    GenericAssayBinaryEnrichmentTableColumn,
+    GenericAssayBinaryEnrichmentTableColumnType,
+} from './GenericAssayBinaryEnrichmentsTable';
+import { GenericAssayCategoricalEnrichmentTableColumn } from './GenericAssayCategoricalEnrichmentsTable';
 
 export type AlterationEnrichmentWithQ = AlterationEnrichment & {
     logRatio?: number;
@@ -52,9 +61,15 @@ export type ContinousDataPvalueTooltipProps = {
 };
 
 export const CNA_AMP_VALUE = 2;
+export const CNA_GAIN_VALUE = 1;
+export const CNA_DIPLOID_VALUE = 0;
+export const CNA_HETLOSS_VALUE = -1;
 export const CNA_HOMDEL_VALUE = -2;
 export const CNA_TO_ALTERATION: { [cna: number]: string } = {
     [CNA_AMP_VALUE]: 'AMP',
+    [CNA_GAIN_VALUE]: 'GAIN',
+    [CNA_DIPLOID_VALUE]: 'DIPLOID',
+    [CNA_HETLOSS_VALUE]: 'HETLOSS',
     [CNA_HOMDEL_VALUE]: 'HOMDEL',
 };
 export const PVALUE_TEST_GROUP_SIZE_THRESHOLD = 3;
@@ -65,6 +80,13 @@ export enum GeneOptionLabel {
     AVERAGE_FREQUENCY = 'Genes with highest average frequency',
     SIGNIFICANT_P_VALUE = 'Genes with most significant p-value',
     SYNC_WITH_TABLE = 'Sync with table (up to 100 genes)',
+}
+
+export enum GaBinaryOptionLabel {
+    HIGHEST_FREQUENCY = 'Entities with highest frequency in any group',
+    AVERAGE_FREQUENCY = 'Entities with highest average frequency',
+    SIGNIFICANT_P_VALUE = 'Entities with most significant p-value',
+    SYNC_WITH_TABLE = 'Sync with table (up to 100 entities)',
 }
 
 export enum AlterationContainerType {
@@ -114,11 +136,40 @@ export function formatPercentage(
     );
 }
 
+export function formatGenericAssayPercentage(
+    group: string,
+    data: GenericAssayBinaryEnrichmentRow
+): string {
+    const datum = data.groupsSet[group];
+    return datum.count + ' (' + datum.alteredPercentage.toFixed(2) + '%)';
+}
+
+export function getProfiledCount(
+    group: string,
+    data: AlterationEnrichmentRow
+): number {
+    return data.groupsSet[group].profiledCount;
+}
+
 export function getAlteredCount(
     group: string,
     data: AlterationEnrichmentRow
 ): number {
     return data.groupsSet[group].alteredCount;
+}
+
+export function getCount(
+    group: string,
+    data: GenericAssayBinaryEnrichmentRow
+): number {
+    return data.groupsSet[group].count;
+}
+
+export function getTotalCount(
+    group: string,
+    data: GenericAssayBinaryEnrichmentRow
+): number {
+    return data.groupsSet[group].totalCount;
 }
 
 function volcanoPlotYCoord(pValue: number) {
@@ -215,6 +266,45 @@ export function getGenericAssayScatterData(
     });
 }
 
+export function getGenericAssayBinaryScatterData(
+    genericAssayBinaryEnrichments: GenericAssayBinaryEnrichmentRow[]
+): any[] {
+    return genericAssayBinaryEnrichments.map(genericAssayBinaryEnrichment => {
+        return {
+            x: roundLogRatio(Number(genericAssayBinaryEnrichment.logRatio), 10),
+            y: volcanoPlotYCoord(genericAssayBinaryEnrichment.pValue),
+            stableId: genericAssayBinaryEnrichment.stableId,
+            entityName: genericAssayBinaryEnrichment.entityName,
+            pValue: genericAssayBinaryEnrichment.pValue,
+            qValue: genericAssayBinaryEnrichment.qValue,
+            logRatio: genericAssayBinaryEnrichment.logRatio,
+            hovered: false,
+        };
+    });
+}
+
+export function getGaBinaryFrequencyScatterData(
+    genericAssayBinaryEnrichments: GenericAssayBinaryEnrichmentRow[],
+    group1: string,
+    group2: string
+): IMiniFrequencyScatterChartData[] {
+    return genericAssayBinaryEnrichments
+        .filter(a => a.pValue !== undefined && a.qValue !== undefined)
+        .map(genericAssayBinaryEnrichment => {
+            return {
+                x:
+                    genericAssayBinaryEnrichment.groupsSet[group1]
+                        .alteredPercentage,
+                y:
+                    genericAssayBinaryEnrichment.groupsSet[group2]
+                        .alteredPercentage,
+                pValue: genericAssayBinaryEnrichment.pValue!,
+                qValue: genericAssayBinaryEnrichment.qValue!,
+                hugoGeneSymbol: '',
+                logRatio: genericAssayBinaryEnrichment.logRatio!,
+            };
+        });
+}
 export function getAlterationRowData(
     alterationEnrichments: AlterationEnrichmentWithQ[],
     queryGenes: string[],
@@ -363,11 +453,130 @@ export function getGenericAssayEnrichmentRowData(
     });
 }
 
+export function getGenericAssayBinaryEnrichmentRowData(
+    genericAssayBinaryEnrichments: GenericAssayBinaryEnrichment[],
+    groups: { name: string; nameOfEnrichmentDirection?: string }[]
+): GenericAssayBinaryEnrichmentRow[] {
+    return genericAssayBinaryEnrichments.map(genericAssayBinaryEnrichment => {
+        let countsWithAlteredPercentage = _.map(
+            genericAssayBinaryEnrichment.counts,
+            datum => {
+                const alteredPercentage =
+                    datum.count > 0 && datum.totalCount > 0
+                        ? (datum.count / datum.totalCount) * 100
+                        : 0;
+                return {
+                    ...datum,
+                    alteredPercentage,
+                };
+            }
+        );
+        let enrichedGroup = '';
+        // fallback to stable id if name is not specified
+        let entityName =
+            'NAME' in genericAssayBinaryEnrichment.genericEntityMetaProperties
+                ? genericAssayBinaryEnrichment.genericEntityMetaProperties[
+                      'NAME'
+                  ]
+                : genericAssayBinaryEnrichment.stableId;
+        let logRatio: number | undefined = undefined;
+        let groupsSet = _.keyBy(
+            countsWithAlteredPercentage,
+            group => group.name
+        );
+
+        if (groups.length === 2) {
+            let group1Data = groupsSet[groups[0].name];
+            let group2Data = groupsSet[groups[1].name];
+            if (genericAssayBinaryEnrichment.pValue !== undefined) {
+                logRatio = Math.log2(
+                    group1Data.alteredPercentage / group2Data.alteredPercentage
+                );
+                let group1Name =
+                    groups[0].nameOfEnrichmentDirection || groups[0].name;
+                let group2Name =
+                    groups[1].nameOfEnrichmentDirection || groups[1].name;
+                enrichedGroup = logRatio > 0 ? group1Name : group2Name;
+            }
+        } else if (genericAssayBinaryEnrichment.pValue !== undefined) {
+            countsWithAlteredPercentage.sort(
+                (a, b) => b.alteredPercentage - a.alteredPercentage
+            );
+            enrichedGroup = countsWithAlteredPercentage[0].name;
+        }
+
+        return {
+            checked: false,
+            disabled: false,
+            logRatio,
+            pValue: genericAssayBinaryEnrichment.pValue,
+            qValue: genericAssayBinaryEnrichment.qValue,
+            enrichedGroup,
+            stableId: genericAssayBinaryEnrichment.stableId,
+            entityName,
+            groupsSet,
+        };
+    });
+}
+
+export function getGenericAssayCategoricalEnrichmentRowData(
+    genericAssayCategoricalEnrichments: GenericAssayCategoricalEnrichment[],
+    groups: { name: string; nameOfEnrichmentDirection?: string }[]
+): GenericAssayCategoricalEnrichmentRow[] {
+    return genericAssayCategoricalEnrichments.map(
+        genericAssayCategoricalEnrichment => {
+            let enrichedGroup = '';
+            // fallback to stable id if name is not specified
+            let entityName =
+                'NAME' in
+                genericAssayCategoricalEnrichment.genericEntityMetaProperties
+                    ? genericAssayCategoricalEnrichment
+                          .genericEntityMetaProperties['NAME']
+                    : genericAssayCategoricalEnrichment.stableId;
+            let logRatio: number | undefined = undefined;
+            let groupsSet = _.keyBy(
+                genericAssayCategoricalEnrichment.groupsStatistics,
+                group => group.name
+            );
+
+            if (groups.length === 2) {
+                let group1Data = groupsSet[groups[0].name];
+                let group2Data = groupsSet[groups[1].name];
+                logRatio =
+                    group1Data.meanExpression - group2Data.meanExpression;
+                let group1Name =
+                    groups[0].nameOfEnrichmentDirection || groups[0].name;
+                let group2Name =
+                    groups[1].nameOfEnrichmentDirection || groups[1].name;
+                enrichedGroup = logRatio > 0 ? group1Name : group2Name;
+            } else {
+                enrichedGroup = genericAssayCategoricalEnrichment.groupsStatistics.sort(
+                    (a, b) => b.meanExpression - a.meanExpression
+                )[0].name;
+            }
+
+            return {
+                checked: false,
+                disabled: false,
+                enrichedGroup: enrichedGroup,
+                pValue: genericAssayCategoricalEnrichment.pValue,
+                qValue: genericAssayCategoricalEnrichment.qValue,
+                stableId: genericAssayCategoricalEnrichment.stableId,
+                entityName,
+                attributeType: 'Sample',
+                statisticalTest: 'Chi-squared Test',
+                groupsSet,
+            };
+        }
+    );
+}
 export function getFilteredData(
     data: (
         | ExpressionEnrichmentRow
         | AlterationEnrichmentRow
         | GenericAssayEnrichmentRow
+        | GenericAssayBinaryEnrichmentRow
+        | GenericAssayCategoricalEnrichmentRow
     )[],
     expressedGroups: string[],
     qValueFilter: boolean,
@@ -413,7 +622,10 @@ export function getFilteredData(
             result =
                 result &&
                 filterFunction(
-                    (enrichmentDatum as GenericAssayEnrichmentRow).stableId
+                    (enrichmentDatum as
+                        | GenericAssayEnrichmentRow
+                        | GenericAssayBinaryEnrichmentRow
+                        | GenericAssayCategoricalEnrichmentRow).stableId
                 );
         } else {
             result =
@@ -425,6 +637,19 @@ export function getFilteredData(
                 );
         }
 
+        return result;
+    });
+}
+
+export function getFilteredCategoricalData(
+    data: GenericAssayCategoricalEnrichmentRow[],
+    filterFunction: (value: string) => boolean
+): GenericAssayCategoricalEnrichmentRow[] {
+    return data.filter(enrichmentDatum => {
+        let result = false;
+        result = filterFunction(
+            (enrichmentDatum as GenericAssayCategoricalEnrichmentRow).stableId
+        );
         return result;
     });
 }
@@ -543,6 +768,22 @@ export function pickMethylationEnrichmentProfiles(
     });
 }
 
+export function pickAllGenericAssayEnrichmentProfiles(
+    profiles: MolecularProfile[]
+) {
+    // TODO: enable all patient-level profile after confirming patient-level data is compatible with enrichment feature
+    return profiles.filter(p => {
+        return (
+            p.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY &&
+            (((p.datatype === DataTypeConstants.BINARY ||
+                p.datatype === DataTypeConstants.CATEGORICAL) &&
+                p.patientLevel === false) ||
+                p.datatype === DataTypeConstants.LIMITVALUE)
+        );
+    });
+}
+
 export function pickGenericAssayEnrichmentProfiles(
     profiles: MolecularProfile[]
 ) {
@@ -556,6 +797,30 @@ export function pickGenericAssayEnrichmentProfiles(
     });
 }
 
+export function pickGenericAssayBinaryEnrichmentProfiles(
+    profiles: MolecularProfile[]
+) {
+    return profiles.filter(p => {
+        return (
+            p.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY &&
+            p.datatype === DataTypeConstants.BINARY
+        );
+    });
+}
+
+export function pickGenericAssayCategoricalEnrichmentProfiles(
+    profiles: MolecularProfile[]
+) {
+    return profiles.filter(p => {
+        return (
+            p.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY &&
+            p.datatype === DataTypeConstants.CATEGORICAL &&
+            p.patientLevel === false
+        );
+    });
+}
 export function getAlterationEnrichmentColumns(
     groups: { name: string; description: string; color?: string }[],
     alteredVsUnalteredMode?: boolean
@@ -651,11 +916,27 @@ export function getAlterationEnrichmentColumns(
         columns.push({
             name: group.name,
             headerRender: PERCENTAGE_IN_headerRender,
-            render: (d: AlterationEnrichmentRow) => (
-                <span data-test={`${group.name}-CountCell`}>
-                    {formatPercentage(group.name, d)}
-                </span>
-            ),
+            render: (d: AlterationEnrichmentRow) => {
+                let overlay = (
+                    <span>
+                        {getProfiledCount(group.name, d)} samples in{' '}
+                        {group.name} are profiled for {d.hugoGeneSymbol},&nbsp;
+                        {formatPercentage(group.name, d)} of which are altered
+                        in {d.hugoGeneSymbol}
+                    </span>
+                );
+                return (
+                    <DefaultTooltip
+                        destroyTooltipOnHide={true}
+                        trigger={['hover']}
+                        overlay={overlay}
+                    >
+                        <span data-test={`${group.name}-CountCell`}>
+                            {formatPercentage(group.name, d)}
+                        </span>
+                    </DefaultTooltip>
+                );
+            },
             tooltip: (
                 <span>
                     <strong>{group.name}:</strong> {group.description}
@@ -973,8 +1254,154 @@ export function getGenericAssayEnrichmentColumns(
     return columns;
 }
 
+export function getGenericAssayBinaryEnrichmentColumns(
+    groups: { name: string; description: string; color?: string }[],
+    alteredVsUnalteredMode?: boolean
+): GenericAssayBinaryEnrichmentTableColumn[] {
+    // minimum 2 group are required for enrichment analysis
+    if (groups.length < 2) {
+        return [];
+    }
+    let columns: GenericAssayBinaryEnrichmentTableColumn[] = [];
+    const nameToGroup = _.keyBy(groups, g => g.name);
+
+    let enrichedGroupColum: GenericAssayBinaryEnrichmentTableColumn = {
+        name: alteredVsUnalteredMode
+            ? GenericAssayBinaryEnrichmentTableColumnType.TENDENCY
+            : groups.length === 2
+            ? GenericAssayBinaryEnrichmentTableColumnType.ENRICHED
+            : GenericAssayBinaryEnrichmentTableColumnType.MOST_ENRICHED,
+        render: (d: GenericAssayBinaryEnrichmentRow) => {
+            if (d.pValue === undefined) {
+                return <span>-</span>;
+            }
+            let groupColor = undefined;
+            const significant = d.qValue < 0.05;
+            if (!alteredVsUnalteredMode && significant) {
+                groupColor = nameToGroup[d.enrichedGroup].color;
+            }
+            return (
+                <div
+                    className={classNames(styles.Tendency, {
+                        [styles.Significant]: significant,
+                        [styles.ColoredBackground]: !!groupColor,
+                    })}
+                    style={{
+                        backgroundColor: groupColor,
+                        color: groupColor && getTextColor(groupColor),
+                    }}
+                >
+                    {alteredVsUnalteredMode
+                        ? d.enrichedGroup
+                        : formatAlterationTendency(d.enrichedGroup)}
+                </div>
+            );
+        },
+        filter: (
+            d: GenericAssayBinaryEnrichmentRow,
+            filterString: string,
+            filterStringUpper: string
+        ) => (d.enrichedGroup || '').toUpperCase().includes(filterStringUpper),
+        sortBy: (d: GenericAssayBinaryEnrichmentRow) => d.enrichedGroup || '-',
+        download: (d: GenericAssayBinaryEnrichmentRow) =>
+            d.enrichedGroup || '-',
+        tooltip: <span>The group with the highest alteration frequency</span>,
+    };
+
+    if (groups.length === 2) {
+        let group1 = groups[0];
+        let group2 = groups[1];
+        columns.push({
+            name: GenericAssayBinaryEnrichmentTableColumnType.LOG_RATIO,
+            render: (d: GenericAssayBinaryEnrichmentRow) => (
+                <span>{d.logRatio ? formatLogOddsRatio(d.logRatio) : '-'}</span>
+            ),
+            tooltip: (
+                <span>
+                    Log2 based ratio of (pct in {group1.name}/ pct in{' '}
+                    {group2.name})
+                </span>
+            ),
+            sortBy: (d: GenericAssayBinaryEnrichmentRow) => Number(d.logRatio),
+            download: (d: GenericAssayBinaryEnrichmentRow) =>
+                d.logRatio ? formatLogOddsRatio(d.logRatio) : '-',
+        });
+
+        enrichedGroupColum.tooltip = (
+            <table>
+                <tr>
+                    <td>Log ratio {'>'} 0</td>
+                    <td>: Enriched in {group1.name}</td>
+                </tr>
+                <tr>
+                    <td>Log ratio &lt;= 0</td>
+                    <td>: Enriched in {group2.name}</td>
+                </tr>
+                <tr>
+                    <td>q-Value &lt; 0.05</td>
+                    <td>: Significant association</td>
+                </tr>
+            </table>
+        );
+    }
+    columns.push(enrichedGroupColum);
+    groups.forEach(group => {
+        columns.push({
+            name: group.name,
+            headerRender: PERCENTAGE_IN_headerRender,
+            render: (d: GenericAssayBinaryEnrichmentRow) => {
+                let overlay = (
+                    <span>
+                        {getTotalCount(group.name, d)} samples in {group.name}{' '}
+                        are profiled for {d.entityName},&nbsp;
+                        {formatGenericAssayPercentage(group.name, d)} of which
+                        are altered in {d.entityName}
+                    </span>
+                );
+                return (
+                    <DefaultTooltip
+                        destroyTooltipOnHide={true}
+                        trigger={['hover']}
+                        overlay={overlay}
+                    >
+                        <span data-test={`${group.name}-CountCell`}>
+                            {formatGenericAssayPercentage(group.name, d)}
+                        </span>
+                    </DefaultTooltip>
+                );
+            },
+            tooltip: (
+                <span>
+                    <strong>{group.name}:</strong> {group.description}
+                </span>
+            ),
+            sortBy: (d: GenericAssayBinaryEnrichmentRow) =>
+                getCount(group.name, d),
+            download: (d: GenericAssayBinaryEnrichmentRow) =>
+                formatGenericAssayPercentage(group.name, d),
+        });
+    });
+    return columns;
+}
+
+export function getGenericAssayCategoricalEnrichmentColumns(
+    groups: { name: string; description: string; color?: string }[],
+    alteredVsUnalteredMode?: boolean
+): GenericAssayCategoricalEnrichmentTableColumn[] {
+    // minimum 2 group are required for enrichment analysis
+    if (groups.length < 2) {
+        return [];
+    }
+    let columns: GenericAssayCategoricalEnrichmentTableColumn[] = [];
+
+    return columns;
+}
 export function getEnrichmentBarPlotData(
-    data: { [gene: string]: AlterationEnrichmentRow },
+    data: {
+        [gene: string]:
+            | AlterationEnrichmentRow
+            | GenericAssayBinaryEnrichmentRow;
+    },
     genes: string[]
 ): IMultipleCategoryBarPlotData[] {
     const usedGenes: { [gene: string]: boolean } = {};
@@ -1034,8 +1461,8 @@ export function getEnrichmentBarPlotData(
 }
 
 export function compareByAlterationPercentage(
-    kv1: AlterationEnrichmentRow,
-    kv2: AlterationEnrichmentRow
+    kv1: AlterationEnrichmentRow | GenericAssayBinaryEnrichmentRow,
+    kv2: AlterationEnrichmentRow | GenericAssayBinaryEnrichmentRow
 ) {
     const t1 = _.reduce(
         kv1.groupsSet,
@@ -1146,6 +1573,91 @@ export function getGeneListOptions(
         {
             label: GeneOptionLabel.SYNC_WITH_TABLE,
             genes: [],
+        },
+    ];
+}
+
+export function getGaBinarydataListOptions(
+    data: GenericAssayBinaryEnrichmentRow[],
+    includeAlteration?: boolean
+): { label: GaBinaryOptionLabel; entities: string[] }[] {
+    if (_.isEmpty(data)) {
+        return [
+            {
+                label: GaBinaryOptionLabel.SYNC_WITH_TABLE,
+                entities: [],
+            },
+        ];
+    }
+
+    let dataWithOptionName: (GenericAssayBinaryEnrichmentRow & {
+        optionName?: string;
+    })[] = data;
+
+    let dataSortedByAlteredPercentage = _.clone(dataWithOptionName).sort(
+        compareByAlterationPercentage
+    );
+
+    let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(function(
+        dataItem1,
+        dataItem2
+    ) {
+        const averageAlteredPercentage1 =
+            _.sumBy(
+                _.values(dataItem1.groupsSet),
+                group => group.alteredPercentage
+            ) / _.keys(dataItem1.groupsSet).length;
+
+        const averageAlteredPercentage2 =
+            _.sumBy(
+                _.values(dataItem2.groupsSet),
+                group => group.alteredPercentage
+            ) / _.keys(dataItem2.groupsSet).length;
+
+        return averageAlteredPercentage2 - averageAlteredPercentage1;
+    });
+
+    let dataSortedBypValue = _.clone(dataWithOptionName).sort(function(
+        dataItem1,
+        dataItem2
+    ) {
+        if (dataItem1.pValue !== undefined && dataItem2.pValue !== undefined) {
+            return 0;
+        }
+        if (dataItem1.pValue !== undefined) {
+            return 1;
+        }
+        if (dataItem2.pValue !== undefined) {
+            return -1;
+        }
+        return Number(dataItem1.pValue) - Number(dataItem2.pValue);
+    });
+
+    return [
+        {
+            label: GaBinaryOptionLabel.HIGHEST_FREQUENCY,
+            entities: _.map(
+                dataSortedByAlteredPercentage,
+                datum => datum.optionName || datum.entityName
+            ),
+        },
+        {
+            label: GaBinaryOptionLabel.AVERAGE_FREQUENCY,
+            entities: _.map(
+                dataSortedByAvgFrequency,
+                datum => datum.optionName || datum.entityName
+            ),
+        },
+        {
+            label: GaBinaryOptionLabel.SIGNIFICANT_P_VALUE,
+            entities: _.map(
+                dataSortedBypValue,
+                datum => datum.optionName || datum.entityName
+            ),
+        },
+        {
+            label: GaBinaryOptionLabel.SYNC_WITH_TABLE,
+            entities: [],
         },
     ];
 }

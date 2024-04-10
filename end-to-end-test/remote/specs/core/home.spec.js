@@ -637,7 +637,7 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         $('button[data-test="queryButton"]').click();
 
         // wait for query to load
-        waitForOncoprint(30000);
+        waitForOncoprint();
 
         const profileFilter = (
             browser.execute(function() {
@@ -739,7 +739,7 @@ describe('results page quick oql edit', () => {
         $('button[data-test="oqlQuickEditSubmitButton"]').click();
 
         // wait for query to load
-        waitForOncoprint(20000);
+        waitForOncoprint();
 
         // mutation, cna, mrna profiles are there
         let profileFilter = (

@@ -38,9 +38,7 @@ export const HelpWidget: React.FunctionComponent<IHelpWidgetProps> = function({
         return null;
     }
 
-    // only show this on public portal right now
-    // this should ultimately be by configuration
-    if (getServerConfig().app_name !== 'public-portal') {
+    if (!getServerConfig().skin_show_study_help_button) {
         return <></>;
     }
 

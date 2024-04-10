@@ -48,6 +48,11 @@ export function getGeneColumnCellOverlaySimple(
                     isTumorSuppressorGene
                 )}
             </span>
+            <strong>
+                {geneIsSelected
+                    ? `Click gene symbol to remove from query queue`
+                    : 'Click gene symbol to queue for query'}
+            </strong>
         </div>
     );
 }
@@ -91,6 +96,7 @@ export function getCancerGeneFilterToggleIcon(
 export enum FreqColumnTypeEnum {
     MUTATION = 'mutations',
     STRUCTURAL_VARIANT = 'structural variants',
+    STRUCTURAL_VARIANT_PAIR = 'structural variant pairs',
     CNA = 'copy number alterations',
     DATA = 'data',
 }

@@ -45,7 +45,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
                 yarn serveDist & \
                 cd end-to-end-test && \
-                yarn install --frozen-lockfile && \
+                yarn install --frozen-lockfile --ignore-engines && \
                 ../scripts/env_vars.sh && \
                 eval "$(../scripts/env_vars.sh)" && \
                 curl $CBIOPORTAL_URL > /dev/null && \
@@ -82,8 +82,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
               path: /tmp/repo/end-to-end-test/shared/imageCompare.html
               destination: /imageCompare.html
           - store_artifacts:
-              path: /tmp/repo/end-to-end-test/remote/junit/customReport.json
-              destination: /customReport.json
+              path: /tmp/repo/end-to-end-test/remote/junit/completeResults.json
+              destination: /completeResults.json
           - store_artifacts:
               path: /tmp/repo/end-to-end-test/remote/junit/errors
               destination: /errors
@@ -133,7 +133,7 @@ jobs:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
           no_output_timeout: 25m
-      - run: cd /tmp/repo/end-to-end-test && (ls node_modules || yarn install --frozen-lockfile)
+      - run: cd /tmp/repo/end-to-end-test && (ls node_modules || yarn install --frozen-lockfile --ignore-engines)
       - save_cache:
           paths:
             - node_modules
@@ -240,7 +240,7 @@ jobs:
     working_directory: /tmp/repo
     machine:
       enabled: true
-      image: ubuntu-2004:202201-02
+      image: default
     resource_class: large
     steps:
       - when:
@@ -287,20 +287,12 @@ jobs:
                   $TEST_HOME/docker_compose/setup.sh
                 no_output_timeout: 25m
             - run:
-                name: Generate checksum of data that populates the test database
-                command: |
-                  $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
-                no_output_timeout: 25m
-            - run:
                 name: Create MySQL data directory
                 command: |
                   docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
             - restore_cache:
                 keys:
-                  - v10-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
-            - restore_cache:
-                keys:
-                  - v14-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+                  - v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
             - run:
                 name: Init database
                 command: |
@@ -314,7 +306,7 @@ jobs:
             - save_cache:
                 paths:
                   - /tmp/repo/e2e-localdb-workspace/cbio_db_data
-                key: v10-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+                key: v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
             - run:
                 name: Start cbioportal and other services
                 command: |
@@ -326,10 +318,6 @@ jobs:
                       sudo chmod -R 777 $KC_DB_DATA_DIR && \
                       sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
                   fi
-            - save_cache:
-                paths:
-                  - /tmp/repo/e2e-localdb-workspace/kc_db_data
-                key: v14-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
             - run:
                 name: Run end-2-end tests with studies in local database
                 command: |
@@ -355,10 +343,10 @@ jobs:
                 path: /tmp/repo/end-to-end-test/shared/imageCompare.html
                 destination: /imageCompare.html
             - store_artifacts:
-                path: /tmp/repo/end-to-end-test/local/junit/customReport.json
-                destination: /customReport.json
+                path: /tmp/repo/end-to-end-test/local/junit/completeResults.json
+                destination: /completeResults.json
             - store_artifacts:
-                path: /tmp/repo/end-to-end-test/remote/junit/errors
+                path: /tmp/repo/end-to-end-test/local/junit/errors
                 destination: /errors
       - unless:
           condition: << pipeline.parameters.enable_localdb_e2e >>

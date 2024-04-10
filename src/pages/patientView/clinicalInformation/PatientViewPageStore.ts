@@ -1,4 +1,4 @@
-import _, { result } from 'lodash';
+import _ from 'lodash';
 import {
     CBioPortalAPIInternal,
     ClinicalData,
@@ -25,9 +25,12 @@ import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
-import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    cached,
+    remoteData,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';
-import { cached, labelMobxPromises } from 'mobxpromise';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
@@ -138,7 +141,11 @@ import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { AppStore } from '../../../AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
-import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
+import {
+    checkNonProfiledGenesExist,
+    retrieveMutationalSignatureMap,
+    createMutationalCountsObjects,
+} from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import SampleManager from '../SampleManager';
@@ -165,7 +172,6 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     MIS_TYPE_VALUE,
     GENOME_NEXUS_ARG_FIELD_ENUM,
-    MSI_H_THRESHOLD,
     TMB_H_THRESHOLD,
     AlterationTypeConstants,
     DataTypeConstants,
@@ -178,13 +184,16 @@ import {
 import {
     IMutationalSignature,
     IMutationalSignatureMeta,
+    IMutationalCounts,
 } from 'shared/model/MutationalSignature';
+import {
+    getGenericAssayMetaPropertyOrDefault,
+    getGenericAssayCategoryFromName,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 import {
-    MutationalSignaturesVersion,
     MutationalSignatureStableIdKeyWord,
-    validateMutationalSignatureRawData,
     retrieveMutationalSignatureVersionFromData,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
@@ -218,6 +227,18 @@ export async function checkForTissueImage(patientId: string): Promise<boolean> {
 export type PathologyReportPDF = {
     name: string;
     url: string;
+};
+
+type ConfidenceDataMapType = {
+    uniqueSampleKey: string;
+    genericAssayStableId: string;
+    molecularProfileId: string;
+    patientId: string;
+    samplId: string;
+    stableId: string;
+    studyId: string;
+    uniquePatientKey: string;
+    value: string;
 };
 
 export function parseCohortIds(concatenatedIds: string) {
@@ -522,11 +543,7 @@ export class PatientViewPageStore {
                             } as GenericAssayDataMultipleStudyFilter,
                         }
                     );
-                    if (
-                        validateMutationalSignatureRawData(genericAssayRawData)
-                    ) {
-                        return Promise.resolve(genericAssayRawData);
-                    }
+                    return Promise.resolve(genericAssayRawData);
                 }
                 return Promise.resolve([]);
             },
@@ -556,12 +573,16 @@ export class PatientViewPageStore {
                 );
                 // we know mutational signatures data are coming in as a pair (contribution and confidence)
                 // we can always find the confidence data based on a key: uniqueSampleKey + id (split by '_', the last word of genericAssayStableId is id)
-                const confidenceDataMap = _.keyBy(
-                    confidenceData,
-                    data =>
-                        data.uniqueSampleKey +
-                        _.last(data.genericAssayStableId.split('_'))
-                );
+                const confidenceDataMap =
+                    confidenceData.length > 0
+                        ? _.keyBy(
+                              confidenceData,
+                              data =>
+                                  data.uniqueSampleKey +
+                                  _.last(data.genericAssayStableId.split('_'))
+                          )
+                        : _.keyBy({}, '0000');
+
                 const numMutationData = this.mutationData.result.length;
 
                 const result: IMutationalSignature[] = [];
@@ -585,16 +606,19 @@ export class PatientViewPageStore {
                             contribution.value
                         );
                         // fill in confidence data
-                        mutationalSignatureTableData.confidence = parseFloat(
-                            confidenceDataMap[
-                                contribution.uniqueSampleKey +
-                                    _.last(
-                                        contribution.genericAssayStableId.split(
-                                            '_'
-                                        )
-                                    )
-                            ].value
-                        );
+                        mutationalSignatureTableData.confidence =
+                            confidenceData.length > 0
+                                ? parseFloat(
+                                      confidenceDataMap[
+                                          contribution.uniqueSampleKey! +
+                                              _.last(
+                                                  contribution.genericAssayStableId!.split(
+                                                      '_'
+                                                  )
+                                              )
+                                      ].value
+                                  )
+                                : parseFloat('0');
                         mutationalSignatureTableData.numberOfMutationsForSample = numMutationData;
                         // split by '_' and use the last word of molecularProfileId as version info
                         mutationalSignatureTableData.version = _.last(
@@ -649,42 +673,30 @@ export class PatientViewPageStore {
                     this.fetchAllMutationalSignatureContributionMetaData.result!.map(
                         (metaData: GenericAssayMeta) => {
                             let meta = {} as IMutationalSignatureMeta;
-                            const name: string =
-                                'NAME' in metaData.genericEntityMetaProperties
-                                    ? metaData.genericEntityMetaProperties[
-                                          'NAME'
-                                      ]
-                                    : '';
-                            const description: string =
-                                'DESCRIPTION' in
-                                metaData.genericEntityMetaProperties
-                                    ? metaData.genericEntityMetaProperties[
-                                          'DESCRIPTION'
-                                      ]
-                                    : 'No description';
-                            const url: string =
-                                'URL' in metaData.genericEntityMetaProperties
-                                    ? metaData.genericEntityMetaProperties[
-                                          'URL'
-                                      ]
-                                    : 'No url';
-                            // TODO: should we add additional property 'CATEGORY' in data file
-                            // currently, category can be derived from name
-                            // name format: ENTITY_NAME (CATEGORY)
-                            // we can get category between '(' and ')'
-                            const category: string = name
-                                ? name.substring(
-                                      name.lastIndexOf('(') + 1,
-                                      name.lastIndexOf(')')
-                                  )
-                                : 'No category';
-                            const confidenceStatement: string =
-                                'DESCRIPTION' in
-                                metaData.genericEntityMetaProperties
-                                    ? metaData.genericEntityMetaProperties[
-                                          'DESCRIPTION'
-                                      ]
-                                    : 'No confidence statement';
+                            const name: string = getGenericAssayMetaPropertyOrDefault(
+                                metaData,
+                                'NAME',
+                                ''
+                            );
+                            const description: string = getGenericAssayMetaPropertyOrDefault(
+                                metaData,
+                                'DESCRIPTION',
+                                'No description'
+                            );
+                            const url: string = getGenericAssayMetaPropertyOrDefault(
+                                metaData,
+                                'URL',
+                                'No url'
+                            );
+                            const confidenceStatement: string = getGenericAssayMetaPropertyOrDefault(
+                                metaData,
+                                'DESCRIPTION',
+                                'No confidence statement'
+                            );
+                            const category: string = getGenericAssayCategoryFromName(
+                                name,
+                                'No category'
+                            );
                             meta.mutationalSignatureId = metaData.stableId;
                             meta.name = name;
                             meta.description = description;
@@ -698,6 +710,60 @@ export class PatientViewPageStore {
             },
         },
         []
+    );
+
+    readonly fetchAllMutationalSignatureCountMetaData = remoteData({
+        await: () => [this.fetchAllMutationalSignatureData],
+        invoke: async () => {
+            const mutationalSignatureCountStableIds = _.chain(
+                this.fetchAllMutationalSignatureData.result
+            )
+                .map((data: GenericAssayData) => data.stableId)
+                .uniq()
+                .filter(stableId =>
+                    stableId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureCountKeyWord
+                    )
+                )
+                .value();
+
+            if (mutationalSignatureCountStableIds.length > 0) {
+                return client.fetchGenericAssayMetaUsingPOST({
+                    genericAssayMetaFilter: {
+                        genericAssayStableIds: mutationalSignatureCountStableIds,
+                    } as GenericAssayMetaFilter,
+                });
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+    readonly mutationalSignatureCountDataGroupedByVersion = remoteData(
+        {
+            await: () => [
+                this.fetchAllMutationalSignatureData,
+                this.mutationData,
+                this.fetchAllMutationalSignatureCountMetaData,
+            ],
+            invoke: async () => {
+                const countData = this.fetchAllMutationalSignatureData.result.filter(
+                    data =>
+                        data.molecularProfileId.includes(
+                            MutationalSignatureStableIdKeyWord.MutationalSignatureCountKeyWord
+                        )
+                );
+                const signatureLabelMap = retrieveMutationalSignatureMap(
+                    this.fetchAllMutationalSignatureCountMetaData.result!
+                );
+
+                const result: IMutationalCounts[] = createMutationalCountsObjects(
+                    countData,
+                    signatureLabelMap
+                );
+                return Promise.resolve(_.groupBy(result, data => data.version));
+            },
+        },
+        {}
     );
 
     readonly mutationalSignatureMetaGroupByStableId = remoteData<{
@@ -812,6 +878,49 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    @observable _selectedSampleIdMutationalSignatureData: string;
+    @action
+    setSampleMutationalSignatureData(sample: string) {
+        this._selectedSampleIdMutationalSignatureData = sample;
+    }
+    @computed get selectedSampleMutationalSignatureData() {
+        return (
+            this._selectedSampleIdMutationalSignatureData ||
+            this.fetchAllMutationalSignatureData.result
+                .filter(data =>
+                    data.molecularProfileId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureCountKeyWord
+                    )
+                )
+                .map(sample => sample.sampleId)[0]
+        );
+    }
+    @computed get selectedSampleUniqueKeyMutationalSignatureData() {
+        const sampleToFilter = this.selectedSampleMutationalSignatureData;
+        return this.samplesWithUniqueKeys.result
+            .filter(item => item.sampleId === sampleToFilter)
+            .map(item => item.uniqueSampleKey);
+    }
+    @computed get samplesWithCountDataAvailable(): string[] {
+        return this.fetchAllMutationalSignatureData.result
+            .filter(data =>
+                data.molecularProfileId.includes(
+                    MutationalSignatureStableIdKeyWord.MutationalSignatureCountKeyWord
+                )
+            )
+            .map(sample => sample.sampleId)
+            .filter((value, index, self) => self.indexOf(value) === index);
+    }
+
+    @computed get samplesNotProfiledForMutationalSignatures(): string[] {
+        const allSamples = this.samplesWithUniqueKeys.result.map(
+            sample => sample.sampleId
+        );
+        return allSamples.filter(
+            element => !this.samplesWithCountDataAvailable.includes(element)
+        );
+    }
 
     readonly samplesWithoutCancerTypeClinicalData = remoteData(
         {
@@ -2025,7 +2134,7 @@ export class PatientViewPageStore {
     );
 
     @computed get mergedMutationData(): Mutation[][] {
-        return mergeMutations(this.mutationData);
+        return mergeMutations(this.mutationData.result);
     }
 
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {

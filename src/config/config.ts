@@ -102,6 +102,24 @@ export class ServerConfigHelpers {
         return matches ? matches.map((s: string) => s.trim()) : [];
     }
 
+    @memoize
+    static parseCustomSampleTypeColors(config: string | undefined): any {
+        const result = {
+            customSampleTypes: [] as string[],
+            customSampleTypeToColor: {} as any,
+            customSampleTypesLower: [] as string[],
+        };
+        if (!config) {
+            return result;
+        }
+        result.customSampleTypeToColor = JSON.parse(config);
+        result.customSampleTypes = _.keys(result.customSampleTypeToColor);
+        result.customSampleTypesLower = result.customSampleTypes.map(t =>
+            t.toLowerCase()
+        );
+        return result;
+    }
+
     @memoize static parseConfigFormat(
         str: string | null
     ): CategorizedConfigItems {
@@ -282,7 +300,7 @@ export function initializeLoadConfiguration() {
 
     const configServiceUrl =
         getBrowserWindow().frontendConfig.configurationServiceUrl ||
-        `${APIROOT}config_service.jsp`;
+        `${APIROOT}config_service`;
 
     const loadConfig: Partial<IAppConfig> = {
         configurationServiceUrl: configServiceUrl,
@@ -362,8 +380,7 @@ export function setLoadConfig(obj: Partial<ILoadConfig>) {
 export function fetchServerConfig() {
     return $.ajax({
         url: getConfigurationServiceApiUrl(),
-        dataType: 'jsonp',
-        jsonpCallback: 'callback',
+        dataType: 'json',
     });
 }
 

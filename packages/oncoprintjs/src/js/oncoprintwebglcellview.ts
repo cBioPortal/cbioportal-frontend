@@ -30,6 +30,17 @@ type ColumnIdIndex = number;
 type PositionVertex = [number, number, number];
 type ColorVertex = [number, number, number, number];
 
+type OncoprintGap = {
+    origin_x: number;
+    origin_y: number;
+    data: OncoprintGapConfig;
+};
+
+export type OncoprintGapConfig = {
+    labelFormatter: () => string;
+    tooltipFormatter: () => string;
+};
+
 export type OncoprintWebGLContext = WebGLRenderingContext & {
     viewportWidth: number;
     viewportHeight: number;
@@ -87,6 +98,7 @@ export default class OncoprintWebGLCellView {
     private mouseMoveHandler: (evt: MouseMoveEvent) => void;
 
     private ctx: OncoprintWebGLContext | null;
+    private gap_ctx: CanvasRenderingContext2D | null;
     private ext: ANGLE_instanced_arrays | null;
     private overlay_ctx: CanvasRenderingContext2D | null;
     private column_label_ctx: CanvasRenderingContext2D | null;
@@ -129,6 +141,7 @@ export default class OncoprintWebGLCellView {
         private $container: JQuery,
         private $canvas: JQuery<HTMLCanvasElement>,
         private $overlay_canvas: JQuery<HTMLCanvasElement>,
+        private $gap_canvas: JQuery<HTMLCanvasElement>,
         private $column_label_canvas: JQuery<HTMLCanvasElement>,
         private $dummy_scroll_div_contents: JQuery,
         model: OncoprintModel,
@@ -249,6 +262,7 @@ export default class OncoprintWebGLCellView {
                 const offset = self.$overlay_canvas.offset();
                 const mouseX = evt.pageX - offset.left;
                 const mouseY = evt.pageY - offset.top;
+
                 let overlapping_cells = model.getOverlappingCells(
                     mouseX + self.scroll_x,
                     mouseY + self.scroll_y
@@ -294,8 +308,42 @@ export default class OncoprintWebGLCellView {
                             )
                         );
                     } else {
-                        tooltip.hideIfNotAlreadyGoingTo(150);
                         overlapping_cells = null;
+                    }
+
+                    // find a gap which is in range of mouse position
+                    const overlappingGap = self.gapTooltipTargets.find(
+                        (t: any) => {
+                            return (
+                                _.inRange(mouseX - t.origin_x, 0, 20) &&
+                                _.inRange(t.origin_y - mouseY, -10, 15)
+                            );
+                        }
+                    );
+
+                    // if there is no gap, turn
+                    if (overlappingGap === undefined) {
+                        self.hoveredGap = undefined;
+                    } else if (self.hoveredGap === overlappingGap) {
+                        // tooltip should already be showing, so do nothing
+                    } else {
+                        // we have a new hovered gap, so show a tooltip
+                        const clientRect = self.$overlay_canvas[0].getBoundingClientRect();
+                        self.hoveredGap = overlappingGap;
+                        tooltip.center = false;
+                        tooltip.show(
+                            250,
+                            clientRect.left + overlappingGap.origin_x,
+                            clientRect.top + overlappingGap.origin_y - 20,
+                            $(
+                                `<span>${overlappingGap.data.tooltipFormatter()}</span>`
+                            ),
+                            false
+                        );
+                    }
+
+                    if (!overlapping_data && !overlappingGap) {
+                        tooltip.hideIfNotAlreadyGoingTo(150);
                     }
                 } else {
                     overlapping_cells = null;
@@ -353,6 +401,21 @@ export default class OncoprintWebGLCellView {
         });
     }
 
+    private drawGapLabel(txt: string, x: number, y: number) {
+        this.gap_ctx.font = '15pt Arial';
+        this.gap_ctx.textAlign = 'right';
+
+        const origin_x = x * this.supersampling_ratio + 52;
+        const origin_y = y * this.supersampling_ratio + 4;
+
+        this.gap_ctx.fillText(txt, origin_x, origin_y);
+
+        return {
+            origin_x: x,
+            origin_y: y,
+        };
+    }
+
     private getNewCanvas() {
         const old_canvas = this.$canvas[0];
         const new_canvas = old_canvas.cloneNode() as HTMLCanvasElement;
@@ -362,6 +425,14 @@ export default class OncoprintWebGLCellView {
         this.$canvas = $(new_canvas);
         this.ctx = null;
         this.ext = null;
+    }
+
+    private getGapContext() {
+        try {
+            return this.$gap_canvas[0].getContext('2d');
+        } catch (e) {
+            return null;
+        }
     }
 
     private getWebGLCanvasContext() {
@@ -534,11 +605,14 @@ export default class OncoprintWebGLCellView {
                 highlightWidth,
                 highlightHeight
             );
+
             this.overlay_ctx.restore();
         }
     }
 
     private getWebGLContextAndSetUpMatrices() {
+        this.gap_ctx = this.getGapContext();
+
         this.ctx = this.getWebGLCanvasContext();
         if (this.ctx) {
             this.ext = this.ctx.getExtension('ANGLE_instanced_arrays');
@@ -681,6 +755,13 @@ export default class OncoprintWebGLCellView {
         this.dummy_scroll_div_client_size.update();
         this.$canvas[0].height = this.supersampling_ratio * height;
         this.$canvas[0].style.height = height + 'px';
+        this.$gap_canvas[0].height = this.supersampling_ratio * height;
+        this.$gap_canvas[0].style.height = height + 'px';
+
+        this.$gap_canvas[0].width =
+            this.supersampling_ratio * visible_area_width;
+        this.$gap_canvas[0].style.width = visible_area_width + 'px';
+
         this.$overlay_canvas[0].height = this.supersampling_ratio * height;
         this.$overlay_canvas[0].style.height = height + 'px';
         this.$column_label_canvas[0].height = this.supersampling_ratio * height;
@@ -700,6 +781,10 @@ export default class OncoprintWebGLCellView {
         this.getOverlayContextAndClear();
         this.getColumnLabelsContext();
     }
+
+    public gapTooltipTargets: OncoprintGap[] = [];
+
+    public hoveredGap: OncoprintGap;
 
     private renderAllTracks(model: OncoprintModel, dont_resize?: boolean) {
         if (this.rendering_suppressed) {
@@ -743,11 +828,45 @@ export default class OncoprintWebGLCellView {
         this.ctx.clearColor(1.0, 1.0, 1.0, 1.0);
         this.ctx.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
 
+        this.gap_ctx.clearRect(
+            0,
+            0,
+            this.$gap_canvas[0].width,
+            this.$gap_canvas[0].height
+        );
+
+        const gapOffsets = model.getGapOffsets();
+
         const tracks = model.getTracks();
+
+        this.gapTooltipTargets = [];
+
         for (let i = 0; i < tracks.length; i++) {
             const track_id = tracks[i];
             const cell_top = model.getCellTops(track_id);
             const cell_height = model.getCellHeight(track_id);
+
+            if (model.showGaps()) {
+                const gaps = this.getGaps(model, track_id);
+                if (gaps) {
+                    gaps.forEach((gap: OncoprintGapConfig, i: number) => {
+                        const x = gapOffsets[i] - scroll_x - model.getGapSize();
+                        const y =
+                            model.getZoomedTrackTops()[track_id] +
+                            cell_height -
+                            scroll_y;
+
+                        this.drawGapLabel(gap.labelFormatter(), x, y);
+
+                        this.gapTooltipTargets.push({
+                            origin_x: x,
+                            origin_y: y,
+                            data: gap,
+                        });
+                    });
+                }
+            }
+
             if (
                 cell_top / zoom_y >= window_bottom ||
                 (cell_top + cell_height) / zoom_y < window_top
@@ -756,6 +875,7 @@ export default class OncoprintWebGLCellView {
                 continue;
             }
             const buffers = this.getTrackBuffers(track_id);
+
             if (buffers.position.numItems === 0) {
                 continue;
             }
@@ -1877,6 +1997,13 @@ export default class OncoprintWebGLCellView {
         return this.dummy_scroll_div_client_size.get();
     }
 
+    getGaps(model: OncoprintModel, track_id: number) {
+        const custom = model.getTrackCustomOptions(track_id);
+        return _.isEmpty(model.ids_after_a_gap.get())
+            ? undefined
+            : custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
+    }
+
     public toSVGGroup(
         model: OncoprintModel,
         offset_x: number,
@@ -1887,9 +2014,13 @@ export default class OncoprintWebGLCellView {
         const tracks = model.getTracks();
         const zoomedColumnLeft = model.getZoomedColumnLeft();
         // add cell shapes
+
+        const gapOffsets = model.getGapOffsets();
+
         for (let i = 0; i < tracks.length; i++) {
             const track_id = tracks[i];
             const offset_y = cell_tops[track_id];
+            const cell_height = model.getCellHeight(track_id);
             const universal_shapes = model.getTrackUniversalShapes(
                 track_id,
                 false
@@ -1898,6 +2029,31 @@ export default class OncoprintWebGLCellView {
                 track_id,
                 false
             );
+
+            const custom = model.getTrackCustomOptions(track_id);
+            if (gapOffsets[0]) {
+                const gaps = _.isEmpty(model.ids_after_a_gap.get())
+                    ? undefined
+                    : custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
+
+                if (gaps) {
+                    gaps.forEach((gap: any, i: number) => {
+                        const textElt = makeSvgElement('text', {
+                            x: gapOffsets[i] - model.getGapSize() + 25,
+                            y: offset_y + cell_height - 3,
+                            'font-size': '10',
+                            'font-family': 'Arial',
+                            'font-weight': 'normal',
+                            'text-anchor': 'end',
+                            'alignment-baseline': 'top',
+                        });
+
+                        textElt.textContent = gap.labelFormatter();
+                        root.appendChild(textElt);
+                    });
+                }
+            }
+
             for (let j = 0; j < identified_shape_list_list.length; j++) {
                 const id_sl = identified_shape_list_list[j];
                 const id = id_sl.id;

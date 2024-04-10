@@ -1,15 +1,11 @@
 import _ from 'lodash';
-import { MobxPromise } from 'mobxpromise';
 import client from 'shared/api/cbioportalClientInstance';
 import {
     Gene,
     GenePanel,
     GenePanelData,
-    GenePanelDataMultipleStudyFilter,
-    MolecularProfile,
     Patient,
     Sample,
-    SampleMolecularIdentifier,
 } from 'cbioportal-ts-api-client';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
 

@@ -179,6 +179,21 @@ export type GeneticTrackSpec = {
     customOptions?: CustomTrackOption[];
 };
 
+export class GeneticTrackConfig {
+    constructor(stableId: string) {
+        this.stableId = stableId;
+    }
+    public stableId: string;
+}
+
+export type GeneticTrackConfigChange = {
+    stableId?: string;
+};
+
+export type GeneticTrackConfigMap = {
+    [geneticAttribute: string]: GeneticTrackConfig;
+};
+
 export interface IBaseHeatmapTrackSpec {
     key: string; // for efficient diffing, just like in React. must be unique
     label: string;
@@ -291,12 +306,17 @@ export interface IOncoprintProps {
     };
     showClinicalTrackLegends?: boolean;
     showWhitespaceBetweenColumns?: boolean;
+    isWhiteBackgroundForGlyphsEnabled?: boolean;
     showMinimap?: boolean;
 
     onMinimapClose?: () => void;
     onDeleteClinicalTrack?: (key: string) => void;
+    onDeleteGeneticTrack?: (key: string, sublabel: string) => void;
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
     onTrackGapChange?: (trackId: TrackId, gap: boolean) => void;
+
+    trackKeySelectedForEdit?: string | null;
+    setTrackKeySelectedForEdit?: (key: string | null) => void;
 
     suppressRendering?: boolean;
     onSuppressRendering?: () => void;

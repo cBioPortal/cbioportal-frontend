@@ -11,11 +11,13 @@ if [ $CUSTOM_BACKEND -eq 1 ]; then
   compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
 fi
 
-cd $E2E_WORKSPACE/cbioportal-docker-compose
-CHECKSUM_ES_0=$(docker-compose $compose_extensions run --rm --no-deps cbioportal sh -c 'tar -cf - /cbioportal/core/src/test/scripts/test_data/study_es_0/ 2> /dev/null | shasum -a 1')
-CHECKSUM_ES_0_GENESETS=$(docker-compose $compose_extensions run --rm --no-deps cbioportal sh -c 'tar -cf - /cbioportal/core/src/test/resources/genesets/study_es_0* 2> /dev/null | shasum -a 1')
+
+CHECKSUM_ES_0=$(tar -cf - "$TEST_HOME"/test_data/study_es_0/ 2> /dev/null | shasum -a 1)
+CHECKSUM_ES_0_GENESETS=$(tar -cf - "$TEST_HOME"/genesets/study_es_0* 2> /dev/null | shasum -a 1)
 CHECKSUM_TEST_STUDIES=$(find "$TEST_HOME"/studies/ -type f -exec md5sum {} \; | shasum -a 1)
-CHECKSUM_MIGRATION_SQL=$(docker-compose $compose_extensions run --rm --no-deps cbioportal sh -c 'shasum -a 1 /cbioportal/db-scripts/src/main/resources/migration.sql')
+
+cd $E2E_WORKSPACE/cbioportal-docker-compose
+CHECKSUM_MIGRATION_SQL=$(docker-compose $compose_extensions run --rm --no-deps cbioportal sh -c 'shasum -a 1 /cbioportal/db-scripts/migration.sql')
 CHECKSUM_SEED_URL=$(echo "$DB_SEED_URL" | shasum -a 1)
 CHECKSUM_SCHEMA_URL=$(echo "$DB_CGDS_URL" | shasum -a 1)
 

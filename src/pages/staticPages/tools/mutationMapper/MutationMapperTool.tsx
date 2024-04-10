@@ -29,7 +29,7 @@ import {
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 import { getServerConfig } from 'config/config';
-import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { saveOncoKbIconStyleToLocalStorage } from 'shared/lib/AnnotationColumnUtils';
 
 interface IMutationMapperToolProps {
     routing: any;
@@ -59,7 +59,10 @@ export default class MutationMapperTool extends React.Component<
     @observable.ref lastParsedInputContent: string | undefined = undefined;
     @observable referenceGenomeSelection: string = REFERENCE_GENOME.grch37.NCBI;
 
-    private store: MutationMapperToolStore = new MutationMapperToolStore();
+    private store: MutationMapperToolStore = new MutationMapperToolStore(
+        undefined,
+        { genomeBuild: REFERENCE_GENOME.grch37.NCBI }
+    );
 
     constructor(props: IMutationMapperToolProps) {
         super(props);
@@ -73,9 +76,9 @@ export default class MutationMapperTool extends React.Component<
             getBrowserWindow().localStorage.getItem('referenceGenomeId') ===
                 REFERENCE_GENOME.grch38.NCBI
         ) {
-            this.store.setGenomeNexusUrl(
-                getServerConfig().genomenexus_url_grch38!
-            );
+            this.store = new MutationMapperToolStore(undefined, {
+                genomeBuild: REFERENCE_GENOME.grch38.UCSC,
+            });
             this.referenceGenomeSelection = REFERENCE_GENOME.grch38.NCBI;
         }
 
@@ -688,7 +691,7 @@ export default class MutationMapperTool extends React.Component<
     @action.bound
     protected handleOncoKbIconToggle(mergeIcons: boolean) {
         this.userSelectionStore.mergeOncoKbIcons = mergeIcons;
-        updateOncoKbIconStyle({ mergeIcons });
+        saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
     @computed get grch38Warning() {

@@ -25,7 +25,7 @@ function waitForAndCheckPlotsTab() {
 
 function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, function() {
-        waitForOncoprint(10000);
+        waitForOncoprint();
         var res = checkElementWithMouseDisabled('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
@@ -182,7 +182,7 @@ describe('result page screenshot tests', function() {
     before(function() {
         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(10000);
+        waitForOncoprint();
     });
 
     runResultsTestSuite('no session');
@@ -343,7 +343,7 @@ describe('result page tabs, loading from session id', function() {
 
         var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(15000);
+        waitForOncoprint();
     });
 
     runResultsTestSuite('session');
@@ -354,11 +354,11 @@ describe('results page tabs while excluding unprofiled samples', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
         );
-        waitForOncoprint(10000);
+        waitForOncoprint();
         setSettingsMenuOpen(true);
         $('input[data-test="HideUnprofiled"]').waitForExist();
         $('input[data-test="HideUnprofiled"]').click();
-        waitForOncoprint(10000);
+        waitForOncoprint();
         setSettingsMenuOpen(false);
     });
 

@@ -11,7 +11,6 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import Helmet from 'react-helmet';
 import request from 'superagent';
 import { getStudyDownloadListUrl } from 'shared/api/urls';
-import { AppStore } from 'AppStore';
 
 export class DatasetPageStore {
     readonly data = remoteData({
@@ -20,9 +19,12 @@ export class DatasetPageStore {
         },
     });
 
-    readonly downloadList = remoteData(() => {
-        if (getServerConfig().app_name === 'public-portal') {
-            return request(getStudyDownloadListUrl()).then(resp => resp.body);
+    readonly downloadList = remoteData(async () => {
+        if (getServerConfig().study_download_url) {
+            const resp = await request(
+                getStudyDownloadListUrl()
+            ).catch(reason => Promise.resolve({ body: '' }));
+            return resp.body;
         } else {
             return Promise.resolve([]);
         }

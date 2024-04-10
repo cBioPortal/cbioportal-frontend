@@ -20,6 +20,8 @@ import { Alteration } from 'shared/lib/oql/oql-parser';
 import { parsedOQLAlterationToSourceOQL } from 'shared/lib/oql/oqlfilter';
 import { insertBetween } from 'shared/lib/ArrayUtils';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 export interface ISubAlteration {
     type: string;
@@ -511,7 +513,10 @@ export default class CaseAlterationTable extends React.Component<
                 showPagination={true}
                 showColumnVisibility={true}
                 showFilter={true}
-                showCopyDownload={true}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
                 enableHorizontalScroll={true}
                 copyDownloadProps={{
                     downloadFilename: 'alterations_across_samples.tsv',

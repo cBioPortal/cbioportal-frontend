@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { groupTimelineData } from 'pages/patientView/timeline/timelineDataUtils.ts';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 class EventsTable extends LazyMobXTable<{}> {}
 
@@ -17,7 +19,11 @@ function makeColumns(data: string[][]) {
                 txt: string,
                 filterString: string,
                 filterStringUpper: string
-            ) => txt.toUpperCase().includes(filterStringUpper),
+            ) =>
+                txt
+                    ?.toString()
+                    .toUpperCase()
+                    .includes(filterStringUpper),
         };
     });
 }
@@ -64,7 +70,11 @@ const ClinicalEventsTables: React.FunctionComponent<{
                             showPagination={false}
                             showColumnVisibility={false}
                             showFilter={true}
-                            showCopyDownload={true}
+                            showCopyDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
                         />
                     </>
                 );

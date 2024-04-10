@@ -92,9 +92,11 @@ export default class StudyPageHeader extends React.Component<
                         updateClinicalDataFilterByValues={
                             this.props.store.updateClinicalDataFilterByValues
                         }
-                        updateGenomicDataIntervalFilter={
-                            this.props.store
-                                .updateGenomicDataIntervalFiltersByValues
+                        updateGenomicDataFilter={
+                            this.props.store.updateGenomicDataFiltersByValues
+                        }
+                        removeMutationDataFilter={
+                            this.props.store.removeMutationDataFilter
                         }
                         updateGenericAssayDataFilter={
                             this.props.store
@@ -104,6 +106,9 @@ export default class StudyPageHeader extends React.Component<
                             this.props.store.setCustomChartCategoricalFilters
                         }
                         removeGeneFilter={this.props.store.removeGeneFilter}
+                        removeStructVarFilter={
+                            this.props.store.removeStructVarFilter
+                        }
                         removeCustomSelectionFilter={
                             this.props.store.removeCustomSelectFilter
                         }

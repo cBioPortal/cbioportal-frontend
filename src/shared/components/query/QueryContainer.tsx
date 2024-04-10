@@ -53,7 +53,8 @@ export default class QueryContainer extends React.Component<
                 this.store.cancerTypes.isComplete &&
                 this.store.cancerStudies.isComplete &&
                 this.store.selectedPhysicalStudies.isComplete &&
-                this.store.profiledSamplesCount.isComplete)
+                this.store.profiledSamplesCount.isComplete &&
+                this.store.cancerStudyTags.isComplete)
         );
     }
 
@@ -401,7 +402,14 @@ export default class QueryContainer extends React.Component<
                                             }
                                         )}
                                     >
-                                        Query By Gene
+                                        <i
+                                            className={'fa fa-search'}
+                                            style={{
+                                                marginTop: 4,
+                                                marginRight: -2,
+                                            }}
+                                        />
+                                        &nbsp; Query By Gene
                                     </a>
                                 </DefaultTooltip>
                                 OR
@@ -419,6 +427,7 @@ export default class QueryContainer extends React.Component<
                                     }
                                 >
                                     <a
+                                        data-tour="explore-studies-button"
                                         onClick={() =>
                                             !this
                                                 .exploreCohortsButtonDisabled &&

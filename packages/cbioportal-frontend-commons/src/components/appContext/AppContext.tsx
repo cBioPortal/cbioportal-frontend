@@ -1,11 +1,7 @@
 import React, { Context } from 'react';
 
-export interface IAppContext {
-    showDownloadControls: boolean;
-}
+export interface IAppContext {}
 
 export const AppContext: Context<IAppContext> = React.createContext<
     IAppContext
->({
-    showDownloadControls: true,
-});
+>({});

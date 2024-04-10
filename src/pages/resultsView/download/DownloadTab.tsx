@@ -58,7 +58,10 @@ import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/Window
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { onMobxPromise } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    onMobxPromise,
+} from 'cbioportal-frontend-commons';
 import {
     MolecularProfile,
     Sample,
@@ -77,6 +80,8 @@ import { ResultsViewTab } from '../ResultsViewPageHelpers';
 import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
+import { computed } from 'mobx';
+import { getServerConfig } from 'config/config';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -622,6 +627,13 @@ export default class DownloadTab extends React.Component<
         },
     });
 
+    @computed get showDownload() {
+        return (
+            getServerConfig().skin_hide_download_controls ===
+            DownloadControlOption.SHOW_ALL
+        );
+    }
+
     public render() {
         const status = getRemoteDataGroupStatus(
             this.geneAlterationData,
@@ -663,11 +675,46 @@ export default class DownloadTab extends React.Component<
                         <div className={'tabMessageContainer'}>
                             <OqlStatusBanner
                                 className="download-oql-status-banner"
-                                store={this.props.store}
+                                queryContainsOql={
+                                    this.props.store.queryContainsOql
+                                }
                                 tabReflectsOql={true}
                             />
-                            <AlterationFilterWarning store={this.props.store} />
-                            <CaseFilterWarning store={this.props.store} />
+                            <AlterationFilterWarning
+                                driverAnnotationSettings={
+                                    this.props.store.driverAnnotationSettings
+                                }
+                                includeGermlineMutations={
+                                    this.props.store.includeGermlineMutations
+                                }
+                                mutationsReportByGene={
+                                    this.props.store.mutationsReportByGene
+                                }
+                                oqlFilteredMutationsReport={
+                                    this.props.store.oqlFilteredMutationsReport
+                                }
+                                oqlFilteredMolecularDataReport={
+                                    this.props.store
+                                        .oqlFilteredMolecularDataReport
+                                }
+                                oqlFilteredStructuralVariantsReport={
+                                    this.props.store
+                                        .oqlFilteredStructuralVariantsReport
+                                }
+                            />
+                            <CaseFilterWarning
+                                samples={this.props.store.samples}
+                                filteredSamples={
+                                    this.props.store.filteredSamples
+                                }
+                                patients={this.props.store.patients}
+                                filteredPatients={
+                                    this.props.store.filteredPatients
+                                }
+                                hideUnprofiledSamples={
+                                    this.props.store.hideUnprofiledSamples
+                                }
+                            />
                         </div>
                         <div>
                             <FeatureTitle
@@ -685,15 +732,20 @@ export default class DownloadTab extends React.Component<
                             >
                                 <tbody>
                                     {hasValidData(this.cnaData.result!) &&
+                                        this.showDownload &&
                                         this.cnaDownloadControls()}
                                     {hasValidMutationData(
                                         this.mutationData.result!
-                                    ) && this.mutationDownloadControls()}
+                                    ) &&
+                                        this.showDownload &&
+                                        this.mutationDownloadControls()}
                                     {hasValidStructuralVariantData(
                                         this.structuralVariantData.result!
                                     ) &&
+                                        this.showDownload &&
                                         this.structuralVariantDownloadControls()}
                                     {hasValidData(this.mrnaData.result!) &&
+                                        this.showDownload &&
                                         this.mrnaExprDownloadControls(
                                             this.props.store.selectedMolecularProfiles.result!.find(
                                                 profile =>
@@ -702,6 +754,7 @@ export default class DownloadTab extends React.Component<
                                             )!.name
                                         )}
                                     {hasValidData(this.proteinData.result!) &&
+                                        this.showDownload &&
                                         this.proteinExprDownloadControls(
                                             this.props.store.selectedMolecularProfiles.result!.find(
                                                 profile =>
@@ -725,6 +778,7 @@ export default class DownloadTab extends React.Component<
                                     )}
                                     {this.props.store
                                         .doNonSelectedDownloadableMolecularProfilesExist &&
+                                        this.showDownload &&
                                         this.nonSelectedProfileDownloadRow(
                                             this.props.store
                                                 .nonSelectedDownloadableMolecularProfilesGroupByName
@@ -738,6 +792,7 @@ export default class DownloadTab extends React.Component<
                                                 .genericAssayProfilesGroupByProfileIdSuffix
                                                 .result
                                         ) &&
+                                        this.showDownload &&
                                         this.genericAssayProfileDownloadRows(
                                             this.props.store
                                                 .genericAssayProfilesGroupByProfileIdSuffix
@@ -1101,6 +1156,7 @@ export default class DownloadTab extends React.Component<
             caseAlteration =>
                 `${caseAlteration.studyId}:${caseAlteration.sampleId}`
         );
+        const alteredSampleCaseIdsSet = new Set(alteredSampleCaseIds);
         const handleDownload = () => alteredSampleCaseIds.join('\n');
         const handleQuery = () =>
             this.handleQueryButtonClick(alteredSampleCaseIds);
@@ -1118,7 +1174,7 @@ export default class DownloadTab extends React.Component<
             selectedSamples: _.filter(
                 virtualStudyParams.selectedSamples,
                 (sample: Sample) =>
-                    alteredSampleCaseIds.includes(
+                    alteredSampleCaseIdsSet.has(
                         `${sample.studyId}:${sample.sampleId}`
                     )
             ),
@@ -1144,6 +1200,7 @@ export default class DownloadTab extends React.Component<
             caseAlteration =>
                 `${caseAlteration.studyId}:${caseAlteration.sampleId}`
         );
+        const unalteredSampleCaseIdsSet = new Set(unalteredSampleCaseIds);
 
         let description = `${unalteredSampleCaseIds.length} unaltered samples from:\n\n`;
         virtualStudyParams.studyWithSamples.forEach(s => {
@@ -1161,7 +1218,7 @@ export default class DownloadTab extends React.Component<
             selectedSamples: _.filter(
                 virtualStudyParams.selectedSamples,
                 (sample: Sample) =>
-                    unalteredSampleCaseIds.includes(
+                    unalteredSampleCaseIdsSet.has(
                         `${sample.studyId}:${sample.sampleId}`
                     )
             ),

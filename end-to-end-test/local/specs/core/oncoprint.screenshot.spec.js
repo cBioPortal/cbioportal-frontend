@@ -34,21 +34,7 @@ const studyes0_oncoprintTabUrl =
 
 const genericArrayUrl =
     CBIOPORTAL_URL +
-    '/results/oncoprint' +
-    '?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_test_generic_assay_mutations' +
-    '&cancer_study_list=lgg_ucsf_2014_test_generic_assay' +
-    '&Z_SCORE_THRESHOLD=2.0' +
-    '&RPPA_SCORE_THRESHOLD=2.0' +
-    '&data_priority=0' +
-    '&profileFilter=0' +
-    '&case_set_id=lgg_ucsf_2014_test_generic_assay_sequenced' +
-    '&gene_list=IDH1' +
-    '&geneset_list=%20' +
-    '&tab_index=tab_visualize' +
-    '&Action=Submit' +
-    '&show_samples=true' +
-    '&generic_assay_groups=lgg_ucsf_2014_test_generic_assay_mutational_signature_binary_v2%2Cmutational_signature_binary_2%2Cmutational_signature_binary_1%3Blgg_ucsf_2014_test_generic_assay_mutational_signature_category_v2%2Cmutational_signature_category_6%2Cmutational_signature_category_8%2Cmutational_signature_category_9';
-
+    '/results?cancer_study_list=lgg_ucsf_2014_test_generic_assay&tab_index=tab_visualize&case_set_id=lgg_ucsf_2014_test_generic_assay_all&Action=Submit&gene_list=IDH1%250ATP53&generic_assay_groups=lgg_ucsf_2014_test_generic_assay_mutational_signature_binary_SBS%2Cmutational_signature_binary_SBS1%2Cmutational_signature_binary_SBS9%3Blgg_ucsf_2014_test_generic_assay_mutational_signature_category_SBS%2Cmutational_signature_category_SBS1%2Cmutational_signature_category_SBS9';
 const SERVER_CLINICAL_TRACK_CONFIG = [
     {
         stableId: 'SUBTYPE',
@@ -88,10 +74,11 @@ const MANUAL_TRACK_CONFIG = [
 const ONCOPRINT_TIMEOUT = 100000;
 
 describe('oncoprint', function() {
+    this.retries(0);
     describe('generic assay categorical tracks', () => {
         it('shows binary and multiple category tracks', () => {
             goToUrlAndSetLocalStorage(genericArrayUrl, true);
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             const res = checkOncoprintElement();
             assertScreenShotMatch(res);
         });
@@ -108,7 +95,7 @@ describe('oncoprint', function() {
                     ),
                 }
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
         });
 
         it('initializes as configured by default', () => {
@@ -146,7 +133,7 @@ describe('oncoprint', function() {
                 MANUAL_TRACK_CONFIG
             );
             goToUrlAndSetLocalStorage(urlWithUserConfig, false);
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
 
             const res = checkOncoprintElement();
             assertScreenShotMatch(res);
@@ -183,9 +170,9 @@ describe('oncoprint', function() {
             const urlWithUserConfig = createUrlWithSettingsQueryParam(
                 customConfig
             );
-            browser.url(urlWithUserConfig);
+            goToUrlAndSetLocalStorage(urlWithUserConfig, false);
 
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
 
             // Check save button enabled
             openTracksMenu();
@@ -196,7 +183,7 @@ describe('oncoprint', function() {
 
             // Click save button
             $saveSessionBtn.click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             // Check save button disabled
             classes = $saveSessionBtn.getAttribute('class').split(' ');
             const saveBtnIsDisabled = classes.includes('disabled');
@@ -258,7 +245,7 @@ describe('oncoprint', function() {
                     SERVER_CLINICAL_TRACK_CONFIG
                 ),
             });
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
         });
 
         it('shows oql structural variant variations', function() {
@@ -278,7 +265,7 @@ function createUrlWithSettingsQueryParam(config) {
 function openTracksMenu() {
     const $tracksDropdown = $('#addTracksDropdown');
     $tracksDropdown.click();
-    waitForOncoprint(2000);
+    waitForOncoprint();
 }
 
 function changeNthTrack(track, menuOptionButtonText) {
@@ -288,7 +275,7 @@ function changeNthTrack(track, menuOptionButtonText) {
         timeout: 1000,
     });
     $(`li=${menuOptionButtonText}`).click();
-    waitForOncoprint(2000);
+    waitForOncoprint();
 }
 
 function getBookmarkUrl(browser) {
@@ -321,6 +308,6 @@ function createOncoprintFromLegacyFormat() {
     ).join(',');
     const legacyUrl = `${studyes0_oncoprintTabUrl}&clinicallist=${legacyFormatQueryParam}`;
     goToUrlAndSetLocalStorage(legacyUrl, false);
-    waitForOncoprint(ONCOPRINT_TIMEOUT);
+    waitForOncoprint();
     return legacyFormatQueryParam;
 }

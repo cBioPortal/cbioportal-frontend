@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
-import MobxPromise from 'mobxpromise';
 import { Nav, NavItem } from 'react-bootstrap';
 
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
@@ -21,8 +20,13 @@ import {
     default as ProgressIndicator,
     IProgressIndicatorItem,
 } from 'shared/components/progressIndicator/ProgressIndicator';
-import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControlOption,
+    MobxPromise,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import CaseFilterWarning from 'shared/components/banners/CaseFilterWarning';
+import { getServerConfig } from 'config/config';
 
 @observer
 export default class CNSegments extends React.Component<
@@ -174,9 +178,21 @@ export default class CNSegments extends React.Component<
                 <CNSegmentsDownloader
                     promise={this.props.store.cnSegments}
                     filename={this.filename}
+                    showDownload={
+                        getServerConfig().skin_hide_download_controls ===
+                        DownloadControlOption.SHOW_ALL
+                    }
                 />
                 <div className={'tabMessageContainer'}>
-                    <CaseFilterWarning store={this.props.store} />
+                    <CaseFilterWarning
+                        samples={this.props.store.samples}
+                        filteredSamples={this.props.store.filteredSamples}
+                        patients={this.props.store.patients}
+                        filteredPatients={this.props.store.filteredPatients}
+                        hideUnprofiledSamples={
+                            this.props.store.hideUnprofiledSamples
+                        }
+                    />
                 </div>
                 <Nav
                     bsStyle="pills"

@@ -15,7 +15,6 @@ import { GenePanel, StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
-import MobxPromise from 'mobxpromise';
 import SurvivalChart, {
     LegendLocation,
 } from '../../resultsView/survival/SurvivalChart';
@@ -23,7 +22,6 @@ import SurvivalChart, {
 import BarChart from './barChart/BarChart';
 import {
     ChartMeta,
-    ChartMetaDataTypeEnum,
     ChartType,
     ClinicalDataCountSummary,
     DataBin,
@@ -31,7 +29,6 @@ import {
     getRangeFromDataBins,
     getTableHeightByDimension,
     getWidthByDimension,
-    logScalePossible,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
 } from '../StudyViewUtils';
@@ -43,7 +40,11 @@ import {
     STUDY_VIEW_CONFIG,
 } from '../StudyViewConfig';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { DataType, DownloadControlsButton } from 'cbioportal-frontend-commons';
+import {
+    DataType,
+    DownloadControlsButton,
+    MobxPromise,
+} from 'cbioportal-frontend-commons';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
@@ -75,6 +76,13 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import ClinicalEventTypeCountTable, {
     ClinicalEventTypeCountColumnKey,
 } from 'pages/studyView/table/ClinicalEventTypeCountTable';
+import {
+    StructuralVariantMultiSelectionTable,
+    StructVarMultiSelectionTableColumn,
+    StructVarMultiSelectionTableColumnKey,
+} from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
+import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
+import { Modal } from 'react-bootstrap';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -100,9 +108,11 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE,
     ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE,
     ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
+    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
 ];
 
 export interface IChartContainerProps {
+    id?: string;
     chartMeta: ChartMeta;
     chartType: ChartType;
     store: StudyViewPageStore;
@@ -152,6 +162,8 @@ export interface IChartContainerProps {
     selectedGenes?: any;
     cancerGenes: number[];
     onGeneSelect?: any;
+    selectedStructuralVariants?: StructVarGenePair[];
+    onStructuralVariantSelect?: any;
     isNewlyAdded: (uniqueKey: string) => boolean;
     cancerGeneFilterEnabled: boolean;
     filterByCancerGenes?: boolean;
@@ -188,6 +200,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable newlyAdded = false;
     @observable private selectedRowsKeys: string[] = [];
 
+    @observable alertContent: JSX.Element | string | null = null;
+
     constructor(props: IChartContainerProps) {
         super(props);
 
@@ -200,10 +214,31 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.plot = plot;
             },
             resetFilters: action(() => {
-                this.props.onResetSelection(this.props.chartMeta, []);
+                // in manual submit mode, we cannot have users REMOVE filters using the chart UI.
+                // filters can only be removed by using the filter tokens at the top of the page
+                // this limitation is due to shortcut taken to enable manual submit mode
+                // which was taken in order to avoid significant refactor
+                if (this.props.store.hesitateUpdate) {
+                    this.alertContent =
+                        'In manual submit mode, you can only clear filters using the filter tokens at the top of the page.';
+                } else {
+                    this.props.onResetSelection(this.props.chartMeta, []);
+                }
             }),
-            onValueSelection: action((values: any) => {
-                this.props.onValueSelection(this.props.chartMeta, values);
+            onValueSelection: action((values: string[]) => {
+                // in manual submit mode, we cannot have users REMOVE filters using the chart UI.
+                // filters can only be removed by using the filter tokens at the top of the page
+                // this limitation is due to shortcut taken to enable manual submit mode
+                // which was taken in order to avoid significant refactor
+                if (
+                    this.props.store.hesitateUpdate &&
+                    values.length < this.props.filters.length
+                ) {
+                    this.alertContent =
+                        'In manual submit mode, you can only remove filters using the filter tokens at the top of the page.';
+                } else {
+                    this.props.onValueSelection(this.props.chartMeta, values);
+                }
             }),
             onChangeSelectedRows: action((values: string[]) => {
                 this.selectedRowsKeys = values;
@@ -360,7 +395,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return (
             this.props.promise.isComplete &&
             this.props.promise.result!.length > 1 &&
-            COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1
+            COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1 &&
+            !this.props.chartMeta.mutationOptionType
         );
     }
 
@@ -368,7 +404,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     openComparisonPage(params?: {
         // for numerical clinical attributes
         categorizationType?: NumericalGroupComparisonType;
-        // for mutated genes table
+        // for mutated genes table and genomic data count chart
         hugoGeneSymbols?: string[];
         // for treatments tables
         treatmentUniqueKeys?: string[];
@@ -378,15 +414,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             switch (this.props.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
-                    const openComparison = () =>
-                        this.props.store.openComparisonPage(
-                            this.props.chartMeta,
-                            {
-                                clinicalAttributeValues: this.props.promise
-                                    .result! as ClinicalDataCountSummary[],
-                            }
-                        );
-                    openComparison();
+                    this.props.store.openComparisonPage(this.props.chartMeta, {
+                        clinicalAttributeValues: this.props.promise
+                            .result! as ClinicalDataCountSummary[],
+                    });
                     break;
                 default:
                     this.props.store.openComparisonPage(
@@ -418,7 +449,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     this.props.chartMeta.uniqueKey
                 ]?.survivalData,
                 this.props.analysisGroupsSettings.groups,
-                this.props.patientToAnalysisGroup!.result!
+                this.props.patientToAnalysisGroup!.result!,
+                this.props.chartMeta.uniqueKey
             );
         } else {
             return undefined;
@@ -455,10 +487,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed get comparisonButtonForTables() {
-        if (this.selectedRowsKeys!.length >= 2) {
+        if (this.selectedRowsKeys!.length >= 2 && this.comparisonPagePossible) {
             return {
                 content: (
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div
+                        data-tour="mutated-genes-table-compare-btn"
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
                         <ComparisonVsIcon
                             className={classnames('fa fa-fw')}
                             style={{ marginRight: 4 }}
@@ -497,7 +532,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         )}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onValueSelection}
-                        openComparisonPage={this.openComparisonPage}
+                        openComparisonPage={
+                            this.comparisonPagePossible
+                                ? this.openComparisonPage
+                                : undefined
+                        }
                         filters={this.props.filters}
                         data={this.props.promise.result}
                         placement={this.placement}
@@ -627,6 +666,73 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             }
+            case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE: {
+                return () => {
+                    const numColumn: MultiSelectionTableColumn = {
+                        columnKey: MultiSelectionTableColumnKey.NUMBER,
+                    };
+                    if (this.props.store.isGlobalMutationFilterActive) {
+                        numColumn.columnTooltip = (
+                            <span data-test="hidden-mutation-alterations">
+                                Total number of mutations
+                                <br />
+                                This table is filtered based on selections in
+                                the <i>Alteration Filter</i> menu.
+                            </span>
+                        );
+                    }
+
+                    return (
+                        <MultiSelectionTable
+                            tableType={FreqColumnTypeEnum.MUTATION}
+                            promise={this.props.promise}
+                            width={getWidthByDimension(
+                                this.props.dimension,
+                                this.borderWidth
+                            )}
+                            height={getTableHeightByDimension(
+                                this.props.dimension,
+                                this.chartHeaderHeight
+                            )}
+                            filters={this.props.filters}
+                            onSubmitSelection={this.handlers.onValueSelection}
+                            onChangeSelectedRows={
+                                this.handlers.onChangeSelectedRows
+                            }
+                            extraButtons={
+                                this.comparisonButtonForTables && [
+                                    this.comparisonButtonForTables,
+                                ]
+                            }
+                            selectedRowsKeys={this.selectedRowsKeys}
+                            onChangeCancerGeneFilter={
+                                this.props.onChangeCancerGeneFilter!
+                            }
+                            columns={[
+                                {
+                                    columnKey:
+                                        MultiSelectionTableColumnKey.MUTATION_TYPE,
+                                },
+                                {
+                                    columnKey:
+                                        MultiSelectionTableColumnKey.NUMBER_MUTATIONS,
+                                },
+                                numColumn,
+                                {
+                                    columnKey:
+                                        MultiSelectionTableColumnKey.FREQ,
+                                },
+                            ]}
+                            defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                            setOperationsButtonText={
+                                this.props.store.hesitateUpdate
+                                    ? 'Add Filters '
+                                    : 'Select Samples '
+                            }
+                        />
+                    );
+                };
+            }
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE: {
                 return () => {
                     const numColumn: MultiSelectionTableColumn = {
@@ -697,6 +803,101 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 },
                             ]}
                             defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                            setOperationsButtonText={
+                                this.props.store.hesitateUpdate
+                                    ? 'Add Filters '
+                                    : 'Select Samples '
+                            }
+                        />
+                    );
+                };
+            }
+            case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
+                return () => {
+                    const numColumn: StructVarMultiSelectionTableColumn = {
+                        columnKey: StructVarMultiSelectionTableColumnKey.NUMBER,
+                    };
+                    if (this.props.store.isGlobalMutationFilterActive) {
+                        numColumn.columnTooltip = (
+                            <span data-test="hidden-fusion-alterations">
+                                Total number of fusions
+                                <br />
+                                This table is filtered based on selections in
+                                the <i>Alteration Filter</i> menu.
+                            </span>
+                        );
+                    }
+                    return (
+                        <StructuralVariantMultiSelectionTable
+                            tableType={
+                                FreqColumnTypeEnum.STRUCTURAL_VARIANT_PAIR
+                            }
+                            promise={this.props.promise}
+                            width={getWidthByDimension(
+                                this.props.dimension,
+                                this.borderWidth
+                            )}
+                            height={getTableHeightByDimension(
+                                this.props.dimension,
+                                this.chartHeaderHeight
+                            )}
+                            filters={this.props.filters}
+                            onSubmitSelection={this.handlers.onValueSelection}
+                            onChangeSelectedRows={
+                                this.handlers.onChangeSelectedRows
+                            }
+                            extraButtons={
+                                this.comparisonButtonForTables && [
+                                    this.comparisonButtonForTables,
+                                ]
+                            }
+                            selectedRowsKeys={this.selectedRowsKeys}
+                            onStructuralVariantSelect={
+                                this.props.onStructuralVariantSelect
+                            }
+                            selectedStructVars={
+                                this.props.selectedStructuralVariants || []
+                            }
+                            genePanelCache={this.props.genePanelCache}
+                            cancerGeneFilterEnabled={
+                                this.props.cancerGeneFilterEnabled
+                            }
+                            filterByCancerGenes={
+                                this.props.filterByCancerGenes!
+                            }
+                            onChangeCancerGeneFilter={
+                                this.props.onChangeCancerGeneFilter!
+                            }
+                            alterationFilterEnabled={
+                                this.props.alterationFilterEnabled
+                            }
+                            filterAlterations={this.props.filterAlterations}
+                            columns={[
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT,
+                                },
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.GENE1,
+                                },
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.GENE2,
+                                },
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS,
+                                },
+                                numColumn,
+                                {
+                                    columnKey:
+                                        StructVarMultiSelectionTableColumnKey.FREQ,
+                                },
+                            ]}
+                            defaultSortBy={
+                                StructVarMultiSelectionTableColumnKey.FREQ
+                            }
                             setOperationsButtonText={
                                 this.props.store.hesitateUpdate
                                     ? 'Add Filters '
@@ -981,6 +1182,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             yAxisTickCount={2}
                             xAxisTickCount={4}
                             compactMode={this.showCompactSurvivalChart}
+                            attributeId={data.attributeId}
+                            onUserSelection={this.handlers.onDataBinSelection}
                         />
                     );
                 } else {
@@ -1236,6 +1439,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return this.newlyAdded;
     }
 
+    @action.bound
+    clearAlertContent() {
+        this.alertContent = null;
+    }
+
     componentDidMount() {
         if (this.props.isNewlyAdded(this.props.chartMeta.uniqueKey)) {
             this.newlyAdded = true;
@@ -1257,76 +1465,89 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     public render() {
         return (
-            <div
-                className={classnames(styles.chart, {
-                    [styles.highlight]: this.highlightChart,
-                })}
-                data-test={`chart-container-${this.props.chartMeta.uniqueKey}`}
-                onMouseEnter={this.handlers.onMouseEnterChart}
-                onMouseLeave={this.handlers.onMouseLeaveChart}
-            >
-                <ChartHeader
-                    height={this.chartHeaderHeight}
-                    chartMeta={this.props.chartMeta}
-                    chartType={this.props.chartType}
-                    store={this.props.store}
-                    title={this.props.title}
-                    active={this.mouseInChart}
-                    resetChart={this.handlers.resetFilters}
-                    deleteChart={this.handlers.onDeleteChart}
-                    selectedRowsKeys={this.selectedRowsKeys}
-                    toggleLogScale={this.handlers.onToggleLogScale}
-                    toggleLogScaleX={this.handlers.onToggleLogScaleX}
-                    toggleLogScaleY={this.handlers.onToggleLogScaleY}
-                    toggleBoxPlot={this.handlers.onToggleBoxPlot}
-                    toggleViolinPlot={this.handlers.onToggleViolinPlot}
-                    toggleSurvivalPlotLeftTruncation={
-                        this.handlers.onToggleSurvivalPlotLeftTruncation
-                    }
-                    isLeftTruncationAvailable={
-                        this.props.isLeftTruncationAvailable
-                    }
-                    swapAxes={this.handlers.onSwapAxes}
-                    toggleNAValue={this.handlers.onToggleNAValue}
-                    chartControls={this.chartControls}
-                    changeChartType={this.changeChartType}
-                    getSVG={() => Promise.resolve(this.toSVGDOMNode())}
-                    getData={this.props.getData}
-                    downloadTypes={this.props.downloadTypes}
-                    openComparisonPage={this.openComparisonPage}
-                    placement={this.placement}
-                    description={this.props.description}
-                    isCompactSurvivalChart={this.showCompactSurvivalChart}
-                />
-                <div className={styles.chartInnerWrapper}>
-                    {this.props.promise.isPending && (
-                        <LoadingIndicator
-                            isLoading={true}
-                            className={styles.chartLoader}
-                        />
-                    )}
-                    {this.props.promise.isError && (
-                        <div className={styles.chartError}>
-                            <i className="fa fa-warning" aria-hidden="true"></i>{' '}
-                            Error when loading data.
-                        </div>
-                    )}
+            <>
+                {this.alertContent && (
+                    <Modal show={true} onHide={this.clearAlertContent}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Alert</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>{this.alertContent}</Modal.Body>
+                    </Modal>
+                )}
+                <div
+                    className={classnames(styles.chart, {
+                        [styles.highlight]: this.highlightChart,
+                    })}
+                    data-test={`chart-container-${this.props.chartMeta.uniqueKey}`}
+                    onMouseEnter={this.handlers.onMouseEnterChart}
+                    onMouseLeave={this.handlers.onMouseLeaveChart}
+                >
+                    <ChartHeader
+                        height={this.chartHeaderHeight}
+                        chartMeta={this.props.chartMeta}
+                        chartType={this.props.chartType}
+                        store={this.props.store}
+                        title={this.props.title}
+                        active={this.mouseInChart}
+                        resetChart={this.handlers.resetFilters}
+                        deleteChart={this.handlers.onDeleteChart}
+                        selectedRowsKeys={this.selectedRowsKeys}
+                        toggleLogScale={this.handlers.onToggleLogScale}
+                        toggleLogScaleX={this.handlers.onToggleLogScaleX}
+                        toggleLogScaleY={this.handlers.onToggleLogScaleY}
+                        toggleBoxPlot={this.handlers.onToggleBoxPlot}
+                        toggleViolinPlot={this.handlers.onToggleViolinPlot}
+                        toggleSurvivalPlotLeftTruncation={
+                            this.handlers.onToggleSurvivalPlotLeftTruncation
+                        }
+                        isLeftTruncationAvailable={
+                            this.props.isLeftTruncationAvailable
+                        }
+                        swapAxes={this.handlers.onSwapAxes}
+                        toggleNAValue={this.handlers.onToggleNAValue}
+                        chartControls={this.chartControls}
+                        changeChartType={this.changeChartType}
+                        getSVG={() => Promise.resolve(this.toSVGDOMNode())}
+                        getData={this.props.getData}
+                        downloadTypes={this.props.downloadTypes}
+                        openComparisonPage={this.openComparisonPage}
+                        placement={this.placement}
+                        description={this.props.description}
+                        isCompactSurvivalChart={this.showCompactSurvivalChart}
+                    />
+                    <div className={styles.chartInnerWrapper}>
+                        {this.props.promise.isPending && (
+                            <LoadingIndicator
+                                isLoading={true}
+                                className={styles.chartLoader}
+                            />
+                        )}
+                        {this.props.promise.isError && (
+                            <div className={styles.chartError}>
+                                <i
+                                    className="fa fa-warning"
+                                    aria-hidden="true"
+                                ></i>{' '}
+                                Error when loading data.
+                            </div>
+                        )}
 
-                    {(!this.props.chartMeta.renderWhenDataChange ||
-                        this.props.promise.isComplete) && (
-                        <div
-                            style={{
-                                visibility: this.props.promise.isPending
-                                    ? 'hidden'
-                                    : 'visible',
-                                display: 'flex',
-                            }}
-                        >
-                            {this.chart && this.chart()}
-                        </div>
-                    )}
+                        {(!this.props.chartMeta.renderWhenDataChange ||
+                            this.props.promise.isComplete) && (
+                            <div
+                                style={{
+                                    visibility: this.props.promise.isPending
+                                        ? 'hidden'
+                                        : 'visible',
+                                    display: 'flex',
+                                }}
+                            >
+                                {this.chart && this.chart()}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </>
         );
     }
 }

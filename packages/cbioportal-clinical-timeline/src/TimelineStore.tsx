@@ -241,7 +241,12 @@ export class TimelineStore {
         if (content === null) {
             // Show default tooltip if there's no custom track tooltip renderer,
             //  or if the track renderer returns `null`
-            content = <EventTooltipContent event={activeItem} />;
+            content = (
+                <EventTooltipContent
+                    trackConfig={tooltipModel.track.trackConf}
+                    event={activeItem}
+                />
+            );
         }
 
         const multipleItems = tooltipModel.events.length > 1;
@@ -286,10 +291,23 @@ export class TimelineStore {
                     >
                         {point}
                         {uid === this.hoveredTooltipUid && (
-                            <span>
-                                {tooltipIndex + 1} of{' '}
-                                {tooltipModel.events.length}. Use spacebar or
-                                arrow keys to see others.
+                            <span className="btn-group">
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    onClick={() => this.prevTooltipEvent()}
+                                >
+                                    &lt;
+                                </button>
+                                <span className="btn btn-default btn-xs">
+                                    {tooltipIndex + 1} of{' '}
+                                    {tooltipModel.events.length} events
+                                </span>
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    onClick={() => this.nextTooltipEvent()}
+                                >
+                                    &gt;
+                                </button>
                             </span>
                         )}
                     </div>

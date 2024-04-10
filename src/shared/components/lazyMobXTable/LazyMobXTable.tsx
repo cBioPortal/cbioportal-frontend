@@ -119,6 +119,7 @@ type LazyMobXTableProps<T> = {
         column: Column<T>
     ) => JSX.Element | undefined;
     deactivateColumnFilter?: (columnId: string) => void;
+    customControls?: JSX.Element;
 };
 
 function compareValues<U extends number | string>(
@@ -667,8 +668,15 @@ export class LazyMobXTableStore<T> {
                 classNames.push('clickable');
 
                 const onRowClick = this.onRowClick; // by the time its called this might be undefined again, so need to save ref
-                rowProps.onClick = () => {
-                    onRowClick(this.visibleData[i]);
+                rowProps.onClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                    // workaround to ignore the click if it happens outside the table component (e.g. within a tooltip)
+                    const isTargetWithinTheTable = $(e.target)
+                        .parents()
+                        .toArray()
+                        .includes(e.currentTarget);
+                    if (isTargetWithinTheTable) {
+                        onRowClick(this.visibleData[i]);
+                    }
                 };
             }
             if (this.onRowMouseEnter) {
@@ -1096,7 +1104,19 @@ export default class LazyMobXTable<T> extends React.Component<
     }
 
     private get countHeader() {
-        return (
+        return this.props.customControls ? (
+            <h3
+                data-test="LazyMobXTable_CountHeader"
+                style={{
+                    color: 'black',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                }}
+            >
+                {this.store.displayData.length} {this.store.itemsLabel} (page{' '}
+                {this.store.page + 1} of {this.store.maxPage + 1})
+            </h3>
+        ) : (
             <span
                 data-test="LazyMobXTable_CountHeader"
                 style={{
@@ -1207,6 +1227,7 @@ export default class LazyMobXTable<T> extends React.Component<
                     ) : (
                         ''
                     )}
+                    {this.props.customControls}
                     {this.props.showPagination &&
                     this.props.showPaginationAtTop ? (
                         <Observer>{this.getPaginationControls}</Observer>

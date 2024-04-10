@@ -1147,6 +1147,18 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
+"@datadog/browser-core@5.4.0":
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-core/-/browser-core-5.4.0.tgz#c9d55357d75a6ce25a95d235795d6b68c6f85e17"
+  integrity sha512-8HlKAcKXm7cJmzWQTVGnZiBs21BXkmRiknDaH9NbO6UT5JqYupXe/3zEesoX6Kxad2EzGlPVpBV816luWfqepw==
+
+"@datadog/browser-logs@^5.4.0":
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-logs/-/browser-logs-5.4.0.tgz#fc346364b1e59acb24d400114ef74adb6f223b92"
+  integrity sha512-0eLkUHUTnch8cpJMqV421XpUaEs0yS/4xriWz+GsAs+2uFQGio26fDmdRGOvK+8JowDBSv9VY+YzRi8iXlhJOA==
+  dependencies:
+    "@datadog/browser-core" "5.4.0"
+
 "@datastructures-js/max-heap@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@datastructures-js/max-heap/-/max-heap-2.0.0.tgz#4ab3bbc09706ff632aaa6d85fe6ba51747663b9a"
@@ -4327,6 +4339,13 @@
   integrity sha512-3Fi2O6Zzq/f3QR9dRnlnHso9bMl7weKCviFmfF6B4LS1Uat6Hkm15k0ZAQuDz+UBq6B3+g+NM6IT2nr5QgPzCw==
   dependencies:
     "@types/react" "*"
+
+"@types/react-toastify@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@types/react-toastify/-/react-toastify-4.1.0.tgz#604e712855dd677916d5c66af595d3b590f5d95d"
+  integrity sha512-u7Ie/7LHBsPVz/iJxi/WlRDS7Gh9csCJACTDXx+pSLuZCm94xpkwzhM3jV1L5ZxP/in0Gp2tFbJ91VrSGr1gyQ==
+  dependencies:
+    react-toastify "*"
 
 "@types/react-transition-group@^2.0.14":
   version "2.0.16"
@@ -7542,6 +7561,11 @@ clone@^1.0.2:
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
   integrity sha1-2jCcwmPfFZlMaIypAheco8fNfH4=
 
+clsx@^1.1.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/clsx/-/clsx-1.2.1.tgz#0ddc4a20a549b59c93a4116bb26f5294ca17dc12"
+  integrity sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==
+
 co@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/co/-/co-4.6.0.tgz#6ea6bdf3d853ae54ccb8e47bfa0bf3f9031fb184"
@@ -10494,11 +10518,6 @@ execa@^5.0.0:
     onetime "^5.1.2"
     signal-exit "^3.0.3"
     strip-final-newline "^2.0.0"
-
-exenv@^1.2.1:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/exenv/-/exenv-1.2.2.tgz#2ae78e85d9894158670b03d47bec1f03bd91bb9d"
-  integrity sha1-KueOhdmJQVhnCwPUe+wfA72Ru50=
 
 exit@0.1.2, exit@0.1.x, exit@^0.1.2:
   version "0.1.2"
@@ -16624,12 +16643,6 @@ mobx@^6.0.0:
   resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.0.4.tgz#8fc3e3629a3346f8afddf5bd954411974744dad1"
   integrity sha512-wT2QJT9tW19VSHo9x7RPKU3z/I2Ps6wUS8Kb1OO+kzmg7UY3n4AkcaYG6jq95Lp1R9ohjC/NGYuT2PtuvBjhFg==
 
-"mobxpromise@github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f":
-  version "2.0.1"
-  resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/303db72588860bff0a6862a4f07a4e8a3578c94f"
-  dependencies:
-    mobx "^6.0.0"
-
 modify-values@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/modify-values/-/modify-values-1.0.1.tgz#b3939fa605546474e3e3e3c63d64bd43b4ee6022"
@@ -18118,10 +18131,10 @@ pathval@^1.1.1:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.1.tgz#8534e77a77ce7ac5a2512ea21e0fdb8fcf6c3d8d"
   integrity sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==
 
-pathway-mapper@^2.3.0-beta.6:
-  version "2.3.0-beta.6"
-  resolved "https://registry.yarnpkg.com/pathway-mapper/-/pathway-mapper-2.3.0-beta.6.tgz#14d75d3a8491aac20d4bd1f1c076685b88b26c6d"
-  integrity sha512-CjHnJ30VcEp5p2/o/ZbqueE2jDZ54P7vIY1sZohcd5ynITynKFdhw9TIo7sqZLHnAJh6W/uwMTchf5zxyRRdSg==
+pathway-mapper@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/pathway-mapper/-/pathway-mapper-2.3.0.tgz#f6ab1ff9ffff18e67a55461b1c0d6bff5d556f62"
+  integrity sha512-9Sv4xxdE09q8MZyrdsZgV9mIKivoDgJIhtb96dNRtNAdhw42pUm3Sd+qnxmRYudAc3PorrDuKj88W5YSMFeYXg==
   dependencies:
     "@datastructures-js/max-heap" "^2.0.0"
     autobind-decorator "^2.4.0"
@@ -19438,7 +19451,7 @@ prop-types@15.5.8:
   dependencies:
     fbjs "^0.8.9"
 
-prop-types@15.7.2, prop-types@15.x, prop-types@^15.0.0, prop-types@^15.3.0, prop-types@^15.5.0, prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.5.6, prop-types@^15.5.7, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@15.7.2, prop-types@15.x, prop-types@^15.0.0, prop-types@^15.5.0, prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.5.6, prop-types@^15.5.7, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -20365,6 +20378,13 @@ react-text-truncate@^0.9.0:
   dependencies:
     prop-types "^15.5.7"
 
+react-toastify@*, react-toastify@^9.1.2:
+  version "9.1.2"
+  resolved "https://registry.yarnpkg.com/react-toastify/-/react-toastify-9.1.2.tgz#293aa1f952240129fe485ae5cb2f8d09c652cf3f"
+  integrity sha512-PBfzXO5jMGEtdYR5jxrORlNZZe/EuOkwvwKijMatsZZm8IZwLj01YvobeJYNjFcA6uy6CVrx2fzL9GWbhWPTDA==
+  dependencies:
+    clsx "^1.1.1"
+
 react-toastify@^5.3.1:
   version "5.5.0"
   resolved "https://registry.yarnpkg.com/react-toastify/-/react-toastify-5.5.0.tgz#f55de44f6b5e3ce3b13b69e5bb4427f2c9404822"
@@ -20430,16 +20450,6 @@ react-transition-group@^4.3.0:
     dom-helpers "^5.0.1"
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
-
-react-twitter-widgets@^1.7.1:
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/react-twitter-widgets/-/react-twitter-widgets-1.7.1.tgz#60061f37a8c4f361c27f3d1d7ceba98d3cd80a40"
-  integrity sha512-bAcR/NKqRbVRJav981bHrm2+xka7NA2nQJB6Urtj9BARqP7aeGHPC0CrrC7wdYIaluOqiF8MiTtURqIJjFs2ZA==
-  dependencies:
-    exenv "^1.2.1"
-    lodash "^4.17.4"
-    prop-types "^15.3.0"
-    scriptjs "^2.5.8"
 
 react-virtualized@^9.20.1:
   version "9.21.0"
@@ -21696,10 +21706,10 @@ sass@^1.32.4:
   dependencies:
     chokidar ">=2.0.0 <4.0.0"
 
-save-svg-as-png@^1.4.6:
-  version "1.4.11"
-  resolved "https://registry.yarnpkg.com/save-svg-as-png/-/save-svg-as-png-1.4.11.tgz#b6a8d8c1d616716f0f1eb5fe303ca20badb75eea"
-  integrity sha512-NyMPYqdkyP6xX8pYh9rUJq/RmoZL6dlLrDeu9wmiziE9B3Kc1/c7TNCVZRMZa3snUz8M8K28eOSqzoOMKI79wA==
+save-svg-as-png@^1.4.17:
+  version "1.4.17"
+  resolved "https://registry.yarnpkg.com/save-svg-as-png/-/save-svg-as-png-1.4.17.tgz#294442002772a24f1db1bf8a2aaf7df4ab0cdc55"
+  integrity sha512-7QDaqJsVhdFPwviCxkgHiGm9omeaMBe1VKbHySWU6oFB2LtnGCcYS13eVoslUgq6VZC6Tjq/HddBd1K6p2PGpA==
 
 sax@>=0.6.0, sax@^1.1.4, sax@~1.2.1, sax@~1.2.4:
   version "1.2.4"
@@ -21779,11 +21789,6 @@ script-loader@^0.7.0:
   integrity sha512-UMNLEvgOAQuzK8ji8qIscM3GIrRCWN6MmMXGD4SD5l6cSycgGsCo0tX5xRnfQcoghqct0tjHjcykgI1PyBE2aA==
   dependencies:
     raw-loader "~0.5.1"
-
-scriptjs@^2.5.8:
-  version "2.5.9"
-  resolved "https://registry.yarnpkg.com/scriptjs/-/scriptjs-2.5.9.tgz#343915cd2ec2ed9bfdde2b9875cd28f59394b35f"
-  integrity sha512-qGVDoreyYiP1pkQnbnFAUIS5AjenNwwQBdl7zeos9etl+hYKWahjRTfzAZZYBv5xNHx7vNKCmaLDQZ6Fr2AEXg==
 
 scroll-smooth@1.0.1:
   version "1.0.1"
@@ -23216,9 +23221,9 @@ svg-path-sdf@^1.1.3:
     parse-svg-path "^0.1.2"
     svg-path-bounds "^1.0.1"
 
-svg2pdf.js@^1.3.3, "svg2pdf.js@github:cbioportal/svg2pdf.js#v1.3.3-cbio":
+"svg2pdf.js@github:cbioportal/svg2pdf.js#v1.3.3-cbio-patch-1":
   version "1.3.3"
-  resolved "https://codeload.github.com/cbioportal/svg2pdf.js/tar.gz/37db750e7ba9e87de29a24df73c43e768837f734"
+  resolved "https://codeload.github.com/cbioportal/svg2pdf.js/tar.gz/5a935ad5432e181497bc101b1825c0adb6da6622"
   dependencies:
     jspdf-yworks "^2.0.1"
 

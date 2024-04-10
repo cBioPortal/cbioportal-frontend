@@ -36,3 +36,9 @@ LICENSE
 end-to-end-test/local/studies/**
 *.screenshottest
 *.jks
+*.cert
+*.key
+*.gmt
+*.yaml
+*.html
+*.crt
