@@ -228,7 +228,7 @@ export class ClinicalDataTab extends React.Component<
 
             if (
                 _.find(
-                    this.props.store.visibleAttributes,
+                    this.props.store.visibleAttributesForClinicalData,
                     chartMeta =>
                         chartMeta.uniqueKey ===
                         SpecialChartsUniqueKeyEnum.CANCER_STUDIES
@@ -239,7 +239,7 @@ export class ClinicalDataTab extends React.Component<
                 });
             }
             return _.reduce(
-                this.props.store.visibleAttributesForClinicalDataTab.sort(
+                this.props.store.visibleAttributesForClinicalData.sort(
                     chartMetaComparator
                 ),
                 (
