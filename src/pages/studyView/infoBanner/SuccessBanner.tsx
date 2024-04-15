@@ -3,7 +3,6 @@ import { observer } from 'mobx-react';
 
 export interface ISuccessBannerProps {
     message: string;
-    containerWidth: number;
 }
 
 @observer
@@ -18,7 +17,6 @@ export default class SuccessBanner extends React.Component<
                 style={{
                     marginTop: '10px',
                     marginBottom: '0',
-                    maxWidth: this.props.containerWidth,
                 }}
             >
                 <span>
