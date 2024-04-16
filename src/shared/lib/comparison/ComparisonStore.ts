@@ -2609,37 +2609,6 @@ export default abstract class ComparisonStore extends AnalysisStore
                     }
                 );
                 return _.chain(result)
-                    .map(x => {
-                        switch (x.eventType.toUpperCase()) {
-                            case 'TREATMENT': {
-                                x.attributes = x.attributes.filter(y =>
-                                    [
-                                        'TREATMENT_TYPE',
-                                        'SUBTYPE',
-                                        'AGENT',
-                                    ].includes(y.key.toUpperCase())
-                                );
-                                break;
-                            }
-                            case 'LAB_TEST': {
-                                x.attributes = x.attributes.filter(
-                                    y => 'TEST' === y.key.toUpperCase()
-                                );
-                                break;
-                            }
-                            case 'DIAGNOSIS': {
-                                x.attributes = x.attributes.filter(
-                                    y => 'SUBTYPE' === y.key.toUpperCase()
-                                );
-                                break;
-                            }
-                            default: {
-                                x.attributes = [];
-                                break;
-                            }
-                        }
-                        return x;
-                    })
                     .map(x => ({
                         label: x.eventType,
                         value: x.eventType,

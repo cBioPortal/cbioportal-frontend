@@ -76,7 +76,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     private endEventPosition: 'FIRST' | 'LAST' = 'LAST';
 
     @observable
-    private censoredEventPosition: 'FIRST' | 'LAST' = 'FIRST';
+    private censoredEventPosition: 'FIRST' | 'LAST' = 'LAST';
 
     @observable
     private _selectedStartClinicalEventType: string | undefined = undefined;
@@ -356,6 +356,12 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     @computed get selectedCensoredClinicalEventType() {
         if (this._selectedCensoredClinicalEventType !== undefined) {
+            if (this._selectedCensoredClinicalEventType === 'any') {
+                const clinicalEvents = _.values(
+                    this.props.store.clinicalEventOptions.result
+                );
+                return clinicalEvents[clinicalEvents.length - 1];
+            }
             return this.props.store.clinicalEventOptions.result[
                 this._selectedCensoredClinicalEventType
             ];
@@ -620,20 +626,30 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                 this
                                                     .onCensoredClinicalEventSelection
                                             }
-                                            options={_.values(
-                                                this.props.store
-                                                    .clinicalEventOptions.result
+                                            options={[
+                                                {
+                                                    label: 'any',
+                                                    value: 'any',
+                                                    attributes: [],
+                                                } as any,
+                                            ].concat(
+                                                _.values(
+                                                    this.props.store
+                                                        .clinicalEventOptions
+                                                        .result
+                                                )
                                             )}
                                             clearable={false}
                                             searchable={false}
                                         />
                                     </td>
-                                    {this._selectedCensoredClinicalEventType !==
+                                    {this.selectedCensoredClinicalEventType !==
                                         undefined &&
                                         this.props.store.clinicalEventOptions
                                             .result[
                                             this
-                                                ._selectedCensoredClinicalEventType
+                                                .selectedCensoredClinicalEventType
+                                                .value
                                         ].attributes.length > 0 && (
                                             <td
                                                 className={
@@ -661,7 +677,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                             .clinicalEventOptions
                                                             .result[
                                                             this
-                                                                ._selectedCensoredClinicalEventType
+                                                                .selectedCensoredClinicalEventType
+                                                                .value
                                                         ].attributes
                                                     }
                                                     isClearable={false}
@@ -671,34 +688,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                 />
                                             </td>
                                         )}
-                                    <td>
-                                        <ButtonGroup>
-                                            {POSITIONS.map((option, i) => {
-                                                return (
-                                                    <Radio
-                                                        checked={
-                                                            option.value ===
-                                                            this
-                                                                .censoredEventPosition
-                                                        }
-                                                        onChange={e => {
-                                                            this.censoredEventPosition = $(
-                                                                e.target
-                                                            ).attr(
-                                                                'data-value'
-                                                            ) as any;
-                                                        }}
-                                                        inline
-                                                        data-value={
-                                                            option.value
-                                                        }
-                                                    >
-                                                        {option.label}
-                                                    </Radio>
-                                                );
-                                            })}
-                                        </ButtonGroup>
-                                    </td>
                                 </tr>
                                 <tr>
                                     <td>
