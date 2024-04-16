@@ -1,6 +1,7 @@
 import { IStringAxisData } from './PlotsTabUtils';
 import _ from 'lodash';
 import { IMultipleCategoryBarPlotData } from '../../../pages/groupComparison/MultipleCategoryBarPlot';
+import { marginLeft } from 'pages/patientView/trialMatch/style/trialMatch.module.scss';
 
 export function makePlotData(
     horzData: IStringAxisData['data'],
@@ -79,12 +80,20 @@ export function makePlotData(
     );
     return data;
 }
+interface TotalSumItem {
+    majorCategory: string;
+    sum: number;
+    minorCategory: { name: string; count: number; percentage: number }[];
+}
 
+// Export TotalSumItem for accessibility from other modules if needed
+export { TotalSumItem };
 export function sortDataByCategory<D>(
     data: D[],
     getCategory: (d: D) => string,
     categoryOrder: { [cat: string]: number } | undefined
 ) {
+    // console.log( TotalSumItem[],"totalSumArray inside sortDataByCategory");
     return _.sortBy(data, d => {
         const category = getCategory(d);
         if (categoryOrder) {
@@ -107,7 +116,8 @@ export function makeBarSpecs(
     categoryCoord: (categoryIndex: number) => number,
     horizontalBars: boolean,
     stacked: boolean,
-    percentage: boolean
+    percentage: boolean,
+    sortOption: string
 ): {
     fill: string;
     data: {
@@ -121,10 +131,87 @@ export function makeBarSpecs(
 }[] {
     // one bar spec per minor category, in correct order - either specified, or alphabetical
     data = sortDataByCategory(data, d => d.minorCategory, minorCategoryOrder);
+
     // reverse the order of stacked or horizontal bars
     if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
         data = _.reverse(data);
     }
+    console.log(data, 'iscalled2');
+    data.forEach(item => {
+        item.counts.sort((a, b) =>
+            a.majorCategory.localeCompare(b.majorCategory)
+        );
+    });
+    console.log(data, 'iscalled211');
+
+    // interface TotalSumItem {
+    //     majorCategory: string;
+    //     sum: number;
+    //     minorCategory: { name: string; count: number ,percentage:number}[];
+    // }
+
+    const totalSumArray: TotalSumItem[] = [];
+    data.forEach(item => {
+        item.counts.forEach(countItem => {
+            const existingItem = totalSumArray.find(
+                sumItem => sumItem.majorCategory === countItem.majorCategory
+            );
+            if (existingItem) {
+                existingItem.sum += countItem.count;
+                existingItem.minorCategory.push({
+                    name: item.minorCategory,
+                    count: countItem.count,
+                    percentage: countItem.percentage,
+                });
+            } else {
+                totalSumArray.push({
+                    majorCategory: countItem.majorCategory,
+                    sum: countItem.count,
+                    minorCategory: [
+                        {
+                            name: item.minorCategory,
+                            count: countItem.count,
+                            percentage: countItem.percentage,
+                        },
+                    ],
+                });
+            }
+        });
+    });
+
+    console.log(totalSumArray, 'totalssu');
+    totalSumArray.sort((a, b) => b.sum - a.sum);
+    const minorCategoryArrays: {
+        [key: string]: {
+            majorCategory: string;
+            count: number;
+            percentage: number;
+        }[];
+    } = {};
+    data.forEach(item => {
+        // Extract the minorCategory from the current item
+        const minorCategory = item.minorCategory;
+
+        // Check if the minorCategory already exists in minorCategoryArrays
+        if (!minorCategoryArrays[minorCategory]) {
+            // If it doesn't exist, create a new array for it
+            minorCategoryArrays[minorCategory] = [];
+        }
+
+        // Find corresponding items in totalSumArray and add them to the array
+        totalSumArray.forEach(totalItem => {
+            totalItem.minorCategory.forEach(minorItem => {
+                if (minorItem.name === minorCategory) {
+                    minorCategoryArrays[minorCategory].push({
+                        majorCategory: totalItem.majorCategory,
+                        count: minorItem.count,
+                        percentage: minorItem.percentage,
+                    });
+                }
+            });
+        });
+    });
+    console.log(minorCategoryArrays, 'minorCategoryarrayss');
     return data.map(({ minorCategory, counts }) => {
         const fill = getColor(minorCategory);
         const sortedCounts = sortDataByCategory(
@@ -132,9 +219,26 @@ export function makeBarSpecs(
             d => d.majorCategory,
             majorCategoryOrder
         );
-        return {
+        console.log(counts, majorCategoryOrder, 'kkk');
+        console.log(sortedCounts, 'sror');
+        // sortedCounts.sort((a, b) => b.count - a.count);
+
+        console.log(sortedCounts, 'sorteddsc');
+        // console.log(minorCategory,"sorteddsc");
+        const finals = minorCategoryArrays[minorCategory];
+        // console.log(minorCategoryArrays["Male"],"HEREISSS")
+
+        // console.log(sortedCounts,"sror")
+        let ans;
+        if (sortOption == 'sortByAlphabet') {
+            ans = sortedCounts;
+        } else {
+            ans = finals;
+        }
+        console.log(sortOption, 'sortOptions');
+        const finalans = {
             fill,
-            data: sortedCounts.map((obj, index) => ({
+            data: ans.map((obj, index) => ({
                 x: categoryCoord(index),
                 y: percentage ? obj.percentage : obj.count,
                 majorCategory: obj.majorCategory,
@@ -143,5 +247,8 @@ export function makeBarSpecs(
                 percentage: obj.percentage,
             })),
         };
+        console.log(finalans, 'iscalled3');
+
+        return finalans;
     });
 }

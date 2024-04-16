@@ -937,6 +937,7 @@ export default class ClinicalData extends React.Component<
                                     ? this.highlightedRow.qValue
                                     : null
                             }
+                            sortOption={'sortByAlphabet'}
                         />
                     );
                 }

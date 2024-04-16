@@ -252,7 +252,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 []
             );
@@ -267,7 +268,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -341,7 +343,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -415,7 +418,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -489,7 +493,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -563,7 +568,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -637,7 +643,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -711,7 +718,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -785,7 +793,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -861,7 +870,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -940,7 +950,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1019,7 +1030,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1098,7 +1110,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1177,7 +1190,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1256,7 +1270,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1335,7 +1350,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1414,7 +1430,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1494,7 +1511,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1568,7 +1586,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1642,7 +1661,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1716,7 +1736,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1790,7 +1811,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1864,7 +1886,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -1938,7 +1961,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2012,7 +2036,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     false,
                     false,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2088,7 +2113,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2167,7 +2193,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     true,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2246,7 +2273,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2325,7 +2353,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     true,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2404,7 +2433,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2483,7 +2513,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     true,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2562,7 +2593,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     false,
-                    false
+                    false,
+                    'sortByAlphabet'
                 ),
                 [
                     {
@@ -2641,7 +2673,8 @@ describe('MultipleCategoryBarPlotUtils', () => {
                     categoryCoord,
                     true,
                     true,
-                    true
+                    true,
+                    'sortByAlphabet'
                 ),
                 [
                     {

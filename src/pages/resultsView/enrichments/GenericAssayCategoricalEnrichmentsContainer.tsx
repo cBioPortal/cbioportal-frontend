@@ -628,6 +628,7 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
                         qValue={
                             this.showPAndQ ? this.highlightedRow.qValue : null
                         }
+                        sortOption={'sortByAlphabet'}
                     />
                 );
 
