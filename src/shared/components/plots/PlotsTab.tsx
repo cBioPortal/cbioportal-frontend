@@ -4464,7 +4464,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </label>
                         </div>
                     )}
-                    {this.isStacked && (
+                    {this.isStacked && (this.plotType.result==3) && (
                         <div className="form-group">
                             <label style={{ margin: '0' }}>
                                 <b>Sort</b>
