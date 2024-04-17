@@ -2609,6 +2609,16 @@ export default abstract class ComparisonStore extends AnalysisStore
                     }
                 );
                 return _.chain(result)
+                    .filter(x =>
+                        getServerConfig()
+                            .skin_survival_plot_clinical_event_types_show_on_init
+                            ? getServerConfig()
+                                  .skin_survival_plot_clinical_event_types_show_on_init.split(
+                                      ','
+                                  )
+                                  .includes(x.eventType)
+                            : true
+                    )
                     .map(x => ({
                         label: x.eventType,
                         value: x.eventType,
