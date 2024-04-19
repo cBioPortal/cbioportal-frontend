@@ -32,11 +32,16 @@ import {
     DefaultTooltip,
     DownloadControlOption,
     DownloadControls,
+    EditableSpan,
 } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
 import { MutationalSignatureTableDataStore } from 'pages/patientView/mutationalSignatures/MutationalSignaturesDataStore';
 import WindowStore from 'shared/components/window/WindowStore';
 import { getServerConfig } from 'config/config';
+import Slider from 'react-rangeslider';
+import { calcYMaxInput } from 'react-mutation-mapper/src/util/LollipopPlotUtils';
+import styles from 'react-mutation-mapper/src/component/lollipopMutationPlot/lollipopMutationPlot.module.scss';
+import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
 
 export interface IMutationalSignaturesContainerProps {
     data: { [version: string]: IMutationalSignature[] };
@@ -61,6 +66,13 @@ interface IAxisScaleSwitchProps {
 export enum AxisScale {
     PERCENT = '%',
     COUNT = '#',
+}
+
+function formatInputValue(value: number, step: number = 1) {
+    const decimalZeros = numberOfLeadingDecimalZeros(step);
+    const fixed = decimalZeros < 0 ? 0 : decimalZeros + 1;
+
+    return value.toFixed(fixed);
 }
 
 @observer
@@ -244,6 +256,10 @@ export default class MutationalSignaturesContainer extends React.Component<
         );
     }
 
+    @computed get updateYAxisDomain() {
+        console.log('slider werkt');
+        return 50;
+    }
     @action.bound
     private onVersionChange(option: { label: string; value: string }): void {
         this.props.onVersionChange(option.value);
@@ -268,6 +284,29 @@ export default class MutationalSignaturesContainer extends React.Component<
     @autobind
     private getSvg() {
         return this.plotSvg;
+    }
+
+    protected get maxValueSlider() {
+        return (
+            <div
+                className="small"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginLeft: 10,
+                }}
+            >
+                <div
+                    style={{
+                        width: 1,
+                        marginLeft: 10,
+                        marginRight: 10,
+                    }}
+                >
+                    <div style={{ textAlign: 'center' }}>Y-Axis:</div>
+                </div>
+            </div>
+        );
     }
 
     @autobind
@@ -313,7 +352,13 @@ export default class MutationalSignaturesContainer extends React.Component<
                 return item.value;
             });
         const mutTotalCount = countPerVersion.reduce((a, b) => a + b, 0);
-        return [this.props.version, mutTotalCount];
+        const versionLabel =
+            this.props.version == 'SBS'
+                ? 'Single Base Substitution (SBS)'
+                : this.props.version == 'DBS'
+                ? 'Double Base Substitution (DBS)'
+                : 'Small insertions and deletions (ID)';
+        return [versionLabel, mutTotalCount];
     }
 
     public render() {
@@ -354,7 +399,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                                     paddingBottom: 10,
                                 }}
                             >
-                                Variant Class:
+                                Mutational Signature Type:
                                 <DefaultTooltip
                                     placement="right"
                                     overlay={
@@ -485,6 +530,52 @@ export default class MutationalSignaturesContainer extends React.Component<
                                             <h5>Mutational count</h5>
                                             {this.getTotalMutationalCount[0]}:
                                             {this.getTotalMutationalCount[1]}
+                                            <DefaultTooltip
+                                                placement="right"
+                                                overlay={
+                                                    <span>
+                                                        Mutation count may
+                                                        include silent,
+                                                        noncoding and other
+                                                        types of mutations that
+                                                        may not be shown
+                                                        elsewhere in cBioPortal.
+                                                    </span>
+                                                }
+                                                destroyTooltipOnHide={true}
+                                            >
+                                                <i
+                                                    className="fa fa-md fa-info-circle"
+                                                    style={{
+                                                        verticalAlign:
+                                                            'middle !important',
+                                                        marginRight: 6,
+                                                        marginBottom: 1,
+                                                        marginLeft: 5,
+                                                    }}
+                                                />
+                                            </DefaultTooltip>
+                                        </div>
+                                        <div
+                                            style={{
+                                                float: 'left',
+                                                paddingLeft: 10,
+                                                width: 100,
+                                                boxSizing: 'border-box',
+                                            }}
+                                        >
+                                            Y-axis scale:
+                                            <Slider
+                                                min={0}
+                                                max={100}
+                                                tooltip={false}
+                                                step={1}
+                                                onChange={
+                                                    this.updateYAxisDomain
+                                                }
+                                                value={100}
+                                                width={100}
+                                            />
                                         </div>
                                     </div>
                                 )}
@@ -524,7 +615,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                                 <div style={{ overflow: 'auto' }}>
                                     <MutationalBarChart
                                         signature={this.signatureToPlot}
-                                        height={220}
+                                        height={230}
                                         width={WindowStore.size.width - 100}
                                         refStatus={false}
                                         svgId={'MutationalBarChart'}
