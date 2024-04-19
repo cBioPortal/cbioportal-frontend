@@ -71,6 +71,7 @@ export default class MutationalBarChart extends React.Component<
         );
     }
     @observable svgWidth = this.props.width;
+    @observable svgHeight: number = 350;
     @observable graphWidth = this.props.width - 50;
 
     @computed get xTickLabels(): string[] {
@@ -463,6 +464,23 @@ export default class MutationalBarChart extends React.Component<
         }
     }
 
+    @computed get heightReferenceAxis() {
+        //Make sure that the height of the table
+        if (!this.props.updateReference) {
+            return 0;
+        } else {
+            return heightYAxis;
+        }
+    }
+
+    @computed get heightSvgElement() {
+        if (!this.props.updateReference) {
+            return 350;
+        } else {
+            return 500;
+        }
+    }
+
     @computed get referenceAxisLabel() {
         const referenceString = `COSMIC Reference`;
         return this.props.version === 'SBS'
@@ -491,7 +509,7 @@ export default class MutationalBarChart extends React.Component<
                 }}
             >
                 <svg
-                    height={600}
+                    height={this.heightSvgElement}
                     width={this.svgWidth}
                     xmlns="http://www.w3.org/2000/svg"
                     ref={this.props.svgRef}
@@ -557,7 +575,7 @@ export default class MutationalBarChart extends React.Component<
                                 label={this.referenceAxisLabel}
                                 domain={[100, 0]}
                                 offsetX={offSetYAxis}
-                                height={heightYAxis}
+                                height={this.heightReferenceAxis}
                                 width={this.graphWidth}
                                 style={{
                                     paddingTop: 20,
@@ -678,7 +696,7 @@ export default class MutationalBarChart extends React.Component<
                                     (this.graphWidth - 200) / 2
                                 ) +
                                 ',' +
-                                this.getTranslateDistance(400) +
+                                this.getTranslateDistance(350) +
                                 ')'
                             }
                         >
@@ -704,7 +722,7 @@ export default class MutationalBarChart extends React.Component<
                                 barRatio={1}
                                 barWidth={7}
                                 width={this.graphWidth}
-                                height={300}
+                                height={this.heightReferenceAxis}
                                 domain={{ y: [-100, 0] }}
                                 data={this.getReferenceSignatureToPlot}
                                 x="label"
