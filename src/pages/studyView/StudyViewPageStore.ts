@@ -674,7 +674,7 @@ export class StudyViewPageStore
         this.reactionDisposers.push(
             reaction(
                 () => [
-                    this.visibleAttributes,
+                    this.visibleAttributesForSummary,
                     this.columns,
                     _.fromPairs(this.chartsDimension.toJSON()),
                     _.fromPairs(this.chartsType.toJSON()),
@@ -2436,7 +2436,7 @@ export class StudyViewPageStore
     @action.bound
     private updateLayout(): void {
         this.currentGridLayout = calculateLayout(
-            this.visibleAttributes,
+            this.visibleAttributesForSummary,
             this.columns,
             _.fromPairs(this.chartsDimension.toJSON()),
             this.currentGridLayout,
@@ -6837,6 +6837,7 @@ export class StudyViewPageStore
         if (this.isSavingUserPreferencePossible) {
             chartSettingsMap = getChartSettingsMap(
                 this.visibleAttributes,
+                this.visibleAttributesForSummary,
                 this.columns,
                 _.fromPairs(this.chartsDimension.toJSON()),
                 _.fromPairs(this.chartsType.toJSON()),
@@ -7043,8 +7044,19 @@ export class StudyViewPageStore
             },
             [] as ChartMeta[]
         );
+        const visibleAttributesForSummary = _.reduce(
+            this._defaultVisibleChartIds,
+            (acc, chartUniqueKey) => {
+                if (this.chartMetaSetForSummary[chartUniqueKey]) {
+                    acc.push(this.chartMetaSetForSummary[chartUniqueKey]);
+                }
+                return acc;
+            },
+            [] as ChartMeta[]
+        );
         return getChartSettingsMap(
             visibleAttributes,
+            visibleAttributesForSummary,
             this.columns,
             _.fromPairs(this._defaultChartsDimension.toJSON()),
             _.fromPairs(this._defaultChartsType.toJSON()),

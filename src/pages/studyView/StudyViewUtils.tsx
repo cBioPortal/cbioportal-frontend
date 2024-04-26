@@ -2807,6 +2807,7 @@ export function isSpecialChart(chartMeta: ChartMeta) {
 
 export function getChartSettingsMap(
     visibleAttributes: ChartMeta[],
+    visibleAttributesForSummary: ChartMeta[],
     columns: number,
     chartDimensionSet: { [uniqueId: string]: ChartDimension },
     chartTypeSet: { [uniqueId: string]: ChartType },
@@ -2824,7 +2825,7 @@ export function getChartSettingsMap(
 ) {
     if (!gridLayout) {
         gridLayout = calculateLayout(
-            visibleAttributes,
+            visibleAttributesForSummary,
             columns,
             chartDimensionSet,
             []
@@ -2895,9 +2896,19 @@ export function getChartSettingsMap(
         }
         chartSettingsMap[id] = chartSetting;
     });
+    // attributes disabled on the summary tab (used in Clinical Data tab but not Summary tab like most survival attributes)
+    const disabledAttributes = _.differenceWith(
+        visibleAttributes,
+        visibleAttributesForSummary,
+        _.isEqual
+    );
     // add layout for each chart
     gridLayout.forEach(layout => {
-        if (layout.i && chartSettingsMap[layout.i]) {
+        if (
+            layout.i &&
+            chartSettingsMap[layout.i] &&
+            !disabledAttributes.find(a => a.uniqueKey === layout.i)
+        ) {
             chartSettingsMap[layout.i].layout = {
                 x: layout.x,
                 y: layout.y,
@@ -4579,6 +4590,7 @@ export async function getMutationTypesDownloadData(
         });
         return data.join('\n');
     } else return '';
+}
 
 export function getChartMetaSetForClinicalAttributes(
     customCharts: ObservableMap<string, ChartMeta>,
