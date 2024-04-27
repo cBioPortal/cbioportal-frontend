@@ -1077,7 +1077,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     )}
                 </MSKTabs>
                 {this.infoMessage && !this.savingCustomData && (
-                    <SuccessBanner message={this.infoMessage} />
+                    <div style={{ maxWidth: this.getTabsWidth }}>
+                        <SuccessBanner message={this.infoMessage} />
+                    </div>
                 )}
                 {this.savingCustomData && (
                     <div
