@@ -58,7 +58,16 @@ export interface IMultipleCategoryBarPlotProps {
     svgRef?: (svgContainer: SVGElement | null) => void;
     pValue: number | null;
     qValue: number | null;
-    sortOption: string;
+    sortOption?: string;
+}
+export interface TotalSumItem {
+    majorCategory: string;
+    sum: number;
+    minorCategory: {
+        name: string;
+        count: number;
+        percentage: number;
+    }[];
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -235,7 +244,6 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     private get legend() {
         if (this.legendData.length > 0) {
-            console.log(this.props, 'This.propss');
             return (
                 <VictoryLegend
                     orientation={
@@ -427,25 +435,17 @@ export default class MultipleCategoryBarPlot extends React.Component<
     }
 
     @computed get labels() {
-        console.log(this.data, 'thisisis');
-        interface TotalSumItem {
-            majorCategory: string;
-            sum: number;
-            minorCategory: {
-                name: string;
-                count: number;
-                percentage: number;
-            }[];
-        }
-        this.data.forEach(item => {
+        _.forEach(this.data, item => {
+            // Sorting counts within each item
             item.counts.sort((a, b) =>
                 a.majorCategory.localeCompare(b.majorCategory)
             );
         });
         const totalSumArray: TotalSumItem[] = [];
-        this.data.forEach(item => {
-            item.counts.forEach(countItem => {
-                const existingItem = totalSumArray.find(
+        _.forEach(this.data, item => {
+            _.forEach(item.counts, countItem => {
+                const existingItem = _.find(
+                    totalSumArray,
                     sumItem => sumItem.majorCategory === countItem.majorCategory
                 );
                 if (existingItem) {
@@ -471,24 +471,21 @@ export default class MultipleCategoryBarPlot extends React.Component<
             });
         });
 
-        console.log(totalSumArray, 'totalssufrommulti');
         totalSumArray.sort((a, b) => b.sum - a.sum);
 
-        const labelss = totalSumArray.map(item => item.majorCategory);
-        console.log(labelss, 'totalsrommulti');
+        const sortedLabels = totalSumArray.map(item => item.majorCategory);
 
         if (this.props.sortOption == 'sortByCount') {
-            return labelss;
+            return sortedLabels;
         }
 
         if (this.data.length > 0) {
-            const ans = sortDataByCategory(
+            const CategorizedData = sortDataByCategory(
                 this.data[0].counts.map(c => c.majorCategory),
                 x => x,
                 this.majorCategoryOrder
             );
-            console.log('thisisconsoledataans', ans);
-            return ans;
+            return CategorizedData;
         } else {
             return [];
         }
@@ -799,7 +796,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
             !!this.props.horizontalBars,
             !!this.props.stacked,
             !!this.props.percentage,
-            this.props.sortOption
+            this.props.sortOption || 'sortByAlphabet'
         );
         return barSpecs.map(spec => (
             <VictoryBar
@@ -946,7 +943,6 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
                                 {this.horzAxis}
                                 {this.vertAxis}
-                                {console.log(this.chartEtl, 'tjos')}
                                 {this.chartEtl}
                             </VictoryChart>
                         </g>
@@ -979,7 +975,6 @@ export default class MultipleCategoryBarPlot extends React.Component<
     }
 
     render() {
-        console.log(this.data, 'this.datas');
         if (!this.data.length) {
             return <div className={'alert alert-info'}>No data to plot.</div>;
         }

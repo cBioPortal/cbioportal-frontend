@@ -86,14 +86,12 @@ interface TotalSumItem {
     minorCategory: { name: string; count: number; percentage: number }[];
 }
 
-// Export TotalSumItem for accessibility from other modules if needed
 export { TotalSumItem };
 export function sortDataByCategory<D>(
     data: D[],
     getCategory: (d: D) => string,
     categoryOrder: { [cat: string]: number } | undefined
 ) {
-    // console.log( TotalSumItem[],"totalSumArray inside sortDataByCategory");
     return _.sortBy(data, d => {
         const category = getCategory(d);
         if (categoryOrder) {
@@ -117,7 +115,7 @@ export function makeBarSpecs(
     horizontalBars: boolean,
     stacked: boolean,
     percentage: boolean,
-    sortOption: string
+    sortOption?: string
 ): {
     fill: string;
     data: {
@@ -127,28 +125,18 @@ export function makeBarSpecs(
         minorCategory: string;
         count: number;
         percentage: number;
-    }[]; // one data per major category, in correct order - either specified, or alphabetical
+    }[];
 }[] {
-    // one bar spec per minor category, in correct order - either specified, or alphabetical
     data = sortDataByCategory(data, d => d.minorCategory, minorCategoryOrder);
 
-    // reverse the order of stacked or horizontal bars
     if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
         data = _.reverse(data);
     }
-    console.log(data, 'iscalled2');
     data.forEach(item => {
         item.counts.sort((a, b) =>
             a.majorCategory.localeCompare(b.majorCategory)
         );
     });
-    console.log(data, 'iscalled211');
-
-    // interface TotalSumItem {
-    //     majorCategory: string;
-    //     sum: number;
-    //     minorCategory: { name: string; count: number ,percentage:number}[];
-    // }
 
     const totalSumArray: TotalSumItem[] = [];
     data.forEach(item => {
@@ -179,7 +167,6 @@ export function makeBarSpecs(
         });
     });
 
-    console.log(totalSumArray, 'totalssu');
     totalSumArray.sort((a, b) => b.sum - a.sum);
     const minorCategoryArrays: {
         [key: string]: {
@@ -211,7 +198,6 @@ export function makeBarSpecs(
             });
         });
     });
-    console.log(minorCategoryArrays, 'minorCategoryarrayss');
     return data.map(({ minorCategory, counts }) => {
         const fill = getColor(minorCategory);
         const sortedCounts = sortDataByCategory(
@@ -219,26 +205,18 @@ export function makeBarSpecs(
             d => d.majorCategory,
             majorCategoryOrder
         );
-        console.log(counts, majorCategoryOrder, 'kkk');
-        console.log(sortedCounts, 'sror');
-        // sortedCounts.sort((a, b) => b.count - a.count);
 
-        console.log(sortedCounts, 'sorteddsc');
-        // console.log(minorCategory,"sorteddsc");
         const finals = minorCategoryArrays[minorCategory];
-        // console.log(minorCategoryArrays["Male"],"HEREISSS")
 
-        // console.log(sortedCounts,"sror")
-        let ans;
-        if (sortOption == 'sortByAlphabet') {
-            ans = sortedCounts;
+        let categoriezedCounts;
+        if (sortOption == 'sortByCount') {
+            categoriezedCounts = finals;
         } else {
-            ans = finals;
+            categoriezedCounts = sortedCounts;
         }
-        console.log(sortOption, 'sortOptions');
-        const finalans = {
+        const countByCategory = {
             fill,
-            data: ans.map((obj, index) => ({
+            data: categoriezedCounts.map((obj, index) => ({
                 x: categoryCoord(index),
                 y: percentage ? obj.percentage : obj.count,
                 majorCategory: obj.majorCategory,
@@ -247,8 +225,7 @@ export function makeBarSpecs(
                 percentage: obj.percentage,
             })),
         };
-        console.log(finalans, 'iscalled3');
 
-        return finalans;
+        return countByCategory;
     });
 }
