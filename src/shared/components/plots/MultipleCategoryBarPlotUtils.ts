@@ -1,6 +1,9 @@
 import { IStringAxisData } from './PlotsTabUtils';
 import _ from 'lodash';
-import { IMultipleCategoryBarPlotData } from '../../../pages/groupComparison/MultipleCategoryBarPlot';
+import {
+    IMultipleCategoryBarPlotData,
+    TotalSumItem,
+} from '../../../pages/groupComparison/MultipleCategoryBarPlot';
 import { marginLeft } from 'pages/patientView/trialMatch/style/trialMatch.module.scss';
 
 export function makePlotData(
@@ -80,13 +83,7 @@ export function makePlotData(
     );
     return data;
 }
-interface TotalSumItem {
-    majorCategory: string;
-    sum: number;
-    minorCategory: { name: string; count: number; percentage: number }[];
-}
 
-export { TotalSumItem };
 export function sortDataByCategory<D>(
     data: D[],
     getCategory: (d: D) => string,
@@ -168,55 +165,51 @@ export function makeBarSpecs(
     });
 
     totalSumArray.sort((a, b) => b.sum - a.sum);
-    const minorCategoryArrays: {
-        [key: string]: {
-            majorCategory: string;
-            count: number;
-            percentage: number;
-        }[];
-    } = {};
-    data.forEach(item => {
-        // Extract the minorCategory from the current item
-        const minorCategory = item.minorCategory;
 
-        // Check if the minorCategory already exists in minorCategoryArrays
-        if (!minorCategoryArrays[minorCategory]) {
-            // If it doesn't exist, create a new array for it
-            minorCategoryArrays[minorCategory] = [];
-        }
-
-        // Find corresponding items in totalSumArray and add them to the array
-        totalSumArray.forEach(totalItem => {
-            totalItem.minorCategory.forEach(minorItem => {
-                if (minorItem.name === minorCategory) {
-                    minorCategoryArrays[minorCategory].push({
-                        majorCategory: totalItem.majorCategory,
-                        count: minorItem.count,
-                        percentage: minorItem.percentage,
-                    });
-                }
-            });
-        });
-    });
     return data.map(({ minorCategory, counts }) => {
         const fill = getColor(minorCategory);
-        const sortedCounts = sortDataByCategory(
-            counts,
-            d => d.majorCategory,
-            majorCategoryOrder
-        );
 
-        const finals = minorCategoryArrays[minorCategory];
-
-        let categoriezedCounts;
+        let categorizedCounts;
         if (sortOption == 'sortByCount') {
-            categoriezedCounts = finals;
+            const minorCategoryArrays: {
+                [key: string]: {
+                    majorCategory: string;
+                    count: number;
+                    percentage: number;
+                }[];
+            } = {};
+            data.forEach(item => {
+                // Extract the minorCategory from the current item
+                if (!minorCategoryArrays[item.minorCategory]) {
+                    minorCategoryArrays[item.minorCategory] = [];
+                }
+
+                // Find corresponding items in totalSumArray and add them to the array
+                totalSumArray.forEach(totalItem => {
+                    totalItem.minorCategory.forEach(minorItem => {
+                        if (minorItem.name === item.minorCategory) {
+                            minorCategoryArrays[item.minorCategory].push({
+                                majorCategory: totalItem.majorCategory,
+                                count: minorItem.count,
+                                percentage: minorItem.percentage,
+                            });
+                        }
+                    });
+                });
+            });
+
+            categorizedCounts = minorCategoryArrays[minorCategory];
         } else {
-            categoriezedCounts = sortedCounts;
+            categorizedCounts = sortDataByCategory(
+                counts,
+                d => d.majorCategory,
+                majorCategoryOrder
+            );
         }
-        const countByCategory = {
+
+        return {
             fill,
-            data: categoriezedCounts.map((obj, index) => ({
+            data: categorizedCounts.map((obj, index) => ({
                 x: categoryCoord(index),
                 y: percentage ? obj.percentage : obj.count,
                 majorCategory: obj.majorCategory,
@@ -225,7 +218,5 @@ export function makeBarSpecs(
                 percentage: obj.percentage,
             })),
         };
-
-        return countByCategory;
     });
 }
