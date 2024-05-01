@@ -883,16 +883,10 @@ function startsWithSvChartType(chartType?: string) {
 }
 
 export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
-    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
-    if (!startsWithSvChartType(parts[0])) {
-        return parts;
-    } else {
-        return _.map(
-            parts,
-            molecularProfileId =>
-                molecularProfileId.split(CHART_TYPE_SEPARATOR)[1]
-        );
-    }
+    return (startsWithSvChartType(uniqueKey)
+        ? uniqueKey.substring(uniqueKey.indexOf(CHART_TYPE_SEPARATOR) + 1)
+        : uniqueKey
+    ).split(UNIQUE_KEY_SEPARATOR);
 }
 
 export function getCurrentDate() {
