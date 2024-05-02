@@ -883,6 +883,8 @@ function startsWithSvChartType(chartType?: string) {
 }
 
 export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
+    // chartType is added to the uniqueKey for structural variant charts. Example: 'structural_variants;study1_structural_variants:study2_structural_variants'.
+    // and for other charts, it is not added. Example: 'study1_mutations:study2_mutations'.
     return (startsWithSvChartType(uniqueKey)
         ? uniqueKey.substring(uniqueKey.indexOf(CHART_TYPE_SEPARATOR) + 1)
         : uniqueKey
