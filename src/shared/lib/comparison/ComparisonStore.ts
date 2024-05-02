@@ -32,7 +32,6 @@ import {
     MolecularProfileFilter,
     ReferenceGenomeGene,
     Sample,
-    ClinicalEventRequestIdentifier,
     SurvivalRequest,
 } from 'cbioportal-ts-api-client';
 import {
@@ -42,6 +41,7 @@ import {
     IReactionDisposer,
     makeObservable,
     observable,
+    reaction,
     toJS,
 } from 'mobx';
 import client from '../../api/cbioportalClientInstance';
@@ -109,6 +109,7 @@ import {
 import { getServerConfig } from 'config/config';
 import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 import {
+    ComparisonPageSettings,
     ComparisonSession,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
@@ -117,6 +118,7 @@ import AnalysisStore from './AnalysisStore';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { compileMutations } from './AnalysisStoreUtils';
 import { FeatureFlagEnum } from 'shared/featureFlags';
+import { SurvivalChartType } from 'pages/resultsView/survival/SurvivalPrefixTable';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -129,7 +131,7 @@ export default abstract class ComparisonStore extends AnalysisStore
     implements IAnnotationFilterSettings {
     private tabHasBeenShown = observable.map<GroupComparisonTab, boolean>();
 
-    private tabHasBeenShownReactionDisposer: IReactionDisposer;
+    private reactionDisposers: IReactionDisposer[] = [];
     @observable public newSessionPending = false;
 
     @observable includeGermlineMutations = true;
@@ -165,58 +167,93 @@ export default abstract class ComparisonStore extends AnalysisStore
             // tabs without explanation is considered bad UX design.
             // The logic below keeps track of tabs that were shown before
             // and keeps them visible between group updates.
-            this.tabHasBeenShownReactionDisposer = autorun(() => {
-                this.tabHasBeenShown.set(
-                    GroupComparisonTab.SURVIVAL,
-                    !!this.tabHasBeenShown.get(GroupComparisonTab.SURVIVAL) ||
-                        this.showSurvivalTab
-                );
-                this.tabHasBeenShown.set(
-                    GroupComparisonTab.MRNA,
-                    !!this.tabHasBeenShown.get(GroupComparisonTab.MRNA) ||
-                        this.showMRNATab
-                );
-                this.tabHasBeenShown.set(
-                    GroupComparisonTab.PROTEIN,
-                    !!this.tabHasBeenShown.get(GroupComparisonTab.PROTEIN) ||
-                        this.showProteinTab
-                );
-                this.tabHasBeenShown.set(
-                    GroupComparisonTab.DNAMETHYLATION,
-                    !!this.tabHasBeenShown.get(
-                        GroupComparisonTab.DNAMETHYLATION
-                    ) || this.showMethylationTab
-                );
-                this.tabHasBeenShown.set(
-                    GroupComparisonTab.GENERIC_ASSAY_PREFIX,
-                    !!this.tabHasBeenShown.get(
-                        GroupComparisonTab.GENERIC_ASSAY_PREFIX
-                    ) || this.showGenericAssayTab
-                );
-                this.tabHasBeenShown.set(
-                    GroupComparisonTab.GENERIC_ASSAY_BINARY_PREFIX,
-                    !!this.tabHasBeenShown.get(
-                        GroupComparisonTab.GENERIC_ASSAY_BINARY_PREFIX
-                    ) || this.showGenericAssayBinaryTab
-                );
-                this.tabHasBeenShown.set(
-                    GroupComparisonTab.ALTERATIONS,
-                    !!this.tabHasBeenShown.get(
-                        GroupComparisonTab.ALTERATIONS
-                    ) || this.showAlterationsTab
-                );
-                this.tabHasBeenShown.set(
-                    GroupComparisonTab.MUTATIONS,
-                    !!this.tabHasBeenShown.get(GroupComparisonTab.MUTATIONS) ||
-                        this.showMutationsTab
-                );
-            });
+            this.reactionDisposers.push(
+                autorun(() => {
+                    this.tabHasBeenShown.set(
+                        GroupComparisonTab.SURVIVAL,
+                        !!this.tabHasBeenShown.get(
+                            GroupComparisonTab.SURVIVAL
+                        ) || this.showSurvivalTab
+                    );
+                    this.tabHasBeenShown.set(
+                        GroupComparisonTab.MRNA,
+                        !!this.tabHasBeenShown.get(GroupComparisonTab.MRNA) ||
+                            this.showMRNATab
+                    );
+                    this.tabHasBeenShown.set(
+                        GroupComparisonTab.PROTEIN,
+                        !!this.tabHasBeenShown.get(
+                            GroupComparisonTab.PROTEIN
+                        ) || this.showProteinTab
+                    );
+                    this.tabHasBeenShown.set(
+                        GroupComparisonTab.DNAMETHYLATION,
+                        !!this.tabHasBeenShown.get(
+                            GroupComparisonTab.DNAMETHYLATION
+                        ) || this.showMethylationTab
+                    );
+                    this.tabHasBeenShown.set(
+                        GroupComparisonTab.GENERIC_ASSAY_PREFIX,
+                        !!this.tabHasBeenShown.get(
+                            GroupComparisonTab.GENERIC_ASSAY_PREFIX
+                        ) || this.showGenericAssayTab
+                    );
+                    this.tabHasBeenShown.set(
+                        GroupComparisonTab.GENERIC_ASSAY_BINARY_PREFIX,
+                        !!this.tabHasBeenShown.get(
+                            GroupComparisonTab.GENERIC_ASSAY_BINARY_PREFIX
+                        ) || this.showGenericAssayBinaryTab
+                    );
+                    this.tabHasBeenShown.set(
+                        GroupComparisonTab.ALTERATIONS,
+                        !!this.tabHasBeenShown.get(
+                            GroupComparisonTab.ALTERATIONS
+                        ) || this.showAlterationsTab
+                    );
+                    this.tabHasBeenShown.set(
+                        GroupComparisonTab.MUTATIONS,
+                        !!this.tabHasBeenShown.get(
+                            GroupComparisonTab.MUTATIONS
+                        ) || this.showMutationsTab
+                    );
+                })
+            );
+
+            this.reactionDisposers.push(
+                reaction(
+                    () => toJS(this.customSurvivalPlots),
+                    () => {
+                        if (this.isSavingSessionPossible) {
+                            this.updateChartSettings();
+                        }
+                    }
+                )
+            );
+
+            this.reactionDisposers.push(
+                reaction(
+                    () => this.pageSettings.isComplete,
+                    isComplete => {
+                        //execute if user log in from study page
+                        if (isComplete && this.isSavingSessionPossible) {
+                            console.log(
+                                'userSettings updated',
+                                this.pageSettings.result
+                            );
+                            this.loadChartSettings();
+                            // this.previousSettings = this.currentChartSettingsMap;
+                            // this.loadChartSettings();
+                        }
+                    }
+                )
+            );
         }); // do this after timeout so that all subclasses have time to construct
     }
 
-    public destroy() {
-        this.tabHasBeenShownReactionDisposer &&
-            this.tabHasBeenShownReactionDisposer();
+    public destroy(): void {
+        for (const disposer of this.reactionDisposers) {
+            disposer();
+        }
     }
 
     @computed get selectedCopyNumberEnrichmentEventTypes() {
@@ -302,8 +339,17 @@ export default abstract class ComparisonStore extends AnalysisStore
     abstract get usePatientLevelEnrichments(): boolean;
     // < / >
 
-    public get isLoggedIn() {
+    @computed public get isLoggedIn() {
         return this.appStore.isLoggedIn;
+    }
+
+    @computed get isSessionLoaded() {
+        return this._session.isComplete;
+    }
+
+    @computed get isSavingSessionPossible() {
+        return this.isSessionLoaded;
+        // return this.isLoggedIn && this.sessionServiceIsEnabled;
     }
 
     public async addGroup(group: SessionGroupData, saveToUser: boolean) {
@@ -534,6 +580,24 @@ export default abstract class ComparisonStore extends AnalysisStore
             return Promise.resolve(
                 _.keyBy(this.referenceGenes.result!, g => g.hugoGeneSymbol)
             );
+        },
+    });
+
+    readonly pageSettings = remoteData<ComparisonPageSettings | undefined>({
+        invoke: async () => {
+            if (this.isSavingSessionPossible) {
+                return JSON.parse(
+                    localStorage.getItem('comparisonPageSettings') ?? '{}'
+                );
+                // return sessionServiceClient.fetchStudyPageSettings(
+                //     toJS(this.studyIds)
+                // );
+            }
+            return undefined;
+        },
+        default: undefined,
+        onError: () => {
+            // fail silently when an error occurs
         },
     });
 
@@ -1137,6 +1201,23 @@ export default abstract class ComparisonStore extends AnalysisStore
         clonedMap[genericAssayType] = profileMap;
         // trigger the function to recompute
         this._selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType = clonedMap;
+    }
+
+    @action.bound
+    public removeCustomSurvivalPlot(prefix: string) {
+        if (!_.isEmpty(this.customSurvivalPlots)) {
+            this.selectedSurvivalPlotPrefix = undefined;
+
+            this.customSurvivalPlots = _.omitBy(
+                toJS(this.customSurvivalPlots),
+                (value, key) => key === prefix
+            ) as { [prefix: string]: Partial<SurvivalRequest> };
+
+            this.customSurvivalDataPromises = _.omitBy(
+                toJS(this.customSurvivalDataPromises),
+                (value, key) => key === prefix
+            ) as { [prefix: string]: MobxPromise<ClinicalData[]> };
+        }
     }
 
     readonly alterationsEnrichmentAnalysisGroups = remoteData({
@@ -3038,12 +3119,21 @@ export default abstract class ComparisonStore extends AnalysisStore
                                 ].name,
                                 description: attr.description,
                                 displayName: attr.displayName,
-                            } as ISurvivalDescription);
+                                chartType: _.keys(
+                                    this.customSurvivalPlots
+                                ).includes(prefix)
+                                    ? SurvivalChartType.CUSTOM
+                                    : SurvivalChartType.PREDEFINED,
+                            } as ISurvivalDescription & { chartType: SurvivalChartType });
                         });
                     }
                     return acc;
                 },
-                {} as { [prefix: string]: ISurvivalDescription[] }
+                {} as {
+                    [prefix: string]: (ISurvivalDescription & {
+                        chartType: SurvivalChartType;
+                    })[];
+                }
             );
             return Promise.resolve(survivalDescriptions);
         },
@@ -3287,12 +3377,19 @@ export default abstract class ComparisonStore extends AnalysisStore
                 },
                 invoke: async () => {
                     const attr = this.customSurvivalPlots[prefix];
+                    let censoredEventRequestIdentifier = toJS(
+                        attr.censoredEventRequestIdentifier!
+                    );
+                    censoredEventRequestIdentifier.clinicalEventRequests =
+                        censoredClinicalEventType !== 'any'
+                            ? censoredEventRequestIdentifier.clinicalEventRequests
+                            : [];
 
                     const survivalRequest = {
                         attributeIdPrefix: prefix,
                         startEventRequestIdentifier: attr.startEventRequestIdentifier!,
                         endEventRequestIdentifier: attr.endEventRequestIdentifier!,
-                        censoredEventRequestIdentifier: attr.censoredEventRequestIdentifier!,
+                        censoredEventRequestIdentifier: censoredEventRequestIdentifier,
                         patientIdentifiers: this.activeSamplesNotOverlapRemoved.result!.map(
                             (s: any) => ({
                                 patientId: s.patientId,
@@ -3308,5 +3405,46 @@ export default abstract class ComparisonStore extends AnalysisStore
                 default: [],
             });
         }
+    }
+
+    @action.bound
+    private loadChartSettings(): void {
+        this.customSurvivalPlots = (this.pageSettings.result ?? {})[
+            this._session.result!.id
+        ];
+
+        _.forEach(this.customSurvivalPlots, plot => {
+            this.addSurvivalRequest(
+                plot.startEventRequestIdentifier!.clinicalEventRequests[0]
+                    .eventType,
+                plot.startEventRequestIdentifier!.position,
+                plot.startEventRequestIdentifier!.clinicalEventRequests[0]
+                    .attributes as ClinicalEventDataWithKey[],
+                plot.endEventRequestIdentifier!.clinicalEventRequests[0]
+                    .eventType,
+                plot.endEventRequestIdentifier!.position,
+                plot.endEventRequestIdentifier!.clinicalEventRequests[0]
+                    .attributes as ClinicalEventDataWithKey[],
+                plot.censoredEventRequestIdentifier!.clinicalEventRequests[0]
+                    .eventType,
+                plot.censoredEventRequestIdentifier!.position,
+                plot.censoredEventRequestIdentifier!.clinicalEventRequests[0]
+                    .attributes as ClinicalEventDataWithKey[]
+            );
+        });
+    }
+
+    @action.bound
+    private updateChartSettings(): void {
+        let pageSettings: ComparisonPageSettings =
+            this.pageSettings.result || {};
+        pageSettings[this._session.result!.id] = toJS(this.customSurvivalPlots);
+
+        localStorage.setItem(
+            'comparisonPageSettings',
+            JSON.stringify(pageSettings)
+        );
+
+        console.log('saving user settings', pageSettings);
     }
 }

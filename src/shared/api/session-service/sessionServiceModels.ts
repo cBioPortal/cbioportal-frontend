@@ -1,4 +1,8 @@
-import { ClinicalData, StudyViewFilter } from 'cbioportal-ts-api-client';
+import {
+    ClinicalData,
+    StudyViewFilter,
+    SurvivalRequest,
+} from 'cbioportal-ts-api-client';
 import { ChartType } from 'pages/studyView/StudyViewUtils';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import { PageSettingsIdentifier } from 'shared/userSession/PageSettingsIdentifier';
@@ -99,6 +103,12 @@ export type StudyPageSettings = {
 
 export type ResultPageSettings = {
     clinicallist?: ClinicalTrackConfig[];
+};
+
+export type ComparisonPageSettings = {
+    [sessionId: string]: {
+        [prefix: string]: Partial<SurvivalRequest>;
+    };
 };
 
 export type PageSettingsData = StudyPageSettings | ResultPageSettings;

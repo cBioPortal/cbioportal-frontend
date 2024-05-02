@@ -39,6 +39,7 @@ import {
 import { observable, action, makeObservable, computed } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
 import SurvivalPrefixTable, {
+    SurvivalChartType,
     SurvivalPrefixTableStore,
 } from 'pages/resultsView/survival/SurvivalPrefixTable';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
@@ -91,7 +92,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     private selectedEndClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
 
     @observable
-    private _selectedCensoredClinicalEventType: string | undefined = undefined;
+    private _selectedCensoredClinicalEventType: string | undefined = 'any';
 
     @observable
     private selectedCensoredClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
@@ -102,7 +103,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     }
 
     @action.bound
-    private setSurvivalPlotPrefix(prefix: string) {
+    private setSurvivalPlotPrefix(prefix: string | undefined) {
         this.props.store.selectedSurvivalPlotPrefix = prefix;
     }
 
@@ -357,10 +358,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     @computed get selectedCensoredClinicalEventType() {
         if (this._selectedCensoredClinicalEventType !== undefined) {
             if (this._selectedCensoredClinicalEventType === 'any') {
-                const clinicalEvents = _.values(
-                    this.props.store.clinicalEventOptions.result
-                );
-                return clinicalEvents[clinicalEvents.length - 1];
+                return {
+                    label: 'any event',
+                    value: 'any',
+                    attributes: [],
+                } as any;
             }
             return this.props.store.clinicalEventOptions.result[
                 this._selectedCensoredClinicalEventType
@@ -372,8 +374,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     @computed get isAddSurvivalPlotDisabled() {
         return (
             this._selectedStartClinicalEventType === undefined ||
-            this._selectedEndClinicalEventType === undefined ||
-            this._selectedCensoredClinicalEventType === undefined
+            this._selectedEndClinicalEventType === undefined
         );
     }
 
@@ -628,7 +629,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             }
                                             options={[
                                                 {
-                                                    label: 'any',
+                                                    label: 'any event',
                                                     value: 'any',
                                                     attributes: [],
                                                 } as any,
@@ -645,6 +646,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     </td>
                                     {this.selectedCensoredClinicalEventType !==
                                         undefined &&
+                                        this.selectedCensoredClinicalEventType
+                                            .value !== 'any' &&
                                         this.props.store.clinicalEventOptions
                                             .result[
                                             this
@@ -838,14 +841,15 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         renderPending: () => (
             <LoadingIndicator center={true} isLoading={true} size={'big'} />
         ),
-        renderError: () => <ErrorMessage message="WIP" />,
+        renderError: () => <ErrorMessage />,
         showLastRenderWhenPending: true,
     });
 
     readonly survivalPrefixes = remoteData(
         {
             await: () => [
-                this.survivalTitleText,
+                this.survivalTitleByPrefix,
+                this.survivalChartTypeByPrefix,
                 this.props.store.patientSurvivals,
                 this.pValuesByPrefix,
                 this.qValuesByPrefix,
@@ -866,7 +870,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 const qValues = this.qValuesByPrefix.result!;
 
                 const survivalPrefixes = _.map(
-                    this.survivalTitleText.result! as Dictionary<string>,
+                    this.survivalTitleByPrefix.result! as Dictionary<string>,
                     (displayText, prefix) => {
                         const patientSurvivalsPerGroup = _.mapValues(
                             _.keyBy(analysisGroups, group => group.name),
@@ -884,9 +888,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 ].push(s);
                             }
                         }
+
+                        const chartType = this.survivalChartTypeByPrefix
+                            .result![prefix];
+
                         return {
                             prefix,
                             displayText,
+                            chartType,
                             numPatients: calculateNumberOfPatients(
                                 patientSurvivals[prefix],
                                 patientToAnalysisGroups
@@ -932,44 +941,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         },
     });
 
-    // readonly survivalContent = MakeMobxView({
-    //     await: () => [
-    //         this.survivalTitleText,
-    //         this.analysisGroupsComputations,
-    //         this.survivalPrefixes,
-    //         this.survivalPrefixTableDataStore,
-    //     ],
-    //     render: () => {
-    //         const analysisGroups = this.analysisGroupsComputations.result!
-    //             .analysisGroups;
-    //             console.log(analysisGroups)
-    //         const survivalTitleText = this.survivalTitleText.result!;
-
-    //         if (Object.keys(survivalTitleText).length > 1) {
-    //             // only show table if there's more than one prefix option
-    //             return (
-    //                 <SurvivalPrefixTable
-    //                     groupNames={analysisGroups.map(g => g.name)}
-    //                     survivalPrefixes={this.survivalPrefixes.result!}
-    //                     getSelectedPrefix={() =>
-    //                         this.selectedSurvivalPlotPrefix
-    //                     }
-    //                     setSelectedPrefix={this.setSurvivalPlotPrefix}
-    //                     dataStore={this.survivalPrefixTableDataStore.result!}
-    //                 />
-    //             );
-    //         } else {
-    //             return null;
-    //         }
-    //     },
-    //     renderPending: () => (
-    //         <LoadingIndicator center={true} isLoading={true} size={'big'} />
-    //     ),
-    // });
-
     readonly survivalPrefixTable = MakeMobxView({
         await: () => [
-            this.survivalTitleText,
+            this.survivalTitleByPrefix,
             this.analysisGroupsComputations,
             this.survivalPrefixes,
             this.survivalPrefixTableDataStore,
@@ -977,9 +951,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         render: () => {
             const analysisGroups = this.analysisGroupsComputations.result!
                 .analysisGroups;
-            const survivalTitleText = this.survivalTitleText.result!;
+            const survivalTitleByPrefix = this.survivalTitleByPrefix.result!;
 
-            if (Object.keys(survivalTitleText).length > 1) {
+            if (Object.keys(survivalTitleByPrefix).length > 1) {
                 // only show table if there's more than one prefix option
                 return (
                     <SurvivalPrefixTable
@@ -990,6 +964,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         }
                         setSelectedPrefix={this.setSurvivalPlotPrefix}
                         dataStore={this.survivalPrefixTableDataStore.result!}
+                        removeCustomSurvivalPlot={
+                            this.props.store.removeCustomSurvivalPlot
+                        }
                     />
                 );
             } else {
@@ -1001,7 +978,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         ),
     });
 
-    readonly survivalTitleText = remoteData(
+    readonly survivalTitleByPrefix = remoteData(
         {
             await: () => [
                 this.props.store.survivalClinicalAttributesPrefix,
@@ -1023,6 +1000,30 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             return map;
                         },
                         {} as { [prefix: string]: string }
+                    )
+                ),
+        },
+        {}
+    );
+
+    readonly survivalChartTypeByPrefix = remoteData(
+        {
+            await: () => [
+                this.props.store.survivalClinicalAttributesPrefix,
+                this.props.store.survivalDescriptions,
+            ],
+            invoke: () =>
+                Promise.resolve(
+                    this.props.store.survivalClinicalAttributesPrefix.result!.reduce(
+                        (map, prefix) => {
+                            map[
+                                prefix
+                            ] = this.props.store.survivalDescriptions.result![
+                                prefix
+                            ][0].chartType;
+                            return map;
+                        },
+                        {} as { [prefix: string]: SurvivalChartType }
                     )
                 ),
         },
@@ -1065,7 +1066,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,
-            this.survivalTitleText,
+            this.survivalTitleByPrefix,
             this.survivalYLabel,
             this.sortedGroupedSurvivals,
             this.pValuesByPrefix,
@@ -1082,7 +1083,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             const patientToAnalysisGroups = this.analysisGroupsComputations
                 .result!.patientToAnalysisGroups;
             const attributeDescriptions: { [prefix: string]: string } = {};
-            const survivalTitleText = this.survivalTitleText.result!;
+            const survivalTitleByPrefix = this.survivalTitleByPrefix.result!;
             const survivalYLabel = this.survivalYLabel.result!;
             this.props.store.survivalClinicalAttributesPrefix.result!.forEach(
                 prefix => {
@@ -1108,8 +1109,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
             // set default plot if applicable
             if (
-                !doNotSetDefaultPlot &&
-                this.selectedSurvivalPlotPrefix === undefined
+                (!doNotSetDefaultPlot &&
+                    this.selectedSurvivalPlotPrefix === undefined) ||
+                !this.props.store.survivalClinicalAttributesPrefix.result?.includes(
+                    this.selectedSurvivalPlotPrefix || ''
+                )
             ) {
                 // if the table exists pick the first one from the table's store for consistency
                 if (this.survivalPrefixTable.component) {
@@ -1189,7 +1193,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     content = (
                         <div style={{ marginBottom: 40 }}>
                             <h4 className="forceHeaderStyle h4">
-                                {survivalTitleText[key]}
+                                {survivalTitleByPrefix[key]}
                             </h4>
                             <p>{attributeDescriptions[key]}</p>
                             {showLeftTruncationCheckbox && (
@@ -1235,7 +1239,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     patientToAnalysisGroups={
                                         patientToAnalysisGroups
                                     }
-                                    title={survivalTitleText[key]}
+                                    title={survivalTitleByPrefix[key]}
                                     xAxisLabel={
                                         this.props.store
                                             .survivalXAxisLabelGroupByPrefix
@@ -1244,7 +1248,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     yAxisLabel={survivalYLabel[key]}
                                     totalCasesHeader="Number of Cases, Total"
                                     statusCasesHeader="Number of Events"
-                                    medianMonthsHeader={`Median Months ${survivalTitleText[key]} (95% CI)`}
+                                    medianMonthsHeader={`Median Months ${survivalTitleByPrefix[key]} (95% CI)`}
                                     yLabelTooltip={
                                         SURVIVAL_PLOT_Y_LABEL_TOOLTIP
                                     }
@@ -1254,10 +1258,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     xLabelWithoutEventTooltip={
                                         SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP
                                     }
-                                    fileName={survivalTitleText[key].replace(
-                                        ' ',
-                                        '_'
-                                    )}
+                                    fileName={survivalTitleByPrefix[
+                                        key
+                                    ].replace(' ', '_')}
                                     showCurveInTooltip={true}
                                     legendLabelComponent={
                                         this.props.store.overlapStrategy ===
@@ -1297,7 +1300,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 } else {
                     content = (
                         <div className={'alert alert-info'}>
-                            {survivalTitleText[key]} not available
+                            {survivalTitleByPrefix[key]} not available
                         </div>
                     );
                 }

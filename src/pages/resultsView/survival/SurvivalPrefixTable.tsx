@@ -22,18 +22,21 @@ import { observable, computed, makeObservable, action } from 'mobx';
 import { getServerConfig } from 'config/config';
 import Slider from 'react-rangeslider';
 import styles from 'pages/resultsView/survival/styles.module.scss';
+import classnames from 'classnames';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
     groupNames: string[];
     getSelectedPrefix: () => string | undefined;
-    setSelectedPrefix: (p: string) => void;
+    setSelectedPrefix: (p: string | undefined) => void;
     dataStore?: SurvivalPrefixTableStore;
+    removeCustomSurvivalPlot: (prefix: string) => void;
 }
 
 export type SurvivalPrefixSummary = {
     prefix: string;
     displayText: string;
+    chartType: SurvivalChartType;
     numPatients: number;
     numPatientsPerGroup: { [groupName: string]: number };
     medianPerGroup: { [groupName: string]: string };
@@ -46,6 +49,11 @@ interface INumPatientsSliderProps {
     minNumPatients: number;
     patientMinThreshold: number;
     onPatientMinThresholdChange: (val: number) => void;
+}
+
+export enum SurvivalChartType {
+    PREDEFINED,
+    CUSTOM,
 }
 
 @observer
@@ -193,77 +201,6 @@ function makeGroupMedianSurvivalColumn(groupName: string) {
     };
 }
 
-const COLUMNS = [
-    {
-        name: 'Survival Type',
-        render: (d: SurvivalPrefixSummary) => <span>{d.displayText}</span>,
-        filter: (
-            d: SurvivalPrefixSummary,
-            f: string,
-            filterStringUpper: string
-        ) => d.displayText.toUpperCase().indexOf(filterStringUpper) > -1,
-        sortBy: (d: SurvivalPrefixSummary) => d.displayText,
-        download: (d: SurvivalPrefixSummary) => d.displayText,
-        visible: true,
-        togglable: false,
-    },
-    {
-        name: 'Number of Patients',
-        render: (d: SurvivalPrefixSummary) => <span>{d.numPatients}</span>,
-        sortBy: (d: SurvivalPrefixSummary) => d.numPatients,
-        download: (d: SurvivalPrefixSummary) => d.numPatients.toString(),
-        visible: true,
-    },
-];
-const P_Q_COLUMNS = [
-    {
-        name: ColumnName.P_VALUE,
-        render: (d: SurvivalPrefixSummary) => (
-            <span>
-                {d.pValue !== null
-                    ? toConditionalPrecisionWithMinimum(d.pValue, 3, 0.01, -10)
-                    : 'N/A'}
-            </span>
-        ),
-        sortBy: (d: SurvivalPrefixSummary) => d.pValue,
-        filter: filterNumericalColumn(
-            (d: SurvivalPrefixSummary) => d.pValue,
-            ColumnName.P_VALUE
-        ),
-        download: (d: SurvivalPrefixSummary) =>
-            d.pValue !== null
-                ? toConditionalPrecision(d.pValue, 3, 0.01)
-                : 'N/A',
-        tooltip: <span>Derived from Log Rank test.</span>,
-        visible: true,
-    },
-    {
-        name: 'q-Value',
-        render: (d: SurvivalPrefixSummary) => (
-            <span>
-                {d.qValue !== null
-                    ? toConditionalPrecisionWithMinimum(d.qValue, 3, 0.01, -10)
-                    : 'N/A'}
-            </span>
-        ),
-        sortBy: (d: SurvivalPrefixSummary) => d.qValue,
-        filter: filterNumericalColumn(
-            (d: SurvivalPrefixSummary) => d.qValue,
-            'q-Value'
-        ),
-        download: (d: SurvivalPrefixSummary) =>
-            d.qValue !== null
-                ? toConditionalPrecision(d.qValue, 3, 0.01)
-                : 'N/A',
-        tooltip: (
-            <span>
-                Derived from Benjamini-Hochberg FDR correction procedure.
-            </span>
-        ),
-        visible: true,
-    },
-];
-
 @observer
 export default class SurvivalPrefixTable extends React.Component<
     ISurvivalPrefixTableProps,
@@ -283,6 +220,111 @@ export default class SurvivalPrefixTable extends React.Component<
             );
         this.columnVisibility = this.initColumnVisibility();
     }
+
+    COLUMNS = [
+        {
+            name: 'Survival Type',
+            render: (d: SurvivalPrefixSummary) => (
+                <span>
+                    {d.displayText}
+                    {d.chartType === SurvivalChartType.CUSTOM ? (
+                        <button
+                            className={classnames(
+                                'btn btn-xs btn.noBorderRadius'
+                            )}
+                            onClick={() => {
+                                this.props.removeCustomSurvivalPlot(d.prefix);
+                            }}
+                            style={{ marginLeft: 10 }}
+                        >
+                            <i
+                                className={classnames(
+                                    'fa fa-xs fa-fw',
+                                    'fa-times',
+                                    styles.clickable
+                                )}
+                                aria-hidden="true"
+                            ></i>
+                        </button>
+                    ) : null}
+                </span>
+            ),
+            filter: (
+                d: SurvivalPrefixSummary,
+                f: string,
+                filterStringUpper: string
+            ) => d.displayText.toUpperCase().indexOf(filterStringUpper) > -1,
+            sortBy: (d: SurvivalPrefixSummary) => d.displayText,
+            download: (d: SurvivalPrefixSummary) => d.displayText,
+            visible: true,
+            togglable: false,
+        },
+        {
+            name: 'Number of Patients',
+            render: (d: SurvivalPrefixSummary) => <span>{d.numPatients}</span>,
+            sortBy: (d: SurvivalPrefixSummary) => d.numPatients,
+            download: (d: SurvivalPrefixSummary) => d.numPatients.toString(),
+            visible: true,
+        },
+    ];
+    P_Q_COLUMNS = [
+        {
+            name: ColumnName.P_VALUE,
+            render: (d: SurvivalPrefixSummary) => (
+                <span>
+                    {d.pValue !== null
+                        ? toConditionalPrecisionWithMinimum(
+                              d.pValue,
+                              3,
+                              0.01,
+                              -10
+                          )
+                        : 'N/A'}
+                </span>
+            ),
+            sortBy: (d: SurvivalPrefixSummary) => d.pValue,
+            filter: filterNumericalColumn(
+                (d: SurvivalPrefixSummary) => d.pValue,
+                ColumnName.P_VALUE
+            ),
+            download: (d: SurvivalPrefixSummary) =>
+                d.pValue !== null
+                    ? toConditionalPrecision(d.pValue, 3, 0.01)
+                    : 'N/A',
+            tooltip: <span>Derived from Log Rank test.</span>,
+            visible: true,
+        },
+        {
+            name: 'q-Value',
+            render: (d: SurvivalPrefixSummary) => (
+                <span>
+                    {d.qValue !== null
+                        ? toConditionalPrecisionWithMinimum(
+                              d.qValue,
+                              3,
+                              0.01,
+                              -10
+                          )
+                        : 'N/A'}
+                </span>
+            ),
+            sortBy: (d: SurvivalPrefixSummary) => d.qValue,
+            filter: filterNumericalColumn(
+                (d: SurvivalPrefixSummary) => d.qValue,
+                'q-Value'
+            ),
+            download: (d: SurvivalPrefixSummary) =>
+                d.qValue !== null
+                    ? toConditionalPrecision(d.qValue, 3, 0.01)
+                    : 'N/A',
+            tooltip: (
+                <span>
+                    Derived from Benjamini-Hochberg FDR correction procedure.
+                </span>
+            ),
+            visible: true,
+        },
+    ];
 
     private initColumnVisibility() {
         return _.mapValues(
@@ -310,12 +352,12 @@ export default class SurvivalPrefixTable extends React.Component<
     @computed get columns() {
         // insert "Num patients in group" columns right before p value
         const cols: Column<SurvivalPrefixSummary>[] = [
-            ...COLUMNS,
+            ...this.COLUMNS,
             ...this.props.groupNames.map(makeGroupColumn),
             ...this.props.groupNames.map(makeGroupMedianSurvivalColumn),
         ];
         if (getServerConfig().survival_show_p_q_values_in_survival_type_table) {
-            cols.push(...P_Q_COLUMNS);
+            cols.push(...this.P_Q_COLUMNS);
         }
         return cols;
     }

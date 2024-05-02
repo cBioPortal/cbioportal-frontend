@@ -676,7 +676,10 @@ export function getSurvivalChartDataByAlteredStatus(
 }
 
 export function generateSurvivalPlotTitleFromDisplayName(displayName: string) {
-    return displayName.replace(/status|survival/gi, '');
+    return displayName
+        .replace(/status|survival/gi, '')
+        .trim()
+        .replace(/^\w/, c => c.toUpperCase());
 }
 
 export function generateSurvivalPlotYAxisLabelFromDisplayName(
