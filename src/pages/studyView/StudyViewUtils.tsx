@@ -883,16 +883,12 @@ function startsWithSvChartType(chartType?: string) {
 }
 
 export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
-    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
-    if (!startsWithSvChartType(parts[0])) {
-        return parts;
-    } else {
-        return _.map(
-            parts,
-            molecularProfileId =>
-                molecularProfileId.split(CHART_TYPE_SEPARATOR)[1]
-        );
-    }
+    // chartType is added to the uniqueKey for structural variant charts. Example: 'structural_variants;study1_structural_variants:study2_structural_variants'.
+    // and for other charts, it is not added. Example: 'study1_mutations:study2_mutations'.
+    return (startsWithSvChartType(uniqueKey)
+        ? uniqueKey.substring(uniqueKey.indexOf(CHART_TYPE_SEPARATOR) + 1)
+        : uniqueKey
+    ).split(UNIQUE_KEY_SEPARATOR);
 }
 
 export function getCurrentDate() {
