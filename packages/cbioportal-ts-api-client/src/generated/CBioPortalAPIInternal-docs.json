@@ -381,7 +381,7 @@
           },
           {
             "default": 0,
-            "description": "Page number of the result list",
+            "description": "Page number of the result list. Zero represents the first page.",
             "format": "int32",
             "in": "query",
             "minimum": 0,
@@ -428,7 +428,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ClinicalDataCollection"
+              "$ref": "#/definitions/SampleClinicalDataCollection"
             }
           }
         },
@@ -3639,23 +3639,6 @@
       },
       "type": "object"
     },
-    "ClinicalDataCollection": {
-      "properties": {
-        "patientClinicalData": {
-          "items": {
-            "$ref": "#/definitions/ClinicalData"
-          },
-          "type": "array"
-        },
-        "sampleClinicalData": {
-          "items": {
-            "$ref": "#/definitions/ClinicalData"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
     "ClinicalDataCount": {
       "properties": {
         "count": {
@@ -5415,6 +5398,20 @@
         "sampleId",
         "studyId"
       ],
+      "type": "object"
+    },
+    "SampleClinicalDataCollection": {
+      "properties": {
+        "byUniqueSampleKey": {
+          "additionalProperties": {
+            "items": {
+              "$ref": "#/definitions/ClinicalData"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        }
+      },
       "type": "object"
     },
     "SampleIdentifier": {
