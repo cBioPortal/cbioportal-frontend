@@ -1428,7 +1428,7 @@ export default class ResultsViewOncoprint extends React.Component<
                     ' ; ' +
                     remainingGeneAfterDeletion
             );
-        } else if (geneticSublabel) {
+        } else if (geneticSublabel && geneListFromURL.includes('%20')) {
             //OQL Queries logic
             const isSublabelInURL = this.isSublabelInURL(
                 geneListArrayFromURL,
