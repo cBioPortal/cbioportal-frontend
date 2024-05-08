@@ -3239,6 +3239,208 @@
         "description": "Get the last time each static resource was updated",
         "operationId": "getAllTimestampsUsingGET"
       }
+    },
+    "/api/treatments/display-patient": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyIds",
+            "required": true,
+            "schema": {
+              "description": "List of Study IDs",
+              "items": {
+                "maxLength": 10000000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 10000000,
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        },
+        "tags": [
+          "Treatments"
+        ],
+        "description": "Should patient level treatments be displayed",
+        "operationId": "getContainsTreatmentDataUsingPOST"
+      }
+    },
+    "/api/treatments/display-sample": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyIds",
+            "required": true,
+            "schema": {
+              "description": "List of Study IDs",
+              "items": {
+                "maxLength": 10000000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 10000000,
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        },
+        "tags": [
+          "Treatments"
+        ],
+        "description": "Should sample level treatments be displayed",
+        "operationId": "getContainsSampleTreatmentDataUsingPOST"
+      }
+    },
+    "/api/treatments/patient": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/PatientTreatmentRow"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Treatments"
+        ],
+        "description": "Get all patient level treatments",
+        "operationId": "getAllPatientTreatmentsUsingPOST"
+      }
+    },
+    "/api/treatments/sample": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/SampleTreatmentRow"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Treatments"
+        ],
+        "description": "Get all sample level treatments",
+        "operationId": "getAllSampleTreatmentsUsingPOST"
+      }
     }
   },
   "definitions": {
@@ -3769,6 +3971,24 @@
         "key",
         "value"
       ],
+      "type": "object"
+    },
+    "ClinicalEventSample": {
+      "properties": {
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "timeTaken": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
       "type": "object"
     },
     "ClinicalEventTypeCount": {
@@ -5252,6 +5472,25 @@
       },
       "type": "object"
     },
+    "PatientTreatmentRow": {
+      "properties": {
+        "count": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "samples": {
+          "items": {
+            "$ref": "#/definitions/ClinicalEventSample"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "ReferenceGenomeGene": {
       "properties": {
         "chromosome": {
@@ -5438,6 +5677,32 @@
     },
     "SampleTreatmentFilter": {
       "properties": {
+        "time": {
+          "enum": [
+            "Pre",
+            "Post"
+          ],
+          "type": "string"
+        },
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "SampleTreatmentRow": {
+      "properties": {
+        "count": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "samples": {
+          "items": {
+            "$ref": "#/definitions/ClinicalEventSample"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
         "time": {
           "enum": [
             "Pre",

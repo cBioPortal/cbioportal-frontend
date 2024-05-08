@@ -10507,7 +10507,7 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplaySampleTreatments],
         invoke: () => {
             if (this.shouldDisplaySampleTreatments.result) {
-                return defaultClient.getAllSampleTreatmentsUsingPOST({
+                return internalClient.getAllSampleTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                 });
             }
@@ -10518,7 +10518,7 @@ export class StudyViewPageStore
     public readonly shouldDisplayPatientTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            return defaultClient.getContainsTreatmentDataUsingPOST({
+            return internalClient.getContainsTreatmentDataUsingPOST({
                 studyIds: toJS(this.queriedPhysicalStudyIds.result),
             });
         },
@@ -10527,7 +10527,7 @@ export class StudyViewPageStore
     public readonly shouldDisplaySampleTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            return defaultClient.getContainsSampleTreatmentDataUsingPOST({
+            return internalClient.getContainsSampleTreatmentDataUsingPOST({
                 studyIds: toJS(this.queriedPhysicalStudyIds.result),
             });
         },
@@ -10539,7 +10539,7 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplayPatientTreatments],
         invoke: () => {
             if (this.shouldDisplayPatientTreatments.result) {
-                return defaultClient.getAllPatientTreatmentsUsingPOST({
+                return internalClient.getAllPatientTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                 });
             }
@@ -10551,7 +10551,7 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplaySampleTreatmentGroups],
         invoke: () => {
             if (this.shouldDisplaySampleTreatmentGroups.result) {
-                return defaultClient.getAllSampleTreatmentsUsingPOST({
+                return internalClient.getAllSampleTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                     tier: 'AgentClass',
                 });
@@ -10566,7 +10566,7 @@ export class StudyViewPageStore
             if (!getServerConfig().enable_treatment_groups) {
                 return Promise.resolve(false);
             }
-            return defaultClient.getContainsTreatmentDataUsingPOST({
+            return internalClient.getContainsTreatmentDataUsingPOST({
                 studyIds: toJS(this.queriedPhysicalStudyIds.result),
                 tier: 'AgentClass',
             });
@@ -10579,7 +10579,7 @@ export class StudyViewPageStore
             if (!getServerConfig().enable_treatment_groups) {
                 return Promise.resolve(false);
             }
-            return defaultClient.getContainsSampleTreatmentDataUsingPOST({
+            return internalClient.getContainsSampleTreatmentDataUsingPOST({
                 studyIds: toJS(this.queriedPhysicalStudyIds.result),
                 tier: 'AgentClass',
             });
@@ -10592,7 +10592,7 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplayPatientTreatmentGroups],
         invoke: () => {
             if (this.shouldDisplayPatientTreatmentGroups.result) {
-                return defaultClient.getAllPatientTreatmentsUsingPOST({
+                return internalClient.getAllPatientTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                     tier: 'AgentClass',
                 });
@@ -10605,7 +10605,7 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplaySampleTreatmentTarget],
         invoke: () => {
             if (this.shouldDisplaySampleTreatmentTarget.result) {
-                return defaultClient.getAllSampleTreatmentsUsingPOST({
+                return internalClient.getAllSampleTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                     tier: 'AgentTarget',
                 });
@@ -10620,7 +10620,7 @@ export class StudyViewPageStore
             if (!getServerConfig().enable_treatment_groups) {
                 return Promise.resolve(false);
             }
-            return defaultClient.getContainsTreatmentDataUsingPOST({
+            return internalClient.getContainsTreatmentDataUsingPOST({
                 studyIds: toJS(this.queriedPhysicalStudyIds.result),
                 tier: 'AgentTarget',
             });
@@ -10633,7 +10633,7 @@ export class StudyViewPageStore
             if (!getServerConfig().enable_treatment_groups) {
                 return Promise.resolve(false);
             }
-            return defaultClient.getContainsSampleTreatmentDataUsingPOST({
+            return internalClient.getContainsSampleTreatmentDataUsingPOST({
                 studyIds: toJS(this.queriedPhysicalStudyIds.result),
                 tier: 'AgentTarget',
             });
@@ -10646,7 +10646,7 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplayPatientTreatmentTarget],
         invoke: () => {
             if (this.shouldDisplayPatientTreatmentTarget.result) {
-                return defaultClient.getAllPatientTreatmentsUsingPOST({
+                return internalClient.getAllPatientTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                     tier: 'AgentTarget',
                 });
