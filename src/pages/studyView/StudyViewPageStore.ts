@@ -182,7 +182,7 @@ import {
     getCustomChartDownloadData,
     generateColorMapKey,
     MutationCategorization,
-    getChartMetaSetForClinicalAttributes,
+    getChartMetaSet,
     getVisibleAttributes,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -6583,7 +6583,7 @@ export class StudyViewPageStore
     @computed get chartMetaSetForSummary(): {
         [id: string]: ChartMeta;
     } {
-        let chartMetaSet = getChartMetaSetForClinicalAttributes(
+        let chartMetaSet = getChartMetaSet(
             this._customCharts,
             this.molecularProfiles.result,
             this._geneSpecificCharts,
@@ -6611,7 +6611,7 @@ export class StudyViewPageStore
     @computed get chartMetaSetForClinicalData(): {
         [id: string]: ChartMeta;
     } {
-        let chartMetaSet = getChartMetaSetForClinicalAttributes(
+        let chartMetaSet = getChartMetaSet(
             this._customCharts,
             this.molecularProfiles.result,
             this._geneSpecificCharts,
@@ -6637,7 +6637,7 @@ export class StudyViewPageStore
     // all chart meta information
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
-        let chartMetaSet = getChartMetaSetForClinicalAttributes(
+        let chartMetaSet = getChartMetaSet(
             this._customCharts,
             this.molecularProfiles.result,
             this._geneSpecificCharts,
@@ -7036,23 +7036,23 @@ export class StudyViewPageStore
     } {
         const visibleAttributes = _.reduce(
             this._defaultVisibleChartIds,
-            (acc, chartUniqueKey) => {
+            (acc: ChartMeta[], chartUniqueKey) => {
                 if (this.chartMetaSet[chartUniqueKey]) {
                     acc.push(this.chartMetaSet[chartUniqueKey]);
                 }
                 return acc;
             },
-            [] as ChartMeta[]
+            []
         );
         const visibleAttributesForSummary = _.reduce(
             this._defaultVisibleChartIds,
-            (acc, chartUniqueKey) => {
+            (acc: ChartMeta[], chartUniqueKey) => {
                 if (this.chartMetaSetForSummary[chartUniqueKey]) {
                     acc.push(this.chartMetaSetForSummary[chartUniqueKey]);
                 }
                 return acc;
             },
-            [] as ChartMeta[]
+            []
         );
         return getChartSettingsMap(
             visibleAttributes,

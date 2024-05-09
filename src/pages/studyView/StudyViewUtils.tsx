@@ -4592,7 +4592,7 @@ export async function getMutationTypesDownloadData(
     } else return '';
 }
 
-export function getChartMetaSetForClinicalAttributes(
+export function getChartMetaSet(
     customCharts: ObservableMap<string, ChartMeta>,
     molecularProfiles: MolecularProfile[],
     geneSpecificCharts: ObservableMap<string, ChartMeta>,
