@@ -273,7 +273,7 @@ describe('patient view page screenshot test', function() {
         $('span*=0 Mutations').waitForExist();
 
         // should show 21.6% copy number altered in genomic overview
-        $('div=*21.6%').waitForExist();
+        $('div*=21.6%').waitForExist();
 
         // take screenshot
         var res = browser.checkElement('#mainColumn', '', { hide: ['.qtip'] });
