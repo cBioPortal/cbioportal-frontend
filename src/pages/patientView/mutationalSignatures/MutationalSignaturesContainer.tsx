@@ -42,11 +42,12 @@ import Slider from 'react-rangeslider';
 import { calcYMaxInput } from 'react-mutation-mapper/src/util/LollipopPlotUtils';
 import styles from 'react-mutation-mapper/src/component/lollipopMutationPlot/lollipopMutationPlot.module.scss';
 import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
+import { SliderPicker } from 'react-color';
 
 export interface IMutationalSignaturesContainerProps {
     data: { [version: string]: IMutationalSignature[] };
     profiles: MolecularProfile[];
-    version: string;
+    gversion: string;
     sample: string;
     samples: string[];
     samplesNotProfiled: string[];
@@ -240,6 +241,10 @@ export default class MutationalSignaturesContainer extends React.Component<
     _mutationalSignatureCountDataGroupedByVersionForSample: IMutationalCounts[];
     @computed
     get mutationalSignatureCountDataGroupedByVersionForSample(): IMutationalCounts[] {
+        const sumValue = _.sum(
+            this.props.dataCount[this.props.version].map(item => item.value)
+        );
+
         return (
             this._mutationalSignatureCountDataGroupedByVersionForSample ||
             this.props.dataCount[this.props.version]
@@ -250,6 +255,10 @@ export default class MutationalSignaturesContainer extends React.Component<
                         obj.mutationalSignatureLabel,
                         this.props.version
                     );
+                    obj['percentage'] =
+                        sumValue == 0
+                            ? 0
+                            : Math.round((obj.value / sumValue!) * 100);
                     return obj;
                 })
                 .filter(subItem => subItem.sampleId === this.sampleIdToFilter)
@@ -260,6 +269,59 @@ export default class MutationalSignaturesContainer extends React.Component<
         console.log('slider werkt');
         return 50;
     }
+
+    // Add the slider to change the labels of both count and reference y-axis
+    protected maxValueSlider(
+        countRange: [number, number],
+        onYAxisMaxSliderChange: (event: any) => void,
+        yMaxSlider: number,
+        yMaxInput: number,
+        label: string = 'Y-Axis Max',
+        width: number = 100,
+        yMaxSliderStep: number = 1
+    ) {
+        return (
+            <div
+                className="small"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginLeft: 10,
+                }}
+            >
+                <div
+                    style={{
+                        width: width,
+                        marginLeft: 10,
+                        marginRight: 10,
+                    }}
+                >
+                    <div style={{ textAlign: 'center' }}>{label}:</div>
+                    <Slider
+                        min={yMaxSliderStep}
+                        max={100}
+                        tooltip={false}
+                        step={yMaxSliderStep}
+                        onChange={onYAxisMaxSliderChange}
+                        value={yMaxSlider}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    protected get yMaxSlider() {
+        return this.maxValueSlider(
+            this.props.countRange,
+            this.props.onYAxisMaxChange,
+            this.props.yMaxSlider,
+            this.props.yMaxInput,
+            'Y-axis Max',
+            this.props.yMaxSliderWidth,
+            this.props.yMaxSliderStep
+        );
+    }
+
     @action.bound
     private onVersionChange(option: { label: string; value: string }): void {
         this.props.onVersionChange(option.value);
@@ -284,29 +346,6 @@ export default class MutationalSignaturesContainer extends React.Component<
     @autobind
     private getSvg() {
         return this.plotSvg;
-    }
-
-    protected get maxValueSlider() {
-        return (
-            <div
-                className="small"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    marginLeft: 10,
-                }}
-            >
-                <div
-                    style={{
-                        width: 1,
-                        marginLeft: 10,
-                        marginRight: 10,
-                    }}
-                >
-                    <div style={{ textAlign: 'center' }}>Y-Axis:</div>
-                </div>
-            </div>
-        );
     }
 
     @autobind
@@ -357,8 +396,50 @@ export default class MutationalSignaturesContainer extends React.Component<
                 ? 'Single Base Substitution (SBS)'
                 : this.props.version == 'DBS'
                 ? 'Double Base Substitution (DBS)'
-                : 'Small insertions and deletions (ID)';
+                : this.props.version == 'ID'
+                ? 'Small insertions and deletions (ID)'
+                : this.props.version;
         return [versionLabel, mutTotalCount];
+    }
+
+    protected yAxisMaxSlider(
+        range: [0, 100],
+        onYAxisMaxSliderChange: (event: any) => void,
+        yMaxSlider: number,
+        YMaxInput: number,
+        sliderValue: number,
+        label: string = 'Y-Axis max',
+        width: number = 100,
+        yMaxSliderStep: number = 1
+    ) {
+        return (
+            <div
+                className="small"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginLeft: 10,
+                }}
+            >
+                <div
+                    style={{
+                        width: width,
+                        marginLeft: 10,
+                        marginRight: 10,
+                    }}
+                >
+                    <div style={{ textAlign: 'center' }}>{{ label }}:</div>
+                    <Slider
+                        min={yMaxSliderStep}
+                        max={100}
+                        tooltip={false}
+                        step={yMaxSliderStep}
+                        onChange={onYAxisMaxSliderChange}
+                        value={sliderValue}
+                    ></Slider>
+                </div>
+            </div>
+        );
     }
 
     public render() {
@@ -556,27 +637,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                                                 />
                                             </DefaultTooltip>
                                         </div>
-                                        <div
-                                            style={{
-                                                float: 'left',
-                                                paddingLeft: 10,
-                                                width: 100,
-                                                boxSizing: 'border-box',
-                                            }}
-                                        >
-                                            Y-axis scale:
-                                            <Slider
-                                                min={0}
-                                                max={100}
-                                                tooltip={false}
-                                                step={1}
-                                                onChange={
-                                                    this.updateYAxisDomain
-                                                }
-                                                value={100}
-                                                width={100}
-                                            />
-                                        </div>
+                                        <div>Here komt de xMaxValueSlider</div>
                                     </div>
                                 )}
                             </div>

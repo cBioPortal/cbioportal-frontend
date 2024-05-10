@@ -675,7 +675,11 @@ export default class MutationalBarChart extends React.Component<
                                 this.props.selectedScale
                             )}
                             x="mutationalSignatureLabel"
-                            y="value"
+                            y={
+                                this.props.selectedScale == '%'
+                                    ? 'percentage'
+                                    : 'value'
+                            }
                             style={{
                                 paddingTop: 30,
                                 paddingLeft: 30,
