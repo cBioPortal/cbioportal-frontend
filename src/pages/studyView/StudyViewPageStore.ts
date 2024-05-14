@@ -9790,11 +9790,42 @@ export class StudyViewPageStore
         if (this.selectedSamples.result.length === 0) {
             return Promise.resolve('');
         }
-        let sampleClinicalDataResponse = await getAllClinicalDataByStudyViewFilter(
-            this.filters,
-            undefined,
-            undefined
-        );
+
+        const BATCH_SIZE = 25000;
+
+        const getBatch = (page: number) =>
+            getAllClinicalDataByStudyViewFilter(
+                this.filters,
+                undefined,
+                undefined,
+                'desc',
+                BATCH_SIZE,
+                page
+            );
+
+        // get first page, which gives us the total count, which we can use to figure out how many pages
+        // we need to download
+        let sampleClinicalDataResponse = await getBatch(0);
+
+        // create a target object to merge batches onto
+        // the results are { sampleId: clinicaldData[]   }
+        // where the counted "rows" are samples.  So a count of 1000 means you getting all clinical data from 1000
+        // samples, grouped by sampleId
+        const resultObj = { ...sampleClinicalDataResponse.data };
+
+        // if there are more than one batch, we need to fetch them and merge them into result
+        if (sampleClinicalDataResponse.totalItems > BATCH_SIZE) {
+            const pages = Math.ceil(
+                sampleClinicalDataResponse.totalItems / BATCH_SIZE
+            );
+            // start at one because we already have the first page from the initial fetch up above
+            let i = 1;
+            do {
+                const batch = await getBatch(i);
+                i++;
+                Object.assign(resultObj, batch.data);
+            } while (i < pages);
+        }
 
         let clinicalAttributesNameSet = _.reduce(
             this.clinicalAttributes.result,
@@ -9818,8 +9849,7 @@ export class StudyViewPageStore
                     patientId: next.patientId,
                     sampleId: next.sampleId,
                 } as { [attributeId: string]: string };
-                const clinicalData =
-                    sampleClinicalDataResponse.data[next.uniqueSampleKey];
+                const clinicalData = resultObj[next.uniqueSampleKey];
                 _.forEach(
                     clinicalData,
                     (attr: ClinicalData) =>
