@@ -34,7 +34,7 @@ import {
     IAxisData,
     IAxisLogScaleParams,
     IStringAxisData,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+} from 'shared/components/plots/PlotsTabUtils';
 import CategoryPlot, {
     CategoryPlotType,
 } from 'pages/groupComparison/CategoryPlot';

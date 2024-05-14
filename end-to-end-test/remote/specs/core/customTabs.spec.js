@@ -104,6 +104,8 @@ function runTests(pageName, url, tabLocation) {
 
             goToUrlWithCustomTabConfig(url, conf);
 
+            browser.setWindowSize(2000, browser.getWindowSize().height);
+
             $('.mainTabs').waitForDisplayed();
 
             assert.equal(
@@ -140,6 +142,8 @@ function runTests(pageName, url, tabLocation) {
             ];
 
             goToUrlWithCustomTabConfig(url, conf);
+
+            browser.setWindowSize(2000, browser.getWindowSize().height);
 
             $('.mainTabs').waitForDisplayed();
 
@@ -210,7 +214,7 @@ function runTests(pageName, url, tabLocation) {
             );
         });
 
-        it('Remounts tab only when tracked url param changes (part of hash in url wrapper)', () => {
+        it('Remounts tab only when tracked url param changes (part of hash in url wrapper)', function() {
             const conf = [
                 {
                     title: 'Async Tab',
@@ -229,12 +233,15 @@ function runTests(pageName, url, tabLocation) {
 
             goToUrlWithCustomTabConfig(url, conf);
 
+            browser.setWindowSize(1600, browser.getWindowSize().height);
+
             browser.execute(() => {
                 window.renderCustomTab1 = function(div, tab) {
                     $(div).append(`<div>First render</div>`);
                 };
             });
 
+            // offset to avoid overlapping elements
             $('=Async Tab').click();
 
             browser.pause(1000);

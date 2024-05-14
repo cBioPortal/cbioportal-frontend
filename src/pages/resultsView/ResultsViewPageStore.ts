@@ -3440,25 +3440,25 @@ export class ResultsViewPageStore extends AnalysisStore
         },
     });
 
-    readonly structuralVariantsByGene = remoteData({
+    readonly structuralVariantsByEntrezGeneId = remoteData({
         await: () => [this.structuralVariants],
         invoke: async () => {
-            const svByGene: Record<string, StructuralVariant[]> = {};
+            const svByGene: Record<number, StructuralVariant[]> = {};
             this.structuralVariants.result!.forEach(sv => {
-                if (sv.site1HugoSymbol) {
-                    svByGene[sv.site1HugoSymbol] =
-                        svByGene[sv.site1HugoSymbol] || [];
-                    svByGene[sv.site1HugoSymbol].push(sv);
+                if (sv.site1EntrezGeneId) {
+                    svByGene[sv.site1EntrezGeneId] =
+                        svByGene[sv.site1EntrezGeneId] || [];
+                    svByGene[sv.site1EntrezGeneId].push(sv);
                 }
 
-                if (sv.site2HugoSymbol) {
+                if (sv.site2EntrezGeneId) {
                     if (
-                        !sv.site1HugoSymbol ||
-                        sv.site2HugoSymbol !== sv.site1HugoSymbol
+                        !sv.site1EntrezGeneId ||
+                        sv.site2EntrezGeneId !== sv.site1EntrezGeneId
                     ) {
-                        svByGene[sv.site2HugoSymbol] =
-                            svByGene[sv.site2HugoSymbol] || [];
-                        svByGene[sv.site2HugoSymbol].push(sv);
+                        svByGene[sv.site2EntrezGeneId] =
+                            svByGene[sv.site2EntrezGeneId] || [];
+                        svByGene[sv.site2EntrezGeneId].push(sv);
                     }
                 }
             });
@@ -5021,13 +5021,17 @@ export class ResultsViewPageStore extends AnalysisStore
         {
             await: () => [
                 this.genes,
-                this.structuralVariantsByGene,
+                this.structuralVariantsByEntrezGeneId,
                 this.studyIdToStudy,
                 this.molecularProfileIdToMolecularProfile,
                 this.samples,
+                this.uniqueSampleKeyToTumorType,
             ],
             invoke: () => {
-                if (this.genes.result && this.structuralVariantsByGene.result) {
+                if (
+                    this.genes.result &&
+                    this.structuralVariantsByEntrezGeneId.result
+                ) {
                     return Promise.resolve(
                         this.genes.result.reduce(
                             (
@@ -5042,9 +5046,8 @@ export class ResultsViewPageStore extends AnalysisStore
                                     gene,
                                     this.studyIdToStudy,
                                     this.molecularProfileIdToMolecularProfile,
-                                    this.structuralVariantsByGene.result![
-                                        gene.hugoGeneSymbol
-                                    ] || [],
+                                    this.structuralVariantsByEntrezGeneId
+                                        .result![gene.entrezGeneId] || [],
                                     this.uniqueSampleKeyToTumorType.result!,
                                     this.structuralVariantOncoKbData,
                                     this.oncoKbCancerGenes,
@@ -5840,10 +5843,25 @@ export class ResultsViewPageStore extends AnalysisStore
         default: [],
     });
 
+    readonly oncoKbAnnotatedGenesForStructuralVariants = remoteData<{
+        [entrezGeneId: number]: boolean;
+    }>({
+        await: () => [
+            this.oncoKbAnnotatedGenes,
+            this.structuralVariantsByEntrezGeneId,
+        ],
+        invoke: async () => {
+            const entrezGeneIds = Object.keys(
+                this.structuralVariantsByEntrezGeneId.result!
+            ).map(Number);
+            return _.pick(this.oncoKbAnnotatedGenes.result, entrezGeneIds);
+        },
+    });
+
     readonly structuralVariantOncoKbData = remoteData<IOncoKbData>(
         {
             await: () => [
-                this.oncoKbAnnotatedGenes,
+                this.oncoKbAnnotatedGenesForStructuralVariants,
                 this.structuralVariantData,
                 this.clinicalDataForSamples,
                 this.studies,
@@ -5853,7 +5871,8 @@ export class ResultsViewPageStore extends AnalysisStore
                 if (getServerConfig().show_oncokb) {
                     return fetchStructuralVariantOncoKbData(
                         this.uniqueSampleKeyToTumorType.result!,
-                        this.oncoKbAnnotatedGenes.result || {},
+                        this.oncoKbAnnotatedGenesForStructuralVariants.result ||
+                            {},
                         this.structuralVariantData
                     );
                 } else {

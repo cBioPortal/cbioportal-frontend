@@ -80,6 +80,6 @@ describe('results view settings/annotation menu', function() {
 
 const openOncoprint = (url, property) => {
     goToUrlAndSetLocalStorageWithProperty(url, true, property);
-    waitForOncoprint(100000);
+    waitForOncoprint();
     setSettingsMenuOpen(true, 'GlobalSettingsButton');
 };

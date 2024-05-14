@@ -1,6 +1,8 @@
 const clipboardy = require('clipboardy');
 const assertScreenShotMatch = require('./lib/testUtils').assertScreenShotMatch;
 
+const DEFAULT_TIMEOUT = 5000;
+
 function waitForStudyQueryPage(timeout) {
     $('div[data-test="cancerTypeListContainer"]').waitForExist({
         timeout: timeout || 10000,
@@ -47,7 +49,7 @@ function waitForPatientView(timeout) {
     });
 }
 
-function waitForOncoprint() {
+function waitForOncoprint(timeout) {
     browser.pause(200); // give oncoprint time to disappear
     browser.waitUntil(
         () => {
@@ -57,7 +59,7 @@ function waitForOncoprint() {
                 $('.oncoprint__controls').isExisting()
             ); // oncoprint controls are showing
         },
-        { timeout: 60000 }
+        { timeout }
     );
     browser.pause(200);
 }
@@ -101,8 +103,13 @@ function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
     );
 }
 
-function getElementByTestHandle(handle) {
-    return $(`[data-test="${handle}"]`);
+async function getElementByTestHandle(handle, options) {
+    if (options?.timeout) {
+        const el = await $(`[data-test="${handle}"]`);
+        await el.waitForExist(options);
+    }
+
+    return await $(`[data-test="${handle}"]`);
 }
 
 function setOncoprintMutationsMenuOpen(open) {
@@ -205,38 +212,30 @@ function getUrl(url) {
     return url;
 }
 
-function goToUrlAndSetLocalStorage(url, authenticated = false) {
-    const currentUrl = browser.getUrl();
+async function goToUrlAndSetLocalStorage(url, authenticated = false) {
+    const currentUrl = await browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
-    // navigate to blank page first to prevent issues with url hash params
-    browser.url('about:blank');
     if (!useExternalFrontend) {
-        browser.url(url);
+        await browser.url(url);
         console.log('Connecting to: ' + url);
     } else if (useNetlifyDeployPreview) {
-        browser.url(url);
-        browser.execute(
+        await browser.url(url);
+        await browser.execute(
             function(config) {
                 this.localStorage.setItem('netlify', config.netlify);
             },
             { netlify: netlifyDeployPreview }
         );
-        browser.url(url);
+        await browser.url(url);
         console.log('Connecting to: ' + url);
     } else {
         var urlparam = useLocalDist ? 'localdist' : 'localdev';
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
-        browser.url(`${url}${prefix}${urlparam}=true`);
+        await browser.url(`${url}${prefix}${urlparam}=true`);
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
     if (needToLogin) keycloakLogin(10000);
-
-    //browser.setViewportSize({ height: 1000, width: 1600 });
-
-    // move mouse out of the way
-    // move mouse out of the way
-    //browser.moveToObject('body', 0, 0);
 }
 
 const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
@@ -267,27 +266,11 @@ function showGsva() {
     setServerConfiguration({ skin_show_gsva: true });
 }
 
-function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
-    browser.waitUntil(
-        () => {
-            var ret =
-                $$('[data-test="cancerTypeListContainer"] > ul > ul').length ===
-                expectedNumber;
-            if (text && ret) {
-                ret = $(
-                    '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-                ).isExisting();
-                if (ret) {
-                    ret =
-                        $(
-                            '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-                        ).getText() === text;
-                }
-            }
-            return ret;
-        },
-        { timeout: 60000 }
-    );
+async function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
+    await browser.waitUntil(async () => {
+        const cbs = await jq(`[data-test="StudySelect"] input:checkbox`);
+        return cbs.length === expectedNumber;
+    });
 }
 
 function getNthOncoprintTrackOptionsElements(n) {
@@ -542,12 +525,16 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
     return res;
 }
 
-function clickQueryByGeneButton() {
-    $('.disabled[data-test=queryByGeneButton]').waitForExist({
+async function clickQueryByGeneButton() {
+    const el = await $('.disabled[data-test=queryByGeneButton]');
+    await el.waitForExist({
         reverse: true,
     });
-    getElementByTestHandle('queryByGeneButton').click();
-    $('body').scrollIntoView();
+    //const el = await getElementByTestHandle('queryByGeneButton');
+    await clickElement('handle=queryByGeneButton');
+
+    const body = await $('body');
+    await body.scrollIntoView();
 }
 
 function clickModifyStudySelectionButton() {
@@ -692,8 +679,8 @@ function selectElementByText(text) {
     return $(`//*[text()="${text}"]`);
 }
 
-function jq(selector) {
-    return browser.execute(selector => {
+async function jq(selector) {
+    return await browser.execute(selector => {
         return jQuery(selector).toArray();
     }, selector);
 }
@@ -732,12 +719,57 @@ function selectClinicalTabPlotType(type) {
     ).click();
 }
 
+async function getElement(selector, options = {}) {
+    let el;
+
+    if (/^handle=/.test(selector)) {
+        el = await getElementByTestHandle(selector.replace(/^handle=/, ''));
+    } else {
+        el = await $(selector);
+    }
+
+    if (options.timeout) {
+        await el.waitForExist(options);
+    }
+    return el;
+}
+
+async function getText(selector, option) {
+    const el = await getElement(...arguments);
+    return await el.getText();
+}
+
+async function isSelected(selector, options) {
+    const el = await getElement(
+        selector,
+        options || { timeout: DEFAULT_TIMEOUT }
+    );
+    return await el.isSelected();
+}
+
+async function isUnselected(selector, options) {
+    return (await isSelected(...arguments)) === false;
+}
+
+async function clickElement(selector, options = {}) {
+    let el = await getElement(selector);
+    //
+    // if (/^handle=/.test(selector)) {
+    //     el = await getElementByTestHandle(selector.replace(/^handle=/, ''));
+    // } else {
+    //     el = await $(selector);
+    // }
+    await el.waitForDisplayed(options);
+    await el.click();
+}
+
 module.exports = {
     checkElementWithElementHidden,
     waitForPlotsTab,
     waitForAndCheckPlotsTab,
     waitForStudyQueryPage,
     waitForGeneQueryPage,
+    clickElement,
     waitForOncoprint,
     waitForCoExpressionTab,
     waitForPatientView,
@@ -791,4 +823,8 @@ module.exports = {
     setServerConfiguration,
     selectClinicalTabPlotType,
     getElementByTestHandle,
+    getElement,
+    getText,
+    isSelected,
+    isUnselected,
 };

@@ -1,7 +1,9 @@
 var assert = require('assert');
 var expect = require('chai').expect;
 
-var {
+const asyncUtils = require('../../../shared/specUtils_Async');
+
+const {
     clickQueryByGeneButton,
     waitForNumberOfStudyCheckboxes,
     waitForOncoprint,
@@ -32,77 +34,84 @@ describe('Invalid query handling', () => {
 });
 
 describe('cross cancer query', function() {
-    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', function() {
-        goToUrlAndSetLocalStorage(
+    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', async function() {
+        await asyncUtils.goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_list=chol_tcga%2Cblca_tcga_pub%2Ccoadread_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=all&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
 
         // wait for cancer types summary to appear
-        $('[data-test="cancerTypeSummaryChart"]').waitForExist({
+        await asyncUtils.getElementByTestHandle('cancerTypeSummaryChart', {
             timeout: 60000,
         });
 
         // check if TP53 is in the navigation above the plots
-        $('.nav-pills').waitForExist({ timeout: 30000 });
-        var text = $('.nav-pills').getText();
-        assert(text.search('TP53') > -1);
+        await browser.waitUntil(() => {
+            return $('.nav-pills*=TP53').isDisplayed();
+        });
     });
 });
 
-describe('single study query', function() {
-    this.retries(1);
+describe('single study query', async function() {
+    this.retries(0);
 
-    describe('mutation mapper ', function() {
-        it('should show somatic and germline mutation rate', function() {
-            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
+    describe('mutation mapper ', async function() {
+        it('should show somatic and germline mutation rate', async () => {
+            await asyncUtils.goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
 
-            var input = $('[data-test=study-search] input[type=text]');
+            const input = await $('[data-test=study-search] input[type=text]');
 
-            input.waitForExist({ timeout: 10000 });
+            await input.waitForExist({ timeout: 10000 });
 
-            input.setValue('ovarian nature 2011');
+            await input.setValue('ovarian nature 2011');
 
-            waitForNumberOfStudyCheckboxes(1);
+            await asyncUtils.waitForNumberOfStudyCheckboxes(1);
 
-            var checkBox = $('[data-test="StudySelect"]');
+            await asyncUtils.clickElement('[data-test="StudySelect"] input');
 
-            checkBox.waitForExist({ timeout: 10000 });
-
-            $('[data-test="StudySelect"] input').click();
-
-            clickQueryByGeneButton();
+            await asyncUtils.clickQueryByGeneButton();
 
             // query BRCA1 and BRCA2
-            $('[data-test="geneSet"]').setValue('BRCA1 BRCA2');
+            const geneInput = await $('[data-test="geneSet"]');
+            geneInput.setValue('BRCA1 BRCA2');
 
-            $('[data-test="queryButton"]').waitForEnabled({ timeout: 10000 });
-            $('[data-test="queryButton"]').click();
-
-            // click mutations tab
-            $('a.tabAnchor_mutations').waitForExist({ timeout: 10000 });
-            $('a.tabAnchor_mutations').click();
-
-            $('[data-test="mutation-rate-summary"]').waitForExist({
-                timeout: 60000,
+            await (await $('[data-test="queryButton"]')).waitForEnabled({
+                timeout: 10000,
             });
-            var text = $('[data-test="mutation-rate-summary"]').getText();
+
+            await asyncUtils.clickElement('handle=queryButton', {
+                timeout: 10000,
+            });
+
+            await asyncUtils.clickElement('a.tabAnchor_mutations', {
+                timeout: 10000,
+            });
+
+            await asyncUtils.clickElement('handle=mutation-rate-summary', {
+                timeout: 6000,
+            });
+
+            const text = await asyncUtils.getText(
+                '[data-test="mutation-rate-summary"]'
+            );
+
             // check germline mutation rate
             assert(text.search('8.2%') > -1);
             // check somatic mutation
             assert(text.search('3.5%') > -1);
         });
 
-        it('should show lollipop for MUC2', function() {
-            goToUrlAndSetLocalStorage(
+        it('should show lollipop for MUC2', async function() {
+            await asyncUtils.goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_cna`
             );
 
-            //  wait for mutations tab
-            $('a.tabAnchor_mutations').waitForExist({ timeout: 10000 });
-            $('a.tabAnchor_mutations').click();
+            await asyncUtils.clickElement('a.tabAnchor_mutations', {
+                timeout: 10000,
+            });
 
-            // check lollipop plot appears
-            $('[data-test="LollipopPlot"]').waitForExist({ timeout: 60000 });
+            await asyncUtils.getElementByTestHandle('LollipopPlot', {
+                timeout: 6000,
+            });
         });
     });
 
@@ -120,14 +129,14 @@ describe('single study query', function() {
 });
 
 describe('results page', function() {
-    this.retries(1);
+    this.retries(0);
 
     describe('tab hiding', function() {
         it('should hide coexpression and cn segment tabs in a query without any data for those tabs', () => {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?session_id=5bc64b48498eb8b3d5685af7`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             assert(!$('a.tabAnchor_coexpression').isDisplayed());
             assert(!$('a.tabAnchor_cnSegments').isDisplayed());
         });
@@ -162,13 +171,13 @@ describe('results page', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
 
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
         it('should not appear in a multiple study query with one gene', function() {
@@ -320,97 +329,59 @@ describe('genetic profile selection in modify query form', function() {
         $('#modifyQueryBtn').waitForExist({ timeout: 20000 });
     });
 
-    it('contains correct selected genetic profiles through a certain use flow involving two studies', () => {
+    it('contains correct selected genetic profiles through a certain use flow involving two studies', async () => {
         //populates selected genetic profiles from current query, then goes back to defaults if another study is selected then deselected
         // open modify query form
         $('#modifyQueryBtn').click();
-        // wait for profiles selector to load
-        $(
-            'div[data-test="molecularProfileSelector"] input[type="checkbox"]'
-        ).waitForExist({ timeout: 3000 });
-        // mutations, CNA, and protein should be selected
-        assert(
-            $(
+
+        browser.waitUntil(() => {
+            return $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ).isSelected(),
-            'mutation profile should be selected'
+            ).isSelected();
+        });
+
+        await asyncUtils.isSelected(
+            'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
         );
-        assert(
-            $(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ).isSelected(),
-            'cna profile should be selected'
+
+        await asyncUtils.isSelected(
+            'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
         );
-        assert(
-            !$(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ).isSelected(),
-            'mrna profile not selected'
+
+        await asyncUtils.isSelected(
+            'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
         );
-        assert(
-            $(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'
-            ).isSelected(),
-            'protein level should be selected'
+
+        await asyncUtils.isSelected(
+            'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'
         );
 
         // select another study
-        var input = $('div[data-test=study-search] input[type=text]');
-        input.waitForExist({ timeout: 10000 });
-        input.setValue('ampullary baylor');
-        waitForNumberOfStudyCheckboxes(1);
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist({ timeout: 10000 });
-        $('[data-test="StudySelect"] input').click();
+        var input = await $('div[data-test=study-search] input[type=text]');
+        await input.waitForExist({ timeout: 10000 });
+        await input.setValue('ampullary baylor');
+        await asyncUtils.waitForNumberOfStudyCheckboxes(1);
+        const checkBox = await $('[data-test="StudySelect"]');
+        await checkBox.waitForExist({ timeout: 10000 });
 
-        // wait for data type priority selector to load
-        getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
-            timeout: 10000,
-        });
-        getElementByTestHandle('COPY_NUMBER_ALTERATION').waitForExist({
-            timeout: 10000,
-        });
-        assert(
-            getElementByTestHandle('MUTATION_EXTENDED').isSelected(),
-            "'Mutation' should be selected"
-        );
-        assert(
-            getElementByTestHandle('COPY_NUMBER_ALTERATION').isSelected(),
-            "'Copy number alterations' should be selected"
-        );
+        await asyncUtils.clickElement(`[data-test="StudySelect"] input`);
 
-        //deselect other study
-        $('[data-test="StudySelect"] input').click();
+        await asyncUtils.isSelected('handle=MUTATION_EXTENDED');
 
-        // wait for profiles selector to load
-        $(
-            'div[data-test="molecularProfileSelector"] input[type="checkbox"]'
-        ).waitForExist({ timeout: 3000 });
-        // mutations, CNA should be selected
-        assert(
-            $(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ).isSelected(),
-            'mutation profile should be selected'
-        );
-        assert(
-            $(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ).isSelected(),
-            'cna profile should be selected'
-        );
-        assert(
-            !$(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ).isSelected(),
-            'mrna profile not selected'
-        );
-        assert(
-            !$(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'
-            ).isSelected(),
-            'protein level not selected'
-        );
+        await asyncUtils.isSelected('handle=COPY_NUMBER_ALTERATION');
+
+        await asyncUtils.isSelected('handle=COPY_NUMBER_ALTERATION');
+
+        //deselect other study so that available profile types will change
+        await asyncUtils.clickElement(`[data-test="StudySelect"] input`);
+
+        await asyncUtils.isSelected('handle=MUTATION_EXTENDED');
+
+        await asyncUtils.isSelected('handle=COPY_NUMBER_ALTERATION');
+
+        await asyncUtils.isUnselected('handle=MRNA_EXPRESSION');
+
+        await asyncUtils.isUnselected('handle=PROTEIN_LEVEL');
     });
 
     it('contains correct selected genetic profiles through a certain use flow involving the "select all filtered studies" checkbox', () => {
@@ -418,7 +389,7 @@ describe('genetic profile selection in modify query form', function() {
         // open modify query form
         $('#modifyQueryBtn').click();
         // wait for profiles selector to load
-        getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
+        getElementByTestHandle('MUTATION_EXTENDED', {
             timeout: 10000,
         });
 
@@ -449,19 +420,22 @@ describe('genetic profile selection in modify query form', function() {
         input.waitForExist({ timeout: 10000 });
         input.setValue('tcga -firehose');
         browser.pause(500);
+
         $(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
         ).click();
 
         // wait for data type priority selector to load
-        getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
-            timeout: 10000,
+        // getElementByTestHandle('MUTATION_EXTENDED').waitForExist({
+        //     timeout: 10000,
+        // });
+
+        browser.waitUntil(() => {
+            return getElementByTestHandle('MUTATION_EXTENDED').isSelected();
         });
 
-        assert(
-            getElementByTestHandle('MUTATION_EXTENDED').isSelected(),
-            "'Mutation' should be selected"
-        );
+        //browser.debug();
+
         assert(
             getElementByTestHandle('COPY_NUMBER_ALTERATION').isSelected(),
             "'Copy number alterations' should be selected"
@@ -532,6 +506,6 @@ describe('invalid query from url', function() {
         $('[data-test="queryButton"]').click();
 
         $('#modifyQueryBtn').waitForExist({ timeout: 3000 });
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
     });
 });

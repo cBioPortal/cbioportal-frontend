@@ -1139,9 +1139,26 @@ function transitionGeneticTrack(
             $track_info_tooltip_elt: nextSpec.infoTooltip
                 ? $('<div>' + nextSpec.infoTooltip + '</div>')
                 : undefined,
+            removable: nextProps.geneticTracks.length > 1 ? true : false,
             removeCallback: () => {
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
+            },
+            onClickRemoveInTrackMenu: () => {
+                const oql = nextSpec.oql;
+                const sublabel = nextSpec.sublabel;
+                if (oql) {
+                    const geneLabelsRegex = /[A-Z0-9]+(?=:)/g;
+                    const geneLabels = oql.match(geneLabelsRegex);
+                    if (geneLabels) {
+                        const geneLabelsString = geneLabels.join(' ');
+                        nextProps.onDeleteGeneticTrack &&
+                            nextProps.onDeleteGeneticTrack(
+                                geneLabelsString,
+                                sublabel || ''
+                            );
+                    }
+                }
             },
             expandCallback: nextSpec.expansionCallback || undefined,
             expandButtonTextGetter: () => 'Expand',

@@ -703,7 +703,7 @@ describe('submit genes to results view query', () => {
         browser.switchToWindow(resultsViewTabId);
 
         // wait for query to load
-        waitForOncoprint(20000);
+        waitForOncoprint();
 
         // only mrna profile is there
         const profileFilter = (

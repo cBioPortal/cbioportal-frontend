@@ -45,7 +45,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
                 yarn serveDist & \
                 cd end-to-end-test && \
-                yarn install --frozen-lockfile && \
+                yarn install --frozen-lockfile --ignore-engines && \
                 ../scripts/env_vars.sh && \
                 eval "$(../scripts/env_vars.sh)" && \
                 curl $CBIOPORTAL_URL > /dev/null && \
@@ -82,8 +82,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
               path: /tmp/repo/end-to-end-test/shared/imageCompare.html
               destination: /imageCompare.html
           - store_artifacts:
-              path: /tmp/repo/end-to-end-test/remote/junit/customReport.json
-              destination: /customReport.json
+              path: /tmp/repo/end-to-end-test/remote/junit/completeResults.json
+              destination: /completeResults.json
           - store_artifacts:
               path: /tmp/repo/end-to-end-test/remote/junit/errors
               destination: /errors
@@ -133,7 +133,7 @@ jobs:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
           no_output_timeout: 25m
-      - run: cd /tmp/repo/end-to-end-test && (ls node_modules || yarn install --frozen-lockfile)
+      - run: cd /tmp/repo/end-to-end-test && (ls node_modules || yarn install --frozen-lockfile --ignore-engines)
       - save_cache:
           paths:
             - node_modules
@@ -343,10 +343,10 @@ jobs:
                 path: /tmp/repo/end-to-end-test/shared/imageCompare.html
                 destination: /imageCompare.html
             - store_artifacts:
-                path: /tmp/repo/end-to-end-test/local/junit/customReport.json
-                destination: /customReport.json
+                path: /tmp/repo/end-to-end-test/local/junit/completeResults.json
+                destination: /completeResults.json
             - store_artifacts:
-                path: /tmp/repo/end-to-end-test/remote/junit/errors
+                path: /tmp/repo/end-to-end-test/local/junit/errors
                 destination: /errors
       - unless:
           condition: << pipeline.parameters.enable_localdb_e2e >>

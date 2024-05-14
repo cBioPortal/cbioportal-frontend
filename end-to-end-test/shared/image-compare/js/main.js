@@ -24,8 +24,8 @@ function getRootUrl(href) {
 var rootUrl = getRootUrl(window.location.href);
 
 var reportUrl = isLocalHost
-    ? './results/customReport.json'
-    : `./customReport.json`;
+    ? './results/completeResults.json'
+    : `./completeResults.json`;
 
 var diffSliderMode = true;
 
@@ -46,7 +46,7 @@ $(document).on('click', '#toggleDiffModeBtn', () => {
 
 function buildData(reportData) {
     const data = reportData.map(test => {
-        const testName = test.title.replace(/\s/g, '_').toLowerCase();
+        const testName = test.name.replace(/\s/g, '_').toLowerCase();
         const imagePath = `/${testName}_element_chrome_1600x1000.png`;
         const rootUrl = isLocalHost
             ? `/${runMode}/screenshots/`
@@ -117,18 +117,57 @@ function renderList(data) {
     });
 }
 
+function deDupTests(reports) {
+    return _(reports)
+        .flatMap(r => r.suites)
+        .map(s => {
+            // for each suite group tests by name
+            // and filter for groups where ALL tests failed (retries all failed)
+            return _(s.tests)
+                .groupBy(s => s.name)
+                .values()
+                .filter(tests => {
+                    return _.every(tests, t => t.state === 'failed');
+                })
+                .value();
+        })
+        .filter(a => a.length > 0)
+        .map(a => {
+            // the multiple failures are repeats
+            // we only need one them
+            return a.map(aa => aa[0]);
+        })
+        .flatMap()
+        .value();
+}
+
 async function bootstrap() {
     const reportData = await getResultsReport();
-    //'https://circle-production-customer-artifacts.s3.amazonaws.com/picard/57cbb4ee69052f70a6140478/60021ce16cb7c3145511b486-0-build/artifacts'
 
-    runMode = reportData.testHome || 'remote';
+    runMode =
+        reportData.length && reportData[0]?.specs[0]?.includes('/remote/')
+            ? 'remote'
+            : 'local';
 
-    const filteredReportData = reportData.tests.filter(test => {
+    console.log('reportData', reportData);
+
+    var tests = _(reportData)
+        .flatMap(r => r.suites)
+        .flatMap(s => s.tests)
+        .value();
+
+    const de = deDupTests(reportData);
+
+    const filteredReportData = de.filter(test => {
         return (
             test.state === 'failed' &&
-            /isWithinMisMatchTolerance/i.test(test.error.message)
+            /isWithinMisMatchTolerance/i.test(test.error)
         );
     });
+
+    //const filteredReportData = reportData[0].suites[0].tests;
+
+    console.log(filteredReportData);
 
     const data = buildData(filteredReportData);
 
