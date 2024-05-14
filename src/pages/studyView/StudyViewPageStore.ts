@@ -182,6 +182,8 @@ import {
     getCustomChartDownloadData,
     generateColorMapKey,
     MutationCategorization,
+    getChartMetaSet,
+    getVisibleAttributes,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -672,7 +674,7 @@ export class StudyViewPageStore
         this.reactionDisposers.push(
             reaction(
                 () => [
-                    this.visibleAttributes,
+                    this.visibleAttributesForSummary,
                     this.columns,
                     _.fromPairs(this.chartsDimension.toJSON()),
                     _.fromPairs(this.chartsType.toJSON()),
@@ -2434,7 +2436,7 @@ export class StudyViewPageStore
     @action.bound
     private updateLayout(): void {
         this.currentGridLayout = calculateLayout(
-            this.visibleAttributes,
+            this.visibleAttributesForSummary,
             this.columns,
             _.fromPairs(this.chartsDimension.toJSON()),
             this.currentGridLayout,
@@ -6577,250 +6579,85 @@ export class StudyViewPageStore
         );
     }
 
+    // chart meta information for summary tab charts (omits survival attributes)
+    @computed get chartMetaSetForSummary(): {
+        [id: string]: ChartMeta;
+    } {
+        let chartMetaSet = getChartMetaSet(
+            this._customCharts,
+            this.molecularProfiles.result,
+            this._geneSpecificCharts,
+            this._genericAssayCharts,
+            this._XvsYCharts,
+            this.chartClinicalAttributes.result,
+            this.survivalPlots.result,
+            this.mutationProfiles.result,
+            this.structuralVariantProfiles.result,
+            this.isStructVarTableFeatureEnabled,
+            this.cnaProfiles.result,
+            this.shouldDisplayClinicalEventTypeCounts.result,
+            this.shouldDisplaySampleTreatments.result,
+            this.shouldDisplayPatientTreatments.result,
+            this.shouldDisplaySampleTreatmentGroups.result,
+            this.shouldDisplayPatientTreatmentGroups.result,
+            this.shouldDisplaySampleTreatmentTarget.result,
+            this.shouldDisplayPatientTreatmentTarget.result
+        );
+        return chartMetaSet;
+    }
+
+    // chart meta information for clinical data tab columns (omits survival plot attributes)
+    // derived from visible charts in summary tab
+    @computed get chartMetaSetForClinicalData(): {
+        [id: string]: ChartMeta;
+    } {
+        let chartMetaSet = getChartMetaSet(
+            this._customCharts,
+            this.molecularProfiles.result,
+            this._geneSpecificCharts,
+            this._genericAssayCharts,
+            this._XvsYCharts,
+            this.clinicalAttributes.result,
+            [],
+            this.mutationProfiles.result,
+            this.structuralVariantProfiles.result,
+            this.isStructVarTableFeatureEnabled,
+            this.cnaProfiles.result,
+            this.shouldDisplayClinicalEventTypeCounts.result,
+            this.shouldDisplaySampleTreatments.result,
+            this.shouldDisplayPatientTreatments.result,
+            this.shouldDisplaySampleTreatmentGroups.result,
+            this.shouldDisplayPatientTreatmentGroups.result,
+            this.shouldDisplaySampleTreatmentTarget.result,
+            this.shouldDisplayPatientTreatmentTarget.result
+        );
+        return chartMetaSet;
+    }
+
+    // all chart meta information
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
-        // Only add Mobx Promises that are not dependent on StudyViewFilter will force re-render
-        let _chartMetaSet = _.fromPairs(this._customCharts.toJSON());
-        if (_.isEmpty(this.molecularProfiles.result)) {
-            delete _chartMetaSet[
-                SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT
-            ];
-        }
-        _chartMetaSet = _.merge(
-            _chartMetaSet,
-            _.fromPairs(this._geneSpecificCharts.toJSON()),
-            _.fromPairs(this._genericAssayCharts.toJSON()),
-            _.fromPairs(this._XvsYCharts.toJSON())
-        );
-
-        // Add meta information for each of the clinical attribute
-        // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
-        _.reduce(
-            this.chartClinicalAttributes.result,
-            (acc: { [id: string]: ChartMeta }, attribute) => {
-                const uniqueKey = getUniqueKey(attribute);
-                const priority = getPriorityByClinicalAttribute(attribute);
-                if (priority > -1) {
-                    acc[uniqueKey] = {
-                        displayName: attribute.displayName,
-                        uniqueKey: uniqueKey,
-                        dataType: getChartMetaDataType(uniqueKey),
-                        patientAttribute: attribute.patientAttribute,
-                        description: attribute.description,
-                        priority: priority,
-                        renderWhenDataChange: false,
-                        clinicalAttribute: attribute,
-                    };
-                }
-                return acc;
-            },
-            _chartMetaSet
-        );
-
-        _.reduce(
+        let chartMetaSet = getChartMetaSet(
+            this._customCharts,
+            this.molecularProfiles.result,
+            this._geneSpecificCharts,
+            this._genericAssayCharts,
+            this._XvsYCharts,
+            this.clinicalAttributes.result,
             this.survivalPlots.result,
-            (acc: { [id: string]: ChartMeta }, survivalPlot) => {
-                acc[survivalPlot.id] = {
-                    uniqueKey: survivalPlot.id,
-                    dataType: getChartMetaDataType(survivalPlot.id),
-                    patientAttribute: true,
-                    displayName: survivalPlot.title,
-                    clinicalAttribute: survivalPlot.survivalStatusAttribute,
-                    // use survival status attribute's priority as KM plot's priority for non-reserved plots
-                    priority:
-                        STUDY_VIEW_CONFIG.priority[survivalPlot.id] ||
-                        getPriorityByClinicalAttribute(
-                            survivalPlot.survivalStatusAttribute
-                        ),
-                    renderWhenDataChange: false,
-                    description: '',
-                };
-                return acc;
-            },
-            _chartMetaSet
+            this.mutationProfiles.result,
+            this.structuralVariantProfiles.result,
+            this.isStructVarTableFeatureEnabled,
+            this.cnaProfiles.result,
+            this.shouldDisplayClinicalEventTypeCounts.result,
+            this.shouldDisplaySampleTreatments.result,
+            this.shouldDisplayPatientTreatments.result,
+            this.shouldDisplaySampleTreatmentGroups.result,
+            this.shouldDisplayPatientTreatmentGroups.result,
+            this.shouldDisplaySampleTreatmentTarget.result,
+            this.shouldDisplayPatientTreatmentTarget.result
         );
-        if (this.shouldDisplayClinicalEventTypeCounts.result) {
-            _chartMetaSet['CLINICAL_EVENT_TYPE_COUNTS'] = {
-                uniqueKey: 'CLINICAL_EVENT_TYPE_COUNTS',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: false,
-                displayName: 'Timeline Events Availability',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE
-                ),
-                renderWhenDataChange: false,
-                description:
-                    'Distinct Counts of Patients with Clinical Event Types',
-            };
-        }
-        if (this.shouldDisplaySampleTreatments.result) {
-            _chartMetaSet['SAMPLE_TREATMENTS'] = {
-                uniqueKey: 'SAMPLE_TREATMENTS',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: true,
-                displayName: 'Treatment per Sample (pre/post)',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
-                ),
-                renderWhenDataChange: true,
-                description:
-                    'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
-            };
-        }
-
-        if (this.shouldDisplayPatientTreatments.result) {
-            _chartMetaSet['PATIENT_TREATMENTS'] = {
-                uniqueKey: 'PATIENT_TREATMENTS',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: true,
-                displayName: 'Treatment per Patient',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.PATIENT_TREATMENTS_TABLE
-                ),
-                renderWhenDataChange: true,
-                description:
-                    'List of treatments and the corresponding number of patients treated',
-            };
-        }
-
-        if (this.shouldDisplaySampleTreatmentGroups.result) {
-            _chartMetaSet['SAMPLE_TREATMENT_GROUPS'] = {
-                uniqueKey: 'SAMPLE_TREATMENT_GROUPS',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: true,
-                displayName: 'Treatment Category per Sample (pre/post)',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE
-                ),
-                renderWhenDataChange: true,
-                description:
-                    'List of treatments groups and the corresponding number of samples acquired before treatment or after/on treatment',
-            };
-        }
-
-        if (this.shouldDisplayPatientTreatmentGroups.result) {
-            _chartMetaSet['PATIENT_TREATMENT_GROUPS'] = {
-                uniqueKey: 'PATIENT_TREATMENT_GROUPS',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: true,
-                displayName: 'Treatment Category per Patient',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
-                ),
-                renderWhenDataChange: true,
-                description:
-                    'List of treatment groups and the corresponding number of patients treated',
-            };
-        }
-
-        if (this.shouldDisplaySampleTreatmentTarget.result) {
-            _chartMetaSet['SAMPLE_TREATMENT_TARGET'] = {
-                uniqueKey: 'SAMPLE_TREATMENT_TARGET',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: true,
-                displayName: 'Treatment Target per Sample (pre/post)',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE
-                ),
-                renderWhenDataChange: true,
-                description:
-                    'List of treatments targets and the corresponding number of samples acquired before treatment or after/on treatment',
-            };
-        }
-
-        if (this.shouldDisplayPatientTreatmentTarget.result) {
-            _chartMetaSet['PATIENT_TREATMENT_TARGET'] = {
-                uniqueKey: 'PATIENT_TREATMENT_TARGET',
-                dataType: ChartMetaDataTypeEnum.CLINICAL,
-                patientAttribute: true,
-                displayName: 'Treatment Target per Patient',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE
-                ),
-                renderWhenDataChange: true,
-                description:
-                    'List of treatment targets and the corresponding number of patients treated',
-            };
-        }
-
-        if (!_.isEmpty(this.mutationProfiles.result)) {
-            const uniqueKey = getUniqueKeyFromMolecularProfileIds(
-                this.mutationProfiles.result.map(
-                    mutationProfile => mutationProfile.molecularProfileId
-                )
-            );
-            _chartMetaSet[uniqueKey] = {
-                uniqueKey: uniqueKey,
-                dataType: ChartMetaDataTypeEnum.GENOMIC,
-                patientAttribute: false,
-                displayName: 'Mutated Genes',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.MUTATED_GENES_TABLE
-                ),
-                renderWhenDataChange: false,
-                description: '',
-            };
-        }
-
-        if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-            const uniqueKey = getUniqueKeyFromMolecularProfileIds(
-                this.structuralVariantProfiles.result.map(
-                    p => p.molecularProfileId
-                ),
-                ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
-            );
-            _chartMetaSet[uniqueKey] = {
-                uniqueKey,
-                dataType: ChartMetaDataTypeEnum.GENOMIC,
-                patientAttribute: false,
-                displayName: 'Structural Variant Genes',
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
-                ),
-                renderWhenDataChange: true,
-                description: '',
-            };
-            if (this.isStructVarTableFeatureEnabled) {
-                const structVarGenesUniqueKey = getUniqueKeyFromMolecularProfileIds(
-                    this.structuralVariantProfiles.result.map(
-                        p => p.molecularProfileId
-                    ),
-                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
-                );
-                _chartMetaSet[structVarGenesUniqueKey] = {
-                    uniqueKey: structVarGenesUniqueKey,
-                    dataType: ChartMetaDataTypeEnum.GENOMIC,
-                    patientAttribute: false,
-                    displayName: 'Structural Variants',
-                    priority: getDefaultPriorityByUniqueKey(
-                        ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
-                    ),
-                    renderWhenDataChange: true,
-                    description: '',
-                };
-            }
-        }
-
-        if (!_.isEmpty(this.cnaProfiles.result)) {
-            const uniqueKey = getUniqueKeyFromMolecularProfileIds(
-                this.cnaProfiles.result.map(
-                    mutationProfile => mutationProfile.molecularProfileId
-                )
-            );
-            _chartMetaSet[uniqueKey] = {
-                uniqueKey,
-                dataType: ChartMetaDataTypeEnum.GENOMIC,
-                patientAttribute: false,
-                displayName: 'CNA Genes',
-                renderWhenDataChange: false,
-                priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.CNA_GENES_TABLE
-                ),
-                description: '',
-            };
-        }
-
-        return _chartMetaSet;
+        return chartMetaSet;
     }
 
     @computed
@@ -6841,18 +6678,24 @@ export class StudyViewPageStore
     }
 
     @computed
-    get visibleAttributes(): ChartMeta[] {
-        return _.reduce(
-            Array.from(this._chartVisibility.entries() || []),
-            (acc, [chartUniqueKey, visible]) => {
-                if (visible && this.chartMetaSet[chartUniqueKey]) {
-                    let chartMeta = this.chartMetaSet[chartUniqueKey];
-                    acc.push(chartMeta);
-                }
-                return acc;
-            },
-            [] as ChartMeta[]
+    get visibleAttributesForSummary(): ChartMeta[] {
+        return getVisibleAttributes(
+            this._chartVisibility,
+            this.chartMetaSetForSummary
         );
+    }
+
+    @computed
+    get visibleAttributesForClinicalData(): ChartMeta[] {
+        return getVisibleAttributes(
+            this._chartVisibility,
+            this.chartMetaSetForClinicalData
+        );
+    }
+
+    @computed
+    get visibleAttributes(): ChartMeta[] {
+        return getVisibleAttributes(this._chartVisibility, this.chartMetaSet);
     }
 
     get isStructVarTableFeatureEnabled() {
@@ -6994,6 +6837,7 @@ export class StudyViewPageStore
         if (this.isSavingUserPreferencePossible) {
             chartSettingsMap = getChartSettingsMap(
                 this.visibleAttributes,
+                this.visibleAttributesForSummary,
                 this.columns,
                 _.fromPairs(this.chartsDimension.toJSON()),
                 _.fromPairs(this.chartsType.toJSON()),
@@ -7192,16 +7036,27 @@ export class StudyViewPageStore
     } {
         const visibleAttributes = _.reduce(
             this._defaultVisibleChartIds,
-            (acc, chartUniqueKey) => {
+            (acc: ChartMeta[], chartUniqueKey) => {
                 if (this.chartMetaSet[chartUniqueKey]) {
                     acc.push(this.chartMetaSet[chartUniqueKey]);
                 }
                 return acc;
             },
-            [] as ChartMeta[]
+            []
+        );
+        const visibleAttributesForSummary = _.reduce(
+            this._defaultVisibleChartIds,
+            (acc: ChartMeta[], chartUniqueKey) => {
+                if (this.chartMetaSetForSummary[chartUniqueKey]) {
+                    acc.push(this.chartMetaSetForSummary[chartUniqueKey]);
+                }
+                return acc;
+            },
+            []
         );
         return getChartSettingsMap(
             visibleAttributes,
+            visibleAttributesForSummary,
             this.columns,
             _.fromPairs(this._defaultChartsDimension.toJSON()),
             _.fromPairs(this._defaultChartsType.toJSON()),
