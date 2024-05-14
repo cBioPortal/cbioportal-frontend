@@ -28,6 +28,7 @@ import {
     ChartDataCountSet,
     getOptionsByChartMetaDataType,
     getGenomicChartUniqueKey,
+    ChartMeta,
 } from '../StudyViewUtils';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import { ChartTypeEnum, ChartTypeNameEnum } from '../StudyViewConfig';
@@ -299,13 +300,26 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         });
     }
 
+    // provide chartMetaSet for current tab to disable appropriate options
+    // if summary tab, disable survival attributes
+    // if clinical data tab, disable survival plot attributes
     @computed
     get clinicalDataOptions(): ChartOption[] {
+        let chartMetaSetForCurrentTab: { [id: string]: ChartMeta };
+        if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
+            chartMetaSetForCurrentTab = this.props.store.chartMetaSetForSummary;
+        } else {
+            chartMetaSetForCurrentTab = this.props.store
+                .chartMetaSetForClinicalData;
+        }
+
         return getOptionsByChartMetaDataType(
             this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.CLINICAL] ||
                 [],
             this.selectedAttrs,
-            _.fromPairs(this.props.store.chartsType.toJSON())
+            _.fromPairs(this.props.store.chartsType.toJSON()),
+            undefined,
+            chartMetaSetForCurrentTab
         );
     }
 
