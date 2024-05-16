@@ -47,7 +47,7 @@ import { SliderPicker } from 'react-color';
 export interface IMutationalSignaturesContainerProps {
     data: { [version: string]: IMutationalSignature[] };
     profiles: MolecularProfile[];
-    gversion: string;
+    version: string;
     sample: string;
     samples: string[];
     samplesNotProfiled: string[];
