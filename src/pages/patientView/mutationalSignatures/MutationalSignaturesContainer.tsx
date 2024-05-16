@@ -271,14 +271,13 @@ export default class MutationalSignaturesContainer extends React.Component<
     }
 
     // Add the slider to change the labels of both count and reference y-axis
-    protected maxValueSlider(
-        countRange: [number, number],
-        onYAxisMaxSliderChange: (event: any) => void,
+    protected MaxValueSlider(
+        label: string,
+        width: number,
+        yMaxSliderStep: number,
+        onYAxisMaxSliderChange: any,
         yMaxSlider: number,
-        yMaxInput: number,
-        label: string = 'Y-Axis Max',
-        width: number = 100,
-        yMaxSliderStep: number = 1
+        yMaxSliderMax: number
     ) {
         return (
             <div
@@ -291,7 +290,7 @@ export default class MutationalSignaturesContainer extends React.Component<
             >
                 <div
                     style={{
-                        width: width,
+                        width,
                         marginLeft: 10,
                         marginRight: 10,
                     }}
@@ -299,7 +298,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                     <div style={{ textAlign: 'center' }}>{label}:</div>
                     <Slider
                         min={yMaxSliderStep}
-                        max={100}
+                        max={yMaxSliderMax}
                         tooltip={false}
                         step={yMaxSliderStep}
                         onChange={onYAxisMaxSliderChange}
@@ -311,14 +310,13 @@ export default class MutationalSignaturesContainer extends React.Component<
     }
 
     protected get yMaxSlider() {
-        return this.maxValueSlider(
-            this.props.countRange,
-            this.props.onYAxisMaxChange,
-            this.props.yMaxSlider,
-            this.props.yMaxInput,
+        return this.MaxValueSlider(
             'Y-axis Max',
-            this.props.yMaxSliderWidth,
-            this.props.yMaxSliderStep
+            100,
+            1,
+            this.updateYAxisDomain,
+            10,
+            100
         );
     }
 
@@ -400,46 +398,6 @@ export default class MutationalSignaturesContainer extends React.Component<
                 ? 'Small insertions and deletions (ID)'
                 : this.props.version;
         return [versionLabel, mutTotalCount];
-    }
-
-    protected yAxisMaxSlider(
-        range: [0, 100],
-        onYAxisMaxSliderChange: (event: any) => void,
-        yMaxSlider: number,
-        YMaxInput: number,
-        sliderValue: number,
-        label: string = 'Y-Axis max',
-        width: number = 100,
-        yMaxSliderStep: number = 1
-    ) {
-        return (
-            <div
-                className="small"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    marginLeft: 10,
-                }}
-            >
-                <div
-                    style={{
-                        width: width,
-                        marginLeft: 10,
-                        marginRight: 10,
-                    }}
-                >
-                    <div style={{ textAlign: 'center' }}>{{ label }}:</div>
-                    <Slider
-                        min={yMaxSliderStep}
-                        max={100}
-                        tooltip={false}
-                        step={yMaxSliderStep}
-                        onChange={onYAxisMaxSliderChange}
-                        value={sliderValue}
-                    ></Slider>
-                </div>
-            </div>
-        );
     }
 
     public render() {
@@ -637,7 +595,7 @@ export default class MutationalSignaturesContainer extends React.Component<
                                                 />
                                             </DefaultTooltip>
                                         </div>
-                                        <div>Here komt de xMaxValueSlider</div>
+                                        <div>{this.yMaxSlider}</div>
                                     </div>
                                 )}
                             </div>
