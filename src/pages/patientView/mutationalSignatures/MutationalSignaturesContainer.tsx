@@ -43,6 +43,7 @@ import { calcYMaxInput } from 'react-mutation-mapper/src/util/LollipopPlotUtils'
 import styles from 'react-mutation-mapper/src/component/lollipopMutationPlot/lollipopMutationPlot.module.scss';
 import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
 import { SliderPicker } from 'react-color';
+import classnames from 'classnames';
 
 export interface IMutationalSignaturesContainerProps {
     data: { [version: string]: IMutationalSignature[] };
@@ -280,14 +281,7 @@ export default class MutationalSignaturesContainer extends React.Component<
         yMaxSliderMax: number
     ) {
         return (
-            <div
-                className="small"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    marginLeft: 10,
-                }}
-            >
+            <div className={classnames('lollipop_mutation_plot__controls')}>
                 <div
                     style={{
                         width,
