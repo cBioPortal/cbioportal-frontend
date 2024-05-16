@@ -64,7 +64,8 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
         searchTerm,
         sortAttributeId,
         sortDirection,
-        recordLimit
+        recordLimit,
+        0
     );
 
     const aggregatedSampleClinicalData = _.mapValues(
