@@ -696,12 +696,6 @@ export function tabs(
                             .samplesNotProfiledForMutationalSignatures
                     }
                     onSampleChange={pageComponent.onSampleIdChange}
-                    countRange={[0, 100]}
-                    onYAxisMaxChange={(inputValue = 'test') => {}}
-                    yMaxSlider={100}
-                    yMaxInput={100}
-                    yMaxSliderWidth={100}
-                    yMaxSliderStep={5}
                 />
             </MSKTab>
         );
