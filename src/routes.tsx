@@ -120,6 +120,7 @@ import {
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { ResultsViewURLQuery } from 'pages/resultsView/ResultsViewURLWrapper';
 import { EnumDeclaration, EnumType } from 'typescript';
+import Example from 'pages/staticPages/example/Example';
 
 function SuspenseWrapper(Component: any) {
     return (props: any) => (
@@ -461,6 +462,7 @@ export const makeRoutes = () => {
                     path="/testimonials"
                     component={ScrollToTop(TestimonialsPage)}
                 />
+                <Route path="/examples" component={ScrollToTop(Example)} />
                 <Route path="/case.do" component={getBlankPage(handleCaseDO)} />
                 <Route
                     path="/index.do"
