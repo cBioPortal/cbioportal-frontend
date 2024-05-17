@@ -67,9 +67,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     private differentDescriptionExistMessage =
         'Different descriptions of survival data were used for different studies.';
 
-    // @observable
-    // private selectedSurvivalPlotPrefix: string | undefined = undefined;
-
     @observable
     private startEventPosition: 'FIRST' | 'LAST' = 'FIRST';
 
@@ -353,6 +350,37 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     private onCensoredClinicalEventSelection(option: any) {
         this._selectedCensoredClinicalEventType = option.value;
         this.selectedCensoredClinicalEventAttributes = [];
+    }
+
+    @action.bound
+    private onAddSurvivalPlot() {
+        this.props.store.addSurvivalRequest(
+            this._selectedStartClinicalEventType!,
+            this.startEventPosition,
+            this.selectedStartClinicalEventAttributes,
+            this._selectedEndClinicalEventType!,
+            this.endEventPosition,
+            this.selectedEndClinicalEventAttributes,
+            this._selectedCensoredClinicalEventType!,
+            this.censoredEventPosition,
+            this.selectedCensoredClinicalEventAttributes
+        );
+        this.setSurvivalPlotPrefix(
+            getSurvivalPlotPrefixText(
+                this._selectedStartClinicalEventType!,
+                this.startEventPosition,
+                this.selectedStartClinicalEventAttributes,
+                this._selectedEndClinicalEventType!,
+                this.endEventPosition,
+                this.selectedEndClinicalEventAttributes,
+                this._selectedCensoredClinicalEventType!,
+                this.censoredEventPosition,
+                this.selectedCensoredClinicalEventAttributes
+            )
+        );
+        this.props.store.updateCustomSurvivalPlots(
+            this.props.store.customSurvivalPlots
+        );
     }
 
     @computed get selectedCensoredClinicalEventType() {
@@ -699,45 +727,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             disabled={
                                                 this.isAddSurvivalPlotDisabled
                                             }
-                                            onClick={e => {
-                                                this.props.store.addSurvivalRequest(
-                                                    this
-                                                        ._selectedStartClinicalEventType!,
-                                                    this.startEventPosition,
-                                                    this
-                                                        .selectedStartClinicalEventAttributes,
-                                                    this
-                                                        ._selectedEndClinicalEventType!,
-                                                    this.endEventPosition,
-                                                    this
-                                                        .selectedEndClinicalEventAttributes,
-                                                    this
-                                                        ._selectedCensoredClinicalEventType!,
-                                                    this.censoredEventPosition,
-                                                    this
-                                                        .selectedCensoredClinicalEventAttributes
-                                                );
-                                                this.setSurvivalPlotPrefix(
-                                                    getSurvivalPlotPrefixText(
-                                                        this
-                                                            ._selectedStartClinicalEventType!,
-                                                        this.startEventPosition,
-                                                        this
-                                                            .selectedStartClinicalEventAttributes,
-                                                        this
-                                                            ._selectedEndClinicalEventType!,
-                                                        this.endEventPosition,
-                                                        this
-                                                            .selectedEndClinicalEventAttributes,
-                                                        this
-                                                            ._selectedCensoredClinicalEventType!,
-                                                        this
-                                                            .censoredEventPosition,
-                                                        this
-                                                            .selectedCensoredClinicalEventAttributes
-                                                    )
-                                                );
-                                            }}
+                                            onClick={this.onAddSurvivalPlot}
                                         >
                                             Add survival plot
                                         </button>

@@ -8,6 +8,7 @@ import {
     ClinicalTrackConfig,
     GeneticTrackConfig,
 } from 'shared/components/oncoprint/Oncoprint';
+import { CustomSurvivalPlots } from 'shared/lib/comparison/ComparisonStoreUtils';
 import { PageSettingsIdentifier } from 'shared/userSession/PageSettingsIdentifier';
 
 export interface Session {
@@ -62,6 +63,7 @@ export type ComparisonSession = {
     origin: string[];
     clinicalAttributeName?: string;
     groupNameOrder?: string[];
+    customSurvivalPlots?: CustomSurvivalPlots;
 };
 
 export type SessionGroupData = GroupData & {
@@ -107,12 +109,6 @@ export type StudyPageSettings = {
 export type ResultPageSettings = {
     clinicallist?: ClinicalTrackConfig[];
     geneticlist?: GeneticTrackConfig[];
-};
-
-export type ComparisonPageSettings = {
-    [sessionId: string]: {
-        [prefix: string]: Partial<SurvivalRequest>;
-    };
 };
 
 export type PageSettingsData = StudyPageSettings | ResultPageSettings;

@@ -1,7 +1,7 @@
 import ComparisonStore, {
     ClinicalEventDataWithKey,
 } from 'shared/lib/comparison/ComparisonStore';
-import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { MolecularProfile, SurvivalRequest } from 'cbioportal-ts-api-client';
 import { stringListToMap } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 
@@ -165,6 +165,10 @@ export const mutationGroup = [
 export const amplificationGroup = [CopyNumberEnrichmentEventType.AMP];
 export const deletionGroup = [CopyNumberEnrichmentEventType.HOMDEL];
 export const cnaGroup = [...amplificationGroup, ...deletionGroup];
+
+export type CustomSurvivalPlots = {
+    [prefix: string]: Partial<SurvivalRequest>;
+};
 
 export function cnaEventTypeSelectInit(
     profiles: MolecularProfile[]

@@ -92,6 +92,7 @@ import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUti
 import {
     cnaEventTypeSelectInit,
     CopyNumberEnrichmentEventType,
+    CustomSurvivalPlots,
     EnrichmentEventType,
     getCopyNumberEventTypesAPIParameter,
     getMutationEventTypesAPIParameter,
@@ -109,7 +110,6 @@ import {
 import { getServerConfig } from 'config/config';
 import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 import {
-    ComparisonPageSettings,
     ComparisonSession,
     SessionGroupData,
 } from 'shared/api/session-service/sessionServiceModels';
@@ -221,28 +221,10 @@ export default abstract class ComparisonStore extends AnalysisStore
 
             this.reactionDisposers.push(
                 reaction(
-                    () => toJS(this.customSurvivalPlots),
-                    () => {
-                        if (this.isSavingSessionPossible) {
-                            this.updateChartSettings();
-                        }
-                    }
-                )
-            );
-
-            this.reactionDisposers.push(
-                reaction(
-                    () => this.pageSettings.isComplete,
+                    () => this.isSessionLoaded,
                     isComplete => {
-                        //execute if user log in from study page
-                        if (isComplete && this.isSavingSessionPossible) {
-                            console.log(
-                                'userSettings updated',
-                                this.pageSettings.result
-                            );
-                            this.loadChartSettings();
-                            // this.previousSettings = this.currentChartSettingsMap;
-                            // this.loadChartSettings();
+                        if (isComplete) {
+                            this.loadCustomSurvivalCharts();
                         }
                     }
                 )
@@ -347,11 +329,6 @@ export default abstract class ComparisonStore extends AnalysisStore
         return this._session.isComplete;
     }
 
-    @computed get isSavingSessionPossible() {
-        return this.isSessionLoaded;
-        // return this.isLoggedIn && this.sessionServiceIsEnabled;
-    }
-
     public async addGroup(group: SessionGroupData, saveToUser: boolean) {
         this.newSessionPending = true;
         if (saveToUser && this.isLoggedIn) {
@@ -367,6 +344,19 @@ export default abstract class ComparisonStore extends AnalysisStore
         this.newSessionPending = true;
         const newSession = _.cloneDeep(this._session.result!);
         newSession.groups = newSession.groups.filter(g => g.name !== name);
+
+        this.saveAndGoToSession(newSession);
+    }
+
+    public async updateCustomSurvivalPlots(
+        customSurvivalPlots: CustomSurvivalPlots
+    ) {
+        const newSession = toJS(this._session.result!);
+        newSession.customSurvivalPlots = toJS(customSurvivalPlots);
+
+        if (this.isSessionLoaded) {
+            await comparisonClient.addComparisonSession(newSession);
+        }
 
         this.saveAndGoToSession(newSession);
     }
@@ -583,24 +573,6 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    readonly pageSettings = remoteData<ComparisonPageSettings | undefined>({
-        invoke: async () => {
-            if (this.isSavingSessionPossible) {
-                return JSON.parse(
-                    localStorage.getItem('comparisonPageSettings') ?? '{}'
-                );
-                // return sessionServiceClient.fetchStudyPageSettings(
-                //     toJS(this.studyIds)
-                // );
-            }
-            return undefined;
-        },
-        default: undefined,
-        onError: () => {
-            // fail silently when an error occurs
-        },
-    });
-
     public readonly alterationEnrichmentProfiles = remoteData({
         await: () => [this.molecularProfilesInActiveStudies],
         invoke: () => {
@@ -789,9 +761,7 @@ export default abstract class ComparisonStore extends AnalysisStore
         };
     } = {};
 
-    @observable customSurvivalPlots: {
-        [prefix: string]: Partial<SurvivalRequest>;
-    } = {};
+    @observable customSurvivalPlots: CustomSurvivalPlots = {};
 
     @observable customClinicalAttributes: ClinicalAttribute[] = [];
 
@@ -1206,12 +1176,14 @@ export default abstract class ComparisonStore extends AnalysisStore
             this.customSurvivalPlots = _.omitBy(
                 toJS(this.customSurvivalPlots),
                 (value, key) => key === prefix
-            ) as { [prefix: string]: Partial<SurvivalRequest> };
+            ) as CustomSurvivalPlots;
 
             this.customSurvivalDataPromises = _.omitBy(
                 toJS(this.customSurvivalDataPromises),
                 (value, key) => key === prefix
             ) as { [prefix: string]: MobxPromise<ClinicalData[]> };
+
+            this.updateCustomSurvivalPlots(toJS(this.customSurvivalPlots));
         }
     }
 
@@ -3403,10 +3375,9 @@ export default abstract class ComparisonStore extends AnalysisStore
     }
 
     @action.bound
-    private loadChartSettings(): void {
-        this.customSurvivalPlots = (this.pageSettings.result ?? {})[
-            this._session.result!.id
-        ];
+    private loadCustomSurvivalCharts(): void {
+        this.customSurvivalPlots =
+            this._session.result!.customSurvivalPlots ?? {};
 
         _.forEach(this.customSurvivalPlots, plot => {
             this.addSurvivalRequest(
@@ -3427,19 +3398,5 @@ export default abstract class ComparisonStore extends AnalysisStore
                     .attributes as ClinicalEventDataWithKey[]
             );
         });
-    }
-
-    @action.bound
-    private updateChartSettings(): void {
-        let pageSettings: ComparisonPageSettings =
-            this.pageSettings.result || {};
-        pageSettings[this._session.result!.id] = toJS(this.customSurvivalPlots);
-
-        localStorage.setItem(
-            'comparisonPageSettings',
-            JSON.stringify(pageSettings)
-        );
-
-        console.log('saving user settings', pageSettings);
     }
 }
