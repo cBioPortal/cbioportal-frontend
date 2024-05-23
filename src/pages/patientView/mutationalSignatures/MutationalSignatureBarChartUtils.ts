@@ -324,7 +324,6 @@ export function getColorsForSignatures(
     dataset: IMutationalCounts[],
     yAxisSetting: string
 ): IColorLegend[] {
-    console.log(dataset);
     const colorTableData = dataset.map((obj: IMutationalCounts) => {
         if (obj.mutationalSignatureLabel !== '') {
             const colorIdentity = colorMap.filter(cmap => {
@@ -609,9 +608,8 @@ export function formatTooltipLabelCosmicStyle(
     value: number,
     percentage: number
 ): string {
-    const valueLabel = yAxisSetting == '%' ? '%' : ' count(#)';
-    const countLabel =
-        yAxisSetting == '#' ? percentage + '%' : value + ' counts';
+    const valueLabel = yAxisSetting == '%' ? '% of ' : '';
+    const countLabel = yAxisSetting == '#' ? percentage + '%' : value;
     const valueForTooltip = yAxisSetting == '#' ? value : percentage;
     if (version == 'SBS') {
         const labelSplit = label.split('_').map((x, i) => {
@@ -620,7 +618,7 @@ export function formatTooltipLabelCosmicStyle(
         return labelSplit.length > 1
             ? valueForTooltip +
                   valueLabel +
-                  ' of SBS mutations (' +
+                  ' SBS mutations (' +
                   countLabel +
                   ') are ' +
                   '\n' +
