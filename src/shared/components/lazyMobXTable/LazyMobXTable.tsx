@@ -1162,8 +1162,10 @@ export default class LazyMobXTable<T> extends React.Component<
                     fontWeight: 'bold',
                 }}
             >
-                {this.store.displayData.length} {this.store.itemsLabel} (page{' '}
-                {this.store.page + 1} of {this.store.maxPage + 1})
+                {this.store.displayData.length} {this.store.itemsLabel}
+                {this.store.maxPage + 1 > 1 &&
+                    ` (page ${this.store.page + 1} of ${this.store.maxPage +
+                        1})`}
             </h3>
         ) : (
             <span
@@ -1175,8 +1177,10 @@ export default class LazyMobXTable<T> extends React.Component<
                     fontWeight: 'bold',
                 }}
             >
-                {this.store.displayData.length} {this.store.itemsLabel} (page{' '}
-                {this.store.page + 1} of {this.store.maxPage + 1})
+                {this.store.displayData.length} {this.store.itemsLabel}
+                {this.store.maxPage + 1 > 1 &&
+                    ` (page ${this.store.page + 1} of ${this.store.maxPage +
+                        1})`}
             </span>
         );
     }
