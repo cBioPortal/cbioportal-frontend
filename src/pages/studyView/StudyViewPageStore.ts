@@ -383,14 +383,15 @@ export type StudyViewPageTabKey =
     | StudyViewPageTabKeyEnum.CLINICAL_DATA
     | StudyViewPageTabKeyEnum.SUMMARY
     | StudyViewPageTabKeyEnum.HEATMAPS
-    | StudyViewPageTabKeyEnum.CN_SEGMENTS;
-
+    | StudyViewPageTabKeyEnum.CN_SEGMENTS
+    | StudyViewPageTabKeyEnum.SINGLECELL;
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
     CLINICAL_DATA = 'Clinical Data',
     HEATMAPS = 'Heatmaps',
     CN_SEGMENTS = 'CN Segments',
     PLOTS = 'Plots',
+    SINGLECELL = 'Single Cell',
 }
 
 const DEFAULT_CHART_NAME = 'Custom Data';

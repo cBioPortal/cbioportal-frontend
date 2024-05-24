@@ -1,0 +1,83 @@
+/* styles.css */
+
+.custom-dropdown {
+    width: 300px; /* Set width of dropdown */
+    padding: 10px; /* Add padding */
+    font-size: 16px; /* Set font size */
+    border: 1px solid #ccc; /* Add border */
+    border-radius: 4px; /* Add border radius */
+    outline: none; /* Remove outline */
+    appearance: none; /* Remove default appearance */
+    background: url('data:image/svg+xml;utf8,<svg fill="%23777777" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>')
+        no-repeat right 10px center; /* Add custom arrow icon */
+    background-size: 24px; /* Set size of arrow icon */
+    background-color: #fff; /* Set background color */
+    cursor: pointer; /* Add cursor */
+    transition: border-color 0.3s; /* Add transition for border color */
+}
+
+.custom-dropdown:hover {
+    border-color: #888; /* Change border color on hover */
+}
+
+.custom-dropdown:focus {
+    border-color: #4caf50; /* Change border color on focus */
+}
+
+/* Style for dropdown options */
+.custom-dropdown option {
+    padding: 10px; /* Add padding */
+    font-size: 16px; /* Set font size */
+    cursor: pointer; /* Add cursor */
+}
+
+/* Style for selected option */
+.custom-dropdown option:checked {
+    background-color: #f0f0f0; /* Change background color of selected option */
+}
+
+.home-page-container {
+    display: flex;
+}
+
+.chart-configurations {
+    width: 30%;
+    padding: 20px;
+    border-right: 1px solid #ccc;
+}
+
+.chart-display {
+    width: 70%;
+    padding: 20px;
+}
+
+.dropdown-container {
+    margin-bottom: 20px;
+}
+
+.custom-dropdown {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.custom-dropdown[disabled]:hover {
+    cursor: not-allowed;
+}
+
+.custom-option {
+    padding: 10px; /* Add padding */
+    font-size: 16px; /* Set font size */
+    cursor: pointer; /* Add cursor */
+    transition: background-color 0.3s; /* Add transition effect */
+}
+
+.custom-option:hover {
+    background-color: #333; /* Change background color on hover to light black */
+}
+
+#option {
+    fontsize: red;
+}
