@@ -53,6 +53,10 @@ interface DataBin {
 interface HomePageProps {
     store: StudyViewPageStore; // Assuming StudyViewPageStore is the type of your store
 }
+interface MolecularProfileDataItem {
+    sampleId: string;
+    // Add other properties if needed
+}
 
 interface HomePageState {
     selectedOption: string | null;
@@ -70,7 +74,8 @@ interface HomePageState {
     selectedEntity: Entity | null;
     selectedValue: string | null; // Added selectedValue to store the selected molecular profile
     dataBins: DataBin[] | null; // State variable to hold data bins
-    chartType: string | null; // State variable to hold the selected chart type
+    chartType: string | null;
+    pieChartData: any[]; // State variable to hold the selected chart type
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -93,17 +98,23 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             selectedValue: null, // Initialize selectedValue as null
             dataBins: null, // Initialize dataBins as null
             chartType: null, // Initialize chartType as null
+            pieChartData: [],
         };
     }
-    async fetchGenericAssayData() {
+
+    async fetchGenericAssayData(
+        selectedValue: string,
+        names: string[],
+        sampleId: string[]
+    ) {
         const { store } = this.props;
 
         // Hardcoded parameters
         const params = {
-            molecularProfileId: 'gbm_cptac_2021_single_cell_type_fractions',
+            molecularProfileId: selectedValue,
             genericAssayFilter: {
-                genericAssayStableIds: ['Macrophage'],
-                sampleListId: 'gbm_cptac_2021_cnaseq',
+                genericAssayStableIds: names,
+                sampleIds: sampleId,
             } as GenericAssayFilter,
         };
 
@@ -116,6 +127,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 resp,
                 'response from fetchGenericAssayDataInMolecularProfileUsingPOST'
             );
+            return resp;
         } catch (error) {
             console.error('Error fetching generic assay data', error);
         }
@@ -147,7 +159,11 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
     @autobind
     async handleSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
+        console.log(this.state.entityNames, 'entityNames');
+        // this.fetchGenericAssayData(this.state.entityNames);
+
         const selectedValue = event.target.value;
+
         const selectedProfile = this.state.molecularProfiles.find(
             profile => profile.value === selectedValue
         );
@@ -167,6 +183,29 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 : [];
             const names = entityArray.map((entity: any) => entity.stableId);
             this.setState({ entityNames: names, selectedEntity: null });
+
+            console.log(names, 'here are the names');
+            this.retrieveAllProfiledSamples(selectedValue)
+                .then(async MolecularProfileData => {
+                    console.log(
+                        MolecularProfileData,
+                        'this is molecularProfileData'
+                    );
+
+                    const extractedData: string[] = (
+                        MolecularProfileData ?? []
+                    ).map(({ sampleId }) => sampleId);
+                    const pieChartData = await this.fetchGenericAssayData(
+                        selectedValue,
+                        names,
+                        extractedData
+                    );
+                    this.setState({ pieChartData: pieChartData as any[] });
+                    console.log(extractedData, 'this is the extracted data');
+                })
+                .catch(error => {
+                    console.error('Failed to fetch data:', error);
+                });
 
             const newChartInfo = {
                 name: '',
@@ -207,6 +246,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 },
             });
         }
+        console.log(this.state.entityNames, 'emtit');
     }
 
     @autobind
@@ -271,9 +311,9 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         const { store } = this.props;
         const studyId = 'gbm_cptac_2021';
         const Molecularprofiles = await this.molecularProfiles([studyId]);
+
         console.log(Molecularprofiles, 'this is molecularprofiles');
-        this.fetchGenericAssayData();
-        this.retrieveAllProfiledSamples();
+
         const molecularProfileOptions = Molecularprofiles.map(
             (profile: any) => ({
                 value: profile.molecularProfileId,
@@ -301,18 +341,20 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         return profiles;
     }
 
-    async retrieveAllProfiledSamples() {
+    async retrieveAllProfiledSamples(
+        selectedValue: string
+    ): Promise<MolecularProfileDataItem[]> {
         let data = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
             {
                 genePanelDataMultipleStudyFilter: {
-                    molecularProfileIds: [
-                        'gbm_cptac_2021_single_cell_cycle_phases',
-                    ],
+                    molecularProfileIds: [selectedValue],
                 } as GenePanelDataMultipleStudyFilter,
             }
         );
         console.log('all the profiles are here', data);
-        return data;
+
+        // Assuming 'data' is the array of 'MolecularProfileDataItem'
+        return data as MolecularProfileDataItem[];
     }
 
     truncateOptionLabel(label: string) {
@@ -333,6 +375,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             selectedValue,
             dataBins,
             chartType,
+            pieChartData,
         } = this.state;
 
         return (
@@ -453,10 +496,15 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     {/* Display fetched data bins */}
                     {dataBins && (
                         <div style={{ width: '600px', margin: '12px auto' }}>
+                            {/* <PieChart dataBins={dataBins} pieChartData={pieChartData} /> */}
+
                             {chartType === 'bar' ? (
                                 <BarChart dataBins={dataBins} />
-                            ) : chartType === 'piet' ? (
-                                <PieChart dataBins={dataBins} />
+                            ) : chartType === 'pie' ? (
+                                <PieChart
+                                    dataBins={dataBins}
+                                    pieChartData={pieChartData}
+                                />
                             ) : null}
                         </div>
                     )}

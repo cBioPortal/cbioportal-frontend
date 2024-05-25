@@ -13,30 +13,36 @@ interface DataBin {
 // Define props interface for the Chart component
 interface ChartProps {
     dataBins: DataBin[];
+    pieChartData: any[];
 }
 
-const Chart: React.FC<ChartProps> = ({ dataBins }) => {
+const Chart: React.FC<ChartProps> = ({ dataBins, pieChartData }) => {
     // Filter out data bins with specialValue "NA"
-    const filteredData = dataBins.filter(bin => bin.specialValue !== 'NA');
+    const uniqueIds: string[] = [
+        ...new Set(pieChartData.map((item: any) => item.genericAssayStableId)),
+    ];
+    const sumValues: { [key: string]: number } = {};
 
-    // Process data bins to create a format suitable for VictoryPie
-    const processedData = filteredData.map(bin => {
-        // Generate the label based on start, end, and specialValue
-        let label = '';
-        if (bin.start !== undefined && bin.end !== undefined) {
-            label = `Count: ${bin.count}, Range: ${bin.start} - ${bin.end}`;
-        } else if (bin.specialValue === '<=') {
-            label = `Count: ${bin.count}, Range: <= ${bin.end}`;
-        } else if (bin.specialValue === '>') {
-            label = `Count: ${bin.count}, Range: > ${bin.start}`;
-        } else if (bin.specialValue) {
-            label = bin.specialValue;
-        } else {
-            label = bin.id.replace(/_/g, ' '); // Replace underscores with spaces
-        }
-
-        return { x: label, y: bin.count };
+    // Calculate the total sum of sumValues
+    let totalSum = 0;
+    uniqueIds.forEach((id: string) => {
+        sumValues[id] = pieChartData.reduce((acc: number, item: any) => {
+            if (item.genericAssayStableId === id) {
+                // Convert item.value to a number before adding
+                const value = parseFloat(item.value);
+                totalSum += value; // Add to the total sum
+                return acc + value;
+            }
+            return acc;
+        }, 0);
     });
+    console.log(sumValues, 'sumishere');
+
+    // Convert sumValues object into an array of objects suitable for VictoryPie
+    const pieData = Object.keys(sumValues).map(key => ({
+        typeOfCell: key,
+        percentage: sumValues[key],
+    }));
 
     return (
         <div style={{ textAlign: 'center' }}>
@@ -46,29 +52,21 @@ const Chart: React.FC<ChartProps> = ({ dataBins }) => {
                     : 'No Data'}
             </h2>
             <VictoryPie
-                data={processedData}
+                data={pieData}
+                x="typeOfCell"
+                y="percentage"
                 colorScale="qualitative"
                 innerRadius={50}
-                labelRadius={50}
-                labelComponent={
-                    <VictoryTooltip
-                        cornerRadius={5}
-                        style={{ fontSize: 10 }}
-                        flyoutStyle={{
-                            fill: 'white',
-                            stroke: 'black',
-                            strokeWidth: 1,
-                        }} // Add border
-                        flyoutPadding={{
-                            top: 5,
-                            bottom: 5,
-                            left: 10,
-                            right: 10,
-                        }}
-                    />
+                labelRadius={100}
+                labelComponent={<VictoryTooltip />}
+                labels={(data: any) =>
+                    `Cell type: ${data.typeOfCell}\nPercentage: ${(
+                        (data.percentage / totalSum) *
+                        100
+                    ).toFixed(2)}%`
                 }
-                width={300} // Set the width of the pie chart
-                height={300} // Set the height of the pie chart
+                height={400} // Adjust height as necessary
+                width={600} // Adjust width as necessary
             />
         </div>
     );
