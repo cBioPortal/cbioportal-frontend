@@ -76,6 +76,7 @@ interface HomePageState {
     dataBins: DataBin[] | null; // State variable to hold data bins
     chartType: string | null;
     pieChartData: any[]; // State variable to hold the selected chart type
+    tooltipEnabled: boolean;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -99,6 +100,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             dataBins: null, // Initialize dataBins as null
             chartType: null, // Initialize chartType as null
             pieChartData: [],
+            tooltipEnabled: false,
         };
     }
 
@@ -133,6 +135,10 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         }
     }
 
+    @autobind
+    handleTooltipCheckboxChange(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({ tooltipEnabled: event.target.checked });
+    }
     async fetchDataBins(genericAssayEntityId: string, profileType: string) {
         const { store } = this.props;
         const gaDataBins = await internalClient.fetchGenericAssayDataBinCountsUsingPOST(
@@ -376,6 +382,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             dataBins,
             chartType,
             pieChartData,
+            tooltipEnabled,
         } = this.state;
 
         return (
@@ -489,6 +496,36 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             </select>
                             {console.log(entityNames, 'hereareentitynames')}
                         </div>
+                        <div className="checkbox-wrapper-3">
+                            <input
+                                type="checkbox"
+                                id="cbx-3"
+                                checked={tooltipEnabled}
+                                onChange={this.handleTooltipCheckboxChange}
+                            />
+                            <label htmlFor="cbx-3" className="toggle">
+                                <span></span>
+                            </label>
+                            <label
+                                htmlFor="cbx-3"
+                                className="toggle-label"
+                                style={{
+                                    fontWeight: 'normal',
+                                    fontSize: '15px',
+                                    marginLeft: '10px',
+                                }}
+                            >
+                                Show the data table
+                            </label>
+                        </div>
+
+                        {/* <label className="checkbox-container">One
+                           <input
+                                type="checkbox"
+                                checked={tooltipEnabled}
+                                onChange={this.handleTooltipCheckboxChange}
+                            />  <span className="checkmark"></span>
+                           </label> */}
                     </div>
                 </div>
 
@@ -504,6 +541,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 <PieChart
                                     dataBins={dataBins}
                                     pieChartData={pieChartData}
+                                    tooltipEnabled={tooltipEnabled}
                                 />
                             ) : null}
                         </div>
