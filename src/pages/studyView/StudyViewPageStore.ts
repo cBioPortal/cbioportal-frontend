@@ -1393,6 +1393,12 @@ export class StudyViewPageStore
                         const chartInfo = this._genericAssayChartMap.get(
                             chartMeta.uniqueKey
                         )!;
+                        console.log(
+                            chartInfo,
+                            this.molecularProfileMapByType,
+                            selectedSamples,
+                            'answer'
+                        );
                         data = await getGenericAssayDataAsClinicalData(
                             chartInfo,
                             this.molecularProfileMapByType,

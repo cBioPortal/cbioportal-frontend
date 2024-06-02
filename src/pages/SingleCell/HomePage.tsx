@@ -1,4 +1,6 @@
-import React, { Component } from 'react';
+import React, { Component, useRef } from 'react';
+import _ from 'lodash';
+
 import {
     DataBinMethodConstants,
     StudyViewPageStore,
@@ -32,6 +34,18 @@ interface Option {
     dataType: string;
     genericAssayEntityId: string;
     patientLevel: boolean;
+}
+
+interface gaData {
+    uniqueSampleKey: string;
+    uniquePatientKey: string;
+    molecularProfileId: string;
+    sampleId: string;
+    patientId: string;
+    studyId: string;
+    value: string;
+    genericAssayStableId: string;
+    stableId: string;
 }
 
 interface ProfileOptions {
@@ -76,6 +90,11 @@ interface HomePageState {
     dataBins: DataBin[] | null; // State variable to hold data bins
     chartType: string | null;
     pieChartData: any[]; // State variable to hold the selected chart type
+    tooltipEnabled: boolean;
+    downloadSvg: boolean;
+    downloadPdf: boolean;
+    downloadOption: string;
+    BarDownloadData: gaData[];
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -99,6 +118,11 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             dataBins: null, // Initialize dataBins as null
             chartType: null, // Initialize chartType as null
             pieChartData: [],
+            tooltipEnabled: false,
+            downloadSvg: false,
+            downloadPdf: false,
+            downloadOption: '',
+            BarDownloadData: [],
         };
     }
 
@@ -108,8 +132,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         sampleId: string[]
     ) {
         const { store } = this.props;
-
-        // Hardcoded parameters
         const params = {
             molecularProfileId: selectedValue,
             genericAssayFilter: {
@@ -119,13 +141,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         };
 
         try {
-            // Fetching data using the provided API method and hardcoded parameters
             const resp = await client.fetchGenericAssayDataInMolecularProfileUsingPOST(
                 params
-            );
-            console.log(
-                resp,
-                'response from fetchGenericAssayDataInMolecularProfileUsingPOST'
             );
             return resp;
         } catch (error) {
@@ -133,6 +150,10 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         }
     }
 
+    @autobind
+    handleTooltipCheckboxChange(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({ tooltipEnabled: event.target.checked });
+    }
     async fetchDataBins(genericAssayEntityId: string, profileType: string) {
         const { store } = this.props;
         const gaDataBins = await internalClient.fetchGenericAssayDataBinCountsUsingPOST(
@@ -156,7 +177,19 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         // Update the dataBins state with fetched data
         this.setState({ dataBins });
     }
-
+    @autobind
+    handleDownloadClick(event: React.ChangeEvent<HTMLSelectElement>) {
+        const selectedOption = event.target.value;
+        this.setState({ downloadOption: selectedOption });
+        if (selectedOption === 'svg') {
+            this.setState({ downloadSvg: true });
+        } else if (selectedOption === 'pdf') {
+            this.setState({ downloadPdf: true });
+        } else {
+            this.setState({ downloadSvg: false });
+            this.setState({ downloadPdf: false });
+        }
+    }
     @autobind
     async handleSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
         console.log(this.state.entityNames, 'entityNames');
@@ -164,6 +197,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
         const selectedValue = event.target.value;
 
+        const studyId = 'gbm_cptac_2021';
         const selectedProfile = this.state.molecularProfiles.find(
             profile => profile.value === selectedValue
         );
@@ -254,7 +288,28 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         event: React.ChangeEvent<HTMLSelectElement>
     ) {
         const selectedEntityId = event.target.value;
+
         const { selectedOption } = this.state;
+        const studyId = 'gbm_cptac_2021';
+
+        const Molecularprofiles = await this.molecularProfiles([studyId]);
+        const selectedMolecularProfile = Molecularprofiles.find(
+            (profile: any) => profile.molecularProfileId === selectedOption
+        );
+        console.log(selectedMolecularProfile, 'here is the selected profile');
+
+        const BarchartDownloadData = await this.getGenericAssayDataAsClinicalData(
+            selectedMolecularProfile,
+            selectedEntityId
+        );
+        this.setState({ BarDownloadData: BarchartDownloadData });
+        console.log(BarchartDownloadData, 'hereisbarchartdownloaddata');
+
+        console.log(
+            selectedEntityId,
+            selectedOption,
+            'these are from entity change'
+        );
         const { store } = this.props;
 
         if (
@@ -340,7 +395,49 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
         return profiles;
     }
+    async getGenericAssayDataAsClinicalData(
+        selectedMolecularProfiles: any,
+        genericAssayEntityId: any
+    ) {
+        const molecularProfiles = { 0: selectedMolecularProfiles };
 
+        console.log(molecularProfiles, 'molecularprof');
+        if (_.isEmpty(molecularProfiles)) {
+            return [];
+        }
+        const molecularProfileMapByStudyId = _.keyBy(
+            molecularProfiles,
+            molecularProfile => molecularProfile.studyId
+        );
+        const samples = this.props.store.samples.result;
+        console.log(samples, 'here are samples');
+        const filteredSamples = samples.filter(
+            (sample: any) => sample.studyId in molecularProfileMapByStudyId
+        );
+        const sampleMolecularIdentifiers = filteredSamples.map(
+            (sample: any) => ({
+                sampleId: sample.sampleId,
+                molecularProfileId:
+                    molecularProfileMapByStudyId[sample.studyId]
+                        .molecularProfileId,
+            })
+        );
+        console.log(
+            genericAssayEntityId,
+            sampleMolecularIdentifiers,
+            'SAMPLEMOL'
+        );
+        const gaDataList = await client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+            {
+                projection: 'DETAILED',
+                genericAssayDataMultipleStudyFilter: {
+                    genericAssayStableIds: [genericAssayEntityId],
+                    sampleMolecularIdentifiers: sampleMolecularIdentifiers,
+                } as GenericAssayDataMultipleStudyFilter,
+            }
+        );
+        return gaDataList;
+    }
     async retrieveAllProfiledSamples(
         selectedValue: string
     ): Promise<MolecularProfileDataItem[]> {
@@ -376,6 +473,10 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             dataBins,
             chartType,
             pieChartData,
+            tooltipEnabled,
+            downloadSvg,
+            downloadPdf,
+            BarDownloadData,
         } = this.state;
 
         return (
@@ -489,6 +590,41 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             </select>
                             {console.log(entityNames, 'hereareentitynames')}
                         </div>
+                        {/* <div className="dropdown-container">
+    <select
+        id="downloadOptionsSelect"
+        className="custom-dropdown"
+        onChange={this.handleDownloadClick}
+        value={this.state.downloadOption}
+    >
+        <option value="" disabled hidden>Select download option...</option>
+        <option value="svg">SVG</option>
+        <option value="pdf">PDF</option>
+        <option value="data" disabled>Data (coming soon)</option>
+    </select>
+</div> */}
+                        <div className="checkbox-wrapper-3">
+                            <input
+                                type="checkbox"
+                                id="cbx-3"
+                                checked={tooltipEnabled}
+                                onChange={this.handleTooltipCheckboxChange}
+                            />
+                            <label htmlFor="cbx-3" className="toggle">
+                                <span></span>
+                            </label>
+                            <label
+                                htmlFor="cbx-3"
+                                className="toggle-label"
+                                style={{
+                                    fontWeight: 'normal',
+                                    fontSize: '15px',
+                                    marginLeft: '10px',
+                                }}
+                            >
+                                Show the data table
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -499,11 +635,23 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             {/* <PieChart dataBins={dataBins} pieChartData={pieChartData} /> */}
 
                             {chartType === 'bar' ? (
-                                <BarChart dataBins={dataBins} />
+                                <BarChart
+                                    dataBins={dataBins}
+                                    downloadData={BarDownloadData}
+                                />
                             ) : chartType === 'pie' ? (
                                 <PieChart
                                     dataBins={dataBins}
                                     pieChartData={pieChartData}
+                                    tooltipEnabled={tooltipEnabled}
+                                    downloadSvg={downloadSvg}
+                                    downloadPdf={downloadPdf}
+                                    setDownloadSvg={(value: any) =>
+                                        this.setState({ downloadSvg: value })
+                                    }
+                                    setDownloadPdf={(value: any) =>
+                                        this.setState({ downloadPdf: value })
+                                    }
                                 />
                             ) : null}
                         </div>
