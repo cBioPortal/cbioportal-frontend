@@ -1097,7 +1097,7 @@ export class StudySummaryTab extends React.Component<
                                         }
                                         onResizeStop={this.onResize}
                                     >
-                                        {this.store.visibleAttributes.map(
+                                        {this.store.visibleAttributesForSummary.map(
                                             this.renderAttributeChart
                                         )}
                                     </ReactGridLayout>

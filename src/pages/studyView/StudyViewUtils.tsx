@@ -7,7 +7,6 @@ import {
     ClinicalData,
     ClinicalDataBin,
     ClinicalDataBinFilter,
-    ClinicalDataCollection,
     ClinicalDataCount,
     ClinicalDataMultiStudyFilter,
     DataFilterValue,
@@ -28,6 +27,7 @@ import {
     PatientIdentifier,
     PatientTreatmentRow,
     Sample,
+    SampleClinicalDataCollection,
     SampleIdentifier,
     SampleTreatmentRow,
     StructuralVariantFilterQuery,
@@ -114,6 +114,7 @@ import { MolecularAlterationType_filenameSuffix } from 'shared/lib/StoreUtils';
 import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import Survival from 'pages/groupComparison/Survival';
 import { StructVarMultiSelectionTableRow } from './table/StructuralVariantMultiSelectionTable';
+import { ObservableMap } from 'mobx';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -883,16 +884,12 @@ function startsWithSvChartType(chartType?: string) {
 }
 
 export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
-    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
-    if (!startsWithSvChartType(parts[0])) {
-        return parts;
-    } else {
-        return _.map(
-            parts,
-            molecularProfileId =>
-                molecularProfileId.split(CHART_TYPE_SEPARATOR)[1]
-        );
-    }
+    // chartType is added to the uniqueKey for structural variant charts. Example: 'structural_variants;study1_structural_variants:study2_structural_variants'.
+    // and for other charts, it is not added. Example: 'study1_mutations:study2_mutations'.
+    return (startsWithSvChartType(uniqueKey)
+        ? uniqueKey.substring(uniqueKey.indexOf(CHART_TYPE_SEPARATOR) + 1)
+        : uniqueKey
+    ).split(UNIQUE_KEY_SEPARATOR);
 }
 
 export function getCurrentDate() {
@@ -2421,14 +2418,17 @@ export function getOptionsByChartMetaDataType(
     chartsMeta: ChartMeta[],
     selectedAttrs: string[],
     allChartTypes: { [id: string]: ChartType },
-    isSharedCustomData?: (chartId: string) => boolean
+    isSharedCustomData?: (chartId: string) => boolean,
+    chartMetaSetForCurrentTab?: { [id: string]: ChartMeta }
 ): ChartOption[] {
     return _.map(chartsMeta, chartMeta => {
         const chartOption: ChartOption = {
             label: chartMeta.displayName,
             key: chartMeta.uniqueKey,
             chartType: allChartTypes[chartMeta.uniqueKey],
-            disabled: false,
+            disabled: chartMetaSetForCurrentTab
+                ? !chartMetaSetForCurrentTab[chartMeta.uniqueKey] // if not chartMeta for current tab, disable option
+                : false,
             selected: selectedAttrs.includes(chartMeta.uniqueKey),
             freq: 100,
         };
@@ -2807,6 +2807,7 @@ export function isSpecialChart(chartMeta: ChartMeta) {
 
 export function getChartSettingsMap(
     visibleAttributes: ChartMeta[],
+    visibleAttributesForSummary: ChartMeta[],
     columns: number,
     chartDimensionSet: { [uniqueId: string]: ChartDimension },
     chartTypeSet: { [uniqueId: string]: ChartType },
@@ -2824,7 +2825,7 @@ export function getChartSettingsMap(
 ) {
     if (!gridLayout) {
         gridLayout = calculateLayout(
-            visibleAttributes,
+            visibleAttributesForSummary,
             columns,
             chartDimensionSet,
             []
@@ -2895,9 +2896,19 @@ export function getChartSettingsMap(
         }
         chartSettingsMap[id] = chartSetting;
     });
+    // attributes disabled on the summary tab (used in Clinical Data tab but not Summary tab like most survival attributes)
+    const disabledAttributes = _.differenceWith(
+        visibleAttributes,
+        visibleAttributesForSummary,
+        _.isEqual
+    );
     // add layout for each chart
     gridLayout.forEach(layout => {
-        if (layout.i && chartSettingsMap[layout.i]) {
+        if (
+            layout.i &&
+            chartSettingsMap[layout.i] &&
+            !disabledAttributes.find(a => a.uniqueKey === layout.i)
+        ) {
             chartSettingsMap[layout.i].layout = {
                 x: layout.x,
                 y: layout.y,
@@ -3158,82 +3169,39 @@ export function updateSavedUserPreferenceChartIds(
 }
 
 export async function getAllClinicalDataByStudyViewFilter(
-    studyViewFilter: StudyViewFilter
-): Promise<{ [sampleId: string]: { [attributeId: string]: string } }> {
-    const localClinicalDataCollection: ClinicalDataCollection = {
-        sampleClinicalData: [],
-        patientClinicalData: [],
-    };
-    let remoteClinicalDataCollection: ClinicalDataCollection = {
-        sampleClinicalData: [],
-        patientClinicalData: [],
-    };
-    const maxPageSize = 500000;
-    let pageNumber = 0;
-    do {
-        const remoteClinicalDataCollection = await internalClient.fetchClinicalDataClinicalTableUsingPOST(
-            {
-                studyViewFilter,
-                pageSize: maxPageSize,
-                pageNumber: pageNumber,
-                searchTerm: undefined,
-                sortBy: undefined,
-                direction: 'ASC',
-            }
-        );
-        localClinicalDataCollection.sampleClinicalData = localClinicalDataCollection.sampleClinicalData.concat(
-            remoteClinicalDataCollection.sampleClinicalData
-        );
-        localClinicalDataCollection.patientClinicalData = localClinicalDataCollection.patientClinicalData.concat(
-            remoteClinicalDataCollection.patientClinicalData
-        );
-        pageNumber++;
-    } while (remoteClinicalDataCollection.sampleClinicalData.length > 0);
+    studyViewFilter: StudyViewFilter,
+    searchTerm: string | undefined,
+    sortAttributeId: any,
+    sortDirection: any = 'asc',
+    pageSize: number,
+    pageNumber: number
+): Promise<{
+    totalItems: number;
+    data: { [uniqueSampleKey: string]: ClinicalData[] };
+}> {
+    const [remoteClinicalDataCollection, totalItems]: [
+        SampleClinicalDataCollection,
+        number
+    ] = await internalClient
+        .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
+            studyViewFilter,
+            pageSize: pageSize | 500,
+            pageNumber: pageNumber || 0,
+            searchTerm: searchTerm,
+            sortBy: sortAttributeId,
+            direction: sortDirection?.toUpperCase(),
+        })
+        .then(response => {
+            return [
+                response.body,
+                parseInt(response.header['total-count'] || 0),
+            ];
+        });
 
-    return mergeClinicalDataCollection(localClinicalDataCollection);
-}
-
-export function mergeClinicalDataCollection(
-    clinicalDataCollection: ClinicalDataCollection
-): { [sampleId: string]: { [attributeId: string]: string } } {
-    const patientKeyedSampleData = _.groupBy(
-        clinicalDataCollection.sampleClinicalData,
-        d => d.uniquePatientKey
-    );
-    let patientKeyedSampleKeyedData = _.mapValues(
-        patientKeyedSampleData,
-        sampleData => _.groupBy(sampleData, d => d.uniqueSampleKey)
-    );
-    const patientKeyedPatientData = _.groupBy(
-        clinicalDataCollection.patientClinicalData,
-        d => d.uniquePatientKey
-    );
-    // Add patient level clinical data to sample clinical data.
-    patientKeyedSampleKeyedData = _.mapValues(
-        patientKeyedSampleKeyedData,
-        (sampleKeyedData, patientId) =>
-            _.mapValues(sampleKeyedData, (attrs, sampleId) =>
-                attrs.concat(patientKeyedPatientData[patientId] || [])
-            )
-    );
-    // Remove patient id levels (only keep sample id keys).
-    const sampleKeyedData = _.assign(
-        {},
-        ..._.values(patientKeyedSampleKeyedData)
-    );
-    // Put all clinical attributes in one object.
-    const sampleCollapsedAttributes = _.mapValues(
-        sampleKeyedData,
-        clinicalData => {
-            const data = _.map(clinicalData, (datum: ClinicalData) => {
-                const obj: { [attrId: string]: string } = {};
-                obj[datum.clinicalAttributeId] = datum.value;
-                return obj;
-            });
-            return _.assign({}, ...data);
-        }
-    );
-    return sampleCollapsedAttributes;
+    return {
+        totalItems,
+        data: remoteClinicalDataCollection.byUniqueSampleKey,
+    };
 }
 
 export function convertClinicalDataBinsToDataBins(
@@ -4623,4 +4591,290 @@ export async function getMutationTypesDownloadData(
         });
         return data.join('\n');
     } else return '';
+}
+
+export function getChartMetaSet(
+    customCharts: ObservableMap<string, ChartMeta>,
+    molecularProfiles: MolecularProfile[],
+    geneSpecificCharts: ObservableMap<string, ChartMeta>,
+    genericAssayCharts: ObservableMap<string, ChartMeta>,
+    XvsYCharts: ObservableMap<string, ChartMeta>,
+    clinicalAttributes: ClinicalAttribute[],
+    survivalPlots: SurvivalType[],
+    mutationProfiles: MolecularProfile[],
+    structuralVariantProfiles: MolecularProfile[],
+    isStructVarTableFeatureEnabled: boolean,
+    cnaProfiles: MolecularProfile[],
+    shouldDisplayClinicalEventTypeCounts?: boolean,
+    shouldDisplaySampleTreatments?: boolean,
+    shouldDisplayPatientTreatments?: boolean,
+    shouldDisplaySampleTreatmentGroups?: boolean,
+    shouldDisplayPatientTreatmentGroups?: boolean,
+    shouldDisplaySampleTreatmentTarget?: boolean,
+    shouldDisplayPatientTreatmentTarget?: boolean
+) {
+    const customChartMetaSet = _.fromPairs(customCharts.toJSON());
+    // if no molecular profiles, genomic profiles sample count chart will be empty so remove it from set
+    if (_.isEmpty(molecularProfiles)) {
+        delete customChartMetaSet[
+            SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT
+        ];
+    }
+    const geneSpecificChartMetaSet = _.fromPairs(geneSpecificCharts.toJSON());
+    const genericAssayChartMetaSet = _.fromPairs(genericAssayCharts.toJSON());
+    const XvsYChartMetaSet = _.fromPairs(XvsYCharts.toJSON());
+
+    // Add meta information for clinical attributes
+    // Convert to a Set for easy access and to update attribute meta information (would be useful while adding new features)
+    const clinicalAttributeChartMetaSet = _.reduce(
+        clinicalAttributes,
+        (acc: { [id: string]: ChartMeta }, attribute) => {
+            const uniqueKey = getUniqueKey(attribute);
+            const priority = getPriorityByClinicalAttribute(attribute);
+            if (priority > -1) {
+                acc[uniqueKey] = {
+                    displayName: attribute.displayName,
+                    uniqueKey: uniqueKey,
+                    dataType: getChartMetaDataType(uniqueKey),
+                    patientAttribute: attribute.patientAttribute,
+                    description: attribute.description,
+                    priority: priority,
+                    renderWhenDataChange: false,
+                    clinicalAttribute: attribute,
+                };
+            }
+            return acc;
+        },
+        {}
+    );
+
+    const survivalPlotChartMetaSet = _.reduce(
+        survivalPlots,
+        (acc: { [id: string]: ChartMeta }, survivalPlot) => {
+            acc[survivalPlot.id] = {
+                uniqueKey: survivalPlot.id,
+                dataType: getChartMetaDataType(survivalPlot.id),
+                patientAttribute: true,
+                displayName: survivalPlot.title,
+                clinicalAttribute: survivalPlot.survivalStatusAttribute,
+                // use survival status attribute's priority as KM plot's priority for non-reserved plots
+                priority:
+                    STUDY_VIEW_CONFIG.priority[survivalPlot.id] ||
+                    getPriorityByClinicalAttribute(
+                        survivalPlot.survivalStatusAttribute
+                    ),
+                renderWhenDataChange: false,
+                description: '',
+            };
+            return acc;
+        },
+        {}
+    );
+
+    const chartMetaSet = {
+        ...customChartMetaSet,
+        ...geneSpecificChartMetaSet,
+        ...genericAssayChartMetaSet,
+        ...XvsYChartMetaSet,
+        ...clinicalAttributeChartMetaSet,
+        ...survivalPlotChartMetaSet,
+    };
+
+    if (shouldDisplayClinicalEventTypeCounts) {
+        chartMetaSet['CLINICAL_EVENT_TYPE_COUNTS'] = {
+            uniqueKey: 'CLINICAL_EVENT_TYPE_COUNTS',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: false,
+            displayName: 'Timeline Events Availability',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE
+            ),
+            renderWhenDataChange: false,
+            description:
+                'Distinct Counts of Patients with Clinical Event Types',
+        };
+    }
+    if (shouldDisplaySampleTreatments) {
+        chartMetaSet['SAMPLE_TREATMENTS'] = {
+            uniqueKey: 'SAMPLE_TREATMENTS',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: true,
+            displayName: 'Treatment per Sample (pre/post)',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
+            ),
+            renderWhenDataChange: true,
+            description:
+                'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
+        };
+    }
+
+    if (shouldDisplayPatientTreatments) {
+        chartMetaSet['PATIENT_TREATMENTS'] = {
+            uniqueKey: 'PATIENT_TREATMENTS',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: true,
+            displayName: 'Treatment per Patient',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.PATIENT_TREATMENTS_TABLE
+            ),
+            renderWhenDataChange: true,
+            description:
+                'List of treatments and the corresponding number of patients treated',
+        };
+    }
+
+    if (shouldDisplaySampleTreatmentGroups) {
+        chartMetaSet['SAMPLE_TREATMENT_GROUPS'] = {
+            uniqueKey: 'SAMPLE_TREATMENT_GROUPS',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: true,
+            displayName: 'Treatment Category per Sample (pre/post)',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE
+            ),
+            renderWhenDataChange: true,
+            description:
+                'List of treatments groups and the corresponding number of samples acquired before treatment or after/on treatment',
+        };
+    }
+
+    if (shouldDisplayPatientTreatmentGroups) {
+        chartMetaSet['PATIENT_TREATMENT_GROUPS'] = {
+            uniqueKey: 'PATIENT_TREATMENT_GROUPS',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: true,
+            displayName: 'Treatment Category per Patient',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
+            ),
+            renderWhenDataChange: true,
+            description:
+                'List of treatment groups and the corresponding number of patients treated',
+        };
+    }
+
+    if (shouldDisplaySampleTreatmentTarget) {
+        chartMetaSet['SAMPLE_TREATMENT_TARGET'] = {
+            uniqueKey: 'SAMPLE_TREATMENT_TARGET',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: true,
+            displayName: 'Treatment Target per Sample (pre/post)',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE
+            ),
+            renderWhenDataChange: true,
+            description:
+                'List of treatments targets and the corresponding number of samples acquired before treatment or after/on treatment',
+        };
+    }
+
+    if (shouldDisplayPatientTreatmentTarget) {
+        chartMetaSet['PATIENT_TREATMENT_TARGET'] = {
+            uniqueKey: 'PATIENT_TREATMENT_TARGET',
+            dataType: ChartMetaDataTypeEnum.CLINICAL,
+            patientAttribute: true,
+            displayName: 'Treatment Target per Patient',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE
+            ),
+            renderWhenDataChange: true,
+            description:
+                'List of treatment targets and the corresponding number of patients treated',
+        };
+    }
+
+    if (!_.isEmpty(mutationProfiles)) {
+        const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+            mutationProfiles.map(
+                mutationProfile => mutationProfile.molecularProfileId
+            )
+        );
+        chartMetaSet[uniqueKey] = {
+            uniqueKey: uniqueKey,
+            dataType: ChartMetaDataTypeEnum.GENOMIC,
+            patientAttribute: false,
+            displayName: 'Mutated Genes',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.MUTATED_GENES_TABLE
+            ),
+            renderWhenDataChange: false,
+            description: '',
+        };
+    }
+
+    if (!_.isEmpty(structuralVariantProfiles)) {
+        const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+            structuralVariantProfiles.map(p => p.molecularProfileId),
+            ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+        );
+        chartMetaSet[uniqueKey] = {
+            uniqueKey,
+            dataType: ChartMetaDataTypeEnum.GENOMIC,
+            patientAttribute: false,
+            displayName: 'Structural Variant Genes',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+            ),
+            renderWhenDataChange: true,
+            description: '',
+        };
+        if (isStructVarTableFeatureEnabled) {
+            const structVarGenesUniqueKey = getUniqueKeyFromMolecularProfileIds(
+                structuralVariantProfiles.map(p => p.molecularProfileId),
+                ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+            );
+            chartMetaSet[structVarGenesUniqueKey] = {
+                uniqueKey: structVarGenesUniqueKey,
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
+                patientAttribute: false,
+                displayName: 'Structural Variants',
+                priority: getDefaultPriorityByUniqueKey(
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                ),
+                renderWhenDataChange: true,
+                description: '',
+            };
+        }
+    }
+
+    if (!_.isEmpty(cnaProfiles)) {
+        const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+            cnaProfiles.map(
+                mutationProfile => mutationProfile.molecularProfileId
+            )
+        );
+        chartMetaSet[uniqueKey] = {
+            uniqueKey,
+            dataType: ChartMetaDataTypeEnum.GENOMIC,
+            patientAttribute: false,
+            displayName: 'CNA Genes',
+            renderWhenDataChange: false,
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.CNA_GENES_TABLE
+            ),
+            description: '',
+        };
+    }
+
+    return chartMetaSet;
+}
+
+export function getVisibleAttributes(
+    chartVisibility: ObservableMap<string, boolean>,
+    chartMetaSet: {
+        [id: string]: ChartMeta;
+    }
+) {
+    return _.reduce(
+        Array.from(chartVisibility.entries() || []),
+        (acc: ChartMeta[], [chartUniqueKey, visible]) => {
+            if (visible && chartMetaSet[chartUniqueKey]) {
+                let chartMeta = chartMetaSet[chartUniqueKey];
+                acc.push(chartMeta);
+            }
+            return acc;
+        },
+        []
+    );
 }

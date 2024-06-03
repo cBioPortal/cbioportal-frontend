@@ -3945,208 +3945,6 @@
         "description": "Get the tags of a study",
         "operationId": "getTagsUsingGET"
       }
-    },
-    "/api/treatments/display-patient": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "Agent",
-            "enum": [
-              "Agent",
-              "AgentClass",
-              "AgentTarget"
-            ],
-            "in": "query",
-            "name": "tier",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyIds",
-            "required": true,
-            "schema": {
-              "description": "List of Study IDs",
-              "items": {
-                "maxLength": 10000000,
-                "minLength": 1,
-                "type": "string"
-              },
-              "maxItems": 10000000,
-              "minItems": 1,
-              "type": "array",
-              "uniqueItems": true
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        },
-        "tags": [
-          "Treatments"
-        ],
-        "description": "Should patient level treatments be displayed",
-        "operationId": "getContainsTreatmentDataUsingPOST"
-      }
-    },
-    "/api/treatments/display-sample": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "Agent",
-            "enum": [
-              "Agent",
-              "AgentClass",
-              "AgentTarget"
-            ],
-            "in": "query",
-            "name": "tier",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyIds",
-            "required": true,
-            "schema": {
-              "description": "List of Study IDs",
-              "items": {
-                "maxLength": 10000000,
-                "minLength": 1,
-                "type": "string"
-              },
-              "maxItems": 10000000,
-              "minItems": 1,
-              "type": "array",
-              "uniqueItems": true
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        },
-        "tags": [
-          "Treatments"
-        ],
-        "description": "Should sample level treatments be displayed",
-        "operationId": "getContainsSampleTreatmentDataUsingPOST"
-      }
-    },
-    "/api/treatments/patient": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "Agent",
-            "enum": [
-              "Agent",
-              "AgentClass",
-              "AgentTarget"
-            ],
-            "in": "query",
-            "name": "tier",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/PatientTreatmentRow"
-              },
-              "type": "array"
-            }
-          }
-        },
-        "tags": [
-          "Treatments"
-        ],
-        "description": "Get all patient level treatments",
-        "operationId": "getAllPatientTreatmentsUsingPOST"
-      }
-    },
-    "/api/treatments/sample": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "Agent",
-            "enum": [
-              "Agent",
-              "AgentClass",
-              "AgentTarget"
-            ],
-            "in": "query",
-            "name": "tier",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/SampleTreatmentRow"
-              },
-              "type": "array"
-            }
-          }
-        },
-        "tags": [
-          "Treatments"
-        ],
-        "description": "Get all sample level treatments",
-        "operationId": "getAllSampleTreatmentsUsingPOST"
-      }
     }
   },
   "definitions": {
@@ -4181,75 +3979,6 @@
         "totalCopyNumber": {
           "format": "int32",
           "type": "integer"
-        }
-      },
-      "type": "object"
-    },
-    "AlterationFilter": {
-      "properties": {
-        "copyNumberAlterationEventTypes": {
-          "additionalProperties": {
-            "type": "boolean"
-          },
-          "type": "object"
-        },
-        "includeDriver": {
-          "type": "boolean"
-        },
-        "includeGermline": {
-          "type": "boolean"
-        },
-        "includeSomatic": {
-          "type": "boolean"
-        },
-        "includeUnknownOncogenicity": {
-          "type": "boolean"
-        },
-        "includeUnknownStatus": {
-          "type": "boolean"
-        },
-        "includeUnknownTier": {
-          "type": "boolean"
-        },
-        "includeVUS": {
-          "type": "boolean"
-        },
-        "mutationEventTypes": {
-          "additionalProperties": {
-            "type": "boolean"
-          },
-          "type": "object"
-        },
-        "structuralVariants": {
-          "type": "boolean"
-        },
-        "tiersBooleanMap": {
-          "additionalProperties": {
-            "type": "boolean"
-          },
-          "type": "object"
-        }
-      },
-      "type": "object"
-    },
-    "AndedPatientTreatmentFilters": {
-      "properties": {
-        "filters": {
-          "items": {
-            "$ref": "#/definitions/OredPatientTreatmentFilters"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "AndedSampleTreatmentFilters": {
-      "properties": {
-        "filters": {
-          "items": {
-            "$ref": "#/definitions/OredSampleTreatmentFilters"
-          },
-          "type": "array"
         }
       },
       "type": "object"
@@ -4439,20 +4168,6 @@
       ],
       "type": "object"
     },
-    "ClinicalDataFilter": {
-      "properties": {
-        "attributeId": {
-          "type": "string"
-        },
-        "values": {
-          "items": {
-            "$ref": "#/definitions/DataFilterValue"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
     "ClinicalDataIdentifier": {
       "properties": {
         "entityId": {
@@ -4514,24 +4229,6 @@
       },
       "type": "object"
     },
-    "ClinicalEventSample": {
-      "properties": {
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "timeTaken": {
-          "format": "int32",
-          "type": "integer"
-        }
-      },
-      "type": "object"
-    },
     "CopyNumberSeg": {
       "properties": {
         "chromosome": {
@@ -4578,31 +4275,6 @@
         "start",
         "studyId"
       ],
-      "type": "object"
-    },
-    "DataFilter": {
-      "properties": {
-        "values": {
-          "items": {
-            "$ref": "#/definitions/DataFilterValue"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "DataFilterValue": {
-      "properties": {
-        "end": {
-          "type": "number"
-        },
-        "start": {
-          "type": "number"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
       "type": "object"
     },
     "DiscreteCopyNumberData": {
@@ -4714,79 +4386,6 @@
         "geneticEntityId",
         "hugoGeneSymbol"
       ],
-      "type": "object"
-    },
-    "GeneFilter": {
-      "properties": {
-        "geneQueries": {
-          "items": {
-            "items": {
-              "$ref": "#/definitions/GeneFilterQuery"
-            },
-            "type": "array"
-          },
-          "type": "array"
-        },
-        "molecularProfileIds": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "uniqueItems": true
-        }
-      },
-      "type": "object"
-    },
-    "GeneFilterQuery": {
-      "properties": {
-        "alterations": {
-          "items": {
-            "enum": [
-              "AMP",
-              "GAIN",
-              "DIPLOID",
-              "HETLOSS",
-              "HOMDEL"
-            ],
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "entrezGeneId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "includeDriver": {
-          "type": "boolean"
-        },
-        "includeGermline": {
-          "type": "boolean"
-        },
-        "includeSomatic": {
-          "type": "boolean"
-        },
-        "includeUnknownOncogenicity": {
-          "type": "boolean"
-        },
-        "includeUnknownStatus": {
-          "type": "boolean"
-        },
-        "includeUnknownTier": {
-          "type": "boolean"
-        },
-        "includeVUS": {
-          "type": "boolean"
-        },
-        "tiersBooleanMap": {
-          "additionalProperties": {
-            "type": "boolean"
-          },
-          "type": "object"
-        }
-      },
       "type": "object"
     },
     "GenePanel": {
@@ -4944,23 +4543,6 @@
       ],
       "type": "object"
     },
-    "GenericAssayDataFilter": {
-      "properties": {
-        "profileType": {
-          "type": "string"
-        },
-        "stableId": {
-          "type": "string"
-        },
-        "values": {
-          "items": {
-            "$ref": "#/definitions/DataFilterValue"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
     "GenericAssayDataMultipleStudyFilter": {
       "description": "List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Generic Assay IDs",
       "properties": {
@@ -5058,23 +4640,6 @@
           },
           "maxItems": 10000000,
           "minItems": 1,
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "GenomicDataFilter": {
-      "properties": {
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "profileType": {
-          "type": "string"
-        },
-        "values": {
-          "items": {
-            "$ref": "#/definitions/DataFilterValue"
-          },
           "type": "array"
         }
       },
@@ -5418,36 +4983,6 @@
       ],
       "type": "object"
     },
-    "MutationDataFilter": {
-      "properties": {
-        "categorization": {
-          "enum": [
-            "MUTATED",
-            "MUTATION_TYPE"
-          ],
-          "type": "string"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "profileType": {
-          "type": "string"
-        },
-        "values": {
-          "items": {
-            "items": {
-              "$ref": "#/definitions/DataFilterValue"
-            },
-            "type": "array"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "categorization"
-      ],
-      "type": "object"
-    },
     "MutationFilter": {
       "description": "List of Sample IDs/Sample List ID and Entrez Gene IDs",
       "properties": {
@@ -5550,28 +5085,6 @@
       ],
       "type": "object"
     },
-    "OredPatientTreatmentFilters": {
-      "properties": {
-        "filters": {
-          "items": {
-            "$ref": "#/definitions/PatientTreatmentFilter"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "OredSampleTreatmentFilters": {
-      "properties": {
-        "filters": {
-          "items": {
-            "$ref": "#/definitions/SampleTreatmentFilter"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
     "Patient": {
       "properties": {
         "cancerStudy": {
@@ -5626,33 +5139,6 @@
           "type": "string"
         },
         "studyId": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "PatientTreatmentFilter": {
-      "properties": {
-        "treatment": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "PatientTreatmentRow": {
-      "properties": {
-        "count": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "samples": {
-          "items": {
-            "$ref": "#/definitions/ClinicalEventSample"
-          },
-          "type": "array",
-          "uniqueItems": true
-        },
-        "treatment": {
           "type": "string"
         }
       },
@@ -5790,240 +5276,10 @@
       },
       "type": "object"
     },
-    "SampleTreatmentFilter": {
-      "properties": {
-        "time": {
-          "enum": [
-            "Pre",
-            "Post"
-          ],
-          "type": "string"
-        },
-        "treatment": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "SampleTreatmentRow": {
-      "properties": {
-        "count": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "samples": {
-          "items": {
-            "$ref": "#/definitions/ClinicalEventSample"
-          },
-          "type": "array",
-          "uniqueItems": true
-        },
-        "time": {
-          "enum": [
-            "Pre",
-            "Post"
-          ],
-          "type": "string"
-        },
-        "treatment": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "ServerStatusMessage": {
       "properties": {
         "status": {
           "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "StructuralVariantFilterQuery": {
-      "properties": {
-        "gene1Query": {
-          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
-        },
-        "gene2Query": {
-          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
-        },
-        "includeDriver": {
-          "type": "boolean"
-        },
-        "includeGermline": {
-          "type": "boolean"
-        },
-        "includeSomatic": {
-          "type": "boolean"
-        },
-        "includeUnknownOncogenicity": {
-          "type": "boolean"
-        },
-        "includeUnknownStatus": {
-          "type": "boolean"
-        },
-        "includeUnknownTier": {
-          "type": "boolean"
-        },
-        "includeVUS": {
-          "type": "boolean"
-        },
-        "tiersBooleanMap": {
-          "additionalProperties": {
-            "type": "boolean"
-          },
-          "type": "object"
-        }
-      },
-      "type": "object"
-    },
-    "StructuralVariantGeneSubQuery": {
-      "properties": {
-        "entrezId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "hugoSymbol": {
-          "type": "string"
-        },
-        "specialValue": {
-          "enum": [
-            "ANY_GENE",
-            "NO_GENE"
-          ],
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "StudyViewFilter": {
-      "description": "Study view filter",
-      "properties": {
-        "alterationFilter": {
-          "$ref": "#/definitions/AlterationFilter"
-        },
-        "caseLists": {
-          "items": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "type": "array"
-        },
-        "clinicalDataFilters": {
-          "items": {
-            "$ref": "#/definitions/ClinicalDataFilter"
-          },
-          "type": "array"
-        },
-        "clinicalEventFilters": {
-          "items": {
-            "$ref": "#/definitions/DataFilter"
-          },
-          "type": "array"
-        },
-        "customDataFilters": {
-          "items": {
-            "$ref": "#/definitions/ClinicalDataFilter"
-          },
-          "type": "array"
-        },
-        "geneFilters": {
-          "items": {
-            "$ref": "#/definitions/GeneFilter"
-          },
-          "type": "array"
-        },
-        "genericAssayDataFilters": {
-          "items": {
-            "$ref": "#/definitions/GenericAssayDataFilter"
-          },
-          "type": "array"
-        },
-        "genomicDataFilters": {
-          "items": {
-            "$ref": "#/definitions/GenomicDataFilter"
-          },
-          "type": "array"
-        },
-        "genomicProfiles": {
-          "items": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "type": "array"
-        },
-        "mutationDataFilters": {
-          "items": {
-            "$ref": "#/definitions/MutationDataFilter"
-          },
-          "type": "array"
-        },
-        "patientTreatmentFilters": {
-          "$ref": "#/definitions/AndedPatientTreatmentFilters"
-        },
-        "patientTreatmentGroupFilters": {
-          "$ref": "#/definitions/AndedPatientTreatmentFilters"
-        },
-        "patientTreatmentTargetFilters": {
-          "$ref": "#/definitions/AndedPatientTreatmentFilters"
-        },
-        "sampleIdentifiers": {
-          "items": {
-            "$ref": "#/definitions/SampleIdentifier"
-          },
-          "maxItems": 2147483647,
-          "minItems": 1,
-          "type": "array"
-        },
-        "sampleTreatmentFilters": {
-          "$ref": "#/definitions/AndedSampleTreatmentFilters"
-        },
-        "sampleTreatmentGroupFilters": {
-          "$ref": "#/definitions/AndedSampleTreatmentFilters"
-        },
-        "sampleTreatmentTargetFilters": {
-          "$ref": "#/definitions/AndedSampleTreatmentFilters"
-        },
-        "structuralVariantFilters": {
-          "items": {
-            "$ref": "#/definitions/StudyViewStructuralVariantFilter"
-          },
-          "type": "array"
-        },
-        "studyIds": {
-          "items": {
-            "maxLength": 2147483647,
-            "minLength": 1,
-            "type": "string"
-          },
-          "maxItems": 2147483647,
-          "minItems": 1,
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "StudyViewStructuralVariantFilter": {
-      "properties": {
-        "molecularProfileIds": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "uniqueItems": true
-        },
-        "structVarQueries": {
-          "items": {
-            "items": {
-              "$ref": "#/definitions/StructuralVariantFilterQuery"
-            },
-            "type": "array"
-          },
-          "type": "array"
         }
       },
       "type": "object"

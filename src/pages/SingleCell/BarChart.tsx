@@ -116,12 +116,24 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
     };
 
     const handleDownloadData = () => {
-        const headers = Object.keys(downloadData[0]);
+        // Define the columns you want to include in the download
+        const columnsToDownload = ['patientId', 'sampleId', 'studyId', 'value'];
+
+        // Filter the headers to include only the columns specified
+        const headers = columnsToDownload;
+
+        // Map through the data and create rows with only the selected columns
         const dataRows = downloadData.map((item: any) =>
-            headers.map(header => item[header]).join('\t')
+            columnsToDownload.map(column => item[column]).join('\t')
         );
+
+        // Join the headers and data rows into a single string
         const dataString = [headers.join('\t'), ...dataRows].join('\n');
+
+        // Create a blob with the data string
         const blob = new Blob([dataString], { type: 'text/plain' });
+
+        // Create a URL for the blob and initiate download
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
