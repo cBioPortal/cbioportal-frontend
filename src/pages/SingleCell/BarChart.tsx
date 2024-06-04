@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { VictoryBar, VictoryChart, VictoryAxis, VictoryTooltip } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
-import { jsPDF } from 'jspdf-yworks';
-import svg2pdf from 'svg2pdf.js';
-import request from 'superagent';
+import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 
 interface DataBin {
     id: string;
@@ -42,9 +40,6 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
         boolean
     >(false);
     const chartRef = useRef<HTMLDivElement>(null);
-
-    console.log(dataBins, 'here are dataBins');
-    console.log(downloadData, 'here are downloadDATA');
 
     const filteredData = dataBins.filter(bin => bin.specialValue !== 'NA');
 
@@ -87,53 +82,32 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
         return { x: label, y: bin.count, range: range, count: bin.count };
     });
 
-    const handleDownloadSVG = () => {
+    const handleDownloadSVGWrapper = () => {
         if (chartRef.current) {
             const svg = chartRef.current.querySelector('svg');
             if (svg) {
-                const serializer = new XMLSerializer();
-                const svgString = serializer.serializeToString(svg);
-                const blob = new Blob([svgString], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'bar_chart.svg';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+                handleDownloadSVG({ current: svg });
             }
         }
     };
 
-    const handleDownloadPDF = async () => {
+    const handleDownloadPDFWrapper = async () => {
         if (chartRef.current) {
             const svg = chartRef.current.querySelector('svg');
             if (svg) {
-                await svgToPdfDownload('bar_chart.pdf', svg);
+                await handleDownloadPDF({ current: svg });
             }
         }
     };
 
     const handleDownloadData = () => {
-        // Define the columns you want to include in the download
         const columnsToDownload = ['patientId', 'sampleId', 'studyId', 'value'];
-
-        // Filter the headers to include only the columns specified
         const headers = columnsToDownload;
-
-        // Map through the data and create rows with only the selected columns
         const dataRows = downloadData.map((item: any) =>
             columnsToDownload.map(column => item[column]).join('\t')
         );
-
-        // Join the headers and data rows into a single string
         const dataString = [headers.join('\t'), ...dataRows].join('\n');
-
-        // Create a blob with the data string
         const blob = new Blob([dataString], { type: 'text/plain' });
-
-        // Create a URL for the blob and initiate download
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -165,7 +139,6 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
                             }}
                             tickValues={xAxisLabels}
                         />
-                        {console.log(xAxisLabels, 'xasos', processedData)}
                         <VictoryAxis dependentAxis />
                         <VictoryBar
                             data={processedData}
@@ -235,7 +208,7 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
                                 borderBottom: '1px solid #ddd',
                                 transition: 'background-color 0.3s ease',
                             }}
-                            onClick={handleDownloadPDF}
+                            onClick={handleDownloadPDFWrapper}
                             onMouseEnter={e =>
                                 (e.currentTarget.style.backgroundColor =
                                     '#f0f0f0')
@@ -253,7 +226,7 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
                                 cursor: 'pointer',
                                 transition: 'background-color 0.3s ease',
                             }}
-                            onClick={handleDownloadSVG}
+                            onClick={handleDownloadSVGWrapper}
                             onMouseEnter={e =>
                                 (e.currentTarget.style.backgroundColor =
                                     '#f0f0f0')
@@ -289,40 +262,5 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
         </div>
     );
 };
-
-async function svgToPdfDownload(
-    fileName: string,
-    svg: any,
-    fontUrl: string = 'FREE_SANS_PUBLIC_URL'
-) {
-    const width =
-            svg.scrollWidth ||
-            parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!),
-        height =
-            svg.scrollHeight ||
-            parseInt(
-                (svg.attributes.getNamedItem('height') as Attr).nodeValue!
-            );
-
-    let direction = 'l';
-    if (height > width) {
-        direction = 'p';
-    }
-    const pdf = new jsPDF(direction, 'pt', [width, height]);
-
-    try {
-        const fontRequest = await request.get(fontUrl);
-        pdf.addFileToVFS('FreeSans-normal.ttf', fontRequest.body.FreeSans);
-        pdf.addFont('FreeSans-normal.ttf', 'Arial', 'normal');
-    } catch (ex) {
-    } finally {
-        await svg2pdf(svg, pdf, {
-            xOffset: 0,
-            yOffset: 0,
-            scale: 1,
-        });
-        pdf.save(fileName);
-    }
-}
 
 export default BarChart;

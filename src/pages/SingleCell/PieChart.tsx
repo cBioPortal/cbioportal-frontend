@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { VictoryPie, VictoryTooltip } from 'victory';
-import { jsPDF } from 'jspdf-yworks';
-import svg2pdf from 'svg2pdf.js';
-import request from 'superagent';
+import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 import './styles.css';
 
 // Define the DataBin interface
@@ -62,15 +60,14 @@ const Chart: React.FC<ChartProps> = ({
 
     useEffect(() => {
         if (downloadSvg) {
-            handleDownloadSVG();
-            // handleDownloadPDF();
+            handleDownloadSVG(svgRef);
             setDownloadSvg(false);
         }
     }, [downloadSvg]);
+
     useEffect(() => {
         if (downloadPdf) {
-            // handleDownloadSVG();
-            handleDownloadPDF();
+            handleDownloadPDF(svgRef);
             setDownloadPdf(false);
         }
     }, [downloadPdf]);
@@ -138,31 +135,6 @@ const Chart: React.FC<ChartProps> = ({
         };
     });
 
-    // Function to handle SVG download
-    const handleDownloadSVG = () => {
-        if (svgRef.current) {
-            const svg = svgRef.current;
-            const serializer = new XMLSerializer();
-            const svgString = serializer.serializeToString(svg);
-            const blob = new Blob([svgString], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'pie_chart.svg';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
-    };
-
-    // Function to handle PDF download using svgToPdfDownload
-    const handleDownloadPDF = async () => {
-        if (svgRef.current) {
-            const svg = svgRef.current;
-            await svgToPdfDownload('pie_chart.pdf', svg);
-        }
-    };
     const handleDownloadData = () => {
         const headers = Object.keys(pieChartData[0]);
         const dataRows = pieChartData.map(item =>
@@ -179,6 +151,7 @@ const Chart: React.FC<ChartProps> = ({
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
+
     return (
         <div>
             <div
@@ -290,7 +263,7 @@ const Chart: React.FC<ChartProps> = ({
                                         transition:
                                             'background-color 0.3s ease',
                                     }}
-                                    onClick={handleDownloadPDF}
+                                    onClick={() => handleDownloadPDF(svgRef)}
                                     onMouseEnter={e =>
                                         (e.currentTarget.style.backgroundColor =
                                             '#f0f0f0')
@@ -309,7 +282,7 @@ const Chart: React.FC<ChartProps> = ({
                                         transition:
                                             'background-color 0.3s ease',
                                     }}
-                                    onClick={handleDownloadSVG}
+                                    onClick={() => handleDownloadSVG(svgRef)}
                                     onMouseEnter={e =>
                                         (e.currentTarget.style.backgroundColor =
                                             '#f0f0f0')
@@ -476,46 +449,5 @@ const Chart: React.FC<ChartProps> = ({
         </div>
     );
 };
-
-// SVG to PDF conversion function
-async function svgToPdfDownload(
-    fileName: string,
-    svg: any,
-    fontUrl: string = 'FREE_SANS_PUBLIC_URL'
-) {
-    const width =
-            svg.scrollWidth ||
-            parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!),
-        height =
-            svg.scrollHeight ||
-            parseInt(
-                (svg.attributes.getNamedItem('height') as Attr).nodeValue!
-            );
-
-    // create a new jsPDF instance
-    let direction = 'l';
-    if (height > width) {
-        direction = 'p';
-    }
-    const pdf = new jsPDF(direction, 'pt', [width, height]);
-
-    // we need this to provide special character support for PDF
-    try {
-        const fontRequest = await request.get(fontUrl);
-        // override Arial with FreeSans to display special characters
-        pdf.addFileToVFS('FreeSans-normal.ttf', fontRequest.body.FreeSans);
-        pdf.addFont('FreeSans-normal.ttf', 'Arial', 'normal');
-    } catch (ex) {
-        // we just won't embed font
-    } finally {
-        // render the svg element
-        await svg2pdf(svg, pdf, {
-            xOffset: 0,
-            yOffset: 0,
-            scale: 1,
-        });
-        pdf.save(fileName);
-    }
-}
 
 export default Chart;
