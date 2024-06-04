@@ -349,8 +349,10 @@ const Chart: React.FC<ChartProps> = ({
                             <div
                                 className="custom-scrollbar"
                                 style={{
-                                    maxHeight: '150px', // Adjust as necessary
+                                    height: '150px', // Adjust as necessary
                                     overflowY: 'auto',
+                                    resize: 'both',
+                                    overflow: 'auto',
                                     backgroundColor: 'white',
                                     pointerEvents: 'auto', // Re-enable pointer events for the scrollable container
                                 }}

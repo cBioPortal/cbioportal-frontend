@@ -84,7 +84,7 @@
 /* In your global CSS file (e.g., styles.css) */
 
 /* For Webkit-based browsers */
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
     width: 6px;
 }
 ::-webkit-scrollbar-track {
@@ -97,7 +97,7 @@
 }
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
-}
+} */
 
 /* For Firefox */
 .custom-scrollbar {
