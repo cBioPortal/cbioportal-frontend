@@ -615,6 +615,12 @@ export type Vcf = {
         'ref': string
 
 };
+export type VueReference = {
+    'pubmedId': number
+
+        'referenceText': string
+
+};
 export type Vues = {
     'comment': string
 
@@ -630,13 +636,15 @@ export type Vues = {
 
         'hugoGeneSymbol': string
 
-        'pubmedId': number
+        'mutationOrigin': string
 
-        'referenceText': string
+        'references': Array < VueReference >
 
         'revisedProteinEffect': string
 
         'revisedVariantClassification': string
+
+        'revisedVariantClassificationStandard': string
 
         'transcriptId': string
 
