@@ -98,7 +98,18 @@ export default class AnnotationColumnFormatter {
             annotationDownloadContent.push(
                 `reVUE: ${
                     annotationData.vue
-                        ? `${annotationData.vue.comment},PubmedId:${annotationData.vue.pubmedId},PredictedEffect:${annotationData.vue.defaultEffect},ExperimentallyValidatedEffect:${annotationData.vue.revisedVariantClassification},RevisedProteinEffect:${annotationData.vue.revisedProteinEffect}`
+                        ? `${
+                              annotationData.vue.comment
+                          },PubmedId:${annotationData.vue.references
+                              .map(reference => reference.pubmedId)
+                              .join(';')},PredictedEffect:${
+                              annotationData.vue.defaultEffect
+                          },ExperimentallyValidatedEffect:${
+                              annotationData.vue
+                                  .revisedVariantClassificationStandard
+                          },RevisedProteinEffect:${
+                              annotationData.vue.revisedProteinEffect
+                          }`
                         : 'no'
                 }`
             );
