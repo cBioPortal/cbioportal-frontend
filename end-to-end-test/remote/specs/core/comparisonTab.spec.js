@@ -16,7 +16,7 @@ const sampleGroupNameInputField = '[data-test="sampleGroupNameInputField"]';
 const dataTestSampleGroupNameSubmitButton =
     '[data-test="sampleGroupNameSubmitButton"]';
 
-describe.only('results view comparison tab venn diagram tests', function() {
+describe('results view comparison tab venn diagram tests', function() {
     describe('create new group tests', function() {
         before(async function() {
             // await browser.debug()
@@ -230,7 +230,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
     });
 });
 
-describe.only('results view comparison tab upset diagram tests', function() {
+describe('results view comparison tab upset diagram tests', function() {
     describe('create new group tests', function() {
         before(async function() {
             await goToUrlAndSetLocalStorage(
