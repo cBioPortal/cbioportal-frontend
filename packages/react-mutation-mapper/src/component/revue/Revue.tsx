@@ -43,7 +43,7 @@ export const RevueTooltipContent: React.FunctionComponent<{
                         >
                             {reference.referenceText}
                         </a>
-                        {index !== props.vue.references.length - 1 ? ';' : ''}
+                        {index < props.vue.references.length - 1 && ';'}
                     </span>
                 ))}
                 {`): `}
