@@ -105,7 +105,8 @@ export default class AnnotationColumnFormatter {
                               .join(';')},PredictedEffect:${
                               annotationData.vue.defaultEffect
                           },ExperimentallyValidatedEffect:${
-                              annotationData.vue.revisedVariantClassification
+                              annotationData.vue
+                                  .revisedVariantClassificationStandard
                           },RevisedProteinEffect:${
                               annotationData.vue.revisedProteinEffect
                           }`
