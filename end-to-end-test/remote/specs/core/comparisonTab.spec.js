@@ -3,6 +3,7 @@ const {
     goToUrlAndSetLocalStorage,
     jsApiClick,
     getElement,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -40,7 +41,7 @@ describe('results view comparison tab venn diagram tests', function() {
         });
 
         it('select from sample venn diagram', async function() {
-            jsApiClick('rect[data-test="sample0VennRegion"]');
+            await jsApiClick('rect[data-test="sample0VennRegion"]');
             await browser.pause(100);
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
@@ -56,8 +57,8 @@ describe('results view comparison tab venn diagram tests', function() {
             (await getElement(SampleCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
             await browser.pause(200);
-            const el = await getElement(
-                '[data-test="sampleGroupNameInputField"]'
+            const el = await getElementByTestHandle(
+                'sampleGroupNameInputField'
             );
             const isDisplayed = await el.isDisplayed();
             console.log('isDisplayed', isDisplayed);
@@ -75,13 +76,13 @@ describe('results view comparison tab venn diagram tests', function() {
                 'Altered group'
             );
             await browser.pause(100);
-            await getElement('[data-test="sampleDuplicateGroupNameMessage"]', {
+            await getElementByTestHandle('sampleDuplicateGroupNameMessage', {
                 timeout: 20000,
             });
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="sampleDuplicateGroupNameMessage"]'
+                    await getElementByTestHandle(
+                        'sampleDuplicateGroupNameMessage'
                     )
                 ).getText(),
                 'Another group already has this name.'
@@ -95,13 +96,13 @@ describe('results view comparison tab venn diagram tests', function() {
 
             (await getElement(sampleGroupNameInputField)).setValue('KRAS');
             await browser.pause(100);
-            await getElement('[data-test="sampleDuplicateGroupNameMessage"]', {
+            await getElementByTestHandle('sampleDuplicateGroupNameMessage', {
                 timeout: 20000,
             });
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="sampleDuplicateGroupNameMessage"]'
+                    await getElementByTestHandle(
+                        'sampleDuplicateGroupNameMessage'
                     )
                 ).getText(),
                 'Another group already has this name.'
@@ -129,8 +130,8 @@ describe('results view comparison tab venn diagram tests', function() {
 
         it('select from patient venn diagram', async function() {
             // unselect sample venn diagram first
-            jsApiClick('rect[data-test="sample0VennRegion"]');
-            jsApiClick('rect[data-test="patient0VennRegion"]');
+            await jsApiClick('rect[data-test="sample0VennRegion"]');
+            await jsApiClick('rect[data-test="patient0VennRegion"]');
             await browser.pause(100);
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
@@ -148,16 +149,14 @@ describe('results view comparison tab venn diagram tests', function() {
             await browser.pause(100);
             assert.equal(
                 await (
-                    await getElement('[data-test="patientGroupNameInputField"]')
+                    await getElementByTestHandle('patientGroupNameInputField')
                 ).isDisplayed(),
                 true,
                 'group name input exists'
             );
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientGroupNameSubmitButton"]'
-                    )
+                    await getElementByTestHandle('patientGroupNameSubmitButton')
                 ).isEnabled(),
                 false
             );
@@ -165,49 +164,45 @@ describe('results view comparison tab venn diagram tests', function() {
 
         it('patient venn diagram: group name exists, should disable submit button', async function() {
             (
-                await getElement('[data-test="patientGroupNameInputField"]')
+                await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('Unaltered group');
             await browser.pause(100);
-            await getElement('[data-test="patientDuplicateGroupNameMessage"]', {
+            await getElementByTestHandle('patientDuplicateGroupNameMessage', {
                 timeout: 20000,
             });
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientDuplicateGroupNameMessage"]'
+                    await getElementByTestHandle(
+                        'patientDuplicateGroupNameMessage'
                     )
                 ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientGroupNameSubmitButton"]'
-                    )
+                    await getElementByTestHandle('patientGroupNameSubmitButton')
                 ).isEnabled(),
                 false
             );
 
             (
-                await getElement('[data-test="patientGroupNameInputField"]')
+                await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('BRAF');
             await browser.pause(100);
-            await getElement('[data-test="patientDuplicateGroupNameMessage"]', {
+            await getElementByTestHandle('patientDuplicateGroupNameMessage', {
                 timeout: 20000,
             });
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientDuplicateGroupNameMessage"]'
+                    await getElementByTestHandle(
+                        'patientDuplicateGroupNameMessage'
                     )
                 ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientGroupNameSubmitButton"]'
-                    )
+                    await getElementByTestHandle('patientGroupNameSubmitButton')
                 ).isEnabled(),
                 false
             );
@@ -215,14 +210,12 @@ describe('results view comparison tab venn diagram tests', function() {
 
         it('patient venn diagram: new group name, should enable submit button', async function() {
             (
-                await getElement('[data-test="patientGroupNameInputField"]')
+                await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('new group');
             await browser.pause(100);
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientGroupNameSubmitButton"]'
-                    )
+                    await getElementByTestHandle('patientGroupNameSubmitButton')
                 ).isEnabled(),
                 true
             );
@@ -253,7 +246,7 @@ describe('results view comparison tab upset diagram tests', function() {
         });
 
         it('select from sample upset diagram', async function() {
-            jsApiClick('.sample_Altered_group_KRAS_bar');
+            await jsApiClick('.sample_Altered_group_KRAS_bar');
             await browser.pause(100);
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
@@ -289,7 +282,7 @@ describe('results view comparison tab upset diagram tests', function() {
                 'Altered group'
             );
             await browser.pause(100);
-            await getElement('[data-test="sampleDuplicateGroupNameMessage"]', {
+            await getElementByTestHandle('sampleDuplicateGroupNameMessage', {
                 timeout: 20000,
             });
             assert.equal(
@@ -321,8 +314,8 @@ describe('results view comparison tab upset diagram tests', function() {
 
         it('select from patient upset diagram', async function() {
             // unselect sample venn diagram first
-            jsApiClick('.sample_Altered_group_KRAS_bar');
-            jsApiClick('.patient_Unaltered_group_bar');
+            await jsApiClick('.sample_Altered_group_KRAS_bar');
+            await jsApiClick('.patient_Unaltered_group_bar');
             await browser.pause(100);
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
@@ -340,16 +333,14 @@ describe('results view comparison tab upset diagram tests', function() {
             await browser.pause(100);
             assert.equal(
                 await (
-                    await getElement('[data-test="patientGroupNameInputField"]')
+                    await getElementByTestHandle('patientGroupNameInputField')
                 ).isDisplayed(),
                 true,
                 'group name input exists'
             );
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientGroupNameSubmitButton"]'
-                    )
+                    await getElementByTestHandle('patientGroupNameSubmitButton')
                 ).isEnabled(),
                 false
             );
@@ -357,25 +348,23 @@ describe('results view comparison tab upset diagram tests', function() {
 
         it('patient upset diagram: group name exists, should disable submit button', async function() {
             (
-                await getElement('[data-test="patientGroupNameInputField"]')
+                await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('BRAF');
             await browser.pause(100);
-            await getElement('[data-test="patientDuplicateGroupNameMessage"]', {
+            await getElementByTestHandle('patientDuplicateGroupNameMessage', {
                 timeout: 20000,
             });
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientDuplicateGroupNameMessage"]'
+                    await getElementByTestHandle(
+                        'patientDuplicateGroupNameMessage'
                     )
                 ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientGroupNameSubmitButton"]'
-                    )
+                    await getElementByTestHandle('patientGroupNameSubmitButton')
                 ).isEnabled(),
                 false
             );
@@ -383,14 +372,12 @@ describe('results view comparison tab upset diagram tests', function() {
 
         it('patient upset diagram: new group name, should enable submit button', async function() {
             (
-                await getElement('[data-test="patientGroupNameInputField"]')
+                await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('new group');
             await browser.pause(100);
             assert.equal(
                 await (
-                    await getElement(
-                        '[data-test="patientGroupNameSubmitButton"]'
-                    )
+                    await getElementByTestHandle('patientGroupNameSubmitButton')
                 ).isEnabled(),
                 true
             );

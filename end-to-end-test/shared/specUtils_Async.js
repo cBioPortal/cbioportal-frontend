@@ -438,9 +438,9 @@ function checkOncoprintElement(selector, viewports) {
     });
 }
 
-function jsApiHover(selector) {
-    browser.execute(function(_selector) {
-        $(_selector)[0].dispatchEvent(
+async function jsApiHover(selector) {
+    await browser.execute(async function(_selector) {
+        (await $(_selector))[0].dispatchEvent(
             new MouseEvent('mouseover', { bubbles: true })
         );
     }, selector);
