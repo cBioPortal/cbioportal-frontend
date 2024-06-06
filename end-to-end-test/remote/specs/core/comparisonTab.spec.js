@@ -41,7 +41,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
 
         it('select from sample venn diagram', async function() {
             jsApiClick('rect[data-test="sample0VennRegion"]');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
                 true
@@ -55,7 +55,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
         it('click sample venn diagram create group button', async function() {
             (await getElement(SampleCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
-            browser.pause(200);
+            await browser.pause(200);
             const el = await getElement(
                 '[data-test="sampleGroupNameInputField"]'
             );
@@ -74,7 +74,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
             (await getElement(sampleGroupNameInputField)).setValue(
                 'Altered group'
             );
-            browser.pause(100);
+            await browser.pause(100);
             await getElement('[data-test="sampleDuplicateGroupNameMessage"]', {
                 timeout: 20000,
             });
@@ -94,7 +94,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
             );
 
             (await getElement(sampleGroupNameInputField)).setValue('KRAS');
-            browser.pause(100);
+            await browser.pause(100);
             await getElement('[data-test="sampleDuplicateGroupNameMessage"]', {
                 timeout: 20000,
             });
@@ -118,7 +118,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
             await (await getElement(sampleGroupNameInputField)).setValue(
                 'new group'
             );
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (
                     await getElement(dataTestSampleGroupNameSubmitButton)
@@ -131,7 +131,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
             // unselect sample venn diagram first
             jsApiClick('rect[data-test="sample0VennRegion"]');
             jsApiClick('rect[data-test="patient0VennRegion"]');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
                 false
@@ -145,7 +145,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
         it('click patient venn diagram create group button', async function() {
             (await getElement(PatientCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (
                     await getElement('[data-test="patientGroupNameInputField"]')
@@ -167,7 +167,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
             (
                 await getElement('[data-test="patientGroupNameInputField"]')
             ).setValue('Unaltered group');
-            browser.pause(100);
+            await browser.pause(100);
             await getElement('[data-test="patientDuplicateGroupNameMessage"]', {
                 timeout: 20000,
             });
@@ -191,7 +191,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
             (
                 await getElement('[data-test="patientGroupNameInputField"]')
             ).setValue('BRAF');
-            browser.pause(100);
+            await browser.pause(100);
             await getElement('[data-test="patientDuplicateGroupNameMessage"]', {
                 timeout: 20000,
             });
@@ -217,7 +217,7 @@ describe.only('results view comparison tab venn diagram tests', function() {
             (
                 await getElement('[data-test="patientGroupNameInputField"]')
             ).setValue('new group');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (
                     await getElement(
@@ -254,7 +254,7 @@ describe.only('results view comparison tab upset diagram tests', function() {
 
         it('select from sample upset diagram', async function() {
             jsApiClick('.sample_Altered_group_KRAS_bar');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
                 true
@@ -268,7 +268,7 @@ describe.only('results view comparison tab upset diagram tests', function() {
         it('click sample upset diagram create group button', async function() {
             (await getElement(SampleCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (
                     await getElement(sampleGroupNameInputField)
@@ -288,7 +288,7 @@ describe.only('results view comparison tab upset diagram tests', function() {
             (await getElement(sampleGroupNameInputField)).setValue(
                 'Altered group'
             );
-            browser.pause(100);
+            await browser.pause(100);
             await getElement('[data-test="sampleDuplicateGroupNameMessage"]', {
                 timeout: 20000,
             });
@@ -310,7 +310,7 @@ describe.only('results view comparison tab upset diagram tests', function() {
 
         it('sample upset diagram: new group name, should enable submit button', async function() {
             (await getElement(sampleGroupNameInputField)).setValue('new group');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (
                     await getElement(dataTestSampleGroupNameSubmitButton)
@@ -323,7 +323,7 @@ describe.only('results view comparison tab upset diagram tests', function() {
             // unselect sample venn diagram first
             jsApiClick('.sample_Altered_group_KRAS_bar');
             jsApiClick('.patient_Unaltered_group_bar');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
                 false
@@ -337,7 +337,7 @@ describe.only('results view comparison tab upset diagram tests', function() {
         it('click patient upset diagram create group button', async function() {
             (await getElement(PatientCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (
                     await getElement('[data-test="patientGroupNameInputField"]')
@@ -359,7 +359,7 @@ describe.only('results view comparison tab upset diagram tests', function() {
             (
                 await getElement('[data-test="patientGroupNameInputField"]')
             ).setValue('BRAF');
-            browser.pause(100);
+            await browser.pause(100);
             await getElement('[data-test="patientDuplicateGroupNameMessage"]', {
                 timeout: 20000,
             });
@@ -385,7 +385,7 @@ describe.only('results view comparison tab upset diagram tests', function() {
             (
                 await getElement('[data-test="patientGroupNameInputField"]')
             ).setValue('new group');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
                 await (
                     await getElement(
