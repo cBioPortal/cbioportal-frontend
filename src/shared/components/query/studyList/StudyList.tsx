@@ -14,6 +14,7 @@ import { FilteredCancerTreeView } from '../StudyListLogic';
 import {
     CancerTreeNode,
     CancerTypeWithVisibility,
+    PUBLIC_VIRTUAL_STUDY_NAME,
 } from '../CancerStudyTreeData';
 import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip, {
@@ -303,7 +304,10 @@ export default class StudyList extends QueryStoreComponent<
                 },
             ];
 
-            if (this.store.isVirtualStudy(study.studyId)) {
+            if (
+                this.store.isVirtualStudy(study.studyId) &&
+                study.cancerTypeId != PUBLIC_VIRTUAL_STUDY_NAME
+            ) {
                 links.push({
                     icon: 'trash',
                     tooltip: 'Delete this virtual study.',

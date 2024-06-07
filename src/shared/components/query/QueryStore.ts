@@ -792,6 +792,19 @@ export class QueryStore {
         }
     }, []);
 
+    readonly publicVirtualStudies = remoteData(async () => {
+        if (ServerConfigHelpers.sessionServiceIsEnabled()) {
+            try {
+                const studies = await sessionServiceClient.getPublicVirtualStudies();
+                return studies;
+            } catch (ex) {
+                return [];
+            }
+        } else {
+            return [];
+        }
+    }, []);
+
     private readonly userVirtualStudiesSet = remoteData<{
         [studyId: string]: VirtualStudy;
     }>({
@@ -1490,6 +1503,9 @@ export class QueryStore {
             virtualStudies: this.forDownloadTab
                 ? []
                 : this.userVirtualStudies.result,
+            publicVirtualStudies: this.forDownloadTab
+                ? []
+                : this.publicVirtualStudies.result,
             maxTreeDepth: this.maxTreeDepth,
         });
     }
