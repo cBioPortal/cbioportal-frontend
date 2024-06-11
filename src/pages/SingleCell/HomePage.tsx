@@ -23,6 +23,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import PieChart from './PieChart';
 import BarChart from './BarChart';
+import StackedBarChart from './StackedBarChart';
 import './styles.css';
 
 interface Option {
@@ -95,6 +96,7 @@ interface HomePageState {
     downloadPdf: boolean;
     downloadOption: string;
     BarDownloadData: gaData[];
+    stackEntity: any;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -123,6 +125,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             downloadPdf: false,
             downloadOption: '',
             BarDownloadData: [],
+            stackEntity: '',
         };
     }
 
@@ -193,16 +196,11 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     @autobind
     async handleSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
         console.log(this.state.entityNames, 'entityNames');
-        // this.fetchGenericAssayData(this.state.entityNames);
-
         const selectedValue = event.target.value;
-
         const studyId = 'gbm_cptac_2021';
         const selectedProfile = this.state.molecularProfiles.find(
             profile => profile.value === selectedValue
         );
-
-        // Store the selectedValue in the state
         this.setState({ selectedValue, chartType: null, selectedEntity: null });
 
         if (selectedProfile) {
@@ -282,7 +280,10 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         }
         console.log(this.state.entityNames, 'emtit');
     }
-
+    @autobind
+    handleEntitySelectChangeStack(event: React.ChangeEvent<HTMLSelectElement>) {
+        this.setState({ stackEntity: event.target.value });
+    }
     @autobind
     async handleEntitySelectChange(
         event: React.ChangeEvent<HTMLSelectElement>
@@ -547,6 +548,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         </div>
 
                         {/* Dropdown for selecting chart type */}
+
                         <div className="dropdown-container">
                             <select
                                 id="chartTypeSelect"
@@ -565,73 +567,105 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         </div>
 
                         {/* Dropdown for selecting entity */}
-                        <div className="dropdown-container">
-                            <select
-                                id="entitySelect"
-                                className="custom-dropdown"
-                                onChange={this.handleEntitySelectChange}
-                                value={
-                                    selectedEntity
-                                        ? selectedEntity.stableId
-                                        : ''
-                                }
-                                disabled={
-                                    !selectedOption || chartType !== 'bar'
-                                }
-                            >
-                                <option value="" disabled hidden>
-                                    Select cell type...
-                                </option>
-                                {entityNames.map(entityName => (
-                                    <option key={entityName} value={entityName}>
-                                        {entityName.replace(/_/g, ' ')}
+                        {chartType === 'bar' && (
+                            <div className="dropdown-container">
+                                <select
+                                    id="entitySelect"
+                                    className="custom-dropdown"
+                                    onChange={this.handleEntitySelectChange}
+                                    value={
+                                        selectedEntity
+                                            ? selectedEntity.stableId
+                                            : ''
+                                    }
+                                    disabled={!selectedOption}
+                                >
+                                    <option value="" disabled hidden>
+                                        Select cell type...
                                     </option>
-                                ))}
-                            </select>
-                            {console.log(entityNames, 'hereareentitynames')}
-                        </div>
-                        {/* <div className="dropdown-container">
-    <select
-        id="downloadOptionsSelect"
-        className="custom-dropdown"
-        onChange={this.handleDownloadClick}
-        value={this.state.downloadOption}
-    >
-        <option value="" disabled hidden>Select download option...</option>
-        <option value="svg">SVG</option>
-        <option value="pdf">PDF</option>
-        <option value="data" disabled>Data (coming soon)</option>
-    </select>
-</div> */}
-                        <div className="checkbox-wrapper-3">
-                            <input
-                                type="checkbox"
-                                id="cbx-3"
-                                checked={tooltipEnabled}
-                                onChange={this.handleTooltipCheckboxChange}
-                            />
-                            <label htmlFor="cbx-3" className="toggle">
-                                <span></span>
-                            </label>
-                            <label
-                                htmlFor="cbx-3"
-                                className="toggle-label"
-                                style={{
-                                    fontWeight: 'normal',
-                                    fontSize: '15px',
-                                    marginLeft: '10px',
-                                }}
-                            >
-                                Show the data table
-                            </label>
-                        </div>
+                                    {entityNames.map(entityName => (
+                                        <option
+                                            key={entityName}
+                                            value={entityName}
+                                        >
+                                            {entityName.replace(/_/g, ' ')}
+                                        </option>
+                                    ))}
+                                </select>
+                                {console.log(entityNames, 'hereareentitynames')}
+                            </div>
+                        )}
+
+                        {chartType === 'stack' && (
+                            <div className="dropdown-container">
+                                <select
+                                    id="entitySelect"
+                                    className="custom-dropdown"
+                                    onChange={
+                                        this.handleEntitySelectChangeStack
+                                    }
+                                    value={
+                                        this.state.stackEntity
+                                            ? this.state.stackEntity
+                                            : ''
+                                    }
+                                    disabled={!selectedOption}
+                                >
+                                    <option value="" disabled hidden>
+                                        Sort by cell type...
+                                    </option>
+                                    {entityNames.map(entityName => (
+                                        <option
+                                            key={entityName}
+                                            value={entityName}
+                                        >
+                                            {entityName.replace(/_/g, ' ')}
+                                        </option>
+                                    ))}
+                                </select>
+                                {console.log(entityNames, 'hereareentitynames')}
+                            </div>
+                        )}
+
+                        {chartType === 'pie' && (
+                            <div className="checkbox-wrapper-3">
+                                <input
+                                    type="checkbox"
+                                    id="cbx-3"
+                                    checked={tooltipEnabled}
+                                    onChange={this.handleTooltipCheckboxChange}
+                                />
+                                <label htmlFor="cbx-3" className="toggle">
+                                    <span></span>
+                                </label>
+                                <label
+                                    htmlFor="cbx-3"
+                                    className="toggle-label"
+                                    style={{
+                                        fontWeight: 'normal',
+                                        fontSize: '15px',
+                                        marginLeft: '10px',
+                                    }}
+                                >
+                                    Show the data table
+                                </label>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <div className="chart-display">
                     {/* Display fetched data bins */}
                     {dataBins && (
-                        <div style={{ width: '600px', margin: '12px auto' }}>
+                        <div
+                            style={{
+                                margin: '12px auto',
+                                width:
+                                    chartType === 'bar' || chartType === 'pie'
+                                        ? '600px'
+                                        : 'auto',
+                            }}
+                        >
                             {/* <PieChart dataBins={dataBins} pieChartData={pieChartData} /> */}
 
                             {chartType === 'bar' ? (
@@ -652,6 +686,12 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     setDownloadPdf={(value: any) =>
                                         this.setState({ downloadPdf: value })
                                     }
+                                />
+                            ) : chartType === 'stack' ? (
+                                <StackedBarChart
+                                    dataBins={dataBins}
+                                    pieChartData={pieChartData}
+                                    stackEntity={this.state.stackEntity}
                                 />
                             ) : null}
                         </div>

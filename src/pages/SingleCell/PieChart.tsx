@@ -13,6 +13,10 @@ interface DataBin {
 }
 
 // Define props interface for the Chart component
+interface PatientData {
+    [key: string]: { stableId: string; value: number }[];
+}
+
 interface ChartProps {
     dataBins: DataBin[];
     pieChartData: any[];
@@ -46,6 +50,7 @@ const Chart: React.FC<ChartProps> = ({
 }) => {
     const [isHovered, setIsHovered] = useState<boolean>(false);
     console.log(pieChartData, 'this is piechartData');
+
     const [hoveredSliceIndex, setHoveredSliceIndex] = useState<number | null>(
         null
     );
@@ -57,7 +62,37 @@ const Chart: React.FC<ChartProps> = ({
 
     // Create a ref to hold the SVG container
     const svgRef = useRef<SVGSVGElement>(null);
+    // Set to store unique patient IDs
+    let differentPatientIds: string[] = [];
 
+    // Extract unique patient IDs from piechartData
+    for (let i = 0; i < pieChartData.length; i++) {
+        let currentId = pieChartData[i].patientId;
+        if (!differentPatientIds.includes(currentId)) {
+            differentPatientIds.push(currentId);
+        }
+    }
+    console.log(differentPatientIds, 'differentPatientIds');
+    // Initialize an object to store data for each patient
+    // let patientData = {};
+    let patientData: PatientData = {};
+
+    // Iterate over unique patient IDs
+    for (let i = 0; i < differentPatientIds.length; i++) {
+        let id = differentPatientIds[i];
+        patientData[id] = []; // Initialize array for current patient ID
+
+        // Iterate over piechartData to find data for current patient
+        for (let j = 0; j < pieChartData.length; j++) {
+            if (pieChartData[j].patientId === id) {
+                patientData[id].push({
+                    stableId: pieChartData[j].stableId,
+                    value: pieChartData[j].value,
+                });
+            }
+        }
+    }
+    console.log(patientData, 'patientData');
     useEffect(() => {
         if (downloadSvg) {
             handleDownloadSVG(svgRef);

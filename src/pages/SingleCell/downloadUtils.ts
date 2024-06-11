@@ -27,14 +27,24 @@ async function svgToPdfDownload(
     svg: any,
     fontUrl: string = 'FREE_SANS_PUBLIC_URL'
 ) {
-    const width =
+    const originalWidth =
         svg.scrollWidth ||
         parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!);
-    const height =
+    const originalHeight =
         svg.scrollHeight ||
         parseInt((svg.attributes.getNamedItem('height') as Attr).nodeValue!);
 
+    // Clone the SVG node to avoid modifications to the original SVG
+    const clonedSvg = svg.cloneNode(true);
+
     // Create a new jsPDF instance
+    const scale = 1.5; // Adjust scale factor as needed
+    clonedSvg.setAttribute('width', `${originalWidth * scale}`);
+    clonedSvg.setAttribute('height', `${originalHeight * scale}`);
+    clonedSvg.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
+
+    const width = originalWidth * scale;
+    const height = originalHeight * scale;
     let direction = 'l';
     if (height > width) {
         direction = 'p';
@@ -52,7 +62,7 @@ async function svgToPdfDownload(
     } finally {
         // Render the SVG element
         await svg2pdf(svg, pdf, {
-            xOffset: 0,
+            xOffset: 60,
             yOffset: 0,
             scale: 1,
         });
