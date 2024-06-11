@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { VictoryBar, VictoryChart, VictoryAxis, VictoryTooltip } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
@@ -36,12 +36,17 @@ interface BarChartProps {
 }
 
 const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
-    const [downloadOptionsVisible, setDownloadOptionsVisible] = useState<
-        boolean
-    >(false);
+    const [downloadOptionsVisible, setDownloadOptionsVisible] = useState(false);
+    const [filterNA, setFilterNA] = useState(false);
     const chartRef = useRef<HTMLDivElement>(null);
 
-    const filteredData = dataBins.filter(bin => bin.specialValue !== 'NA');
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFilterNA(e.target.checked);
+    };
+
+    const filteredData = !filterNA
+        ? dataBins.filter(bin => bin.specialValue !== 'NA')
+        : dataBins;
 
     const xAxisLabels: string[] = [];
     filteredData.forEach(bin => {
@@ -51,6 +56,8 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
             xAxisLabels.push(`> ${bin.start}`);
         } else if (bin.start !== undefined && bin.end !== undefined) {
             xAxisLabels.push(`${bin.start}`);
+        } else {
+            xAxisLabels.push(`NA`);
         }
     });
 
@@ -69,6 +76,9 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
         if (bin.specialValue === '<=') {
             label = `<= ${bin.end}`;
             range = `<= ${bin.end}`;
+        } else if (bin.specialValue == 'NA') {
+            label = `NA`;
+            range = `NA`;
         } else if (bin.specialValue === '>') {
             label = `> ${bin.start}`;
             range = `> ${bin.start}`;
@@ -123,8 +133,23 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
             <h2>
                 {dataBins.length > 0
                     ? dataBins[0].id.replace(/_/g, ' ')
-                    : 'No Data'}
+                    : 'No Data  '}
             </h2>
+            <label
+                style={{
+                    display: 'block',
+                    marginBottom: '10px',
+                    marginTop: '10px',
+                    textAlign: 'end',
+                }}
+            >
+                <input
+                    type="checkbox"
+                    checked={filterNA}
+                    onChange={handleCheckboxChange}
+                />{' '}
+                Show NA values
+            </label>
             {processedData.length !== 0 && (
                 <div ref={chartRef}>
                     <VictoryChart
