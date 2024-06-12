@@ -439,8 +439,8 @@ function checkOncoprintElement(selector, viewports) {
 }
 
 async function jsApiHover(selector) {
-    await browser.execute(async function(_selector) {
-        (await $(_selector))[0].dispatchEvent(
+    await browser.execute(function(_selector) {
+        $(_selector)[0].dispatchEvent(
             new MouseEvent('mouseover', { bubbles: true })
         );
     }, selector);
