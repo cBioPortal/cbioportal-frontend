@@ -127,7 +127,10 @@ export default class CancerStudyTreeData {
                         studyId: publicVirtualStudy.id,
                         name: publicVirtualStudy.data.name,
                         description: publicVirtualStudy.data.description,
-                        cancerTypeId: PUBLIC_VIRTUAL_STUDY_NAME,
+                        cancerTypeId:
+                            publicVirtualStudy.data.typeOfCancerId ||
+                            PUBLIC_VIRTUAL_STUDY_NAME,
+                        pmid: publicVirtualStudy.data.pmid,
                     } as CancerStudy;
                 }
             })

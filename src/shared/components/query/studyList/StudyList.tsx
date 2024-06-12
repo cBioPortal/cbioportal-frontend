@@ -306,7 +306,7 @@ export default class StudyList extends QueryStoreComponent<
 
             if (
                 this.store.isVirtualStudy(study.studyId) &&
-                study.cancerTypeId != PUBLIC_VIRTUAL_STUDY_NAME
+                !this.store.isPublicVirtualStudy(study.studyId)
             ) {
                 links.push({
                     icon: 'trash',
