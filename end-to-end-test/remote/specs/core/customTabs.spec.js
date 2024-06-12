@@ -48,14 +48,14 @@ async function goToUrlWithCustomTabConfig(url, custom_tabs) {
 }
 
 function runTests(pageName, url, tabLocation) {
-    describe.only(`${pageName} Custom Tabs`, () => {
-        it.skip('Sync and async hide/show works', async function() {
+    describe(`${pageName} Custom Tabs`, () => {
+        it.skip('Sync and async hide/show works', async function () {
             this.retries(0);
 
             await goToUrlWithCustomTabConfig(url, customTabBase(tabLocation));
 
             await browser.execute(() => {
-                window.renderCustomTab1 = async function(div, tab) {
+                window.renderCustomTab1 = async function (div, tab) {
                     (await getElement(div)).append(
                         `<div>this is the content for ${tab.title}</div>`
                     );
@@ -256,7 +256,7 @@ function runTests(pageName, url, tabLocation) {
             await browser.setWindowSize(1600, getBrowserHeight());
 
             await browser.execute(() => {
-                window.renderCustomTab1 = async function(div) {
+                window.renderCustomTab1 = async function (div) {
                     await (await getElement(div)).append(
                         `<div>First render</div>`
                     );
@@ -273,7 +273,7 @@ function runTests(pageName, url, tabLocation) {
             // redefine custom tab render
             // so we can see when it's called
             await browser.execute(() => {
-                window.renderCustomTab1 = async function(div, tab) {
+                window.renderCustomTab1 = async function (div, tab) {
                     await (await getElement(div)).append(
                         `<div>Second render</div>`
                     );
@@ -284,12 +284,20 @@ function runTests(pageName, url, tabLocation) {
             await (await getElement('.mainTabs .tabAnchor'))[0].click();
             await (await getElement('=Async Tab')).click();
 
+            // TODO: this test is not working for study page should we expect both tabs to be mounted?
+            // this does not seem to be the case
             // we haven't re-mounted the tab
+            const mounted_1 = await (
+                await getElement('div=First render')
+            ).isDisplayed();
+            const mounted_2 = await (
+                await getElement('div=Second render')
+            ).isDisplayed();
             assert(
                 (await (await getElement('div=First render')).isDisplayed()) &&
-                    (await (
-                        await getElement('div=Second render')
-                    ).isDisplayed()),
+                (await (
+                    await getElement('div=Second render')
+                ).isDisplayed()),
                 "merely switching tabs didn't call mount function"
             );
 
@@ -375,7 +383,7 @@ describe.only('Patient Cohort View Custom Tab Tests', () => {
         },
     ];
 
-    it('Navigating between patients changes tab contents', async function() {
+    it('Navigating between patients changes tab contents', async function () {
         this.retries(0);
 
         await goToUrlWithCustomTabConfig(patientUrl, conf);
