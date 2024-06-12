@@ -20,8 +20,10 @@ function waitForGeneQueryPage(timeout) {
     });
 }
 
-function waitForPlotsTab(timeout) {
-    $('div.axisBlock').waitForDisplayed({ timeout: timeout || 20000 });
+async function waitForPlotsTab(timeout) {
+    await (await $('div.axisBlock')).waitForDisplayed({
+        timeout: timeout || 20000,
+    });
 }
 
 function waitForAndCheckPlotsTab() {
@@ -382,10 +384,8 @@ function waitForGroupComparisonTabOpen(timeout) {
     });
 }
 
-function getTextFromElement(element) {
-    return $(element)
-        .getText()
-        .trim();
+async function getTextFromElement(element) {
+    return (await (await $(element)).getText()).trim();
 }
 
 function getNumberOfStudyViewCharts() {
