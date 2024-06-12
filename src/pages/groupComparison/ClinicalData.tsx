@@ -649,7 +649,12 @@ export default class ClinicalData extends React.Component<
 
     @computed get boxPlotTooltip() {
         return (data: any[], labels: string[]) => (
-            <SummaryStatisticsTable data={data} labels={labels} />
+            <SummaryStatisticsTable
+                data={data}
+                labels={labels}
+                scatterData={data}
+                showTable={false}
+            />
         );
     }
 

@@ -45,7 +45,12 @@ export class ClinicalNumericalDataVisualisation extends React.Component<
         );
         const groupLabels = this.props.data.map(d => d.label);
         return (
-            <SummaryStatisticsTable data={groupStats} labels={groupLabels} />
+            <SummaryStatisticsTable
+                data={groupStats}
+                labels={groupLabels}
+                scatterData={this.props.data}
+                showTable={true}
+            />
         );
     }
 
