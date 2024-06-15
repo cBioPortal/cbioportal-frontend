@@ -44,7 +44,7 @@
     width: 20%;
     padding: 20px;
     background-color: #eeeeee;
-    max-height: 350px;
+    /* max-height: 350px; */
     border-right: 1px solid #ccc;
     margin-top: 50px;
 }

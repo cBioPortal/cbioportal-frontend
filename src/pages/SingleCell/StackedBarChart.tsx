@@ -57,6 +57,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
 }) => {
     console.log(stackEntity, 'this is stacckentity');
     const [selectedSamples, setSelectedSamples] = useState<string[]>([]);
+    const [isVisible, setIsVisible] = useState(false);
     const [selectedSortingSample, setSelectedSortingSample] = useState('');
 
     const handleSampleSelectionChange = (selectedOptions: any) => {
@@ -98,6 +99,34 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     // if (loading) {
     //     return <div>Loading...</div>; // You can replace this with a spinner or any other loading indicator
     // }
+    function calculatePercentageForPieChartData(data: any) {
+        const groupedData = data.reduce((acc: any, item: any) => {
+            if (!acc[item.sampleId]) {
+                acc[item.sampleId] = [];
+            }
+            acc[item.sampleId].push(item);
+            return acc;
+        }, {});
+
+        Object.keys(groupedData).forEach(sampleId => {
+            const sampleData = groupedData[sampleId];
+            const total = sampleData.reduce(
+                (sum: any, item: any) => sum + parseFloat(item.value),
+                0
+            );
+
+            sampleData.forEach((item: any) => {
+                const percentage = (parseFloat(item.value) / total).toFixed(5);
+                item.value = percentage + '%';
+            });
+        });
+
+        return _.flatMap(groupedData);
+    }
+    const updatedPiechartData = calculatePercentageForPieChartData(
+        pieChartData
+    );
+    console.log(updatedPiechartData, 'updatedPiechartDataupdatedPiechartData');
 
     for (let i = 0; i < pieChartData.length; i++) {
         let currentSampleId = pieChartData[i].sampleId;
@@ -127,6 +156,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             }
         }
     }
+    console.log(stableIdData, 'stableIdDatastableIdData');
 
     let tooltipData: { [key: string]: string } = {};
 
@@ -363,24 +393,67 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             setFormattedDatastate(sortedFormattedData);
         }
     }, [stackEntity]);
+    useEffect(() => {
+        let timeout: any;
+        if (isHovered || tooltipHovered) {
+            setIsVisible(true);
+            clearTimeout(timeout);
+        } else if (isVisible) {
+            timeout = setTimeout(() => {
+                setIsVisible(false);
+            }, 3000); // Tooltip will remain visible for 3 seconds after hover ends
+        }
+        return () => clearTimeout(timeout);
+    }, [isHovered, tooltipHovered]);
+    const chartContainerRef = useRef<HTMLDivElement>(null);
+    // const chartRef = useRef<HTMLDivElement>(null);
+    const [containerHeight, setContainerHeight] = useState(0);
+    const [chartHeight, setChartHeight] = useState(0);
+
+    useEffect(() => {
+        if (chartContainerRef.current) {
+            setContainerHeight(chartContainerRef.current.offsetHeight);
+        }
+        if (chartRef.current) {
+            setChartHeight(chartRef.current.offsetHeight);
+        }
+    }, [chartContainerRef, chartRef]);
+    useEffect(() => {
+        const handleResize = () => {
+            if (chartContainerRef.current) {
+                setContainerHeight(chartContainerRef.current.offsetHeight);
+            }
+            if (chartRef.current) {
+                setChartHeight(chartRef.current.offsetHeight);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     return (
-        <div style={{ textAlign: 'center', position: 'relative' }}>
+        <div
+            style={{ textAlign: 'center', position: 'relative' }}
+            ref={chartContainerRef}
+        >
             <div
                 style={{
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'flex-start',
-                    width: '100%',
+
                     marginTop: '15px',
                     position: 'relative',
                 }}
             >
                 <div
                     style={{
-                        flex: '0 0 67%',
+                        flex: '0 0 80%',
                         textAlign: 'center',
-                        height: '600px',
+                        height: containerHeight
+                            ? `${containerHeight}px`
+                            : 'auto',
                     }}
                     ref={chartRef}
                 >
@@ -413,17 +486,21 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 style={{ padding: "10px", marginTop: "15px", marginBottom: "5px" }}
             />
             </div> */}
-                    <VictoryChart domainPadding={20} height={800} width={800}>
+                    <VictoryChart
+                        domainPadding={20}
+                        height={chartHeight ? chartHeight * 1.68 : 2100}
+                        width={1100}
+                    >
                         <VictoryAxis
                             style={{
-                                tickLabels: { fontSize: 18, padding: 5 },
+                                tickLabels: { fontSize: 16, padding: 5 },
                             }}
                             dependentAxis
                             domain={[0, 1]}
                         />
                         <VictoryAxis
                             style={{
-                                tickLabels: { fontSize: 18, padding: 5 },
+                                tickLabels: { fontSize: 16, padding: 5 },
                             }}
                             tickValues={[0, 0.25, 0.5, 0.75, 1]}
                             domain={[0, 1]}
@@ -447,7 +524,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                         horizontal
                                         key={i}
                                         data={filteredFormattedData}
-                                        barWidth={30}
+                                        barWidth={32}
                                         style={{
                                             data: {
                                                 fill: (d: any) => {
@@ -589,24 +666,22 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                         )}
                     </div>
                 </div>
-                <div style={{ flex: '0 0 31%', position: 'relative' }}>
-                    {(isHovered || tooltipHovered) && (
+                <div style={{ flex: '0 0 18%', position: 'relative' }}>
+                    {(isVisible || tooltipHovered) && (
                         <div
                             style={{
                                 position: 'absolute',
                                 top: '150px',
                                 pointerEvents: 'auto',
+                                transform: 'translateX(-120px)',
                                 margin: 'auto',
-                                transition: 'opacity 0.5s ease-in-out',
-                                transitionDelay: '0s',
+                                transition:
+                                    'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
                                 backgroundColor: 'white',
                                 width: '350px',
                                 boxShadow: '0 0 10px rgba(0,0,0,0.2)',
                                 zIndex: 220,
-                                display:
-                                    isHovered || tooltipHovered
-                                        ? 'block'
-                                        : 'none',
+                                opacity: isVisible ? 1 : 0,
                             }}
                             onMouseEnter={() => setTooltipHovered(true)}
                             onMouseLeave={() => setTooltipHovered(false)}
@@ -614,7 +689,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                             <div
                                 className="custom-scrollbar"
                                 style={{
-                                    height: '150px',
+                                    height: 'max-content',
                                     overflowY: 'auto',
                                     resize: 'both',
                                     overflow: 'auto',

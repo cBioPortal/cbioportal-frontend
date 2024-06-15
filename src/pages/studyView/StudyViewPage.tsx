@@ -688,6 +688,7 @@ export default class StudyViewPage extends React.Component<
                                             store={this.store}
                                         ></StudySummaryTab>
                                     </MSKTab>
+
                                     {this.store.genericAssayProfiles.result &&
                                         this.store.genericAssayProfiles.result
                                             .length > 0 &&
@@ -706,12 +707,6 @@ export default class StudyViewPage extends React.Component<
                                                     StudyViewPageTabDescriptions.SINGLECELL
                                                 }
                                             >
-                                                {console.log(
-                                                    this.store
-                                                        .genericAssayProfiles
-                                                        .result,
-                                                    'these are generic assays'
-                                                )}
                                                 <HomePage
                                                     store={this.store}
                                                     // appStore={this.props.appStore}

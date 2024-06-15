@@ -158,6 +158,16 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         this.setState({ tooltipEnabled: event.target.checked });
     }
     async fetchDataBins(genericAssayEntityId: string, profileType: string) {
+        let temp = this.props.store.genericAssayProfileOptionsByType.result;
+        console.log(temp, profileType, 'before id');
+        let id = temp[profileType];
+        let tempstudyId = id[0].value;
+        console.log(id, tempstudyId, 'this is the id');
+        console.log(
+            genericAssayEntityId,
+            profileType,
+            'here are function parameters'
+        );
         const { store } = this.props;
         const gaDataBins = await internalClient.fetchGenericAssayDataBinCountsUsingPOST(
             {
@@ -166,7 +176,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     genericAssayDataBinFilters: [
                         {
                             stableId: genericAssayEntityId,
-                            profileType: profileType,
+                            profileType: tempstudyId,
                         },
                     ] as any,
                     studyViewFilter: store.filters,
@@ -242,7 +252,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             const newChartInfo = {
                 name: '',
                 description: selectedProfile.description,
-                profileType: selectedProfile.profileType.toLowerCase(),
+                profileType: selectedProfile.profileType,
                 genericAssayType: selectedProfile.genericAssayType,
                 dataType: selectedProfile.dataType,
                 genericAssayEntityId: selectedProfile.genericAssayEntityId,
@@ -291,7 +301,19 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         const selectedEntityId = event.target.value;
 
         const { selectedOption } = this.state;
-        const studyId = 'gbm_cptac_2021';
+        let studyId = '';
+        const data = this.props.store.genericAssayProfiles.result;
+
+        for (const item of data) {
+            if (
+                item.molecularAlterationType === 'GENERIC_ASSAY' &&
+                item.genericAssayType.startsWith('SINGLE_CELL')
+            ) {
+                console.log(item.studyId); // Log the studyId to console
+                studyId = item.studyId; // Store the studyId in the variable
+                break; // Exit the loop once the desired item is found
+            }
+        }
 
         const Molecularprofiles = await this.molecularProfiles([studyId]);
         const selectedMolecularProfile = Molecularprofiles.find(
@@ -365,7 +387,21 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
     async componentDidMount() {
         const { store } = this.props;
-        const studyId = 'gbm_cptac_2021';
+        let studyId = 'gbm_cptac_2021';
+        const data = this.props.store.genericAssayProfiles.result;
+
+        for (const item of data) {
+            if (
+                item.molecularAlterationType === 'GENERIC_ASSAY' &&
+                item.genericAssayType.startsWith('SINGLE_CELL')
+            ) {
+                console.log(item.studyId); // Log the studyId to console
+                studyId = item.studyId; // Store the studyId in the variable
+                break; // Exit the loop once the desired item is found
+            }
+        }
+        console.log('Found studyId:', studyId);
+
         const Molecularprofiles = await this.molecularProfiles([studyId]);
 
         console.log(Molecularprofiles, 'this is molecularprofiles');
@@ -500,21 +536,14 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 {console.log(molecularProfiles, 'sdas')}
                                 {console.log(selectedOption, 'sdas2')}
 
-                                {molecularProfiles
-                                    .filter(
-                                        option =>
-                                            option.label ===
-                                                'Single cell - cell type assignment fractions' ||
-                                            option.label ===
-                                                'Single cell - cell cycle phase values'
-                                    )
-                                    .map(option => {
-                                        const updatedLabel =
-                                            option.label ===
-                                            'Single cell - cell type assignment fractions'
-                                                ? 'Single Cell Type Fractions'
-                                                : 'Single Cell Cycle Phases';
-
+                                {molecularProfiles.map(option => {
+                                    // Check if option.profileType exists and starts with "SINGLE_CELL"
+                                    if (
+                                        option.profileType &&
+                                        option.profileType.startsWith(
+                                            'SINGLE_CELL'
+                                        )
+                                    ) {
                                         return (
                                             <option
                                                 key={option.value}
@@ -530,20 +559,23 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                     backgroundColor: 'inherit', // Background color
                                                 }}
                                                 title={
-                                                    updatedLabel.length > 50
-                                                        ? updatedLabel
+                                                    option.label.length > 35
+                                                        ? option.label
                                                         : ''
                                                 }
                                             >
-                                                {updatedLabel.length > 50
-                                                    ? updatedLabel.slice(
+                                                {option.label.length > 35
+                                                    ? option.label.slice(
                                                           0,
-                                                          50
+                                                          35
                                                       ) + '...'
-                                                    : updatedLabel}
+                                                    : option.label}
                                             </option>
                                         );
-                                    })}
+                                    } else {
+                                        return null; // If profileType is undefined or does not start with "SINGLE_CELL", don't render anything
+                                    }
+                                })}
                             </select>
                         </div>
 
