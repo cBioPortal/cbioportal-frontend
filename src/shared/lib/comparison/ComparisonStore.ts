@@ -611,13 +611,8 @@ export default abstract class ComparisonStore extends AnalysisStore
         {
             await: () => [this.molecularProfilesInActiveStudies],
             invoke: () => {
-                const availableProfiles = this.appStore.featureFlagStore.has(
-                    FeatureFlagEnum.GENERIC_ASSAY_GROUP_COMPARISON
-                )
-                    ? this.molecularProfilesInActiveStudies.result!
-                    : pickGenericAssayEnrichmentProfiles(
-                          this.molecularProfilesInActiveStudies.result!
-                      );
+                const availableProfiles = this.molecularProfilesInActiveStudies
+                    .result!;
                 return Promise.resolve(
                     _.groupBy(
                         pickAllGenericAssayEnrichmentProfiles(

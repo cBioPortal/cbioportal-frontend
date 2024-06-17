@@ -184,7 +184,7 @@ export default class Mutations extends React.Component<
                     <div className={'tabMessageContainer'}>
                         <OqlStatusBanner
                             className="mutations-oql-status-banner"
-                            store={this.props.store}
+                            queryContainsOql={this.props.store.queryContainsOql}
                             tabReflectsOql={
                                 this.props.store.mutationsTabFilteringSettings
                                     .useOql
@@ -195,7 +195,25 @@ export default class Mutations extends React.Component<
                             onToggle={this.onToggleOql}
                         />
                         <AlterationFilterWarning
-                            store={this.props.store}
+                            driverAnnotationSettings={
+                                this.props.store.driverAnnotationSettings
+                            }
+                            includeGermlineMutations={
+                                this.props.store.includeGermlineMutations
+                            }
+                            mutationsReportByGene={
+                                this.props.store.mutationsReportByGene
+                            }
+                            oqlFilteredMutationsReport={
+                                this.props.store.oqlFilteredMutationsReport
+                            }
+                            oqlFilteredMolecularDataReport={
+                                this.props.store.oqlFilteredMolecularDataReport
+                            }
+                            oqlFilteredStructuralVariantsReport={
+                                this.props.store
+                                    .oqlFilteredStructuralVariantsReport
+                            }
                             mutationsTabModeSettings={{
                                 excludeVUS: this.props.store
                                     .mutationsTabFilteringSettings.excludeVus,
@@ -208,7 +226,15 @@ export default class Mutations extends React.Component<
                                     .hugoGeneSymbol,
                             }}
                         />
-                        <CaseFilterWarning store={this.props.store} />
+                        <CaseFilterWarning
+                            samples={this.props.store.samples}
+                            filteredSamples={this.props.store.filteredSamples}
+                            patients={this.props.store.patients}
+                            filteredPatients={this.props.store.filteredPatients}
+                            hideUnprofiledSamples={
+                                this.props.store.hideUnprofiledSamples
+                            }
+                        />
                     </div>
                     <ResultsViewMutationMapper
                         {...convertToMutationMapperProps({

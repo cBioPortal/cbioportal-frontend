@@ -22,7 +22,7 @@ describe('oncoprint colors', () => {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize&show_samples=false`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
         });
 
         it('color configuration modal reflects user selected colors', () => {
@@ -37,7 +37,7 @@ describe('oncoprint colors', () => {
                 .click();
             getElementByTestHandle('update-tracks').waitForDisplayed();
             getElementByTestHandle('update-tracks').click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
 
             // check that mutation spectrum is added to the oncoprint
             let legendText = getTextInOncoprintLegend();
@@ -57,7 +57,7 @@ describe('oncoprint colors', () => {
             getElementByTestHandle('color-picker-icon').click();
             $('.circle-picker').waitForDisplayed({ timeout: 1000 });
             $('.circle-picker [title="#990099"]').click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             getElementByTestHandle('color-picker-icon').waitForDisplayed();
             getElementByTestHandle('color-picker-icon').click();
             $('.circle-picker').waitForDisplayed({ reverse: true });
@@ -65,7 +65,7 @@ describe('oncoprint colors', () => {
             $$('[data-test="color-picker-icon"]')[1].click();
             $('.circle-picker').waitForDisplayed({ timeout: 1000 });
             $('.circle-picker [title="#109618"]').click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
             getElementByTestHandle('color-picker-icon').waitForDisplayed();
             $$('[data-test="color-picker-icon"]')[1].click();
             $('.circle-picker').waitForDisplayed({ reverse: true });
@@ -73,7 +73,7 @@ describe('oncoprint colors', () => {
             $$('[data-test="color-picker-icon"]')[2].click();
             $('.circle-picker').waitForDisplayed({ timeout: 1000 });
             $('.circle-picker [title="#8b0707"]').click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
 
             assert.strictEqual(
                 $('[data-test="color-picker-icon"] rect').getAttribute('fill'),
@@ -114,7 +114,7 @@ describe('oncoprint colors', () => {
         it('color configuration modal reflects default colors', () => {
             // click "Reset Colors" track
             getElementByTestHandle('resetColors').click();
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
 
             assert.strictEqual(
                 $('[data-test="color-picker-icon"] rect').getAttribute('fill'),
@@ -160,13 +160,13 @@ describe('oncoprint colors', () => {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize&show_samples=false`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            waitForOncoprint();
         });
         it('oncoprint uses white background for glyphs when option toggled', () => {
             // toggle on white backgrounds for glyphs
             const $viewDropdown = $('#viewDropdownButton');
             $viewDropdown.click();
-            waitForOncoprint(2000);
+            waitForOncoprint();
             getElementByTestHandle('toggleWhiteBackgroundForGlyphs').click();
             $viewDropdown.click();
 
@@ -178,7 +178,7 @@ describe('oncoprint colors', () => {
             // toggle off white backgrounds for glyphs
             const $viewDropdown = $('#viewDropdownButton');
             $viewDropdown.click();
-            waitForOncoprint(2000);
+            waitForOncoprint();
             getElementByTestHandle('toggleWhiteBackgroundForGlyphs').click();
             $viewDropdown.click();
 

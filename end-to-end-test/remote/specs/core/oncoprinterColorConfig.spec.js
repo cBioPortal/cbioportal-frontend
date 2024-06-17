@@ -39,7 +39,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
         getElementByTestHandle('color-picker-icon').click();
         $('.circle-picker').waitForDisplayed({ timeout: 1000 });
         $('.circle-picker [title="#990099"]').click();
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         getElementByTestHandle('color-picker-icon').waitForDisplayed();
         getElementByTestHandle('color-picker-icon').click();
         $('.circle-picker').waitForDisplayed({ reverse: true });
@@ -47,7 +47,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
         $$('[data-test="color-picker-icon"]')[1].click();
         $('.circle-picker').waitForDisplayed({ timeout: 1000 });
         $('.circle-picker [title="#109618"]').click();
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
         getElementByTestHandle('color-picker-icon').waitForDisplayed();
         $$('[data-test="color-picker-icon"]')[1].click();
         $('.circle-picker').waitForDisplayed({ reverse: true });
@@ -55,7 +55,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
         $$('[data-test="color-picker-icon"]')[2].click();
         $('.circle-picker').waitForDisplayed({ timeout: 1000 });
         $('.circle-picker [title="#8b0707"]').click();
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         assert.strictEqual(
             $('[data-test="color-picker-icon"] rect').getAttribute('fill'),
@@ -92,7 +92,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
     it('oncoprinter color configuration modal reflects default colors', () => {
         // click "Reset Colors" track
         getElementByTestHandle('resetColors').click();
-        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        waitForOncoprint();
 
         assert.strictEqual(
             $('[data-test="color-picker-icon"] rect').getAttribute('fill'),

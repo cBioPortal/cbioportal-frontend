@@ -159,7 +159,7 @@ Follow instructions to boot up frontend dev server. This is the frontend that wi
 cd end-to-end-test
 
 // install deps
-yarn 
+yarn --ignore-engines
 
 ```
 

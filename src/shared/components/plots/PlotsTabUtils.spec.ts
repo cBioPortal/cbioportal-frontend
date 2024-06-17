@@ -32,7 +32,7 @@ import {
     makeAxisLogScaleFunction,
     IAxisData,
     axisHasNegativeNumbers,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+} from './PlotsTabUtils';
 
 import _ from 'lodash';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';

@@ -117,7 +117,7 @@ import {
     PatientViewResourceTabPrefix,
 } from 'pages/patientView/PatientViewPageTabs';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
-import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
+import { CLIN_ATTR_DATA_TYPE } from 'shared/components/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { AlterationTypeConstants } from 'shared/constants';
 import {

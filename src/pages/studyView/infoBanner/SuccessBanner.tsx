@@ -14,7 +14,10 @@ export default class SuccessBanner extends React.Component<
         return (
             <div
                 className="alert alert-success"
-                style={{ marginTop: '10px', marginBottom: '0' }}
+                style={{
+                    marginTop: '10px',
+                    marginBottom: '0',
+                }}
             >
                 <span>
                     <i className="fa fa-md fa-check" /> {this.props.message}
