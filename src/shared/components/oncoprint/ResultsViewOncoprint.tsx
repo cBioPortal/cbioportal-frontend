@@ -15,7 +15,7 @@ import {
     remoteData,
     svgToPdfDownload,
 } from 'cbioportal-frontend-commons';
-import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import { getRemoteDataGroupStatus, Mutation } from 'cbioportal-utils';
 import Oncoprint, {
     ClinicalTrackSpec,
     ClinicalTrackConfig,
@@ -1100,41 +1100,83 @@ export default class ResultsViewOncoprint extends React.Component<
                             [
                                 this.props.store.sampleKeyToSample,
                                 this.props.store.patientKeyToPatient,
+                                this.props.store.mutationsByGene,
+                                this.props.store.studyIds,
                             ],
                             (
                                 sampleKeyToSample: {
                                     [sampleKey: string]: Sample;
                                 },
-                                patientKeyToPatient: any
+                                patientKeyToPatient: any,
+                                mutationsByGenes: {
+                                    [gene: string]: Mutation[];
+                                },
+                                studyIds: string[]
                             ) => {
-                                const fileContent = getTabularDownloadData(
-                                    this.geneticTracks.result,
-                                    this.clinicalTracks.result,
-                                    this.heatmapTracks.result,
-                                    this.genericAssayHeatmapTracks.result,
-                                    this.genesetHeatmapTracks.result,
-                                    this.oncoprintJs.getIdOrder(),
-                                    this.oncoprintAnalysisCaseType ===
-                                        OncoprintAnalysisCaseType.SAMPLE
-                                        ? (key: string) =>
-                                              sampleKeyToSample[key].sampleId
-                                        : (key: string) =>
-                                              patientKeyToPatient[key]
-                                                  .patientId,
-                                    this.oncoprintAnalysisCaseType,
-                                    this.distinguishDrivers
+                                const allGenesMutations = Object.values(
+                                    mutationsByGenes
+                                ).reduce(
+                                    (acc, geneArray) => [...acc, ...geneArray],
+                                    []
                                 );
 
-                                const prefixName =
-                                    this.oncoprintAnalysisCaseType === 'sample'
-                                        ? 'SAMPLE_DATA_'
-                                        : 'PATIENT_DATA_';
+                                console.log(allGenesMutations);
+
+                                function convertToCSV(jsonArray: Mutation[]) {
+                                    // Define the fields to keep
+                                    const fieldsToKeep = [
+                                        'hugoGeneSymbol',
+                                        'alterationType',
+                                        'chr',
+                                        'startPosition',
+                                        'endPosition',
+                                        'referenceAllele',
+                                        'variantAllele',
+                                        'proteinChange',
+                                        'proteinPosStart',
+                                        'proteinPosEnd',
+                                        'mutationType',
+                                        'oncoKbOncogenic',
+                                        'patientId',
+                                        'sampleId',
+                                        'isHotspot',
+                                    ];
+
+                                    // Create the header
+                                    const csvHeader = fieldsToKeep.join(',');
+
+                                    // Create the rows
+                                    const csvRows = jsonArray
+                                        .map(item => {
+                                            return fieldsToKeep
+                                                .map(field => {
+                                                    // Use bracket notation to access the field since it's dynamically referenced
+                                                    return (
+                                                        item[
+                                                            field as keyof Mutation
+                                                        ] || ''
+                                                    );
+                                                })
+                                                .join(',');
+                                        })
+                                        .join('\n');
+
+                                    const final_csv = [csvHeader, csvRows].join(
+                                        '\r\n'
+                                    );
+                                    return final_csv;
+                                }
+
+                                const allGenesMutationsCsv = convertToCSV(
+                                    allGenesMutations
+                                );
+
                                 const jupyterNotebookTool = window.open(
                                     buildCBioPortalPageUrl('/jupyternotebook')
                                 ) as any;
                                 jupyterNotebookTool.clientPostedData = {
-                                    fileContent: fileContent,
-                                    fileName: prefixName + 'oncoprint.tsv',
+                                    fileContent: [allGenesMutationsCsv],
+                                    fileName: studyIds.join('&') + '.csv',
                                 };
                             }
                         );
