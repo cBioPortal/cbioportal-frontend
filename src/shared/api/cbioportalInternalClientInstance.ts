@@ -31,5 +31,6 @@ proxyColumnStore(internalClientColumnStore, 'fetchMutatedGenes');
 proxyColumnStore(internalClientColumnStore, 'fetchFilteredSamples');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataBinCounts');
+proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataDensityPlot');
 
 export default internalClient;
