@@ -1419,7 +1419,6 @@ export default class ResultsViewOncoprint extends React.Component<
         const remainingGeneAfterDeletionString = remainingGeneAfterDeletion.split(
             ' '
         );
-        console.log('geneListArrayFromURL', geneListArrayFromURL);
 
         //Datatypes genetrack logic
         if (geneListArrayFromURL.includes('DATATYPES:')) {
@@ -1438,15 +1437,12 @@ export default class ResultsViewOncoprint extends React.Component<
                 geneListArrayFromURL,
                 geneticSublabel
             );
-            console.log('geentic sublabel', geneticSublabel);
-            console.log('isSublabelInURL', isSublabelInURL);
             if (isSublabelInURL) {
                 const newList = this.sliceURLBasedOnSublabel(
                     geneListArrayFromURL,
                     geneticSublabel,
                     GeneticTrackToBeDeleted
                 );
-                console.log('newList', newList);
                 if (newList !== null) {
                     updatedGeneList.push(...newList);
                 }
@@ -1454,7 +1450,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 geneListArrayFromURL = geneListArrayFromURL.filter(
                     item => item !== GeneticTrackToBeDeleted
                 );
-                const testRemainingArray = remainingGeneAfterDeletionString; // Split testRemaining into an array
+                const testRemainingArray = remainingGeneAfterDeletionString;
                 let startIdx = 0;
 
                 for (let i = 1; i < testRemainingArray.length; i++) {
@@ -1522,7 +1518,6 @@ export default class ResultsViewOncoprint extends React.Component<
         const decodedTrackToBeDeleted = decodeURIComponent(
             geneticTrackToBeDeleted
         ).trim();
-        console.log('decodedTrackToBeDeleted', decodedTrackToBeDeleted);
 
         for (let i = 0; i < geneListArrayFromURL.length; i++) {
             const currentGene = decodeURIComponent(
@@ -1530,7 +1525,6 @@ export default class ResultsViewOncoprint extends React.Component<
             ).trim();
 
             if (currentGene.startsWith(decodedTrackToBeDeleted)) {
-                // Find the end of the current gene's modifiers
                 let endIndex = i;
                 while (
                     endIndex + 1 < geneListArrayFromURL.length &&
@@ -1538,19 +1532,14 @@ export default class ResultsViewOncoprint extends React.Component<
                 ) {
                     endIndex++;
                 }
-
-                // Remove the gene and its modifiers
                 const slicedURL = [
                     ...geneListArrayFromURL.slice(0, i),
                     ...geneListArrayFromURL.slice(endIndex + 1),
                 ];
-                console.log('slicedURL', slicedURL);
                 return slicedURL;
             }
         }
-
-        console.log('Track not found:', decodedTrackToBeDeleted);
-        return geneListArrayFromURL; // Return the original array if the track is not found
+        return geneListArrayFromURL; 
     }
 
     private isSublabelInURL(
