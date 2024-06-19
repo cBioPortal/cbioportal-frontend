@@ -383,6 +383,12 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         );
     }
 
+    @action.bound
+    private onDeleteSurvivalPlot(prefix: string) {
+        this.setSurvivalPlotPrefix(undefined);
+        this.props.store.removeCustomSurvivalPlot(prefix);
+    }
+
     @computed get selectedCensoredClinicalEventType() {
         if (this._selectedCensoredClinicalEventType !== undefined) {
             if (this._selectedCensoredClinicalEventType === 'any') {
@@ -432,309 +438,335 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             } else if (numActiveGroups === 0) {
                 content = <span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
+                const clinicalDataExisted = !_.isEmpty(
+                    this.props.store.clinicalEventOptions.result
+                );
                 content = (
                     <>
-                        <div
-                            className={survivalPlotStyle.clinicalEventSelection}
-                        >
-                            <table>
-                                <tr>
-                                    <td>
-                                        <ControlLabel>Start:</ControlLabel>
-                                    </td>
-                                    <td
-                                        className={
-                                            survivalPlotStyle['event-type']
-                                        }
-                                    >
-                                        <Select
-                                            placeholder="Select clinical event type"
-                                            name="clinical-event"
-                                            value={
-                                                this
-                                                    .selectedStartClinicalEventType
+                        {clinicalDataExisted && (
+                            <div
+                                className={
+                                    survivalPlotStyle.clinicalEventSelection
+                                }
+                            >
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <ControlLabel>Start:</ControlLabel>
+                                        </td>
+                                        <td
+                                            className={
+                                                survivalPlotStyle['event-type']
                                             }
-                                            onChange={
-                                                this
-                                                    .onStartClinicalEventSelection
-                                            }
-                                            options={_.values(
-                                                this.props.store
-                                                    .clinicalEventOptions.result
-                                            )}
-                                            clearable={false}
-                                            searchable={false}
-                                        />
-                                    </td>
-                                    {this._selectedStartClinicalEventType !==
-                                        undefined &&
-                                        this.props.store.clinicalEventOptions
-                                            .result[
-                                            this._selectedStartClinicalEventType
-                                        ].attributes.length > 0 && (
-                                            <td
-                                                className={
-                                                    survivalPlotStyle[
-                                                        'event-attributes'
-                                                    ]
+                                        >
+                                            <Select
+                                                placeholder="Select clinical event type"
+                                                name="clinical-event"
+                                                value={
+                                                    this
+                                                        .selectedStartClinicalEventType
                                                 }
-                                            >
-                                                <Select
-                                                    placeholder="Select clinical event type attributes"
-                                                    name="clinical-event-attributes"
-                                                    closeMenuOnSelect={false}
-                                                    isMulti
-                                                    value={
-                                                        this
-                                                            .selectedStartClinicalEventAttributes
-                                                    }
-                                                    onChange={(
-                                                        selectedOptions: any
-                                                    ) => {
-                                                        this.selectedStartClinicalEventAttributes = selectedOptions;
-                                                    }}
-                                                    options={
-                                                        this.props.store
-                                                            .clinicalEventOptions
-                                                            .result[
-                                                            this
-                                                                ._selectedStartClinicalEventType
-                                                        ].attributes
-                                                    }
-                                                    isClearable={false}
-                                                    noOptionsMessage={() =>
-                                                        'No results'
-                                                    }
-                                                />
-                                            </td>
-                                        )}
-                                    <td>
-                                        <ButtonGroup>
-                                            {POSITIONS.map((option, i) => {
-                                                return (
-                                                    <Radio
-                                                        checked={
-                                                            option.value ===
-                                                            this
-                                                                .startEventPosition
-                                                        }
-                                                        onChange={e => {
-                                                            this.startEventPosition = $(
-                                                                e.target
-                                                            ).attr(
-                                                                'data-value'
-                                                            ) as any;
-                                                        }}
-                                                        inline
-                                                        data-value={
-                                                            option.value
-                                                        }
-                                                    >
-                                                        {option.label}
-                                                    </Radio>
-                                                );
-                                            })}
-                                        </ButtonGroup>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <ControlLabel>End:</ControlLabel>
-                                    </td>
-                                    <td
-                                        className={
-                                            survivalPlotStyle['event-type']
-                                        }
-                                    >
-                                        <Select
-                                            placeholder="Select clinical event type"
-                                            name="clinical-event"
-                                            value={
-                                                this
-                                                    .selectedEndClinicalEventType
-                                            }
-                                            onChange={
-                                                this.onEndClinicalEventSelection
-                                            }
-                                            options={_.values(
-                                                this.props.store
-                                                    .clinicalEventOptions.result
-                                            )}
-                                            clearable={false}
-                                            searchable={false}
-                                        />
-                                    </td>
-                                    {this._selectedEndClinicalEventType !==
-                                        undefined &&
-                                        this.props.store.clinicalEventOptions
-                                            .result[
-                                            this._selectedEndClinicalEventType
-                                        ].attributes.length > 0 && (
-                                            <td
-                                                className={
-                                                    survivalPlotStyle[
-                                                        'event-attributes'
-                                                    ]
+                                                onChange={
+                                                    this
+                                                        .onStartClinicalEventSelection
                                                 }
-                                            >
-                                                <Select
-                                                    placeholder="Select clinical event type attributes"
-                                                    name="clinical-event-attributes"
-                                                    closeMenuOnSelect={false}
-                                                    isMulti
-                                                    value={
-                                                        this
-                                                            .selectedEndClinicalEventAttributes
-                                                    }
-                                                    onChange={(
-                                                        selectedOptions: any
-                                                    ) => {
-                                                        this.selectedEndClinicalEventAttributes = selectedOptions;
-                                                    }}
-                                                    options={
-                                                        this.props.store
-                                                            .clinicalEventOptions
-                                                            .result[
-                                                            this
-                                                                ._selectedEndClinicalEventType
-                                                        ].attributes
-                                                    }
-                                                    isClearable={false}
-                                                    noOptionsMessage={() =>
-                                                        'No results'
-                                                    }
-                                                />
-                                            </td>
-                                        )}
-                                    <td>
-                                        <ButtonGroup>
-                                            {POSITIONS.map((option, i) => {
-                                                return (
-                                                    <Radio
-                                                        checked={
-                                                            option.value ===
-                                                            this
-                                                                .endEventPosition
-                                                        }
-                                                        onChange={e => {
-                                                            this.endEventPosition = $(
-                                                                e.target
-                                                            ).attr(
-                                                                'data-value'
-                                                            ) as any;
-                                                        }}
-                                                        inline
-                                                        data-value={
-                                                            option.value
-                                                        }
-                                                    >
-                                                        {option.label}
-                                                    </Radio>
-                                                );
-                                            })}
-                                        </ButtonGroup>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <ControlLabel>Censored:</ControlLabel>
-                                    </td>
-                                    <td
-                                        className={
-                                            survivalPlotStyle['event-type']
-                                        }
-                                    >
-                                        <Select
-                                            placeholder="Select clinical event type"
-                                            name="clinical-event"
-                                            value={
-                                                this
-                                                    .selectedCensoredClinicalEventType
-                                            }
-                                            onChange={
-                                                this
-                                                    .onCensoredClinicalEventSelection
-                                            }
-                                            options={[
-                                                {
-                                                    label: 'any event',
-                                                    value: 'any',
-                                                    attributes: [],
-                                                } as any,
-                                            ].concat(
-                                                _.values(
+                                                options={_.values(
                                                     this.props.store
                                                         .clinicalEventOptions
                                                         .result
-                                                )
-                                            )}
-                                            clearable={false}
-                                            searchable={false}
-                                        />
-                                    </td>
-                                    {this.selectedCensoredClinicalEventType !==
-                                        undefined &&
-                                        this.selectedCensoredClinicalEventType
-                                            .value !== 'any' &&
-                                        this.props.store.clinicalEventOptions
-                                            .result[
-                                            this
-                                                .selectedCensoredClinicalEventType
-                                                .value
-                                        ].attributes.length > 0 && (
-                                            <td
-                                                className={
-                                                    survivalPlotStyle[
-                                                        'event-attributes'
-                                                    ]
-                                                }
-                                            >
-                                                <Select
-                                                    placeholder="Select clinical event type attributes"
-                                                    name="clinical-event-attributes"
-                                                    closeMenuOnSelect={false}
-                                                    isMulti
-                                                    value={
-                                                        this
-                                                            .selectedCensoredClinicalEventAttributes
+                                                )}
+                                                clearable={false}
+                                                searchable={false}
+                                            />
+                                        </td>
+                                        {this
+                                            ._selectedStartClinicalEventType !==
+                                            undefined &&
+                                            this.props.store
+                                                .clinicalEventOptions.result[
+                                                this
+                                                    ._selectedStartClinicalEventType
+                                            ].attributes.length > 0 && (
+                                                <td
+                                                    className={
+                                                        survivalPlotStyle[
+                                                            'event-attributes'
+                                                        ]
                                                     }
-                                                    onChange={(
-                                                        selectedOptions: any
-                                                    ) => {
-                                                        this.selectedCensoredClinicalEventAttributes = selectedOptions;
-                                                    }}
-                                                    options={
+                                                >
+                                                    <Select
+                                                        placeholder="Select clinical event type attributes"
+                                                        name="clinical-event-attributes"
+                                                        closeMenuOnSelect={
+                                                            false
+                                                        }
+                                                        isMulti
+                                                        value={
+                                                            this
+                                                                .selectedStartClinicalEventAttributes
+                                                        }
+                                                        onChange={(
+                                                            selectedOptions: any
+                                                        ) => {
+                                                            this.selectedStartClinicalEventAttributes = selectedOptions;
+                                                        }}
+                                                        options={
+                                                            this.props.store
+                                                                .clinicalEventOptions
+                                                                .result[
+                                                                this
+                                                                    ._selectedStartClinicalEventType
+                                                            ].attributes
+                                                        }
+                                                        isClearable={false}
+                                                        noOptionsMessage={() =>
+                                                            'No results'
+                                                        }
+                                                    />
+                                                </td>
+                                            )}
+                                        <td>
+                                            <ButtonGroup>
+                                                {POSITIONS.map((option, i) => {
+                                                    return (
+                                                        <Radio
+                                                            checked={
+                                                                option.value ===
+                                                                this
+                                                                    .startEventPosition
+                                                            }
+                                                            onChange={e => {
+                                                                this.startEventPosition = $(
+                                                                    e.target
+                                                                ).attr(
+                                                                    'data-value'
+                                                                ) as any;
+                                                            }}
+                                                            inline
+                                                            data-value={
+                                                                option.value
+                                                            }
+                                                        >
+                                                            {option.label}
+                                                        </Radio>
+                                                    );
+                                                })}
+                                            </ButtonGroup>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <ControlLabel>End:</ControlLabel>
+                                        </td>
+                                        <td
+                                            className={
+                                                survivalPlotStyle['event-type']
+                                            }
+                                        >
+                                            <Select
+                                                placeholder="Select clinical event type"
+                                                name="clinical-event"
+                                                value={
+                                                    this
+                                                        .selectedEndClinicalEventType
+                                                }
+                                                onChange={
+                                                    this
+                                                        .onEndClinicalEventSelection
+                                                }
+                                                options={_.values(
+                                                    this.props.store
+                                                        .clinicalEventOptions
+                                                        .result
+                                                )}
+                                                clearable={false}
+                                                searchable={false}
+                                            />
+                                        </td>
+                                        {this._selectedEndClinicalEventType !==
+                                            undefined &&
+                                            this.props.store
+                                                .clinicalEventOptions.result[
+                                                this
+                                                    ._selectedEndClinicalEventType
+                                            ].attributes.length > 0 && (
+                                                <td
+                                                    className={
+                                                        survivalPlotStyle[
+                                                            'event-attributes'
+                                                        ]
+                                                    }
+                                                >
+                                                    <Select
+                                                        placeholder="Select clinical event type attributes"
+                                                        name="clinical-event-attributes"
+                                                        closeMenuOnSelect={
+                                                            false
+                                                        }
+                                                        isMulti
+                                                        value={
+                                                            this
+                                                                .selectedEndClinicalEventAttributes
+                                                        }
+                                                        onChange={(
+                                                            selectedOptions: any
+                                                        ) => {
+                                                            this.selectedEndClinicalEventAttributes = selectedOptions;
+                                                        }}
+                                                        options={
+                                                            this.props.store
+                                                                .clinicalEventOptions
+                                                                .result[
+                                                                this
+                                                                    ._selectedEndClinicalEventType
+                                                            ].attributes
+                                                        }
+                                                        isClearable={false}
+                                                        noOptionsMessage={() =>
+                                                            'No results'
+                                                        }
+                                                    />
+                                                </td>
+                                            )}
+                                        <td>
+                                            <ButtonGroup>
+                                                {POSITIONS.map((option, i) => {
+                                                    return (
+                                                        <Radio
+                                                            checked={
+                                                                option.value ===
+                                                                this
+                                                                    .endEventPosition
+                                                            }
+                                                            onChange={e => {
+                                                                this.endEventPosition = $(
+                                                                    e.target
+                                                                ).attr(
+                                                                    'data-value'
+                                                                ) as any;
+                                                            }}
+                                                            inline
+                                                            data-value={
+                                                                option.value
+                                                            }
+                                                        >
+                                                            {option.label}
+                                                        </Radio>
+                                                    );
+                                                })}
+                                            </ButtonGroup>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <ControlLabel>
+                                                Censored:
+                                            </ControlLabel>
+                                        </td>
+                                        <td
+                                            className={
+                                                survivalPlotStyle['event-type']
+                                            }
+                                        >
+                                            <Select
+                                                placeholder="Select clinical event type"
+                                                name="clinical-event"
+                                                value={
+                                                    this
+                                                        .selectedCensoredClinicalEventType
+                                                }
+                                                onChange={
+                                                    this
+                                                        .onCensoredClinicalEventSelection
+                                                }
+                                                options={[
+                                                    {
+                                                        label: 'any event',
+                                                        value: 'any',
+                                                        attributes: [],
+                                                    } as any,
+                                                ].concat(
+                                                    _.values(
                                                         this.props.store
                                                             .clinicalEventOptions
-                                                            .result[
+                                                            .result
+                                                    )
+                                                )}
+                                                clearable={false}
+                                                searchable={false}
+                                            />
+                                        </td>
+                                        {this
+                                            .selectedCensoredClinicalEventType !==
+                                            undefined &&
+                                            this
+                                                .selectedCensoredClinicalEventType
+                                                .value !== 'any' &&
+                                            this.props.store
+                                                .clinicalEventOptions.result[
+                                                this
+                                                    .selectedCensoredClinicalEventType
+                                                    .value
+                                            ].attributes.length > 0 && (
+                                                <td
+                                                    className={
+                                                        survivalPlotStyle[
+                                                            'event-attributes'
+                                                        ]
+                                                    }
+                                                >
+                                                    <Select
+                                                        placeholder="Select clinical event type attributes"
+                                                        name="clinical-event-attributes"
+                                                        closeMenuOnSelect={
+                                                            false
+                                                        }
+                                                        isMulti
+                                                        value={
                                                             this
-                                                                .selectedCensoredClinicalEventType
-                                                                .value
-                                                        ].attributes
-                                                    }
-                                                    isClearable={false}
-                                                    noOptionsMessage={() =>
-                                                        'No results'
-                                                    }
-                                                />
-                                            </td>
-                                        )}
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <button
-                                            className={'btn btn-primary btn-sm'}
-                                            disabled={
-                                                this.isAddSurvivalPlotDisabled
-                                            }
-                                            onClick={this.onAddSurvivalPlot}
-                                        >
-                                            Add survival plot
-                                        </button>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
+                                                                .selectedCensoredClinicalEventAttributes
+                                                        }
+                                                        onChange={(
+                                                            selectedOptions: any
+                                                        ) => {
+                                                            this.selectedCensoredClinicalEventAttributes = selectedOptions;
+                                                        }}
+                                                        options={
+                                                            this.props.store
+                                                                .clinicalEventOptions
+                                                                .result[
+                                                                this
+                                                                    .selectedCensoredClinicalEventType
+                                                                    .value
+                                                            ].attributes
+                                                        }
+                                                        isClearable={false}
+                                                        noOptionsMessage={() =>
+                                                            'No results'
+                                                        }
+                                                    />
+                                                </td>
+                                            )}
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <button
+                                                className={
+                                                    'btn btn-primary btn-sm'
+                                                }
+                                                disabled={
+                                                    this
+                                                        .isAddSurvivalPlotDisabled
+                                                }
+                                                onClick={this.onAddSurvivalPlot}
+                                            >
+                                                Add survival plot
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        )}
                         {this.tabUI.component}
                     </>
                 );
@@ -954,9 +986,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         }
                         setSelectedPrefix={this.setSurvivalPlotPrefix}
                         dataStore={this.survivalPrefixTableDataStore.result!}
-                        removeCustomSurvivalPlot={
-                            this.props.store.removeCustomSurvivalPlot
-                        }
+                        removeCustomSurvivalPlot={this.onDeleteSurvivalPlot}
                     />
                 );
             } else {
@@ -1072,6 +1102,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 .analysisGroups;
             const patientToAnalysisGroups = this.analysisGroupsComputations
                 .result!.patientToAnalysisGroups;
+            const patientSurvivals = this.props.store.patientSurvivals.result!;
             const attributeDescriptions: { [prefix: string]: string } = {};
             const survivalTitleByPrefix = this.survivalTitleByPrefix.result!;
             const survivalYLabel = this.survivalYLabel.result!;
@@ -1099,11 +1130,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
             // set default plot if applicable
             if (
-                (!doNotSetDefaultPlot &&
-                    this.selectedSurvivalPlotPrefix === undefined) ||
-                !this.props.store.survivalClinicalAttributesPrefix.result?.includes(
-                    this.selectedSurvivalPlotPrefix || ''
-                )
+                !doNotSetDefaultPlot &&
+                this.selectedSurvivalPlotPrefix === undefined
             ) {
                 // if the table exists pick the first one from the table's store for consistency
                 if (this.survivalPrefixTable.component) {
@@ -1114,17 +1142,27 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 }
                 // if there is no table, pick the first one from the default store
                 else {
-                    this.setSurvivalPlotPrefix(
-                        _.keys(this.props.store.patientSurvivals.result!)[0]
-                    );
+                    this.setSurvivalPlotPrefix(_.keys(patientSurvivals)[0]);
                 }
             }
 
-            if (this.selectedSurvivalPlotPrefix) {
-                const value = this.props.store.patientSurvivals.result![
-                    this.selectedSurvivalPlotPrefix
-                ];
+            if (
+                this.selectedSurvivalPlotPrefix &&
+                patientSurvivals?.[this.selectedSurvivalPlotPrefix]
+            ) {
+                const value = patientSurvivals[this.selectedSurvivalPlotPrefix];
                 const key = this.selectedSurvivalPlotPrefix;
+
+                // // show survival plot that is just selected
+                // if (!this.props.store.survivalClinicalAttributesPrefix.result?.includes(
+                //     key
+                // )) {
+                //     this.setSurvivalPlotPrefix(
+                //         this.survivalPrefixTableDataStore.result!.getSortedFilteredData()[0]
+                //             .prefix
+                //     );
+                // }
+
                 if (value.length > 0) {
                     if (
                         this.props.store.survivalDescriptions &&

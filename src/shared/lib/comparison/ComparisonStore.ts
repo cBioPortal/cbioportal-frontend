@@ -1171,8 +1171,6 @@ export default abstract class ComparisonStore extends AnalysisStore
     @action.bound
     public removeCustomSurvivalPlot(prefix: string) {
         if (!_.isEmpty(this.customSurvivalPlots)) {
-            this.selectedSurvivalPlotPrefix = undefined;
-
             this.customSurvivalPlots = _.omitBy(
                 toJS(this.customSurvivalPlots),
                 (value, key) => key === prefix
