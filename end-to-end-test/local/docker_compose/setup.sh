@@ -11,9 +11,6 @@ mkdir -p $E2E_WORKSPACE/keycloak
 cd $E2E_WORKSPACE
 git clone https://github.com/cBioPortal/cbioportal-docker-compose.git
 cd cbioportal-docker-compose
-#TODO: temporarily use docker compose for demo-rfc72
-# https://github.com/cBioPortal/cbioportal-docker-compose/pull/23
-git checkout demo-rfc72
 
 # update keycloak config with permissions for test studies
 config_json="$(cat $TEST_HOME/docker_compose/keycloak/keycloak-config.json)"
