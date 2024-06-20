@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { lazy, Suspense } from 'react';
 import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
@@ -80,6 +81,17 @@ import {
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import PlotsTab from 'shared/components/plots/PlotsTab';
 import HomePage from 'pages/SingleCell/HomePage';
+function SuspenseWrapper(Component: any) {
+    return (props: any) => (
+        <React.Suspense fallback={null}>
+            <Component {...props} />
+        </React.Suspense>
+    );
+}
+const LazyHomePage = SuspenseWrapper(
+    // @ts-ignore
+    React.lazy(() => import('pages/SingleCell/HomePage'))
+);
 export interface IStudyViewPageProps {
     routing: any;
     appStore: AppStore;
@@ -172,6 +184,7 @@ export default class StudyViewPage extends React.Component<
 
         const query = props.routing.query;
         const hash = props.routing.location.hash;
+
         // clear hash if any
         props.routing.location.hash = '';
         const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
@@ -692,6 +705,10 @@ export default class StudyViewPage extends React.Component<
                                     {this.store.genericAssayProfiles.result &&
                                         this.store.genericAssayProfiles.result
                                             .length > 0 &&
+                                        this.store.studyIdToStudy.result &&
+                                        Object.values(
+                                            this.store.studyIdToStudy.result
+                                        ).length == 1 &&
                                         this.store.genericAssayProfiles.result.some(
                                             (profile: any) =>
                                                 profile.genericAssayType.startsWith(
@@ -707,10 +724,9 @@ export default class StudyViewPage extends React.Component<
                                                     StudyViewPageTabDescriptions.SINGLECELL
                                                 }
                                             >
-                                                <HomePage
+                                                <LazyHomePage
                                                     store={this.store}
-                                                    // appStore={this.props.appStore}
-                                                ></HomePage>
+                                                />
                                             </MSKTab>
                                         )}
                                     <MSKTab

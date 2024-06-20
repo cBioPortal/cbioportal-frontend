@@ -31,6 +31,7 @@ interface StackedBarChartProps {
     pieChartData: any[];
     dataBins: DataBin[];
     stackEntity: any;
+    studyIdToStudy: any;
 }
 
 interface BarDatum {
@@ -54,9 +55,13 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     pieChartData,
     dataBins,
     stackEntity,
+    studyIdToStudy,
 }) => {
     console.log(stackEntity, 'this is stacckentity');
+    console.log(studyIdToStudy, 'this is studyIdToStudy');
+
     const [selectedSamples, setSelectedSamples] = useState<string[]>([]);
+    const [hoveredSampleId, setHoveredSampleId] = useState<string[]>([]);
     const [isVisible, setIsVisible] = useState(false);
     const [selectedSortingSample, setSelectedSortingSample] = useState('');
 
@@ -263,12 +268,12 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         for (let i = 0; i < differentSampleIds.length; i++) {
             mappedData[differentSampleIds[i]] = updatedTooltiparray[i] || null; // Assign null if there's no corresponding tooltipData
         }
-        console.log(mappedData, '  ');
 
         setToolArraystate(updatedTooltiparray);
     }, []);
 
     console.log(formattedDatastate, 'this isformattedDatastate');
+    console.log(mappedData, 'DAMAAPED  ');
 
     console.log(formattedData, 'formattedData');
     function sortFormattedData(formattedData: any, stableIdToBeSorted: any) {
@@ -440,17 +445,15 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             <div
                 style={{
                     display: 'flex',
-                    justifyContent: 'center',
+
                     alignItems: 'flex-start',
 
-                    marginTop: '15px',
                     position: 'relative',
                 }}
             >
                 <div
                     style={{
                         flex: '0 0 80%',
-                        textAlign: 'center',
                         height: containerHeight
                             ? `${containerHeight}px`
                             : 'auto',
@@ -488,19 +491,23 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             </div> */}
                     <VictoryChart
                         domainPadding={20}
-                        height={chartHeight ? chartHeight * 1.68 : 2100}
-                        width={1100}
+                        height={
+                            studyIdToStudy == 'msk_spectrum_tme_2022'
+                                ? 1800
+                                : 600
+                        } //1800
+                        width={600}
                     >
                         <VictoryAxis
                             style={{
-                                tickLabels: { fontSize: 16, padding: 5 },
+                                tickLabels: { fontSize: 0, padding: 5 }, // Hide labels
                             }}
                             dependentAxis
                             domain={[0, 1]}
                         />
                         <VictoryAxis
                             style={{
-                                tickLabels: { fontSize: 16, padding: 5 },
+                                tickLabels: { fontSize: 10, padding: 5 },
                             }}
                             tickValues={[0, 0.25, 0.5, 0.75, 1]}
                             domain={[0, 1]}
@@ -524,7 +531,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                         horizontal
                                         key={i}
                                         data={filteredFormattedData}
-                                        barWidth={32}
+                                        barWidth={20}
                                         style={{
                                             data: {
                                                 fill: (d: any) => {
@@ -555,6 +562,9 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                                             mappedData[
                                                                 props.datum.x
                                                             ]
+                                                        );
+                                                        setHoveredSampleId(
+                                                            props.datum.x
                                                         );
                                                     },
                                                     onMouseOut: () => {
@@ -671,7 +681,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                         <div
                             style={{
                                 position: 'absolute',
-                                top: '150px',
+                                top: '200px',
                                 pointerEvents: 'auto',
                                 transform: 'translateX(-120px)',
                                 margin: 'auto',
@@ -697,6 +707,14 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                     pointerEvents: 'auto',
                                 }}
                             >
+                                <h3
+                                    style={{
+                                        marginTop: '125px',
+                                        paddingTop: '7px',
+                                    }}
+                                >
+                                    {hoveredSampleId ? hoveredSampleId : ''}
+                                </h3>
                                 <table
                                     style={{
                                         borderCollapse: 'collapse',

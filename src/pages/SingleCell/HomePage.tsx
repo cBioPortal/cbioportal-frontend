@@ -97,6 +97,7 @@ interface HomePageState {
     downloadOption: string;
     BarDownloadData: gaData[];
     stackEntity: any;
+    studyIdToStudy: any;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -126,6 +127,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             downloadOption: '',
             BarDownloadData: [],
             stackEntity: '',
+            studyIdToStudy: '',
         };
     }
 
@@ -396,6 +398,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 item.genericAssayType.startsWith('SINGLE_CELL')
             ) {
                 console.log(item.studyId); // Log the studyId to console
+                this.setState({ studyIdToStudy: item.studyId });
                 studyId = item.studyId; // Store the studyId in the variable
                 break; // Exit the loop once the desired item is found
             }
@@ -724,6 +727,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     dataBins={dataBins}
                                     pieChartData={pieChartData}
                                     stackEntity={this.state.stackEntity}
+                                    studyIdToStudy={this.state.studyIdToStudy}
                                 />
                             ) : null}
                         </div>
