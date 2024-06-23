@@ -41,6 +41,348 @@
 }
 
 .chart-configurations {
+    width: 15%;
+    padding: 20px;
+    background-color: #eeeeee;
+    /* max-height: 350px; */
+    border-right: 1px solid #ccc;
+    margin-top: 50px;
+}
+
+.chart-display {
+    width: 60%;
+    padding: 20px;
+}
+
+.dropdown-container {
+    margin-bottom: 20px;
+}
+
+.custom-dropdown {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.custom-dropdown[disabled]:hover {
+    cursor: not-allowed;
+}
+
+.custom-option {
+    padding: 10px; /* Add padding */
+    font-size: 16px; /* Set font size */
+    cursor: pointer; /* Add cursor */
+    transition: background-color 0.3s; /* Add transition effect */
+}
+
+.custom-option:hover {
+    background-color: #333; /* Change background color on hover to light black */
+}
+
+/* In your global CSS file (e.g., styles.css) */
+
+/* For Webkit-based browsers */
+/* ::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 10px;
+    border: 2px solid #f1f1f1;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+} */
+
+/* For Firefox */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+}
+.checkbox-wrapper-3 {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.checkbox-wrapper-3 input[type='checkbox'] {
+    visibility: hidden;
+    display: none;
+}
+
+.checkbox-wrapper-3 .toggle {
+    position: relative;
+    display: block;
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform: translate3d(0, 0, 0);
+}
+
+.checkbox-wrapper-3 .toggle:before {
+    content: '';
+    position: relative;
+    top: 3px;
+    left: 3px;
+    width: 34px;
+    height: 14px;
+    display: block;
+    background: #9a9999;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.checkbox-wrapper-3 .toggle span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    display: block;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(154, 153, 153, 0.5);
+    transition: all 0.2s ease;
+}
+
+.checkbox-wrapper-3 .toggle span:before {
+    content: '';
+    position: absolute;
+    display: block;
+    margin: -18px;
+    width: 56px;
+    height: 56px;
+    background: rgba(79, 46, 220, 0.5);
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: 1;
+    pointer-events: none;
+}
+
+.checkbox-wrapper-3 #cbx-3:checked + .toggle:before {
+    background: #947ada;
+}
+
+.checkbox-wrapper-3 #cbx-3:checked + .toggle span {
+    background: #4f2edc;
+    transform: translateX(20px);
+    transition: all 0.2s cubic-bezier(0.8, 0.4, 0.3, 1.25),
+        background 0.15s ease;
+    box-shadow: 0 3px 8px rgba(79, 46, 220, 0.2);
+}
+
+.checkbox-wrapper-3 #cbx-3:checked + .toggle span:before {
+    transform: scale(1);
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.checkbox-wrapper-4 {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.checkbox-wrapper-4 input[type='checkbox'] {
+    visibility: hidden;
+    display: none;
+}
+
+.checkbox-wrapper-4 .toggle {
+    position: relative;
+    display: block;
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform: translate3d(0, 0, 0);
+}
+
+.checkbox-wrapper-4 .toggle:before {
+    content: '';
+    position: relative;
+    top: 3px;
+    left: 3px;
+    width: 34px;
+    height: 14px;
+    display: block;
+    background: #9a9999;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.checkbox-wrapper-4 .toggle span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    display: block;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(154, 153, 153, 0.5);
+    transition: all 0.2s ease;
+}
+
+.checkbox-wrapper-4 .toggle span:before {
+    content: '';
+    position: absolute;
+    display: block;
+    margin: -18px;
+    width: 56px;
+    height: 56px;
+    background: rgba(79, 46, 220, 0.5);
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: 1;
+    pointer-events: none;
+}
+
+.checkbox-wrapper-4 #cbx-4:checked + .toggle:before {
+    background: #947ada;
+}
+
+.checkbox-wrapper-4 #cbx-4:checked + .toggle span {
+    background: #4f2edc;
+    transform: translateX(20px);
+    transition: all 0.2s cubic-bezier(0.8, 0.4, 0.3, 1.25),
+        background 0.15s ease;
+    box-shadow: 0 3px 8px rgba(79, 46, 220, 0.2);
+}
+
+.checkbox-wrapper-4 #cbx-4:checked + .toggle span:before {
+    transform: scale(1);
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.toggle-label {
+    color: #424141;
+}
+
+.download-button {
+    padding: 10px 20px;
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.download-button:hover {
+    background-color: #0b7dda;
+}
+
+.throttle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.resize-checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+.resize-checkbox-label {
+    color: #424141;
+    margin-left: 10px;
+}
+
+.throttle-button {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    background-color: #f5f5f5;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.throttle-button:hover {
+    background-color: #e0e0e0;
+}
+
+.throttle-button:active {
+    transform: scale(0.95);
+}
+
+.throttle-input {
+    width: 70px;
+    height: 40px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 18px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.throttle-input:focus {
+    border-color: #3f51b5;
+    box-shadow: 0 2px 8px rgba(63, 81, 181, 0.3);
+    outline: none;
+}
+
+/* styles.css */
+
+.custom-dropdown {
+    width: 300px; /* Set width of dropdown */
+    padding: 10px; /* Add padding */
+    font-size: 16px; /* Set font size */
+    border: 1px solid #ccc; /* Add border */
+    border-radius: 4px; /* Add border radius */
+    outline: none; /* Remove outline */
+    appearance: none; /* Remove default appearance */
+    background: url('data:image/svg+xml;utf8,<svg fill="%23777777" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>')
+        no-repeat right 10px center; /* Add custom arrow icon */
+    background-size: 24px; /* Set size of arrow icon */
+    background-color: #fff; /* Set background color */
+    cursor: pointer; /* Add cursor */
+    transition: border-color 0.3s; /* Add transition for border color */
+}
+
+.custom-dropdown:hover {
+    border-color: #888; /* Change border color on hover */
+}
+
+.custom-dropdown:focus {
+    border-color: #4caf50; /* Change border color on focus */
+}
+
+/* Style for dropdown options */
+.custom-dropdown option {
+    padding: 10px; /* Add padding */
+    font-size: 16px; /* Set font size */
+    cursor: pointer; /* Add cursor */
+}
+
+/* Style for selected option */
+.custom-dropdown option:checked {
+    background-color: #f0f0f0; /* Change background color of selected option */
+}
+
+.home-page-container {
+    display: flex;
+}
+
+.chart-configurations {
     width: 20%;
     padding: 20px;
     background-color: #eeeeee;

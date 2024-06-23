@@ -24,6 +24,7 @@ import {
 import PieChart from './PieChart';
 import BarChart from './BarChart';
 import StackedBarChart from './StackedBarChart';
+import StackToolTip from './StackToolTip';
 import './styles.css';
 
 interface Option {
@@ -98,6 +99,16 @@ interface HomePageState {
     BarDownloadData: gaData[];
     stackEntity: any;
     studyIdToStudy: any;
+    hoveredSampleId: any;
+    currentTooltipData: any;
+    map: { [key: string]: string };
+    dynamicWidth: any;
+    increaseCount: any;
+    decreaseCount: any;
+    resizeEnabled: boolean;
+    isHorizontal: boolean;
+    isVisible: boolean;
+    tooltipHovered: boolean;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -128,6 +139,16 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             BarDownloadData: [],
             stackEntity: '',
             studyIdToStudy: '',
+            hoveredSampleId: [],
+            currentTooltipData: [],
+            map: {},
+            dynamicWidth: 0,
+            increaseCount: 0,
+            decreaseCount: 0,
+            resizeEnabled: false,
+            isHorizontal: false,
+            isVisible: false,
+            tooltipHovered: false,
         };
     }
 
@@ -207,6 +228,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     }
     @autobind
     async handleSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
+        this.setState({ stackEntity: '' });
         console.log(this.state.entityNames, 'entityNames');
         const selectedValue = event.target.value;
         const studyId = 'gbm_cptac_2021';
@@ -502,7 +524,33 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             return label;
         }
     }
+    increaseWidth = () => {
+        this.setState((prevState: any) => ({
+            dynamicWidth: prevState.dynamicWidth + 10,
+            increaseCount: prevState.increaseCount + 1,
+        }));
+        console.log(`Width increased: ${this.state.increaseCount + 1}`);
+    };
 
+    decreaseWidth = () => {
+        this.setState((prevState: any) => ({
+            dynamicWidth: prevState.dynamicWidth - 10,
+            decreaseCount: prevState.decreaseCount + 1,
+        }));
+        console.log(`Width decreased: ${this.state.decreaseCount + 1}`);
+    };
+    handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(event.target.value);
+        this.setState({ dynamicWidth: value });
+    };
+    handleResizeCheckboxChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        this.setState({ resizeEnabled: event.target.checked });
+    };
+    toggleAxes = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({ isHorizontal: event.target.checked });
+    };
     render() {
         const {
             selectedOption,
@@ -647,7 +695,13 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     disabled={!selectedOption}
                                 >
                                     <option value="" disabled hidden>
-                                        Sort by cell type...
+                                        {selectedOption &&
+                                        selectedOption.includes('type')
+                                            ? 'Sort by cell type...'
+                                            : selectedOption &&
+                                              selectedOption.includes('cycle')
+                                            ? 'Sort by cycle phase...'
+                                            : 'Sort by ...'}
                                     </option>
                                     {entityNames.map(entityName => (
                                         <option
@@ -686,20 +740,120 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 </label>
                             </div>
                         )}
+                        {chartType === 'stack' && (
+                            <>
+                                <div className="checkbox-wrapper-3">
+                                    <input
+                                        type="checkbox"
+                                        id="cbx-3"
+                                        checked={this.state.resizeEnabled}
+                                        onChange={
+                                            this.handleResizeCheckboxChange
+                                        }
+                                    />
+                                    <label htmlFor="cbx-3" className="toggle">
+                                        <span></span>
+                                    </label>
+                                    <label
+                                        htmlFor="cbx-3"
+                                        className="toggle-label"
+                                        style={{
+                                            fontWeight: 'normal',
+                                            fontSize: '15px',
+                                            marginLeft: '10px',
+                                        }}
+                                    >
+                                        Resize Graph
+                                    </label>
+                                </div>
+                            </>
+                        )}
+                        {chartType == 'stack' && (
+                            <div className="checkbox-wrapper-4">
+                                <input
+                                    type="checkbox"
+                                    id="cbx-4"
+                                    checked={this.state.isHorizontal}
+                                    onChange={this.toggleAxes}
+                                />
+                                <label htmlFor="cbx-4" className="toggle">
+                                    <span></span>
+                                </label>
+                                <label
+                                    htmlFor="cbx-4"
+                                    className="toggle-label"
+                                    style={{
+                                        fontWeight: 'normal',
+                                        fontSize: '15px',
+                                        marginLeft: '10px',
+                                    }}
+                                >
+                                    Toggle axes
+                                </label>
+                            </div>
+                        )}
+                        {chartType === 'stack' && this.state.resizeEnabled && (
+                            <div className="throttle-container">
+                                <label className="throttle-label">
+                                    {this.state.isHorizontal
+                                        ? 'Height:'
+                                        : 'Width:'}
+                                </label>
+
+                                <button
+                                    className="throttle-button"
+                                    onClick={this.decreaseWidth}
+                                >
+                                    -
+                                </button>
+                                <input
+                                    type="number"
+                                    className="throttle-input"
+                                    value={this.state.dynamicWidth}
+                                    onChange={this.handleWidthChange}
+                                    min="10"
+                                    max="100"
+                                />
+                                <button
+                                    className="throttle-button"
+                                    onClick={this.increaseWidth}
+                                >
+                                    +
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="chart-display">
+                <div
+                    className={chartType != 'stack' ? 'chart-display' : ''}
+                    style={
+                        chartType == 'stack'
+                            ? {
+                                  width: '55%',
+                                  marginLeft: '5px',
+                                  marginTop: '30px',
+                              }
+                            : {}
+                    }
+                >
                     {/* Display fetched data bins */}
                     {dataBins && (
                         <div
-                            style={{
-                                margin: '12px auto',
-                                width:
-                                    chartType === 'bar' || chartType === 'pie'
-                                        ? '600px'
-                                        : 'auto',
-                            }}
+                            className="custom-scrollbar"
+                            style={
+                                chartType == 'stack'
+                                    ? {
+                                          width: '100%',
+                                          overflowX: 'scroll',
+                                          height: '700px',
+                                          overflowY: 'scroll',
+                                      }
+                                    : {
+                                          margin: '12px auto',
+                                          width: '600px',
+                                      }
+                            }
                         >
                             {/* <PieChart dataBins={dataBins} pieChartData={pieChartData} /> */}
 
@@ -728,11 +882,77 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     pieChartData={pieChartData}
                                     stackEntity={this.state.stackEntity}
                                     studyIdToStudy={this.state.studyIdToStudy}
+                                    hoveredSampleId={this.state.hoveredSampleId}
+                                    setHoveredSampleId={(value: any) =>
+                                        this.setState({
+                                            hoveredSampleId: value,
+                                        })
+                                    }
+                                    currentTooltipData={
+                                        this.state.currentTooltipData
+                                    }
+                                    setCurrentTooltipData={(value: any) =>
+                                        this.setState({
+                                            currentTooltipData: value,
+                                        })
+                                    }
+                                    map={this.state.map}
+                                    setMap={(value: any) =>
+                                        this.setState({ map: value })
+                                    }
+                                    dynamicWidth={this.state.dynamicWidth}
+                                    setDynamicWidth={(value: any) =>
+                                        this.setState({ dynamicWidth: value })
+                                    }
+                                    isHorizontal={this.state.isHorizontal}
+                                    setIsHorizontal={(value: any) =>
+                                        this.setState({ isHorizontal: value })
+                                    }
+                                    isVisible={this.state.isVisible}
+                                    setIsVisible={(value: any) =>
+                                        this.setState({ isVisible: value })
+                                    }
+                                    tooltipHovered={this.state.tooltipHovered}
+                                    setTooltipHovered={(value: any) =>
+                                        this.setState({ tooltipHovered: value })
+                                    }
                                 />
                             ) : null}
                         </div>
                     )}
                 </div>
+                {chartType == 'stack' && (
+                    <div
+                        style={{
+                            width: '22%',
+                            marginTop: '100px',
+                            marginLeft: '5px',
+                        }}
+                    >
+                        <StackToolTip
+                            hoveredSampleId={this.state.hoveredSampleId}
+                            setHoveredSampleId={(value: any) =>
+                                this.setState({ hoveredSampleId: value })
+                            }
+                            currentTooltipData={this.state.currentTooltipData}
+                            setCurrentTooltipData={(value: any) =>
+                                this.setState({ currentTooltipData: value })
+                            }
+                            map={this.state.map}
+                            setMap={(value: any) =>
+                                this.setState({ map: value })
+                            }
+                            isVisible={this.state.isVisible}
+                            setIsVisible={(value: any) =>
+                                this.setState({ isVisible: value })
+                            }
+                            tooltipHovered={this.state.tooltipHovered}
+                            setTooltipHovered={(value: any) =>
+                                this.setState({ tooltipHovered: value })
+                            }
+                        />
+                    </div>
+                )}
             </div>
         );
     }

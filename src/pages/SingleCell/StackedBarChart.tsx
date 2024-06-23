@@ -32,6 +32,20 @@ interface StackedBarChartProps {
     dataBins: DataBin[];
     stackEntity: any;
     studyIdToStudy: any;
+    hoveredSampleId: any;
+    setHoveredSampleId: (value: any) => void;
+    currentTooltipData: { [key: string]: { [key: string]: React.ReactNode } };
+    setCurrentTooltipData: (value: any) => void;
+    map: { [key: string]: string };
+    setMap: (value: any) => void;
+    dynamicWidth: any;
+    setDynamicWidth: (value: any) => void;
+    isHorizontal: any;
+    setIsHorizontal: (value: any) => void;
+    isVisible: any;
+    setIsVisible: (value: any) => void;
+    tooltipHovered: any;
+    setTooltipHovered: (value: any) => void;
 }
 
 interface BarDatum {
@@ -56,15 +70,28 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     dataBins,
     stackEntity,
     studyIdToStudy,
+    hoveredSampleId,
+    setHoveredSampleId,
+    currentTooltipData,
+    setCurrentTooltipData,
+    map,
+    setMap,
+    dynamicWidth,
+    setDynamicWidth,
+    isHorizontal,
+    setIsHorizontal,
+    isVisible,
+    setIsVisible,
+    tooltipHovered,
+    setTooltipHovered,
 }) => {
-    console.log(stackEntity, 'this is stacckentity');
-    console.log(studyIdToStudy, 'this is studyIdToStudy');
-
     const [selectedSamples, setSelectedSamples] = useState<string[]>([]);
-    const [hoveredSampleId, setHoveredSampleId] = useState<string[]>([]);
-    const [isVisible, setIsVisible] = useState(false);
+    // const [hoveredSampleId, setHoveredSampleId] = useState<string[]>([]);
+    // const [isVisible, setIsVisible] = useState(false);
+    // const [map, setMap] = useState<{ [key: string]: string }>({});
+    console.log(map, 'hereisMap');
     const [selectedSortingSample, setSelectedSortingSample] = useState('');
-
+    // const [isHorizontal, setIsHorizontal] = useState(true);
     const handleSampleSelectionChange = (selectedOptions: any) => {
         const selectedSampleIds = selectedOptions
             ? selectedOptions.map((option: any) => option.value)
@@ -74,20 +101,22 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         console.log(selectedSampleIds);
     };
 
-    console.log(pieChartData, 'piechartDaataaa');
     const [isHovered, setIsHovered] = useState<boolean>(false);
     const [hoveredSliceIndex, setHoveredSliceIndex] = useState<number | null>(
         null
     );
-    const [currentTooltipData, setCurrentTooltipData] = useState([]);
+    // const [currentTooltipData, setCurrentTooltipData] = useState([]);
     const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
-    const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
+    // const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
     const [downloadOptionsVisible, setDownloadOptionsVisible] = useState<
         boolean
     >(false);
     const [formattedDatastate, setFormattedDatastate] = useState([] as any);
     const [tooltipArraystate, setToolArraystate] = useState([] as any);
+    const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+    const [noOfBars, setNoOfBars] = useState(0);
+    // const [dynamicWidth,setDynamicWidth]=useState(0);
     const chartRef = useRef<HTMLDivElement>(null);
 
     let differentSampleIds: string[] = [];
@@ -104,6 +133,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     // if (loading) {
     //     return <div>Loading...</div>; // You can replace this with a spinner or any other loading indicator
     // }
+    console.log(tooltipPosition.y, 'tooltipposition');
     function calculatePercentageForPieChartData(data: any) {
         const groupedData = data.reduce((acc: any, item: any) => {
             if (!acc[item.sampleId]) {
@@ -131,7 +161,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     const updatedPiechartData = calculatePercentageForPieChartData(
         pieChartData
     );
-    console.log(updatedPiechartData, 'updatedPiechartDataupdatedPiechartData');
+    // console.log(updatedPiechartData, 'updatedPiechartDataupdatedPiechartData');
 
     for (let i = 0; i < pieChartData.length; i++) {
         let currentSampleId = pieChartData[i].sampleId;
@@ -161,7 +191,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             }
         }
     }
-    console.log(stableIdData, 'stableIdDatastableIdData');
+    // console.log(stableIdData, 'stableIdDatastableIdData');
 
     let tooltipData: { [key: string]: string } = {};
 
@@ -174,28 +204,64 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         });
         tooltipData[sampleId] = sampleTooltip.trim();
     });
-    console.log(differentStableIds, 'differentSampleIds');
+    // console.log(differentStableIds, 'differentSampleIds');
+
+    // const [stableIdColorMap, setStableIdColorMap] = useState<{ [key: string]: string }>({});
+    useEffect(() => {
+        const stableIdColorMap: { [key: string]: string } = {};
+
+        let colorIndex = 0;
+        const colorScale = [
+            '#00BCD4', // Cyan (High contrast, good accessibility)
+            '#FF9800', // Orange (Warm, contrasting)
+            '#A52A2A', // Maroon (Deep, high contrast)
+            '#795548', // Brown (Earth tone, contrasts well with previous)
+            '#27AE60', // Pink (Light, good contrast)
+            '#E53935', // Green (Vibrant, contrasts with Pink)
+            '#9C27B0', // Violet (Rich, unique hue)
+            '#2986E2', // Blue (Calming, high contrast)
+            '#FFEB3B', // Light Yellow (Light, good contrast with Blue)
+            '#051288', // Red (Bold, contrasts well)
+            '#008080',
+            '#7a8376',
+        ];
+
+        let formattedData = Object.keys(stableIdData).map(stableId => {
+            if (!stableIdColorMap[stableId]) {
+                stableIdColorMap[stableId] =
+                    colorScale[colorIndex % colorScale.length];
+                colorIndex++;
+            }
+            return stableIdData[stableId].map(item => ({
+                x: item.sampleId,
+                y: item.value,
+                stableId: item.stableId,
+                color: stableIdColorMap[stableId],
+            }));
+        });
+        setMap(stableIdColorMap);
+    }, []);
     const stableIdColorMap: { [key: string]: string } = {};
+
     let colorIndex = 0;
     const colorScale = [
-        '#2986E2',
-        '#DC3912',
-        '#f88508',
-        '#109618',
-        '#990099',
-        '#0099c6',
-        '#dd4477',
-        '#66aa00',
-        '#b82e2e',
-        '#4e2da2',
-        '#38761d',
-        '#c90076',
+        '#00BCD4', // Cyan (High contrast, good accessibility)
+        '#FF9800', // Orange (Warm, contrasting)
+        '#A52A2A', // Maroon (Deep, high contrast)
+        '#795548', // Brown (Earth tone, contrasts well with previous)
+        '#27AE60', // Pink (Light, good contrast)
+        '#E53935', // Green (Vibrant, contrasts with Pink)
+        '#9C27B0', // Violet (Rich, unique hue)
+        '#2986E2', // Blue (Calming, high contrast)
+        '#FFEB3B', // Light Yellow (Light, good contrast with Blue)
+        '#051288', // Red (Bold, contrasts well)
+        '#008080',
+        '#7a8376',
     ];
 
     let formattedData = Object.keys(stableIdData).map(stableId => {
         if (!stableIdColorMap[stableId]) {
-            stableIdColorMap[stableId] =
-                colorScale[colorIndex % colorScale.length];
+            stableIdColorMap[stableId] = colorScale[colorIndex];
             colorIndex++;
         }
         return stableIdData[stableId].map(item => ({
@@ -241,7 +307,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 color: stableIdColorMap[stableId],
             }));
         });
-        console.log(formattedDatastate, 'tiiktip');
+        // console.log(formattedDatastate, 'tiiktip');
         const rows = formattedDatastate.length;
         const columns = formattedDatastate[0].length;
 
@@ -255,15 +321,18 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 tooltipArray[i][j] = { [eleName]: value };
             }
         }
-        console.log(tooltipArray, 'here is 1the tooltipArray');
+        // console.log(tooltipArray, 'here is 1the tooltipArray');
 
         return tooltipArray;
     };
     const updatedTooltiparray = tooltipUtilArray();
-    console.log(updatedTooltiparray);
+    // console.log(updatedTooltiparray);
 
     useEffect(() => {
         setFormattedDatastate(formattedData);
+        setNoOfBars(formattedData[0].length);
+        let temp = formattedData[0].length * 47;
+        setDynamicWidth(temp);
         const updatedTooltiparray = tooltipUtilArray();
         for (let i = 0; i < differentSampleIds.length; i++) {
             mappedData[differentSampleIds[i]] = updatedTooltiparray[i] || null; // Assign null if there's no corresponding tooltipData
@@ -271,11 +340,8 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
 
         setToolArraystate(updatedTooltiparray);
     }, []);
+    console.log(noOfBars, 'here are no of bars');
 
-    console.log(formattedDatastate, 'this isformattedDatastate');
-    console.log(mappedData, 'DAMAAPED  ');
-
-    console.log(formattedData, 'formattedData');
     function sortFormattedData(formattedData: any, stableIdToBeSorted: any) {
         // Step 1: Find the array corresponding to the stableIdToBeSorted
 
@@ -335,8 +401,13 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         if (chartRef.current) {
             const svg = chartRef.current.querySelector('svg');
             if (svg) {
+                console.log('SVG Element found:', svg);
                 handleDownloadSVG({ current: svg });
+            } else {
+                console.log('SVG Element not found within chartRef');
             }
+        } else {
+            console.log('chartRef is not defined');
         }
     };
 
@@ -374,10 +445,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         value: stableId,
         label: stableId,
     }));
-    console.log(currentTooltipData, 'current data');
-    console.log(tooltipArraystate, 'current tooltip data');
 
-    console.log(stableIdColorMap, 'this is color map');
     const handleSortingSampleSelectionChange = (selectedOption: any) => {
         setSelectedSortingSample(selectedOption);
         const sortedFormattedData = sortFormattedData(
@@ -398,6 +466,8 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             setFormattedDatastate(sortedFormattedData);
         }
     }, [stackEntity]);
+    console.log(formattedDatastate, stackEntity, 'this is formattedState');
+
     useEffect(() => {
         let timeout: any;
         if (isHovered || tooltipHovered) {
@@ -406,293 +476,291 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         } else if (isVisible) {
             timeout = setTimeout(() => {
                 setIsVisible(false);
-            }, 3000); // Tooltip will remain visible for 3 seconds after hover ends
+            }, 2000); // Tooltip will remain visible for 3 seconds after hover ends
         }
         return () => clearTimeout(timeout);
     }, [isHovered, tooltipHovered]);
-    const chartContainerRef = useRef<HTMLDivElement>(null);
-    // const chartRef = useRef<HTMLDivElement>(null);
-    const [containerHeight, setContainerHeight] = useState(0);
-    const [chartHeight, setChartHeight] = useState(0);
-
-    useEffect(() => {
-        if (chartContainerRef.current) {
-            setContainerHeight(chartContainerRef.current.offsetHeight);
-        }
-        if (chartRef.current) {
-            setChartHeight(chartRef.current.offsetHeight);
-        }
-    }, [chartContainerRef, chartRef]);
-    useEffect(() => {
-        const handleResize = () => {
-            if (chartContainerRef.current) {
-                setContainerHeight(chartContainerRef.current.offsetHeight);
-            }
-            if (chartRef.current) {
-                setChartHeight(chartRef.current.offsetHeight);
-            }
-        };
-
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    const [tooltipStyle, setTooltipStyle] = useState({});
+    const tooltipRef = useRef<HTMLDivElement | null>(null);
 
     return (
-        <div
-            style={{ textAlign: 'center', position: 'relative' }}
-            ref={chartContainerRef}
-        >
-            <div
-                style={{
-                    display: 'flex',
+        <>
+            <div style={{ textAlign: 'center', position: 'relative' }}>
+                {/* <button onClick={toggleAxes} style={{ marginBottom: '10px' }}>Swap Axes</button> */}
 
-                    alignItems: 'flex-start',
-
-                    position: 'relative',
-                }}
-            >
                 <div
                     style={{
-                        flex: '0 0 80%',
-                        height: containerHeight
-                            ? `${containerHeight}px`
-                            : 'auto',
-                    }}
-                    ref={chartRef}
-                >
-                    <h2>
-                        {dataBins.length > 0
-                            ? dataBins[0].id.replace(/_/g, ' ')
-                            : 'No Data'}
-                    </h2>
-                    <Select
-                        placeholder="Select SampleId.."
-                        options={sampleOptions}
-                        isMulti
-                        onChange={handleSampleSelectionChange}
-                        value={selectedSamples.map(sampleId => ({
-                            value: sampleId,
-                            label: sampleId,
-                        }))}
-                        style={{
-                            padding: '10px',
-                            marginTop: '5px',
-                            marginBottom: '5px',
-                        }}
-                    />
-                    {/* <div style={{marginTop:"10px"}}>
-                <Select
-                placeholder="Select samples to sort..."
-                options={sortingOptions}
-                onChange={handleSortingSampleSelectionChange}
-                value={selectedSortingSample}
-                style={{ padding: "10px", marginTop: "15px", marginBottom: "5px" }}
-            />
-            </div> */}
-                    <VictoryChart
-                        domainPadding={20}
-                        height={
-                            studyIdToStudy == 'msk_spectrum_tme_2022'
-                                ? 1800
-                                : 600
-                        } //1800
-                        width={600}
-                    >
-                        <VictoryAxis
-                            style={{
-                                tickLabels: { fontSize: 0, padding: 5 }, // Hide labels
-                            }}
-                            dependentAxis
-                            domain={[0, 1]}
-                        />
-                        <VictoryAxis
-                            style={{
-                                tickLabels: { fontSize: 10, padding: 5 },
-                            }}
-                            tickValues={[0, 0.25, 0.5, 0.75, 1]}
-                            domain={[0, 1]}
-                        />
-                        <VictoryStack>
-                            {formattedDatastate.map((elem: any, i: any) => {
-                                const filteredFormattedData =
-                                    selectedSamples.length > 0
-                                        ? elem.filter((dataItem: any) =>
-                                              selectedSamples.includes(
-                                                  dataItem.x
-                                              )
-                                          )
-                                        : elem;
-                                console.log(
-                                    filteredFormattedData,
-                                    'here is formattedData'
-                                );
-                                return (
-                                    <VictoryBar
-                                        horizontal
-                                        key={i}
-                                        data={filteredFormattedData}
-                                        barWidth={20}
-                                        style={{
-                                            data: {
-                                                fill: (d: any) => {
-                                                    // console.log(d,"dprop"); // Log the data point 'd'
-                                                    return d.color; // Set the fill color based on the 'color' field in your data
-                                                },
-                                            },
-                                        }}
-                                        labelComponent={<VictoryTooltip />}
-                                        events={[
-                                            {
-                                                target: 'data',
-                                                eventHandlers: {
-                                                    onMouseOver: (
-                                                        evt: React.MouseEvent<
-                                                            any
-                                                        >,
-                                                        props: any
-                                                    ) => {
-                                                        console.log(
-                                                            props.datum,
-                                                            'propss',
-                                                            mappedData
-                                                        );
+                        display: 'flex',
 
-                                                        setIsHovered(true);
-                                                        setCurrentTooltipData(
-                                                            mappedData[
-                                                                props.datum.x
-                                                            ]
-                                                        );
-                                                        setHoveredSampleId(
-                                                            props.datum.x
-                                                        );
-                                                    },
-                                                    onMouseOut: () => {
-                                                        setIsHovered(false);
-                                                    },
-                                                },
-                                            },
-                                        ]}
-                                    />
-                                );
-                            })}
-                        </VictoryStack>
-                    </VictoryChart>
-                </div>
-                <div style={{ flex: '0 0 2%', position: 'relative' }}>
+                        alignItems: 'flex-start',
+
+                        position: 'relative',
+                    }}
+                >
                     <div
                         style={{
-                            position: 'absolute',
-                            top: 0,
-
-                            cursor: 'pointer',
-                            border: '1px solid lightgrey',
-                            padding: '5px',
-                            borderRadius: '4px',
-                            transition: 'background-color 0.3s ease',
+                            flex: '0 0 80%',
+                            height: 'auto',
                         }}
-                        onMouseEnter={() => setDownloadOptionsVisible(true)}
-                        onMouseLeave={() => setDownloadOptionsVisible(false)}
                     >
-                        <i
-                            className="fa fa-cloud-download"
-                            aria-hidden="true"
+                        <h2>
+                            {dataBins.length > 0
+                                ? dataBins[0].id.replace(/_/g, ' ')
+                                : 'No Data'}
+                        </h2>
+                        <Select
+                            placeholder="Select SampleId.."
+                            options={sampleOptions}
+                            isMulti
+                            onChange={handleSampleSelectionChange}
+                            value={selectedSamples.map(sampleId => ({
+                                value: sampleId,
+                                label: sampleId,
+                            }))}
+                            style={{
+                                padding: '10px',
+                                marginTop: '5px',
+                                marginBottom: '5px',
+                                width: '350px',
+                            }}
                         />
-                        {downloadOptionsVisible && (
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    top: '30px',
-
-                                    backgroundColor: 'white',
-                                    boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-                                    zIndex: 220,
-                                    borderRadius: '4px',
-                                    overflow: 'hidden',
-                                    transition: 'opacity 0.3s ease-out',
-                                    opacity: downloadOptionsVisible ? 1 : 0,
-                                }}
+                        <div
+                            ref={chartRef}
+                            style={{
+                                width: 'max-content',
+                            }}
+                        >
+                            <VictoryChart
+                                domainPadding={20}
+                                height={isHorizontal ? dynamicWidth : 600} //1800
+                                width={isHorizontal ? 800 : dynamicWidth}
                             >
-                                <div
+                                <VictoryAxis
                                     style={{
-                                        padding: '8px',
-                                        cursor: 'pointer',
-                                        borderBottom: '1px solid #ddd',
-                                        transition:
-                                            'background-color 0.3s ease',
+                                        tickLabels: { fontSize: 0, padding: 5 }, // Hide labels
                                     }}
-                                    onClick={handleDownloadPDFWrapper}
-                                    onMouseEnter={e =>
-                                        (e.currentTarget.style.backgroundColor =
-                                            '#f0f0f0')
-                                    }
-                                    onMouseLeave={e =>
-                                        (e.currentTarget.style.backgroundColor =
-                                            'white')
-                                    }
-                                >
-                                    PDF
-                                </div>
-                                <div
+                                    dependentAxis={isHorizontal ? true : false}
+                                    domain={[0, 1]}
+                                />
+                                <VictoryAxis
                                     style={{
-                                        padding: '8px',
-                                        cursor: 'pointer',
-                                        borderBottom: '1px solid #ddd',
-                                        transition:
-                                            'background-color 0.3s ease',
+                                        tickLabels: {
+                                            fontSize: 15,
+                                            padding: 5,
+                                        },
                                     }}
-                                    onClick={handleDownloadSVGWrapper}
-                                    onMouseEnter={e =>
-                                        (e.currentTarget.style.backgroundColor =
-                                            '#f0f0f0')
-                                    }
-                                    onMouseLeave={e =>
-                                        (e.currentTarget.style.backgroundColor =
-                                            'white')
-                                    }
-                                >
-                                    SVG
-                                </div>
-                                <div
-                                    style={{
-                                        padding: '8px',
-                                        cursor: 'pointer',
-                                        transition:
-                                            'background-color 0.3s ease',
-                                    }}
-                                    onClick={handleDownloadData}
-                                    onMouseEnter={e =>
-                                        (e.currentTarget.style.backgroundColor =
-                                            '#f0f0f0')
-                                    }
-                                    onMouseLeave={e =>
-                                        (e.currentTarget.style.backgroundColor =
-                                            'white')
-                                    }
-                                >
-                                    Data
-                                </div>
-                            </div>
-                        )}
+                                    dependentAxis={isHorizontal ? false : true}
+                                    tickValues={[0, 0.25, 0.5, 0.75, 1]}
+                                    domain={[0, 1]}
+                                />
+                                <VictoryStack>
+                                    {formattedDatastate.map(
+                                        (elem: any, i: any) => {
+                                            const filteredFormattedData =
+                                                selectedSamples.length > 0
+                                                    ? elem.filter(
+                                                          (dataItem: any) =>
+                                                              selectedSamples.includes(
+                                                                  dataItem.x
+                                                              )
+                                                      )
+                                                    : elem;
+
+                                            return (
+                                                <VictoryBar
+                                                    key={i}
+                                                    data={filteredFormattedData}
+                                                    horizontal={
+                                                        isHorizontal
+                                                            ? true
+                                                            : false
+                                                    }
+                                                    barWidth={25}
+                                                    style={{
+                                                        data: {
+                                                            fill: (d: any) => {
+                                                                // console.log(d,"dprop"); // Log the data point 'd'
+                                                                return d.color; // Set the fill color based on the 'color' field in your data
+                                                            },
+                                                        },
+                                                    }}
+                                                    labelComponent={
+                                                        <VictoryTooltip />
+                                                    }
+                                                    events={[
+                                                        {
+                                                            target: 'data',
+                                                            eventHandlers: {
+                                                                onMouseOver: (
+                                                                    evt: React.MouseEvent<
+                                                                        any
+                                                                    >,
+                                                                    props: any
+                                                                ) => {
+                                                                    const target = evt.target as HTMLElement;
+                                                                    const rect = target.getBoundingClientRect();
+                                                                    const x =
+                                                                        rect.left +
+                                                                        window.scrollX +
+                                                                        rect.width /
+                                                                            2;
+                                                                    const y =
+                                                                        rect.top +
+                                                                        window.scrollY;
+                                                                    setTooltipPosition(
+                                                                        { x, y }
+                                                                    );
+                                                                    setIsHovered(
+                                                                        true
+                                                                    );
+                                                                    setCurrentTooltipData(
+                                                                        mappedData[
+                                                                            props
+                                                                                .datum
+                                                                                .x
+                                                                        ]
+                                                                    );
+                                                                    setHoveredSampleId(
+                                                                        props
+                                                                            .datum
+                                                                            .x
+                                                                    );
+                                                                },
+                                                                onMouseOut: () => {
+                                                                    setIsHovered(
+                                                                        false
+                                                                    );
+                                                                },
+                                                            },
+                                                        },
+                                                    ]}
+                                                />
+                                            );
+                                        }
+                                    )}
+                                </VictoryStack>
+                            </VictoryChart>
+                        </div>
                     </div>
-                </div>
-                <div style={{ flex: '0 0 18%', position: 'relative' }}>
-                    {(isVisible || tooltipHovered) && (
+                    <div style={{ flex: '0 0 2%', position: 'relative' }}>
                         <div
                             style={{
                                 position: 'absolute',
-                                top: '200px',
-                                pointerEvents: 'auto',
-                                transform: 'translateX(-120px)',
-                                margin: 'auto',
-                                transition:
-                                    'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
-                                backgroundColor: 'white',
-                                width: '350px',
-                                boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-                                zIndex: 220,
-                                opacity: isVisible ? 1 : 0,
+                                top: 0,
+
+                                cursor: 'pointer',
+                                border: '1px solid lightgrey',
+                                padding: '5px',
+                                borderRadius: '4px',
+                                transition: 'background-color 0.3s ease',
                             }}
+                            onMouseEnter={() => setDownloadOptionsVisible(true)}
+                            onMouseLeave={() =>
+                                setDownloadOptionsVisible(false)
+                            }
+                        >
+                            <i
+                                className="fa fa-cloud-download"
+                                aria-hidden="true"
+                            />
+                            {downloadOptionsVisible && (
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        // left: `${tooltipPosition.x}px`,
+
+                                        backgroundColor: 'white',
+                                        boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+                                        zIndex: 220,
+                                        borderRadius: '4px',
+                                        overflow: 'hidden',
+                                        transition: 'opacity 0.3s ease-out',
+                                        opacity: downloadOptionsVisible ? 1 : 0,
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            padding: '8px',
+
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #ddd',
+                                            transition:
+                                                'background-color 0.3s ease',
+                                        }}
+                                        onClick={handleDownloadPDFWrapper}
+                                        onMouseEnter={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                '#f0f0f0')
+                                        }
+                                        onMouseLeave={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                'white')
+                                        }
+                                    >
+                                        PDF
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: '8px',
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #ddd',
+                                            transition:
+                                                'background-color 0.3s ease',
+                                        }}
+                                        onClick={handleDownloadSVGWrapper}
+                                        onMouseEnter={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                '#f0f0f0')
+                                        }
+                                        onMouseLeave={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                'white')
+                                        }
+                                    >
+                                        SVG
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: '8px',
+                                            cursor: 'pointer',
+                                            transition:
+                                                'background-color 0.3s ease',
+                                        }}
+                                        onClick={handleDownloadData}
+                                        onMouseEnter={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                '#f0f0f0')
+                                        }
+                                        onMouseLeave={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                'white')
+                                        }
+                                    >
+                                        Data
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* <div style={{ flex: '0 0 18%', position: 'relative' }}>
+                    {(isVisible || tooltipHovered) && (
+                        <div
+                        style={{
+                            position: 'absolute',
+                            top: `${tooltipPosition.y}px`,
+                            pointerEvents: 'auto',
+                            transform: 'translateX(-420px)',
+                            margin: 'auto',
+                            transition:
+                                'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
+                            backgroundColor: 'white',
+                            width: '350px',
+                            boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+                            zIndex: 220,
+                            opacity: isVisible ? 1 : 0,
+                        }}
+
                             onMouseEnter={() => setTooltipHovered(true)}
                             onMouseLeave={() => setTooltipHovered(false)}
                         >
@@ -772,7 +840,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                                                             height:
                                                                                 '23px',
                                                                             backgroundColor:
-                                                                                stableIdColorMap[
+                                                                                map[
                                                                                     key
                                                                                 ],
                                                                             textAlign:
@@ -809,9 +877,42 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                             </div>
                         </div>
                     )}
+                </div> */}
                 </div>
             </div>
-        </div>
+            <div
+                style={
+                    isHorizontal
+                        ? { marginLeft: '40px' }
+                        : { width: dynamicWidth, marginLeft: '40px' }
+                }
+            >
+                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                    {Object.keys(map).map(cellName => (
+                        <div
+                            key={cellName}
+                            style={{
+                                marginTop: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginRight: '10px',
+                                marginBottom: '10px',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: '20px',
+                                    height: '20px',
+                                    backgroundColor: map[cellName],
+                                    marginRight: '5px',
+                                }}
+                            ></div>
+                            <span>{cellName}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </>
     );
 };
 
