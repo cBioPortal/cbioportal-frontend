@@ -1,8 +1,9 @@
-var assert = require('assert');
+const assert = require('assert');
 const {
     setServerConfiguration,
     goToUrlAndSetLocalStorage,
     getElement,
+    clickElement,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -11,7 +12,7 @@ const getBrowserHeight = () => {
     return Number(browser.getWindowSize().height);
 };
 
-function customTabBase(location) {
+const customTabBase = location => {
     return [
         {
             title: 'Sync Tab',
@@ -37,17 +38,16 @@ function customTabBase(location) {
            }`,
         },
     ];
-}
+};
 
-async function goToUrlWithCustomTabConfig(url, custom_tabs) {
+const goToUrlWithCustomTabConfig = async (url, custom_tabs) => {
     await browser.url(`${CBIOPORTAL_URL}/blank`);
-    setServerConfiguration({
-        custom_tabs,
-    });
+    setServerConfiguration({ custom_tabs });
     await goToUrlAndSetLocalStorage(url);
-}
+    await browser.pause(2000);
+};
 
-function runTests(pageName, url, tabLocation) {
+const runTests = async (pageName, url, tabLocation) => {
     describe(`${pageName} Custom Tabs`, () => {
         it.skip('Sync and async hide/show works', async function() {
             this.retries(0);
@@ -62,7 +62,7 @@ function runTests(pageName, url, tabLocation) {
                 };
             });
 
-            (await getElement('.mainTabs')).waitForDisplayed();
+            await (await getElement('.mainTabs')).waitForDisplayed();
 
             assert.equal(
                 await (await getElement('=Async Tab')).isDisplayed(),
@@ -82,7 +82,7 @@ function runTests(pageName, url, tabLocation) {
                 'Async tab displays after pause'
             );
 
-            (await getElement('=Sync Tab')).click();
+            await (await getElement('=Sync Tab')).click();
 
             assert(
                 await (
@@ -256,13 +256,13 @@ function runTests(pageName, url, tabLocation) {
             await browser.setWindowSize(2000, getBrowserHeight());
 
             await browser.execute(() => {
-                window.renderCustomTab1 = function(div) {
+                window.renderCustomTab1 = div => {
                     $(div).append(`<div>First render</div>`);
                 };
             });
 
             // offset to avoid overlapping elements
-            await (await getElement('=Async Tab')).click();
+            await clickElement('=Async Tab');
 
             await browser.pause(1000);
 
@@ -271,14 +271,16 @@ function runTests(pageName, url, tabLocation) {
             // redefine custom tab render
             // so we can see when it's called
             await browser.execute(() => {
-                window.renderCustomTab1 = function(div, tab) {
+                window.renderCustomTab1 = function(div, _tab) {
                     $(div).append(`<div>Second render</div>`);
                 };
             });
 
+            await browser.pause(2000);
+
             // switch to new tab and then back
-            await (await getElement('.mainTabs .tabAnchor')).click();
-            await (await getElement('=Async Tab')).click();
+            await clickElement('.mainTabs .tabAnchor');
+            await clickElement('=Async Tab');
 
             const render1 = await (
                 await getElement('div=First render')
@@ -312,20 +314,20 @@ function runTests(pageName, url, tabLocation) {
                     });
                     break;
                 case 'PATIENT_PAGE':
-                    (await (await getElement('.nextPageBtn')).isDisplayed()) &&
-                        (await (await getElement('.nextPageBtn')).click());
+                    await (await getElement('.nextPageBtn')).isDisplayed();
+                    await clickElement('.nextPageBtn');
                     break;
                 case 'COMPARISON_PAGE':
-                    await (
-                        await getElement(
-                            "[data-test='groupSelectorButtonMSI/CIMP']"
-                        )
-                    ).click();
+                    await clickElement(
+                        "[data-test='groupSelectorButtonMSI/CIMP']"
+                    );
                     break;
                 case 'STUDY_PAGE':
                     // For study page, I do not see a way to evoke a remount (eg. by changing query params)
                     break;
             }
+
+            await browser.pause(2000);
 
             await (await getElement('div=Second render')).waitForDisplayed();
 
@@ -335,7 +337,7 @@ function runTests(pageName, url, tabLocation) {
             );
         });
     });
-}
+};
 
 const resultsUrl = `${CBIOPORTAL_URL}/results?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF`;
 
@@ -390,7 +392,7 @@ describe('Patient Cohort View Custom Tab Tests', () => {
             assert.fail("Async exists when it shouldn't!");
         }
 
-        (await getElement('=Sync Tab')).click();
+        await clickElement('=Sync Tab');
 
         assert.equal(
             await (
@@ -408,7 +410,7 @@ describe('Patient Cohort View Custom Tab Tests', () => {
             'Async tab has showed up'
         );
 
-        (await getElement('.nextPageBtn')).click();
+        await clickElement('.nextPageBtn');
 
         await (await getElement('.mainTabs')).waitForDisplayed();
 
@@ -428,7 +430,7 @@ describe('Patient Cohort View Custom Tab Tests', () => {
 
         await (await getElement('.prevPageBtn')).waitForDisplayed();
 
-        (await getElement('.prevPageBtn')).click();
+        await clickElement('.prevPageBtn');
 
         await (
             await getElement('div=tab for patient TCGA-AP-A053')

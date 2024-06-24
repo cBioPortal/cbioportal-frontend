@@ -1,4 +1,4 @@
-var assert = require('assert');
+const assert = require('assert');
 const {
     clickElement,
     getElement,
@@ -13,7 +13,7 @@ describe('Quick Search', () => {
     });
 
     beforeEach(async () => {
-        var url = `${CBIOPORTAL_URL}`;
+        const url = `${CBIOPORTAL_URL}`;
         await goToUrlAndSetLocalStorage(url);
         await clickElement('strong=Beta!');
         await (
