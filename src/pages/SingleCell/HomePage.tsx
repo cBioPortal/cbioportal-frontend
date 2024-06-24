@@ -1005,6 +1005,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         }}
                     >
                         <StackToolTip
+                            studyIdToStudy={this.state.studyIdToStudy}
                             hoveredSampleId={this.state.hoveredSampleId}
                             setHoveredSampleId={(value: any) =>
                                 this.setState({ hoveredSampleId: value })

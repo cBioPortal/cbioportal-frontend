@@ -9,6 +9,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 import Select from 'react-select';
 import _ from 'lodash';
+import { Link } from 'react-router-dom';
 
 interface StackToolTipProps {
     hoveredSampleId: any;
@@ -21,6 +22,7 @@ interface StackToolTipProps {
     setIsVisible: (value: any) => void;
     tooltipHovered: any;
     setTooltipHovered: (value: any) => void;
+    studyIdToStudy: any;
 }
 
 const StackToolTip: React.FC<StackToolTipProps> = ({
@@ -34,7 +36,10 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
     setIsVisible,
     tooltipHovered,
     setTooltipHovered,
+    studyIdToStudy,
 }) => {
+    const url = `/patient?sampleId=${hoveredSampleId}&studyId=${studyIdToStudy}`;
+
     return (
         <>
             {(isVisible || tooltipHovered) && (
@@ -71,7 +76,13 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                                     textAlign: 'center',
                                 }}
                             >
-                                {hoveredSampleId ? hoveredSampleId : ''}
+                                <Link
+                                    to={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    {hoveredSampleId ? hoveredSampleId : ''}
+                                </Link>
                             </h3>
                             <table
                                 style={{
