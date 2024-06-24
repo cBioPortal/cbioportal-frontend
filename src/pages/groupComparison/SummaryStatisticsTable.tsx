@@ -92,13 +92,13 @@ export const DescriptiveDataTable: FunctionComponent<descriptiveDataTableProps> 
                     <tr>
                         <td>Minimum</td>
                         {props.descriptiveData.map((d, index) => {
-                            return <td key={index}>{d.minimum}</td>;
+                            return <td key={index}>{_.round(d.minimum, 2)}</td>;
                         })}
                     </tr>
                     <tr>
                         <td>Maximum</td>
                         {props.descriptiveData.map((d, index) => {
-                            return <td key={index}>{d.maximum}</td>;
+                            return <td key={index}>{_.round(d.maximum, 2)}</td>;
                         })}
                     </tr>
                     <tr>
