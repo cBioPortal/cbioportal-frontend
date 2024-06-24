@@ -10,8 +10,10 @@ function proxyColumnStore(client: any, endpoint: string) {
     const method = `${endpoint}UsingPOSTWithHttpInfo`;
     const old = client[method];
 
+    const host = 'genie-public-beta1.cbioportal.org'; //getLoadConfig().baseUrl
+
     client[method] = function(params: any) {
-        params.$domain = `//${getLoadConfig().baseUrl}/api/column-store`;
+        params.$domain = `//${host}/api/column-store`;
         const url = old.apply(this, [params]);
         return url;
     };
@@ -27,6 +29,13 @@ const oldRequest = (internalClientColumnStore as any).request;
     return oldRequest.apply(this, args);
 };
 
+proxyColumnStore(internalClientColumnStore, 'fetchCNAGenes');
+proxyColumnStore(internalClientColumnStore, 'fetchStructuralVariantGenes');
+proxyColumnStore(internalClientColumnStore, 'fetchCaseListCounts');
+proxyColumnStore(
+    internalClientColumnStore,
+    'fetchMolecularProfileSampleCounts'
+);
 proxyColumnStore(internalClientColumnStore, 'fetchMutatedGenes');
 proxyColumnStore(internalClientColumnStore, 'fetchFilteredSamples');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataCounts');
