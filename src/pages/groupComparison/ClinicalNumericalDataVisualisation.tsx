@@ -1,11 +1,17 @@
 import BoxScatterPlot, {
+    IBaseBoxScatterPlotPoint,
+    IBoxScatterPlotData,
     IBoxScatterPlotProps,
     toBoxPlotData,
 } from 'shared/components/plots/BoxScatterPlot';
 import { IBoxScatterPlotPoint } from 'shared/components/plots/PlotsTabUtils';
 import React from 'react';
 import { computed, makeObservable } from 'mobx';
-import { SummaryStatisticsTable } from './SummaryStatisticsTable';
+import {
+    DescriptiveDataTable,
+    SummaryStatisticsTable,
+} from './SummaryStatisticsTable';
+import { toDataDescriptive } from 'pages/groupComparison/GroupComparisonUtils';
 
 export enum ClinicalNumericalVisualisationType {
     Plot = 'Plot',
@@ -43,13 +49,14 @@ export class ClinicalNumericalDataVisualisation extends React.Component<
             this.props.excludeLimitValuesFromBoxPlot,
             this.props.logScale
         );
+
+        const dataDescription = toDataDescriptive(this.props.data);
         const groupLabels = this.props.data.map(d => d.label);
         return (
-            <SummaryStatisticsTable
-                data={groupStats}
+            <DescriptiveDataTable
+                dataBoxplot={groupStats}
                 labels={groupLabels}
-                scatterData={this.props.data}
-                showTable={true}
+                descriptiveData={dataDescription}
             />
         );
     }
