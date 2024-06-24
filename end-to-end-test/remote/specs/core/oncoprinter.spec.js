@@ -1,18 +1,14 @@
-var assert = require('assert');
-var {
+const assert = require('assert');
+const {
     waitForOncoprint,
     setOncoprintMutationsMenuOpen,
     goToUrlAndSetLocalStorage,
-    setInputText,
     getElement,
     isSelected,
     clickElement,
 } = require('../../../shared/specUtils_Async');
 
 const TIMEOUT = 6000;
-
-const ONCOPRINT_TIMEOUT = 60000;
-
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('oncoprinter tests', () => {

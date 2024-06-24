@@ -1,4 +1,4 @@
-var assert = require('assert');
+const assert = require('assert');
 
 const {
     clickQueryByGeneButton,
@@ -11,11 +11,10 @@ const {
     getText,
     isSelected,
     isUnselected,
+    setInputText,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-
-const ONCOPRINT_TIMEOUT = 15000;
 
 const ALL_CASE_SET_REGEXP = /^All \(\d+\)$/;
 
@@ -52,8 +51,8 @@ describe('cross cancer query', function() {
         });
 
         // check if TP53 is in the navigation above the plots
-        await browser.waitUntil(() => {
-            return $('.nav-pills*=TP53').isDisplayed();
+        await browser.waitUntil(async () => {
+            return await (await getElement('.nav-pills*=TP53')).isDisplayed();
         });
     });
 });
@@ -80,8 +79,10 @@ describe('single study query', async function() {
             await clickQueryByGeneButton();
 
             // query BRCA1 and BRCA2
-            const geneInput = await getElementByTestHandle('geneSet');
-            await geneInput.setValue('BRCA1 BRCA2');
+            // const geneInput = await getElementByTestHandle('geneSet');
+            // await geneInput.setValue('BRCA1 BRCA2');
+
+            await setInputText('[data-test="geneSet"]', 'BRCA1 BRCA2');
 
             await (await getElementByTestHandle('queryButton')).waitForEnabled({
                 timeout: 10000,
@@ -255,13 +256,13 @@ describe('results page', function() {
 });
 
 describe('case set selection in modify query form', function() {
-    var selectedCaseSet_sel =
+    const selectedCaseSet_sel =
         'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
     this.retries(2);
 
     beforeEach(async function() {
-        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
+        const url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
         await goToUrlAndSetLocalStorage(url);
         await getElement('#modifyQueryBtn', { timeout: 60000 });
     });
@@ -278,7 +279,7 @@ describe('case set selection in modify query form', function() {
         );
 
         // Select a different study
-        var input = await getElement(
+        const input = await getElement(
             'div[data-test=study-search] input[type=text]',
             { timeout: 10000 }
         );
@@ -322,7 +323,7 @@ describe('case set selection in modify query form', function() {
         );
 
         // Select all impact studies
-        var input = await getElement(
+        const input = await getElement(
             'div[data-test=study-search] input[type=text]',
             { timeout: 10000 }
         );
@@ -362,7 +363,7 @@ describe('case set selection in modify query form', function() {
 
 describe('gene list input', function() {
     beforeEach(async function() {
-        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
+        const url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
         await goToUrlAndSetLocalStorage(url);
         await getElement('#modifyQueryBtn', { timeout: 60000 });
     });
@@ -380,7 +381,7 @@ describe('gene list input', function() {
 
 describe('genetic profile selection in modify query form', () => {
     beforeEach(async () => {
-        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;
+        const url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;
         await goToUrlAndSetLocalStorage(url);
         await getElement('#modifyQueryBtn', { timeout: 20000 });
     });
@@ -414,7 +415,7 @@ describe('genetic profile selection in modify query form', () => {
         );
 
         // select another study
-        var input = await getElement(
+        const input = await getElement(
             'div[data-test=study-search] input[type=text]',
             { timeout: 10000 }
         );
@@ -477,7 +478,7 @@ describe('genetic profile selection in modify query form', () => {
         );
 
         // select all TCGA non-firehose studies
-        var input = await getElement(
+        const input = await getElement(
             'div[data-test=study-search] input[type=text]',
             { timeout: 10000 }
         );
@@ -494,7 +495,7 @@ describe('genetic profile selection in modify query form', () => {
         // });
 
         await browser.waitUntil(async () => {
-            return (
+            return await (
                 await getElementByTestHandle('MUTATION_EXTENDED')
             ).isSelected();
         });
@@ -502,7 +503,7 @@ describe('genetic profile selection in modify query form', () => {
         //browser.debug();
 
         assert(
-            (
+            await (
                 await getElementByTestHandle('COPY_NUMBER_ALTERATION')
             ).isSelected(),
             "'Copy number alterations' should be selected"
@@ -552,12 +553,12 @@ describe('invalid query from url', function() {
 
     it('show invalid query alert when url contains invalid gene', async () => {
         //go to cbioportal with a url that contains an invalid gene symbol RB:
-        var url = `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=mixed_pipseq_2017&case_set_id=mixed_pipseq_2017_sequenced&clinicallist=NUM_SAMPLES_PER_PATIENT&data_priority=0&gene_list=RB&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=mixed_pipseq_2017_mutations&show_samples=false&tab_index=tab_visualize`;
+        const url = `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=mixed_pipseq_2017&case_set_id=mixed_pipseq_2017_sequenced&clinicallist=NUM_SAMPLES_PER_PATIENT&data_priority=0&gene_list=RB&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=mixed_pipseq_2017_mutations&show_samples=false&tab_index=tab_visualize`;
         await goToUrlAndSetLocalStorage(url);
 
         // check alert message
         await getElement('[data-test="invalidQueryAlert"]', { timeout: 60000 });
-        var text = (await getText('[data-test="invalidQueryAlert"]')).trim();
+        const text = (await getText('[data-test="invalidQueryAlert"]')).trim();
         assert.equal(
             text,
             'Your query has invalid or out-dated gene symbols. Please correct below.'
@@ -570,8 +571,11 @@ describe('invalid query from url', function() {
 
         await getElement('[data-test="queryButton"]', { timeout: 15000 });
         await clickElement('[data-test="queryButton"]');
+        await browser.pause(2000);
 
-        (await getElement('#modifyQueryBtn')).waitForExist({ timeout: 3000 });
-        waitForOncoprint();
+        await (await getElement('#modifyQueryBtn')).waitForExist({
+            timeout: 6000,
+        });
+        await waitForOncoprint();
     });
 });

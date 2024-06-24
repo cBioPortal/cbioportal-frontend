@@ -1,11 +1,10 @@
-var assert = require('assert');
+const assert = require('assert');
 const {
     getElementByTestHandle,
     waitForPlotsTab,
     getTextFromElement,
     goToUrlAndSetLocalStorage,
     getElement,
-    getText,
 } = require('../../../shared/specUtils_Async');
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -24,7 +23,7 @@ describe('plots tab tests', function() {
         // Tooltip elements are created when hovering the data availability alert info icon.
         // Control logic below is needed to access the last one after it
         // was created.
-        var curNumToolTips = (await $$('div.rc-tooltip-inner')).length;
+        const curNumToolTips = (await $$('div.rc-tooltip-inner')).length;
         await (
             await getElementByTestHandle('dataAvailabilityAlertInfoIcon')
         ).moveTo();
@@ -32,8 +31,8 @@ describe('plots tab tests', function() {
             async () =>
                 (await $$('div.rc-tooltip-inner')).length > curNumToolTips
         );
-        var toolTips = await $$('div.rc-tooltip-inner');
-        var text = await toolTips[toolTips.length - 1].getText();
+        const toolTips = await $$('div.rc-tooltip-inner');
+        const text = await toolTips[toolTips.length - 1].getText();
         assert.equal(
             text,
             'Data availability per profile/axis:\nHorizontal Axis: 1164 samples from 2 studies\nVertical Axis: 1164 samples from 2 studies\nIntersection of the two axes: 1164 samples from 2 studies'

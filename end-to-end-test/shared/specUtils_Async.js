@@ -263,23 +263,20 @@ async function goToUrlAndSetLocalStorage(url, authenticated = false) {
     if (needToLogin) keycloakLogin(10000);
 }
 
+const setServerConfiguration = serverConfig => {
+    browser.execute(function(_serverConfig) {
+        this.localStorage.setItem(
+            'frontendConfig',
+            JSON.stringify({ serverConfig: _serverConfig })
+        );
+    }, serverConfig);
+};
+
 const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
     goToUrlAndSetLocalStorage(url, authenticated);
     setServerConfiguration(props);
     goToUrlAndSetLocalStorage(url, authenticated);
 };
-
-function setServerConfiguration(props) {
-    browser.execute(
-        function(frontendConf) {
-            this.localStorage.setItem(
-                'frontendConfig',
-                JSON.stringify(frontendConf)
-            );
-        },
-        { serverConfig: props }
-    );
-}
 
 function sessionServiceIsEnabled() {
     return browser.execute(function() {
@@ -706,15 +703,6 @@ async function jq(selector) {
     return await browser.execute(selector => {
         return jQuery(selector).toArray();
     }, selector);
-}
-
-function setServerConfiguration(serverConfig) {
-    browser.execute(function(_serverConfig) {
-        this.localStorage.setItem(
-            'frontendConfig',
-            JSON.stringify({ serverConfig: _serverConfig })
-        );
-    }, serverConfig);
 }
 
 var openAlterationTypeSelectionMenu = () => {

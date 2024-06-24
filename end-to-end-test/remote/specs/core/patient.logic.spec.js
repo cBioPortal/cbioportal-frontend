@@ -1,6 +1,4 @@
-var assert = require('assert');
-
-var {
+const {
     goToUrlAndSetLocalStorage,
     getElementByTestHandle,
     getElement,
