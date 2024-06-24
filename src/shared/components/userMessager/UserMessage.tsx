@@ -39,7 +39,7 @@ if (
 
         {
             dateEnd: 100000000000000,
-            content: `Re-introducing the cBioPortal Newsletter! Subscribe via <a href="https://www.linkedin.com/pulse/april-update-hello-cbioportal-community-cbioportal-22vle/" target="_blank">LinkedIn</a> or <a href="https://groups.google.com/g/cbioportal-news" target="_blank">Google Groups</a>`,
+            content: `Re-introducing the cBioPortal Newsletter! Subscribe via <a href="https://www.linkedin.com/newsletters/cbioportal-newsletter-7178731490539634689/" target="_blank">LinkedIn</a> or <a href="https://groups.google.com/g/cbioportal-news" target="_blank">Google Groups</a>`,
             showCondition: routingStore => {
                 return getServerConfig().app_name === 'public-portal';
             },
