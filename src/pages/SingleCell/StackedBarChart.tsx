@@ -46,6 +46,10 @@ interface StackedBarChartProps {
     setIsVisible: (value: any) => void;
     tooltipHovered: any;
     setTooltipHovered: (value: any) => void;
+    selectedSamples: any;
+    setSelectedSamples: (value: any) => void;
+    dropdownOptions: any;
+    setDropdownOptions: (value: any) => void;
 }
 
 interface BarDatum {
@@ -84,8 +88,12 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     setIsVisible,
     tooltipHovered,
     setTooltipHovered,
+    selectedSamples,
+    setSelectedSamples,
+    dropdownOptions,
+    setDropdownOptions,
 }) => {
-    const [selectedSamples, setSelectedSamples] = useState<string[]>([]);
+    // const [selectedSamples, setSelectedSamples] = useState<string[]>([]);
     // const [hoveredSampleId, setHoveredSampleId] = useState<string[]>([]);
     // const [isVisible, setIsVisible] = useState(false);
     // const [map, setMap] = useState<{ [key: string]: string }>({});
@@ -207,6 +215,10 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     // console.log(differentStableIds, 'differentSampleIds');
 
     // const [stableIdColorMap, setStableIdColorMap] = useState<{ [key: string]: string }>({});
+    const sampleOptions = differentSampleIds.map(sampleId => ({
+        value: sampleId,
+        label: sampleId,
+    }));
     useEffect(() => {
         const stableIdColorMap: { [key: string]: string } = {};
 
@@ -240,6 +252,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             }));
         });
         setMap(stableIdColorMap);
+        setDropdownOptions(sampleOptions);
     }, []);
     const stableIdColorMap: { [key: string]: string } = {};
 
@@ -332,6 +345,8 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         setFormattedDatastate(formattedData);
         setNoOfBars(formattedData[0].length);
         let temp = formattedData[0].length * 47;
+        console.log(formattedData[0].length, 'ilteredFormattedData.length22');
+
         setDynamicWidth(temp);
         const updatedTooltiparray = tooltipUtilArray();
         for (let i = 0; i < differentSampleIds.length; i++) {
@@ -437,10 +452,10 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
-    const sampleOptions = differentSampleIds.map(sampleId => ({
-        value: sampleId,
-        label: sampleId,
-    }));
+    // const sampleOptions = differentSampleIds.map(sampleId => ({
+    //     value: sampleId,
+    //     label: sampleId,
+    // }));
     const sortingOptions = differentStableIds.map(stableId => ({
         value: stableId,
         label: stableId,
@@ -482,7 +497,28 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     }, [isHovered, tooltipHovered]);
     const [tooltipStyle, setTooltipStyle] = useState({});
     const tooltipRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        // Calculate filteredFormattedData based on selectedSamples
+        const filteredFormattedData = formattedDatastate.map((elem: any) =>
+            selectedSamples.length > 0
+                ? elem.filter((dataItem: any) =>
+                      selectedSamples.includes(dataItem.x)
+                  )
+                : elem
+        );
 
+        // Log filteredFormattedData for debugging (optional)
+        console.log('Filtered and formatted data:', filteredFormattedData);
+
+        // Update noOfBars state to the length of filteredFormattedData
+        setNoOfBars(filteredFormattedData.length);
+        console.log(
+            filteredFormattedData.length,
+            'ilteredFormattedData.length'
+        );
+        let temp = filteredFormattedData.length * 47;
+        // setDynamicWidth(temp);
+    }, [selectedSamples, formattedDatastate]);
     return (
         <>
             <div style={{ textAlign: 'center', position: 'relative' }}>
@@ -503,17 +539,12 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                             height: 'auto',
                         }}
                     >
-                        <h2>
-                            {dataBins.length > 0
-                                ? dataBins[0].id.replace(/_/g, ' ')
-                                : 'No Data'}
-                        </h2>
-                        <Select
+                        {/* <Select
                             placeholder="Select SampleId.."
-                            options={sampleOptions}
+                            options={dropdownOptions}
                             isMulti
                             onChange={handleSampleSelectionChange}
-                            value={selectedSamples.map(sampleId => ({
+                            value={selectedSamples.map((sampleId:any) => ({
                                 value: sampleId,
                                 label: sampleId,
                             }))}
@@ -523,7 +554,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                 marginBottom: '5px',
                                 width: '350px',
                             }}
-                        />
+                        /> */}
                         <div
                             ref={chartRef}
                             style={{
@@ -532,16 +563,31 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                         >
                             <VictoryChart
                                 domainPadding={20}
-                                height={isHorizontal ? dynamicWidth : 600} //1800
+                                height={isHorizontal ? dynamicWidth : 600}
                                 width={isHorizontal ? 800 : dynamicWidth}
+                                padding={{
+                                    top: 10,
+                                    bottom: 80,
+                                    left: isHorizontal ? 150 : 60,
+                                    right: 50,
+                                }} // Adjust chart padding as needed
                             >
+                                {/* Y-Axis (dependentAxis) */}
                                 <VictoryAxis
                                     style={{
-                                        tickLabels: { fontSize: 0, padding: 5 }, // Hide labels
+                                        tickLabels: {
+                                            fontSize: 10,
+                                            angle: isHorizontal ? 0 : 45,
+                                            textAnchor: isHorizontal
+                                                ? 'end'
+                                                : 'start',
+                                        },
                                     }}
                                     dependentAxis={isHorizontal ? true : false}
                                     domain={[0, 1]}
                                 />
+
+                                {/* X-Axis (independentAxis) */}
                                 <VictoryAxis
                                     style={{
                                         tickLabels: {
@@ -553,6 +599,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                     tickValues={[0, 0.25, 0.5, 0.75, 1]}
                                     domain={[0, 1]}
                                 />
+
                                 <VictoryStack>
                                     {formattedDatastate.map(
                                         (elem: any, i: any) => {
@@ -578,10 +625,8 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                                     barWidth={25}
                                                     style={{
                                                         data: {
-                                                            fill: (d: any) => {
-                                                                // console.log(d,"dprop"); // Log the data point 'd'
-                                                                return d.color; // Set the fill color based on the 'color' field in your data
-                                                            },
+                                                            fill: (d: any) =>
+                                                                d.color,
                                                         },
                                                     }}
                                                     labelComponent={
@@ -641,6 +686,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                 </VictoryStack>
                             </VictoryChart>
                         </div>
+                        ;
                     </div>
                     <div style={{ flex: '0 0 2%', position: 'relative' }}>
                         <div
@@ -883,8 +929,8 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             <div
                 style={
                     isHorizontal
-                        ? { marginLeft: '40px' }
-                        : { width: dynamicWidth, marginLeft: '40px' }
+                        ? { marginLeft: '80px' }
+                        : { width: dynamicWidth, marginLeft: '80px' }
                 }
             >
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>

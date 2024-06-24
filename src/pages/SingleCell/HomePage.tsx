@@ -6,6 +6,7 @@ import {
     StudyViewPageStore,
 } from 'pages/studyView/StudyViewPageStore';
 import autobind from 'autobind-decorator';
+import Select from 'react-select';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
@@ -109,6 +110,8 @@ interface HomePageState {
     isHorizontal: boolean;
     isVisible: boolean;
     tooltipHovered: boolean;
+    selectedSamples: any;
+    dropdownOptions: any;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -149,6 +152,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             isHorizontal: false,
             isVisible: false,
             tooltipHovered: false,
+            selectedSamples: [],
+            dropdownOptions: [],
         };
     }
 
@@ -551,6 +556,13 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     toggleAxes = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({ isHorizontal: event.target.checked });
     };
+    handleSampleSelectionChange = (selectedOptions: any) => {
+        const selectedSampleIds = selectedOptions
+            ? selectedOptions.map((option: any) => option.value)
+            : [];
+        this.setState({ selectedSamples: selectedSampleIds });
+        console.log(selectedSampleIds);
+    };
     render() {
         const {
             selectedOption,
@@ -837,6 +849,39 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             : {}
                     }
                 >
+                    {chartType == 'stack' && (
+                        <>
+                            <h2
+                                style={{
+                                    textAlign: 'center',
+                                }}
+                            >
+                                {dataBins && dataBins.length > 0
+                                    ? dataBins[0].id.replace(/_/g, ' ')
+                                    : 'No Data'}
+                            </h2>
+
+                            <Select
+                                placeholder="Select SampleId.."
+                                options={this.state.dropdownOptions}
+                                isMulti
+                                onChange={this.handleSampleSelectionChange}
+                                value={this.state.selectedSamples.map(
+                                    (sampleId: any) => ({
+                                        value: sampleId,
+                                        label: sampleId,
+                                    })
+                                )}
+                                style={{
+                                    padding: '10px',
+                                    marginTop: '5px',
+                                    marginBottom: '5px',
+                                    width: '350px',
+                                }}
+                            />
+                        </>
+                    )}
+
                     {/* Display fetched data bins */}
                     {dataBins && (
                         <div
@@ -877,46 +922,76 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     }
                                 />
                             ) : chartType === 'stack' ? (
-                                <StackedBarChart
-                                    dataBins={dataBins}
-                                    pieChartData={pieChartData}
-                                    stackEntity={this.state.stackEntity}
-                                    studyIdToStudy={this.state.studyIdToStudy}
-                                    hoveredSampleId={this.state.hoveredSampleId}
-                                    setHoveredSampleId={(value: any) =>
-                                        this.setState({
-                                            hoveredSampleId: value,
-                                        })
-                                    }
-                                    currentTooltipData={
-                                        this.state.currentTooltipData
-                                    }
-                                    setCurrentTooltipData={(value: any) =>
-                                        this.setState({
-                                            currentTooltipData: value,
-                                        })
-                                    }
-                                    map={this.state.map}
-                                    setMap={(value: any) =>
-                                        this.setState({ map: value })
-                                    }
-                                    dynamicWidth={this.state.dynamicWidth}
-                                    setDynamicWidth={(value: any) =>
-                                        this.setState({ dynamicWidth: value })
-                                    }
-                                    isHorizontal={this.state.isHorizontal}
-                                    setIsHorizontal={(value: any) =>
-                                        this.setState({ isHorizontal: value })
-                                    }
-                                    isVisible={this.state.isVisible}
-                                    setIsVisible={(value: any) =>
-                                        this.setState({ isVisible: value })
-                                    }
-                                    tooltipHovered={this.state.tooltipHovered}
-                                    setTooltipHovered={(value: any) =>
-                                        this.setState({ tooltipHovered: value })
-                                    }
-                                />
+                                <>
+                                    <StackedBarChart
+                                        dataBins={dataBins}
+                                        pieChartData={pieChartData}
+                                        stackEntity={this.state.stackEntity}
+                                        studyIdToStudy={
+                                            this.state.studyIdToStudy
+                                        }
+                                        hoveredSampleId={
+                                            this.state.hoveredSampleId
+                                        }
+                                        setHoveredSampleId={(value: any) =>
+                                            this.setState({
+                                                hoveredSampleId: value,
+                                            })
+                                        }
+                                        currentTooltipData={
+                                            this.state.currentTooltipData
+                                        }
+                                        setCurrentTooltipData={(value: any) =>
+                                            this.setState({
+                                                currentTooltipData: value,
+                                            })
+                                        }
+                                        map={this.state.map}
+                                        setMap={(value: any) =>
+                                            this.setState({ map: value })
+                                        }
+                                        dynamicWidth={this.state.dynamicWidth}
+                                        setDynamicWidth={(value: any) =>
+                                            this.setState({
+                                                dynamicWidth: value,
+                                            })
+                                        }
+                                        isHorizontal={this.state.isHorizontal}
+                                        setIsHorizontal={(value: any) =>
+                                            this.setState({
+                                                isHorizontal: value,
+                                            })
+                                        }
+                                        isVisible={this.state.isVisible}
+                                        setIsVisible={(value: any) =>
+                                            this.setState({ isVisible: value })
+                                        }
+                                        tooltipHovered={
+                                            this.state.tooltipHovered
+                                        }
+                                        setTooltipHovered={(value: any) =>
+                                            this.setState({
+                                                tooltipHovered: value,
+                                            })
+                                        }
+                                        selectedSamples={
+                                            this.state.selectedSamples
+                                        }
+                                        setSelectedSamples={(value: any) => {
+                                            this.setState({
+                                                selectedSamples: value,
+                                            });
+                                        }}
+                                        dropdownOptions={
+                                            this.state.dropdownOptions
+                                        }
+                                        setDropdownOptions={(value: any) => {
+                                            this.setState({
+                                                dropdownOptions: value,
+                                            });
+                                        }}
+                                    />
+                                </>
                             ) : null}
                         </div>
                     )}
