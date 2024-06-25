@@ -45,5 +45,6 @@ proxyColumnStore(internalClientColumnStore, 'fetchFilteredSamples');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataDensityPlot');
+proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataViolinPlots');
 
 export default internalClient;
