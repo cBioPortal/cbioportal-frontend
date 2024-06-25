@@ -511,13 +511,15 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         console.log('Filtered and formatted data:', filteredFormattedData);
 
         // Update noOfBars state to the length of filteredFormattedData
-        setNoOfBars(filteredFormattedData.length);
-        console.log(
-            filteredFormattedData.length,
-            'ilteredFormattedData.length'
-        );
-        let temp = filteredFormattedData.length * 47;
-        // setDynamicWidth(temp);
+        if (filteredFormattedData && filteredFormattedData.length > 0) {
+            setNoOfBars(filteredFormattedData[0].length);
+            console.log(
+                filteredFormattedData.length,
+                'filteredFormattedData.length'
+            );
+            let temp = filteredFormattedData[0].length * 47 + 150;
+            setDynamicWidth(temp);
+        }
     }, [selectedSamples, formattedDatastate]);
     return (
         <>
@@ -692,7 +694,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                         <div
                             style={{
                                 position: 'absolute',
-                                top: 0,
+                                top: 20,
 
                                 cursor: 'pointer',
                                 border: '1px solid lightgrey',
@@ -713,8 +715,9 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                 <div
                                     style={{
                                         position: 'absolute',
-                                        // left: `${tooltipPosition.x}px`,
-
+                                        top: '30px',
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
                                         backgroundColor: 'white',
                                         boxShadow: '0 0 10px rgba(0,0,0,0.2)',
                                         zIndex: 220,
@@ -930,7 +933,10 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 style={
                     isHorizontal
                         ? { marginLeft: '80px' }
-                        : { width: dynamicWidth, marginLeft: '80px' }
+                        : {
+                              width: dynamicWidth > 600 ? dynamicWidth : 600,
+                              marginLeft: '80px',
+                          }
                 }
             >
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
