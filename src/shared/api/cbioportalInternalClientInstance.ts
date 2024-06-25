@@ -10,9 +10,13 @@ function proxyColumnStore(client: any, endpoint: string) {
     const method = `${endpoint}UsingPOSTWithHttpInfo`;
     const old = client[method];
 
-    const host = 'genie-public-beta1.cbioportal.org'; //getLoadConfig().baseUrl
-
     client[method] = function(params: any) {
+        const host =
+            getBrowserWindow().location.hostname ===
+            'genie-public-beta.cbioportal.org'
+                ? 'genie-public-beta1.cbioportal.org'
+                : getLoadConfig().baseUrl;
+
         params.$domain = `//${host}/api/column-store`;
         const url = old.apply(this, [params]);
         return url;
