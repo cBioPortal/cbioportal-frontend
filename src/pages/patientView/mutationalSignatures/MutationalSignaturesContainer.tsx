@@ -46,14 +46,9 @@ import { MutationalSignatureTableDataStore } from 'pages/patientView/mutationalS
 import WindowStore from 'shared/components/window/WindowStore';
 import { getServerConfig } from 'config/config';
 import Slider from 'react-rangeslider';
-import { calcYMaxInput } from 'react-mutation-mapper/src/util/LollipopPlotUtils';
-import styles from 'react-mutation-mapper/src/component/lollipopMutationPlot/lollipopMutationPlot.module.scss';
 import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
-import { SliderPicker } from 'react-color';
 import classnames from 'classnames';
-import { useState } from 'react';
 import { useLocalObservable } from 'mobx-react-lite';
-import { isNumeral } from 'numeral';
 
 export interface IMutationalSignaturesContainerProps {
     data: { [version: string]: IMutationalSignature[] };
