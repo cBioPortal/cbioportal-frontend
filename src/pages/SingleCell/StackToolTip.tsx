@@ -47,6 +47,7 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                     <div
                         style={{
                             pointerEvents: 'auto',
+                            marginTop: '20px',
                             transition:
                                 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
                             backgroundColor: 'white',

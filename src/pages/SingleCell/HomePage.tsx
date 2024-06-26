@@ -1,12 +1,15 @@
 import React, { Component, useRef } from 'react';
 import _ from 'lodash';
-
+// import Dropdown from 'react-bootstrap/Dropdown';
+// import DropdownButton from 'react-bootstrap/DropdownButton';
+import { Dropdown, DropdownButton } from 'react-bootstrap';
 import {
     DataBinMethodConstants,
     StudyViewPageStore,
 } from 'pages/studyView/StudyViewPageStore';
 import autobind from 'autobind-decorator';
 import Select from 'react-select';
+import ReactSelect from 'react-select1';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
@@ -112,6 +115,8 @@ interface HomePageState {
     tooltipHovered: boolean;
     selectedSamples: any;
     dropdownOptions: any;
+    isReverse: any;
+    initialWidth: any;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -154,6 +159,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             tooltipHovered: false,
             selectedSamples: [],
             dropdownOptions: [],
+            isReverse: false,
+            initialWidth: 0,
         };
     }
 
@@ -184,6 +191,10 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     @autobind
     handleTooltipCheckboxChange(event: React.ChangeEvent<HTMLInputElement>) {
         this.setState({ tooltipEnabled: event.target.checked });
+    }
+    @autobind
+    handleReverseChange(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({ isReverse: event.target.checked });
     }
     async fetchDataBins(genericAssayEntityId: string, profileType: string) {
         let temp = this.props.store.genericAssayProfileOptionsByType.result;
@@ -232,10 +243,12 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         }
     }
     @autobind
-    async handleSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    async handleSelectChange(event: any) {
+        console.log('i am claed', event);
         this.setState({ stackEntity: '' });
         console.log(this.state.entityNames, 'entityNames');
-        const selectedValue = event.target.value;
+        const selectedValue = event.value;
+        console.log(event.value, 'this is event.target.value');
         const studyId = 'gbm_cptac_2021';
         const selectedProfile = this.state.molecularProfiles.find(
             profile => profile.value === selectedValue
@@ -320,14 +333,12 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         console.log(this.state.entityNames, 'emtit');
     }
     @autobind
-    handleEntitySelectChangeStack(event: React.ChangeEvent<HTMLSelectElement>) {
-        this.setState({ stackEntity: event.target.value });
+    handleEntitySelectChangeStack(event: any) {
+        this.setState({ stackEntity: event.value });
     }
     @autobind
-    async handleEntitySelectChange(
-        event: React.ChangeEvent<HTMLSelectElement>
-    ) {
-        const selectedEntityId = event.target.value;
+    async handleEntitySelectChange(event: any) {
+        const selectedEntityId = event.value;
 
         const { selectedOption } = this.state;
         let studyId = '';
@@ -410,8 +421,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     }
 
     @autobind
-    handleChartTypeChange(event: React.ChangeEvent<HTMLSelectElement>) {
-        this.setState({ chartType: event.target.value, selectedEntity: null });
+    handleChartTypeChange(event: any) {
+        this.setState({ chartType: event.value, selectedEntity: null });
     }
 
     async componentDidMount() {
@@ -539,15 +550,22 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
     decreaseWidth = () => {
         this.setState((prevState: any) => ({
-            dynamicWidth: prevState.dynamicWidth - 10,
+            dynamicWidth: Math.max(
+                prevState.dynamicWidth - 10,
+                prevState.initialWidth
+            ),
             decreaseCount: prevState.decreaseCount + 1,
         }));
         console.log(`Width decreased: ${this.state.decreaseCount + 1}`);
     };
+
     handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = parseInt(event.target.value);
-        this.setState({ dynamicWidth: value });
+        this.setState((prevState: any) => ({
+            dynamicWidth: Math.max(value, prevState.initialWidth),
+        }));
     };
+
     handleResizeCheckboxChange = (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
@@ -578,6 +596,23 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             downloadPdf,
             BarDownloadData,
         } = this.state;
+        const filteredOptions = molecularProfiles.filter(
+            option =>
+                option.profileType &&
+                option.profileType.startsWith('SINGLE_CELL')
+        );
+
+        // Map filtered options to format expected by react-select
+        const options = filteredOptions.map(option => ({
+            value: option.value,
+            label:
+                option.label.length > 35
+                    ? `${option.label.slice(0, 35)}...`
+                    : option.label,
+            title: option.label.length > 35 ? option.label : '',
+            isDisabled: false,
+            isHidden: false,
+        }));
 
         return (
             <div className="home-page-container">
@@ -587,113 +622,74 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     <div>
                         {/* Dropdown for selecting molecular profile */}
                         <div className="dropdown-container">
-                            <select
-                                id="molecularProfileSelect"
-                                className="custom-dropdown"
-                                onChange={this.handleSelectChange}
+                            <ReactSelect
                                 value={selectedOption || ''}
-                            >
-                                <option value="" disabled hidden>
-                                    Select a Molecular Profile...
-                                </option>
-                                {console.log(molecularProfiles, 'sdas')}
-                                {console.log(selectedOption, 'sdas2')}
-
-                                {molecularProfiles.map(option => {
-                                    // Check if option.profileType exists and starts with "SINGLE_CELL"
-                                    if (
-                                        option.profileType &&
-                                        option.profileType.startsWith(
-                                            'SINGLE_CELL'
-                                        )
-                                    ) {
-                                        return (
-                                            <option
-                                                key={option.value}
-                                                value={option.value}
-                                                className="custom-option"
-                                                style={{
-                                                    padding: '10px',
-                                                    fontSize: '16px',
-                                                    cursor: 'pointer',
-                                                    transition:
-                                                        'background-color 0.3s',
-                                                    color: 'black', // Text color
-                                                    backgroundColor: 'inherit', // Background color
-                                                }}
-                                                title={
-                                                    option.label.length > 35
-                                                        ? option.label
-                                                        : ''
-                                                }
-                                            >
-                                                {option.label.length > 35
-                                                    ? option.label.slice(
-                                                          0,
-                                                          35
-                                                      ) + '...'
-                                                    : option.label}
-                                            </option>
-                                        );
-                                    } else {
-                                        return null; // If profileType is undefined or does not start with "SINGLE_CELL", don't render anything
-                                    }
-                                })}
-                            </select>
+                                onChange={this.handleSelectChange}
+                                options={options}
+                                placeholder="Select a Molecular Profile..."
+                                clearable={false}
+                                searchable={true}
+                            />
                         </div>
 
-                        {/* Dropdown for selecting chart type */}
-
-                        <div className="dropdown-container">
-                            <select
-                                id="chartTypeSelect"
-                                className="custom-dropdown"
-                                onChange={this.handleChartTypeChange}
-                                value={chartType || ''}
-                                disabled={!selectedOption}
-                            >
-                                <option value="" disabled hidden>
-                                    Select type of chart...
-                                </option>
-                                <option value="pie">Pie Chart</option>
-                                <option value="bar">Bar Chart</option>
-                                <option value="stack">Stacked Bar Chart</option>
-                            </select>
-                        </div>
+                        {selectedOption && (
+                            <div className="dropdown-container">
+                                <ReactSelect
+                                    id="chartTypeSelect"
+                                    onChange={this.handleChartTypeChange}
+                                    value={chartType}
+                                    options={[
+                                        { value: 'pie', label: 'Pie Chart' },
+                                        { value: 'bar', label: 'Bar Chart' },
+                                        {
+                                            value: 'stack',
+                                            label: 'Stacked Bar Chart',
+                                        },
+                                    ]}
+                                    placeholder="Select type of chart..."
+                                    isDisabled={!selectedOption} // Disable if selectedOption is falsy
+                                    clearable={false}
+                                    searchable={true}
+                                />
+                            </div>
+                        )}
 
                         {/* Dropdown for selecting entity */}
                         {chartType === 'bar' && (
                             <div className="dropdown-container">
-                                <select
+                                <ReactSelect
                                     id="entitySelect"
-                                    className="custom-dropdown"
+                                    // className="custom-dropdown"
                                     onChange={this.handleEntitySelectChange}
                                     value={
                                         selectedEntity
-                                            ? selectedEntity.stableId
+                                            ? {
+                                                  value:
+                                                      selectedEntity.stableId,
+                                                  label: selectedEntity.stableId.replace(
+                                                      /_/g,
+                                                      ' '
+                                                  ),
+                                              }
                                             : ''
                                     }
-                                    disabled={!selectedOption}
-                                >
-                                    <option value="" disabled hidden>
-                                        Select cell type...
-                                    </option>
-                                    {entityNames.map(entityName => (
-                                        <option
-                                            key={entityName}
-                                            value={entityName}
-                                        >
-                                            {entityName.replace(/_/g, ' ')}
-                                        </option>
-                                    ))}
-                                </select>
+                                    options={entityNames.map(entityName => ({
+                                        value: entityName,
+                                        label: entityName.replace(/_/g, ' '),
+                                    }))}
+                                    placeholder="Select cell type..."
+                                    isDisabled={!selectedOption}
+                                    clearable={false}
+                                    searchable={true}
+                                />
+
                                 {console.log(entityNames, 'hereareentitynames')}
                             </div>
                         )}
 
                         {chartType === 'stack' && (
                             <div className="dropdown-container">
-                                <select
+                                {/* <select
                                     id="entitySelect"
                                     className="custom-dropdown"
                                     onChange={
@@ -723,7 +719,31 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                             {entityName.replace(/_/g, ' ')}
                                         </option>
                                     ))}
-                                </select>
+                                </select> */}
+                                <ReactSelect
+                                    id="entitySelect"
+                                    // className="custom-dropdown"
+                                    onChange={
+                                        this.handleEntitySelectChangeStack
+                                    }
+                                    value={this.state.stackEntity || ''}
+                                    options={entityNames.map(entityName => ({
+                                        value: entityName,
+                                        label: entityName.replace(/_/g, ' '),
+                                    }))}
+                                    placeholder={
+                                        selectedOption &&
+                                        selectedOption.includes('type')
+                                            ? 'Sort by cell type...'
+                                            : selectedOption &&
+                                              selectedOption.includes('cycle')
+                                            ? 'Sort by cycle phase...'
+                                            : 'Sort by ...'
+                                    }
+                                    isDisabled={!selectedOption}
+                                    clearable={false}
+                                    searchable={true}
+                                />
                                 {console.log(entityNames, 'hereareentitynames')}
                             </div>
                         )}
@@ -744,7 +764,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     className="toggle-label"
                                     style={{
                                         fontWeight: 'normal',
-                                        fontSize: '15px',
+                                        fontSize: '14px',
                                         marginLeft: '10px',
                                     }}
                                 >
@@ -771,7 +791,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         className="toggle-label"
                                         style={{
                                             fontWeight: 'normal',
-                                            fontSize: '15px',
+                                            fontSize: '14px',
                                             marginLeft: '10px',
                                         }}
                                     >
@@ -796,11 +816,35 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     className="toggle-label"
                                     style={{
                                         fontWeight: 'normal',
-                                        fontSize: '15px',
+                                        fontSize: '14px',
                                         marginLeft: '10px',
                                     }}
                                 >
                                     Toggle axes
+                                </label>
+                            </div>
+                        )}
+                        {chartType == 'stack' && this.state.stackEntity != '' && (
+                            <div className="checkbox-wrapper-5">
+                                <input
+                                    type="checkbox"
+                                    id="cbx-5"
+                                    checked={this.state.isReverse}
+                                    onChange={this.handleReverseChange}
+                                />
+                                <label htmlFor="cbx-5" className="toggle">
+                                    <span></span>
+                                </label>
+                                <label
+                                    htmlFor="cbx-5"
+                                    className="toggle-label"
+                                    style={{
+                                        fontWeight: 'normal',
+                                        fontSize: '14px',
+                                        marginLeft: '10px',
+                                    }}
+                                >
+                                    Reverse sort
                                 </label>
                             </div>
                         )}
@@ -851,7 +895,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 >
                     {chartType == 'stack' && (
                         <>
-                            <h2
+                            {/* <h2
                                 style={{
                                     textAlign: 'center',
                                 }}
@@ -859,7 +903,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 {dataBins && dataBins.length > 0
                                     ? dataBins[0].id.replace(/_/g, ' ')
                                     : 'No Data'}
-                            </h2>
+                            </h2> */}
 
                             <Select
                                 placeholder="Select SampleId.."
@@ -890,9 +934,17 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 chartType == 'stack'
                                     ? {
                                           width: '100%',
-                                          overflowX: 'scroll',
+                                          overflowX: this.state.isHorizontal
+                                              ? 'hidden'
+                                              : 'scroll',
+                                          border: '1px dashed lightgrey',
+                                          padding: '10px',
+                                          marginTop: '20px',
+                                          borderRadius: '5px',
                                           height: '700px',
-                                          overflowY: 'scroll',
+                                          overflowY: this.state.isHorizontal
+                                              ? 'scroll'
+                                              : 'hidden',
                                       }
                                     : {
                                           margin: '12px auto',
@@ -956,6 +1008,11 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                 dynamicWidth: value,
                                             })
                                         }
+                                        setInitialWidth={(value: any) =>
+                                            this.setState({
+                                                initialWidth: value,
+                                            })
+                                        }
                                         isHorizontal={this.state.isHorizontal}
                                         setIsHorizontal={(value: any) =>
                                             this.setState({
@@ -990,6 +1047,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                 dropdownOptions: value,
                                             });
                                         }}
+                                        isReverse={this.state.isReverse}
                                     />
                                 </>
                             ) : null}
@@ -1002,6 +1060,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             width: '22%',
                             marginTop: '100px',
                             marginLeft: '5px',
+                            textAlign: 'center',
                         }}
                     >
                         <StackToolTip

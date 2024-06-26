@@ -3786,33 +3786,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 <div>
                     <div style={{ marginBottom: '5px' }} className="form-group">
                         <label className="label-text">Data Type</label>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <ReactSelect
-                                name={`${
-                                    vertical ? 'v' : 'h'
-                                }-profile-type-selector`}
-                                value={axisSelection.dataType}
-                                onChange={
-                                    vertical
-                                        ? this.onVerticalAxisDataTypeSelect
-                                        : this.onHorizontalAxisDataTypeSelect
-                                }
-                                options={
-                                    (vertical
-                                        ? this.vertDatatypeOptions.result
-                                        : this.horzDatatypeOptions.result) || []
-                                }
-                                clearable={false}
-                                searchable={false}
-                            />
-                            {dataTypeDescription && (
-                                <InfoIcon
-                                    tooltip={<span>{dataTypeDescription}</span>}
-                                    tooltipPlacement="right"
-                                    style={{ marginLeft: 7 }}
-                                />
-                            )}
-                        </div>
+                        <div
+                            style={{ display: 'flex', alignItems: 'center' }}
+                        ></div>
                     </div>
                     {this.showSortOrderButton(!vertical) && (
                         <div className="checkbox">

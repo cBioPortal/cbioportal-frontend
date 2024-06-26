@@ -40,6 +40,7 @@ interface StackedBarChartProps {
     setMap: (value: any) => void;
     dynamicWidth: any;
     setDynamicWidth: (value: any) => void;
+    setInitialWidth: (value: any) => void;
     isHorizontal: any;
     setIsHorizontal: (value: any) => void;
     isVisible: any;
@@ -50,6 +51,7 @@ interface StackedBarChartProps {
     setSelectedSamples: (value: any) => void;
     dropdownOptions: any;
     setDropdownOptions: (value: any) => void;
+    isReverse: any;
 }
 
 interface BarDatum {
@@ -82,6 +84,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     setMap,
     dynamicWidth,
     setDynamicWidth,
+    setInitialWidth,
     isHorizontal,
     setIsHorizontal,
     isVisible,
@@ -92,6 +95,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     setSelectedSamples,
     dropdownOptions,
     setDropdownOptions,
+    isReverse,
 }) => {
     // const [selectedSamples, setSelectedSamples] = useState<string[]>([]);
     // const [hoveredSampleId, setHoveredSampleId] = useState<string[]>([]);
@@ -348,6 +352,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         console.log(formattedData[0].length, 'ilteredFormattedData.length22');
 
         setDynamicWidth(temp);
+        setInitialWidth(temp - 100);
         const updatedTooltiparray = tooltipUtilArray();
         for (let i = 0; i < differentSampleIds.length; i++) {
             mappedData[differentSampleIds[i]] = updatedTooltiparray[i] || null; // Assign null if there's no corresponding tooltipData
@@ -372,7 +377,12 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         }
 
         // Step 2: Sort the array by the y value
-        sortedArray.sort((a: any, b: any) => a.y - b.y);
+
+        if (!isReverse) {
+            sortedArray.sort((a: any, b: any) => a.y - b.y);
+        } else {
+            sortedArray.sort((a: any, b: any) => b.y - a.y);
+        }
 
         // Step 3: Create a mapping of x values to the sorted order
         const sortedOrder = sortedArray.map((item: any) => item.x);
@@ -473,14 +483,36 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         setToolArraystate(updatedTooltiparray);
     };
     useEffect(() => {
-        if (stackEntity != '') {
+        if (stackEntity !== '') {
             const sortedFormattedData = sortFormattedData(
                 formattedDatastate,
                 stackEntity
             );
+            let temp = 0;
+            let found = false;
+
+            for (let i = 0; i < sortedFormattedData.length; i++) {
+                let dataArray = sortedFormattedData[i];
+                if (dataArray[0].stableId === stackEntity) {
+                    temp = i;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found) {
+                // Swap the first array with the array at index temp
+                [sortedFormattedData[0], sortedFormattedData[temp]] = [
+                    sortedFormattedData[temp],
+                    sortedFormattedData[0],
+                ];
+            }
+
+            console.log(sortedFormattedData, 'this is sortedData');
             setFormattedDatastate(sortedFormattedData);
         }
-    }, [stackEntity]);
+    }, [stackEntity, isReverse]);
+
     console.log(formattedDatastate, stackEntity, 'this is formattedState');
 
     useEffect(() => {
@@ -519,6 +551,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             );
             let temp = filteredFormattedData[0].length * 47 + 150;
             setDynamicWidth(temp);
+            setInitialWidth(temp - 100);
         }
     }, [selectedSamples, formattedDatastate]);
     return (
@@ -569,16 +602,16 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                 width={isHorizontal ? 800 : dynamicWidth}
                                 padding={{
                                     top: 10,
-                                    bottom: 80,
-                                    left: isHorizontal ? 150 : 60,
-                                    right: 50,
+                                    bottom: 130,
+                                    left: isHorizontal ? 190 : 60,
+                                    right: 80,
                                 }} // Adjust chart padding as needed
                             >
                                 {/* Y-Axis (dependentAxis) */}
                                 <VictoryAxis
                                     style={{
                                         tickLabels: {
-                                            fontSize: 10,
+                                            fontSize: 13,
                                             angle: isHorizontal ? 0 : 45,
                                             textAnchor: isHorizontal
                                                 ? 'end'
@@ -593,7 +626,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                 <VictoryAxis
                                     style={{
                                         tickLabels: {
-                                            fontSize: 15,
+                                            fontSize: 13,
                                             padding: 5,
                                         },
                                     }}
