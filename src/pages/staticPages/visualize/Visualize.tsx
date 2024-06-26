@@ -7,9 +7,86 @@ import './styles.scss';
 import styles from './visualize.module.scss';
 import { getNCBIlink } from 'cbioportal-frontend-commons';
 
+/* WIP
+const Visualize = () => {
+
+  return (
+    <>
+      <hr />
+
+      <h2>
+        3rd party tools not maintained by cBioPortal community
+      </h2>
+
+      {isWindows && (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ marginBottom: 20 }}>
+            <h2>
+              <a href="https://bit.ly/avm-cbioportal" target="_blank" rel="noopener noreferrer">AVM for cBioPortal</a>
+            </h2>
+            <p>
+              Windows software that loads data into 3D Landscapes for interactive 
+              visualization and pathway analysis. Download table data directly from 
+              cBioPortal.{' '}
+              <a href="https://bit.ly/avm-cbioportal" target="_blank" rel="noopener noreferrer">Try it!</a>
+            </p>
+            <a href="https://bit.ly/avm-cbioportal" target="_blank" rel="noopener noreferrer">
+              <img
+                className="tile-image top-image"
+                alt="AVM for cBioPortal"
+                src={require('./images/msk_impact_prostate_primary_vs_metastatic_in_avm.png')}
+              />
+            </a>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Visualize;
+*/
+
+
 @observer
 export default class Visualize extends React.Component<{}, {}> {
     public render() {
+        // Check if the user's platform is Windows - to display 3rd party tools
+        const isWindows = navigator.userAgent.indexOf('Win') >= 0;
+
+        const thirdPartyTools = isWindows ? 
+        (
+            <>
+                <hr></hr>
+
+                <h2>
+                    3rd party tools not maintained by cBioPortal community
+                </h2>                
+
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ marginBottom: 20 }}>
+                        <h2>
+                            <a href="https://bit.ly/avm-cbioportal" target="_blank">AVM for cBioPortal</a>
+                        </h2>
+                        <p>
+                            Windows software that loads data into 3D Landscapes for interactive 
+                            visualization and pathway analysis. Download table data directly from 
+                            cBioPortal.{' '}
+                            <a href="https://bit.ly/avm-cbioportal" target="_blank">Try it!</a>
+                        </p>
+                        <a href="https://bit.ly/avm-cbioportal" target="_blank">
+                            <img
+                                className="tile-image top-image"
+                                alt="AVM for cBioPortal"
+                                src={require('./images/msk_impact_prostate_primary_vs_metastatic_in_avm.png')}
+                            />
+                        </a>
+                    </div>
+                </div>  
+            </>
+        ) : null;
+
+        // Display the page, and append thirdPartyTools (which may be empty)
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
@@ -129,32 +206,8 @@ export default class Visualize extends React.Component<{}, {}> {
                     </div>
                 </div>
 
-                <hr></hr>
-
-                <h2>
-                    3rd party tools not maintained by cBioPortal community
-                </h2>                
-
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ marginBottom: 20 }}>
-                        <h2>
-                            <a href="https://bit.ly/avm-cbioportal" target="_blank">AVM for cBioPortal</a>
-                        </h2>
-                        <p>
-                            Windows software that loads data into 3D Landscapes for interactive 
-                            visualization and pathway analysis. Download table data directly from 
-                            cBioPortal.{' '}
-                            <a href="https://bit.ly/avm-cbioportal" target="_blank">Try it!</a>
-                        </p>
-                        <a href="https://bit.ly/avm-cbioportal" target="_blank">
-                            <img
-                                className="tile-image top-image"
-                                alt="AVM for cBioPortal"
-                                src={require('./images/msk_impact_prostate_primary_vs_metastatic_in_avm.png')}
-                            />
-                        </a>
-                    </div>
-                </div>                
+                {thirdPartyTools}
+         
             </PageLayout>
         );
     }
