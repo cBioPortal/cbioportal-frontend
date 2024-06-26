@@ -3,6 +3,7 @@ import { If } from 'react-if';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
+import '../externalTools/styles.scss';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
@@ -66,7 +67,7 @@ export class CopyDownloadButtons extends React.Component<
     downloadButton() {
         return (
             <DefaultTooltip
-                overlay={<span>Download TSV</span>}
+                overlay={<span>Download TSV foo</span>}
                 {...this.baseTooltipProps}
                 overlayClassName={this.props.className}
             >
@@ -78,6 +79,24 @@ export class CopyDownloadButtons extends React.Component<
         );
     }
 
+    downloadButtonExternalTool() {
+        let iconImgSrc = require('../externalTools/images/avm_icon.png');
+        return (
+            <DefaultTooltip
+                overlay={<span>Download TSV, then launch AVM</span>}
+                {...this.baseTooltipProps}
+                overlayClassName={this.props.className}
+            >
+                <Button className="btn-sm" onClick={this.props.handleDownload}>
+                    {this.props.downloadLabel}{' '}
+                    <img className="downloadButtonImageExternalTool" 
+                        src={iconImgSrc}/>
+                </Button>
+                
+            </DefaultTooltip>
+        );
+    }    
+
     public render() {
         return (
             <span className={this.props.className}>
@@ -85,6 +104,9 @@ export class CopyDownloadButtons extends React.Component<
                     <If condition={this.props.showCopy}>{this.copyButton()}</If>
                     <If condition={this.props.showDownload}>
                         {this.downloadButton()}
+                    </If>
+                    <If condition={this.props.showDownload}>
+                        {this.downloadButtonExternalTool()}
                     </If>
                 </ButtonGroup>
             </span>
