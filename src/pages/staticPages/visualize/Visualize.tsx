@@ -47,32 +47,36 @@ const Visualize = () => {
 export default Visualize;
 */
 
-
 @observer
 export default class Visualize extends React.Component<{}, {}> {
     public render() {
-        // Check if the user's platform is Windows - to display 3rd party tools
-        const isWindows = navigator.userAgent.indexOf('Win') >= 0;
-
-        const thirdPartyTools = isWindows ? 
-        (
+        // third party / external tools section
+        const externalTools = (
             <>
                 <hr></hr>
 
-                <h2>
-                    3rd party tools not maintained by cBioPortal community
-                </h2>                
+                <h2>3rd party tools not maintained by cBioPortal community</h2>
 
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ marginBottom: 20 }}>
+                    <div style={{ marginTop: 20 }}>
                         <h2>
-                            <a href="https://bit.ly/avm-cbioportal" target="_blank">AVM for cBioPortal</a>
+                            <a
+                                href="https://bit.ly/avm-cbioportal"
+                                target="_blank"
+                            >
+                                AVM for cBioPortal (Windows)
+                            </a>
                         </h2>
                         <p>
-                            Windows software that loads data into 3D Landscapes for interactive 
-                            visualization and pathway analysis. Download table data directly from 
-                            cBioPortal.{' '}
-                            <a href="https://bit.ly/avm-cbioportal" target="_blank">Try it!</a>
+                            Windows software that loads data into 3D Landscapes
+                            for interactive visualization and pathway analysis.
+                            Download table data directly from cBioPortal.{' '}
+                            <a
+                                href="https://bit.ly/avm-cbioportal"
+                                target="_blank"
+                            >
+                                Try it!
+                            </a>
                         </p>
                         <a href="https://bit.ly/avm-cbioportal" target="_blank">
                             <img
@@ -82,9 +86,9 @@ export default class Visualize extends React.Component<{}, {}> {
                             />
                         </a>
                     </div>
-                </div>  
+                </div>
             </>
-        ) : null;
+        );
 
         // Display the page, and append thirdPartyTools (which may be empty)
         return (
@@ -206,8 +210,7 @@ export default class Visualize extends React.Component<{}, {}> {
                     </div>
                 </div>
 
-                {thirdPartyTools}
-         
+                {externalTools}
             </PageLayout>
         );
     }
