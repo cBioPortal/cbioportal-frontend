@@ -168,6 +168,7 @@ class GroupSelectorButton extends React.Component<
                             target={this.button}
                         >
                             <Popover
+                                id="groupSelectorButtonPopover"
                                 arrowOffsetTop={17}
                                 className={classnames(
                                     'cbioportal-frontend',

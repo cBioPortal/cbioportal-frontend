@@ -128,6 +128,7 @@ export default class GroupCheckbox extends React.Component<
     buildColorChooserWidget = () => (
         <Popover>
             <div
+                id="colorChooserWidgetPopover"
                 onMouseDown={e => {
                     e.nativeEvent.stopImmediatePropagation();
                 }}
