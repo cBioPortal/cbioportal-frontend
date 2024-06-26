@@ -128,6 +128,33 @@ export default class Visualize extends React.Component<{}, {}> {
                         </a>
                     </div>
                 </div>
+
+                <hr></hr>
+
+                <h2>
+                    3rd party tools not maintained by cBioPortal community
+                </h2>                
+
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ marginBottom: 20 }}>
+                        <h2>
+                            <a href="https://bit.ly/avm-cbioportal" target="_blank">AVM for cBioPortal</a>
+                        </h2>
+                        <p>
+                            Windows software that loads data into 3D Landscapes for interactive 
+                            visualization and pathway analysis. Download table data directly from 
+                            cBioPortal.{' '}
+                            <a href="https://bit.ly/avm-cbioportal" target="_blank">Try it!</a>
+                        </p>
+                        <a href="https://bit.ly/avm-cbioportal" target="_blank">
+                            <img
+                                className="tile-image top-image"
+                                alt="AVM for cBioPortal"
+                                src={require('./images/msk_impact_prostate_primary_vs_metastatic_in_avm.png')}
+                            />
+                        </a>
+                    </div>
+                </div>                
             </PageLayout>
         );
     }
