@@ -514,20 +514,22 @@ export function tabs(
             pageComponent.patientViewPageStore.structuralVariantOncoKbData
                 .isComplete &&
             pageComponent.patientViewPageStore.cnaOncoKbData.isComplete ? (
-                <AnnotationVisualisationComponent
-                    mutationData={
-                        pageComponent.patientViewPageStore.oncoKbData.result
-                            .indicatorMap
-                    }
-                    structuralVariantData={
-                        pageComponent.patientViewPageStore
-                            .structuralVariantOncoKbData.result.indicatorMap
-                    }
-                    cnaData={
-                        pageComponent.patientViewPageStore.cnaOncoKbData.result
-                            .indicatorMap
-                    }
-                />
+                <div style={{ margin: '2vh' }}>
+                    <AnnotationVisualisationComponent
+                        mutationData={
+                            pageComponent.patientViewPageStore.oncoKbData.result
+                                .indicatorMap
+                        }
+                        structuralVariantData={
+                            pageComponent.patientViewPageStore
+                                .structuralVariantOncoKbData.result.indicatorMap
+                        }
+                        cnaData={
+                            pageComponent.patientViewPageStore.cnaOncoKbData
+                                .result.indicatorMap
+                        }
+                    />
+                </div>
             ) : (
                 <LoadingIndicator isLoading={true} size={'big'} center={true} />
             )}
