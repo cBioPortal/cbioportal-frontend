@@ -2,14 +2,12 @@
 // for launching an ExternalTool by URL via the CopyDownloadButtons
 export type ExternalToolConfig = {
     id: string;
-    // fnord full string title or just name?
     name: string;
-    // fnord relative
-    imagePath: string;
-    //fnordim
+    // USAGE: goes as is into image.src attribute
+    iconImageSrc: string;
     required_installed_font_family: string;
     // fnord this may be tricky. eval equivalent?
-    // "avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}"
+    // "foo://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}"
     url_format: string;
 };
 
@@ -17,10 +15,8 @@ export const ExternalToolConfigDefaults : ExternalToolConfig[] = [
     {
         id: 'avm',
         name: 'AVM for cBioPortal',
-        //fnordim
-        imagePath: 'avm.png',   
+        iconImageSrc: 'https://aquminmedical.com/images/content/favicon.png',   
         required_installed_font_family: 'AVMInstalled',
         url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
     }
-
 ];
