@@ -1,4 +1,5 @@
 import { IServerConfig } from './IAppConfig';
+import { ExternalToolConfigDefaults } from 'shared/components/externalTools/ExternalToolConfig';
 
 export const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',
@@ -243,6 +244,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     vaf_log_scale_default: false,
 
     skin_study_view_show_sv_table: false,
+
+    external_tools: ExternalToolConfigDefaults,
 };
 
 export default ServerConfigDefaults;

@@ -1,3 +1,5 @@
+import { ExternalToolConfig } from 'shared/components/externalTools/ExternalToolConfig';
+
 export interface IAppConfig {
     apiRoot?: string;
     baseUrl?: string;
@@ -186,4 +188,5 @@ export interface IServerConfig {
     vaf_log_scale_default: boolean; // this has a default
     skin_study_view_show_sv_table: boolean; // this has a default
     enable_study_tags: boolean;
+    external_tools : ExternalToolConfig[];
 }
