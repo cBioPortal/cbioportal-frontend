@@ -81,6 +81,11 @@ class GroupSelectorButton extends React.Component<
         this.hovered = false;
     }
 
+    @action.bound
+    private onHideOverlay() {
+        this.hovered = false;
+    }    
+
     render() {
         const group = this.props.group;
         const selected = this.props.isSelected(group.name);
@@ -166,9 +171,10 @@ class GroupSelectorButton extends React.Component<
                             placement="top"
                             show={this.hovered}
                             target={this.button}
+                            onHide={this.onHideOverlay}
                         >
                             <Popover
-                                id="groupSelectorButtonPopover"
+                                id="GroupSelectorButtonPopover"
                                 arrowOffsetTop={17}
                                 className={classnames(
                                     'cbioportal-frontend',
