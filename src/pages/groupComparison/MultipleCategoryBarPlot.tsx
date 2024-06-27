@@ -797,6 +797,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
             return (ReactDOM as any).createPortal(
                 <Popover
+                    id="MultipleCategoryBarPlotTooltipPopover"
                     arrowOffsetTop={-dy}
                     className={classnames('cbioportal-frontend', 'cbioTooltip')}
                     positionLeft={this.mousePosition.x + dx}

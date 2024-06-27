@@ -86,6 +86,7 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                     return (
                         <Portal container={document.body}>
                             <Popover
+                                id="TimelineTracksTooltipPopover"
                                 onMouseEnter={() => {
                                     store.togglePinTooltip(uid);
                                 }}

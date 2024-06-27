@@ -230,6 +230,7 @@ export default class MiniBarChart extends React.Component<
                 </div>
                 {this.tooltipModel && (
                     <Popover
+                        id="MiniBarChartToolTipPopover"
                         arrowOffsetTop={14}
                         positionLeft={this.tooltipModel.y * 1.06 + 16}
                         positionTop={this.tooltipModel.x - 13}

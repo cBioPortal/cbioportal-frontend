@@ -364,6 +364,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
             return (
                 <Portal isOpened={true} node={document.body}>
                     <Popover
+                        id="VAFChartTooltipPopover"
                         className={classnames(
                             'cbioportal-frontend',
                             'cbioTooltip',

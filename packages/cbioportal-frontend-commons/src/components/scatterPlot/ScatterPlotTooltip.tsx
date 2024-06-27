@@ -55,7 +55,7 @@ export default class ScatterPlotTooltip extends React.Component<
             return (
                 <Portal container={document.body}>
                     <Popover
-                        id="scatterPlotTooltipPopover"
+                        id="ScatterPlotTooltipPopover"
                         className={classnames(
                             'cbioportal-frontend',
                             'cbioTooltip',

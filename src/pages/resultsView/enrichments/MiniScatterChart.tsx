@@ -96,6 +96,7 @@ export default class MiniScatterChart<
         if (this.tooltipModel) {
             return (
                 <Popover
+                    id="MiniScatterChartTooltipPopover"
                     className={'cbioTooltip'}
                     positionLeft={this.tooltipModel.x + 15}
                     positionTop={this.tooltipModel.y - 33}

@@ -452,6 +452,7 @@ export default class RectangleVennDiagram extends React.Component<
                 {!!this.tooltipModel &&
                     (ReactDOM as any).createPortal(
                         <Popover
+                            id="RectangleVennDiagramTooltipPopover"
                             arrowOffsetTop={17}
                             className={classnames(
                                 'cbioportal-frontend',

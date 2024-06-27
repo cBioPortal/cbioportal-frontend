@@ -50,6 +50,7 @@ export default class WaterfallPlotTooltip extends React.Component<
             return (
                 <Portal container={document.body}>
                     <Popover
+                        id="WaterfallPlotTooltipPopover"
                         className={classnames(
                             'cbioportal-frontend',
                             'cbioTooltip',

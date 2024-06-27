@@ -903,6 +903,7 @@ export default class BoxScatterPlot<
                     : 'right';
             return (ReactDOM as any).createPortal(
                 <Popover
+                    id="BoxScatterPlotToolTipPopover"
                     arrowOffsetTop={VERTICAL_OFFSET}
                     className={classnames('cbioportal-frontend', 'cbioTooltip')}
                     positionLeft={

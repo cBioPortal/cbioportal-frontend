@@ -197,6 +197,7 @@ export default class MiniFrequencyScatterChart extends React.Component<
         if (this.tooltipModel) {
             return (
                 <Popover
+                    id="MiniFrequencyScatterChartTooltipPopover"
                     className={'cbioTooltip'}
                     positionLeft={this.tooltipModel.x + 15}
                     positionTop={this.tooltipModel.y - 44}

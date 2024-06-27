@@ -1739,6 +1739,7 @@ export default class SurvivalChartExtended
                     )}
                     {this.tooltipModel && (
                         <Popover
+                            id="SurvivalChartToolTipPopover"
                             arrowOffsetTop={56}
                             className={classnames(
                                 'cbioportal-frontend',

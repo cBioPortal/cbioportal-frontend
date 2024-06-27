@@ -66,6 +66,7 @@ export default class BarChartToolTip extends React.Component<
 
         return (
             <Popover
+                id="BarChartToolTipPopover"
                 arrowOffsetTop={VERTICAL_OFFSET}
                 className={classnames('cbioportal-frontent', 'cbioTooltip')}
                 positionLeft={this.positionLeft}

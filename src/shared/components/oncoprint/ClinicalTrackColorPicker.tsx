@@ -69,7 +69,7 @@ export default class ClinicalTrackColorPicker extends React.Component<
 
     @computed get colorChooserElement() {
         return (
-            <Popover>
+            <Popover id="ClinicalTrackColorPickerPopover">
                 <div
                     onMouseDown={e => {
                         e.nativeEvent.stopImmediatePropagation();

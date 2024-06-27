@@ -603,6 +603,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
 
         return (ReactDOM as any).createPortal(
             <Popover
+                id="StudyViewViolinPlotTableTooltipPopover"
                 arrowOffsetTop={17}
                 className={classnames(
                     'cbioportal-frontend',
