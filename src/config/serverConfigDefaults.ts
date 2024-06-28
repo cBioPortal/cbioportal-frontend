@@ -1,5 +1,5 @@
 import { IServerConfig } from './IAppConfig';
-import { ExternalToolConfigDefaults } from 'shared/components/externalTools/ExternalToolConfig';
+import { ExternalToolConfigDefaults } from 'shared/components/externalTools/externalToolConfig';
 
 export const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',

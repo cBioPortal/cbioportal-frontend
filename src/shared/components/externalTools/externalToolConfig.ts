@@ -1,5 +1,6 @@
 
-// for launching an ExternalTool by URL via the CopyDownloadButtons
+// define an ExternalTool to display in CopyDownloadButtons
+// clicking on the button will launch it using the url_format
 export type ExternalToolConfig = {
     id: string;
     name: string;
@@ -11,6 +12,7 @@ export type ExternalToolConfig = {
     url_format: string;
 };
 
+// RFC87
 export const ExternalToolConfigDefaults : ExternalToolConfig[] = [
     {
         id: 'avm',

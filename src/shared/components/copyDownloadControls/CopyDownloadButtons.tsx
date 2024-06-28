@@ -5,6 +5,8 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 import { getServerConfig } from '../../../config/config';
 import '../externalTools/styles.scss';
+import { ExternalToolConfig } from '../externalTools/externalToolConfig';
+import { handleDownloadExternalTool } from '../externalTools/externalToolUtils';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
@@ -80,6 +82,8 @@ export class CopyDownloadButtons extends React.Component<
         );
     }
 
+
+
     downloadButtonsExternalTools() {
         const config = getServerConfig().external_tools;
         if (!config) { 
@@ -87,10 +91,17 @@ export class CopyDownloadButtons extends React.Component<
         }
 
         return config.map((tool, index) => {
+            //fnordchange back to relative
             // ASNEEDED: we can support storing images locally with relative paths,
             //  E.g. iconImageSrc: '../externalTools/images/icon.png'
             //  in which case this would run require{tool.iconImageSrc}.  
             let iconImgSrc = tool.iconImageSrc;
+
+            const handleDownloadWrapper = () => {
+                if (this.props.handleDownload) {
+                    handleDownloadExternalTool(this.props.handleDownload, tool)
+                }
+            };
 
             return (
                 <DefaultTooltip
@@ -101,7 +112,7 @@ export class CopyDownloadButtons extends React.Component<
                     <Button 
                         id={tool.id} 
                         className="btn-sm" 
-                        onClick={this.props.handleDownload}>
+                        onClick={handleDownloadWrapper}>
                             {this.props.downloadLabel}{' '}
                             <img className="downloadButtonImageExternalTool" 
                                 src={iconImgSrc}/>
