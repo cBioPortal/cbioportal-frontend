@@ -20,4 +20,9 @@ export interface ICopyDownloadInputsProps {
     downloadLabel?: string;
     handleDownload?: () => void;
     handleCopy?: () => void;
+    // allow implementation to handle the data on it's own. The input here is from getDownloadData
+    // ASNEEDED: it may be simpler to just pass the downloadData delegate here instead
+    // handleCustom?: (handler: (text: string) => void);
+    //fnord simpler
+    downloadData?: () => string;
 }

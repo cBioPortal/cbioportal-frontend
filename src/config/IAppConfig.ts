@@ -1,4 +1,4 @@
-import { ExternalToolConfig } from 'shared/components/externalTools/externalToolConfig';
+import { ExternalToolConfig } from 'shared/components/ExternalTools/ExternalToolConfig';
 
 export interface IAppConfig {
     apiRoot?: string;

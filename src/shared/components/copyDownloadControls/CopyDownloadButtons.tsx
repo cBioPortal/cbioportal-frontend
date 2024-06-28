@@ -4,9 +4,8 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 import { getServerConfig } from '../../../config/config';
-import '../externalTools/styles.scss';
-import { ExternalToolConfig } from '../externalTools/externalToolConfig';
-import { handleDownloadExternalTool } from '../externalTools/externalToolUtils';
+import { ExternalToolConfig } from '../ExternalTools/ExternalToolConfig';
+import { ExternalTool } from '../ExternalTools/ExternalTool';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
@@ -70,7 +69,7 @@ export class CopyDownloadButtons extends React.Component<
     downloadButton() {
         return (
             <DefaultTooltip
-                overlay={<span>Download TSV foo</span>}
+                overlay={<span>Download TSV</span>}
                 {...this.baseTooltipProps}
                 overlayClassName={this.props.className}
             >
@@ -83,45 +82,23 @@ export class CopyDownloadButtons extends React.Component<
     }
 
 
-
-    downloadButtonsExternalTools() {
+    buttonsExternalTools() {
         const config = getServerConfig().external_tools;
         if (!config) { 
             return null;
         }
 
         return config.map((tool, index) => {
-            //fnordchange back to relative
-            // ASNEEDED: we can support storing images locally with relative paths,
-            //  E.g. iconImageSrc: '../externalTools/images/icon.png'
-            //  in which case this would run require{tool.iconImageSrc}.  
-            let iconImgSrc = tool.iconImageSrc;
-
-            const handleDownloadWrapper = () => {
-                if (this.props.handleDownload) {
-                    handleDownloadExternalTool(this.props.handleDownload, tool)
-                }
-            };
-
             return (
-                <DefaultTooltip
-                    overlay={<span>Download TSV, then launch {tool.name}</span>}
-                    {...this.baseTooltipProps}
-                    overlayClassName={this.props.className}
-                >
-                    <Button 
-                        id={tool.id} 
-                        className="btn-sm" 
-                        onClick={handleDownloadWrapper}>
-                            {this.props.downloadLabel}{' '}
-                            <img className="downloadButtonImageExternalTool" 
-                                src={iconImgSrc}/>
-                    </Button>
-                </DefaultTooltip>
+                <ExternalTool 
+                    toolConfig={tool}
+                    baseTooltipProps={this.baseTooltipProps}
+                    downloadData={this.props.downloadData}  
+                    overlayClassName={this.props.className} />
             );            
         });
     }    
-
+        
     public render() {
         return (
             <span className={this.props.className}>
@@ -131,7 +108,7 @@ export class CopyDownloadButtons extends React.Component<
                         {this.downloadButton()}
                     </If>
                     <If condition={this.props.showDownload}>
-                        {this.downloadButtonsExternalTools()}
+                        {this.buttonsExternalTools()}
                     </If>
                 </ButtonGroup>
             </span>

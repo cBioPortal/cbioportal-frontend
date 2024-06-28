@@ -84,6 +84,7 @@ export class SimpleCopyDownloadControls extends React.Component<
                 <CopyDownloadButtons
                     className={this.props.className}
                     handleDownload={this.handleDownload}
+                    downloadData={this.props.downloadData}
                     copyButtonRef={this.copyButtonRef}
                     handleCopy={this.handleAfterCopy}
                     showCopyMessage={this.showCopyMessage}

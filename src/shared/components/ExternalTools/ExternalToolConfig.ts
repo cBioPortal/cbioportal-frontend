@@ -4,7 +4,10 @@
 export type ExternalToolConfig = {
     id: string;
     name: string;
-    // USAGE: goes as is into image.src attribute
+    tooltip: string;
+    // fnord confirm HTML works?
+    // USAGE: relative to shared/components/copyDownloadControls.
+    // ASNEEDED: smarter support for relative paths
     iconImageSrc: string;
     required_installed_font_family: string;
     // fnord this may be tricky. eval equivalent?
@@ -17,7 +20,10 @@ export const ExternalToolConfigDefaults : ExternalToolConfig[] = [
     {
         id: 'avm',
         name: 'AVM for cBioPortal',
-        iconImageSrc: 'https://aquminmedical.com/images/content/favicon.png',   
+        tooltip: 'Launch AVM for cBioPortal with Data',
+        //iconImageSrc: '../ExternalTools/images/avm_icon.png',   
+        //fnordregress, then change to relative
+        iconImageSrc: 'https://aquminmedical.com/images/content/favicon.png',
         required_installed_font_family: 'AVMInstalled',
         url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
     }
