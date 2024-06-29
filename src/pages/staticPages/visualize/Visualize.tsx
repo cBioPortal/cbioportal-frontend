@@ -6,6 +6,7 @@ import { PageLayout } from 'shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import styles from './visualize.module.scss';
 import { getNCBIlink } from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 
 /* WIP
 const Visualize = () => {
@@ -51,7 +52,8 @@ export default Visualize;
 export default class Visualize extends React.Component<{}, {}> {
     public render() {
         // third party / external tools section
-        const externalTools = (
+        var shouldDisplay = getServerConfig().external_tools?.some(tool => tool.id === 'avm') ?? false;
+        const externalTools = !shouldDisplay ? null : (
             <>
                 <hr></hr>
 
