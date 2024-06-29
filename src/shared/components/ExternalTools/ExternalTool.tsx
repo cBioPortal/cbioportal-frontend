@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { IExternalToolProps } from './IExternalTool';
+import { IExternalToolProps, IExternalToolUrlParameters } from './IExternalTool';
 import './styles.scss';
 
 
@@ -45,44 +45,53 @@ export function handleLaunchExternalTool(data : string, tool : ExternalToolConfi
     console.log('handleDownloadDone');
     //fnordwip
     // url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
-    console.log(tool.url_format);
-    window.location.href = 'avm://-AutoMode=true';
+
 }
     */
 
 //fnordfolder rename again
 export class ExternalTool extends React.Component<
     IExternalToolProps,
-    {}
+    { urlParameters : IExternalToolUrlParameters }
 > {
 
-    /*fnordwip
-    get className() {
-        return this.props.hostControls.className;
-    }    
+    constructor(props: IExternalToolProps) {
+        super(props);
 
+        const urlParameterDefaults : IExternalToolUrlParameters = 
+        {
+            // TODO: pull from DOM or somewhere in state
+            studyName: "cBioPortal Data"
+        };
 
-    get downloadLabel() {
-        return this.props.hostControls.className;
-    }       
-        */
+        this.state = {
+            urlParameters: Object.assign(urlParameterDefaults, props.urlFormatOverrides)
+        };
+
+    }
 
     handleLaunch = () => {
         console.log('ExternalTool.handleLaunch');
         if (this.props.downloadData) {
+            // pass the data directly to the app via the URL
+            // TECH: we do this instead of as a downloaded file, since we don't know exactly where the browser would download the file or how it would name it.
+            // OPTIMIZE: the data is TSV. Could compress first, or possibly send the data in a tighter pre-TSV format.
+            var data = this.props.downloadData();
+            var base64data = btoa(data);
+
+            // e.g. url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
+            var urlFormat = this.props.toolConfig.url_format;
+
+            console.log('StudyName:' + this.state.urlParameters.studyName);
+
+            //fnord or location.href?
+            //window.location.href = 'avm://-AutoMode=true';
         }
         //fnordim
     }
 
     public render() {
-        //fnord title wrong
         const tool = this.props.toolConfig;
-        // fnord require vs literal?
-        var iconImgSrc = require(tool.iconImageSrc);
-
-/*fnordremoved
-                    {this.props.downloadLabel}{' '}
-*/
 
         return (
             <DefaultTooltip
@@ -95,7 +104,7 @@ export class ExternalTool extends React.Component<
                 className="btn-sm" 
                 onClick={this.handleLaunch}>
                     <img className="downloadButtonImageExternalTool" 
-                        src={iconImgSrc}/>
+                        src={tool.iconImageSrc}/>
             </Button>
         </DefaultTooltip>
         );
