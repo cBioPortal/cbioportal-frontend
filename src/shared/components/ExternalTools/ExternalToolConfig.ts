@@ -7,8 +7,6 @@ export type ExternalToolConfig = {
     tooltip: string;
     iconImageSrc: string;
     required_installed_font_family: string;
-    // fnord this may be tricky. eval equivalent?
-    // "foo://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}"
     url_format: string;
 };
 
@@ -21,6 +19,9 @@ export const ExternalToolConfigDefaults : ExternalToolConfig[] = [
         // HACK: storing image locally to avoid external dependency, but need to make sure webpack loads it so we require() here
         iconImageSrc: require('./images/avm_icon.png'),   
         required_installed_font_family: 'AVMInstalled',
-        url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
+        //fnordoriginal
+        // url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
+        //url_format: 'avm://?importdata&-AutoMode=true&-ProjectNameHint=${studyName}-Data=${data}'
+        url_format: 'avm://?importdata&-AutoMode=true&-ProjectNameHint=${studyName}'
     }
 ];
