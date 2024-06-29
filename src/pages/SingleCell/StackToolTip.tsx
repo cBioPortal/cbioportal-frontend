@@ -47,18 +47,34 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                     <div
                         style={{
                             pointerEvents: 'auto',
-                            marginTop: '20px',
+                            opacity: isVisible ? 1 : 0,
                             transition:
                                 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
                             backgroundColor: 'white',
                             width: '350px',
-                            boxShadow: '0 0 10px rgba(0,0,0,0.2)',
                             zIndex: 220,
-                            opacity: isVisible ? 1 : 0,
+                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', // Enhanced shadow for 3D effect
+                            borderRadius: '10px', // Rounded corners
+                            position: 'relative',
                         }}
                         onMouseEnter={() => setTooltipHovered(true)}
                         onMouseLeave={() => setTooltipHovered(false)}
                     >
+                        <div
+                            style={{
+                                content: '""',
+                                position: 'absolute',
+                                left: '-10px', // Position the triangle to the left of the tooltip
+                                top: '50%', // Center the triangle vertically
+                                transform: 'translateY(-50%)', // Center the triangle vertically
+                                width: '0',
+                                height: '0',
+                                borderTop: '10px solid transparent', // Triangle pointing to the right
+                                borderBottom: '10px solid transparent',
+                                borderRight: '10px solid rgba(0, 0, 0, 0.15)', // Color of the triangle
+                                zIndex: 219, // Ensure the triangle is under the tooltip shadow
+                            }}
+                        ></div>
                         <div
                             className="custom-scrollbar"
                             style={{
@@ -137,6 +153,8 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                                                             >
                                                                 <div
                                                                     style={{
+                                                                        textAlign:
+                                                                            'center',
                                                                         width:
                                                                             '23px',
                                                                         height:
@@ -145,8 +163,9 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                                                                             map[
                                                                                 key
                                                                             ],
-                                                                        textAlign:
-                                                                            'center',
+
+                                                                        borderRadius:
+                                                                            '50%',
                                                                     }}
                                                                 ></div>
                                                             </td>

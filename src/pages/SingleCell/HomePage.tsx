@@ -29,6 +29,7 @@ import PieChart from './PieChart';
 import BarChart from './BarChart';
 import StackedBarChart from './StackedBarChart';
 import StackToolTip from './StackToolTip';
+import PieToolTip from './PieToolTip';
 import './styles.css';
 
 interface Option {
@@ -82,6 +83,7 @@ interface HomePageState {
     selectedOption: string | null;
     entityNames: string[];
     molecularProfiles: Option[];
+
     chartInfo: {
         name: string;
         description: string;
@@ -117,6 +119,9 @@ interface HomePageState {
     dropdownOptions: any;
     isReverse: any;
     initialWidth: any;
+    heading: any;
+    isHovered: any;
+    hoveredSliceIndex: any;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -161,6 +166,9 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             dropdownOptions: [],
             isReverse: false,
             initialWidth: 0,
+            heading: '',
+            isHovered: false,
+            hoveredSliceIndex: 0,
         };
     }
 
@@ -201,6 +209,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         console.log(temp, profileType, 'before id');
         let id = temp[profileType];
         let tempstudyId = id[0].value;
+        this.setState({ heading: profileType });
         console.log(id, tempstudyId, 'this is the id');
         console.log(
             genericAssayEntityId,
@@ -640,7 +649,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     value={chartType}
                                     options={[
                                         { value: 'pie', label: 'Pie Chart' },
-                                        { value: 'bar', label: 'Bar Chart' },
+                                        { value: 'bar', label: 'Histogram' },
                                         {
                                             value: 'stack',
                                             label: 'Stacked Bar Chart',
@@ -882,13 +891,17 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 </div>
 
                 <div
-                    className={chartType != 'stack' ? 'chart-display' : ''}
+                    className={chartType == 'bar' ? 'chart-display' : ''}
                     style={
                         chartType == 'stack'
                             ? {
                                   width: '55%',
                                   marginLeft: '5px',
                                   marginTop: '30px',
+                              }
+                            : chartType == 'pie'
+                            ? {
+                                  width: '48%',
                               }
                             : {}
                     }
@@ -946,8 +959,20 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                               ? 'scroll'
                                               : 'hidden',
                                       }
+                                    : chartType == 'pie'
+                                    ? {
+                                          width: '100%',
+                                          border: '1px dashed lightgrey',
+                                          borderRadius: '5px',
+                                          paddingRight: '5px',
+                                          paddingBottom: '10px',
+                                          marginLeft: '6px',
+                                      }
                                     : {
                                           margin: '12px auto',
+                                          border: '1px dashed lightgrey',
+                                          borderRadius: '5px',
+                                          padding: '10px',
                                           width: '600px',
                                       }
                             }
@@ -957,7 +982,9 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             {chartType === 'bar' ? (
                                 <BarChart
                                     dataBins={dataBins}
+                                    selectedEntity={this.state.selectedEntity}
                                     downloadData={BarDownloadData}
+                                    heading={this.state.heading}
                                 />
                             ) : chartType === 'pie' ? (
                                 <PieChart
@@ -972,6 +999,19 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     setDownloadPdf={(value: any) =>
                                         this.setState({ downloadPdf: value })
                                     }
+                                    isHovered={this.state.isHovered}
+                                    setIsHovered={(value: any) =>
+                                        this.setState({ isHovered: value })
+                                    }
+                                    hoveredSliceIndex={
+                                        this.state.hoveredSliceIndex
+                                    }
+                                    setHoveredSliceIndex={(value: any) =>
+                                        this.setState({
+                                            hoveredSliceIndex: value,
+                                        })
+                                    }
+                                    heading={this.state.heading}
                                 />
                             ) : chartType === 'stack' ? (
                                 <>
@@ -1058,8 +1098,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     <div
                         style={{
                             width: '22%',
-                            marginTop: '100px',
-                            marginLeft: '5px',
+                            marginTop: '60px',
+                            marginLeft: '10px',
                             textAlign: 'center',
                         }}
                     >
@@ -1084,6 +1124,38 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             tooltipHovered={this.state.tooltipHovered}
                             setTooltipHovered={(value: any) =>
                                 this.setState({ tooltipHovered: value })
+                            }
+                        />
+                    </div>
+                )}
+                {chartType == 'pie' && (
+                    <div
+                        style={{
+                            width: '22%',
+                            marginTop: '60px',
+                            marginLeft: '20px',
+                            textAlign: 'center',
+                        }}
+                    >
+                        <PieToolTip
+                            pieChartData={pieChartData}
+                            tooltipEnabled={tooltipEnabled}
+                            downloadSvg={downloadSvg}
+                            downloadPdf={downloadPdf}
+                            setDownloadSvg={(value: any) =>
+                                this.setState({ downloadSvg: value })
+                            }
+                            setDownloadPdf={(value: any) =>
+                                this.setState({ downloadPdf: value })
+                            }
+                            heading={this.state.heading}
+                            isHovered={this.state.isHovered}
+                            setIsHovered={(value: any) =>
+                                this.setState({ isHovered: value })
+                            }
+                            hoveredSliceIndex={this.state.hoveredSliceIndex}
+                            setHoveredSliceIndex={(value: any) =>
+                                this.setState({ hoveredSliceIndex: value })
                             }
                         />
                     </div>

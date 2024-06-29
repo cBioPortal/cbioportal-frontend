@@ -33,9 +33,16 @@ interface gaData {
 interface BarChartProps {
     dataBins: DataBin[];
     downloadData: gaData[];
+    selectedEntity: any;
+    heading: any;
 }
 
-const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
+const BarChart: React.FC<BarChartProps> = ({
+    dataBins,
+    downloadData,
+    selectedEntity,
+    heading,
+}) => {
     const [downloadOptionsVisible, setDownloadOptionsVisible] = useState(false);
     const [filterNA, setFilterNA] = useState(false);
     const chartRef = useRef<HTMLDivElement>(null);
@@ -73,25 +80,38 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
     const processedData: Datum[] = filteredData.map(bin => {
         let label = '';
         let range = '';
+        let alignment = '';
         if (bin.specialValue === '<=') {
             label = `<= ${bin.end}`;
             range = `<= ${bin.end}`;
+            alignment = 'middle';
         } else if (bin.specialValue == 'NA') {
             label = `NA`;
             range = `NA`;
+            alignment = 'middle';
         } else if (bin.specialValue === '>') {
             label = `> ${bin.start}`;
             range = `> ${bin.start}`;
+            alignment = 'middle';
         } else if (bin.start !== undefined && bin.end !== undefined) {
             label = `${bin.start}`;
             range = `${bin.start} - ${bin.end}`;
+            alignment = 'start';
         } else {
             label = bin.id.replace(/_/g, ' ');
             range = `${bin.start} - ${bin.end}`;
+            alignment = 'start';
         }
-        return { x: label, y: bin.count, range: range, count: bin.count };
+        return {
+            x: label,
+            y: bin.count,
+            range: range,
+            count: bin.count,
+            alignment: alignment,
+        };
     });
 
+    console.log(processedData, 'thi is processed data');
     const handleDownloadSVGWrapper = () => {
         if (chartRef.current) {
             const svg = chartRef.current.querySelector('svg');
@@ -127,13 +147,78 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
+    const handleDownload = () => {
+        const element = document.getElementById('div-to-download');
 
+        if (element) {
+            // Find the element to exclude
+            const excludeElement = element.querySelector(
+                '.exclude-from-svg'
+            ) as HTMLElement;
+            if (excludeElement) {
+                // Hide the element to exclude
+                excludeElement.style.display = 'none';
+            }
+
+            // Create an SVG element
+            const svg = document.createElementNS(
+                'http://www.w3.org/2000/svg',
+                'svg'
+            );
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            svg.setAttribute('width', element.offsetWidth.toString());
+            svg.setAttribute('height', (element.offsetHeight + 80).toString());
+
+            // Create a foreignObject element to hold the HTML content
+            const foreignObject = document.createElementNS(
+                'http://www.w3.org/2000/svg',
+                'foreignObject'
+            );
+            foreignObject.setAttribute('width', '100%');
+            foreignObject.setAttribute('height', '100%');
+
+            // Clone the HTML content and append it to the foreignObject
+            const clonedContent = element.cloneNode(true) as HTMLElement;
+            foreignObject.appendChild(clonedContent);
+
+            // Append the foreignObject to the SVG
+            svg.appendChild(foreignObject);
+
+            // Create a blob from the SVG and trigger a download
+            const serializer = new XMLSerializer();
+            const svgBlob = new Blob([serializer.serializeToString(svg)], {
+                type: 'image/svg+xml;charset=utf-8',
+            });
+            const url = URL.createObjectURL(svgBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${selectedEntity.stableId}.svg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Revoke the object URL after download
+            URL.revokeObjectURL(url);
+
+            // Show the excluded element again
+            if (excludeElement) {
+                excludeElement.style.display = '';
+            }
+        } else {
+            console.error('Element not found');
+        }
+    };
+    console.log(selectedEntity, 'selectedEntity side');
     return (
-        <div style={{ textAlign: 'center', position: 'relative' }}>
+        <div
+            id="div-to-download"
+            style={{ textAlign: 'center', position: 'relative' }}
+        >
             <h2>
-                {dataBins.length > 0
-                    ? dataBins[0].id.replace(/_/g, ' ')
-                    : 'No Data  '}
+                {heading && heading.length > 0
+                    ? heading.replace(/_/g, ' ')
+                    : 'No Data'}
             </h2>
             <label
                 style={{
@@ -157,17 +242,30 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
                         domainPadding={{ x: 15, y: 20 }}
                         height={400}
                         width={600}
+                        padding={{
+                            bottom: 80,
+                            left: 60,
+                        }}
                     >
                         <VictoryAxis
+                            label={`Absolute/Relative Counts (${selectedEntity.stableId})`}
                             style={{
                                 tickLabels: { angle: 45, textAnchor: 'start' },
+                                axisLabel: { padding: 50, fontSize: 15 },
                             }}
                             tickValues={xAxisLabels}
                         />
-                        <VictoryAxis dependentAxis />
+                        <VictoryAxis
+                            label="No. of Samples"
+                            style={{
+                                axisLabel: { padding: 30, fontSize: 15 },
+                            }}
+                            dependentAxis
+                        />
                         <VictoryBar
                             data={processedData}
-                            barWidth={20}
+                            barWidth={600 / processedData.length - 8}
+                            aligment={'start'}
                             labels={(data: any) =>
                                 `Number of samples: ${data.count}\nRange: ${data.range}`
                             }
@@ -195,6 +293,7 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
             )}
 
             <div
+                className="exclude-from-svg"
                 style={{
                     position: 'absolute',
                     top: 0,
@@ -251,7 +350,7 @@ const BarChart: React.FC<BarChartProps> = ({ dataBins, downloadData }) => {
                                 cursor: 'pointer',
                                 transition: 'background-color 0.3s ease',
                             }}
-                            onClick={handleDownloadSVGWrapper}
+                            onClick={handleDownload}
                             onMouseEnter={e =>
                                 (e.currentTarget.style.backgroundColor =
                                     '#f0f0f0')

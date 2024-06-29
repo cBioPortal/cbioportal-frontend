@@ -40,15 +40,6 @@
     display: flex;
 }
 
-.chart-configurations {
-    width: 15%;
-    padding: 20px;
-    background-color: #eeeeee;
-    /* max-height: 350px; */
-    border-right: 1px solid #ccc;
-    margin-top: 50px;
-}
-
 .chart-display {
     width: 60%;
     padding: 20px;
@@ -466,9 +457,9 @@
     width: 20%;
     padding: 20px;
     background-color: #eeeeee;
-    /* max-height: 350px; */
+    max-height: 350px;
     border-right: 1px solid #ccc;
-    margin-top: 50px;
+    margin-top: 10px;
 }
 
 .chart-display {
