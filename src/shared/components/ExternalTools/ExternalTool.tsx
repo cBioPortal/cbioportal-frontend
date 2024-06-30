@@ -68,7 +68,10 @@ export class ExternalTool extends React.Component<
              */
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(data)
-                    .then(this.handleLaunchReady)
+                    .then(() => {
+                        console.log('Data copied to clipboard - size:' + data.length);
+                        this.handleLaunchReady();
+                    })
                     .catch(err => {
                         console.error(this.config.name + ' - Could not copy text: ', err);
                     });
