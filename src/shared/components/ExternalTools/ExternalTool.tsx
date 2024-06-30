@@ -60,7 +60,6 @@ export class ExternalTool extends React.Component<
 
             // data to clipboard
             // OPTIMIZE: compress to base64, or use a more efficient format
-            //fnord update title?
             var data = this.props.downloadData();
 
             /* REF: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API
