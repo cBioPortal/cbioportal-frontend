@@ -22,6 +22,6 @@ export const ExternalToolConfigDefaults : ExternalToolConfig[] = [
         //fnordoriginal
         // url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
         //url_format: 'avm://?importdata&-AutoMode=true&-ProjectNameHint=${studyName}-Data=${data}'
-        url_format: 'avm://?importdata&-AutoMode=true&-ProjectNameHint=${studyName}'
+        url_format: 'avm://?importclipboard&-AutoMode=true&-ProjectNameHint=${studyName}'
     }
 ];

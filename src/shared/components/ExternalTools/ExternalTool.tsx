@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { IExternalToolProps, IExternalToolUrlParameters } from './IExternalTool';
+import { ExternalToolConfig } from './ExternalToolConfig';
 import './styles.scss';
 
 export class ExternalTool extends React.Component<
@@ -17,6 +18,10 @@ export class ExternalTool extends React.Component<
 
         };
     }
+    
+    get config() : ExternalToolConfig {
+        return this.props.toolConfig;
+    }
 
     get urlParametersDefault() : IExternalToolUrlParameters {
         return  {
@@ -25,42 +30,53 @@ export class ExternalTool extends React.Component<
         }
     };
 
-    handleLaunch = () => {
-        console.log('ExternalTool.handleLaunch:' + this.props.toolConfig.id);
+    /* TECH: looking for simplest ways to pass data to external tool.
+     * 1) base64 encode to URL: will not work in Windows with 8196 char limit.
+     * 2) clipboard: should work
+     * 3) open a WebSocket and pass URL: may work
+     */
+
+    handleLaunchReady = () => {
+        // assemble final available urlParameters
+        var urlParameters = Object.assign(this.urlParametersDefault, this.props.urlFormatOverrides);
+
+        // e.g. url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
+        var urlFormat = this.props.toolConfig.url_format;
+
+        // Replace all parameter references in urlFormat with the appropriate property in urlParameters
+        var url = urlFormat;
+        Object.keys(urlParameters).forEach(key => {
+            const value = urlParameters[key];
+            url = url.replace(new RegExp(`\\$\{${key}\}`, 'g'), value);
+        });            
+
+        window.location.href = url.substring(0, 100);
+    }
+
+    // TECH: pass data using Clipboard
+    handleLaunchStart = () => {
+        console.log('ExternalTool.handleLaunchStart:' + this.props.toolConfig.id);
         if (this.props.downloadData) {
-            // assemble final urlParameters
-            var urlParameters = Object.assign(this.urlParametersDefault, this.props.urlFormatOverrides);
 
-            if (!urlParameters.data) {
-                urlParameters.data = this.props.downloadData();
+            // data to clipboard
+            // OPTIMIZE: compress to base64, or use a more efficient format
+            //fnord update title?
+            var data = this.props.downloadData();
+
+            /* REF: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API
+             * Clipboard API supported in Chrome 66+, Firefox 63+, Safari 10.1+, Edge 79+, Opera 53+
+             */
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(data)
+                    .then(this.handleLaunchReady)
+                    .catch(err => {
+                        console.error(this.config.name + ' - Could not copy text: ', err);
+                    });
+            } else {
+                // ASNEEDED: we could leverage the clipboard package like CopyDownloadButtons (which requires a UI element ref)
+                // TODO: is there a proper way to report a failure?
+                alert(this.config.name + ' launch failed: a modern browser is required.');
             }
-
-            // to pass the data directly the the app via URL, we need to encode it
-            // TECH: we do this instead of as a downloaded file, since we don't know exactly where the browser would download the file or how it would name it.
-            // OPTIMIZE: the data is TSV. Could compress first, or possibly send the data in a tighter pre-TSV format.
-            if (urlParameters.data) {
-                var base64data = btoa(urlParameters.data);
-                urlParameters.data = base64data;
-            }
-
-            // e.g. url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
-            var urlFormat = this.props.toolConfig.url_format;
-
-            // Replace all parameter references in urlFormat with the appropriate property in urlParameters
-            var url = urlFormat;
-            Object.keys(urlParameters).forEach(key => {
-                const value = urlParameters[key];
-                //fnord url encode?
-                url = url.replace(new RegExp(`\\$\{${key}\}`, 'g'), value);
-            });            
-
-            //fnorddebug
-            console.log('Url.Len:' + url.length);
-            console.log('Url:' + url.substring(0, 100) + '...');
-
-            //fnord or location.href?
-            //window.open(url, '_blank');
-            window.location.href = url.substring(0, 100);
         }
     }
 
@@ -76,7 +92,7 @@ export class ExternalTool extends React.Component<
             <Button 
                 id={tool.id} 
                 className="btn-sm" 
-                onClick={this.handleLaunch}>
+                onClick={this.handleLaunchStart}>
                     <img className="downloadButtonImageExternalTool" 
                         src={tool.iconImageSrc}/>
             </Button>
