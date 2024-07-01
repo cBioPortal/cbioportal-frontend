@@ -62,6 +62,13 @@ const OncoprinterTool = SuspenseWrapper(
     )
 );
 
+const JupyterNotebookTool = SuspenseWrapper(
+    React.lazy(() =>
+        // @ts-ignore
+        import('./pages/staticPages/tools/oncoprinter/JupyterNotebookTool')
+    )
+);
+
 const Visualize = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/staticPages/visualize/Visualize'))
@@ -416,6 +423,10 @@ export const makeRoutes = () => {
                 <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
                 <Route path="/mutation_mapper" component={MutationMapperTool} />
                 <Route path="/oncoprinter" component={OncoprinterTool} />
+                <Route
+                    path="/jupyternotebook"
+                    component={JupyterNotebookTool}
+                />
                 <Route path="/datasets" component={ScrollToTop(DatasetPage)} />
                 <Route path="/installations" component={InstallationMap} />
                 <Route path="/visualize" component={ScrollToTop(Visualize)} />
