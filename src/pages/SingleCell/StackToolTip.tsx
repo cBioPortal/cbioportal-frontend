@@ -113,7 +113,6 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                                         <th
                                             style={{
                                                 padding: '8px',
-                                                textAlign: 'center',
                                             }}
                                         >
                                             Color
