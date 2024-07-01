@@ -17,6 +17,14 @@ export default class sessionServiceAPI {
         return `${getSessionUrl()}/virtual_study`;
     }
 
+    getPublicVirtualStudyServiceUrl() {
+        //FIXME change url after moving the code to the session controller
+        return getSessionUrl().replace(
+            'api/session',
+            'api/public_virtual_studies'
+        );
+    }
+
     getSessionServiceUrl() {
         return `${getSessionUrl()}/main_session`;
     }
@@ -36,6 +44,18 @@ export default class sessionServiceAPI {
         return (
             request
                 .get(this.getVirtualStudyServiceUrl())
+                // @ts-ignore: this method comes from caching plugin and isn't in typing
+                .forceUpdate(true)
+                .then((res: any) => {
+                    return res.body;
+                })
+        );
+    }
+
+    getPublicVirtualStudies(): Promise<Array<VirtualStudy>> {
+        return (
+            request
+                .get(this.getPublicVirtualStudyServiceUrl())
                 // @ts-ignore: this method comes from caching plugin and isn't in typing
                 .forceUpdate(true)
                 .then((res: any) => {
