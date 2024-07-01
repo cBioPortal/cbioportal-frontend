@@ -277,12 +277,7 @@ export function getDigitalSlideArchiveMetaUrl(patientId: string) {
     return getServerConfig().digital_slide_archive_meta_url + patientId;
 }
 export function getDigitalSlideArchiveIFrameUrl(patientId: string) {
-    //format:
-    //https://cancer.digitalslidearchive.org/#!/CDSA/caseName/TCGA-02-0006
-    return (
-        getServerConfig().digital_slide_archive_iframe_url +
-        `#!/CDSA/byPatientID/${patientId}`
-    );
+    return "https://app.histowiz.com/shared_social/viewer/e6432e9d-6c86-41d4-b9e7-e189aa154196#x=0.4999999999999991&y=1.386784243197772&zoom=0.5&rotation=180&slideId=8266c18e-e783-4303-84c9-819294d3d62e"
 }
 
 export function getDarwinUrl(sampleIds: string[], caseId: string) {
