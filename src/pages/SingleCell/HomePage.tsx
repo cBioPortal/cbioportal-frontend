@@ -432,6 +432,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     @autobind
     handleChartTypeChange(event: any) {
         this.setState({ chartType: event.value, selectedEntity: null });
+        this.setState({ stackEntity: '' });
     }
 
     async componentDidMount() {
@@ -735,7 +736,11 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     onChange={
                                         this.handleEntitySelectChangeStack
                                     }
-                                    value={this.state.stackEntity || ''}
+                                    value={
+                                        this.state.stackEntity
+                                            ? this.state.stackEntity
+                                            : ''
+                                    }
                                     options={entityNames.map(entityName => ({
                                         value: entityName,
                                         label: entityName.replace(/_/g, ' '),

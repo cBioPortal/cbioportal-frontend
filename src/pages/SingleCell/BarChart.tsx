@@ -209,6 +209,17 @@ const BarChart: React.FC<BarChartProps> = ({
             console.error('Element not found');
         }
     };
+    const [showXAxisValuesModal, setShowXAxisValuesModal] = useState(false);
+    const formattedXAxisLabels = xAxisLabels
+        .filter(label => !label.startsWith('<=') && !label.startsWith('>'))
+        .join(', ');
+    const handleShowXAxisValues = () => {
+        setShowXAxisValuesModal(true);
+    };
+
+    const handleCloseXAxisValuesModal = () => {
+        setShowXAxisValuesModal(false);
+    };
     console.log(selectedEntity, 'selectedEntity side');
     return (
         <div
@@ -250,7 +261,7 @@ const BarChart: React.FC<BarChartProps> = ({
                         }}
                     >
                         <VictoryAxis
-                            label={`Absolute/Relative Counts (${selectedEntity.stableId})`}
+                            label={`Absolute/Relative Counts (${selectedEntity?.stableId})`}
                             style={{
                                 tickLabels: { angle: 45, textAnchor: 'start' },
                                 axisLabel: { padding: 50, fontSize: 15 },
@@ -296,7 +307,22 @@ const BarChart: React.FC<BarChartProps> = ({
                     </VictoryChart>
                 </div>
             )}
-
+            <button
+                onClick={handleShowXAxisValues}
+                style={{
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                    padding: '10px',
+                    cursor: 'pointer',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    backgroundColor: '#fff',
+                    zIndex: 100,
+                }}
+            >
+                Show X-Axis Values
+            </button>
             <div
                 className="exclude-from-svg"
                 style={{
@@ -388,6 +414,41 @@ const BarChart: React.FC<BarChartProps> = ({
                     </div>
                 )}
             </div>
+            {showXAxisValuesModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        zIndex: 200,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onClick={handleCloseXAxisValuesModal}
+                >
+                    <div
+                        style={{
+                            backgroundColor: '#fff',
+                            padding: '20px',
+                            borderRadius: '4px',
+                            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+                            maxWidth: '80%',
+                            maxHeight: '80%',
+                            overflow: 'auto',
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h3>X-Axis Tick Values</h3>
+                        <div style={{ whiteSpace: 'nowrap' }}>
+                            {formattedXAxisLabels}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
