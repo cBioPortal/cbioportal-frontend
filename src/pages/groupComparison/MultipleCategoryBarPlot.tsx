@@ -58,6 +58,16 @@ export interface IMultipleCategoryBarPlotProps {
     svgRef?: (svgContainer: SVGElement | null) => void;
     pValue: number | null;
     qValue: number | null;
+    sortOption?: string;
+}
+export interface TotalSumItem {
+    majorCategory: string;
+    sum: number;
+    minorCategory: {
+        name: string;
+        count: number;
+        percentage: number;
+    }[];
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -274,6 +284,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
         } else if (this.props.plotData) {
             data = this.props.plotData;
         }
+
         return data;
     }
 
@@ -424,12 +435,56 @@ export default class MultipleCategoryBarPlot extends React.Component<
     }
 
     @computed get labels() {
+        if (this.props.sortOption == 'sortByCount') {
+            _.forEach(this.data, item => {
+                item.counts.sort((a, b) =>
+                    a.majorCategory.localeCompare(b.majorCategory)
+                );
+            });
+            const totalSumArray: TotalSumItem[] = [];
+            _.forEach(this.data, item => {
+                _.forEach(item.counts, countItem => {
+                    const existingItem = _.find(
+                        totalSumArray,
+                        sumItem =>
+                            sumItem.majorCategory === countItem.majorCategory
+                    );
+                    if (existingItem) {
+                        existingItem.sum += countItem.count;
+                        existingItem.minorCategory.push({
+                            name: item.minorCategory,
+                            count: countItem.count,
+                            percentage: countItem.percentage,
+                        });
+                    } else {
+                        totalSumArray.push({
+                            majorCategory: countItem.majorCategory,
+                            sum: countItem.count,
+                            minorCategory: [
+                                {
+                                    name: item.minorCategory,
+                                    count: countItem.count,
+                                    percentage: countItem.percentage,
+                                },
+                            ],
+                        });
+                    }
+                });
+            });
+
+            totalSumArray.sort((a, b) => b.sum - a.sum);
+
+            const sortedLabels = totalSumArray.map(item => item.majorCategory);
+            return sortedLabels;
+        }
+
         if (this.data.length > 0) {
-            return sortDataByCategory(
+            const CategorizedData = sortDataByCategory(
                 this.data[0].counts.map(c => c.majorCategory),
                 x => x,
                 this.majorCategoryOrder
             );
+            return CategorizedData;
         } else {
             return [];
         }
@@ -739,7 +794,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
             this.categoryCoord,
             !!this.props.horizontalBars,
             !!this.props.stacked,
-            !!this.props.percentage
+            !!this.props.percentage,
+            this.props.sortOption || 'sortByAlphabet'
         );
         return barSpecs.map(spec => (
             <VictoryBar
