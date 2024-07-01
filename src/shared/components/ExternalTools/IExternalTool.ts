@@ -5,6 +5,7 @@ import { ExternalToolConfig } from './ExternalToolConfig';
 export interface IExternalToolUrlParameters {
     [key: string]: any; // Adding an index signature
     studyName?: string,
+    dataLength?: number,
 }
 
 // Now, when you use urlParameters, TypeScript knows it can be indexed with a string.
