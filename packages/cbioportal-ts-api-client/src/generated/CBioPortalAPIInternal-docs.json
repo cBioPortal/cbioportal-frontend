@@ -550,7 +550,48 @@
               "type": "array"
             }
           }
-        },
+        }
+      }
+    },
+    "/api/clinical-events-meta/fetch": {
+      "post": {
+        "tags": [
+          "Clinical Events"
+        ],
+        "summary": "Fetch clinical events meta",
+        "operationId": "fetchClinicalEventsMetaUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "clinicalEventAttributeRequest",
+            "description": "clinical events Request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClinicalEventAttributeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalEvent"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cna-genes/fetch": {
+      "post": {
         "tags": [
           "Study View"
         ],
@@ -3219,6 +3260,43 @@
         "operationId": "getSignificantlyMutatedGenesUsingGET"
       }
     },
+    "/api/survival-data/fetch": {
+      "post": {
+        "tags": [
+          "Survival"
+        ],
+        "summary": "Fetch survival data",
+        "operationId": "fetchSurvivalDataUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "survivalRequest",
+            "description": "Survival Data Request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SurvivalRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalData"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/timestamps": {
       "get": {
         "produces": [
@@ -3958,6 +4036,25 @@
       ],
       "type": "object"
     },
+    "ClinicalEventAttributeRequest": {
+      "type": "object",
+      "properties": {
+        "clinicalEventRequests": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/ClinicalEventRequest"
+          }
+        },
+        "patientIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PatientIdentifier"
+          }
+        }
+      },
+      "title": "ClinicalEventAttributeRequest"
+    },
     "ClinicalEventData": {
       "properties": {
         "key": {
@@ -3972,6 +4069,47 @@
         "value"
       ],
       "type": "object"
+    },
+    "ClinicalEventRequest": {
+      "type": "object",
+      "required": [
+        "eventType"
+      ],
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalEventData"
+          }
+        },
+        "eventType": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalEventRequest"
+    },
+    "ClinicalEventRequestIdentifier": {
+      "type": "object",
+      "required": [
+        "position"
+      ],
+      "properties": {
+        "clinicalEventRequests": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/ClinicalEventRequest"
+          }
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "FIRST",
+            "LAST"
+          ]
+        }
+      },
+      "title": "ClinicalEventRequestIdentifier"
     },
     "ClinicalEventSample": {
       "properties": {
@@ -5464,6 +5602,18 @@
       },
       "type": "object"
     },
+    "PatientIdentifier": {
+      "type": "object",
+      "properties": {
+        "patientId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "PatientIdentifier"
+    },
     "PatientTreatmentFilter": {
       "properties": {
         "treatment": {
@@ -6125,6 +6275,30 @@
         }
       },
       "type": "object"
+    },
+    "SurvivalRequest": {
+      "type": "object",
+      "required": [
+        "attributeIdPrefix"
+      ],
+      "properties": {
+        "attributeIdPrefix": {
+          "type": "string"
+        },
+        "endEventRequestIdentifier": {
+          "$ref": "#/definitions/ClinicalEventRequestIdentifier"
+        },
+        "patientIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PatientIdentifier"
+          }
+        },
+        "startEventRequestIdentifier": {
+          "$ref": "#/definitions/ClinicalEventRequestIdentifier"
+        }
+      },
+      "title": "SurvivalRequest"
     },
     "VariantCount": {
       "properties": {
