@@ -277,7 +277,7 @@ const BarChart: React.FC<BarChartProps> = ({
                             labelComponent={
                                 <VictoryTooltip
                                     cornerRadius={5}
-                                    style={{ fontSize: 10 }}
+                                    style={{ fontSize: 14 }}
                                     flyoutStyle={{
                                         fill: 'white',
                                         stroke: 'black',
