@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { VictoryBar, VictoryChart, VictoryAxis, VictoryTooltip } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
-
+import BarChart1 from '../studyView/charts/barChart/BarChart';
 interface DataBin {
     id: string;
     count: number;
@@ -167,7 +167,7 @@ const BarChart: React.FC<BarChartProps> = ({
             );
             svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
             svg.setAttribute('width', element.offsetWidth.toString());
-            svg.setAttribute('height', (element.offsetHeight + 80).toString());
+            svg.setAttribute('height', (element.offsetHeight + 150).toString());
 
             // Create a foreignObject element to hold the HTML content
             const foreignObject = document.createElementNS(
@@ -235,16 +235,18 @@ const BarChart: React.FC<BarChartProps> = ({
                 />{' '}
                 Show NA values
             </label>
+
             {processedData.length !== 0 && (
                 <div ref={chartRef}>
                     <VictoryChart
                         theme={CBIOPORTAL_VICTORY_THEME}
                         domainPadding={{ x: 15, y: 20 }}
                         height={400}
-                        width={600}
+                        width={640}
                         padding={{
                             bottom: 80,
                             left: 60,
+                            right: 60,
                         }}
                     >
                         <VictoryAxis
@@ -264,8 +266,11 @@ const BarChart: React.FC<BarChartProps> = ({
                         />
                         <VictoryBar
                             data={processedData}
-                            barWidth={600 / processedData.length - 8}
-                            aligment={'start'}
+                            barWidth={600 / processedData.length - 7}
+                            alignment={'start'}
+                            // alignment={(data:any)=>{
+                            //    data.alignment
+                            // }}
                             labels={(data: any) =>
                                 `Number of samples: ${data.count}\nRange: ${data.range}`
                             }

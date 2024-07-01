@@ -218,7 +218,7 @@ const Chart: React.FC<ChartProps> = ({
             );
             svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
             svg.setAttribute('width', element.offsetWidth.toString());
-            svg.setAttribute('height', (element.offsetHeight + 120).toString());
+            svg.setAttribute('height', (element.offsetHeight + 150).toString());
 
             // Create a foreignObject element to hold the HTML content
             const foreignObject = document.createElementNS(
