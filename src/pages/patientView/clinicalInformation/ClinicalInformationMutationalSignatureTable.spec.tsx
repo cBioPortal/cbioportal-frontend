@@ -16,8 +16,8 @@ const sampleMutationalSignatureMeta = [
     },
     {
         mutationalSignatureId: 'secondMutationalSignature',
-        name: 'Description  Signature 2',
-        description: 'Mutational Signature 2',
+        name: 'Mutational Signature 2',
+        description: 'Description Signature 2',
         url: 'COSMIC/FakeMutationalSignature2',
         category: 'category 2',
         confidenceStatement:
