@@ -44,9 +44,9 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
         }
     }
 
-    handleLaunchReady = (urlParametersLaunch: IExternalToolUrlParameters) => {
+    handleLaunchReady(urlParametersLaunch: IExternalToolUrlParameters) {
         // assemble final available urlParameters
-        const urlParameters = {
+        const urlParameters : IExternalToolUrlParameters = {
             ...this.urlParametersDefault,
             ...this.props.urlFormatOverrides,
             ...urlParametersLaunch,
@@ -58,18 +58,17 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
         // Replace all parameter references in urlFormat with the appropriate property in urlParameters
         var url = urlFormat;
         Object.keys(urlParameters).forEach(key => {
-            const value = urlParameters[key];
-            url = url.replace(new RegExp(`\\$\{${key}\}`, 'g'), value);
+            const value = urlParameters[key] ?? "";
+            // TECH: location.href.set will actually encode the value, but we do it here for deterministic results with unit tests
+            url = url.replace(new RegExp(`\\$\{${key}\}`, 'g'), encodeURIComponent(value));
         });
 
         window.location.href = url;
-    };
+    }
 
-    // TECH: pass data using Clipboard
-    handleLaunchStart = () => {
-        console.log(
-            'ExternalTool.handleLaunchStart:' + this.props.toolConfig.id
-        );
+    // pass data using Clipboard to the external tool
+    handleLaunchStart() {
+        console.log('ExternalTool.handleLaunchStart:' + this.props.toolConfig.id);
 
         if (this.props.downloadData) {
             // data to clipboard
@@ -77,7 +76,7 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
             const data = this.props.downloadData();
 
             var urlParametersLaunch: IExternalToolUrlParameters = {
-                dataLength: data.length,
+                dataLength: data.length.toString(),
             };
 
             /* REF: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API
@@ -106,7 +105,7 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
                 );
             }
         }
-    };
+    }
 
     public render() {
         const tool = this.props.toolConfig;
@@ -120,7 +119,7 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
                 <Button
                     id={tool.id}
                     className="btn-sm"
-                    onClick={this.handleLaunchStart}
+                    onClick={this.handleLaunchStart.bind(this)}
                 >
                     <img
                         className="downloadButtonImageExternalTool"
