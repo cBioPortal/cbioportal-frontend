@@ -81,24 +81,24 @@ export class CopyDownloadButtons extends React.Component<
         );
     }
 
-
     buttonsExternalTools() {
         const config = getServerConfig().external_tools;
-        if (!config) { 
+        if (!config) {
             return null;
         }
 
         return config.map((tool, index) => {
             return (
-                <ExternalTool 
+                <ExternalTool
                     toolConfig={tool}
                     baseTooltipProps={this.baseTooltipProps}
-                    downloadData={this.props.downloadData}  
-                    overlayClassName={this.props.className} />
-            );            
+                    downloadData={this.props.downloadData}
+                    overlayClassName={this.props.className}
+                />
+            );
         });
-    }    
-        
+    }
+
     public render() {
         return (
             <span className={this.props.className}>

@@ -2,31 +2,31 @@ import * as React from 'react';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { IExternalToolProps, IExternalToolUrlParameters } from './IExternalTool';
+import {
+    IExternalToolProps,
+    IExternalToolUrlParameters,
+} from './IExternalTool';
 import { ExternalToolConfig } from './ExternalToolConfig';
 import './styles.scss';
 
-export class ExternalTool extends React.Component<
-    IExternalToolProps,
-    {  }
-> {
+export class ExternalTool extends React.Component<IExternalToolProps, {}> {
     constructor(props: IExternalToolProps) {
         super(props);
     }
-    
-    get config() : ExternalToolConfig {
+
+    get config(): ExternalToolConfig {
         return this.props.toolConfig;
     }
 
-    get urlParametersDefault() : IExternalToolUrlParameters {
-        return  {
+    // OPTIMIZE: this is computed when needed. It could be lazy, so it's only computed once, but it's unlikely to be called more than once per instance
+    get urlParametersDefault(): IExternalToolUrlParameters {
+        return {
             studyName: this.getSingleStudyName() ?? 'cBioPortal Data',
-        }
-    };
+        };
+    }
 
     // RETURNS: the name of the study for the current context, if exactly one study; null otherwise
-    getSingleStudyName() : string | null {
-
+    getSingleStudyName(): string | null {
         // extract the study name from the current context
         // CODEP: GroupComparisonPag stores a reference in the window, so when we are embedded there we can get details about which studies
         const groupComparisonPage = (window as any).groupComparisonPage;
@@ -34,7 +34,8 @@ export class ExternalTool extends React.Component<
             return null;
         }
 
-        const studies : CancerStudy[]= groupComparisonPage.store.displayedStudies.result;
+        const studies: CancerStudy[] =
+            groupComparisonPage.store.displayedStudies.result;
 
         if (studies.length === 1) {
             return studies[0].name;
@@ -43,12 +44,12 @@ export class ExternalTool extends React.Component<
         }
     }
 
-    handleLaunchReady = (urlParametersLaunch : IExternalToolUrlParameters) => {
+    handleLaunchReady = (urlParametersLaunch: IExternalToolUrlParameters) => {
         // assemble final available urlParameters
         const urlParameters = {
-            ... this.urlParametersDefault,
-            ... this.props.urlFormatOverrides, 
-            ... urlParametersLaunch
+            ...this.urlParametersDefault,
+            ...this.props.urlFormatOverrides,
+            ...urlParametersLaunch,
         };
 
         // e.g. url_format: 'avm://?-ProjectName=${studyName}'
@@ -59,22 +60,23 @@ export class ExternalTool extends React.Component<
         Object.keys(urlParameters).forEach(key => {
             const value = urlParameters[key];
             url = url.replace(new RegExp(`\\$\{${key}\}`, 'g'), value);
-        });            
+        });
 
         window.location.href = url;
-    }
+    };
 
     // TECH: pass data using Clipboard
     handleLaunchStart = () => {
-        console.log('ExternalTool.handleLaunchStart:' + this.props.toolConfig.id);
+        console.log(
+            'ExternalTool.handleLaunchStart:' + this.props.toolConfig.id
+        );
 
         if (this.props.downloadData) {
-
             // data to clipboard
             // OPTIMIZE: compress or use a more efficient format
             const data = this.props.downloadData();
 
-            var urlParametersLaunch : IExternalToolUrlParameters = {
+            var urlParametersLaunch: IExternalToolUrlParameters = {
                 dataLength: data.length,
             };
 
@@ -82,38 +84,50 @@ export class ExternalTool extends React.Component<
              * Clipboard API supported in Chrome 66+, Firefox 63+, Safari 10.1+, Edge 79+, Opera 53+
              */
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(data)
+                navigator.clipboard
+                    .writeText(data)
                     .then(() => {
-                        console.log('Data copied to clipboard - size:' + data.length);
+                        console.log(
+                            'Data copied to clipboard - size:' + data.length
+                        );
                         this.handleLaunchReady(urlParametersLaunch);
                     })
                     .catch(err => {
-                        console.error(this.config.name + ' - Could not copy text: ', err);
+                        console.error(
+                            this.config.name + ' - Could not copy text: ',
+                            err
+                        );
                     });
             } else {
                 // TODO: proper way to report a failure?
-                alert(this.config.name + ' launch failed: clipboard API is not avaialble.');
+                alert(
+                    this.config.name +
+                        ' launch failed: clipboard API is not avaialble.'
+                );
             }
         }
-    }
+    };
 
     public render() {
         const tool = this.props.toolConfig;
 
         return (
             <DefaultTooltip
-            overlay={<span>{tool.tooltip}</span>}
-            {...this.props.baseTooltipProps}
-            overlayClassName={this.props.overlayClassName}
-        >
-            <Button 
-                id={tool.id} 
-                className="btn-sm" 
-                onClick={this.handleLaunchStart}>
-                    <img className="downloadButtonImageExternalTool" 
-                        src={tool.iconImageSrc}/>
-            </Button>
-        </DefaultTooltip>
+                overlay={<span>{tool.tooltip}</span>}
+                {...this.props.baseTooltipProps}
+                overlayClassName={this.props.overlayClassName}
+            >
+                <Button
+                    id={tool.id}
+                    className="btn-sm"
+                    onClick={this.handleLaunchStart}
+                >
+                    <img
+                        className="downloadButtonImageExternalTool"
+                        src={tool.iconImageSrc}
+                    />
+                </Button>
+            </DefaultTooltip>
         );
-    }    
+    }
 }

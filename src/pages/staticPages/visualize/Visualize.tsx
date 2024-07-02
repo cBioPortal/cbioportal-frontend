@@ -52,7 +52,9 @@ export default Visualize;
 export default class Visualize extends React.Component<{}, {}> {
     public render() {
         // third party / external tools section
-        var shouldDisplay = getServerConfig().external_tools?.some(tool => tool.id === 'avm') ?? false;
+        var shouldDisplay =
+            getServerConfig().external_tools?.some(tool => tool.id === 'avm') ??
+            false;
         const externalTools = !shouldDisplay ? null : (
             <>
                 <hr></hr>
