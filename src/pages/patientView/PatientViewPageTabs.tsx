@@ -645,58 +645,61 @@ export function tabs(
             </MSKTab>
         );
 
-    tabs.push(
-        <MSKTab
-            key={8}
-            id="mutationalSignatures"
-            linkText="Mutational Signatures"
-            hide={
-                pageComponent.patientViewPageStore
-                    .mutationalSignatureMolecularProfiles.isPending ||
-                pageComponent.patientViewPageStore
-                    .initialMutationalSignatureVersion.isPending ||
-                _.isEmpty(
+    pageComponent.patientViewPageStore.hasMutationalSignatureData.result &&
+        pageComponent.patientViewPageStore.initialMutationalSignatureVersion
+            .isComplete &&
+        tabs.push(
+            <MSKTab
+                key={8}
+                id="mutationalSignatures"
+                linkText="Mutational Signatures"
+                hide={
                     pageComponent.patientViewPageStore
-                        .mutationalSignatureDataGroupByVersion.result
-                )
-            }
-        >
-            <MutationalSignaturesContainer
-                data={
+                        .mutationalSignatureMolecularProfiles.isPending ||
                     pageComponent.patientViewPageStore
-                        .mutationalSignatureDataGroupByVersion.result
+                        .initialMutationalSignatureVersion.isPending ||
+                    _.isEmpty(
+                        pageComponent.patientViewPageStore
+                            .mutationalSignatureDataGroupByVersion.result
+                    )
                 }
-                profiles={
-                    pageComponent.patientViewPageStore
-                        .mutationalSignatureMolecularProfiles.result
-                }
-                onVersionChange={
-                    pageComponent.onMutationalSignatureVersionChange
-                }
-                version={
-                    pageComponent.patientViewPageStore
-                        .selectedMutationalSignatureVersion
-                }
-                dataCount={
-                    pageComponent.patientViewPageStore
-                        .mutationalSignatureCountDataGroupedByVersion.result
-                }
-                sample={
-                    pageComponent.patientViewPageStore
-                        .selectedSampleMutationalSignatureData
-                }
-                samples={
-                    pageComponent.patientViewPageStore
-                        .samplesWithCountDataAvailable
-                }
-                samplesNotProfiled={
-                    pageComponent.patientViewPageStore
-                        .samplesNotProfiledForMutationalSignatures
-                }
-                onSampleChange={pageComponent.onSampleIdChange}
-            />
-        </MSKTab>
-    );
+            >
+                <MutationalSignaturesContainer
+                    data={
+                        pageComponent.patientViewPageStore
+                            .mutationalSignatureDataGroupByVersion.result
+                    }
+                    profiles={
+                        pageComponent.patientViewPageStore
+                            .mutationalSignatureMolecularProfiles.result
+                    }
+                    onVersionChange={
+                        pageComponent.onMutationalSignatureVersionChange
+                    }
+                    version={
+                        pageComponent.patientViewPageStore
+                            .selectedMutationalSignatureVersion
+                    }
+                    dataCount={
+                        pageComponent.patientViewPageStore
+                            .mutationalSignatureCountDataGroupedByVersion.result
+                    }
+                    sample={
+                        pageComponent.patientViewPageStore
+                            .selectedSampleMutationalSignatureData
+                    }
+                    samples={
+                        pageComponent.patientViewPageStore
+                            .samplesWithDataAvailable
+                    }
+                    samplesNotProfiled={
+                        pageComponent.patientViewPageStore
+                            .samplesNotProfiledForMutationalSignatures
+                    }
+                    onSampleChange={pageComponent.onSampleIdChange}
+                />
+            </MSKTab>
+        );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */

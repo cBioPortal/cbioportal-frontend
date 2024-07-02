@@ -131,8 +131,11 @@ export default class MutationalSignaturesContainer extends React.Component<
     @observable signatureToPlot: string = this.props.data[this.props.version][0]
         .meta.name;
     private plotSvg: SVGElement | null = null;
-    @observable signatureURL: string;
-    @observable signatureDescription: string;
+    @observable signatureURL: string = this.props.data[this.props.version][0]
+        .meta.url;
+    @observable signatureDescription: string = this.props.data[
+        this.props.version
+    ][0].meta.description;
     @observable isSignatureInformationToolTipVisible: boolean = false;
     @observable updateReferencePlot: boolean = false;
     public static defaultProps: Partial<IAxisScaleSwitchProps> = {
@@ -142,39 +145,9 @@ export default class MutationalSignaturesContainer extends React.Component<
     @observable
     selectedScale: string = AxisScale.PERCENT;
 
-    mutationalProfileSelection = (
-        childData: string,
-        visibility: boolean,
-        updateReference: boolean
-    ) => {
-        this.signatureProfile = childData;
-        this.updateReferencePlot = updateReference;
-        this.isSignatureInformationToolTipVisible = visibility;
-        this.signatureToPlot = updateReference
-            ? childData
-            : this.signatureToPlot;
-        this.signatureURL =
-            this.props.data[this.props.version].filter(obj => {
-                return childData === obj.meta.name;
-            }).length > 0
-                ? this.props.data[this.props.version].filter(obj => {
-                      return childData === obj.meta.name;
-                  })[0].meta.url
-                : '';
-        this.signatureDescription =
-            this.props.data[this.props.version].filter(obj => {
-                return childData === obj.meta.name;
-            }).length > 0
-                ? this.props.data[this.props.version].filter(obj => {
-                      return childData === obj.meta.name;
-                  })[0].meta.description
-                : 'No description available';
-    };
-
     constructor(props: IMutationalSignaturesContainerProps) {
         super(props);
         makeObservable(this);
-
         getBrowserWindow().moo = this;
 
         this.mutationalSignatureTableStore = new MutationalSignatureTableDataStore(
@@ -187,7 +160,6 @@ export default class MutationalSignaturesContainer extends React.Component<
     @observable _selectedData: IMutationalCounts[] = this.props.dataCount[
         this.props.version
     ];
-
     @computed get availableVersions() {
         // mutational signatures version is stored in the profile id
         // split the id by "_", the last part is the version info
@@ -198,14 +170,6 @@ export default class MutationalSignaturesContainer extends React.Component<
             .filter(item => item in this.props.data)
             .uniq()
             .value();
-    }
-
-    @computed get selectURLSignature(): string {
-        return this.props.data[this.props.version][0].meta.url;
-    }
-
-    @computed get selectDescriptionSignature(): string {
-        return this.props.data[this.props.version][0].meta.description;
     }
 
     @computed get selectedVersion(): string {
@@ -330,41 +294,6 @@ export default class MutationalSignaturesContainer extends React.Component<
     }
 
     @action.bound
-    updateYAxisDomain(obj: number) {
-        this.yMaxSliderValue = obj;
-    }
-
-    @computed get yMaxSlider(): any {
-        return (
-            <div
-                className={classnames('lollipop_mutation_plot__controls')}
-                style={{ display: 'flex', alignItems: 'center' }}
-            >
-                Y-axis Max:&nbsp;
-                <div style={{ width: 100 }}>
-                    <WrappedSlider
-                        min={1}
-                        max={100}
-                        tooltip={false}
-                        step={1}
-                        onChange={(val: number) => this.updateYAxisDomain(val)}
-                        defaultValue={100}
-                        value={this.yMaxSliderValue}
-                    />
-                </div>
-                {/*<input className={"form-control"} value={this.yMaxSliderValue} onInput={(obj)=>{*/}
-                {/*    if (_.isNumber(parseInt(obj.currentTarget.value))) {*/}
-                {/*        this.yMaxSliderValue = parseInt(obj.currentTarget.value);*/}
-                {/*    }*/}
-                {/*}}*/}
-                {/*/>*/}
-            </div>
-        );
-    }
-
-    @observable yMaxSliderValue = 100;
-
-    @action.bound
     private onVersionChange(option: { label: string; value: string }): void {
         this.props.onVersionChange(option.value);
         this.signatureProfile = this.props.data[option.value][0].meta.name;
@@ -396,6 +325,7 @@ export default class MutationalSignaturesContainer extends React.Component<
     onMutationalSignatureTableRowClick(d: IMutationalSignatureRow) {
         this.signatureProfile = d.name;
         this.signatureURL = d.url;
+        this.signatureDescription = d.description;
         this.signatureProfile = d.name;
         this.signatureToPlot = d.name;
         this.updateReferencePlot = true;
@@ -411,6 +341,7 @@ export default class MutationalSignaturesContainer extends React.Component<
     @autobind
     onMutationalSignatureTableMouseOver(d: IMutationalSignatureRow) {
         this.signatureProfile = d.name;
+        this.signatureDescription = d.description;
         this.signatureURL = d.url;
         this.signatureProfile = d.name;
     }
@@ -445,6 +376,35 @@ export default class MutationalSignaturesContainer extends React.Component<
                 : this.props.version;
         return [versionLabel, mutTotalCount];
     }
+
+    @action.bound
+    updateYAxisDomain(obj: number) {
+        this.yMaxSliderValue = obj;
+    }
+
+    @computed get yMaxSlider(): any {
+        return (
+            <div
+                className={classnames('lollipop_mutation_plot__controls')}
+                style={{ display: 'flex', alignItems: 'center' }}
+            >
+                Y-axis Max:&nbsp;
+                <div style={{ width: 100 }}>
+                    <WrappedSlider
+                        min={1}
+                        max={100}
+                        tooltip={false}
+                        step={1}
+                        onChange={(val: number) => this.updateYAxisDomain(val)}
+                        defaultValue={100}
+                        value={this.yMaxSliderValue}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    @observable yMaxSliderValue = 100;
 
     public render() {
         return (
@@ -653,24 +613,26 @@ export default class MutationalSignaturesContainer extends React.Component<
                         )}
 
                         <div style={{ marginTop: 20 }}>
-                            <p className={'text-center'}>
-                                Select a signature from the table to show the
-                                reference signature plot
-                            </p>
-                            <ClinicalInformationMutationalSignatureTable
-                                data={this.mutationalSignatureDataForTable}
-                                url={this.signatureURL}
-                                description={this.signatureDescription}
-                                signature={this.signatureProfile}
-                                samples={this.props.samples}
-                                onRowClick={
-                                    this.onMutationalSignatureTableRowClick
-                                }
-                                onRowMouseEnter={
-                                    this.onMutationalSignatureTableMouseOver
-                                }
-                                dataStore={this.mutationalSignatureTableStore}
-                            />
+                            <FeatureInstruction
+                                content={CONTENT_TO_SHOW_ABOVE_TABLE}
+                            >
+                                <ClinicalInformationMutationalSignatureTable
+                                    data={this.mutationalSignatureDataForTable}
+                                    url={this.signatureURL}
+                                    description={this.signatureDescription}
+                                    signature={this.signatureProfile}
+                                    samples={this.props.samples}
+                                    onRowClick={
+                                        this.onMutationalSignatureTableRowClick
+                                    }
+                                    onRowMouseEnter={
+                                        this.onMutationalSignatureTableMouseOver
+                                    }
+                                    dataStore={
+                                        this.mutationalSignatureTableStore
+                                    }
+                                />
+                            </FeatureInstruction>
                         </div>
                     </div>
                 )}

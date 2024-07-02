@@ -547,6 +547,7 @@ export function prepareMutationalSignatureDataForTable(
         .map((mutationalSignatureSampleData, name) => ({
             name,
             samples: mutationalSignatureSampleData,
+            description: mutationalSignatureSampleData[0].meta.description,
             url: mutationalSignatureSampleData[0].meta.url,
         }))
         .value();
@@ -554,10 +555,13 @@ export function prepareMutationalSignatureDataForTable(
         let mutationalSignatureRowForTable: IMutationalSignatureRow = {
             name: '',
             sampleValues: {},
+            description: '',
             url: '',
         };
 
         mutationalSignatureRowForTable.name = mutationalSignature.name;
+        mutationalSignatureRowForTable.description =
+            mutationalSignature.description;
         mutationalSignatureRowForTable.url = mutationalSignature.url;
         if (
             Object.keys(mutationalSignature.samples).length ===

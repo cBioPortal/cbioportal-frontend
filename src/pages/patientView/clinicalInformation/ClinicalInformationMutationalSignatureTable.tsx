@@ -34,6 +34,7 @@ export interface IMutationalSignatureRow {
             confidence: number;
         };
     };
+    description: string;
     url: string;
 }
 
@@ -74,15 +75,29 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                         <b>Signature: </b>
                         {this.props.signature}
                     </h5>
-                    <p style={{ fontSize: '12px' }}>
-                        <b>Description: </b>
-                        {this.props.description}
-                    </p>
-                    <p style={{ fontSize: '12px' }}>
-                        <a href={this.props.url} target="_blank">
-                            External link to signature (opens new tab)
-                        </a>
-                    </p>
+                    {this.props.description != '' && (
+                        <p style={{ fontSize: '12px' }}>
+                            <b>Description: </b>
+                            {this.props.description}
+                        </p>
+                    )}
+                    {this.props.description == '' && (
+                        <p style={{ fontSize: '12px' }}>
+                            No description annnotated in data
+                        </p>
+                    )}
+                    {this.props.url != '' && (
+                        <p style={{ fontSize: '12px' }}>
+                            <a href={this.props.url} target="_blank">
+                                External link to signature (opens new tab)
+                            </a>
+                        </p>
+                    )}
+                    {this.props.url == '' && (
+                        <p style={{ fontSize: '12px' }}>
+                            No url annnotated in data
+                        </p>
+                    )}
                 </div>
             </div>
         );
