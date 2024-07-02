@@ -99,7 +99,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                         confidence: 0.8,
                     },
                 },
-                description: 'Description  signature 1',
+                description: 'Description Signature 1',
                 url: 'COSMIC/FakeMutationalSignature1',
             },
             {
@@ -114,7 +114,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                         confidence: 0.01,
                     },
                 },
-                description: 'Description  signature 2',
+                description: 'Description Signature 2',
                 url: 'COSMIC/FakeMutationalSignature2',
             },
         ]);
