@@ -24,22 +24,17 @@ export class ExternalTool extends React.Component<
         }
     };
 
-    // RETURNS: the name of the study for the current context, if exactly one study
-    // - null if no studies, or more than one
+    // RETURNS: the name of the study for the current context, if exactly one study; null otherwise
     getSingleStudyName() : string | null {
 
         // extract the study name from the current context
-        // CODEP: GroupComparisonPag stores a reference in the window,
-        //  so when we are embedded there we can get details about which studies
+        // CODEP: GroupComparisonPag stores a reference in the window, so when we are embedded there we can get details about which studies
         const groupComparisonPage = (window as any).groupComparisonPage;
         if (!groupComparisonPage) {
             return null;
-
         }
-        const studies : CancerStudy[]= groupComparisonPage.store.displayedStudies.result;
 
-        // DEBUG
-        //console.log('Studies:' + studies.map(study => study.studyId).join(', '));
+        const studies : CancerStudy[]= groupComparisonPage.store.displayedStudies.result;
 
         if (studies.length === 1) {
             return studies[0].name;
@@ -48,19 +43,15 @@ export class ExternalTool extends React.Component<
         }
     }
 
-    /* TECH: looking for simplest ways to pass data to external tool.
-     * 1) base64 encode to URL: will not work in Windows with 8196 char limit.
-     * 2) clipboard: should work
-     * 3) open a WebSocket and pass URL: may work
-     */
-
     handleLaunchReady = (urlParametersLaunch : IExternalToolUrlParameters) => {
         // assemble final available urlParameters
-        const urlParameters = Object.assign(this.urlParametersDefault, 
-            this.props.urlFormatOverrides, 
-            urlParametersLaunch);
+        const urlParameters = {
+            ... this.urlParametersDefault,
+            ... this.props.urlFormatOverrides, 
+            ... urlParametersLaunch
+        };
 
-        // e.g. url_format: 'avm://?${downloadedFilePath}&-AutoMode=true&-ProjectNameHint=${studyName}'
+        // e.g. url_format: 'avm://?-ProjectName=${studyName}'
         const urlFormat = this.props.toolConfig.url_format;
 
         // Replace all parameter references in urlFormat with the appropriate property in urlParameters
@@ -80,7 +71,7 @@ export class ExternalTool extends React.Component<
         if (this.props.downloadData) {
 
             // data to clipboard
-            // OPTIMIZE: compress to base64, or use a more efficient format
+            // OPTIMIZE: compress or use a more efficient format
             const data = this.props.downloadData();
 
             var urlParametersLaunch : IExternalToolUrlParameters = {
