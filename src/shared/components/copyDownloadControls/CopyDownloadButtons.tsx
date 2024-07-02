@@ -6,6 +6,7 @@ import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 import { getServerConfig } from '../../../config/config';
 import { ExternalToolConfig } from '../ExternalTools/ExternalToolConfig';
 import { ExternalTool } from '../ExternalTools/ExternalTool';
+import { isExternalToolAvailable } from '../ExternalTools/ExternalToolConfigUtils';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
@@ -87,16 +88,18 @@ export class CopyDownloadButtons extends React.Component<
             return null;
         }
 
-        return config.map((tool, index) => {
-            return (
-                <ExternalTool
-                    toolConfig={tool}
-                    baseTooltipProps={this.baseTooltipProps}
-                    downloadData={this.props.downloadData}
-                    overlayClassName={this.props.className}
-                />
-            );
-        });
+        return config
+            .filter((tool: ExternalToolConfig) => isExternalToolAvailable(tool))
+            .map((tool: ExternalToolConfig, index: number) => {
+                return (
+                    <ExternalTool
+                        toolConfig={tool}
+                        baseTooltipProps={this.baseTooltipProps}
+                        downloadData={this.props.downloadData}
+                        overlayClassName={this.props.className}
+                    />
+                );
+            });
     }
 
     public render() {
