@@ -5,7 +5,7 @@ export type ExternalToolConfig = {
     name: string;
     tooltip: string;
     iconImageSrc: string;
-    required_installed_font_family: string;
+    required_installed_font_family?: string;
     url_format: string;
 };
 
