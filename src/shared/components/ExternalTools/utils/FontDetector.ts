@@ -69,7 +69,7 @@ export class FontDetector implements IFontDetector {
 
         // expose a detect() function that leverages that state
         this.detect = (font : string): boolean => {
-            console.log("detect:" + font);
+            // console.log("detect:" + font);
             for (var index in baseFonts) {
                 // name of the font along with the base font for fallback.
                 span.style.fontFamily = font + ',' + baseFonts[index]; 
