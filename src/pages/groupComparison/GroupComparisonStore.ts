@@ -17,7 +17,7 @@ import {
     Sample,
     MutationCountByPosition,
 } from 'cbioportal-ts-api-client';
-import { action, observable, makeObservable, computed } from 'mobx';
+import { action, observable, makeObservable, computed, _allowStateChangesInsideComputed } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
@@ -660,4 +660,13 @@ export default class GroupComparisonStore extends ComparisonStore {
             FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
         );
     }
+
+    // cache ExternalToolAvailable map so don't need to recompute too often
+    public isExternalToolAvailable = (id: string): boolean | undefined => {
+        return this._externalToolAvailable[id] || undefined;
+    }
+    public setIsExternalToolAvailable = (id: string, value: boolean): void => {
+        this._externalToolAvailable[id] = value;
+    }
+    private _externalToolAvailable: { [key: string]: boolean } = {}
 }

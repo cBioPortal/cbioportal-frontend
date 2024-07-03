@@ -1,14 +1,6 @@
 import { ExternalToolConfig } from './ExternalToolConfig';
 import { FontDetector } from './utils/FontDetector';
 
-// actually computes if font is installed
-const computeIsInstalled = (fontFamily: string): boolean => {
-    const detector = new FontDetector();
-    const result = detector.detect(fontFamily);
-    console.log("computeIsInstalled:" + result);
-    return result;
-};
-
 function checkToolRequirementsPlatform(toolConfig: ExternalToolConfig): boolean {
     console.log('checkToolRequirementsPlatform: ' + toolConfig.required_platform);
 
@@ -21,41 +13,20 @@ function checkToolRequirementsPlatform(toolConfig: ExternalToolConfig): boolean 
 
 // TECH: uses localStorage as cache so does not have to recompute
 function checkToolRequirementsFontFamily(toolConfig: ExternalToolConfig): boolean {
-    console.log('checkToolRequirementsFontFamily: ' + toolConfig.required_installed_font_family);
+    const fontFamily = toolConfig.required_installed_font_family;
+    console.log('checkToolRequirementsFontFamily: ' + fontFamily);
 
-    if (!toolConfig.required_installed_font_family) {
+    if (!fontFamily) {
         return true;
     }
 
-    // check cache
-    // TODO: add timeout to cache, or is F5 sufficient?
-    // fnord F5 is NOT working here
-    const cacheKey = 'fontFamilyInstalled_' + toolConfig.required_installed_font_family;
-    const cachedValue = localStorage.getItem(cacheKey);
-    if (cachedValue) {
-        const parsedValue = JSON.parse(cachedValue);
-        if (typeof parsedValue === 'boolean') {
-            //fnordtest
-            console.log('IsInstalled.Cache:' + parsedValue);
-            return parsedValue;
-        } else {
-            console.error('Unexpected cached value for fontFamilyIsInstalled');
-            // fall through to recompute
-        }
-    }
-
-    // compute and store in cache
-    const isInstalled = computeIsInstalled(toolConfig.required_installed_font_family);
-    localStorage.setItem(cacheKey, JSON.stringify(isInstalled));
-
-    //fnordtest
-    console.log('IsInstalled.Compute:' + isInstalled);
-
-    return isInstalled;
+    const detector = new FontDetector();
+    const result = detector.detect(fontFamily);
+    return result;
 }
 
-export function isExternalToolAvailable(toolConfig: ExternalToolConfig) : boolean {
-    console.log('isExternalToolAvailable: ' + toolConfig.name);
+function computeIsExternalToolAvaialble(toolConfig: ExternalToolConfig) : boolean {
+    // compute
     if (!checkToolRequirementsPlatform(toolConfig)) {
         return false;
     }
@@ -65,4 +36,37 @@ export function isExternalToolAvailable(toolConfig: ExternalToolConfig) : boolea
     }   
 
     return true;
+}
+
+// OPTIMIZE: pass store
+export function isExternalToolAvailable(toolConfig: ExternalToolConfig) : boolean {
+    console.log('isExternalToolAvailable: ' + toolConfig.name);
+
+    // check store
+    const groupComparisonPage = (window as any).groupComparisonPage;
+    try {
+        if (groupComparisonPage) {
+            var resultCached = groupComparisonPage.store.isExternalToolAvailable(toolConfig.id);
+            if (resultCached !== undefined) {
+                console.log('isExternalToolAvailable.Cache:' + resultCached);
+                return resultCached;
+            }
+        }
+    } catch (e) {
+        console.error('isExternalToolAvailable.GetCache.Exception:', e);
+    }
+
+    // compute and store the value
+    var resultComputed = computeIsExternalToolAvaialble(toolConfig);
+    console.log('isExternalToolAvailable.Computed:' + resultComputed);
+    try {
+        if (groupComparisonPage) {
+            groupComparisonPage.store.setIsExternalToolAvailable(toolConfig.id, resultComputed);
+            console.log('stored');
+        }
+    } catch (e) {
+        console.error('isExternalToolAvailable.SetCache.Exception:', e);
+    }
+
+    return resultComputed;
 }

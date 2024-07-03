@@ -64,7 +64,6 @@ export class FontDetector implements IFontDetector {
             html.appendChild(span);
             defaultWidth[baseFonts[index]] = span.offsetWidth; 
             defaultHeight[baseFonts[index]] = span.offsetHeight; 
-            console.log('baseFont:' + baseFonts[index] + ' width:' + defaultWidth[baseFonts[index]] + ' height:' + defaultHeight[baseFonts[index]] );
             html.removeChild(span);
         }
 
