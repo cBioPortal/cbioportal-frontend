@@ -25,6 +25,6 @@ describe('checkToolRequirementsFontFamily', () => {
     });
 
     it('should return false if the required font family is not installed', () => {
-        expect(isExternalToolAvailable(mockPropsDoesNotExist)).to.be.true;
+        expect(isExternalToolAvailable(mockPropsDoesNotExist)).to.be.false;
     });
 });

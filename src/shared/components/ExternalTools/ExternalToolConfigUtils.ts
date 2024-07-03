@@ -1,12 +1,16 @@
 import { ExternalToolConfig } from './ExternalToolConfig';
+import { FontDetector } from './utils/FontDetector';
 
 // actually computes if font is installed
 const computeIsInstalled = (fontFamily: string): boolean => {
-    var detector = new Detector();
-    return (detector.detect(fontFamily));
+    const detector = new FontDetector();
+    const result = detector.detect(fontFamily);
+    return result;
 };
 
 function checkToolRequirementsPlatform(toolConfig: ExternalToolConfig): boolean {
+    console.log('checkToolRequirementsPlatform: ' + toolConfig.required_platform);
+
     if (!toolConfig.required_platform) {
         return true;
     }
@@ -16,6 +20,8 @@ function checkToolRequirementsPlatform(toolConfig: ExternalToolConfig): boolean 
 
 // TECH: uses localStorage as cache so does not have to recompute
 function checkToolRequirementsFontFamily(toolConfig: ExternalToolConfig): boolean {
+    console.log('checkToolRequirementsFontFamily: ' + toolConfig.required_installed_font_family);
+
     if (!toolConfig.required_installed_font_family) {
         return true;
     }
@@ -47,6 +53,7 @@ function checkToolRequirementsFontFamily(toolConfig: ExternalToolConfig): boolea
 }
 
 export function isExternalToolAvailable(toolConfig: ExternalToolConfig) : boolean {
+    console.log('isExternalToolAvailable: ' + toolConfig.name);
     if (!checkToolRequirementsPlatform(toolConfig)) {
         return false;
     }

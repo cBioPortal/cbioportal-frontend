@@ -2,7 +2,7 @@ import { ICopyDownloadInputsProps } from '../copyDownloadControls/ICopyDownloadC
 import { ExternalToolConfig } from './ExternalToolConfig';
 
 // may be referenced from url_format
-export type IExternalToolUrlParameters {
+export type IExternalToolUrlParameters = {
     studyName?: string;
     dataLength?: string;
     // TECH: to add an indexing operator, TypeScript likes it when all properties are the same type
