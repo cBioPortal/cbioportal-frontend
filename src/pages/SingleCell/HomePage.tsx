@@ -122,6 +122,9 @@ interface HomePageState {
     heading: any;
     isHovered: any;
     hoveredSliceIndex: any;
+    stableIdBin: any;
+    profileTypeBin: any;
+    databinState: any;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -169,6 +172,9 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             heading: '',
             isHovered: false,
             hoveredSliceIndex: 0,
+            profileTypeBin: '',
+            stableIdBin: '',
+            databinState: [],
         };
     }
 
@@ -210,7 +216,10 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         let id = temp[profileType];
         let tempstudyId = id[0].value;
         this.setState({ heading: profileType });
+        this.setState({ stableIdBin: genericAssayEntityId });
+        this.setState({ profileTypeBin: tempstudyId });
         console.log(id, tempstudyId, 'this is the id');
+
         console.log(
             genericAssayEntityId,
             profileType,
@@ -236,6 +245,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         console.log(dataBins, 'convertedDataBins');
 
         // Update the dataBins state with fetched data
+        this.setState({ databinState: dataBins });
         this.setState({ dataBins });
     }
     @autobind
@@ -990,6 +1000,13 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     selectedEntity={this.state.selectedEntity}
                                     downloadData={BarDownloadData}
                                     heading={this.state.heading}
+                                    profileTypeBin={this.state.profileTypeBin}
+                                    stableIdBin={this.state.stableIdBin}
+                                    store={this.props.store}
+                                    databinState={this.state.databinState}
+                                    setDatabinState={(value: any) =>
+                                        this.setState({ databinState: value })
+                                    }
                                 />
                             ) : chartType === 'pie' ? (
                                 <PieChart

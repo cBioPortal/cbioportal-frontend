@@ -1,8 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { VictoryBar, VictoryChart, VictoryAxis, VictoryTooltip } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
+import {
+    DataBinMethodConstants,
+    StudyViewPageStore,
+} from 'pages/studyView/StudyViewPageStore';
 import BarChart1 from '../studyView/charts/barChart/BarChart';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import client from 'shared/api/cbioportalClientInstance';
 interface DataBin {
     id: string;
     count: number;
@@ -35,6 +41,11 @@ interface BarChartProps {
     downloadData: gaData[];
     selectedEntity: any;
     heading: any;
+    stableIdBin: any;
+    profileTypeBin: any;
+    store: StudyViewPageStore;
+    databinState: any;
+    setDatabinState: (value: any) => void;
 }
 
 const BarChart: React.FC<BarChartProps> = ({
@@ -42,8 +53,14 @@ const BarChart: React.FC<BarChartProps> = ({
     downloadData,
     selectedEntity,
     heading,
+    stableIdBin,
+    profileTypeBin,
+    store,
+    databinState,
+    setDatabinState,
 }) => {
     const [downloadOptionsVisible, setDownloadOptionsVisible] = useState(false);
+    const [optionsVisible, setOptionsVisible] = useState(false);
     const [filterNA, setFilterNA] = useState(false);
     const chartRef = useRef<HTMLDivElement>(null);
 
@@ -51,12 +68,32 @@ const BarChart: React.FC<BarChartProps> = ({
         setFilterNA(e.target.checked);
     };
 
+    const fetchDataBins = async (editedArray: any) => {
+        const gaDataBins = await internalClient.fetchGenericAssayDataBinCountsUsingPOST(
+            {
+                dataBinMethod: DataBinMethodConstants.STATIC,
+                genericAssayDataBinCountFilter: {
+                    genericAssayDataBinFilters: [
+                        {
+                            stableId: stableIdBin,
+                            profileType: profileTypeBin,
+                            customBins: editedArray,
+                        },
+                    ] as any,
+                    studyViewFilter: store.filters,
+                },
+            }
+        );
+        console.log(gaDataBins, 'gaDataBins-2');
+        setDatabinState(gaDataBins);
+    };
+
     const filteredData = !filterNA
-        ? dataBins.filter(bin => bin.specialValue !== 'NA')
-        : dataBins;
+        ? databinState.filter((bin: any) => bin.specialValue !== 'NA')
+        : databinState;
 
     const xAxisLabels: string[] = [];
-    filteredData.forEach(bin => {
+    filteredData.forEach((bin: any) => {
         if (bin.specialValue === '<=') {
             xAxisLabels.push(`<= ${bin.end}`);
         } else if (bin.specialValue === '>') {
@@ -77,7 +114,7 @@ const BarChart: React.FC<BarChartProps> = ({
         return parseLabel(a) - parseLabel(b);
     });
 
-    const processedData: Datum[] = filteredData.map(bin => {
+    const processedData: Datum[] = filteredData.map((bin: any) => {
         let label = '';
         let range = '';
         let alignment = '';
@@ -213,207 +250,319 @@ const BarChart: React.FC<BarChartProps> = ({
     const formattedXAxisLabels = xAxisLabels
         .filter(label => !label.startsWith('<=') && !label.startsWith('>'))
         .join(', ');
-    const handleShowXAxisValues = () => {
+    const handleCustomDatabins = () => {
         setShowXAxisValuesModal(true);
     };
 
     const handleCloseXAxisValuesModal = () => {
         setShowXAxisValuesModal(false);
     };
+    console.log(formattedXAxisLabels, 'formattedCX');
+    const [editValues, setEditValues] = useState(formattedXAxisLabels);
+
+    useEffect(() => {
+        setEditValues(formattedXAxisLabels);
+    }, [formattedXAxisLabels]);
+    const isCommaSeparatedNumeric = (input: string) => {
+        const trimmedInput = input.replace(/\s/g, ''); // Remove all whitespace
+        const regex = /^(\d+(,\d+)*)?$/; // Allow optional leading or trailing commas
+        return regex.test(trimmedInput);
+    };
+
+    // State for validation message
+    const [validationMessage, setValidationMessage] = useState('');
+    const handleSave = () => {
+        if (!isCommaSeparatedNumeric(editValues)) {
+            setValidationMessage(
+                'Please enter valid comma-separated numeric values.'
+            );
+        } else {
+            console.log('Edited values:', editValues);
+            // fetchDataBins(editValues);
+            const editedValuesArray = editValues
+                .split(',') // Split by commas
+                .map(value => Number(value.trim())); // Convert each trimmed substring to a number
+
+            console.log('Edited values array:', editedValuesArray);
+            fetchDataBins(editedValuesArray);
+            setValidationMessage('');
+            handleCloseXAxisValuesModal();
+        }
+    };
     console.log(selectedEntity, 'selectedEntity side');
     return (
-        <div
-            id="div-to-download"
-            style={{ textAlign: 'center', position: 'relative' }}
-        >
-            <h2>
-                {heading && heading.length > 0
-                    ? heading.replace(/_/g, ' ')
-                    : 'No Data'}
-            </h2>
-            <label
-                style={{
-                    display: 'block',
-                    marginBottom: '10px',
-                    marginTop: '10px',
-                    textAlign: 'end',
-                }}
-            >
-                <input
-                    type="checkbox"
-                    checked={filterNA}
-                    onChange={handleCheckboxChange}
-                />{' '}
-                Show NA values
-            </label>
-
-            {processedData.length !== 0 && (
-                <div ref={chartRef}>
-                    <VictoryChart
-                        theme={CBIOPORTAL_VICTORY_THEME}
-                        domainPadding={{ x: 15, y: 20 }}
-                        height={400}
-                        width={640}
-                        padding={{
-                            bottom: 80,
-                            left: 60,
-                            right: 60,
-                        }}
-                    >
-                        <VictoryAxis
-                            label={`Absolute/Relative Counts (${selectedEntity?.stableId})`}
-                            style={{
-                                tickLabels: { angle: 45, textAnchor: 'start' },
-                                axisLabel: { padding: 50, fontSize: 15 },
-                            }}
-                            tickValues={xAxisLabels}
-                        />
-                        <VictoryAxis
-                            label="No. of Samples"
-                            style={{
-                                axisLabel: { padding: 30, fontSize: 15 },
-                            }}
-                            dependentAxis
-                        />
-                        <VictoryBar
-                            data={processedData}
-                            barWidth={600 / processedData.length - 7}
-                            alignment={'start'}
-                            // alignment={(data:any)=>{
-                            //    data.alignment
-                            // }}
-                            labels={(data: any) =>
-                                `Number of samples: ${data.count}\nRange: ${data.range}`
-                            }
-                            labelComponent={
-                                <VictoryTooltip
-                                    cornerRadius={5}
-                                    style={{ fontSize: 14 }}
-                                    flyoutStyle={{
-                                        fill: 'white',
-                                        stroke: 'black',
-                                        strokeWidth: 1,
-                                    }}
-                                    flyoutPadding={{
-                                        top: 5,
-                                        bottom: 5,
-                                        left: 10,
-                                        right: 10,
-                                    }}
-                                />
-                            }
-                            style={{ data: { fill: '#2986E2' } }}
-                        />
-                    </VictoryChart>
-                </div>
-            )}
-            <button
-                onClick={handleShowXAxisValues}
-                style={{
-                    position: 'absolute',
-                    bottom: '20px',
-                    right: '20px',
-                    padding: '10px',
-                    cursor: 'pointer',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    backgroundColor: '#fff',
-                    zIndex: 100,
-                }}
-            >
-                Show X-Axis Values
-            </button>
+        <>
             <div
-                className="exclude-from-svg"
+                id="div-to-download"
                 style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: '30px',
-                    cursor: 'pointer',
-                    border: '1px solid lightgrey',
-                    padding: '5px',
-                    borderRadius: '4px',
-                    transition: 'background-color 0.3s ease',
-                    zIndex: 10,
+                    textAlign: 'center',
+                    position: 'relative',
+                    marginBottom: '20px',
                 }}
-                onMouseEnter={() => setDownloadOptionsVisible(true)}
-                onMouseLeave={() => setDownloadOptionsVisible(false)}
             >
-                <i className="fa fa-cloud-download" aria-hidden="true" />
-                {downloadOptionsVisible && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: '30px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            backgroundColor: 'white',
-                            boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-                            zIndex: 20,
-                            borderRadius: '4px',
-                            overflow: 'hidden',
-                            transition: 'opacity 0.3s ease-out',
-                            opacity: downloadOptionsVisible ? 1 : 0,
-                        }}
-                    >
-                        <div
-                            style={{
-                                padding: '8px',
-                                cursor: 'pointer',
-                                borderBottom: '1px solid #ddd',
-                                transition: 'background-color 0.3s ease',
+                <h2>
+                    {heading && heading.length > 0
+                        ? heading.replace(/_/g, ' ')
+                        : 'No Data'}
+                </h2>
+                <label
+                    style={{
+                        display: 'block',
+                        marginBottom: '10px',
+                        marginTop: '10px',
+                        textAlign: 'end',
+                    }}
+                >
+                    <input
+                        type="checkbox"
+                        checked={filterNA}
+                        onChange={handleCheckboxChange}
+                    />{' '}
+                    Show NA values
+                </label>
+
+                {processedData.length !== 0 && (
+                    <div ref={chartRef}>
+                        <VictoryChart
+                            theme={CBIOPORTAL_VICTORY_THEME}
+                            domainPadding={{ x: 15, y: 20 }}
+                            height={400}
+                            width={640}
+                            padding={{
+                                bottom: 80,
+                                left: 60,
+                                right: 60,
                             }}
-                            onClick={handleDownloadPDFWrapper}
-                            onMouseEnter={e =>
-                                (e.currentTarget.style.backgroundColor =
-                                    '#f0f0f0')
-                            }
-                            onMouseLeave={e =>
-                                (e.currentTarget.style.backgroundColor =
-                                    'white')
-                            }
                         >
-                            PDF
-                        </div>
-                        <div
-                            style={{
-                                padding: '8px',
-                                cursor: 'pointer',
-                                transition: 'background-color 0.3s ease',
-                            }}
-                            onClick={handleDownload}
-                            onMouseEnter={e =>
-                                (e.currentTarget.style.backgroundColor =
-                                    '#f0f0f0')
-                            }
-                            onMouseLeave={e =>
-                                (e.currentTarget.style.backgroundColor =
-                                    'white')
-                            }
-                        >
-                            SVG
-                        </div>
-                        <div
-                            style={{
-                                padding: '8px',
-                                cursor: 'pointer',
-                                transition: 'background-color 0.3s ease',
-                            }}
-                            onClick={handleDownloadData}
-                            onMouseEnter={e =>
-                                (e.currentTarget.style.backgroundColor =
-                                    '#f0f0f0')
-                            }
-                            onMouseLeave={e =>
-                                (e.currentTarget.style.backgroundColor =
-                                    'white')
-                            }
-                        >
-                            Data
-                        </div>
+                            <VictoryAxis
+                                label={`Absolute/Relative Counts (${selectedEntity?.stableId})`}
+                                style={{
+                                    tickLabels: {
+                                        angle: 45,
+                                        textAnchor: 'start',
+                                    },
+                                    axisLabel: { padding: 50, fontSize: 15 },
+                                }}
+                                tickValues={xAxisLabels}
+                            />
+                            <VictoryAxis
+                                label="No. of Samples"
+                                style={{
+                                    axisLabel: { padding: 30, fontSize: 15 },
+                                }}
+                                dependentAxis
+                            />
+                            <VictoryBar
+                                data={processedData}
+                                barWidth={600 / processedData.length - 7}
+                                alignment={'start'}
+                                labels={(data: any) =>
+                                    `Number of samples: ${data.count}\nRange: ${data.range}`
+                                }
+                                labelComponent={
+                                    <VictoryTooltip
+                                        cornerRadius={5}
+                                        style={{ fontSize: 14 }}
+                                        flyoutStyle={{
+                                            fill: 'white',
+                                            stroke: 'black',
+                                            strokeWidth: 1,
+                                        }}
+                                        flyoutPadding={{
+                                            top: 5,
+                                            bottom: 5,
+                                            left: 10,
+                                            right: 10,
+                                        }}
+                                    />
+                                }
+                                style={{ data: { fill: '#2986E2' } }}
+                            />
+                        </VictoryChart>
                     </div>
                 )}
+
+                <div
+                    className="exclude-from-svg"
+                    style={{
+                        position: 'absolute',
+                        top: '0',
+                        right: '0',
+                        cursor: 'pointer',
+                        zIndex: 100,
+                    }}
+                    onMouseLeave={() => {
+                        setOptionsVisible(false);
+                        setDownloadOptionsVisible(false);
+                    }}
+                >
+                    <i
+                        className="fa fa-ellipsis-v"
+                        aria-hidden="true"
+                        onMouseEnter={() => setOptionsVisible(true)}
+                        style={{
+                            padding: '10px',
+                            borderRadius: '50%',
+                            border: '1px solid lightgrey',
+                            transition: 'background-color 0.3s ease',
+                        }}
+                    />
+                    {optionsVisible && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                backgroundColor: 'white',
+                                boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+                                zIndex: 200,
+                                borderRadius: '4px',
+                                overflow: 'hidden',
+                                minWidth: '160px',
+                                textAlign: 'center',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    padding: '8px',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #ddd',
+                                    transition: 'background-color 0.3s ease',
+                                }}
+                                onClick={() =>
+                                    setDownloadOptionsVisible(
+                                        !downloadOptionsVisible
+                                    )
+                                }
+                                onMouseEnter={e =>
+                                    (e.currentTarget.style.backgroundColor =
+                                        '#f0f0f0')
+                                }
+                                onMouseLeave={e =>
+                                    (e.currentTarget.style.backgroundColor =
+                                        'white')
+                                }
+                            >
+                                <span style={{ marginRight: '8px' }}>
+                                    <i className="fa fa-download" />
+                                </span>
+                                Download{' '}
+                                <span style={{ fontSize: '12px' }}>
+                                    {downloadOptionsVisible ? '▲' : '▼'}
+                                </span>
+                            </div>
+                            {downloadOptionsVisible && (
+                                <div
+                                    style={{
+                                        backgroundColor: 'white',
+                                        boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+                                        zIndex: 200,
+                                        borderRadius: '4px',
+                                        overflow: 'hidden',
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            padding: '8px',
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #ddd',
+                                            transition:
+                                                'background-color 0.3s ease',
+                                        }}
+                                        onClick={handleDownloadPDFWrapper}
+                                        onMouseEnter={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                '#f0f0f0')
+                                        }
+                                        onMouseLeave={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                'white')
+                                        }
+                                    >
+                                        <i
+                                            className="fa fa-file-pdf-o"
+                                            style={{
+                                                marginRight: '8px',
+                                            }}
+                                        />
+                                        PDF
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: '8px',
+                                            cursor: 'pointer',
+                                            transition:
+                                                'background-color 0.3s ease',
+                                        }}
+                                        onClick={handleDownload}
+                                        onMouseEnter={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                '#f0f0f0')
+                                        }
+                                        onMouseLeave={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                'white')
+                                        }
+                                    >
+                                        <i
+                                            className="fa fa-file-image-o"
+                                            style={{
+                                                marginRight: '8px',
+                                            }}
+                                        />
+                                        SVG
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: '8px',
+                                            cursor: 'pointer',
+                                            transition:
+                                                'background-color 0.3s ease',
+                                        }}
+                                        onClick={handleDownloadData}
+                                        onMouseEnter={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                '#f0f0f0')
+                                        }
+                                        onMouseLeave={e =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                'white')
+                                        }
+                                    >
+                                        <i
+                                            className="fa fa-database"
+                                            style={{
+                                                marginRight: '8px',
+                                            }}
+                                        />
+                                        Data
+                                    </div>
+                                </div>
+                            )}
+                            <div
+                                style={{
+                                    padding: '8px',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #ddd',
+                                    transition: 'background-color 0.3s ease',
+                                }}
+                                onClick={handleCustomDatabins}
+                                onMouseEnter={e =>
+                                    (e.currentTarget.style.backgroundColor =
+                                        '#f0f0f0')
+                                }
+                                onMouseLeave={e =>
+                                    (e.currentTarget.style.backgroundColor =
+                                        'white')
+                                }
+                            >
+                                Custom Databins
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
+
             {showXAxisValuesModal && (
                 <div
                     style={{
@@ -422,34 +571,120 @@ const BarChart: React.FC<BarChartProps> = ({
                         left: 0,
                         width: '100%',
                         height: '100%',
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        zIndex: 200,
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        zIndex: 300,
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
+                        padding: '20px',
                     }}
                     onClick={handleCloseXAxisValuesModal}
                 >
                     <div
                         style={{
                             backgroundColor: '#fff',
-                            padding: '20px',
-                            borderRadius: '4px',
-                            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
-                            maxWidth: '80%',
+                            padding: '30px',
+                            borderRadius: '8px',
+                            boxShadow: '0 0 20px rgba(0,0,0,0.5)',
+                            maxWidth: '600px',
+                            width: '100%',
                             maxHeight: '80%',
                             overflow: 'auto',
                         }}
                         onClick={e => e.stopPropagation()}
                     >
-                        <h3>X-Axis Tick Values</h3>
-                        <div style={{ whiteSpace: 'nowrap' }}>
-                            {formattedXAxisLabels}
+                        <h3 style={{ marginBottom: '20px' }}>
+                            Please specify bin boundaries of the x axis
+                        </h3>
+                        <textarea
+                            value={editValues}
+                            onChange={e => {
+                                setEditValues(e.target.value);
+                                setValidationMessage('');
+                            }}
+                            style={{
+                                width: '100%',
+                                height: '100px',
+                                marginBottom: '10px',
+                                padding: '10px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                fontSize: '14px',
+                                resize: 'none',
+                                outline: 'none',
+                            }}
+                            onFocus={e =>
+                                (e.target.style.border = '1px solid #007bff')
+                            }
+                            onBlur={e =>
+                                (e.target.style.border = '1px solid #ccc')
+                            }
+                        />
+                        {validationMessage && (
+                            <div style={{ color: 'red', marginBottom: '10px' }}>
+                                {validationMessage}
+                            </div>
+                        )}
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                            }}
+                        >
+                            <button
+                                onClick={handleSave}
+                                style={{
+                                    marginRight: '10px',
+                                    padding: '8px 16px', // Adjusted padding to make the button smaller
+                                    backgroundColor: '#007bff',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    transition: 'background-color 0.3s ease',
+                                }}
+                                onMouseEnter={e =>
+                                    isCommaSeparatedNumeric(editValues) &&
+                                    (e.currentTarget.style.backgroundColor =
+                                        '#0056b3')
+                                }
+                                onMouseLeave={e =>
+                                    isCommaSeparatedNumeric(editValues) &&
+                                    (e.currentTarget.style.backgroundColor =
+                                        '#007bff')
+                                }
+                            >
+                                Update
+                            </button>
+                            <button
+                                onClick={handleCloseXAxisValuesModal}
+                                style={{
+                                    padding: '8px 16px', // Adjusted padding to make the button smaller
+                                    backgroundColor: '#6c757d',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    transition: 'background-color 0.3s ease',
+                                }}
+                                onMouseEnter={e =>
+                                    (e.currentTarget.style.backgroundColor =
+                                        '#5a6268')
+                                }
+                                onMouseLeave={e =>
+                                    (e.currentTarget.style.backgroundColor =
+                                        '#6c757d')
+                                }
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 
