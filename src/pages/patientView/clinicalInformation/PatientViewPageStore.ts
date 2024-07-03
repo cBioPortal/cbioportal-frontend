@@ -902,12 +902,17 @@ export class PatientViewPageStore {
             .filter(item => item.sampleId === sampleToFilter)
             .map(item => item.uniqueSampleKey);
     }
-    @computed get samplesWithCountDataAvailable(): string[] {
+
+    @computed get samplesWithDataAvailable(): string[] {
         return this.fetchAllMutationalSignatureData.result
-            .filter(data =>
-                data.molecularProfileId.includes(
-                    MutationalSignatureStableIdKeyWord.MutationalSignatureCountKeyWord
-                )
+            .filter(
+                data =>
+                    data.molecularProfileId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureCountKeyWord
+                    ) ||
+                    data.molecularProfileId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureContributionKeyWord
+                    )
             )
             .map(sample => sample.sampleId)
             .filter((value, index, self) => self.indexOf(value) === index);
@@ -918,7 +923,7 @@ export class PatientViewPageStore {
             sample => sample.sampleId
         );
         return allSamples.filter(
-            element => !this.samplesWithCountDataAvailable.includes(element)
+            element => !this.samplesWithDataAvailable.includes(element)
         );
     }
 
