@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ExternalToolConfig} from './ExternalToolConfig';
+import { ExternalToolConfig } from './ExternalToolConfig';
 import { isExternalToolAvailable } from './ExternalToolConfigUtils';
 
 describe('checkToolRequirementsFontFamily', () => {
@@ -14,7 +14,6 @@ describe('checkToolRequirementsFontFamily', () => {
     const mockPropsDoesExist = {
         required_installed_font_family: 'Arial',
     } as ExternalToolConfig;
-
 
     it('should return true if required_installed_font_family is not provided', () => {
         expect(isExternalToolAvailable(mockPropsUndefined)).to.be.true;

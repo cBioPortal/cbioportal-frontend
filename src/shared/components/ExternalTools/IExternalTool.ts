@@ -1,4 +1,3 @@
-import { ICopyDownloadInputsProps } from '../copyDownloadControls/ICopyDownloadControls';
 import { ExternalToolConfig } from './ExternalToolConfig';
 
 // may be referenced from url_format
@@ -6,8 +5,8 @@ export type IExternalToolUrlParameters = {
     studyName?: string;
     dataLength?: string;
     // TECH: to add an indexing operator, TypeScript likes it when all properties are the same type
-    [key: string]: string | undefined; 
-}
+    [key: string]: string | undefined;
+};
 
 // Now, when you use urlParameters, TypeScript knows it can be indexed with a string.
 

@@ -1,8 +1,9 @@
 import { ExternalToolConfig } from './ExternalToolConfig';
 import { FontDetector } from './utils/FontDetector';
 
-function checkToolRequirementsPlatform(toolConfig: ExternalToolConfig): boolean {
-
+function checkToolRequirementsPlatform(
+    toolConfig: ExternalToolConfig
+): boolean {
     if (!toolConfig.required_platform) {
         return true;
     }
@@ -11,7 +12,9 @@ function checkToolRequirementsPlatform(toolConfig: ExternalToolConfig): boolean 
 }
 
 // TECH: uses localStorage as cache so does not have to recompute
-function checkToolRequirementsFontFamily(toolConfig: ExternalToolConfig): boolean {
+function checkToolRequirementsFontFamily(
+    toolConfig: ExternalToolConfig
+): boolean {
     const fontFamily = toolConfig.required_installed_font_family;
 
     if (!fontFamily) {
@@ -23,7 +26,9 @@ function checkToolRequirementsFontFamily(toolConfig: ExternalToolConfig): boolea
     return result;
 }
 
-function computeIsExternalToolAvaialble(toolConfig: ExternalToolConfig) : boolean {
+function computeIsExternalToolAvaialble(
+    toolConfig: ExternalToolConfig
+): boolean {
     // compute
     if (!checkToolRequirementsPlatform(toolConfig)) {
         return false;
@@ -31,19 +36,23 @@ function computeIsExternalToolAvaialble(toolConfig: ExternalToolConfig) : boolea
 
     if (!checkToolRequirementsFontFamily(toolConfig)) {
         return false;
-    }   
+    }
 
     return true;
 }
 
 // OPTIMIZE: pass store
-export function isExternalToolAvailable(toolConfig: ExternalToolConfig) : boolean {
+export function isExternalToolAvailable(
+    toolConfig: ExternalToolConfig
+): boolean {
     // check store
     // CODEP: relies on exitence of groupComparisonPage in window and exposed functions
     const groupComparisonPage = (window as any).groupComparisonPage;
     try {
         if (groupComparisonPage) {
-            var resultCached = groupComparisonPage.store.isExternalToolAvailable(toolConfig.id);
+            var resultCached = groupComparisonPage.store.isExternalToolAvailable(
+                toolConfig.id
+            );
             if (resultCached !== undefined) {
                 // console.log('isExternalToolAvailable.Cache:' + resultCached);
                 return resultCached;
@@ -58,7 +67,10 @@ export function isExternalToolAvailable(toolConfig: ExternalToolConfig) : boolea
     // console.log('isExternalToolAvailable.Computed:' + resultComputed);
     try {
         if (groupComparisonPage) {
-            groupComparisonPage.store.setIsExternalToolAvailable(toolConfig.id, resultComputed);
+            groupComparisonPage.store.setIsExternalToolAvailable(
+                toolConfig.id,
+                resultComputed
+            );
         }
     } catch (e) {
         console.error('isExternalToolAvailable.SetCache.Exception:', e);

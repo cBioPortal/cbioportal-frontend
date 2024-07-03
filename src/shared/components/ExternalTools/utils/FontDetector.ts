@@ -1,6 +1,6 @@
-/** 
+/**
  * TypeScript class to detect if a font is installed
- * 
+ *
  * ORIGINAL HEADER:
  * JavaScript code to detect available availability of a
  * particular font in a browser using JavaScript and CSS.
@@ -38,7 +38,7 @@ export class FontDetector implements IFontDetector {
 
     // we use m or w because these two characters take up the maximum width.
     // And we use a LLi so that the same matching fonts can get separated
-    testString = "mmmmmmmmmmlli";
+    testString = 'mmmmmmmmmmlli';
 
     // we test using 72px font size, we may use any size. I guess larger the better.
     testSize = '72px';
@@ -47,41 +47,43 @@ export class FontDetector implements IFontDetector {
 
     constructor() {
         // precompute for the test
-        var defaultWidth: {[key: string]: number} = {};
-        var defaultHeight: {[key: string]: number} = {};
+        var defaultWidth: { [key: string]: number } = {};
+        var defaultHeight: { [key: string]: number } = {};
 
-        var html = document.getElementsByTagName("body")[0];
+        var html = document.getElementsByTagName('body')[0];
 
         // create a SPAN in the document to get the width of the text we use to test
-        var span = document.createElement("span");
+        var span = document.createElement('span');
         span.style.fontSize = this.testSize;
         span.innerHTML = this.testString;
 
-        const baseFonts = this.baseFonts; 
+        const baseFonts = this.baseFonts;
         for (var index in baseFonts) {
             //get the default width for the three base fonts
             span.style.fontFamily = baseFonts[index];
             html.appendChild(span);
-            defaultWidth[baseFonts[index]] = span.offsetWidth; 
-            defaultHeight[baseFonts[index]] = span.offsetHeight; 
+            defaultWidth[baseFonts[index]] = span.offsetWidth;
+            defaultHeight[baseFonts[index]] = span.offsetHeight;
             html.removeChild(span);
         }
 
         // expose a detect() function that leverages that state
-        this.detect = (font : string): boolean => {
+        this.detect = (font: string): boolean => {
             // console.log("detect:" + font);
             for (var index in baseFonts) {
                 // name of the font along with the base font for fallback.
-                span.style.fontFamily = font + ',' + baseFonts[index]; 
+                span.style.fontFamily = font + ',' + baseFonts[index];
                 // add the span with the test font, and see if it's actually using a baseFont
                 html.appendChild(span);
-                var matched = (span.offsetWidth != defaultWidth[baseFonts[index]] || span.offsetHeight != defaultHeight[baseFonts[index]]);
+                var matched =
+                    span.offsetWidth != defaultWidth[baseFonts[index]] ||
+                    span.offsetHeight != defaultHeight[baseFonts[index]];
                 html.removeChild(span);
                 if (matched) {
                     return true;
                 }
             }
             return false;
-        }
+        };
     }
-};
+}

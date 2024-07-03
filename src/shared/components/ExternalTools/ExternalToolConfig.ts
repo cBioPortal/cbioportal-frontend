@@ -1,7 +1,4 @@
 // define an ExternalTool to display in CopyDownloadButtons
-
-import { parsed } from "yargs";
-
 // clicking on the button will launch it using the url_format
 export type ExternalToolConfig = {
     id: string;

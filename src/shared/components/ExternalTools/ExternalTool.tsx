@@ -46,7 +46,7 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
 
     handleLaunchReady(urlParametersLaunch: IExternalToolUrlParameters) {
         // assemble final available urlParameters
-        const urlParameters : IExternalToolUrlParameters = {
+        const urlParameters: IExternalToolUrlParameters = {
             ...this.urlParametersDefault,
             ...this.props.urlFormatOverrides,
             ...urlParametersLaunch,
@@ -58,9 +58,12 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
         // Replace all parameter references in urlFormat with the appropriate property in urlParameters
         var url = urlFormat;
         Object.keys(urlParameters).forEach(key => {
-            const value = urlParameters[key] ?? "";
+            const value = urlParameters[key] ?? '';
             // TECH: location.href.set will actually encode the value, but we do it here for deterministic results with unit tests
-            url = url.replace(new RegExp(`\\$\{${key}\}`, 'g'), encodeURIComponent(value));
+            url = url.replace(
+                new RegExp(`\\$\{${key}\}`, 'g'),
+                encodeURIComponent(value)
+            );
         });
 
         window.location.href = url;
@@ -68,7 +71,9 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
 
     // pass data using Clipboard to the external tool
     handleLaunchStart() {
-        console.log('ExternalTool.handleLaunchStart:' + this.props.toolConfig.id);
+        console.log(
+            'ExternalTool.handleLaunchStart:' + this.props.toolConfig.id
+        );
 
         if (this.props.downloadData) {
             // data to clipboard
