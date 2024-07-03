@@ -5,6 +5,7 @@ import { FontDetector } from './utils/FontDetector';
 const computeIsInstalled = (fontFamily: string): boolean => {
     const detector = new FontDetector();
     const result = detector.detect(fontFamily);
+    console.log("computeIsInstalled:" + result);
     return result;
 };
 
@@ -28,7 +29,8 @@ function checkToolRequirementsFontFamily(toolConfig: ExternalToolConfig): boolea
 
     // check cache
     // TODO: add timeout to cache, or is F5 sufficient?
-    const cacheKey = 'fontFamilyIsInstalled_' + toolConfig.required_installed_font_family;
+    // fnord F5 is NOT working here
+    const cacheKey = 'fontFamilyInstalled_' + toolConfig.required_installed_font_family;
     const cachedValue = localStorage.getItem(cacheKey);
     if (cachedValue) {
         const parsedValue = JSON.parse(cachedValue);
