@@ -17,9 +17,9 @@ Note: you can check the frontend version of the live instance by checking `windo
 Make sure you have installed the node version and yarn version specified in
 [package.json](https://github.com/cBioPortal/cbioportal-frontend/blob/master/package.json).
 
-> **Tip:**  We recommend that you use [nvm:  Node Version Manager](https://github.com/nvm-sh/nvm) to switch between versions more easily.
+> **Tip:**  For node, we recommend that you use [nvm:  Node Version Manager](https://github.com/nvm-sh/nvm) to switch between versions easily.
 
-> **Tip:** For yarn versions, you can use [yarn set version](https://yarnpkg.com/cli/set/version) or `npm install yarn@(version)`.
+> **Tip:** For yarn, you can use [yarn set version](https://yarnpkg.com/cli/set/version) or `npm install yarn@(version)`.
 
 > **Windows Tip:** If you are developing on Windows, we recommend that you use [Ubuntu / Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
@@ -54,7 +54,7 @@ export BRANCH_ENV=master # or rc if branching from rc
 yarn run start
 ```
 
-> **Tip:** BRANCH_ENV should be set to `master` or `rc`, and not to your local branch name.
+> **Tip:** BRANCH_ENV should be set to `master` or `rc`, and not to your local branch name. You can set this in your ~/.bashrc if you don't intend to change it often.
 
 Example pages:
  - http://localhost:3000/
@@ -365,18 +365,11 @@ Please make sure to not introduce any dependencies from `cbioportal-frontend` wo
 
 When running on a Windows environment, use [WSL: Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10). You will be able to run a linux shell, which is necessary for many of the scripts used. You will also be able to use it concurrently with Windows applications.
 
-Make sure the git repo is cloned under the WSL file system (under your home directory).  If you instead clone it to the Windows file system (e.g. `/mnt/c/...` from WSL), then all of the yarn scripts will be extremely slow.
+Make sure the git repo is cloned under the WSL file system (under your home directory).  If you instead clone it to the Windows file system (e.g. `/mnt/c/...` from WSL), then all scripts will be extremely slow.
 
-Make sure your line returns are set to `lf` as opposed to the Windows default `crlf`. This may be an issue if you are interfacing with the git repo via the Windows system.
+If you may be working with the git repo via the Windows system, then make sure your line returns are set to `lf` as opposed to the Windows default `crlf`. 
 
 ```
 # from the repo folder
 git config core.autocrlf false
-```
-
-You can always point WSL to certain Windows services via the `/mnt/` pathspec.  For example, the following can go in your ~/.bashrc.
-
-```
-# if you use plink for credentials
-export GIT_SSH_COMMAND="/mnt/c/Program\ Files/PuTTY/plink.exe"
 ```
