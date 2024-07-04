@@ -67,7 +67,7 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
         });
 
         try {
-            window.open(url, '_blank'); 
+            window.open(url, '_blank');
         } catch (e) {
             // TECH: in practice, this never gets hit. If the URL protocol is not supported, then a blank window appears.
             alert('Launching ' + this.config.name + ' failed: ' + e);

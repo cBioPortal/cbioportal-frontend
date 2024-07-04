@@ -128,6 +128,6 @@ describe('ExternalTool Component', () => {
 
         component.handleLaunchReady(urlParametersLaunch);
 
-        expect(windowOpenMock).toHaveBeenCalledWith(expectedUrl, '_blank'); 
+        expect(windowOpenMock).toHaveBeenCalledWith(expectedUrl, '_blank');
     });
 });
