@@ -84,7 +84,7 @@ class GroupSelectorButton extends React.Component<
     @action.bound
     private onHideOverlay() {
         this.hovered = false;
-    }    
+    }
 
     render() {
         const group = this.props.group;
