@@ -54,7 +54,7 @@ export function isExternalToolAvailable(
                 toolConfig.id
             );
             if (resultCached !== undefined) {
-                // console.log('isExternalToolAvailable.Cache:' + resultCached);
+                // console.log(toolConfig.id + '.isExternalToolAvailable.Cache:' + resultCached);
                 return resultCached;
             }
         }
@@ -64,7 +64,7 @@ export function isExternalToolAvailable(
 
     // compute and store the value
     var resultComputed = computeIsExternalToolAvaialble(toolConfig);
-    // console.log('isExternalToolAvailable.Computed:' + resultComputed);
+    // console.log(toolConfig.id + '.isExternalToolAvailable.Computed:' + resultComputed);
     try {
         if (groupComparisonPage) {
             groupComparisonPage.store.setIsExternalToolAvailable(

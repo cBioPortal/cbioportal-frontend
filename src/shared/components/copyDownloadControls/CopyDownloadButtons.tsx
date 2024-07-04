@@ -7,6 +7,7 @@ import { getServerConfig } from '../../../config/config';
 import { ExternalToolConfig } from '../ExternalTools/ExternalToolConfig';
 import { ExternalTool } from '../ExternalTools/ExternalTool';
 import { isExternalToolAvailable } from '../ExternalTools/ExternalToolConfigUtils';
+import { isJSDocNonNullableType } from 'typescript';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
@@ -83,6 +84,11 @@ export class CopyDownloadButtons extends React.Component<
     }
 
     buttonsExternalTools() {
+        // TECH: <If condition={this.props.showDownload}> was not working with returning multiple items in JSX.Element[], so moved the conditional here.
+        if (!this.props.showDownload) {
+            return null;
+        }
+
         const config = getServerConfig().external_tools;
         if (!config) {
             return null;
@@ -91,8 +97,10 @@ export class CopyDownloadButtons extends React.Component<
         return config
             .filter((tool: ExternalToolConfig) => isExternalToolAvailable(tool))
             .map((tool: ExternalToolConfig, index: number) => {
+                console.log('render:' + tool.id);
                 return (
                     <ExternalTool
+                        key={tool.id}
                         toolConfig={tool}
                         baseTooltipProps={this.baseTooltipProps}
                         downloadData={this.props.downloadData}
@@ -110,9 +118,7 @@ export class CopyDownloadButtons extends React.Component<
                     <If condition={this.props.showDownload}>
                         {this.downloadButton()}
                     </If>
-                    <If condition={this.props.showDownload}>
-                        {this.buttonsExternalTools()}
-                    </If>
+                    {this.buttonsExternalTools()}
                 </ButtonGroup>
             </span>
         );

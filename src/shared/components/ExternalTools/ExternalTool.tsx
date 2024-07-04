@@ -66,7 +66,12 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
             );
         });
 
-        window.location.href = url;
+        try {
+            window.open(url, '_blank'); 
+        } catch (e) {
+            // TECH: in practice, this never gets hit. If the URL protocol is not supported, then a blank window appears.
+            alert('Launching ' + this.config.name + ' failed: ' + e);
+        }
     }
 
     // pass data using Clipboard to the external tool

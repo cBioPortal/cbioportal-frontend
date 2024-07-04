@@ -23,4 +23,16 @@ export const ExternalToolConfigDefaults: ExternalToolConfig[] = [
         url_format:
             'avm://?importclipboard&-AutoMode=true&-ProjectNameHint=${studyName}&-ImportDataLength=${dataLength}',
     },
+
+    /* TEST: uncomment to test
+     * ASNEEDED: we could add a localStorage prop to enable
+    {
+        id: 'test',
+        name: 'Test Tool',
+        tooltip: 'This button shows that the Test Tool is working',
+        iconImageSrc: require('../../../globalStyles/images/cbioportal_logo.png'),
+        url_format:
+            'https://eu.httpbin.org/anything?-StudyName=${studyName}&-ImportDataLength=${dataLength}',
+    },    
+     */
 ];

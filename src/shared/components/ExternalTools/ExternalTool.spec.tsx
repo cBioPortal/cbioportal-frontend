@@ -19,7 +19,12 @@ describe('ExternalTool Component', () => {
         'http://example.com?study=${studyName}&-DataLength=${dataLength}';
     const testStudyName = 'Test Study';
     const navigatorClipboardOriginal = navigator.clipboard;
+
+    // we used to use window.location to navigate, then changed to window.open
     const windowLocationOriginal = window.location;
+    const windowOpenOriginal = window.open;
+    const windowOpenMock = jest.fn();
+
     const mockProps: IExternalToolProps = {
         toolConfig: {
             name: 'Test',
@@ -58,12 +63,16 @@ describe('ExternalTool Component', () => {
                 (window as any).location.href = url;
             }),
         };
+
+        // Mock window.open
+        (window as any).open = windowOpenMock;
     });
 
     afterEach(() => {
         delete (window as any).groupComparisonPage;
         Object.assign(navigator, navigatorClipboardOriginal);
         window.location = windowLocationOriginal;
+        window.open = windowOpenOriginal;
     });
 
     it('renders correctly', () => {
@@ -119,6 +128,6 @@ describe('ExternalTool Component', () => {
 
         component.handleLaunchReady(urlParametersLaunch);
 
-        expect(window.location.href).toBe(expectedUrl);
+        expect(windowOpenMock).toHaveBeenCalledWith(expectedUrl, '_blank'); 
     });
 });
