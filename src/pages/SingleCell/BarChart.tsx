@@ -265,7 +265,7 @@ const BarChart: React.FC<BarChartProps> = ({
     }, [formattedXAxisLabels]);
     const isCommaSeparatedNumeric = (input: string) => {
         const trimmedInput = input.replace(/\s/g, ''); // Remove all whitespace
-        const regex = /^(\d+(,\d+)*)?$/; // Allow optional leading or trailing commas
+        const regex = /^(\d+(\.\d+)?(,\d+(\.\d+)?)*|\d*\.?\d+)?$/; // Allow decimals and commas
         return regex.test(trimmedInput);
     };
 
