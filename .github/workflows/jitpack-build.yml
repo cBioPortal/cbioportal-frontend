@@ -22,7 +22,7 @@ jobs:
       - name: Trigger JitPack Build
         run: |
           TAG=${{ steps.get_tag.outputs.tag }}
-          JITPACK_BUILD_URL="https://jitpack.io/com/github/cbioportal/cbioportal-frontend/$TAG/build.log"
+          JITPACK_BUILD_URL="https://jitpack.io/com/github/kalletlak/cbioportal-frontend/$TAG/build.log"
           echo "Triggering JitPack build for $TAG"
           curl -I $JITPACK_BUILD_URL
 
