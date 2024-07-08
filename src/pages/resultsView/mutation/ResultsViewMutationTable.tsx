@@ -77,6 +77,8 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.CLINVAR,
             MutationTableColumnType.DBSNP,
             MutationTableColumnType.SIGNAL,
+            MutationTableColumnType.ALPHAMISSENSE,
+
         ],
         columnVisibilityProps: {},
     };
@@ -257,6 +259,7 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.CLINVAR].order = 270;
         this._columns[MutationTableColumnType.DBSNP].order = 280;
         this._columns[MutationTableColumnType.SIGNAL].order = 290;
+        this._columns[MutationTableColumnType.ALPHAMISSENSE].order = 29;
 
         // exclude
         this._columns[
