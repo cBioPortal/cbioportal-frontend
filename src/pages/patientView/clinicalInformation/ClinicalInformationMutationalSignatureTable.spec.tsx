@@ -8,7 +8,7 @@ const sampleMutationalSignatureMeta = [
     {
         mutationalSignatureId: 'firstMutationalSignature',
         name: 'Mutational Signature 1',
-        description: 'Mutational Signature 1',
+        description: 'Description Signature 1',
         url: 'COSMIC/FakeMutationalSignature1',
         category: 'category 1',
         confidenceStatement:
@@ -17,7 +17,7 @@ const sampleMutationalSignatureMeta = [
     {
         mutationalSignatureId: 'secondMutationalSignature',
         name: 'Mutational Signature 2',
-        description: 'Mutational Signature 2',
+        description: 'Description Signature 2',
         url: 'COSMIC/FakeMutationalSignature2',
         category: 'category 2',
         confidenceStatement:
@@ -99,6 +99,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                         confidence: 0.8,
                     },
                 },
+                description: 'Description Signature 1',
                 url: 'COSMIC/FakeMutationalSignature1',
             },
             {
@@ -113,6 +114,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                         confidence: 0.01,
                     },
                 },
+                description: 'Description Signature 2',
                 url: 'COSMIC/FakeMutationalSignature2',
             },
         ]);

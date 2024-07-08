@@ -10,10 +10,7 @@ import {
     IMutationalSignatureMeta,
     IMutationalCounts,
 } from 'shared/model/MutationalSignature';
-import {
-    getGenericAssayMetaPropertyOrDefault,
-    getGenericAssayCategoryFromName,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { getGenericAssayMetaPropertyOrDefault } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     MutationalSignatureLabelMap,
     MutationalSignatureCount,

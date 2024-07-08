@@ -3173,7 +3173,8 @@ export async function getAllClinicalDataByStudyViewFilter(
     searchTerm: string | undefined,
     sortAttributeId: any,
     sortDirection: any = 'asc',
-    pageSize: number = 500
+    pageSize: number,
+    pageNumber: number
 ): Promise<{
     totalItems: number;
     data: { [uniqueSampleKey: string]: ClinicalData[] };
@@ -3184,8 +3185,8 @@ export async function getAllClinicalDataByStudyViewFilter(
     ] = await internalClient
         .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
             studyViewFilter,
-            pageSize,
-            pageNumber: 0,
+            pageSize: pageSize | 500,
+            pageNumber: pageNumber || 0,
             searchTerm: searchTerm,
             sortBy: sortAttributeId,
             direction: sortDirection?.toUpperCase(),

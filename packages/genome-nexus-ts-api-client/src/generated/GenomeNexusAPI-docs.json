@@ -3800,6 +3800,18 @@
         }
       }
     },
+    "VueReference": {
+      "type": "object",
+      "properties": {
+        "pubmedId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referenceText": {
+          "type": "string"
+        }
+      }
+    },
     "Vues": {
       "type": "object",
       "properties": {
@@ -3824,17 +3836,22 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "pubmedId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "referenceText": {
+        "mutationOrigin": {
           "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VueReference"
+          }
         },
         "revisedProteinEffect": {
           "type": "string"
         },
         "revisedVariantClassification": {
+          "type": "string"
+        },
+        "revisedVariantClassificationStandard": {
           "type": "string"
         },
         "transcriptId": {

@@ -908,7 +908,7 @@ describe('group comparison mutations tab tests', function() {
 
             assert.equal(
                 getElementByTestHandle('LazyMobXTable_CountHeader').getText(),
-                '14 Mutations (page 1 of 1)'
+                '14 Mutations'
             );
 
             assert.equal(
@@ -921,7 +921,7 @@ describe('group comparison mutations tab tests', function() {
 
             assert.equal(
                 getElementByTestHandle('LazyMobXTable_CountHeader').getText(),
-                '1 Mutation (page 1 of 1)'
+                '1 Mutation'
             );
 
             assert.equal(
@@ -934,7 +934,7 @@ describe('group comparison mutations tab tests', function() {
 
             assert.equal(
                 getElementByTestHandle('LazyMobXTable_CountHeader').getText(),
-                '16 Mutations (page 1 of 1)'
+                '16 Mutations'
             );
 
             assert.equal(
