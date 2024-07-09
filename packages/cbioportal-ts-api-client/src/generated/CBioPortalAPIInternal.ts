@@ -239,11 +239,28 @@ export type ClinicalEvent = {
         'uniqueSampleKey': string
 
 };
+export type ClinicalEventAttributeRequest = {
+    'clinicalEventRequests': Array < ClinicalEventRequest >
+
+        'patientIdentifiers': Array < PatientIdentifier >
+
+};
 export type ClinicalEventData = {
     'key': string
 
         'value': string
 
+};
+export type ClinicalEventRequest = {
+    'attributes': Array < ClinicalEventData >
+
+        'eventType': string
+
+};
+export type ClinicalEventRequestIdentifier = {
+    'clinicalEventRequests': Array < ClinicalEventRequest >
+
+        'position': "FIRST" | "LAST"
 };
 export type ClinicalEventSample = {
     'patientId': string
@@ -897,6 +914,12 @@ export type OredSampleTreatmentFilters = {
     'filters': Array < SampleTreatmentFilter >
 
 };
+export type PatientIdentifier = {
+    'patientId': string
+
+        'studyId': string
+
+};
 export type PatientTreatmentFilter = {
     'treatment': string
 
@@ -1202,6 +1225,18 @@ export type StudyViewStructuralVariantFilter = {
 
         'structVarQueries': Array < Array < StructuralVariantFilterQuery >
         >
+
+};
+export type SurvivalRequest = {
+    'attributeIdPrefix': string
+
+        'endEventRequestIdentifier': ClinicalEventRequestIdentifier
+
+        'patientIdentifiers': Array < PatientIdentifier >
+
+        'startEventRequestIdentifier': ClinicalEventRequestIdentifier
+
+        'censoredEventRequestIdentifier': ClinicalEventRequestIdentifier
 
 };
 export type VariantCount = {
@@ -2336,6 +2371,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < ClinicalEventTypeCount >
         > {
             return this.getClinicalEventTypeCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchClinicalEventsMetaUsingPOSTURL(parameters: {
+        'clinicalEventAttributeRequest': ClinicalEventAttributeRequest,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/clinical-events-meta/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch clinical events meta
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalEventsMetaUsingPOST
+     * @param {} clinicalEventAttributeRequest - clinical events Request
+     */
+    fetchClinicalEventsMetaUsingPOSTWithHttpInfo(parameters: {
+        'clinicalEventAttributeRequest': ClinicalEventAttributeRequest,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/clinical-events-meta/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['clinicalEventAttributeRequest'] !== undefined) {
+                body = parameters['clinicalEventAttributeRequest'];
+            }
+
+            if (parameters['clinicalEventAttributeRequest'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalEventAttributeRequest'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch clinical events meta
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalEventsMetaUsingPOST
+     * @param {} clinicalEventAttributeRequest - clinical events Request
+     */
+    fetchClinicalEventsMetaUsingPOST(parameters: {
+            'clinicalEventAttributeRequest': ClinicalEventAttributeRequest,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalEvent >
+        > {
+            return this.fetchClinicalEventsMetaUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -7311,6 +7423,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < MutSig >
         > {
             return this.getSignificantlyMutatedGenesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchSurvivalDataUsingPOSTURL(parameters: {
+        'survivalRequest': SurvivalRequest,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/survival-data/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch survival data
+     * @method
+     * @name CBioPortalAPIInternal#fetchSurvivalDataUsingPOST
+     * @param {} survivalRequest - Survival Data Request
+     */
+    fetchSurvivalDataUsingPOSTWithHttpInfo(parameters: {
+        'survivalRequest': SurvivalRequest,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/survival-data/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['survivalRequest'] !== undefined) {
+                body = parameters['survivalRequest'];
+            }
+
+            if (parameters['survivalRequest'] === undefined) {
+                reject(new Error('Missing required  parameter: survivalRequest'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch survival data
+     * @method
+     * @name CBioPortalAPIInternal#fetchSurvivalDataUsingPOST
+     * @param {} survivalRequest - Survival Data Request
+     */
+    fetchSurvivalDataUsingPOST(parameters: {
+            'survivalRequest': SurvivalRequest,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalData >
+        > {
+            return this.fetchSurvivalDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
