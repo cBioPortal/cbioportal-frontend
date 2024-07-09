@@ -18,11 +18,7 @@ export default class sessionServiceAPI {
     }
 
     getPublicVirtualStudyServiceUrl() {
-        //FIXME change url after moving the code to the session controller
-        return getSessionUrl().replace(
-            'api/session',
-            'api/public_virtual_studies'
-        );
+        return getSessionUrl('api/public_virtual_studies');
     }
 
     getSessionServiceUrl() {
