@@ -14,7 +14,6 @@ import { FilteredCancerTreeView } from '../StudyListLogic';
 import {
     CancerTreeNode,
     CancerTypeWithVisibility,
-    PUBLIC_VIRTUAL_STUDY_NAME,
 } from '../CancerStudyTreeData';
 import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip, {
