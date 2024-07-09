@@ -113,28 +113,23 @@ export default class CancerStudyTreeData {
         cancerTypes = CancerStudyTreeData.sortNodes(cancerTypes);
 
         //map public virtual study to cancer study
-        const _publicVirtualStudies = publicVirtualStudies
-            .map(publicVirtualStudy => {
-                // TODO: temp fix for when virtual study data is not of expeceted format
-                // (e.g. old format) Might need some better sanity checking of
-                // virtual/session data
-                if (publicVirtualStudy.data) {
-                    return {
-                        allSampleCount: _.sumBy(
-                            publicVirtualStudy.data.studies,
-                            study => study.samples.length
-                        ),
-                        studyId: publicVirtualStudy.id,
-                        name: publicVirtualStudy.data.name,
-                        description: publicVirtualStudy.data.description,
-                        cancerTypeId:
-                            publicVirtualStudy.data.typeOfCancerId ||
-                            PUBLIC_VIRTUAL_STUDY_NAME,
-                        pmid: publicVirtualStudy.data.pmid,
-                    } as CancerStudy;
-                }
-            })
-            .filter(publicVirtualStudy => publicVirtualStudy) as CancerStudy[];
+        const _publicVirtualStudies = publicVirtualStudies.map(
+            publicVirtualStudy => {
+                return {
+                    allSampleCount: _.sumBy(
+                        publicVirtualStudy.data.studies,
+                        study => study.samples.length
+                    ),
+                    studyId: publicVirtualStudy.id,
+                    name: publicVirtualStudy.data.name,
+                    description: publicVirtualStudy.data.description,
+                    cancerTypeId:
+                        publicVirtualStudy.data.typeOfCancerId ||
+                        PUBLIC_VIRTUAL_STUDY_NAME,
+                    pmid: publicVirtualStudy.data.pmid,
+                } as CancerStudy;
+            }
+        );
 
         //map virtual study to cancer study
         const _virtualStudies = virtualStudies
