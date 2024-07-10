@@ -14,10 +14,33 @@ Note: you can check the frontend version of the live instance by checking `windo
 
 ## Run
 
+### Node and Yarn Version Dependencies
 Make sure you have installed the node version and yarn version specified in
 [package.json](https://github.com/cBioPortal/cbioportal-frontend/blob/master/package.json).
 
-> **Tip:**  We recommend that you use [nvm:  Node Version Manager](https://github.com/nvm-sh/nvm) and [yvm:  Yarn Version Manager](https://yvm.js.org/docs/overview) to switch between versions more easily.
+> **Tip:**  Currently, the recommended way to manage multiple node and yarn versions is through Corepack, and so we recommend installing and configuring your environment using Corepack if possible. if you choose to use an alternative package manager such as [nvm](https://github.com/nvm-sh/nvm) and [yvm](https://yvm.js.org/docs/overview), you can skip to [Installing Packages](#installing-packages).
+
+[Corepack](https://nodejs.org/api/corepack.html) is a *version manager* for your different *package managers* within Node.js, and can be used to easily switch between node and yarn versions within projects. When utilized, it can identify the current versions of package managers configured in the current project, and install the necessary versions required for the user.
+
+For Node.js versions >= 16.10, it comes pre-installed by default. For lower versions, you can run the following command to install it.
+
+```npm i -g corepack```
+
+Currently, corepack is still an experimental tool, and is disabled by default. After ensuring it is installed, run the following command to enable it:
+
+```corepack enable```
+
+After enabling corepack, it will look for the `package.json` in the directory and determine the necessary versions dependencies for your npm and yarn package managers, installing them if needed when a call is made. All subsequent calls to yarn or node should now utilize the right version, and you should be able to move onto the next section.
+
+If for whatever reason, corepack does not install the necessary node or yarn version, you can still install the correct version listed in package.json via standard install commands, such as  
+
+`npm install node@version`, 
+
+or 
+
+`corepack prepare yarn@<version> --activate`
+
+### Installing Packages
 
 > **Windows Tip:** If you are developing on Windows, we recommend that you use [Ubuntu / Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
