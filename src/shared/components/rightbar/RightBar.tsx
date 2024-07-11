@@ -46,9 +46,7 @@ export default class RightBar extends React.Component<
 
     public newsContent = remoteData(async () => {
         await sleep(3000);
-        return fetch(
-            'https://www.cbioportal.org/proxy/docs.cbioportal.org/news/'
-        )
+        return fetch('https://docs.cbioportal.org/news/')
             .then(d => d.text())
             .then(d => {
                 return parseNews(d);
