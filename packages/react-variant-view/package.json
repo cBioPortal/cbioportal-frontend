@@ -1,6 +1,6 @@
 {
   "name": "react-variant-view",
-  "version": "0.3.111",
+  "version": "0.3.112",
   "description": "cBioPortal Variant Viewer",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -52,7 +52,7 @@
     "react-collapse": "4.0.3",
     "react-if": "^2.1.0",
     "react-motion": "^0.5.2",
-    "react-mutation-mapper": "^0.8.110",
+    "react-mutation-mapper": "^0.8.111",
     "react-rangeslider": "^2.2.0",
     "react-select": "^3.0.4",
     "react-table": "^6.10.0",
