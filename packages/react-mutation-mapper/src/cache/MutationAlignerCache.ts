@@ -21,15 +21,24 @@ export class MutationAlignerCache extends DefaultStringQueryCache<string> {
     }
 
     public fetch(pfamAccession: string): Promise<string> {
-        return fetchMutationAlignerLink(
-            pfamAccession,
-            this.mutationAlignerUrlTemplate
-        )
-            .then(res =>
-                Promise.resolve(
-                    `http://mutationaligner.org/domains/${res.body.pfamId}`
-                )
-            )
-            .catch(e => Promise.reject(e));
+        // The code below is only to check if there is data for a specific domain
+        // Since mutation aligner is not HTTPS we need to use proxy for that
+        // We can enable this check again if we can directly query the API
+        // For now we just return the link without checking the existence of the data
+
+        // return fetchMutationAlignerLink(
+        //     pfamAccession,
+        //     this.mutationAlignerUrlTemplate
+        // )
+        //     .then(res =>
+        //         Promise.resolve(
+        //             `http://mutationaligner.org/domains/${res.body.pfamId}`
+        //         )
+        //     )
+        //     .catch(e => Promise.reject(e));
+
+        return Promise.resolve(
+            `http://mutationaligner.org/domains/${pfamAccession}`
+        );
     }
 }
