@@ -602,9 +602,9 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                 width={isHorizontal ? 800 : dynamicWidth}
                                 padding={{
                                     top: 10,
-                                    bottom: 130,
+                                    bottom: isHorizontal ? 60 : 150,
                                     left: isHorizontal ? 190 : 60,
-                                    right: 80,
+                                    right: 110,
                                 }} // Adjust chart padding as needed
                             >
                                 {/* Y-Axis (dependentAxis) */}

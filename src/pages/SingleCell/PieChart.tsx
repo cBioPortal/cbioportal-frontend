@@ -397,6 +397,10 @@ const Chart: React.FC<ChartProps> = ({
                                         100
                                     ).toFixed(2)}%`
                                 }
+                                animate={{
+                                    duration: 2000,
+                                    onLoad: { duration: 1000 },
+                                }}
                                 events={[
                                     {
                                         target: 'data',
