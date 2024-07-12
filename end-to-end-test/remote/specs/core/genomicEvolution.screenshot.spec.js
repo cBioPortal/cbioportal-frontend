@@ -95,6 +95,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         $(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
         ).click();
+        $('body').moveTo({ xOffset: 0, yOffset: 0 });
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
