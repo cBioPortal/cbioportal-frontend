@@ -1,6 +1,9 @@
 import { CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
 import { getLoadConfig } from 'config/config';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { toJS } from 'mobx';
+import { validate } from 'shared/api/validation';
+import _ from 'lodash';
 
 function proxyColumnStore(client: any, endpoint: string) {
     if (getBrowserWindow().location.search.includes('legacy')) {
@@ -17,8 +20,41 @@ function proxyColumnStore(client: any, endpoint: string) {
                 ? 'genie-public-beta1.cbioportal.org'
                 : getLoadConfig().baseUrl;
 
+        const oldRequest = this.request;
+
+        const endpoints = [
+            'ClinicalDataCounts',
+            'MutatedGenes',
+            'CaseList',
+            'ClinicalDataBin',
+            'MolecularProfileSample',
+            'CNAGenes',
+            'StructuralVariantGenes',
+            'FilteredSamples',
+            'ClinicalDataDensity',
+        ];
+
+        const matchedMethod = method.match(new RegExp(endpoints.join('|')));
+        if (localStorage.validateClickhouse && matchedMethod) {
+            this.request = function() {
+                const params = toJS(arguments[2]);
+
+                oldRequest.apply(this, arguments);
+
+                const url =
+                    arguments[1].replace(/column-store\/api/, 'column-store') +
+                    '?' +
+                    _.map(arguments[4], (v, k) => `${k}=${v}&`).join('');
+
+                validate(url, params, matchedMethod[0]);
+            };
+        }
+
         params.$domain = `//${host}/api/column-store`;
         const url = old.apply(this, [params]);
+
+        this.request = oldRequest;
+
         return url;
     };
 }
