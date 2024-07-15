@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet';
 import { PageLayout } from '../../../../shared/components/PageLayout/PageLayout';
 import { observable, makeObservable, action } from 'mobx';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { folder } from 'jszip';
 
 export interface IOncoprinterToolProps {}
 
@@ -12,17 +13,21 @@ export default class JupyterNotebookTool extends React.Component<
     IOncoprinterToolProps,
     {}
 > {
+    private fileDetails = getBrowserWindow().clientPostedData;
+
     private jupyterIframe: Window | null = null;
 
     @observable private isLoading: boolean = true;
-    @observable private main_data_file: string =
-        getBrowserWindow()?.clientPostedData?.fileName || '';
+
+    @observable private folder_used: string =
+        getBrowserWindow()?.clientPostedData?.folderName || '';
+    @observable private file_to_execute: string =
+        getBrowserWindow()?.clientPostedData?.filename || '';
 
     private notebookContentToExecute = {
-        metadata: {
-            nbformat: 4,
-            nbformat_minor: 4,
-        },
+        nbformat: 4,
+        nbformat_minor: 4,
+        metadata: {},
         cells: [
             {
                 cell_type: 'code',
@@ -40,7 +45,7 @@ export default class JupyterNotebookTool extends React.Component<
                 cell_type: 'code',
                 execution_count: 2,
                 source: [
-                    'df = pd.read_csv("msk_impact_2017.csv")\n',
+                    `df = pd.read_csv("${this.file_to_execute}")\n`,
                     'numerical_columns = ["startPosition", "endPosition", "proteinPosStart", "proteinPosEnd"]\n',
                     'X = df[numerical_columns]\n',
                     'X = X.fillna(X.mean())\n',
@@ -107,26 +112,33 @@ export default class JupyterNotebookTool extends React.Component<
 
     @action
     sendFileToJupyter = () => {
-        const fileDetails = getBrowserWindow().clientPostedData;
-        if (fileDetails && fileDetails.fileContent && this.jupyterIframe) {
+        console.table('File Saved SuccessFully');
+        if (
+            this.fileDetails &&
+            this.fileDetails.fileContent &&
+            this.jupyterIframe
+        ) {
             this.jupyterIframe.postMessage(
                 {
                     type: 'from-host-to-iframe-for-file-saving',
-                    filePath: fileDetails.fileName,
-                    fileContent: fileDetails.fileContent,
+                    filename: this.fileDetails.filename,
+                    fileContent: this.fileDetails.fileContent,
+                    folderName: this.fileDetails.folderName,
                 },
                 '*'
             );
-            this.main_data_file = fileDetails.fileName;
+            this.file_to_execute = this.fileDetails.filename;
+            this.folder_used = this.fileDetails.folderName;
         }
     };
 
     openDemoExecution = () => {
+        console.log('Execution taking place');
         this.jupyterIframe?.postMessage(
             {
                 type: 'from-host-to-iframe-for-file-execution',
-                filePath: 'main.ipynb',
-                fileContent: JSON.stringify(this.notebookContentToExecute),
+                folderName: this.folder_used,
+                notebookContent: this.notebookContentToExecute,
             },
             '*'
         );
@@ -149,7 +161,6 @@ export default class JupyterNotebookTool extends React.Component<
     };
 
     render() {
-        console.log('main file: ', this.main_data_file);
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
@@ -158,19 +169,30 @@ export default class JupyterNotebookTool extends React.Component<
                     </title>
                 </Helmet>
                 <div className="cbioportal-frontend">
-                    <h1 style={{ display: 'inline', marginRight: 10 }}>
+                    {/* <h1 style={{ display: 'inline', marginRight: 10 }}>
                         {' '}
                         {this.isLoading
                             ? 'Syncing the Contents....'
                             : 'Contents Synced with the Latest Data'}
-                    </h1>{' '}
-                    <div style={{ marginTop: 10 }}>
+                    </h1>{' '} */}
+                    <div
+                        style={{
+                            marginTop: 10,
+                            width: '100%',
+                            height: '100vh',
+                        }}
+                    >
                         <iframe
                             id="jupyterIframe"
-                            src={`https://master--regal-malabi-ea7e9f.netlify.app/lite/lab/index.html`}
+                            src={`https://rad-haupia-36408a.netlify.app/lite/lab/index.html`}
+                            // src={`http://127.0.0.1:8000/lite/lab/index.html`}
                             width="100%"
-                            height="900px"
-                            style={{ overflow: 'auto' }}
+                            height="100%"
+                            style={{
+                                border: 'none',
+                                boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)',
+                                borderRadius: '8px',
+                            }}
                         ></iframe>
                     </div>
                 </div>

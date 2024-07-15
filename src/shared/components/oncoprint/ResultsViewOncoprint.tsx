@@ -99,6 +99,7 @@ import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
+import JupyterNoteBookModal from 'pages/staticPages/tools/oncoprinter/JupyterNotebookModal';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -773,6 +774,22 @@ export default class ResultsViewOncoprint extends React.Component<
         this.mouseInsideBounds = false;
     }
 
+    // jupyternotebook modal handling:
+
+    @observable public showJupyterNotebookModal = false;
+    @observable private jupyterFileContent = '';
+    @observable private jupyterFileName = '';
+
+    @action
+    private openJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = true;
+    };
+
+    @action
+    private closeJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = false;
+    };
+
     private buildControlsHandlers() {
         return {
             onSelectColumnType: (type: OncoprintAnalysisCaseType) => {
@@ -1148,8 +1165,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                     []
                                 );
 
-                                console.log(allGenesMutations);
-
                                 function convertToCSV(jsonArray: Mutation[]) {
                                     // Define the fields to keep
                                     const fieldsToKeep = [
@@ -1178,7 +1193,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                         .map(item => {
                                             return fieldsToKeep
                                                 .map(field => {
-                                                    // Use bracket notation to access the field since it's dynamically referenced
                                                     return (
                                                         item[
                                                             field as keyof Mutation
@@ -1188,24 +1202,26 @@ export default class ResultsViewOncoprint extends React.Component<
                                                 .join(',');
                                         })
                                         .join('\n');
-
-                                    const final_csv = [csvHeader, csvRows].join(
-                                        '\r\n'
-                                    );
-                                    return final_csv;
+                                    return `${csvHeader}\r\n${csvRows}`;
                                 }
 
                                 const allGenesMutationsCsv = convertToCSV(
                                     allGenesMutations
                                 );
 
-                                const jupyterNotebookTool = window.open(
-                                    buildCBioPortalPageUrl('/jupyternotebook')
-                                ) as any;
-                                jupyterNotebookTool.clientPostedData = {
-                                    fileContent: [allGenesMutationsCsv],
-                                    fileName: studyIds.join('&') + '.csv',
-                                };
+                                this.jupyterFileContent = allGenesMutationsCsv;
+
+                                this.jupyterFileName = studyIds.join('&');
+
+                                // const jupyterNotebookTool = window.open(
+                                //     buildCBioPortalPageUrl('/jupyternotebook')
+                                // ) as any;
+                                // jupyterNotebookTool.clientPostedData = {
+                                //     fileContent: allGenesMutationsCsv,
+                                //     fileName: studyIds.join('&') + '.csv',
+                                // };
+
+                                this.openJupyterNotebookModal();
                             }
                         );
                         break;
@@ -2419,6 +2435,13 @@ export default class ResultsViewOncoprint extends React.Component<
                         </div>
                     </div>
                 </div>
+
+                <JupyterNoteBookModal
+                    show={this.showJupyterNotebookModal}
+                    handleClose={this.closeJupyterNotebookModal}
+                    fileContent={this.jupyterFileContent}
+                    fileName={this.jupyterFileName}
+                />
             </div>
         );
     }
