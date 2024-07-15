@@ -49,6 +49,10 @@ const goToUrlWithCustomTabConfig = async (url, custom_tabs) => {
 
 const runTests = async (pageName, url, tabLocation) => {
     describe(`${pageName} Custom Tabs`, () => {
+        before(function() {
+            browser.setWindowSize(2000, 1000);
+        });
+
         it.skip('Sync and async hide/show works', async function() {
             this.retries(0);
 
