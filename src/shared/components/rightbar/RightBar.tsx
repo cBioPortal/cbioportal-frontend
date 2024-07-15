@@ -46,9 +46,7 @@ export default class RightBar extends React.Component<
 
     public newsContent = remoteData(async () => {
         await sleep(3000);
-        return fetch(
-            'https://www.cbioportal.org/proxy/docs.cbioportal.org/news/'
-        )
+        return fetch('https://docs.cbioportal.org/news/')
             .then(d => d.text())
             .then(d => {
                 return parseNews(d);
@@ -150,7 +148,7 @@ export default class RightBar extends React.Component<
                                 <a
                                     target="_blank"
                                     className="btn btn-default btn-sm"
-                                    href="https://www.linkedin.com/pulse/april-update-hello-cbioportal-community-cbioportal-22vle/"
+                                    href="https://www.linkedin.com/newsletters/cbioportal-newsletter-7178731490539634689/"
                                     style={{ width: '49%', marginRight: '3px' }}
                                 >
                                     LinkedIn

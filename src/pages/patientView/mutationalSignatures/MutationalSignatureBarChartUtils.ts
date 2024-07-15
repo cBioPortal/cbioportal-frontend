@@ -351,7 +351,8 @@ export function getColorsForSignatures(
                 obj.mutationalSignatureLabel,
                 colorIdentity,
                 yAxisSetting,
-                obj.value
+                obj.value,
+                obj.percentage
             );
             const group: string =
                 colorIdentity.length > 0
@@ -386,12 +387,13 @@ export function getColorsForSignatures(
     }
 }
 
+// TODO we should make sure that the percentage is always calculated
 export function getPercentageOfMutationalCount(
     inputData: IMutationalCounts[]
 ): IMutationalCounts[] {
     const sumValue = _.sum(inputData.map(item => item.value));
     return inputData.map(item => {
-        const count = Math.round((item.value / sumValue!) * 100);
+        const percentage = Math.round((item.value / sumValue!) * 100);
         return {
             uniqueSampleKey: item.uniqueSampleKey,
             patientId: item.patientId,
@@ -401,7 +403,8 @@ export function getPercentageOfMutationalCount(
             mutationalSignatureLabel: item.mutationalSignatureLabel,
             mutationalSignatureClass: item.mutationalSignatureClass,
             version: item.version,
-            value: sumValue == 0 ? 0 : count,
+            percentage: sumValue == 0 ? 0 : percentage,
+            value: item.value,
         };
     });
 }
@@ -544,6 +547,7 @@ export function prepareMutationalSignatureDataForTable(
         .map((mutationalSignatureSampleData, name) => ({
             name,
             samples: mutationalSignatureSampleData,
+            description: mutationalSignatureSampleData[0].meta.description,
             url: mutationalSignatureSampleData[0].meta.url,
         }))
         .value();
@@ -551,10 +555,13 @@ export function prepareMutationalSignatureDataForTable(
         let mutationalSignatureRowForTable: IMutationalSignatureRow = {
             name: '',
             sampleValues: {},
+            description: '',
             url: '',
         };
 
         mutationalSignatureRowForTable.name = mutationalSignature.name;
+        mutationalSignatureRowForTable.description =
+            mutationalSignature.description;
         mutationalSignatureRowForTable.url = mutationalSignature.url;
         if (
             Object.keys(mutationalSignature.samples).length ===
@@ -596,23 +603,27 @@ export function prepareMutationalSignatureDataForTable(
     return tableData;
 }
 
+// TODO check if this function returns a value when we look at percentage
 export function formatTooltipLabelCosmicStyle(
     version: string,
     label: string,
     category: ColorMapProps[],
     yAxisSetting: string,
-    value: number
+    value: number,
+    percentage: number
 ): string {
-    const valueLabel = yAxisSetting == '%' ? '%' : ' count(#)';
+    const valueLabel = yAxisSetting == '%' ? '% of ' : '';
+    const countLabel = yAxisSetting == '#' ? percentage + '%' : value;
+    const valueForTooltip = yAxisSetting == '#' ? value : percentage;
     if (version == 'SBS') {
         const labelSplit = label.split('_').map((x, i) => {
             return i == 1 ? '[' + x.replace('-', '->') + ']' : x;
         });
         return labelSplit.length > 1
-            ? value +
+            ? valueForTooltip +
                   valueLabel +
-                  ' of SBS mutations (' +
-                  percentageToFraction(value) +
+                  ' SBS mutations (' +
+                  countLabel +
                   ') are ' +
                   '\n' +
                   labelSplit[1] +
@@ -623,10 +634,10 @@ export function formatTooltipLabelCosmicStyle(
     } else if (version == 'DBS') {
         const labelSplit = label.split('-');
         return labelSplit.length > 1
-            ? value +
+            ? valueForTooltip +
                   valueLabel +
                   ' of DBS mutations (' +
-                  percentageToFraction(value) +
+                  countLabel +
                   ') ' +
                   '\n' +
                   labelSplit[0] +
@@ -680,7 +691,6 @@ function formatIndelTooltipLabelsCosmicStyle(
         return (
             value +
             ' of small indels (' +
-            percentageToFraction(value) +
             ') ' +
             ' ' +
             information[0].category +
@@ -692,7 +702,6 @@ function formatIndelTooltipLabelsCosmicStyle(
         return (
             value +
             ' of small indels (' +
-            percentageToFraction(value) +
             ') ' +
             ' ' +
             information[0].category +
@@ -709,7 +718,6 @@ function formatIndelTooltipLabelsCosmicStyle(
         return (
             value +
             ' of small indels (' +
-            percentageToFraction(value) +
             ') ' +
             ' ' +
             information[0].category +

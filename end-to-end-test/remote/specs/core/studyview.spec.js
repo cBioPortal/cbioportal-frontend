@@ -725,7 +725,9 @@ describe('submit genes to results view query', () => {
             goToUrlAndSetLocalStorage(url);
             waitForNetworkQuiet();
         });
-        it('generic assay chart should be added in the summary tab', function() {
+        // this relies on the micbiobiome signature generic assay
+        // which no longer exists (data retracted)
+        it.skip('generic assay chart should be added in the summary tab', function() {
             this.retries(0);
             browser.waitUntil(
                 () =>
@@ -736,10 +738,15 @@ describe('submit genes to results view query', () => {
             );
             $(ADD_CHART_BUTTON).click();
 
+            browser.debug();
+
             // Change to GENERIC ASSAY tab
             $(ADD_CHART_GENERIC_ASSAY_TAB).waitForDisplayed({
                 timeout: WAIT_FOR_VISIBLE_TIMEOUT,
             });
+
+            browser.debug();
+
             $(ADD_CHART_GENERIC_ASSAY_TAB).click();
 
             // wait for generic assay data loading complete

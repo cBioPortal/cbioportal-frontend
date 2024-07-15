@@ -385,54 +385,6 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page microbiome signature tab several groups', function() {
-            // use study blca_tcga_pan_can_atlas_2018 for microbiome signature tests
-            goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/comparison/generic_assay_microbiome_signature?sessionId=5d63f222e4b0d777deb05c78&unselectedGroups=%5B%22NA%22%5D`
-            );
-            $(
-                'div[data-test="GroupComparisonGenericAssayEnrichments"]'
-            ).waitForDisplayed({ timeout: 10000 });
-            $(
-                'div[data-test="GroupComparisonGenericAssayEnrichments"]'
-            ).waitForDisplayed({ timeout: 10000 });
-            $('b=Collimonas').waitForDisplayed({ timeout: 10000 });
-            $('b=Collimonas').click();
-            $('div[data-test="MiniBoxPlot"]').waitForDisplayed({
-                timeout: 20000,
-            });
-            $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
-                '.msk-tab:not(.hiddenByPosition)',
-                '',
-                {
-                    hide: ['.qtip'],
-                }
-            );
-            assertScreenShotMatch(res);
-        });
-
-        it('group comparison page microbiome signature tab two groups', function() {
-            // use study blca_tcga_pan_can_atlas_2018 for microbiome signature tests
-            goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/comparison/generic_assay_microbiome_signature?sessionId=5d63f222e4b0d777deb05c78&unselectedGroups=%5B%22NA%22%2C%22White%22%5D`
-            );
-            $(
-                'div[data-test="GroupComparisonGenericAssayEnrichments"]'
-            ).waitForDisplayed({ timeout: 10000 });
-            $('b=Lawsonia').waitForDisplayed({ timeout: 10000 });
-            $('b=Lawsonia').click();
-            $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
-                '.msk-tab:not(.hiddenByPosition)',
-                '',
-                {
-                    hide: ['.qtip'],
-                }
-            );
-            assertScreenShotMatch(res);
-        });
-
         it('group comparison page mutations tab two groups', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison/mutations?sessionId=5cf89323e4b0ab413787436c&selectedGene=AR`

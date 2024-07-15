@@ -31,6 +31,7 @@ export interface IMutationalCounts {
     mutationalSignatureClass: string;
     version: string;
     value: number;
+    percentage: number;
 }
 
 export type MutationalSignatureLabelMap = {
