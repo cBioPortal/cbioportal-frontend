@@ -137,18 +137,23 @@ async function getColorOfNthElement(selector, index, type = 'color') {
     return color.parsed.hex;
 }
 
-function setOncoprintMutationsMenuOpen(open) {
+async function setOncoprintMutationsMenuOpen(open) {
     const mutationColorMenuButton = '#mutationColorDropdown';
     const mutationColorMenuDropdown =
         'div.oncoprint__controls__mutation_color_menu';
-    $('div.oncoprint__controls').moveTo();
-    $(mutationColorMenuButton).waitForDisplayed();
-    browser.waitUntil(
-        () => {
-            if (open === $(mutationColorMenuDropdown).isDisplayedInViewport()) {
+    await (await getElement('div.oncoprint__controls')).moveTo();
+    await (await getElement(mutationColorMenuButton)).waitForDisplayed();
+    await browser.waitUntil(
+        async () => {
+            if (
+                open ===
+                (await (
+                    await getElement(mutationColorMenuDropdown)
+                ).isDisplayedInViewport())
+            ) {
                 return true;
             } else {
-                $(mutationColorMenuButton).click();
+                await clickElement(mutationColorMenuButton);
                 return false;
             }
         },
