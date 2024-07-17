@@ -29,7 +29,7 @@ describe('Invalid query handling', () => {
         const elem = await getElement(
             '.studyItem_metastatic_solid_tumors_mich_2017'
         ); // or $(() => document.getElementById('elem'))
-        const checkbox = elem.$(function() {
+        const checkbox = await elem.$(async function() {
             return this.previousSibling;
         });
         assert(
