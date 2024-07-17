@@ -50,7 +50,6 @@ const PieToolTip: React.FC<ChartProps> = ({
     setHoveredSliceIndex,
 }) => {
     // const [isHovered, setIsHovered] = useState<boolean>(false);
-    console.log(pieChartData, 'this is piechartData');
 
     const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
     const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
@@ -70,7 +69,6 @@ const PieToolTip: React.FC<ChartProps> = ({
             differentPatientIds.push(currentId);
         }
     }
-    console.log(differentPatientIds, 'differentPatientIds');
     // Initialize an object to store data for each patient
     // let patientData = {};
     let patientData: PatientData = {};
@@ -90,7 +88,6 @@ const PieToolTip: React.FC<ChartProps> = ({
             }
         }
     }
-    console.log(patientData, 'patientData');
     useEffect(() => {
         if (downloadSvg) {
             handleDownloadSVG(svgRef);

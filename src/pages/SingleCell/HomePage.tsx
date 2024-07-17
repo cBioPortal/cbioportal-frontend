@@ -212,19 +212,11 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     }
     async fetchDataBins(genericAssayEntityId: string, profileType: string) {
         let temp = this.props.store.genericAssayProfileOptionsByType.result;
-        console.log(temp, profileType, 'before id');
         let id = temp[profileType];
         let tempstudyId = id[0].value;
         this.setState({ heading: profileType });
         this.setState({ stableIdBin: genericAssayEntityId });
         this.setState({ profileTypeBin: tempstudyId });
-        console.log(id, tempstudyId, 'this is the id');
-
-        console.log(
-            genericAssayEntityId,
-            profileType,
-            'here are function parameters'
-        );
         const { store } = this.props;
         const gaDataBins = await internalClient.fetchGenericAssayDataBinCountsUsingPOST(
             {
@@ -240,11 +232,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 },
             }
         );
-        console.log(gaDataBins, 'gaDataBins');
         const dataBins = convertGenericAssayDataBinsToDataBins(gaDataBins);
-        console.log(dataBins, 'convertedDataBins');
-
-        // Update the dataBins state with fetched data
         this.setState({ databinState: dataBins });
         this.setState({ dataBins });
     }
@@ -263,11 +251,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     }
     @autobind
     async handleSelectChange(event: any) {
-        console.log('i am claed', event);
         this.setState({ stackEntity: '' });
-        console.log(this.state.entityNames, 'entityNames');
         const selectedValue = event.value;
-        console.log(event.value, 'this is event.target.value');
         const studyId = 'gbm_cptac_2021';
         const selectedProfile = this.state.molecularProfiles.find(
             profile => profile.value === selectedValue
@@ -287,7 +272,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             const names = entityArray.map((entity: any) => entity.stableId);
             this.setState({ entityNames: names, selectedEntity: null });
 
-            console.log(names, 'here are the names');
             this.retrieveAllProfiledSamples(selectedValue)
                 .then(async MolecularProfileData => {
                     console.log(
@@ -304,7 +288,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         extractedData
                     );
                     this.setState({ pieChartData: pieChartData as any[] });
-                    console.log(extractedData, 'this is the extracted data');
                 })
                 .catch(error => {
                     console.error('Failed to fetch data:', error);
@@ -326,7 +309,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     chartInfo: newChartInfo,
                 },
                 async () => {
-                    console.log(this.state.chartInfo);
                     await this.fetchDataBins(
                         newChartInfo.genericAssayEntityId,
                         newChartInfo.profileType
@@ -349,7 +331,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 },
             });
         }
-        console.log(this.state.entityNames, 'emtit');
     }
     @autobind
     handleEntitySelectChangeStack(event: any) {
@@ -368,7 +349,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 item.molecularAlterationType === 'GENERIC_ASSAY' &&
                 item.genericAssayType.startsWith('SINGLE_CELL')
             ) {
-                console.log(item.studyId); // Log the studyId to console
                 studyId = item.studyId; // Store the studyId in the variable
                 break; // Exit the loop once the desired item is found
             }
@@ -378,20 +358,12 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         const selectedMolecularProfile = Molecularprofiles.find(
             (profile: any) => profile.molecularProfileId === selectedOption
         );
-        console.log(selectedMolecularProfile, 'here is the selected profile');
 
         const BarchartDownloadData = await this.getGenericAssayDataAsClinicalData(
             selectedMolecularProfile,
             selectedEntityId
         );
         this.setState({ BarDownloadData: BarchartDownloadData });
-        console.log(BarchartDownloadData, 'hereisbarchartdownloaddata');
-
-        console.log(
-            selectedEntityId,
-            selectedOption,
-            'these are from entity change'
-        );
         const { store } = this.props;
 
         if (
@@ -455,17 +427,13 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 item.molecularAlterationType === 'GENERIC_ASSAY' &&
                 item.genericAssayType.startsWith('SINGLE_CELL')
             ) {
-                console.log(item.studyId); // Log the studyId to console
                 this.setState({ studyIdToStudy: item.studyId });
                 studyId = item.studyId; // Store the studyId in the variable
                 break; // Exit the loop once the desired item is found
             }
         }
-        console.log('Found studyId:', studyId);
 
         const Molecularprofiles = await this.molecularProfiles([studyId]);
-
-        console.log(Molecularprofiles, 'this is molecularprofiles');
 
         const molecularProfileOptions = Molecularprofiles.map(
             (profile: any) => ({
@@ -480,7 +448,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             })
         );
 
-        console.log(molecularProfileOptions, 'hereistheanswer');
         this.setState({ molecularProfiles: molecularProfileOptions });
     }
 
@@ -499,7 +466,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     ) {
         const molecularProfiles = { 0: selectedMolecularProfiles };
 
-        console.log(molecularProfiles, 'molecularprof');
         if (_.isEmpty(molecularProfiles)) {
             return [];
         }
@@ -508,7 +474,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             molecularProfile => molecularProfile.studyId
         );
         const samples = this.props.store.samples.result;
-        console.log(samples, 'here are samples');
         const filteredSamples = samples.filter(
             (sample: any) => sample.studyId in molecularProfileMapByStudyId
         );
@@ -520,11 +485,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         .molecularProfileId,
             })
         );
-        console.log(
-            genericAssayEntityId,
-            sampleMolecularIdentifiers,
-            'SAMPLEMOL'
-        );
+
         const gaDataList = await client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
             {
                 projection: 'DETAILED',
@@ -546,7 +507,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 } as GenePanelDataMultipleStudyFilter,
             }
         );
-        console.log('all the profiles are here', data);
 
         // Assuming 'data' is the array of 'MolecularProfileDataItem'
         return data as MolecularProfileDataItem[];
@@ -565,7 +525,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             dynamicWidth: prevState.dynamicWidth + 10,
             increaseCount: prevState.increaseCount + 1,
         }));
-        console.log(`Width increased: ${this.state.increaseCount + 1}`);
     };
 
     decreaseWidth = () => {
@@ -576,7 +535,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             ),
             decreaseCount: prevState.decreaseCount + 1,
         }));
-        console.log(`Width decreased: ${this.state.decreaseCount + 1}`);
     };
 
     handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -599,7 +557,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             ? selectedOptions.map((option: any) => option.value)
             : [];
         this.setState({ selectedSamples: selectedSampleIds });
-        console.log(selectedSampleIds);
     };
     render() {
         const {
@@ -636,7 +593,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
         return (
             <div className="home-page-container">
-                {console.log(this.props.store, 'this is tore')}
                 <div className="chart-configurations">
                     <h2>Chart Configurations</h2>
                     <div>
@@ -702,8 +658,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     clearable={false}
                                     searchable={true}
                                 />
-
-                                {console.log(entityNames, 'hereareentitynames')}
                             </div>
                         )}
 
@@ -768,7 +722,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     clearable={false}
                                     searchable={true}
                                 />
-                                {console.log(entityNames, 'hereareentitynames')}
                             </div>
                         )}
 

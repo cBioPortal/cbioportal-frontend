@@ -84,7 +84,6 @@ const BarChart: React.FC<BarChartProps> = ({
                 },
             }
         );
-        console.log(gaDataBins, 'gaDataBins-2');
         setDatabinState(gaDataBins);
     };
 
@@ -148,7 +147,6 @@ const BarChart: React.FC<BarChartProps> = ({
         };
     });
 
-    console.log(processedData, 'thi is processed data');
     const handleDownloadSVGWrapper = () => {
         if (chartRef.current) {
             const svg = chartRef.current.querySelector('svg');
@@ -257,7 +255,6 @@ const BarChart: React.FC<BarChartProps> = ({
     const handleCloseXAxisValuesModal = () => {
         setShowXAxisValuesModal(false);
     };
-    console.log(formattedXAxisLabels, 'formattedCX');
     const [editValues, setEditValues] = useState(formattedXAxisLabels);
 
     useEffect(() => {
@@ -277,19 +274,16 @@ const BarChart: React.FC<BarChartProps> = ({
                 'Please enter valid comma-separated numeric values.'
             );
         } else {
-            console.log('Edited values:', editValues);
             // fetchDataBins(editValues);
             const editedValuesArray = editValues
                 .split(',') // Split by commas
                 .map(value => Number(value.trim())); // Convert each trimmed substring to a number
 
-            console.log('Edited values array:', editedValuesArray);
             fetchDataBins(editedValuesArray);
             setValidationMessage('');
             handleCloseXAxisValuesModal();
         }
     };
-    console.log(selectedEntity, 'selectedEntity side');
     return (
         <>
             <div
