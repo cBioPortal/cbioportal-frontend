@@ -12,6 +12,7 @@ const {
     isSelected,
     isUnselected,
     setInputText,
+    waitForNetworkQuiet,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -29,7 +30,7 @@ describe('Invalid query handling', () => {
         const elem = await getElement(
             '.studyItem_metastatic_solid_tumors_mich_2017'
         ); // or $(() => document.getElementById('elem'))
-        const checkbox = await elem.$(async function() {
+        const checkbox = await elem.$(function() {
             return this.previousSibling;
         });
         assert(
@@ -44,6 +45,8 @@ describe('cross cancer query', function() {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_list=chol_tcga%2Cblca_tcga_pub%2Ccoadread_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=all&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
+
+        await waitForNetworkQuiet();
 
         // wait for cancer types summary to appear
         await getElementByTestHandle('cancerTypeSummaryChart', {
@@ -112,6 +115,8 @@ describe('single study query', async function() {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_cna`
             );
+
+            await waitForNetworkQuiet();
 
             await clickElement('a.tabAnchor_mutations', {
                 timeout: 10000,
@@ -271,7 +276,7 @@ describe('case set selection in modify query form', function() {
         //populates case set selector with selected case set in current query, then selects "All" when more studies are selected, then selects default when only one is selected again
         // open query form
         await clickElement('#modifyQueryBtn');
-        getElement(selectedCaseSet_sel, { timeout: 10000 });
+        await getElement(selectedCaseSet_sel, { timeout: 10000 });
         assert.equal(
             await getText(selectedCaseSet_sel),
             'Samples with protein data (RPPA) (196)',
