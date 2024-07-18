@@ -303,7 +303,10 @@ export default class StudyList extends QueryStoreComponent<
                 },
             ];
 
-            if (this.store.isVirtualStudy(study.studyId)) {
+            if (
+                this.store.isVirtualStudy(study.studyId) &&
+                !this.store.isPublicVirtualStudy(study.studyId)
+            ) {
                 links.push({
                     icon: 'trash',
                     tooltip: 'Delete this virtual study.',
