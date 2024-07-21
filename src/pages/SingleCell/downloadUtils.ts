@@ -76,6 +76,6 @@ export const handleDownloadPDF = async (
 ) => {
     if (svgRef.current) {
         const svg = svgRef.current;
-        await svgToPdfDownload('pie_chart.pdf', svg);
+        await svgToPdfDownload('chart.pdf', svg);
     }
 };

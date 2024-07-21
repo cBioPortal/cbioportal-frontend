@@ -10,6 +10,7 @@ import {
 import autobind from 'autobind-decorator';
 import Select from 'react-select';
 import ReactSelect from 'react-select1';
+import singleCellStore from './SingleCellStore';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
@@ -31,6 +32,7 @@ import StackedBarChart from './StackedBarChart';
 import StackToolTip from './StackToolTip';
 import PieToolTip from './PieToolTip';
 import './styles.css';
+import { selectable } from 'shared/components/query/styles/styles.module.scss';
 
 interface Option {
     value: string;
@@ -177,7 +179,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             databinState: [],
         };
     }
-
     async fetchGenericAssayData(
         selectedValue: string,
         names: string[],
@@ -204,16 +205,21 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
     @autobind
     handleTooltipCheckboxChange(event: React.ChangeEvent<HTMLInputElement>) {
+        singleCellStore.setTooltipEnabled(event.target.checked);
         this.setState({ tooltipEnabled: event.target.checked });
     }
     @autobind
     handleReverseChange(event: React.ChangeEvent<HTMLInputElement>) {
+        singleCellStore.setIsReverse(event.target.checked);
         this.setState({ isReverse: event.target.checked });
     }
     async fetchDataBins(genericAssayEntityId: string, profileType: string) {
         let temp = this.props.store.genericAssayProfileOptionsByType.result;
         let id = temp[profileType];
         let tempstudyId = id[0].value;
+        singleCellStore.setHeading(profileType);
+        singleCellStore.setStableIdBin(genericAssayEntityId);
+        singleCellStore.setProfileTypeBin(tempstudyId);
         this.setState({ heading: profileType });
         this.setState({ stableIdBin: genericAssayEntityId });
         this.setState({ profileTypeBin: tempstudyId });
@@ -234,17 +240,23 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         );
         const dataBins = convertGenericAssayDataBinsToDataBins(gaDataBins);
         this.setState({ databinState: dataBins });
+        singleCellStore.setDataBins(dataBins);
         this.setState({ dataBins });
     }
     @autobind
     handleDownloadClick(event: React.ChangeEvent<HTMLSelectElement>) {
         const selectedOption = event.target.value;
+        singleCellStore.setDownloadOption(selectedOption);
         this.setState({ downloadOption: selectedOption });
         if (selectedOption === 'svg') {
+            singleCellStore.setDownloadSvg(true);
             this.setState({ downloadSvg: true });
         } else if (selectedOption === 'pdf') {
+            singleCellStore.setDownloadPdf(true);
             this.setState({ downloadPdf: true });
         } else {
+            singleCellStore.setDownloadSvg(false);
+            singleCellStore.setDownloadPdf(false);
             this.setState({ downloadSvg: false });
             this.setState({ downloadPdf: false });
         }
@@ -252,11 +264,16 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     @autobind
     async handleSelectChange(event: any) {
         this.setState({ stackEntity: '' });
+        singleCellStore.setStackEntity('');
         const selectedValue = event.value;
         const studyId = 'gbm_cptac_2021';
-        const selectedProfile = this.state.molecularProfiles.find(
+        // const selectedProfile = this.state.molecularProfiles.find(
+        //     profile => profile.value === selectedValue
+        // );
+        const selectedProfile = singleCellStore.molecularProfiles.find(
             profile => profile.value === selectedValue
         );
+        singleCellStore.setChartType(null);
         this.setState({ selectedValue, chartType: null, selectedEntity: null });
 
         if (selectedProfile) {
@@ -270,6 +287,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 ? entities[selectedProfile.genericAssayEntityId]
                 : [];
             const names = entityArray.map((entity: any) => entity.stableId);
+            singleCellStore.setEntityNames(names);
             this.setState({ entityNames: names, selectedEntity: null });
 
             this.retrieveAllProfiledSamples(selectedValue)
@@ -287,6 +305,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         names,
                         extractedData
                     );
+                    singleCellStore.setPieChartData(pieChartData as any[]);
                     this.setState({ pieChartData: pieChartData as any[] });
                 })
                 .catch(error => {
@@ -302,12 +321,13 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 genericAssayEntityId: selectedProfile.genericAssayEntityId,
                 patientLevel: selectedProfile.patientLevel,
             };
-
+            singleCellStore.setSelectedOption(selectedValue);
             this.setState(
                 {
                     selectedOption: selectedValue,
                     chartInfo: newChartInfo,
                 },
+
                 async () => {
                     await this.fetchDataBins(
                         newChartInfo.genericAssayEntityId,
@@ -316,6 +336,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 }
             );
         } else {
+            singleCellStore.setSelectedOption(null);
+            singleCellStore.setEntityNames([]);
             this.setState({
                 selectedOption: null,
                 entityNames: [],
@@ -334,13 +356,15 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     }
     @autobind
     handleEntitySelectChangeStack(event: any) {
+        singleCellStore.setStackEntity(event.value);
         this.setState({ stackEntity: event.value });
     }
     @autobind
     async handleEntitySelectChange(event: any) {
         const selectedEntityId = event.value;
 
-        const { selectedOption } = this.state;
+        // const { selectedOption } = this.state;
+        const selectedOption = singleCellStore.selectedOption;
         let studyId = '';
         const data = this.props.store.genericAssayProfiles.result;
 
@@ -363,6 +387,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             selectedMolecularProfile,
             selectedEntityId
         );
+        singleCellStore.setBarDownloadData(BarchartDownloadData);
         this.setState({ BarDownloadData: BarchartDownloadData });
         const { store } = this.props;
 
@@ -413,6 +438,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
     @autobind
     handleChartTypeChange(event: any) {
+        singleCellStore.setChartType(event.value);
+        singleCellStore.setStackEntity('');
         this.setState({ chartType: event.value, selectedEntity: null });
         this.setState({ stackEntity: '' });
     }
@@ -427,6 +454,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 item.molecularAlterationType === 'GENERIC_ASSAY' &&
                 item.genericAssayType.startsWith('SINGLE_CELL')
             ) {
+                singleCellStore.setStudyIdToStudy(item.studyId);
                 this.setState({ studyIdToStudy: item.studyId });
                 studyId = item.studyId; // Store the studyId in the variable
                 break; // Exit the loop once the desired item is found
@@ -447,7 +475,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 patientLevel: profile.patientLevel,
             })
         );
-
+        singleCellStore.setMolecularProfiles(molecularProfileOptions);
         this.setState({ molecularProfiles: molecularProfileOptions });
     }
 
@@ -539,6 +567,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
     handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = parseInt(event.target.value);
+        singleCellStore.handleWidthChange(value);
         this.setState((prevState: any) => ({
             dynamicWidth: Math.max(value, prevState.initialWidth),
         }));
@@ -547,32 +576,46 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     handleResizeCheckboxChange = (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
+        singleCellStore.setResizeEnabled(event.target.checked);
         this.setState({ resizeEnabled: event.target.checked });
     };
     toggleAxes = (event: React.ChangeEvent<HTMLInputElement>) => {
+        singleCellStore.setIsHorizontal(event.target.checked);
         this.setState({ isHorizontal: event.target.checked });
     };
     handleSampleSelectionChange = (selectedOptions: any) => {
         const selectedSampleIds = selectedOptions
             ? selectedOptions.map((option: any) => option.value)
             : [];
+        singleCellStore.setSelectedSamples(selectedSampleIds);
         this.setState({ selectedSamples: selectedSampleIds });
     };
     render() {
         const {
-            selectedOption,
-            entityNames,
-            molecularProfiles,
+            // selectedOption,
+            // entityNames,
+            // molecularProfiles,
             selectedEntity,
             selectedValue,
-            dataBins,
-            chartType,
+            // dataBins,
+            // chartType,
             pieChartData,
-            tooltipEnabled,
-            downloadSvg,
-            downloadPdf,
-            BarDownloadData,
+            // tooltipEnabled,
+            // downloadSvg,
+            // downloadPdf,
+            // BarDownloadData,
         } = this.state;
+        const selectedOption = singleCellStore.selectedOption;
+        const entityNames = singleCellStore.entityNames;
+        const molecularProfiles = singleCellStore.molecularProfiles;
+        const dataBins = singleCellStore.dataBins;
+        const chartType = singleCellStore.chartType;
+        // const pieChartData=singleCellStore.pieChartData
+        const tooltipEnabled = singleCellStore.tooltipEnabled;
+        const downloadSvg = singleCellStore.downloadSvg;
+        const downloadPdf = singleCellStore.downloadPdf;
+        const BarDownloadData = singleCellStore.BarDownloadData;
+
         const filteredOptions = molecularProfiles.filter(
             option =>
                 option.profileType &&
@@ -580,6 +623,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         );
 
         // Map filtered options to format expected by react-select
+        console.log(singleCellStore, 'here is store');
+
         const options = filteredOptions.map(option => ({
             value: option.value,
             label:
@@ -701,8 +746,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         this.handleEntitySelectChangeStack
                                     }
                                     value={
-                                        this.state.stackEntity
-                                            ? this.state.stackEntity
+                                        singleCellStore.stackEntity
+                                            ? singleCellStore.stackEntity
                                             : ''
                                     }
                                     options={entityNames.map(entityName => ({
@@ -730,7 +775,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 <input
                                     type="checkbox"
                                     id="cbx-3"
-                                    checked={tooltipEnabled}
+                                    checked={singleCellStore.tooltipEnabled}
                                     onChange={this.handleTooltipCheckboxChange}
                                 />
                                 <label htmlFor="cbx-3" className="toggle">
@@ -801,30 +846,31 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 </label>
                             </div>
                         )}
-                        {chartType == 'stack' && this.state.stackEntity != '' && (
-                            <div className="checkbox-wrapper-5">
-                                <input
-                                    type="checkbox"
-                                    id="cbx-5"
-                                    checked={this.state.isReverse}
-                                    onChange={this.handleReverseChange}
-                                />
-                                <label htmlFor="cbx-5" className="toggle">
-                                    <span></span>
-                                </label>
-                                <label
-                                    htmlFor="cbx-5"
-                                    className="toggle-label"
-                                    style={{
-                                        fontWeight: 'normal',
-                                        fontSize: '14px',
-                                        marginLeft: '10px',
-                                    }}
-                                >
-                                    Reverse sort
-                                </label>
-                            </div>
-                        )}
+                        {chartType == 'stack' &&
+                            singleCellStore.stackEntity != '' && (
+                                <div className="checkbox-wrapper-5">
+                                    <input
+                                        type="checkbox"
+                                        id="cbx-5"
+                                        checked={this.state.isReverse}
+                                        onChange={this.handleReverseChange}
+                                    />
+                                    <label htmlFor="cbx-5" className="toggle">
+                                        <span></span>
+                                    </label>
+                                    <label
+                                        htmlFor="cbx-5"
+                                        className="toggle-label"
+                                        style={{
+                                            fontWeight: 'normal',
+                                            fontSize: '14px',
+                                            marginLeft: '10px',
+                                        }}
+                                    >
+                                        Reverse sort
+                                    </label>
+                                </div>
+                            )}
                         {chartType === 'stack' && this.state.resizeEnabled && (
                             <div className="throttle-container">
                                 <label className="throttle-label">
@@ -949,12 +995,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
                             {chartType === 'bar' ? (
                                 <BarChart
-                                    dataBins={dataBins}
+                                    singleCellStore={singleCellStore}
                                     selectedEntity={this.state.selectedEntity}
-                                    downloadData={BarDownloadData}
-                                    heading={this.state.heading}
-                                    profileTypeBin={this.state.profileTypeBin}
-                                    stableIdBin={this.state.stableIdBin}
                                     store={this.props.store}
                                     databinState={this.state.databinState}
                                     setDatabinState={(value: any) =>
@@ -962,32 +1004,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     }
                                 />
                             ) : chartType === 'pie' ? (
-                                <PieChart
-                                    dataBins={dataBins}
-                                    pieChartData={pieChartData}
-                                    tooltipEnabled={tooltipEnabled}
-                                    downloadSvg={downloadSvg}
-                                    downloadPdf={downloadPdf}
-                                    setDownloadSvg={(value: any) =>
-                                        this.setState({ downloadSvg: value })
-                                    }
-                                    setDownloadPdf={(value: any) =>
-                                        this.setState({ downloadPdf: value })
-                                    }
-                                    isHovered={this.state.isHovered}
-                                    setIsHovered={(value: any) =>
-                                        this.setState({ isHovered: value })
-                                    }
-                                    hoveredSliceIndex={
-                                        this.state.hoveredSliceIndex
-                                    }
-                                    setHoveredSliceIndex={(value: any) =>
-                                        this.setState({
-                                            hoveredSliceIndex: value,
-                                        })
-                                    }
-                                    heading={this.state.heading}
-                                />
+                                <PieChart singleCellStore={singleCellStore} />
                             ) : chartType === 'stack' ? (
                                 <>
                                     <StackedBarChart
@@ -1112,27 +1129,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             textAlign: 'center',
                         }}
                     >
-                        <PieToolTip
-                            pieChartData={pieChartData}
-                            tooltipEnabled={tooltipEnabled}
-                            downloadSvg={downloadSvg}
-                            downloadPdf={downloadPdf}
-                            setDownloadSvg={(value: any) =>
-                                this.setState({ downloadSvg: value })
-                            }
-                            setDownloadPdf={(value: any) =>
-                                this.setState({ downloadPdf: value })
-                            }
-                            heading={this.state.heading}
-                            isHovered={this.state.isHovered}
-                            setIsHovered={(value: any) =>
-                                this.setState({ isHovered: value })
-                            }
-                            hoveredSliceIndex={this.state.hoveredSliceIndex}
-                            setHoveredSliceIndex={(value: any) =>
-                                this.setState({ hoveredSliceIndex: value })
-                            }
-                        />
+                        <PieToolTip singleCellStore={singleCellStore} />
                     </div>
                 )}
             </div>

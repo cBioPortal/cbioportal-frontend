@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { VictoryPie, VictoryTooltip } from 'victory';
 import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 import './styles.css';
+import { observer } from 'mobx-react-lite';
 
 // Define the DataBin interface
 
@@ -11,17 +12,7 @@ interface PatientData {
 }
 
 interface ChartProps {
-    pieChartData: any[];
-    tooltipEnabled: boolean;
-    downloadSvg: boolean;
-    setDownloadSvg: React.Dispatch<React.SetStateAction<boolean>>;
-    downloadPdf: boolean;
-    setDownloadPdf: React.Dispatch<React.SetStateAction<boolean>>;
-    heading: any;
-    isHovered: any;
-    setIsHovered: (value: any) => void;
-    hoveredSliceIndex: any;
-    setHoveredSliceIndex: (value: any) => void;
+    singleCellStore: any;
 }
 
 // Define the type for the pie chart data
@@ -36,21 +27,23 @@ interface VictoryEventProps {
     index: number;
 }
 
-const PieToolTip: React.FC<ChartProps> = ({
-    pieChartData,
-    tooltipEnabled,
-    downloadSvg,
-    setDownloadSvg,
-    downloadPdf,
-    setDownloadPdf,
-    heading,
-    isHovered,
-    setIsHovered,
-    hoveredSliceIndex,
-    setHoveredSliceIndex,
-}) => {
+const PieToolTip: React.FC<ChartProps> = observer(({ singleCellStore }) => {
     // const [isHovered, setIsHovered] = useState<boolean>(false);
+    const {
+        pieChartData,
+        tooltipEnabled,
+        downloadSvg,
+        setDownloadSvg,
+        downloadPdf,
+        setDownloadPdf,
+        heading,
+        isHovered,
+        setIsHovered,
+        hoveredSliceIndex,
+        setHoveredSliceIndex,
+    } = singleCellStore;
 
+    console.log('Current hoveredSliceIndex:', hoveredSliceIndex);
     const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
     const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
     const [downloadOptionsVisible, setDownloadOptionsVisible] = useState<
@@ -136,7 +129,7 @@ const PieToolTip: React.FC<ChartProps> = ({
     ];
 
     // Filter out data bins with specialValue "NA"
-    const uniqueIds: string[] = [
+    const uniqueIds: any = [
         ...new Set(pieChartData.map((item: any) => item.genericAssayStableId)),
     ];
     const sumValues: { [key: string]: number } = {};
@@ -156,7 +149,7 @@ const PieToolTip: React.FC<ChartProps> = ({
 
     const pieData = Object.keys(sumValues).map((key, index) => {
         const color =
-            pieChartData.find(item => item.genericAssayStableId === key)
+            pieChartData.find((item: any) => item.genericAssayStableId === key)
                 ?.color || colors[index];
         return {
             typeOfCell: key,
@@ -167,7 +160,7 @@ const PieToolTip: React.FC<ChartProps> = ({
 
     const handleDownloadData = () => {
         const headers = Object.keys(pieChartData[0]);
-        const dataRows = pieChartData.map(item =>
+        const dataRows = pieChartData.map((item: any) =>
             headers.map(header => item[header]).join('\t')
         );
         const dataString = [headers.join('\t'), ...dataRows].join('\n');
@@ -292,7 +285,7 @@ const PieToolTip: React.FC<ChartProps> = ({
                     <div
                         className="custom-scrollbar"
                         style={{
-                            height: tooltipEnabled ? undefined : '400px',
+                            height: tooltipEnabled ? 'max-content' : undefined,
                             overflowY: 'auto',
                             resize: 'both',
                             overflow: 'auto',
@@ -395,6 +388,6 @@ const PieToolTip: React.FC<ChartProps> = ({
             </div>
         </div>
     );
-};
+});
 
 export default PieToolTip;

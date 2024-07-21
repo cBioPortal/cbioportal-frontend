@@ -3,8 +3,8 @@ import { VictoryPie, VictoryTooltip, VictoryChart, VictoryAxis } from 'victory';
 import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 import './styles.css';
 import { jsPDF } from 'jspdf-yworks';
-
-// Define the DataBin interface
+import { observer } from 'mobx-react-lite';
+import singleCellStore_importedDirectly from './SingleCellStore';
 interface DataBin {
     id: string;
     count: number;
@@ -13,24 +13,12 @@ interface DataBin {
     specialValue?: string;
 }
 
-// Define props interface for the Chart component
 interface PatientData {
     [key: string]: { stableId: string; value: number }[];
 }
 
 interface ChartProps {
-    dataBins: DataBin[];
-    pieChartData: any[];
-    tooltipEnabled: boolean;
-    downloadSvg: boolean;
-    setDownloadSvg: React.Dispatch<React.SetStateAction<boolean>>;
-    downloadPdf: boolean;
-    setDownloadPdf: React.Dispatch<React.SetStateAction<boolean>>;
-    heading: any;
-    isHovered: any;
-    setIsHovered: (value: any) => void;
-    hoveredSliceIndex: any;
-    setHoveredSliceIndex: (value: any) => void;
+    singleCellStore: any;
 }
 
 // Define the type for the pie chart data
@@ -45,22 +33,27 @@ interface VictoryEventProps {
     index: number;
 }
 
-const Chart: React.FC<ChartProps> = ({
-    dataBins,
-    pieChartData,
-    tooltipEnabled,
-    downloadSvg,
-    setDownloadSvg,
-    downloadPdf,
-    setDownloadPdf,
-    heading,
-    isHovered,
-    setIsHovered,
-    hoveredSliceIndex,
-    setHoveredSliceIndex,
-}) => {
-    // const [isHovered, setIsHovered] = useState<boolean>(false);
+const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
+    const {
+        dataBins,
+        pieChartData,
+        tooltipEnabled,
+        downloadSvg,
+        setDownloadSvg,
+        downloadPdf,
+        setDownloadPdf,
+        heading,
+        isHovered,
+        setIsHovered,
+        hoveredSliceIndex,
+        setHoveredSliceIndex,
+    } = singleCellStore;
 
+    console.log(setHoveredSliceIndex, 'this is setHoveredSliceIndex');
+    if (!singleCellStore) {
+        console.error('singleCellStore is undefined');
+        return null; // Handle the case where singleCellStore is not available
+    }
     const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
     const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
     const [downloadOptionsVisible, setDownloadOptionsVisible] = useState<
@@ -146,7 +139,7 @@ const Chart: React.FC<ChartProps> = ({
     ];
 
     // Filter out data bins with specialValue "NA"
-    const uniqueIds: string[] = [
+    const uniqueIds: any = [
         ...new Set(pieChartData.map((item: any) => item.genericAssayStableId)),
     ];
     const sumValues: { [key: string]: number } = {};
@@ -167,7 +160,7 @@ const Chart: React.FC<ChartProps> = ({
 
     const pieData = Object.keys(sumValues).map((key, index) => {
         const color =
-            pieChartData.find(item => item.genericAssayStableId === key)
+            pieChartData.find((item: any) => item.genericAssayStableId === key)
                 ?.color || colors[index];
         return {
             typeOfCell: key,
@@ -347,6 +340,7 @@ const Chart: React.FC<ChartProps> = ({
             console.error('Element not found');
         }
     };
+
     return (
         <>
             <div id="div-to-download">
@@ -401,12 +395,19 @@ const Chart: React.FC<ChartProps> = ({
                                                 evt: React.MouseEvent<any>,
                                                 props: VictoryEventProps
                                             ) => {
-                                                setHoveredSliceIndex(
+                                                singleCellStore_importedDirectly.setHoveredSliceIndex(
                                                     props.index
                                                 );
                                                 if (!tooltipEnabled) {
-                                                    setIsHovered(true);
-                                                    setHoveredSliceIndex(
+                                                    singleCellStore_importedDirectly.setIsHovered(
+                                                        true
+                                                    );
+                                                    singleCellStore_importedDirectly.setHoveredSliceIndex(
+                                                        props.index
+                                                    );
+                                                    console.log(
+                                                        'new hoveredsliceindex',
+                                                        hoveredSliceIndex,
                                                         props.index
                                                     );
                                                 }
@@ -414,9 +415,13 @@ const Chart: React.FC<ChartProps> = ({
                                                 return [];
                                             },
                                             onMouseOut: () => {
-                                                setHoveredSliceIndex(-1);
+                                                singleCellStore_importedDirectly.setHoveredSliceIndex(
+                                                    -1
+                                                );
                                                 if (!tooltipEnabled) {
-                                                    setIsHovered(false);
+                                                    singleCellStore_importedDirectly.setIsHovered(
+                                                        false
+                                                    );
                                                 }
 
                                                 return [];
@@ -539,6 +544,6 @@ const Chart: React.FC<ChartProps> = ({
             </div>
         </>
     );
-};
+});
 
 export default Chart;
