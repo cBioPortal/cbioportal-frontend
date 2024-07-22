@@ -909,7 +909,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     style={
                         chartType == 'stack'
                             ? {
-                                  width: '55%',
+                                  width: '52%',
                                   marginLeft: '5px',
                                   marginTop: '30px',
                               }
@@ -968,7 +968,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                           padding: '10px',
                                           marginTop: '20px',
                                           borderRadius: '5px',
-                                          height: '700px',
+                                          height: '720px',
                                           overflowY: this.state.isHorizontal
                                               ? 'scroll'
                                               : 'hidden',
@@ -1089,8 +1089,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 {chartType == 'stack' && (
                     <div
                         style={{
-                            width: '22%',
-                            marginTop: '60px',
+                            width: '25%',
+                            marginTop: '85px',
                             marginLeft: '10px',
                             textAlign: 'center',
                         }}
