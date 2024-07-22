@@ -51,7 +51,7 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                             transition:
                                 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
                             backgroundColor: 'white',
-                            width: '350px',
+                            width: '320px',
                             zIndex: 220,
                             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', // Enhanced shadow for 3D effect
                             borderRadius: '10px', // Rounded corners
