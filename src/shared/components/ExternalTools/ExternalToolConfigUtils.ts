@@ -41,40 +41,11 @@ function computeIsExternalToolAvaialble(
     return true;
 }
 
-// OPTIMIZE: pass store
+// OPTIMIZE: cache in store so not recomputed too often, but need a store that is invalidated whenever the user refreshes the page, or add an expiration time
 export function isExternalToolAvailable(
     toolConfig: ExternalToolConfig
 ): boolean {
-    // check store
-    // CODEP: relies on exitence of groupComparisonPage in window and exposed functions
-    const groupComparisonPage = (window as any).groupComparisonPage;
-    try {
-        if (groupComparisonPage) {
-            var resultCached = groupComparisonPage.store.isExternalToolAvailable(
-                toolConfig.id
-            );
-            if (resultCached !== undefined) {
-                // console.log(toolConfig.id + '.isExternalToolAvailable.Cache:' + resultCached);
-                return resultCached;
-            }
-        }
-    } catch (e) {
-        console.error('isExternalToolAvailable.GetCache.Exception:', e);
-    }
-
-    // compute and store the value
     var resultComputed = computeIsExternalToolAvaialble(toolConfig);
     // console.log(toolConfig.id + '.isExternalToolAvailable.Computed:' + resultComputed);
-    try {
-        if (groupComparisonPage) {
-            groupComparisonPage.store.setIsExternalToolAvailable(
-                toolConfig.id,
-                resultComputed
-            );
-        }
-    } catch (e) {
-        console.error('isExternalToolAvailable.SetCache.Exception:', e);
-    }
-
     return resultComputed;
 }

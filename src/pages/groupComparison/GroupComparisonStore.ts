@@ -666,13 +666,4 @@ export default class GroupComparisonStore extends ComparisonStore {
             FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
         );
     }
-
-    // cache ExternalToolAvailable map so don't need to recompute too often
-    public isExternalToolAvailable = (id: string): boolean | undefined => {
-        return this._externalToolAvailable[id] || undefined;
-    };
-    public setIsExternalToolAvailable = (id: string, value: boolean): void => {
-        this._externalToolAvailable[id] = value;
-    };
-    private _externalToolAvailable: { [key: string]: boolean } = {};
 }
