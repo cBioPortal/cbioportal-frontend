@@ -28,6 +28,16 @@ export class BarChartAxisLabel extends VictoryLabel {
             key: style[0].textAnchor || textAnchor,
         };
 
+        let tspan = this.getTspan(content, tspanProps, style, datum);
+
+        return React.cloneElement(
+            props.textComponent,
+            { dx, dy, x, y, events, transform, className, title, desc },
+            tspan
+        );
+    }
+
+    getTspan(content: string[], tspanProps: any, style: any, datum: any) {
         let tspan = [];
 
         // add the second string as a superscript
@@ -47,16 +57,10 @@ export class BarChartAxisLabel extends VictoryLabel {
             tspan.push(<tspan {...tspanProps}>{content[0]}</tspan>);
         }
 
-        return React.cloneElement(
-            props.textComponent,
-            { dx, dy, x, y, events, transform, className, title, desc },
-            tspan
-        );
+        return tspan;
     }
 }
 
 // we need to ignore the type of BarChartAxisLabel to avoid typescript error
-// TS2605: JSX element type 'BarChartAxisLabel' is not a constructor function for JSX elements.
-// we get this error because VictoryLabel cannot be resolved as a valid react component (due to missing victory types)
 const BarChartAxisLabelIgnoreType = BarChartAxisLabel as any;
 export default BarChartAxisLabelIgnoreType;

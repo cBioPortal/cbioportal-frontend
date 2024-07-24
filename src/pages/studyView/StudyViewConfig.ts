@@ -23,6 +23,7 @@ export type StudyViewColorTheme = {
 
 export type StudyViewThreshold = {
     pieToTable: number;
+    pieToBar: number;
     piePadding: number;
     barRatio: number;
     rowsInTableForOneGrid: number;
@@ -61,9 +62,14 @@ export type StudyViewFrontEndConfig = {
 
 export type StudyViewConfig = StudyView & StudyViewFrontEndConfig;
 
+export type ChangeChartOptionsMap = {
+    [chartType in ChartTypeEnum]?: ChartType[];
+};
+
 export enum ChartTypeEnum {
     PIE_CHART = 'PIE_CHART',
     BAR_CHART = 'BAR_CHART',
+    BAR_CATEGORICAL_CHART = 'BAR_CATEGORICAL_CHART',
     SURVIVAL = 'SURVIVAL',
     TABLE = 'TABLE',
     SCATTER = 'SCATTER',
@@ -88,6 +94,7 @@ export enum ChartTypeEnum {
 export enum ChartTypeNameEnum {
     PIE_CHART = 'pie chart',
     BAR_CHART = 'bar chart',
+    BAR_CATEGORICAL_CHART = 'categorical bar chart',
     SURVIVAL = 'survival plot',
     TABLE = 'table',
     SCATTER = 'density plot',
@@ -160,6 +167,7 @@ const studyViewFrontEnd = {
     },
     thresholds: {
         pieToTable: 20,
+        pieToBar: 5,
         piePadding: 20,
         barRatio: 0.8,
         rowsInTableForOneGrid: 4,
@@ -183,6 +191,10 @@ const studyViewFrontEnd = {
                 h: 1,
             },
             [ChartTypeEnum.BAR_CHART]: {
+                w: 2,
+                h: 1,
+            },
+            [ChartTypeEnum.BAR_CATEGORICAL_CHART]: {
                 w: 2,
                 h: 1,
             },
