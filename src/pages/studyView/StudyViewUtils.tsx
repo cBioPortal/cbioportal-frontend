@@ -226,6 +226,12 @@ export type DataBin = {
     start: number;
 };
 
+export type CategoryDataBin = {
+    id: string;
+    count: number;
+    specialValue: string;
+};
+
 export type MutationCategorization = 'MUTATED' | 'MUTATION_TYPE';
 
 export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
@@ -1244,6 +1250,18 @@ export function filterIntervalBins(numericalBins: DataBin[]) {
     return numericalBins.filter(
         dataBin => dataBin.start !== undefined && dataBin.end !== undefined
     );
+}
+
+export function clinicalDataToDataBin(
+    data: ClinicalDataCountSummary[]
+): DataBin[] {
+    return data.map(item => ({
+        id: item.value,
+        count: item.count,
+        specialValue: `${item.value}`,
+        start: -1,
+        end: -1,
+    }));
 }
 
 export function calcIntervalBinValues(intervalBins: DataBin[]) {
