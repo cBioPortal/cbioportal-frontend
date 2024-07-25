@@ -17,13 +17,7 @@ import {
     Sample,
     MutationCountByPosition,
 } from 'cbioportal-ts-api-client';
-import {
-    action,
-    observable,
-    makeObservable,
-    computed,
-    _allowStateChangesInsideComputed,
-} from 'mobx';
+import { action, observable, makeObservable, computed } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
