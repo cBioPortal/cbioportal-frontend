@@ -7,7 +7,6 @@ import { getServerConfig } from '../../../config/config';
 import { ExternalToolConfig } from '../ExternalTools/ExternalToolConfig';
 import { ExternalTool } from '../ExternalTools/ExternalTool';
 import { isExternalToolAvailable } from '../ExternalTools/ExternalToolConfigUtils';
-import { isJSDocNonNullableType } from 'typescript';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
