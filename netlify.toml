@@ -48,6 +48,12 @@ for = "/*.eot"
 	Access-Control-Allow-Origin = "*"
 	Content-Type = "application/font-eot"
 
+[[headers]]
+for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

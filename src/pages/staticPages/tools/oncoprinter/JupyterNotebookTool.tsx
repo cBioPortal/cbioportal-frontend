@@ -2,9 +2,12 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { Helmet } from 'react-helmet';
 import { PageLayout } from '../../../../shared/components/PageLayout/PageLayout';
-import { observable, makeObservable, action } from 'mobx';
+import { observable, makeObservable, action, computed } from 'mobx';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
-import { folder } from 'jszip';
+import ProgressIndicator, {
+    IProgressIndicatorItem,
+} from 'shared/components/progressIndicator/ProgressIndicator';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 export interface IOncoprinterToolProps {}
 
@@ -17,12 +20,14 @@ export default class JupyterNotebookTool extends React.Component<
 
     private jupyterIframe: Window | null = null;
 
-    @observable private isLoading: boolean = true;
+    private timeShownInterval: ReturnType<typeof setInterval> | undefined;
 
     @observable private folder_used: string =
         getBrowserWindow()?.clientPostedData?.folderName || '';
     @observable private file_to_execute: string =
         getBrowserWindow()?.clientPostedData?.filename || '';
+    @observable private isActivated: boolean = false;
+    @observable private timeShown: number = 0;
 
     private notebookContentToExecute = {
         nbformat: 4,
@@ -101,13 +106,23 @@ export default class JupyterNotebookTool extends React.Component<
                 event.data.message ===
                     'JupyterLab extension jupyterlab-iframe-bridge-example is activated!'
             ) {
+                this.isActivated = true;
                 this.sendFileToJupyter();
             }
         });
+
+        this.timeShownInterval = setInterval(() => {
+            if (!this.isActivated) {
+                this.timeShown += 1;
+            }
+        }, 1000);
     }
 
     componentWillUnmount() {
         window.removeEventListener('message', this.handleMessageFromIframe);
+        if (this.timeShownInterval) {
+            clearInterval(this.timeShownInterval);
+        }
     }
 
     @action
@@ -149,16 +164,46 @@ export default class JupyterNotebookTool extends React.Component<
         if (event.data.type === 'from-iframe-to-host-about-file-status') {
             if (event.data.message === 'File saved successfully') {
                 this.openDemoExecution();
-                setTimeout(() => {
-                    this.isLoading = false;
-                }, 10000);
             }
         }
 
         if (event.data.type === 'from-iframe-to-host-about-file-execution') {
-            console.log('Id for the execution : ', event.data.message);
+            console.log('Execution Message : ', event.data.message);
         }
     };
+
+    @computed get progressItems(): IProgressIndicatorItem[] {
+        const ret: IProgressIndicatorItem[] = [];
+
+        if (!this.isActivated) {
+            ret.push({
+                label: 'Initializing JupyterLab extension...',
+                promises: [],
+                hideIcon: true,
+                style: { fontWeight: 'bold' },
+            });
+
+            if (this.timeShown > 2) {
+                ret.push({
+                    label: ' - this can take several seconds',
+                    promises: [],
+                    hideIcon: true,
+                });
+            }
+        } else {
+            ret.push({
+                label: 'JupyterLab extension is activated',
+                promises: [],
+                style: { fontWeight: 'bold' },
+            });
+        }
+
+        ret.push({
+            label: 'Rendering',
+        });
+
+        return ret as IProgressIndicatorItem[];
+    }
 
     render() {
         return (
@@ -169,12 +214,21 @@ export default class JupyterNotebookTool extends React.Component<
                     </title>
                 </Helmet>
                 <div className="cbioportal-frontend">
-                    {/* <h1 style={{ display: 'inline', marginRight: 10 }}>
-                        {' '}
-                        {this.isLoading
-                            ? 'Syncing the Contents....'
-                            : 'Contents Synced with the Latest Data'}
-                    </h1>{' '} */}
+                    <LoadingIndicator
+                        isLoading={!this.isActivated}
+                        size={'big'}
+                        centerRelativeToContainer={false}
+                        center={true}
+                        className="jupyterNotebookLoadingIndicator"
+                        noFade={true}
+                    >
+                        <ProgressIndicator
+                            getItems={() => this.progressItems}
+                            show={!this.isActivated}
+                            sequential={true}
+                        />
+                    </LoadingIndicator>
+
                     <div
                         style={{
                             marginTop: 10,
@@ -184,8 +238,12 @@ export default class JupyterNotebookTool extends React.Component<
                     >
                         <iframe
                             id="jupyterIframe"
-                            src={`https://rad-haupia-36408a.netlify.app/lite/lab/index.html`}
+                            // src={`https://rad-haupia-36408a.netlify.app/lite/lab/index.html`}
                             // src={`http://127.0.0.1:8000/lite/lab/index.html`}
+                            // src={'http://localhost:8080/lite/lab/index.html'}
+                            src={
+                                'https://bright-rabanadas-351fae.netlify.app/lite/lab/index.html'
+                            }
                             width="100%"
                             height="100%"
                             style={{

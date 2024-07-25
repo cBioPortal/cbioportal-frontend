@@ -27,6 +27,8 @@ class JupyterNoteBookModal extends React.Component<
     FilenameModalProps,
     FilenameModalState
 > {
+    public channel: BroadcastChannel;
+
     constructor(props: FilenameModalProps) {
         super(props);
         this.state = {
@@ -34,6 +36,7 @@ class JupyterNoteBookModal extends React.Component<
             validated: false,
             errorMessage: '',
         };
+        this.channel = new BroadcastChannel('jupyter_channel');
     }
 
     componentDidMount() {
@@ -69,6 +72,19 @@ class JupyterNoteBookModal extends React.Component<
             filename: `${fileName}.csv`,
             folderName: folderName,
         };
+
+        // this.channel.postMessage({
+        //     fileContent: fileContent,
+        //     filename: `${fileName}.csv`,
+        //     folderName: folderName,
+        // },);
+
+        // const data = {
+        //     message: 'Hello, world!',
+        //     number: 42,
+        // };
+
+        // this.channel.postMessage(data)
 
         this.setState({ folderName: '', validated: false, errorMessage: '' });
         this.props.handleClose();
