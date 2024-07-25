@@ -289,18 +289,6 @@ const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
     goToUrlAndSetLocalStorage(url, authenticated);
 };
 
-function setServerConfiguration(props) {
-    browser.execute(
-        function(frontendConf) {
-            this.localStorage.setItem(
-                'frontendConfig',
-                JSON.stringify(frontendConf)
-            );
-        },
-        { serverConfig: props }
-    );
-}
-
 async function waitForElementDisplayed(selector, options = {}) {
     const element = await getElement(selector, options);
     await element.waitForDisplayed({

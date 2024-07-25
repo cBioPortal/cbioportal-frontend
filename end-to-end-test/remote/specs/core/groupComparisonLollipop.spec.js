@@ -17,7 +17,7 @@ const {
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('group comparison mutations tab tests', () => {
-    describe.only('lollipop alerts and plot display', () => {
+    describe('lollipop alerts and plot display', () => {
         before(async () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison/mutations?comparisonId=634006c24dd45f2bc4c3d4aa`
@@ -58,7 +58,7 @@ describe('group comparison mutations tab tests', () => {
         });
     });
 
-    describe.only('lollipop tooltip display', () => {
+    describe('lollipop tooltip display', () => {
         it('displays double tooltip when lollipop is present in both plots at the same position', async () => {
             await (await getElement('.lollipop-0')).waitForExist();
             await (await getElement('.lollipop-0')).moveTo();
@@ -107,7 +107,7 @@ describe('group comparison mutations tab tests', () => {
         });
     });
 
-    describe.only('selecting gene with dropdown and tabs', () => {
+    describe('selecting gene with dropdown and tabs', () => {
         it('clicking on gene tab sets the selected gene', async () => {
             await (await getElement('a.tabAnchor_TP53')).click();
             await (
