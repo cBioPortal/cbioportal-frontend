@@ -158,11 +158,16 @@ describe('Mutation Table', function() {
                 'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
             );
             // wait for gnomad checkbox appear
-            $('//label[div/text()="gnomAD"]/input').waitForDisplayed({
+            await (
+                await getElement('//label[div/text()="gnomAD"]/input')
+            ).waitForDisplayed({
                 timeout: 60000,
             });
             // click "GNOMAD"
-            setCheckboxChecked(true, '//label[div/text()="gnomAD"]/input');
+            await setCheckboxChecked(
+                true,
+                '//label[div/text()="gnomAD"]/input'
+            );
             // close columns menu
             await clickElement('//button[contains(text(), "Columns")]');
             // find frequency

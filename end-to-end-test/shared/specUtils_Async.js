@@ -464,10 +464,10 @@ function getSelectCheckedOptions(parent) {
     return parent.$$('.checked-select-option');
 }
 
-function pasteToElement(elementSelector, text) {
-    clipboardy.writeSync(text);
-    $(elementSelector).click();
-    browser.keys(['Shift', 'Insert']);
+async function pasteToElement(elementSelector, text) {
+    await clipboardy.writeSync(text);
+    await clickElement(elementSelector);
+    await browser.keys(['Shift', 'Insert']);
 }
 
 async function checkOncoprintElement(selector, viewports) {
@@ -593,8 +593,8 @@ async function clickQueryByGeneButton() {
     await browser.pause(500);
 }
 
-function clickModifyStudySelectionButton() {
-    $('[data-test="modifyStudySelectionButton"]').click();
+async function clickModifyStudySelectionButton() {
+    await clickElement('[data-test="modifyStudySelectionButton"]');
 }
 
 async function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {

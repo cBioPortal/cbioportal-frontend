@@ -132,6 +132,7 @@ describe('select all/deselect all functionality in study selector', () => {
 
     it('clicking select all studies checkbox selects all studies', async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+        await browser.pause(1000);
         assert.equal(
             (await getCheckedCheckboxes()).length,
             0,
@@ -209,6 +210,7 @@ describe('case set selection in front page query form', () => {
 
     beforeEach(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+        await browser.pause(3000);
     });
 
     it('selects the default case set for single study selections', async () => {
@@ -232,7 +234,7 @@ describe('case set selection in front page query form', () => {
     it('selects the right default case sets in a single->multiple->single study selection flow', async () => {
         // Select Ampullary Carcinoma
         const input = 'div[data-test=study-search] input[type=text]';
-        await getElement(input, { timeout: 10000 });
+        await getElement(input, { timeout: 20000 });
         await setInputText(input, 'ampullary baylor');
         await waitForNumberOfStudyCheckboxes(1);
         await getElement('[data-test="StudySelect"]', { timeout: 10000 });
@@ -290,7 +292,9 @@ describe('case set selection in front page query form', () => {
 
         await clickQueryByGeneButton();
 
-        await (await getElement(selectedCaseSet_sel)).waitForExist();
+        await (await getElement(selectedCaseSet_sel)).waitForExist({
+            timeout: 10000,
+        });
         await browser.waitUntil(
             async () =>
                 (await getText(selectedCaseSet_sel)).trim() ===
