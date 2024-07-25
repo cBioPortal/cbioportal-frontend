@@ -96,7 +96,6 @@ export class CopyDownloadButtons extends React.Component<
         return config
             .filter((tool: ExternalToolConfig) => isExternalToolAvailable(tool))
             .map((tool: ExternalToolConfig, index: number) => {
-                console.log('render:' + tool.id);
                 return (
                     <ExternalTool
                         key={tool.id}
