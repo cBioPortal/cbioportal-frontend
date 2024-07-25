@@ -242,7 +242,7 @@ export default class JupyterNotebookTool extends React.Component<
                             // src={`http://127.0.0.1:8000/lite/lab/index.html`}
                             // src={'http://localhost:8080/lite/lab/index.html'}
                             src={
-                                'https://bright-rabanadas-351fae.netlify.app/lite/lab/index.html'
+                                'https://shimmering-kelpie-dfb478.netlify.app/lite/lab/index.html'
                             }
                             width="100%"
                             height="100%"
@@ -251,6 +251,7 @@ export default class JupyterNotebookTool extends React.Component<
                                 boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)',
                                 borderRadius: '8px',
                             }}
+                            allow="cross-origin-isolated"
                         ></iframe>
                     </div>
                 </div>
