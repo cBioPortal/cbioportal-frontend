@@ -549,7 +549,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 filteredFormattedData.length,
                 'filteredFormattedData.length'
             );
-            let temp = filteredFormattedData[0].length * 47 + 150;
+            let temp = filteredFormattedData[0].length * 47 + 160;
             setDynamicWidth(temp);
             setInitialWidth(temp - 40);
         }
@@ -965,10 +965,10 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             <div
                 style={
                     isHorizontal
-                        ? { marginLeft: '80px' }
+                        ? { marginLeft: '130px' }
                         : {
                               width: dynamicWidth > 600 ? dynamicWidth : 600,
-                              marginLeft: '80px',
+                              marginLeft: '90px',
                           }
                 }
             >
