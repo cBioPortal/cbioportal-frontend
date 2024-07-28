@@ -1038,14 +1038,39 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     };
 
     decreaseWidth = () => {
-        this.setState((prevState: any) => ({
-            dynamicWidth: Math.max(
+        this.setState((prevState: any) => {
+            const newWidth = Math.max(
                 prevState.dynamicWidth - 10,
                 prevState.initialWidth
-            ),
-            decreaseCount: prevState.decreaseCount + 1,
-        }));
-        console.log(`Width decreased: ${this.state.decreaseCount + 1}`);
+            );
+
+            if (newWidth === prevState.initialWidth) {
+                const toastId = toast.loading('Processing...', {
+                    theme: 'light',
+                    position: 'top-center',
+                    transition: Zoom,
+                });
+                setTimeout(() => {
+                    toast.update(toastId, {
+                        render: `Minimum ${
+                            this.state.isHorizontal ? 'height' : 'width'
+                        } limit reached`,
+                        type: 'error',
+                        theme: 'light',
+                        isLoading: false,
+                        position: 'top-center',
+                        autoClose: 3500,
+                        // closeButton: true
+                    });
+                }, 700);
+                return null; // Prevent state update
+            }
+
+            return {
+                dynamicWidth: newWidth,
+                decreaseCount: prevState.decreaseCount + 1,
+            };
+        });
     };
 
     handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1159,18 +1184,22 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     />
                                 </div>
 
-                                <div className="dropdown-container">
-                                    <ReactSelect
-                                        id="chartTypeSelect"
-                                        onChange={this.handleChartTypeChange}
-                                        value={chartType}
-                                        options={chartOptions}
-                                        placeholder="Select type of chart..."
-                                        // Disable if selectedOption is falsy
-                                        clearable={false}
-                                        searchable={true}
-                                    />
-                                </div>
+                                {selectedOption && (
+                                    <div className="dropdown-container">
+                                        <ReactSelect
+                                            id="chartTypeSelect"
+                                            onChange={
+                                                this.handleChartTypeChange
+                                            }
+                                            value={chartType}
+                                            options={chartOptions}
+                                            placeholder="Select type of chart..."
+                                            // Disable if selectedOption is falsy
+                                            clearable={false}
+                                            searchable={true}
+                                        />
+                                    </div>
+                                )}
 
                                 {/* Dropdown for selecting entity */}
                                 {chartType === 'bar' && (
@@ -1569,7 +1598,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             style={
                                 chartType == 'stack'
                                     ? {
-                                          width: '55%',
+                                          width: '52%',
                                           marginLeft: '5px',
                                           marginTop: '30px',
                                       }
@@ -1851,8 +1880,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         {chartType == 'stack' && (
                             <div
                                 style={{
-                                    width: '22%',
-                                    marginTop: '60px',
+                                    width: '25%',
+                                    marginTop: '85px',
                                     marginLeft: '10px',
                                     textAlign: 'center',
                                 }}
