@@ -599,10 +599,10 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                             <VictoryChart
                                 domainPadding={20}
                                 height={isHorizontal ? dynamicWidth : 600}
-                                width={isHorizontal ? 800 : dynamicWidth}
+                                width={isHorizontal ? 740 : dynamicWidth}
                                 padding={{
                                     top: 10,
-                                    bottom: isHorizontal ? 60 : 150,
+                                    bottom: isHorizontal ? 40 : 150,
                                     left: isHorizontal ? 190 : 60,
                                     right: 110,
                                 }} // Adjust chart padding as needed

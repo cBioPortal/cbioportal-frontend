@@ -295,7 +295,7 @@ const PieToolTip: React.FC<ChartProps> = ({
                     <div
                         className="custom-scrollbar"
                         style={{
-                            height: tooltipEnabled ? undefined : '400px',
+                            height: tooltipEnabled ? 'max-content' : undefined,
                             overflowY: 'auto',
                             resize: 'both',
                             overflow: 'auto',
