@@ -320,7 +320,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         setNoOfBars(formattedData[0].length);
         let temp = formattedData[0].length * 47;
         setDynamicWidth(temp);
-        setInitialWidth(temp - 100);
+        setInitialWidth(temp - 40);
         const updatedTooltiparray = tooltipUtilArray();
         for (let i = 0; i < differentSampleIds.length; i++) {
             mappedData[differentSampleIds[i]] = updatedTooltiparray[i] || null; // Assign null if there's no corresponding tooltipData
@@ -500,7 +500,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             setNoOfBars(filteredFormattedData[0].length);
             let temp = filteredFormattedData[0].length * 47 + 150;
             setDynamicWidth(temp);
-            setInitialWidth(temp - 100);
+            setInitialWidth(temp - 40);
         }
     }, [selectedSamples, formattedDatastate]);
     return (

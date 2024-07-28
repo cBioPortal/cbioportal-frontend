@@ -2,6 +2,8 @@ import React, { Component, useRef } from 'react';
 import _ from 'lodash';
 // import Dropdown from 'react-bootstrap/Dropdown';
 // import DropdownButton from 'react-bootstrap/DropdownButton';
+import { toast, Zoom } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Dropdown, DropdownButton } from 'react-bootstrap';
 import {
     DataBinMethodConstants,
@@ -556,13 +558,39 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     };
 
     decreaseWidth = () => {
-        this.setState((prevState: any) => ({
-            dynamicWidth: Math.max(
+        this.setState((prevState: any) => {
+            const newWidth = Math.max(
                 prevState.dynamicWidth - 10,
                 prevState.initialWidth
-            ),
-            decreaseCount: prevState.decreaseCount + 1,
-        }));
+            );
+
+            if (newWidth === prevState.initialWidth) {
+                const toastId = toast.loading('Processing...', {
+                    theme: 'light',
+                    position: 'top-center',
+                    transition: Zoom,
+                });
+                setTimeout(() => {
+                    toast.update(toastId, {
+                        render: `Minimum ${
+                            this.state.isHorizontal ? 'height' : 'width'
+                        } limit reached`,
+                        type: 'error',
+                        theme: 'light',
+                        isLoading: false,
+                        position: 'top-center',
+                        autoClose: 3500,
+                        // closeButton: true
+                    });
+                }, 700);
+                return null; // Prevent state update
+            }
+
+            return {
+                dynamicWidth: newWidth,
+                decreaseCount: prevState.decreaseCount + 1,
+            };
+        });
     };
 
     handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -647,7 +675,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 value={selectedOption || ''}
                                 onChange={this.handleSelectChange}
                                 options={options}
-                                placeholder="Select a Molecular Profile..."
+                                placeholder="Select a single cell profile..."
                                 clearable={false}
                                 searchable={true}
                             />
