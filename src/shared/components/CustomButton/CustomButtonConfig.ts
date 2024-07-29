@@ -3,14 +3,14 @@ import { ICustomButtonConfig } from './ICustomButton';
 import memoize from 'memoize-weak-decorator';
 
 /**
- * Define a CustomButton to display (in CopyDownloadButtons). 
+ * Define a CustomButton to display (in CopyDownloadButtons).
  * Clicking on the button will launch it using the url_format
  */
 export class CustomButtonConfig implements ICustomButtonConfig {
     id: string;
     name: string;
     tooltip: string;
-    iconImageSrc: string;
+    image_src: string;
     required_user_agent?: string;
     required_installed_font_family?: string;
     url_format: string;
@@ -31,9 +31,10 @@ export class CustomButtonConfig implements ICustomButtonConfig {
         this.id = config.id;
         this.name = config.name;
         this.tooltip = config.tooltip;
-        this.iconImageSrc = config.iconImageSrc;
+        this.image_src = config.iconImageSrc;
         this.required_user_agent = config.required_platform;
-        this.required_installed_font_family = config.required_installed_font_family;
+        this.required_installed_font_family =
+            config.required_installed_font_family;
         this.url_format = config.url_format;
     }
 
@@ -48,40 +49,46 @@ export class CustomButtonConfig implements ICustomButtonConfig {
     }
 
     @memoize
-    checkToolRequirementsPlatform(required_userAgent: string | undefined): boolean {
+    checkToolRequirementsPlatform(
+        required_userAgent: string | undefined
+    ): boolean {
         if (!required_userAgent) {
             return true;
         }
-    
+
         return navigator.userAgent.indexOf(required_userAgent) >= 0;
     }
-    
+
     // OPTIMIZE: want to @memoize, but if user installs font, it wouldn't be detected.
-    checkToolRequirementsFontFamily(fontFamily : string | undefined): boolean {
+    checkToolRequirementsFontFamily(fontFamily: string | undefined): boolean {
         if (!fontFamily) {
             return true;
         }
-    
+
         const detector = new FontDetector();
         const result = detector.detect(fontFamily);
         return result;
     }
-    
+
     computeIsCustomButtonAvailable(): boolean {
         if (!this.checkToolRequirementsPlatform(this.required_user_agent)) {
             return false;
         }
-    
-        if (!this.checkToolRequirementsFontFamily(this.required_installed_font_family)) {
+
+        if (
+            !this.checkToolRequirementsFontFamily(
+                this.required_installed_font_family
+            )
+        ) {
             return false;
         }
-    
+
         return true;
-    }    
-};
+    }
+}
 
 /*fnordref
-*/
+ */
 // RFC87
 //fnord move to server file
 export const CustomButtonConfigDefaults: ICustomButtonConfig[] = [
@@ -89,14 +96,15 @@ export const CustomButtonConfigDefaults: ICustomButtonConfig[] = [
         id: 'avm',
         name: 'AVM for cBioPortal',
         tooltip: 'Launch AVM for cBioPortal with data (copied to clipboard)',
-        iconImageSrc: 'https://aquminmedical.com/images/content/AquminLogoSimple.png',
+        image_src:
+            'https://aquminmedical.com/images/content/AquminLogoSimple.png',
         required_user_agent: 'Win',
         required_installed_font_family: 'AVMInstalled',
         url_format:
             'avm://?importclipboard&-AutoMode=true&-ProjectNameHint=${studyName}&-ImportDataLength=${dataLength}',
     },
 
-     /* TEST: uncomment to test
+    /* TEST: uncomment to test
      * ASNEEDED: we could add a localStorage prop to enable
     {
         id: 'test',
@@ -108,8 +116,3 @@ export const CustomButtonConfigDefaults: ICustomButtonConfig[] = [
     },    
      */
 ];
-
-
-
-
-

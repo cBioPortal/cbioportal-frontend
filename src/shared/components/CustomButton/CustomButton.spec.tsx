@@ -28,11 +28,11 @@ describe('CustomButton Component', () => {
             id: 'test-tool',
             url_format: testUrlFormat,
             tooltip: 'Test Tooltip',
-            iconImageSrc: 'test-icon.png',
+            image_src: 'test-icon.png',
         },
         baseTooltipProps: {},
         overlayClassName: '',
-        downloadData: jest.fn(() => testData),
+        downloadData: Promise.resolve(testData),
         urlFormatOverrides: {},
     };
 
@@ -82,15 +82,15 @@ describe('CustomButton Component', () => {
         expect(component.getSingleStudyName()).toBe('Test Study');
     });
 
-    it('calls handleLaunchStart on button click', () => {
-        const handleLaunchStartSpy = jest.spyOn(
+    it('calls handleClick on button click', () => {
+        const handleClickSpy = jest.spyOn(
             CustomButton.prototype,
-            'handleLaunchStart'
+            'handleClick'
         );
         const { getByRole } = render(<CustomButton {...mockProps} />);
         const button = getByRole('button');
         fireEvent.click(button);
-        expect(handleLaunchStartSpy).toHaveBeenCalled();
+        expect(handleClickSpy).toHaveBeenCalled();
     });
 
     it('copies data to clipboard and calls openCustomUrl', async () => {

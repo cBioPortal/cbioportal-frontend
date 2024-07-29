@@ -20,6 +20,9 @@ export interface ICopyDownloadInputsProps {
     downloadLabel?: string;
     handleDownload?: () => void;
     handleCopy?: () => void;
-    // allow implementation to handle the data on it's own. The input here is from getDownloadData
-    downloadData?: () => string;
+    // allow implementation to handle the data on it's own. 
+    // TECH_DOWNLOADDATA: CopyDownloadButtons.downloadData needs to be async so it can work with either async context (IAsyncCopyDownloadControlsProps) or synchronous context (SimpleCopyDownloadControls)
+    // TODO: we should return Promise<ICopyDownloadData> here, but would need to pull that interface out of CopyDownloadControls.tsx (circular dependency).
+    downloadData?: Promise<string>;
+
 }

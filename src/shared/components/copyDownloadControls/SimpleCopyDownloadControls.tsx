@@ -84,7 +84,7 @@ export class SimpleCopyDownloadControls extends React.Component<
                 <CopyDownloadButtons
                     className={this.props.className}
                     handleDownload={this.handleDownload}
-                    downloadData={this.props.downloadData}
+                    downloadData={this.downloadDataAsPromise()}
                     copyButtonRef={this.copyButtonRef}
                     handleCopy={this.handleAfterCopy}
                     showCopyMessage={this.showCopyMessage}
@@ -92,6 +92,16 @@ export class SimpleCopyDownloadControls extends React.Component<
                     showDownload={this.props.showDownload}
                 />
             );
+        }
+    }
+
+    /**
+     * Wrapper around downloadData() to return as a Promise<string> for ICopyDownloadButtonsProps
+     * See TECH_DOWNLOADDATA
+     */
+    private downloadDataAsPromise(): Promise<string> | undefined {
+        if (this.props.downloadData) {
+            return Promise.resolve(this.props.downloadData());
         }
     }
 

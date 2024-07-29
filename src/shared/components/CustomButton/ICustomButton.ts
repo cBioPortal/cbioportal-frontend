@@ -15,7 +15,7 @@ export interface ICustomButtonProps {
     // this is an object that contains a property map
     baseTooltipProps: any;
     overlayClassName?: string;
-    downloadData?: () => string;
+    downloadData?: Promise<string> | undefined;
 
     // optional
     urlFormatOverrides?: CustomButtonUrlParameters;
@@ -25,7 +25,7 @@ export interface ICustomButtonConfig {
     id: string;
     name: string;
     tooltip: string;
-    iconImageSrc: string;
+    image_src: string;
     required_user_agent?: string;
     required_installed_font_family?: string;
     url_format: string;
