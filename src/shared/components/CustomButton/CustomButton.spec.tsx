@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ExternalTool } from './ExternalTool';
+import { CustomButton } from './CustomButton';
 import {
-    IExternalToolProps,
-    IExternalToolUrlParameters,
-} from './IExternalTool';
+    ICustomButtonProps,
+    CustomButtonUrlParameters,
+} from './ICustomButton';
 
 jest.mock('cbioportal-frontend-commons', () => ({
     DefaultTooltip: ({ children }: { children: React.ReactNode }) => (
@@ -12,7 +12,7 @@ jest.mock('cbioportal-frontend-commons', () => ({
     ),
 }));
 
-describe('ExternalTool Component', () => {
+describe('CustomButton Component', () => {
     const testData = 'test data';
     const testDataLengthString = testData.length.toString();
     const testUrlFormat =
@@ -25,7 +25,7 @@ describe('ExternalTool Component', () => {
     const windowOpenOriginal = window.open;
     const windowOpenMock = jest.fn();
 
-    const mockProps: IExternalToolProps = {
+    const mockProps: ICustomButtonProps = {
         toolConfig: {
             name: 'Test',
             id: 'test-tool',
@@ -76,21 +76,21 @@ describe('ExternalTool Component', () => {
     });
 
     it('renders correctly', () => {
-        render(<ExternalTool {...mockProps} />);
+        render(<CustomButton {...mockProps} />);
         expect(screen.getByRole('button')).toBeTruthy();
     });
 
     it('returns the correct study name from getSingleStudyName', () => {
-        const component = new ExternalTool(mockProps);
+        const component = new CustomButton(mockProps);
         expect(component.getSingleStudyName()).toBe('Test Study');
     });
 
     it('calls handleLaunchStart on button click', () => {
         const handleLaunchStartSpy = jest.spyOn(
-            ExternalTool.prototype,
+            CustomButton.prototype,
             'handleLaunchStart'
         );
-        const { getByRole } = render(<ExternalTool {...mockProps} />);
+        const { getByRole } = render(<CustomButton {...mockProps} />);
         const button = getByRole('button');
         fireEvent.click(button);
         expect(handleLaunchStartSpy).toHaveBeenCalled();
@@ -98,10 +98,10 @@ describe('ExternalTool Component', () => {
 
     it('copies data to clipboard and calls handleLaunchReady', async () => {
         const handleLaunchReadySpy = jest.spyOn(
-            ExternalTool.prototype,
+            CustomButton.prototype,
             'handleLaunchReady'
         );
-        const { getByRole } = render(<ExternalTool {...mockProps} />);
+        const { getByRole } = render(<CustomButton {...mockProps} />);
         const button = getByRole('button');
 
         fireEvent.click(button);
@@ -116,8 +116,8 @@ describe('ExternalTool Component', () => {
     });
 
     it('formats URL correctly and redirects', () => {
-        const component = new ExternalTool(mockProps);
-        const urlParametersLaunch: IExternalToolUrlParameters = {
+        const component = new CustomButton(mockProps);
+        const urlParametersLaunch: CustomButtonUrlParameters = {
             studyName: testStudyName,
             dataLength: testDataLengthString,
         };

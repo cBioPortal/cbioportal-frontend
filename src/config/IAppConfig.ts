@@ -1,4 +1,4 @@
-import { ExternalToolConfig } from 'shared/components/ExternalTools/ExternalToolConfig';
+import { CustomButtonConfig } from 'shared/components/CustomButton/CustomButtonConfig';
 
 export interface IAppConfig {
     apiRoot?: string;
@@ -188,5 +188,5 @@ export interface IServerConfig {
     vaf_log_scale_default: boolean; // this has a default
     skin_study_view_show_sv_table: boolean; // this has a default
     enable_study_tags: boolean;
-    external_tools: ExternalToolConfig[];
+    external_tools: CustomButtonConfig[];
 }

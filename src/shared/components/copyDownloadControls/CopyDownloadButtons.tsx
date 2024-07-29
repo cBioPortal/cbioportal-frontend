@@ -4,9 +4,8 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 import { getServerConfig } from '../../../config/config';
-import { ExternalToolConfig } from '../ExternalTools/ExternalToolConfig';
-import { ExternalTool } from '../ExternalTools/ExternalTool';
-import { isExternalToolAvailable } from '../ExternalTools/ExternalToolConfigUtils';
+import { CustomButtonConfig } from '../CustomButton/CustomButtonConfig';
+import { CustomButton } from '../CustomButton/CustomButton';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
@@ -82,7 +81,7 @@ export class CopyDownloadButtons extends React.Component<
         );
     }
 
-    buttonsExternalTools() {
+    customButtons() {
         // TECH: <If condition={this.props.showDownload}> was not working with returning multiple items in JSX.Element[], so moved the conditional here.
         if (!this.props.showDownload) {
             return null;
@@ -94,10 +93,10 @@ export class CopyDownloadButtons extends React.Component<
         }
 
         return config
-            .filter((tool: ExternalToolConfig) => isExternalToolAvailable(tool))
-            .map((tool: ExternalToolConfig, index: number) => {
+            .filter((tool: CustomButtonConfig) => tool.isAvailable())
+            .map((tool: CustomButtonConfig, index: number) => {
                 return (
-                    <ExternalTool
+                    <CustomButton
                         key={tool.id}
                         toolConfig={tool}
                         baseTooltipProps={this.baseTooltipProps}
@@ -116,7 +115,7 @@ export class CopyDownloadButtons extends React.Component<
                     <If condition={this.props.showDownload}>
                         {this.downloadButton()}
                     </If>
-                    {this.buttonsExternalTools()}
+                    {this.customButtons()}
                 </ButtonGroup>
             </span>
         );

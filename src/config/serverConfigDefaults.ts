@@ -1,5 +1,5 @@
 import { IServerConfig } from './IAppConfig';
-import { ExternalToolConfigDefaults } from 'shared/components/ExternalTools/ExternalToolConfig';
+import { CustomButtonConfigDefaults } from 'shared/components/CustomButton/CustomButtonConfig';
 
 export const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',
@@ -245,7 +245,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_study_view_show_sv_table: false,
 
-    external_tools: ExternalToolConfigDefaults,
+    external_tools: CustomButtonConfigDefaults,
 };
 
 export default ServerConfigDefaults;

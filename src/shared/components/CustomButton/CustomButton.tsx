@@ -3,23 +3,23 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
-    IExternalToolProps,
-    IExternalToolUrlParameters,
-} from './IExternalTool';
-import { ExternalToolConfig } from './ExternalToolConfig';
+    ICustomButtonProps,
+    CustomButtonUrlParameters,
+} from './ICustomButton';
+import { CustomButtonConfig } from './CustomButtonConfig';
 import './styles.scss';
 
-export class ExternalTool extends React.Component<IExternalToolProps, {}> {
-    constructor(props: IExternalToolProps) {
+export class CustomButton extends React.Component<ICustomButtonProps, {}> {
+    constructor(props: ICustomButtonProps) {
         super(props);
     }
 
-    get config(): ExternalToolConfig {
+    get config(): CustomButtonConfig {
         return this.props.toolConfig;
     }
 
     // OPTIMIZE: this is computed when needed. It could be lazy, so it's only computed once, but it's unlikely to be called more than once per instance
-    get urlParametersDefault(): IExternalToolUrlParameters {
+    get urlParametersDefault(): CustomButtonUrlParameters {
         return {
             studyName: this.getSingleStudyName() ?? 'cBioPortal Data',
         };
@@ -44,9 +44,9 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
         }
     }
 
-    handleLaunchReady(urlParametersLaunch: IExternalToolUrlParameters) {
+    handleLaunchReady(urlParametersLaunch: CustomButtonUrlParameters) {
         // assemble final available urlParameters
-        const urlParameters: IExternalToolUrlParameters = {
+        const urlParameters: CustomButtonUrlParameters = {
             ...this.urlParametersDefault,
             ...this.props.urlFormatOverrides,
             ...urlParametersLaunch,
@@ -76,16 +76,14 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
 
     // pass data using Clipboard to the external tool
     handleLaunchStart() {
-        console.log(
-            'ExternalTool.handleLaunchStart:' + this.props.toolConfig.id
-        );
+        console.log('CustomData.handleLaunchStart:' + this.props.toolConfig.id );
 
         if (this.props.downloadData) {
             // data to clipboard
             // OPTIMIZE: compress or use a more efficient format
             const data = this.props.downloadData();
 
-            var urlParametersLaunch: IExternalToolUrlParameters = {
+            var urlParametersLaunch: CustomButtonUrlParameters = {
                 dataLength: data.length.toString(),
             };
 
@@ -132,7 +130,7 @@ export class ExternalTool extends React.Component<IExternalToolProps, {}> {
                     onClick={this.handleLaunchStart.bind(this)}
                 >
                     <img
-                        className="downloadButtonImageExternalTool"
+                        className="customButtonImage"
                         src={tool.iconImageSrc}
                     />
                 </Button>
