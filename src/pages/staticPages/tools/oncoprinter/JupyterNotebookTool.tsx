@@ -8,90 +8,42 @@ import ProgressIndicator, {
     IProgressIndicatorItem,
 } from 'shared/components/progressIndicator/ProgressIndicator';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { partial } from 'lodash';
+import { parse } from 'query-string';
+import { types } from '@babel/core';
+import { createNotebookContent } from './notebookContent';
 
 export interface IOncoprinterToolProps {}
+
+type FileDetailProps = {
+    fileContent: string;
+    filename: string;
+    folderName: string;
+};
 
 @observer
 export default class JupyterNotebookTool extends React.Component<
     IOncoprinterToolProps,
     {}
 > {
-    private fileDetails = getBrowserWindow().clientPostedData;
-
+    private fileDetails: FileDetailProps | null = null;
     private jupyterIframe: Window | null = null;
-
     private timeShownInterval: ReturnType<typeof setInterval> | undefined;
 
-    @observable private folder_used: string =
-        getBrowserWindow()?.clientPostedData?.folderName || '';
-    @observable private file_to_execute: string =
-        getBrowserWindow()?.clientPostedData?.filename || '';
     @observable private isActivated: boolean = false;
     @observable private timeShown: number = 0;
-
-    private notebookContentToExecute = {
-        nbformat: 4,
-        nbformat_minor: 4,
-        metadata: {},
-        cells: [
-            {
-                cell_type: 'code',
-                execution_count: 1,
-                source: [
-                    'import pandas as pd\n',
-                    'import numpy as np\n',
-                    'from sklearn.cluster import KMeans\n',
-                    'from sklearn.preprocessing import MinMaxScaler\n',
-                    'import matplotlib.pyplot as plt\n',
-                    'from mpl_toolkits.mplot3d import Axes3D\n',
-                ],
-            },
-            {
-                cell_type: 'code',
-                execution_count: 2,
-                source: [
-                    `df = pd.read_csv("${this.file_to_execute}")\n`,
-                    'numerical_columns = ["startPosition", "endPosition", "proteinPosStart", "proteinPosEnd"]\n',
-                    'X = df[numerical_columns]\n',
-                    'X = X.fillna(X.mean())\n',
-                ],
-            },
-            {
-                cell_type: 'code',
-                execution_count: 3,
-                source: [
-                    'scaler = MinMaxScaler()\n',
-                    'X_normalized = scaler.fit_transform(X)\n',
-                    'n_clusters = 3  # You can adjust this number\n',
-                    'kmeans = KMeans(n_clusters=n_clusters, n_init="auto", random_state=42)\n',
-                    'df["Cluster"] = kmeans.fit_predict(X_normalized)\n',
-                ],
-            },
-            {
-                cell_type: 'code',
-                execution_count: 4,
-                source: [
-                    'fig = plt.figure(figsize=(12, 10))\n',
-                    'ax = fig.add_subplot(111, projection="3d")\n',
-                    'colors = ["r", "g", "b"]\n',
-                    'for i in range(n_clusters):\n',
-                    '    cluster_points = X_normalized[df["Cluster"] == i]\n',
-                    '    ax.scatter(cluster_points[:, 0], cluster_points[:, 1], cluster_points[:, 2],\n',
-                    '               c=colors[i], label=f"Cluster {i}", alpha=0.7)\n',
-                    'ax.set_xlabel(f"{numerical_columns[0]} (normalized)")\n',
-                    'ax.set_ylabel(f"{numerical_columns[1]} (normalized)")\n',
-                    'ax.set_zlabel(f"{numerical_columns[2]} (normalized)")\n',
-                    'ax.legend()\n',
-                    'plt.title("3D Scatter Plot of Normalized Mutation Data")\n',
-                ],
-            },
-        ],
-    };
 
     constructor(props: IOncoprinterToolProps) {
         super(props);
         makeObservable(this);
         (window as any).oncoprinterTool = this;
+
+        let incomingData: string = getBrowserWindow().jupyterData;
+        delete (window as any).jupyterData;
+
+        if (incomingData) {
+            this.fileDetails = JSON.parse(incomingData);
+        }
     }
 
     componentDidMount() {
@@ -100,16 +52,6 @@ export default class JupyterNotebookTool extends React.Component<
         ) as HTMLIFrameElement;
         this.jupyterIframe = iframe.contentWindow;
         window.addEventListener('message', this.handleMessageFromIframe);
-        window.addEventListener('message', event => {
-            if (
-                event.data.type === 'file-communication' &&
-                event.data.message ===
-                    'JupyterLab extension jupyterlab-iframe-bridge-example is activated!'
-            ) {
-                this.isActivated = true;
-                this.sendFileToJupyter();
-            }
-        });
 
         this.timeShownInterval = setInterval(() => {
             if (!this.isActivated) {
@@ -127,12 +69,8 @@ export default class JupyterNotebookTool extends React.Component<
 
     @action
     sendFileToJupyter = () => {
-        console.table('File Saved SuccessFully');
-        if (
-            this.fileDetails &&
-            this.fileDetails.fileContent &&
-            this.jupyterIframe
-        ) {
+        console.log('checking it while sending the file', this.fileDetails);
+        if (this.fileDetails && this.jupyterIframe) {
             this.jupyterIframe.postMessage(
                 {
                     type: 'from-host-to-iframe-for-file-saving',
@@ -142,18 +80,18 @@ export default class JupyterNotebookTool extends React.Component<
                 },
                 '*'
             );
-            this.file_to_execute = this.fileDetails.filename;
-            this.folder_used = this.fileDetails.folderName;
         }
     };
 
     openDemoExecution = () => {
-        console.log('Execution taking place');
+        const notebookContent = createNotebookContent({
+            filename: this.fileDetails?.filename,
+        });
         this.jupyterIframe?.postMessage(
             {
                 type: 'from-host-to-iframe-for-file-execution',
-                folderName: this.folder_used,
-                notebookContent: this.notebookContentToExecute,
+                folderName: this.fileDetails?.folderName,
+                notebookContent: notebookContent,
             },
             '*'
         );
@@ -161,14 +99,27 @@ export default class JupyterNotebookTool extends React.Component<
 
     @action
     handleMessageFromIframe = (event: MessageEvent) => {
-        if (event.data.type === 'from-iframe-to-host-about-file-status') {
-            if (event.data.message === 'File saved successfully') {
-                this.openDemoExecution();
-            }
-        }
+        switch (event.data.type) {
+            case 'file-communication':
+                if (
+                    event.data.message ===
+                    'JupyterLab extension jupyterlab-iframe-bridge-example is activated!'
+                ) {
+                    this.isActivated = true;
+                    this.sendFileToJupyter();
+                }
+                break;
+            case 'from-iframe-to-host-about-file-status':
+                if (event.data.message === 'File saved successfully') {
+                    this.openDemoExecution();
+                }
+                break;
 
-        if (event.data.type === 'from-iframe-to-host-about-file-execution') {
-            console.log('Execution Message : ', event.data.message);
+            case 'from-iframe-to-host-about-file-execution':
+                console.log('Final Execution Message : ', event.data.message);
+                break;
+            default:
+                console.warn('Unhandled message type:', event.data.type);
         }
     };
 
