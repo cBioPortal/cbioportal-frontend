@@ -8,9 +8,6 @@ import ProgressIndicator, {
     IProgressIndicatorItem,
 } from 'shared/components/progressIndicator/ProgressIndicator';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { partial } from 'lodash';
-import { parse } from 'query-string';
-import { types } from '@babel/core';
 import { createNotebookContent } from './notebookContent';
 
 export interface IOncoprinterToolProps {}
@@ -40,6 +37,8 @@ export default class JupyterNotebookTool extends React.Component<
 
         let incomingData: string = getBrowserWindow().jupyterData;
         delete (window as any).jupyterData;
+
+        console.log({ incomingData });
 
         if (incomingData) {
             this.fileDetails = JSON.parse(incomingData);
