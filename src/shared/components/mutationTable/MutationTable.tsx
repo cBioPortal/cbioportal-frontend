@@ -13,6 +13,7 @@ import {
     Mutation,
     ClinicalData,
 } from 'cbioportal-ts-api-client';
+import AlphaMissenseColumnFormatter from './column/AlphaMissenseColumnFormatter';
 import SampleColumnFormatter from './column/SampleColumnFormatter';
 import TumorAlleleFreqColumnFormatter from './column/TumorAlleleFreqColumnFormatter';
 import NormalAlleleFreqColumnFormatter from './column/NormalAlleleFreqColumnFormatter';
@@ -198,6 +199,7 @@ export enum MutationTableColumnType {
     NORMAL_ALLELE_FREQ = 'Allele Freq (N)',
     FUNCTIONAL_IMPACT = 'Functional Impact',
     ANNOTATION = 'Annotation',
+    ALPHAMISSENSE = 'AlphaMissense',
     CUSTOM_DRIVER = 'Custom Driver',
     CUSTOM_DRIVER_TIER = 'Custom Driver Tier',
     HGVSG = 'HGVSg',
@@ -468,6 +470,32 @@ export default class MutationTable<
             visible: false,
             resizable: true,
             truncateOnResize: true,
+        };
+
+        this._columns[MutationTableColumnType.ALPHAMISSENSE] = {
+            name: MutationTableColumnType.ALPHAMISSENSE,
+            render: (d: Mutation[]) =>
+                this.props.genomeNexusCache ? (
+                    AlphaMissenseColumnFormatter.renderFunction(
+                        d,
+                        this.props.genomeNexusCache
+                    )
+                ) : (
+                    <span></span>
+                ),
+            download: (d: Mutation[]) =>
+                AlphaMissenseColumnFormatter.download(
+                    d,
+                    this.props.genomeNexusCache as GenomeNexusCache
+                ),
+            sortBy: (d: Mutation[]) =>
+                AlphaMissenseColumnFormatter.getSortValue(
+                    d,
+                    this.props.genomeNexusCache as GenomeNexusCache
+                ),
+            visible: false,
+            tooltip: (<span> AlphaMissense Paper- <a href="https://www.science.org/doi/10.1126/science.adg7492">Read Paper</a></span>),
+            defaultSortDirection: 'desc',
         };
 
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
