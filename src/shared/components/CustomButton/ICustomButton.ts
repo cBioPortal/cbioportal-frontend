@@ -1,23 +1,24 @@
 import { CustomButtonConfig } from './CustomButtonConfig';
 
-// these properties may be referenced from url_format like "${studyName}"
+/**
+ * Properties that may be referenced from url_format, like "${studyName}".
+ * TECH: all properties are string, since it's easier for the TypeScript indexing operator. E.g. dataLength as string instead of integer.
+ */
 export type CustomButtonUrlParameters = {
     studyName?: string;
     dataLength?: string;
-    // CODEP: when adding an indexing operator, easier for TypeScript when all properties are the same type (e.g. dataLength as string instead of integer)
     [key: string]: string | undefined;
 };
 
-// TECH: value of defining this interface is when you use urlParameters, TypeScript knows it can be indexed with a string.
-//fnord review value
+/**
+ * This interface defines the properties that can be passed to the CustomButton component.
+ */
 export interface ICustomButtonProps {
     toolConfig: ICustomButtonConfig;
     // this is an object that contains a property map
     baseTooltipProps: any;
     overlayClassName?: string;
     downloadData?: Promise<string> | undefined;
-
-    // optional
     urlFormatOverrides?: CustomButtonUrlParameters;
 }
 
