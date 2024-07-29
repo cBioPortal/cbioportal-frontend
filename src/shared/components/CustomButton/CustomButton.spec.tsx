@@ -1,10 +1,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { CustomButton } from './CustomButton';
-import {
-    ICustomButtonProps,
-    CustomButtonUrlParameters,
-} from './ICustomButton';
+import { ICustomButtonProps, CustomButtonUrlParameters } from './ICustomButton';
 
 jest.mock('cbioportal-frontend-commons', () => ({
     DefaultTooltip: ({ children }: { children: React.ReactNode }) => (

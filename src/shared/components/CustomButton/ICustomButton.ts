@@ -28,7 +28,7 @@ export interface ICustomButtonConfig {
     iconImageSrc: string;
     required_user_agent?: string;
     required_installed_font_family?: string;
-    url_format: string;    
+    url_format: string;
 
     isAvailable?(): boolean;
 }
