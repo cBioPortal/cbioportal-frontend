@@ -87,10 +87,8 @@ export class CustomButtonConfig implements ICustomButtonConfig {
     }
 }
 
-/*fnordref
- */
+// TODO_CUSTOMBUTTON: move to backend
 // RFC87
-//fnord move to server file
 export const CustomButtonConfigDefaults: ICustomButtonConfig[] = [
     {
         id: 'avm',
