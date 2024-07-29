@@ -111,7 +111,7 @@ export class CopyDownloadControls extends React.Component<
         if (this.props.downloadData) {
             return this.props.downloadData().then(data => data.text);
         }
-    }    
+    }
 
     public downloadIndicatorModal(): JSX.Element {
         return (

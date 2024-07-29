@@ -80,14 +80,14 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
      * OPTIMIZE: compress the data or use a more efficient format
      * @param data The data to pass to the handler.
      */
-    handleDataReady(data : string) {
+    handleDataReady(data: string) {
         var urlParametersLaunch: CustomButtonUrlParameters = {
             dataLength: data.length.toString(),
         };
 
         /* REF: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API
-            * Clipboard API supported in Chrome 66+, Firefox 63+, Safari 10.1+, Edge 79+, Opera 53+
-            */
+         * Clipboard API supported in Chrome 66+, Firefox 63+, Safari 10.1+, Edge 79+, Opera 53+
+         */
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard
                 .writeText(data)
@@ -109,8 +109,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
                 this.config.name +
                     ' launch failed: clipboard API is not avaialble.'
             );
-        }        
-
+        }
     }
 
     /**
@@ -142,10 +141,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
                     className="btn-sm"
                     onClick={this.handleClick.bind(this)}
                 >
-                    <img
-                        className="customButtonImage"
-                        src={tool.image_src}
-                    />
+                    <img className="customButtonImage" src={tool.image_src} />
                 </Button>
             </DefaultTooltip>
         );
