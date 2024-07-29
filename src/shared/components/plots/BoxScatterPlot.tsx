@@ -93,7 +93,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     qValue?: number | null;
 }
 
-type BoxModel = {
+export type BoxModel = {
     min: number;
     max: number;
     median: number;
@@ -957,7 +957,7 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
     data: IBoxScatterPlotData<D>[],
     boxCalculationFilter?: (d: D) => boolean,
     excludeLimitValuesFromBoxPlot?: any,
-    logScale?: any,
+    logScale?: IAxisLogScaleParams,
     calcBoxSizes?: (box: BoxModel, i: number) => void
 ) {
     // when limit values are shown in the legend, exclude
@@ -1013,4 +1013,68 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
                 })
             );
         });
+}
+
+export function toDataDescriptive<D extends IBaseBoxScatterPlotPoint>(
+    data: IBoxScatterPlotData<D>[],
+    logScale?: IAxisLogScaleParams
+) {
+    return data.map(d => {
+        const scatterValues = d.data.map(x =>
+            logScale ? logScale.fLogScale(x.value, 0) : x.value
+        );
+        const count = scatterValues.length;
+        // Calculate minimum and maximum
+        const minimum = Math.min(...scatterValues);
+        const maximum = Math.max(...scatterValues);
+        const mean = _.mean(scatterValues);
+
+        // Calculate standard deviation
+        const squaredDifferences = scatterValues.map((val: number) => {
+            const difference = val - mean;
+            return difference * difference;
+        });
+        const variance =
+            squaredDifferences.reduce(
+                (sum: number, val: number) => sum + val,
+                0
+            ) / scatterValues.length;
+        const stdDeviation = Math.sqrt(variance);
+
+        // Calculate median
+        const scatterValuesSorted = scatterValues
+            .slice()
+            .sort((a: number, b: number) => a - b);
+        const mid = Math.floor(scatterValuesSorted.length / 2);
+        const median =
+            scatterValuesSorted.length % 2 !== 0
+                ? scatterValuesSorted[mid]
+                : (scatterValuesSorted[mid - 1] + scatterValuesSorted[mid]) / 2;
+
+        // Calculate median absolute deviation (MAD)
+        const absoluteDeviations = scatterValues.map(val =>
+            Math.abs(val - median)
+        );
+        const absoluteDeviationsSorted = absoluteDeviations
+            .slice()
+            .sort((a, b) => a - b);
+        const madMid = Math.floor(absoluteDeviationsSorted.length / 2);
+        const mad =
+            absoluteDeviationsSorted.length % 2 !== 0
+                ? absoluteDeviationsSorted[madMid]
+                : (absoluteDeviationsSorted[madMid - 1] +
+                      absoluteDeviationsSorted[madMid]) /
+                  2;
+
+        // Return an object with the descriptive statistics
+        return {
+            count,
+            minimum,
+            maximum,
+            mean,
+            stdDeviation,
+            median,
+            mad,
+        };
+    });
 }
