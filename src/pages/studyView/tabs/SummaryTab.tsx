@@ -42,6 +42,7 @@ import {
     getGenesCNADownloadData,
     getPatientTreatmentDownloadData,
     getSampleTreatmentDownloadData,
+    clinicalDataToDataBin,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import DelayedRender from 'shared/components/DelayedRender';
@@ -349,6 +350,87 @@ export class StudySummaryTab extends React.Component<
                     ),
                     showNAToggle: this.store.isShowNAToggleVisible(
                         this.store.getClinicalDataBin(chartMeta).result!
+                    ),
+                }),
+            }),
+            [ChartTypeEnum.BAR_CATEGORICAL_CHART]: () => ({
+                commonProps: {
+                    onToggleNAValue: this.handlers.onToggleNAValue,
+                    onChangeChartType: this.handlers.onChangeChartType,
+                    getData: (dataType?: DataType) =>
+                        this.store.getChartDownloadableData(
+                            chartMeta,
+                            dataType
+                        ),
+                    isShowNAChecked: this.store.isShowNAChecked(
+                        chartMeta.uniqueKey
+                    ),
+                    downloadTypes: ['Summary Data', 'Full Data', 'SVG', 'PDF'],
+                },
+                [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
+                    filters: this.store
+                        .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            clinicalDataFilterValue =>
+                                clinicalDataFilterValue.value
+                        ),
+                    onValueSelection: this.handlers
+                        .setCustomChartCategoricalFilters,
+                    onResetSelection: this.handlers
+                        .setCustomChartCategoricalFilters,
+                    promise: this.store.getCustomDataCount(chartMeta),
+                }),
+                [ChartMetaDataTypeEnum.GENERIC_ASSAY]: () => ({
+                    filters: this.store
+                        .getGenericAssayDataFiltersByUniqueKey(
+                            chartMeta.uniqueKey
+                        )
+                        .map(
+                            genericAssayDataFilter =>
+                                genericAssayDataFilter.value
+                        ),
+                    onValueSelection: this.handlers
+                        .onGenericAssayCategoricalValueSelection,
+                    onResetSelection: this.handlers
+                        .onGenericAssayCategoricalValueSelection,
+                    promise: this.store.getGenericAssayChartDataCount(
+                        chartMeta
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
+                    promise: this.store.getGenomicChartDataCount(chartMeta),
+                    filters: chartMeta.mutationOptionType
+                        ? this.store.getMutationDataFiltersByUniqueKey(
+                              chartMeta.uniqueKey
+                          ).length > 0
+                            ? this.store.getMutationDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )[0]
+                            : []
+                        : this.store
+                              .getGenomicDataFiltersByUniqueKey(
+                                  chartMeta.uniqueKey
+                              )
+                              .map(
+                                  genomicDataFilterValue =>
+                                      genomicDataFilterValue.value
+                              ),
+                    onValueSelection: this.handlers
+                        .onGenomicDataCategoricalValueSelection,
+                    onResetSelection: this.handlers
+                        .onGenomicDataCategoricalValueSelection,
+                }),
+                [ChartMetaDataTypeEnum.CLINICAL]: () => ({
+                    promise: this.store.getClinicalDataCount(chartMeta),
+                    onDataBinSelection: this.handlers.onDataBinSelection,
+                    filters: this.store.getClinicalDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onResetSelection: this.handlers.onDataBinSelection,
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        clinicalDataToDataBin(
+                            this.store.getClinicalDataCount(chartMeta).result!
+                        )
                     ),
                 }),
             }),
