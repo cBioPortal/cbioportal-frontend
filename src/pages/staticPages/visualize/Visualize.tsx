@@ -14,7 +14,7 @@ export default class Visualize extends React.Component<{}, {}> {
         // third party / external tools section
         // TODO: pull from config
         var shouldDisplay =
-            getServerConfig().external_tools?.some(tool => tool.id === 'avm') ??
+            getServerConfig().custom_buttons?.some(tool => tool.id === 'avm') ??
             false;
         const externalTools = !shouldDisplay ? null : (
             <>

@@ -2,8 +2,6 @@ import { FontDetector } from './utils/FontDetector';
 import { ICustomButtonConfig } from './ICustomButton';
 import memoize from 'memoize-weak-decorator';
 
-
-
 /**
  * Define a CustomButton to display (in CopyDownloadButtons). 
  * Clicking on the button will launch it using the url_format
@@ -91,7 +89,7 @@ export const CustomButtonConfigDefaults: ICustomButtonConfig[] = [
         id: 'avm',
         name: 'AVM for cBioPortal',
         tooltip: 'Launch AVM for cBioPortal with data (copied to clipboard)',
-        iconImageSrc: 'https://aquminmedical.com/images/content/AquminLogo.png',
+        iconImageSrc: 'https://aquminmedical.com/images/content/AquminLogoSimple.png',
         required_user_agent: 'Win',
         required_installed_font_family: 'AVMInstalled',
         url_format:

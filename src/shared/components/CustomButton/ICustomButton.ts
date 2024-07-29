@@ -29,4 +29,6 @@ export interface ICustomButtonConfig {
     required_user_agent?: string;
     required_installed_font_family?: string;
     url_format: string;    
+
+    isAvailable?(): boolean;
 }

@@ -3,6 +3,7 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
+    ICustomButtonConfig,
     ICustomButtonProps,
     CustomButtonUrlParameters,
 } from './ICustomButton';
@@ -14,7 +15,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
         super(props);
     }
 
-    get config(): CustomButtonConfig {
+    get config(): ICustomButtonConfig {
         return this.props.toolConfig;
     }
 
@@ -44,7 +45,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
         }
     }
 
-    handleLaunchReady(urlParametersLaunch: CustomButtonUrlParameters) {
+    openCustomUrl(urlParametersLaunch: CustomButtonUrlParameters) {
         // assemble final available urlParameters
         const urlParameters: CustomButtonUrlParameters = {
             ...this.urlParametersDefault,
@@ -76,7 +77,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
 
     // pass data using Clipboard to the external tool
     handleLaunchStart() {
-        console.log('CustomData.handleLaunchStart:' + this.props.toolConfig.id );
+        console.log('CustomButton.handleLaunchStart:' + this.props.toolConfig.id );
 
         if (this.props.downloadData) {
             // data to clipboard
@@ -97,7 +98,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
                         console.log(
                             'Data copied to clipboard - size:' + data.length
                         );
-                        this.handleLaunchReady(urlParametersLaunch);
+                        this.openCustomUrl(urlParametersLaunch);
                     })
                     .catch(err => {
                         console.error(
@@ -112,6 +113,10 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
                         ' launch failed: clipboard API is not avaialble.'
                 );
             }
+        }
+        else
+        {
+            console.error(this.config.name + ': downloadData is not defined');
         }
     }
 

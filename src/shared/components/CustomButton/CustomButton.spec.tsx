@@ -96,10 +96,10 @@ describe('CustomButton Component', () => {
         expect(handleLaunchStartSpy).toHaveBeenCalled();
     });
 
-    it('copies data to clipboard and calls handleLaunchReady', async () => {
-        const handleLaunchReadySpy = jest.spyOn(
+    it('copies data to clipboard and calls openCustomUrl', async () => {
+        const openCustomUrlSpy = jest.spyOn(
             CustomButton.prototype,
-            'handleLaunchReady'
+            'openCustomUrl'
         );
         const { getByRole } = render(<CustomButton {...mockProps} />);
         const button = getByRole('button');
@@ -108,9 +108,9 @@ describe('CustomButton Component', () => {
 
         expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testData);
 
-        await waitFor(() => expect(handleLaunchReadySpy).toHaveBeenCalled());
+        await waitFor(() => expect(openCustomUrlSpy).toHaveBeenCalled());
 
-        expect(handleLaunchReadySpy).toHaveBeenCalledWith({
+        expect(openCustomUrlSpy).toHaveBeenCalledWith({
             dataLength: testDataLengthString,
         });
     });
@@ -126,7 +126,7 @@ describe('CustomButton Component', () => {
         const expectedUrl =
             'http://example.com?study=Test%20Study&-DataLength=9';
 
-        component.handleLaunchReady(urlParametersLaunch);
+        component.openCustomUrl(urlParametersLaunch);
 
         expect(windowOpenMock).toHaveBeenCalledWith(expectedUrl, '_blank');
     });
