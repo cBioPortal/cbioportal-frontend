@@ -28,7 +28,10 @@ export default class Visualize extends React.Component<{}, {}> {
 
                 <h2>3rd party tools not maintained by cBioPortal community</h2>
 
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div
+                    style={{ display: 'flex' }}
+                    className={styles.customToolArray}
+                >
                     {displayButtons.map((button, index) => (
                         <div key={index} style={{ marginTop: 20 }}>
                             <h2>

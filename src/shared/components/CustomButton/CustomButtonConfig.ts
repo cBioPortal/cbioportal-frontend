@@ -104,20 +104,25 @@ export const CustomButtonConfigDefaults: ICustomButtonConfig[] = [
         visualize_href: 'https://bit.ly/avm-cbioportal',
         visualize_description:
             'Windows software that loads data into 3D Landscapes for interactive visualization and pathway analysis. Download table data directly from cBioPortal.',
-        // TODO_CUSTOMBUTTON: CDN
         visualize_image_src:
-            './images/msk_impact_prostate_primary_vs_metastatic_in_avm.png',
+            'https://github.com/user-attachments/assets/5c17f5ed-0357-4ffa-a6e1-5a9d435dd3c5',
     },
 
     /* TEST: uncomment to test
      * ASNEEDED: we could add a localStorage prop to enable
+     */
     {
         id: 'test',
         name: 'Test Tool',
         tooltip: 'This button shows that the Test Tool is working',
-        iconImageSrc: require('../../../globalStyles/images/cbioportal_logo.png'),
+        image_src:
+            'https://frontend.cbioportal.org/reactapp/images/369b022222badf37b2b0c284f4ae2284.png',
         url_format:
             'https://eu.httpbin.org/anything?-StudyName=${studyName}&-ImportDataLength=${dataLength}',
-    },    
-     */
+        visualize_title: 'Test Tool',
+        visualize_href: 'https://www.cbioportal.org/',
+        visualize_description: 'Test tool.',
+        visualize_image_src:
+            'https://frontend.cbioportal.org/reactapp/images/369b022222badf37b2b0c284f4ae2284.png',
+    },
 ];
