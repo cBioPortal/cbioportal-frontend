@@ -911,8 +911,8 @@ describe('group comparison mutations tab tests', () => {
 
             await jsApiHover(await getElementByTestHandle('infoIcon'));
 
-            await getElementByTestHandle(
-                'patientMultipleMutationsMessage'
+            await (
+                await getElementByTestHandle('patientMultipleMutationsMessage')
             ).waitForExist();
             assert.equal(
                 await (

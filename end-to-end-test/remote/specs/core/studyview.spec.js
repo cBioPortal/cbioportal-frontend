@@ -793,11 +793,17 @@ describe('the gene panel is loaded properly', () => {
         );
 
         // test whether the gene info has been loaded correctly
-        $(`[data-test="gene-panel-modal-body"]`).waitForDisplayed({
+        await (
+            await getElement(`[data-test="gene-panel-modal-body"]`)
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         assert.equal(
-            $('[data-test="gene-panel-modal-body"] p:first-child').getText(),
+            await (
+                await getElement(
+                    '[data-test="gene-panel-modal-body"] p:first-child'
+                )
+            ).getText(),
             'ABL1'
         );
     });

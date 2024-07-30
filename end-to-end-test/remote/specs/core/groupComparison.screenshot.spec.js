@@ -767,7 +767,7 @@ describe('group comparison page screenshot tests', () => {
         });
     });
 
-    describe.only('overlap upset diagram group selection', () => {
+    describe('overlap upset diagram group selection', () => {
         before(async () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison?sessionId=5d0bc0c5e4b0ab4137876bc3`

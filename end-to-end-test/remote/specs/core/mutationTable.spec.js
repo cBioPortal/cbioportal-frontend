@@ -174,11 +174,13 @@ describe('Mutation Table', function() {
             // TODO: not sure why this is not working
             const frequency =
                 '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"] span';
-            await (await $(frequency)).waitForExist({ timeout: 60000 });
+            await getElement(frequency, {
+                timeout: 60000,
+            });
             // wait for gnomad frequency show in the column
             browser.waitUntil(
                 async () => {
-                    var textFrequency = await (
+                    const textFrequency = await (
                         await getElement(frequency)
                     ).getText();
                     return textFrequency.length >= 1;

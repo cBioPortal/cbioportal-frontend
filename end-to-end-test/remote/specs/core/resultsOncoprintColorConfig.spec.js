@@ -151,13 +151,19 @@ describe('oncoprint colors', () => {
                 trackOptionsElts.dropdown_selector + ' li:nth-child(8)'
             );
             await (
-                await getElementByTestHandle('resetColors')
+                await getElementByTestHandle('resetColors', {
+                    timeout: 10000,
+                })
             ).waitForDisplayed();
         });
 
         it('color configuration modal reflects default colors', async () => {
             // click "Reset Colors" track
-            await (await getElementByTestHandle('resetColors')).click();
+            await (
+                await getElementByTestHandle('resetColors', {
+                    timeout: 10000,
+                })
+            ).click();
             await waitForOncoprint();
 
             assert.strictEqual(

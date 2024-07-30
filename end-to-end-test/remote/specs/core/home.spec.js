@@ -223,7 +223,7 @@ describe('case set selection in front page query form', () => {
 
         await clickQueryByGeneButton();
 
-        await (await getElement(selectedCaseSet_sel)).wa;
+        await (await getElement(selectedCaseSet_sel)).waitForDisplayed();
         await browser.waitUntil(
             async () =>
                 (await getText(selectedCaseSet_sel)) ===

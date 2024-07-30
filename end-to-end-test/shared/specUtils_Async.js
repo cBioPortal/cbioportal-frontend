@@ -311,7 +311,7 @@ function showGsva() {
 
 async function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
     await browser.waitUntil(async () => {
-        const cbs = await jq(`[data-test="StudySelect"] input:checkbox`);
+        const cbs = await $$(`[data-test="StudySelect"] input:checkbox`);
         return cbs.length === expectedNumber;
     });
 }
