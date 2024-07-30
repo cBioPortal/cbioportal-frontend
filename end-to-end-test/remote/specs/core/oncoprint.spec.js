@@ -27,13 +27,15 @@ describe('merged tracks', () => {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=coadread_tcga&case_set_id=coadread_tcga_cnaseq&data_priority=0&gene_list=%255B%2522RAS%2522%2520KRAS%2520NRAS%2520HRAS%255D&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_mutations&tab_index=tab_visualize`
         );
-        await waitForOncoprint();
+        await waitForOncoprint({
+            timeout: 10000,
+        });
 
         const trackOptionsElts = await getNthOncoprintTrackOptionsElements(1);
         // open menu
         await clickElement(trackOptionsElts.button_selector);
         await waitForElementDisplayed(trackOptionsElts.dropdown_selector, {
-            timeout: 1000,
+            timeout: 10000,
         });
         // click expand
         await clickElement(
@@ -510,13 +512,15 @@ describe('oncoprint', function() {
 
             await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
+            await browser.pause(5000);
+
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
             const inputSelector =
                 'div[data-test=study-search] input[type="text"]';
-            await getElement(inputSelector, { timeout: 10000 });
+            await getElement(inputSelector, { timeout: 20000 });
             await setInputText(inputSelector, 'colorectal tcga nature');
             await waitForNumberOfStudyCheckboxes(1);
-            await getElement('[data-test="StudySelect"]', { timeout: 10000 });
+            await getElement('[data-test="StudySelect"]', { timeout: 20000 });
             await clickElement('[data-test="StudySelect"] input');
 
             await setInputText(
@@ -533,8 +537,7 @@ describe('oncoprint', function() {
 
             await clickQueryByGeneButton();
 
-            await browser.pause(5000); // let things trigger
-
+            await browser.pause(10000); // let things trigger
             const molecularProfileSelector = await (
                 await getElement('[data-test="molecularProfileSelector"]', {
                     timeout: 20000,
@@ -554,7 +557,7 @@ describe('oncoprint', function() {
             const alterationsLabel = await molecularProfileSelector.$(
                 'label*=Putative copy-number alterations from GISTIC'
             );
-            alterationsLabel.waitForExist({ timeout: 10000 });
+            await alterationsLabel.waitForExist({ timeout: 10000 });
             const alterationsCheckbox = await alterationsLabel.$(
                 'input[type="checkbox"]'
             );

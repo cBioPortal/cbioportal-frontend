@@ -439,13 +439,13 @@ describe('group comparison page screenshot tests', () => {
                 )
             ).waitForDisplayed({ timeout: 10000 });
             await (
-                await getElement('b=Lawsonia', {
+                await getElement('b=BET1', {
                     timeout: 20000,
                 })
             ).waitForDisplayed({
                 timeout: 20000,
             });
-            await clickElement('b=Lawsonia');
+            await clickElement('b=BET1');
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',

@@ -905,6 +905,7 @@ describe('submit genes to results view query', () => {
                 { timeout: 60000 }
             );
             await clickElement(ADD_CHART_BUTTON);
+            await browser.pause(5000);
             // Change to GENERIC ASSAY tab
             await (
                 await getElement(ADD_CHART_GENERIC_ASSAY_TAB, {

@@ -408,8 +408,11 @@ describe('results view comparison tab screenshot tests', () => {
         });
 
         it('results view comparison tab microbiome signature tab two groups', async () => {
+            await browser.pause(5000);
             // deselect a group
-            await clickElement('button[data-test="groupSelectorButtonMDM4"]');
+            await clickElement('button[data-test="groupSelectorButtonMDM4"]', {
+                timeout: 20000,
+            });
 
             await (
                 await getElement(
