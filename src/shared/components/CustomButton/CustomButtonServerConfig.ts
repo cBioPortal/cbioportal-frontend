@@ -2,7 +2,6 @@ import { getServerConfig } from 'config/config';
 // TECH: parseCustomButtonConfigs() is a static factory function to create CustomButtonConfig objects.  We don't include
 //  that method here to avoid an issue importing getServerConfig in the unit tests.
 import { CustomButtonConfig} from './CustomButtonConfig';
-//fnordrem
 import { ICustomButtonConfig } from './ICustomButton';
 
 /**

@@ -19,10 +19,8 @@ export class CustomButtonConfig implements ICustomButtonConfig {
         if (!customButtonsJson) {
             return [];
         } else {
-            //fnordtest as Object
-            return JSON.parse(
-                customButtonsJson
-            ) as ICustomButtonConfig[];   
+            return JSON.parse(customButtonsJson)
+                .map((item : any) => new CustomButtonConfig(item));   
         }    
     }
 

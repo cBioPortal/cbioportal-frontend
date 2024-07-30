@@ -89,8 +89,8 @@ describe('CustomButton Component', () => {
         const config = CustomButtonConfig.parseCustomButtonConfigs(mockJson);
         expect(config.length).toBe(1);
         expect(config[0].id).toBe('test');
-        console.log('parsed = ' + (config[0]?.isAvailable && config[0].isAvailable()));
-        expect(config[0].isAvailable).toBe(true);
+        // TECH: compiler doesn't know that config[0] is valid, so we add a spurious optional chaining operator
+        expect(config[0]?.isAvailable?.()).toBe(true);
     });
 
     it('renders correctly', () => {
