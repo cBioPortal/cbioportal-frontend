@@ -613,13 +613,7 @@ describe('group comparison mutations tab tests', () => {
 
             // protein driver badge selected
             assert.equal(
-                (
-                    await (
-                        await getElement(
-                            '[data-test="badge-splice_putative_driver"]'
-                        )
-                    ).getCSSProperty('color')
-                ).parsed.hex,
+                await getColorByTestHandle('badge-splice_putative_driver'),
                 '#ffffff'
             );
             // protein vus badge deselected

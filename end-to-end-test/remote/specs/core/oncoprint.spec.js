@@ -535,9 +535,9 @@ describe('oncoprint', function() {
 
             await browser.pause(5000); // let things trigger
 
-            const molecularProfileSelector = await getElement(
-                '[data-test="molecularProfileSelector"]'
-            );
+            const molecularProfileSelector = await (
+                await getElement('[data-test="molecularProfileSelector"]')
+            ).waitForDisplayed({ timeout: 10000 });
             await molecularProfileSelector.waitForExist({ timeout: 10000 });
             // Check for the "Mutations" checkbox
             const mutationsLabel = await molecularProfileSelector.$(

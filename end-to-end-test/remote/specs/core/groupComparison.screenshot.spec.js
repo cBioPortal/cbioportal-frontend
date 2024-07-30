@@ -114,7 +114,7 @@ describe('group comparison page screenshot tests', () => {
         });
 
         it('group comparison page clinical tab log scale  Kruskal Wallis test', async () => {
-            clickElement(
+            await clickElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="logScale"]'
             );
             await (

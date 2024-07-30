@@ -887,6 +887,7 @@ describe('submit genes to results view query', () => {
             const url = `${CBIOPORTAL_URL}/study?id=chol_tcga_pan_can_atlas_2018`;
             await goToUrlAndSetLocalStorage(url);
             await waitForNetworkQuiet();
+            await browser.pause(2000);
         });
         it('generic assay chart should be added in the summary tab', async function() {
             this.retries(0);
@@ -904,9 +905,6 @@ describe('submit genes to results view query', () => {
                 { timeout: 60000 }
             );
             await clickElement(ADD_CHART_BUTTON);
-
-            browser.debug();
-
             // Change to GENERIC ASSAY tab
             await (
                 await getElement(ADD_CHART_GENERIC_ASSAY_TAB)
