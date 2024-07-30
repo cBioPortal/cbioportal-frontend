@@ -53,7 +53,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
             ...urlParametersLaunch,
         };
 
-        // e.g. url_format: 'avm://?-ProjectName=${studyName}'
+        // e.g. url_format: 'foo://?-ProjectName=${studyName}'
         const urlFormat = this.props.toolConfig.url_format;
 
         // Replace all parameter references in urlFormat with the appropriate property in urlParameters

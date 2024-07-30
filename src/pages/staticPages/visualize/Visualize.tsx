@@ -10,52 +10,55 @@ import { getServerConfig } from 'config/config';
 
 @observer
 export default class Visualize extends React.Component<{}, {}> {
-    public render() {
-        // third party / external tools section
-        // TODO: pull from config
-        var shouldDisplay =
-            getServerConfig().custom_buttons?.some(tool => tool.id === 'avm') ??
-            false;
-        const externalTools = !shouldDisplay ? null : (
+    /**
+     * Display the 'visualize_html' data associated with serverConfig.custom_buttons
+     * @returns JSX.element
+     */
+    externalToolsSection() {
+        const displayButtons = getServerConfig().custom_buttons?.filter(
+            button => button.visualize_href
+        );
+        if (!displayButtons || displayButtons.length === 0) {
+            return;
+        }
+
+        return (
             <>
-                <hr></hr>
+                <hr />
 
                 <h2>3rd party tools not maintained by cBioPortal community</h2>
 
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ marginTop: 20 }}>
-                        <h2>
-                            <a
-                                href="https://bit.ly/avm-cbioportal"
-                                target="_blank"
-                            >
-                                AVM for cBioPortal (Windows)
-                            </a>
-                        </h2>
-                        <p>
-                            Windows software that loads data into 3D Landscapes
-                            for interactive visualization and pathway analysis.
-                            Download table data directly from cBioPortal.{' '}
-                            <a
-                                href="https://bit.ly/avm-cbioportal"
-                                target="_blank"
-                            >
-                                Try it!
-                            </a>
-                        </p>
-                        <a href="https://bit.ly/avm-cbioportal" target="_blank">
-                            <img
-                                className="tile-image top-image"
-                                alt="AVM for cBioPortal"
-                                src={require('./images/msk_impact_prostate_primary_vs_metastatic_in_avm.png')}
-                            />
-                        </a>
-                    </div>
+                    {displayButtons.map((button, index) => (
+                        <div key={index} style={{ marginTop: 20 }}>
+                            <h2>
+                                <a href={button.visualize_href} target="_blank">
+                                    {button.visualize_title}
+                                </a>
+                            </h2>
+                            <p>
+                                {button.visualize_description}
+                                <a href={button.visualize_href} target="_blank">
+                                    Try it!
+                                </a>
+                            </p>
+                            {button.visualize_image_src && (
+                                <a href={button.visualize_href} target="_blank">
+                                    <img
+                                        className="tile-image top-image"
+                                        alt={button.visualize_title}
+                                        src={button.visualize_image_src}
+                                    />
+                                </a>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </>
         );
+    }
 
-        // Display the page, and append thirdPartyTools (which may be empty)
+    public render() {
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
@@ -175,7 +178,7 @@ export default class Visualize extends React.Component<{}, {}> {
                     </div>
                 </div>
 
-                {externalTools}
+                {this.externalToolsSection()}
             </PageLayout>
         );
     }

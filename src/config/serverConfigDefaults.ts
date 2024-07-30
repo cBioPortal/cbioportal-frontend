@@ -245,6 +245,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_study_view_show_sv_table: false,
 
+    // TODO_CUSTOMBUTTON
     custom_buttons: CustomButtonConfigDefaults,
 };
 

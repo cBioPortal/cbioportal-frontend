@@ -30,6 +30,10 @@ export interface ICustomButtonConfig {
     required_user_agent?: string;
     required_installed_font_family?: string;
     url_format: string;
+    visualize_href?: string;
+    visualize_title?: string;
+    visualize_description?: string;
+    visualize_image_src?: string;
 
     isAvailable?(): boolean;
 }

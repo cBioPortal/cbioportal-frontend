@@ -100,6 +100,13 @@ export const CustomButtonConfigDefaults: ICustomButtonConfig[] = [
         required_installed_font_family: 'AVMInstalled',
         url_format:
             'avm://?importclipboard&-AutoMode=true&-ProjectNameHint=${studyName}&-ImportDataLength=${dataLength}',
+        visualize_title: 'AVM for cBioPortal (Windows)',
+        visualize_href: 'https://bit.ly/avm-cbioportal',
+        visualize_description:
+            'Windows software that loads data into 3D Landscapes for interactive visualization and pathway analysis. Download table data directly from cBioPortal.',
+        // TODO_CUSTOMBUTTON: CDN
+        visualize_image_src:
+            './images/msk_impact_prostate_primary_vs_metastatic_in_avm.png',
     },
 
     /* TEST: uncomment to test
