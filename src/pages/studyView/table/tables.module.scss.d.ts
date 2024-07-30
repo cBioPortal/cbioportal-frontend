@@ -22,7 +22,6 @@ declare const styles: {
   readonly "highlightedEvenRow": string;
   readonly "highlightedOddRow": string;
   readonly "highlightedRow": string;
-  readonly "hover": string;
   readonly "intersection": string;
   readonly "labelContent": string;
   readonly "labelContentSVG": string;
