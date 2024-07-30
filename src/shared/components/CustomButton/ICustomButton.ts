@@ -1,3 +1,4 @@
+import { getServerConfig } from 'config/config';
 import { CustomButtonConfig } from './CustomButtonConfig';
 
 /**
@@ -37,3 +38,28 @@ export interface ICustomButtonConfig {
 
     isAvailable?(): boolean;
 }
+
+
+/**
+ * Lazy initialization from a JSON file configured on the server.
+ * @returns The CustomButtonConfigs from the server configuration.
+ */
+export const getCustomButtonConfigs = (() => {
+    let customButtons: ICustomButtonConfig[] | undefined = undefined;
+
+    return (): ICustomButtonConfig[] => {
+        if (!customButtons) {
+            // Initialize
+            const customButtonsJson = getServerConfig().custom_buttons_json;
+            if (!customButtonsJson) {
+                customButtons = [];
+            } else {
+                //fnordtest as Object
+                customButtons = JSON.parse(
+                    customButtonsJson
+                ) as ICustomButtonConfig[];   
+            }
+        }
+        return customButtons;
+    }
+})();

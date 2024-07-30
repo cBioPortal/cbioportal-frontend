@@ -6,16 +6,16 @@ import { PageLayout } from 'shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import styles from './visualize.module.scss';
 import { getNCBIlink } from 'cbioportal-frontend-commons';
-import { getServerConfig } from 'config/config';
+import { ICustomButtonConfig, getCustomButtonConfigs } from 'shared/components/CustomButton/ICustomButton';
 
 @observer
 export default class Visualize extends React.Component<{}, {}> {
     /**
-     * Display the 'visualize_html' data associated with serverConfig.custom_buttons
+     * Display the 'visualize_html' data associated with serverConfig.custom_buttons_json
      * @returns JSX.element
      */
     externalToolsSection() {
-        const displayButtons = getServerConfig().custom_buttons?.filter(
+        const displayButtons = getCustomButtonConfigs().filter(
             button => button.visualize_href
         );
         if (!displayButtons || displayButtons.length === 0) {

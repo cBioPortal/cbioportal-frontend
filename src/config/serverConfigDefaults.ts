@@ -1,5 +1,4 @@
 import { IServerConfig } from './IAppConfig';
-import { CustomButtonConfigDefaults } from 'shared/components/CustomButton/CustomButtonConfig';
 
 export const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',
@@ -245,8 +244,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_study_view_show_sv_table: false,
 
-    // TODO_CUSTOMBUTTON
-    custom_buttons: CustomButtonConfigDefaults,
+    custom_buttons_json: '',
 };
 
 export default ServerConfigDefaults;

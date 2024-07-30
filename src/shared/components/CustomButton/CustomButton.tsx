@@ -81,7 +81,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
      * @param data The data to pass to the handler.
      */
     handleDataReady(data: string) {
-        var urlParametersLaunch: CustomButtonUrlParameters = {
+        const urlParametersLaunch: CustomButtonUrlParameters = {
             dataLength: data.length.toString(),
         };
 
