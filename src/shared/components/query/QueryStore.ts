@@ -1170,6 +1170,10 @@ export class QueryStore {
         return _.sumBy(this.selectableSelectedStudies, s => s.allSampleCount);
     }
 
+    @computed get sampleCountForAllStudies() {
+        return _.sumBy(this.selectableStudies, s => s.allSampleCount);
+    }
+
     readonly sampleLists = remoteData<SampleList[]>({
         invoke: async () => {
             if (!this.isSingleNonVirtualStudySelected) {
@@ -1576,6 +1580,10 @@ export class QueryStore {
                     this.treeData.map_studyId_cancerStudy.get(id) as CancerStudy
             )
             .filter(_.identity);
+    }
+
+    @computed get selectableStudies() {
+        return Array.from(this.treeData.map_studyId_cancerStudy.values());
     }
 
     public isVirtualStudy(studyId: string): boolean {
