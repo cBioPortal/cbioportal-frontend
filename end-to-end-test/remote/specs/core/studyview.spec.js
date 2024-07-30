@@ -907,7 +907,9 @@ describe('submit genes to results view query', () => {
             await clickElement(ADD_CHART_BUTTON);
             // Change to GENERIC ASSAY tab
             await (
-                await getElement(ADD_CHART_GENERIC_ASSAY_TAB)
+                await getElement(ADD_CHART_GENERIC_ASSAY_TAB, {
+                    timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+                })
             ).waitForDisplayed({
                 timeout: WAIT_FOR_VISIBLE_TIMEOUT,
             });

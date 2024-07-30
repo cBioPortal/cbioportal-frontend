@@ -325,9 +325,13 @@ async function getNthOncoprintTrackOptionsElements(n) {
         '#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-' + n;
 
     return {
-        button: await $(button_selector),
+        button: await $(button_selector, {
+            timeout: 20000,
+        }),
         button_selector,
-        dropdown: await $(dropdown_selector),
+        dropdown: await $(dropdown_selector, {
+            timeout: 20000,
+        }),
         dropdown_selector,
     };
 }

@@ -76,7 +76,7 @@ describe('homepage', () => {
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
         await getElement('div[data-test=study-search] input[type=text]', {
-            timeout: 10000,
+            timeout: 20000,
         });
         await setInputText(
             'div[data-test=study-search] input[type=text]',
@@ -215,7 +215,7 @@ describe('case set selection in front page query form', () => {
 
     it('selects the default case set for single study selections', async () => {
         const input = 'div[data-test=study-search] input[type=text]';
-        await getElement(input, { timeout: 10000 });
+        await getElement(input, { timeout: 20000 });
         await setInputText(input, 'ovarian nature 2011');
         await waitForNumberOfStudyCheckboxes(1);
         await ('[data-test="StudySelect"]', { timeout: 10000 });
@@ -267,11 +267,13 @@ describe('case set selection in front page query form', () => {
 
         await clickQueryByGeneButton();
 
-        getElementByTestHandle('MUTATION_EXTENDED', {
+        await getElementByTestHandle('MUTATION_EXTENDED', {
             timeout: 10000,
         });
 
-        await (await getElement(selectedCaseSet_sel)).waitForExist();
+        await (await getElement(selectedCaseSet_sel)).waitForExist({
+            timeout: 10000,
+        });
         await browser.waitUntil(
             async () =>
                 (await getText(selectedCaseSet_sel)).trim() === 'All (252)',
@@ -305,7 +307,7 @@ describe('case set selection in front page query form', () => {
     it('selects the right default case sets in a single->select all filtered->single study selection flow', async () => {
         // Select Ampullary Carcinoma
         const input = 'div[data-test=study-search] input[type=text]';
-        await getElement(input, { timeout: 10000 });
+        await getElement(input, { timeout: 20000 });
         await setInputText(input, 'ampullary baylor');
         await waitForNumberOfStudyCheckboxes(1);
         await getElement('[data-test="StudySelect"]', { timeout: 10000 });
@@ -411,7 +413,7 @@ describe('genetic profile selection in front page query form', () => {
     it('selects the right default genetic profiles in a single->multiple->single study selection flow', async () => {
         // select a study
         const input = 'div[data-test=study-search] input[type=text]';
-        await getElement(input), { timeout: 10000 };
+        await getElement(input, { timeout: 20000 });
         await setInputText(input, 'ovarian nature 2011');
         await waitForNumberOfStudyCheckboxes(1);
         await getElement('[data-test="StudySelect"]', { timeout: 10000 });

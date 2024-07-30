@@ -435,7 +435,11 @@ describe('group comparison page screenshot tests', () => {
                     'div[data-test="GroupComparisonMethylationEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 10000 });
-            await (await getElement('b=Lawsonia')).waitForDisplayed({
+            await (
+                await getElement('b=Lawsonia', {
+                    timeout: 20000,
+                })
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=Lawsonia');

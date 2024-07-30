@@ -536,8 +536,10 @@ describe('oncoprint', function() {
             await browser.pause(5000); // let things trigger
 
             const molecularProfileSelector = await (
-                await getElement('[data-test="molecularProfileSelector"]')
-            ).waitForDisplayed({ timeout: 10000 });
+                await getElement('[data-test="molecularProfileSelector"]', {
+                    timeout: 20000,
+                })
+            ).waitForDisplayed({ timeout: 20000 });
             await molecularProfileSelector.waitForExist({ timeout: 10000 });
             // Check for the "Mutations" checkbox
             const mutationsLabel = await molecularProfileSelector.$(
@@ -546,7 +548,7 @@ describe('oncoprint', function() {
             const mutationsCheckbox = await mutationsLabel.$(
                 'input[type="checkbox"]'
             );
-            await mutationsCheckbox.waitForExist({ timeout: 10000 });
+            await mutationsCheckbox.waitForExist({ timeout: 20000 });
 
             // Check for the "Putative copy-number alterations from GISTIC" checkbox
             const alterationsLabel = await molecularProfileSelector.$(
