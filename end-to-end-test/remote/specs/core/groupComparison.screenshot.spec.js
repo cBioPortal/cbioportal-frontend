@@ -396,7 +396,7 @@ describe('group comparison page screenshot tests', () => {
             const body = await getElement('body');
             await body.waitForDisplayed();
             await body.moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {
@@ -432,7 +432,10 @@ describe('group comparison page screenshot tests', () => {
             await clickElement('.tabAnchor_dna_methylation');
             await (
                 await getElement(
-                    'div[data-test="GroupComparisonMethylationEnrichments"]'
+                    'div[data-test="GroupComparisonMethylationEnrichments"]',
+                    {
+                        timeout: 20000,
+                    }
                 )
             ).waitForDisplayed({ timeout: 10000 });
             await (
@@ -440,7 +443,7 @@ describe('group comparison page screenshot tests', () => {
                     timeout: 20000,
                 })
             ).waitForDisplayed({
-                timeout: 10000,
+                timeout: 20000,
             });
             await clickElement('b=Lawsonia');
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
@@ -458,7 +461,11 @@ describe('group comparison page screenshot tests', () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison/mutations?sessionId=5cf89323e4b0ab413787436c&selectedGene=AR`
             );
-            await (await getElement('.borderedChart svg')).waitForDisplayed({
+            await (
+                await getElement('.borderedChart svg', {
+                    timeout: 20000,
+                })
+            ).waitForDisplayed({
                 timeout: 20000,
             });
             const res = await browser.checkElement(
@@ -475,7 +482,11 @@ describe('group comparison page screenshot tests', () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison/mutations?comparisonId=634006c24dd45f2bc4c3d4aa&unselectedGroups=%5B"Colon%20Adenocarcinoma"%5D`
             );
-            await (await getElement('.borderedChart svg')).waitForDisplayed({
+            await (
+                await getElement('.borderedChart svg', {
+                    timeout: 20000,
+                })
+            ).waitForDisplayed({
                 timeout: 20000,
             });
             await jsApiHover(await getElementByTestHandle('infoIcon'));
@@ -500,7 +511,12 @@ describe('group comparison page screenshot tests', () => {
                 `${CBIOPORTAL_URL}/comparison?sessionId=5ce411c7e4b0ab4137874076`
             );
             await (
-                await getElement('div[data-test="ComparisonPageOverlapTabDiv"]')
+                await getElement(
+                    'div[data-test="ComparisonPageOverlapTabDiv"]',
+                    {
+                        timeout: 20000,
+                    }
+                )
             ).waitForDisplayed({
                 timeout: 20000,
             });
