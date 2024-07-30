@@ -3,7 +3,7 @@ import { If } from 'react-if';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
-import { ICustomButtonConfig, getCustomButtonConfigs } from '../CustomButton/ICustomButton';
+import { getCustomButtonConfigs } from 'shared/components/CustomButton/CustomButtonServerConfig';
 import { CustomButton } from '../CustomButton/CustomButton';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
@@ -87,8 +87,8 @@ export class CopyDownloadButtons extends React.Component<
         }
 
         return getCustomButtonConfigs()
-            .filter((tool: ICustomButtonConfig) => tool.isAvailable?.() ?? true)
-            .map((tool: ICustomButtonConfig, index: number) => {
+            .filter((tool) => tool.isAvailable?.() ?? true)
+            .map((tool, index: number) => {
                 return (
                     <CustomButton
                         key={tool.id}

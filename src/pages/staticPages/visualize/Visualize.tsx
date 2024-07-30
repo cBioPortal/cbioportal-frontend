@@ -6,7 +6,7 @@ import { PageLayout } from 'shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import styles from './visualize.module.scss';
 import { getNCBIlink } from 'cbioportal-frontend-commons';
-import { ICustomButtonConfig, getCustomButtonConfigs } from 'shared/components/CustomButton/ICustomButton';
+import { getCustomButtonConfigs } from 'shared/components/CustomButton/CustomButtonServerConfig';
 
 @observer
 export default class Visualize extends React.Component<{}, {}> {

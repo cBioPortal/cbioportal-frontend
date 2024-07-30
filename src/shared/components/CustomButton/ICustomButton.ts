@@ -1,7 +1,3 @@
-import { getServerConfig } from 'config/config';
-import { CustomButtonConfig } from './CustomButtonConfig';
-import { parse } from 'superagent';
-
 /**
  * Properties that may be referenced from url_format, like "${studyName}".
  * TECH: all properties are string, since it's easier for the TypeScript indexing operator. E.g. dataLength as string instead of integer.
@@ -40,30 +36,5 @@ export interface ICustomButtonConfig {
     isAvailable?(): boolean;
 }
 
-export function parseCustomButtonConfigs(customButtonsJson: string) : ICustomButtonConfig[] {
-    if (!customButtonsJson) {
-        return [];
-    } else {
-        //fnordtest as Object
-        return JSON.parse(
-            customButtonsJson
-        ) as ICustomButtonConfig[];   
-    }    
-}
 
-/**
- * Lazy initialization from a JSON file configured on the server.
- * @returns The CustomButtonConfigs from the server configuration.
- */
-export const getCustomButtonConfigs = (() => {
-    let customButtons: ICustomButtonConfig[] | undefined = undefined;
 
-    return (): ICustomButtonConfig[] => {
-        if (!customButtons) {
-            // Initialize
-            const customButtonsJson = getServerConfig().custom_buttons_json;
-            customButtons = parseCustomButtonConfigs(customButtonsJson);
-        }
-        return customButtons;
-    }
-})();

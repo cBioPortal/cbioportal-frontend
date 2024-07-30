@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { CustomButton } from './CustomButton';
 import { CustomButtonConfig } from './CustomButtonConfig';
-import { ICustomButtonProps, CustomButtonUrlParameters, ICustomButtonConfig, parseCustomButtonConfigs } from './ICustomButton';
+import { ICustomButtonProps, CustomButtonUrlParameters } from './ICustomButton';
 
 jest.mock('cbioportal-frontend-commons', () => ({
     DefaultTooltip: ({ children }: { children: React.ReactNode }) => (
@@ -86,7 +86,7 @@ describe('CustomButton Component', () => {
     });
 
     it('parses json correctly and creates Config objects', () => {
-        const config = parseCustomButtonConfigs(mockJson);
+        const config = CustomButtonConfig.parseCustomButtonConfigs(mockJson);
         expect(config.length).toBe(1);
         expect(config[0].id).toBe('test');
         console.log('parsed = ' + (config[0]?.isAvailable && config[0].isAvailable()));

@@ -15,6 +15,17 @@ export class CustomButtonConfig implements ICustomButtonConfig {
     required_installed_font_family?: string;
     url_format: string;
 
+    public static parseCustomButtonConfigs(customButtonsJson: string) : ICustomButtonConfig[] {
+        if (!customButtonsJson) {
+            return [];
+        } else {
+            //fnordtest as Object
+            return JSON.parse(
+                customButtonsJson
+            ) as ICustomButtonConfig[];   
+        }    
+    }
+
     /**
      * Creates a new instance of the CustomButtonConfig class.
      * @param config - The configuration object for the custom button.
