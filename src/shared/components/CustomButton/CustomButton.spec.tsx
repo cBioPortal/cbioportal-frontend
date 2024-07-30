@@ -124,7 +124,9 @@ describe('CustomButton Component', () => {
 
         fireEvent.click(button);
 
-        await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testData));
+        await waitFor(() =>
+            expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testData)
+        );
 
         await waitFor(() => expect(openCustomUrlSpy).toHaveBeenCalled());
 

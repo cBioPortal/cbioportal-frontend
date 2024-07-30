@@ -15,13 +15,16 @@ export class CustomButtonConfig implements ICustomButtonConfig {
     required_installed_font_family?: string;
     url_format: string;
 
-    public static parseCustomButtonConfigs(customButtonsJson: string) : ICustomButtonConfig[] {
+    public static parseCustomButtonConfigs(
+        customButtonsJson: string
+    ): ICustomButtonConfig[] {
         if (!customButtonsJson) {
             return [];
         } else {
-            return JSON.parse(customButtonsJson)
-                .map((item : any) => new CustomButtonConfig(item));   
-        }    
+            return JSON.parse(customButtonsJson).map(
+                (item: any) => new CustomButtonConfig(item)
+            );
+        }
     }
 
     /**
@@ -94,6 +97,4 @@ export class CustomButtonConfig implements ICustomButtonConfig {
 
         return true;
     }
- 
 }
-

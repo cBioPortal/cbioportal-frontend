@@ -35,6 +35,3 @@ export interface ICustomButtonConfig {
 
     isAvailable?(): boolean;
 }
-
-
-
