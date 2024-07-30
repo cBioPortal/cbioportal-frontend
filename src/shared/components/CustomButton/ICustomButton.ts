@@ -1,5 +1,6 @@
 import { getServerConfig } from 'config/config';
 import { CustomButtonConfig } from './CustomButtonConfig';
+import { parse } from 'superagent';
 
 /**
  * Properties that may be referenced from url_format, like "${studyName}".
@@ -39,6 +40,16 @@ export interface ICustomButtonConfig {
     isAvailable?(): boolean;
 }
 
+export function parseCustomButtonConfigs(customButtonsJson: string) : ICustomButtonConfig[] {
+    if (!customButtonsJson) {
+        return [];
+    } else {
+        //fnordtest as Object
+        return JSON.parse(
+            customButtonsJson
+        ) as ICustomButtonConfig[];   
+    }    
+}
 
 /**
  * Lazy initialization from a JSON file configured on the server.
@@ -51,14 +62,7 @@ export const getCustomButtonConfigs = (() => {
         if (!customButtons) {
             // Initialize
             const customButtonsJson = getServerConfig().custom_buttons_json;
-            if (!customButtonsJson) {
-                customButtons = [];
-            } else {
-                //fnordtest as Object
-                customButtons = JSON.parse(
-                    customButtonsJson
-                ) as ICustomButtonConfig[];   
-            }
+            customButtons = parseCustomButtonConfigs(customButtonsJson);
         }
         return customButtons;
     }

@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { CustomButton } from './CustomButton';
-import { ICustomButtonProps, CustomButtonUrlParameters } from './ICustomButton';
+import { CustomButtonConfig } from './CustomButtonConfig';
+import { ICustomButtonProps, CustomButtonUrlParameters, ICustomButtonConfig, parseCustomButtonConfigs } from './ICustomButton';
 
 jest.mock('cbioportal-frontend-commons', () => ({
     DefaultTooltip: ({ children }: { children: React.ReactNode }) => (
@@ -21,6 +22,18 @@ describe('CustomButton Component', () => {
     const windowLocationOriginal = window.location;
     const windowOpenOriginal = window.open;
     const windowOpenMock = jest.fn();
+
+    const mockJson: string = `
+[
+    {
+        "id": "test",
+        "name": "Test Tool",
+        "tooltip": "This button shows that the Test Tool is working",
+        "image_src": "https://frontend.cbioportal.org/reactapp/images/369b022222badf37b2b0c284f4ae2284.png",
+        "url_format": "https://eu.httpbin.org/anything?-StudyName=\${studyName}&-ImportDataLength=\${dataLength}"
+    }
+]    
+    `;
 
     const mockProps: ICustomButtonProps = {
         toolConfig: {
@@ -72,6 +85,14 @@ describe('CustomButton Component', () => {
         window.open = windowOpenOriginal;
     });
 
+    it('parses json correctly and creates Config objects', () => {
+        const config = parseCustomButtonConfigs(mockJson);
+        expect(config.length).toBe(1);
+        expect(config[0].id).toBe('test');
+        console.log('parsed = ' + (config[0]?.isAvailable && config[0].isAvailable()));
+        expect(config[0].isAvailable).toBe(true);
+    });
+
     it('renders correctly', () => {
         render(<CustomButton {...mockProps} />);
         expect(screen.getByRole('button')).toBeTruthy();
@@ -103,7 +124,7 @@ describe('CustomButton Component', () => {
 
         fireEvent.click(button);
 
-        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testData);
+        await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testData));
 
         await waitFor(() => expect(openCustomUrlSpy).toHaveBeenCalled());
 
