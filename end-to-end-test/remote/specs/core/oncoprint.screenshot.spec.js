@@ -269,7 +269,7 @@ describe('sorting', () => {
 
         const checkBox = await getElement('[data-test="StudySelect"]');
 
-        checkBox.waitForExist({ timeout: 10000 });
+        await checkBox.waitForExist({ timeout: 10000 });
 
         await clickElement('[data-test="StudySelect"] input');
 
@@ -324,7 +324,7 @@ describe('sorting', () => {
         await waitForNumberOfStudyCheckboxes(1); // should only be one element
 
         const checkBox = await getElement('[data-test="StudySelect"]', {
-            timeout: 500,
+            timeout: 6000,
         });
 
         await clickElement('[data-test="StudySelect"] input');

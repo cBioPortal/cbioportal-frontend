@@ -409,7 +409,9 @@ describe('group comparison mutations tab tests', () => {
             );
 
             // selecting driver badge
-            (await getNthElements('[data-test="badge-driver"]', 1)).click();
+            await (
+                await getNthElements('[data-test="badge-driver"]', 1)
+            ).click();
 
             assert.equal(
                 await getColorOfNthElement(
@@ -597,7 +599,9 @@ describe('group comparison mutations tab tests', () => {
     describe('protein only selecting', () => {
         it('clicking protein driver/vus badge only button selects protein driver/vus, deselects others', async () => {
             // TODO: i can't find the element with the app
-            // await (await getElementByTestHandle('badge-splice_putative_driver')).click();
+            await (
+                await getElementByTestHandle('badge-splice_putative_driver')
+            ).click();
 
             assert.equal(
                 await getColorByTestHandle('badge-splice_putative_driver'),
@@ -611,7 +615,9 @@ describe('group comparison mutations tab tests', () => {
             assert.equal(
                 (
                     await (
-                        await $('[data-test="badge-splice_putative_driver"]')
+                        await getElement(
+                            '[data-test="badge-splice_putative_driver"]'
+                        )
                     ).getCSSProperty('color')
                 ).parsed.hex,
                 '#ffffff'
@@ -661,7 +667,7 @@ describe('group comparison mutations tab tests', () => {
             );
             // vus badge deselected
             assert.equal(
-                await getNthElements('[data-test="badge-VUS"]', 1),
+                await getColorOfNthElement('[data-test="badge-VUS"]', 1),
                 '#696969'
             );
         });
@@ -689,74 +695,68 @@ describe('group comparison mutations tab tests', () => {
             // all protein driver badges are selected
             assert.equal(
                 await getColorOfNthElement('[data-test="badge-driver"]', 1),
-                await getElementByTestHandle('badge-missense_putative_driver')
+                await getColorByTestHandle('badge-missense_putative_driver')
             );
 
             assert.equal(
-                await getElementByTestHandle('badge-missense_putative_driver'),
-                await getElementByTestHandle('badge-truncating_putative_driver')
+                await getColorByTestHandle('badge-missense_putative_driver'),
+                await getColorByTestHandle('badge-truncating_putative_driver')
             );
 
             assert.equal(
-                await getElementByTestHandle(
-                    'badge-truncating_putative_driver'
-                ),
-                await getElementByTestHandle('badge-inframe_putative_driver')
+                await getColorByTestHandle('badge-truncating_putative_driver'),
+                await getColorByTestHandle('badge-inframe_putative_driver')
             );
 
             assert.equal(
-                await getElementByTestHandle('badge-inframe_putative_driver'),
-                await getElementByTestHandle('badge-splice_putative_driver')
+                await getColorByTestHandle('badge-inframe_putative_driver'),
+                await getColorByTestHandle('badge-splice_putative_driver')
             );
 
             // vus badge deselected
-            assert.equal(await getElementByTestHandle('badge-VUS'), '#696969');
+            assert.equal(await getColorByTestHandle('badge-VUS'), '#696969');
 
             // all protein vus badges are deselected
             assert.equal(
-                await getElementByTestHandle('badge-VUS'),
-                await getElementByTestHandle(
+                await getColorByTestHandle('badge-VUS'),
+                await getColorByTestHandle(
                     'badge-missense_unknown_significance'
                 )
             );
 
             assert.equal(
-                await getElementByTestHandle(
+                await getColorByTestHandle(
                     'badge-missense_unknown_significance'
                 ),
-                await getElementByTestHandle(
+                await getColorByTestHandle(
                     'badge-truncating_unknown_significance'
                 )
             );
 
             assert.equal(
-                await getElementByTestHandle(
+                await getColorByTestHandle(
                     'badge-truncating_unknown_significance'
                 ),
-                await getElementByTestHandle(
-                    'badge-inframe_unknown_significance'
-                )
+                await getColorByTestHandle('badge-inframe_unknown_significance')
             );
 
             assert.equal(
-                await getElementByTestHandle(
+                await getColorByTestHandle(
                     'badge-inframe_unknown_significance'
                 ),
-                await getElementByTestHandle(
-                    'badge-splice_unknown_significance'
-                )
+                await getColorByTestHandle('badge-splice_unknown_significance')
             );
 
             // selecting vus only button
             await (await getElementByTestHandle('VUS_only')).click();
 
             assert.equal(
-                await getElementByTestHandle('[data-test="badge-VUS"]'),
-                await getNthElements('[data-test="badge-VUS"]', 1)
+                await getColorByTestHandle('[data-test="badge-VUS"]'),
+                await getColorOfNthElement('[data-test="badge-VUS"]', 1)
             );
 
             // vus badge selected
-            assert.equal(await getElementByTestHandle('badge-VUS'), '#ffffff');
+            assert.equal(await getColorByTestHandle('badge-VUS'), '#ffffff');
 
             await (
                 await getElementByTestHandle('filter-reset-panel')
@@ -764,37 +764,33 @@ describe('group comparison mutations tab tests', () => {
 
             // all protein vus badges are selected
             assert.equal(
-                await getElementByTestHandle('badge-VUS'),
-                await getElementByTestHandle(
+                await getColorByTestHandle('badge-VUS'),
+                await getColorByTestHandle(
                     'badge-missense_unknown_significance'
                 )
             );
 
             assert.equal(
-                await getElementByTestHandle(
+                await getColorByTestHandle(
                     'badge-missense_unknown_significance'
                 ),
-                await getElementByTestHandle(
+                await getColorByTestHandle(
                     'badge-truncating_unknown_significance'
                 )
             );
 
             assert.equal(
-                await getElementByTestHandle(
+                await getColorByTestHandle(
                     'badge-truncating_unknown_significance'
                 ),
-                await getElementByTestHandle(
-                    'badge-inframe_unknown_significance'
-                )
+                await getColorByTestHandle('badge-inframe_unknown_significance')
             );
 
             assert.equal(
-                await getElementByTestHandle(
+                await getColorByTestHandle(
                     'badge-inframe_unknown_significance'
                 ),
-                await getElementByTestHandle(
-                    'badge-splice_unknown_significance'
-                )
+                await getColorByTestHandle('badge-splice_unknown_significance')
             );
 
             // driver badge deselected
@@ -806,24 +802,22 @@ describe('group comparison mutations tab tests', () => {
             // all protein driver badges are deselected
             assert.equal(
                 await getColorOfNthElement('[data-test="badge-driver"]', 1),
-                await getElementByTestHandle('badge-missense_putative_driver')
+                await getColorByTestHandle('badge-missense_putative_driver')
             );
 
             assert.equal(
-                await getElementByTestHandle('badge-missense_putative_driver'),
-                await getElementByTestHandle('badge-truncating_putative_driver')
+                await getColorByTestHandle('badge-missense_putative_driver'),
+                await getColorByTestHandle('badge-truncating_putative_driver')
             );
 
             assert.equal(
-                await getElementByTestHandle(
-                    'badge-truncating_putative_driver'
-                ),
-                await getElementByTestHandle('badge-inframe_putative_driver')
+                await getColorByTestHandle('badge-truncating_putative_driver'),
+                await getColorByTestHandle('badge-inframe_putative_driver')
             );
 
             assert.equal(
-                await getElementByTestHandle('badge-inframe_putative_driver'),
-                await getElementByTestHandle('badge-splice_putative_driver')
+                await getColorByTestHandle('badge-inframe_putative_driver'),
+                await getColorByTestHandle('badge-splice_putative_driver')
             );
 
             // selecting driver badge
