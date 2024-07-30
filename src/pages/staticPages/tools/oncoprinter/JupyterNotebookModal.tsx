@@ -63,18 +63,20 @@ class JupyterNoteBookModal extends React.Component<
 
         const { fileContent, fileName } = this.props;
 
-        const jupyterNotebookTool = window.open(
-            buildCBioPortalPageUrl('/jupyternotebook'),
-            '_blank'
-        );
-
         const data = JSON.stringify({
             fileContent: fileContent,
             filename: `${fileName}.csv`,
             folderName: folderName,
         });
 
-        (jupyterNotebookTool as any).jupyterData = data;
+        localStorage.setItem('jupyterData', data);
+
+        const jupyterNotebookTool = window.open(
+            buildCBioPortalPageUrl('/jupyternotebook'),
+            '_blank'
+        );
+
+        // (jupyterNotebookTool as any).jupyterData = data;
 
         this.setState({ folderName: '', validated: false, errorMessage: '' });
         this.props.handleClose();

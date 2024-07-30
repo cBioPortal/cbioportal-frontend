@@ -34,18 +34,18 @@ export default class JupyterNotebookTool extends React.Component<
         super(props);
         makeObservable(this);
         (window as any).oncoprinterTool = this;
-
-        let incomingData: string = getBrowserWindow().jupyterData;
-        delete (window as any).jupyterData;
-
-        console.log({ incomingData });
-
-        if (incomingData) {
-            this.fileDetails = JSON.parse(incomingData);
-        }
     }
 
     componentDidMount() {
+        const incomingData = localStorage.getItem('jupyterData');
+
+        console.log({ incomingData });
+
+        localStorage.removeItem('jupyterData');
+        if (incomingData) {
+            this.fileDetails = JSON.parse(incomingData);
+        }
+
         const iframe = document.getElementById(
             'jupyterIframe'
         ) as HTMLIFrameElement;
