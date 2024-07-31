@@ -53,7 +53,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
             ...urlParametersLaunch,
         };
 
-        // e.g. url_format: 'foo://?-ProjectName=${studyName}'
+        // e.g. url_format: 'foo://?-ProjectName={studyName}'
         const urlFormat = this.props.toolConfig.url_format;
 
         // Replace all parameter references in urlFormat with the appropriate property in urlParameters
@@ -62,7 +62,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
             const value = urlParameters[key] ?? '';
             // TECH: location.href.set will actually encode the value, but we do it here for deterministic results with unit tests
             url = url.replace(
-                new RegExp(`\\$\{${key}\}`, 'g'),
+                new RegExp(`\{${key}\}`, 'g'),
                 encodeURIComponent(value)
             );
         });

@@ -1,5 +1,5 @@
 /**
- * Properties that may be referenced from url_format, like "${studyName}".
+ * Properties that may be referenced from url_format, like "{studyName}".
  * TECH: all properties are string, since it's easier for the TypeScript indexing operator. E.g. dataLength as string instead of integer.
  */
 export type CustomButtonUrlParameters = {

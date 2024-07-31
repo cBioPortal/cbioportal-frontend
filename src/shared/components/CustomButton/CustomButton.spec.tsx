@@ -14,7 +14,7 @@ describe('CustomButton Component', () => {
     const testData = 'test data';
     const testDataLengthString = testData.length.toString();
     const testUrlFormat =
-        'http://example.com?study=${studyName}&-DataLength=${dataLength}';
+        'http://example.com?study={studyName}&-DataLength={dataLength}';
     const testStudyName = 'Test Study';
     const navigatorClipboardOriginal = navigator.clipboard;
 
@@ -30,7 +30,7 @@ describe('CustomButton Component', () => {
         "name": "Test Tool",
         "tooltip": "This button shows that the Test Tool is working",
         "image_src": "https://frontend.cbioportal.org/reactapp/images/369b022222badf37b2b0c284f4ae2284.png",
-        "url_format": "https://eu.httpbin.org/anything?-StudyName=\${studyName}&-ImportDataLength=\${dataLength}"
+        "url_format": "https://eu.httpbin.org/anything?-StudyName={studyName}&-ImportDataLength={dataLength}"
     }
 ]    
     `;
