@@ -79,3 +79,89 @@ export const handleDownloadPDF = async (
         await svgToPdfDownload('chart.pdf', svg);
     }
 };
+
+export const handleDownloadSvgUtils = (
+    elementId: string,
+    fileName: string,
+    heading: string
+) => {
+    const element = document.getElementById(elementId);
+
+    if (element) {
+        const excludeElement = element.querySelector(
+            '.exclude-from-svg'
+        ) as HTMLElement;
+        if (excludeElement) {
+            excludeElement.style.display = 'none';
+        }
+
+        const svg = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'svg'
+        );
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('width', element.offsetWidth.toString());
+        svg.setAttribute('height', (element.offsetHeight + 150).toString());
+
+        const foreignObject = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'foreignObject'
+        );
+        foreignObject.setAttribute('width', '100%');
+        foreignObject.setAttribute('height', '100%');
+
+        const clonedContent = element.cloneNode(true) as HTMLElement;
+
+        if (heading === 'pieChart') {
+            clonedContent
+                .querySelectorAll('.pie-label')
+                .forEach((label: HTMLElement) => {
+                    const percentageSpan = document.createElement('span');
+                    const percentage = label.getAttribute('data-percentage');
+                    percentageSpan.innerHTML = ` (${percentage}%)`;
+                    label.appendChild(percentageSpan);
+                });
+        }
+
+        foreignObject.appendChild(clonedContent);
+        svg.appendChild(foreignObject);
+
+        const serializer = new XMLSerializer();
+        const svgBlob = new Blob([serializer.serializeToString(svg)], {
+            type: 'image/svg+xml;charset=utf-8',
+        });
+        const url = URL.createObjectURL(svgBlob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${fileName}.svg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+        if (excludeElement) {
+            excludeElement.style.display = '';
+        }
+    } else {
+        console.error('Element not found');
+    }
+};
+export const handleDownloadDataUtils = (data: any[], fileName: string) => {
+    const columnsToDownload = ['patientId', 'sampleId', 'studyId', 'value'];
+    const headers = columnsToDownload;
+    const dataRows = data.map(item =>
+        columnsToDownload.map(column => item[column]).join('\t')
+    );
+    const dataString = [headers.join('\t'), ...dataRows].join('\n');
+    const blob = new Blob([dataString], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};

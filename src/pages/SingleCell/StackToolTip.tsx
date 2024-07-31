@@ -6,7 +6,6 @@ import {
     VictoryTooltip,
 } from 'victory';
 import React, { useState, useEffect, useRef } from 'react';
-import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 import Select from 'react-select';
 import _ from 'lodash';
 import { Link } from 'react-router-dom';

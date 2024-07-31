@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { VictoryPie, VictoryTooltip } from 'victory';
-import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 import './styles.css';
 import { observer } from 'mobx-react-lite';
-
+import { colors } from './SingleCellStore';
 // Define the DataBin interface
 
 // Define props interface for the Chart component
@@ -43,7 +42,6 @@ const PieToolTip: React.FC<ChartProps> = observer(({ singleCellStore }) => {
         setHoveredSliceIndex,
     } = singleCellStore;
 
-    console.log('Current hoveredSliceIndex:', hoveredSliceIndex);
     const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
     const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
     const [downloadOptionsVisible, setDownloadOptionsVisible] = useState<
@@ -81,19 +79,6 @@ const PieToolTip: React.FC<ChartProps> = observer(({ singleCellStore }) => {
             }
         }
     }
-    useEffect(() => {
-        if (downloadSvg) {
-            handleDownloadSVG(svgRef);
-            setDownloadSvg(false);
-        }
-    }, [downloadSvg]);
-
-    useEffect(() => {
-        if (downloadPdf) {
-            handleDownloadPDF(svgRef);
-            setDownloadPdf(false);
-        }
-    }, [downloadPdf]);
 
     // Set tooltip visibility with a delay when hover state changes, only if tooltipEnabled is false
     useEffect(() => {
@@ -111,22 +96,6 @@ const PieToolTip: React.FC<ChartProps> = observer(({ singleCellStore }) => {
             }
         }
     }, [isHovered, tooltipHovered, tooltipEnabled]);
-
-    // Define color scale (replace with your desired colors)
-    const colors = [
-        '#00BCD4', // Cyan (High contrast, good accessibility)
-        '#FF9800', // Orange (Warm, contrasting)
-        '#A52A2A', // Maroon (Deep, high contrast)
-        '#795548', // Brown (Earth tone, contrasts well with previous)
-        '#27AE60', // Pink (Light, good contrast)
-        '#E53935', // Green (Vibrant, contrasts with Pink)
-        '#9C27B0', // Violet (Rich, unique hue)
-        '#2986E2', // Blue (Calming, high contrast)
-        '#FFEB3B', // Light Yellow (Light, good contrast with Blue)
-        '#051288', // Red (Bold, contrasts well)
-        '#008080',
-        '#7a8376',
-    ];
 
     // Filter out data bins with specialValue "NA"
     const uniqueIds: any = [
@@ -157,85 +126,6 @@ const PieToolTip: React.FC<ChartProps> = observer(({ singleCellStore }) => {
             color: color,
         };
     });
-
-    const handleDownloadData = () => {
-        const headers = Object.keys(pieChartData[0]);
-        const dataRows = pieChartData.map((item: any) =>
-            headers.map(header => item[header]).join('\t')
-        );
-        const dataString = [headers.join('\t'), ...dataRows].join('\n');
-        const blob = new Blob([dataString], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'pie_chart_data.txt';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    };
-    const handleDownload = () => {
-        const element = document.getElementById('div-to-download');
-
-        if (element) {
-            // Find the element to exclude
-            const excludeElement = element.querySelector(
-                '.exclude-from-svg'
-            ) as HTMLElement;
-            if (excludeElement) {
-                // Hide the element to exclude
-                excludeElement.style.display = 'none';
-            }
-
-            // Create an SVG element
-            const svg = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'svg'
-            );
-            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            svg.setAttribute('width', element.offsetWidth.toString());
-            svg.setAttribute('height', element.offsetHeight.toString());
-
-            // Create a foreignObject element to hold the HTML content
-            const foreignObject = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'foreignObject'
-            );
-            foreignObject.setAttribute('width', '100%');
-            foreignObject.setAttribute('height', '100%');
-
-            // Clone the HTML content and append it to the foreignObject
-            const clonedContent = element.cloneNode(true) as HTMLElement;
-            foreignObject.appendChild(clonedContent);
-
-            // Append the foreignObject to the SVG
-            svg.appendChild(foreignObject);
-
-            // Create a blob from the SVG and trigger a download
-            const serializer = new XMLSerializer();
-            const svgBlob = new Blob([serializer.serializeToString(svg)], {
-                type: 'image/svg+xml;charset=utf-8',
-            });
-            const url = URL.createObjectURL(svgBlob);
-
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${heading}.svg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Revoke the object URL after download
-            URL.revokeObjectURL(url);
-
-            // Show the excluded element again
-            if (excludeElement) {
-                excludeElement.style.display = '';
-            }
-        } else {
-            console.error('Element not found');
-        }
-    };
 
     return (
         <div>

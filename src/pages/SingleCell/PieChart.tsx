@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { VictoryPie, VictoryTooltip, VictoryChart, VictoryAxis } from 'victory';
-import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
+import {
+    handleDownloadSvgUtils,
+    handleDownloadDataUtils,
+} from './downloadUtils';
 import './styles.css';
 import { jsPDF } from 'jspdf-yworks';
 import { observer } from 'mobx-react-lite';
 import singleCellStore_importedDirectly from './SingleCellStore';
+import { colors } from './SingleCellStore';
 interface DataBin {
     id: string;
     count: number;
@@ -49,7 +53,6 @@ const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
         setHoveredSliceIndex,
     } = singleCellStore;
 
-    console.log(setHoveredSliceIndex, 'this is setHoveredSliceIndex');
     if (!singleCellStore) {
         console.error('singleCellStore is undefined');
         return null; // Handle the case where singleCellStore is not available
@@ -91,19 +94,6 @@ const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
             }
         }
     }
-    useEffect(() => {
-        if (downloadSvg) {
-            handleDownloadSVG(svgRef);
-            setDownloadSvg(false);
-        }
-    }, [downloadSvg]);
-
-    useEffect(() => {
-        if (downloadPdf) {
-            handleDownloadPDF(svgRef);
-            setDownloadPdf(false);
-        }
-    }, [downloadPdf]);
 
     // Set tooltip visibility with a delay when hover state changes, only if tooltipEnabled is false
     useEffect(() => {
@@ -121,22 +111,6 @@ const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
             }
         }
     }, [isHovered, tooltipHovered, tooltipEnabled]);
-
-    // Define color scale (replace with your desired colors)
-    const colors = [
-        '#00BCD4', // Cyan (High contrast, good accessibility)
-        '#FF9800', // Orange (Warm, contrasting)
-        '#A52A2A', // Maroon (Deep, high contrast)
-        '#795548', // Brown (Earth tone, contrasts well with previous)
-        '#27AE60', // Pink (Light, good contrast)
-        '#E53935', // Green (Vibrant, contrasts with Pink)
-        '#9C27B0', // Violet (Rich, unique hue)
-        '#2986E2', // Blue (Calming, high contrast)
-        '#FFEB3B', // Light Yellow (Light, good contrast with Blue)
-        '#051288', // Red (Bold, contrasts well)
-        '#008080',
-        '#7a8376',
-    ];
 
     // Filter out data bins with specialValue "NA"
     const uniqueIds: any = [
@@ -156,7 +130,6 @@ const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
             return acc;
         }, 0);
     });
-    // console.log(pieChartData,sumValues,"here is piedata")
 
     const pieData = Object.keys(sumValues).map((key, index) => {
         const color =
@@ -168,178 +141,6 @@ const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
             color: color,
         };
     });
-
-    const handleDownloadData = () => {
-        const columnsToDownload = ['patientId', 'sampleId', 'studyId', 'value'];
-        const headers = columnsToDownload;
-        const dataRows = pieChartData.map((item: any) =>
-            columnsToDownload.map(column => item[column]).join('\t')
-        );
-        const dataString = [headers.join('\t'), ...dataRows].join('\n');
-        const blob = new Blob([dataString], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'bar_chart_data.txt';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    };
-    const chartRef = useRef<HTMLDivElement>(null);
-
-    const handleDownload = () => {
-        const element = document.getElementById('div-to-download');
-
-        if (element) {
-            // Find the element to exclude
-            const excludeElement = element.querySelector(
-                '.exclude-from-svg'
-            ) as HTMLElement;
-            if (excludeElement) {
-                // Hide the element to exclude
-                excludeElement.style.display = 'none';
-            }
-
-            // Create an SVG element
-            const svg = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'svg'
-            );
-            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            svg.setAttribute('width', element.offsetWidth.toString());
-            svg.setAttribute('height', (element.offsetHeight + 150).toString());
-
-            // Create a foreignObject element to hold the HTML content
-            const foreignObject = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'foreignObject'
-            );
-            foreignObject.setAttribute('width', '100%');
-            foreignObject.setAttribute('height', '100%');
-
-            // Clone the HTML content and append it to the foreignObject
-            const clonedContent = element.cloneNode(true) as HTMLElement;
-
-            // Add percentages to cloned content for SVG
-            clonedContent
-                .querySelectorAll('.pie-label')
-                .forEach((label: HTMLElement) => {
-                    const percentageSpan = document.createElement('span');
-                    const percentage = label.getAttribute('data-percentage');
-                    percentageSpan.innerHTML = ` (${percentage}%)`;
-                    label.appendChild(percentageSpan);
-                });
-
-            foreignObject.appendChild(clonedContent);
-
-            // Append the foreignObject to the SVG
-            svg.appendChild(foreignObject);
-
-            // Create a blob from the SVG and trigger a download
-            const serializer = new XMLSerializer();
-            const svgBlob = new Blob([serializer.serializeToString(svg)], {
-                type: 'image/svg+xml;charset=utf-8',
-            });
-            const url = URL.createObjectURL(svgBlob);
-
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${heading}.svg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Revoke the object URL after download
-            URL.revokeObjectURL(url);
-
-            // Show the excluded element again
-            if (excludeElement) {
-                excludeElement.style.display = '';
-            }
-        } else {
-            console.error('Element not found');
-        }
-    };
-
-    const handleDownloadPDFWrapper = async () => {
-        if (chartRef.current) {
-            const svg = chartRef.current.querySelector('svg');
-            if (svg) {
-                await handleDownloadPDF({ current: svg });
-            }
-        }
-    };
-    const handlePDF = () => {
-        const element = document.getElementById('div-to-download');
-
-        if (element) {
-            // Hide the excluded element
-            const excludeElement = element.querySelector(
-                '.exclude-from-svg'
-            ) as HTMLElement;
-            if (excludeElement) {
-                excludeElement.style.display = 'none';
-            }
-
-            // Create an SVG element
-            const svg = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'svg'
-            );
-            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            svg.setAttribute('width', element.offsetWidth.toString());
-            svg.setAttribute('height', (element.offsetHeight + 80).toString());
-
-            // Create a foreignObject element to hold the HTML content
-            const foreignObject = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'foreignObject'
-            );
-            foreignObject.setAttribute('width', '100%');
-            foreignObject.setAttribute('height', '100%');
-
-            // Clone the HTML content and append it to the foreignObject
-            const clonedContent = element.cloneNode(true) as HTMLElement;
-            foreignObject.appendChild(clonedContent);
-
-            // Append the foreignObject to the SVG
-            svg.appendChild(foreignObject);
-
-            // Create a blob from the SVG
-            const serializer = new XMLSerializer();
-            const svgBlob = new Blob([serializer.serializeToString(svg)], {
-                type: 'image/svg+xml;charset=utf-8',
-            });
-
-            // Create a canvas to render the SVG
-            const canvas = document.createElement('canvas');
-            canvas.width = element.offsetWidth;
-            canvas.height = element.offsetHeight + 80;
-
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-
-            img.onload = () => {
-                if (ctx) {
-                    ctx.drawImage(img, 0, 0);
-                }
-                const pdf = new jsPDF('p', 'pt', 'a4');
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0);
-                pdf.save('div-content.pdf');
-
-                // Show the excluded element again
-                if (excludeElement) {
-                    excludeElement.style.display = '';
-                }
-            };
-
-            const url = URL.createObjectURL(svgBlob);
-            img.src = url;
-        } else {
-            console.error('Element not found');
-        }
-    };
 
     return (
         <>
@@ -405,11 +206,6 @@ const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
                                                     singleCellStore_importedDirectly.setHoveredSliceIndex(
                                                         props.index
                                                     );
-                                                    console.log(
-                                                        'new hoveredsliceindex',
-                                                        hoveredSliceIndex,
-                                                        props.index
-                                                    );
                                                 }
 
                                                 return [];
@@ -472,7 +268,13 @@ const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
                                         transition:
                                             'background-color 0.3s ease',
                                     }}
-                                    onClick={handleDownload}
+                                    onClick={() =>
+                                        handleDownloadSvgUtils(
+                                            'div-to-download',
+                                            'piechart_chart',
+                                            'pieChart'
+                                        )
+                                    }
                                     onMouseEnter={e =>
                                         (e.currentTarget.style.backgroundColor =
                                             '#f0f0f0')
@@ -491,7 +293,12 @@ const Chart: React.FC<ChartProps> = observer(({ singleCellStore }) => {
                                         transition:
                                             'background-color 0.3s ease',
                                     }}
-                                    onClick={handleDownloadData}
+                                    onClick={() =>
+                                        handleDownloadDataUtils(
+                                            pieChartData,
+                                            'pie_chart_data.txt'
+                                        )
+                                    }
                                     onMouseEnter={e =>
                                         (e.currentTarget.style.backgroundColor =
                                             '#f0f0f0')

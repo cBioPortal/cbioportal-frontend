@@ -10,6 +10,7 @@ import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 import './styles.css';
 import Select from 'react-select';
 import _ from 'lodash';
+import { colors } from './SingleCellStore';
 
 interface DataItem {
     stableId: string;
@@ -202,25 +203,9 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         const stableIdColorMap: { [key: string]: string } = {};
 
         let colorIndex = 0;
-        const colorScale = [
-            '#00BCD4', // Cyan (High contrast, good accessibility)
-            '#FF9800', // Orange (Warm, contrasting)
-            '#A52A2A', // Maroon (Deep, high contrast)
-            '#795548', // Brown (Earth tone, contrasts well with previous)
-            '#27AE60', // Pink (Light, good contrast)
-            '#E53935', // Green (Vibrant, contrasts with Pink)
-            '#9C27B0', // Violet (Rich, unique hue)
-            '#2986E2', // Blue (Calming, high contrast)
-            '#FFEB3B', // Light Yellow (Light, good contrast with Blue)
-            '#051288', // Red (Bold, contrasts well)
-            '#008080',
-            '#7a8376',
-        ];
-
         let formattedData = Object.keys(stableIdData).map(stableId => {
             if (!stableIdColorMap[stableId]) {
-                stableIdColorMap[stableId] =
-                    colorScale[colorIndex % colorScale.length];
+                stableIdColorMap[stableId] = colors[colorIndex % colors.length];
                 colorIndex++;
             }
             return stableIdData[stableId].map(item => ({
@@ -236,24 +221,9 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     const stableIdColorMap: { [key: string]: string } = {};
 
     let colorIndex = 0;
-    const colorScale = [
-        '#00BCD4', // Cyan (High contrast, good accessibility)
-        '#FF9800', // Orange (Warm, contrasting)
-        '#A52A2A', // Maroon (Deep, high contrast)
-        '#795548', // Brown (Earth tone, contrasts well with previous)
-        '#27AE60', // Pink (Light, good contrast)
-        '#E53935', // Green (Vibrant, contrasts with Pink)
-        '#9C27B0', // Violet (Rich, unique hue)
-        '#2986E2', // Blue (Calming, high contrast)
-        '#FFEB3B', // Light Yellow (Light, good contrast with Blue)
-        '#051288', // Red (Bold, contrasts well)
-        '#008080',
-        '#7a8376',
-    ];
-
     let formattedData = Object.keys(stableIdData).map(stableId => {
         if (!stableIdColorMap[stableId]) {
-            stableIdColorMap[stableId] = colorScale[colorIndex];
+            stableIdColorMap[stableId] = colors[colorIndex];
             colorIndex++;
         }
         return stableIdData[stableId].map(item => ({
@@ -288,8 +258,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
 
         const formattedDatastate = Object.keys(stableIdData).map(stableId => {
             if (!stableIdColorMap[stableId]) {
-                stableIdColorMap[stableId] =
-                    colorScale[colorIndex % colorScale.length];
+                stableIdColorMap[stableId] = colors[colorIndex % colors.length];
                 colorIndex++;
             }
             return stableIdData[stableId].map(item => ({
@@ -387,7 +356,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         if (chartRef.current) {
             const svg = chartRef.current.querySelector('svg');
             if (svg) {
-                console.log('SVG Element found:', svg);
                 handleDownloadSVG({ current: svg });
             } else {
                 console.log('SVG Element not found within chartRef');

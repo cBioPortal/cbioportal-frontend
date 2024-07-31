@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { VictoryBar, VictoryChart, VictoryAxis, VictoryTooltip } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
-import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
+import {
+    handleDownloadPDF,
+    handleDownloadSvgUtils,
+    handleDownloadDataUtils,
+} from './downloadUtils';
 import { useLocalObservable, observer } from 'mobx-react-lite';
 import {
     DataBinMethodConstants,
@@ -54,7 +58,7 @@ const BarChart: React.FC<BarChartProps> = observer(
     }) => {
         const {
             dataBins,
-            downloadData,
+            BarDownloadData,
             // selectedEntity,
             heading,
             stableIdBin,
@@ -84,7 +88,6 @@ const BarChart: React.FC<BarChartProps> = observer(
                 this.editValues = value;
             },
         }));
-
         const chartRef = useRef<HTMLDivElement>(null);
 
         const handleCheckboxChange = (
@@ -172,15 +175,6 @@ const BarChart: React.FC<BarChartProps> = observer(
             };
         });
 
-        const handleDownloadSVGWrapper = () => {
-            if (chartRef.current) {
-                const svg = chartRef.current.querySelector('svg');
-                if (svg) {
-                    handleDownloadSVG({ current: svg });
-                }
-            }
-        };
-
         const handleDownloadPDFWrapper = async () => {
             if (chartRef.current) {
                 const svg = chartRef.current.querySelector('svg');
@@ -190,93 +184,6 @@ const BarChart: React.FC<BarChartProps> = observer(
             }
         };
 
-        const handleDownloadData = () => {
-            const columnsToDownload = [
-                'patientId',
-                'sampleId',
-                'studyId',
-                'value',
-            ];
-            const headers = columnsToDownload;
-            const dataRows = downloadData.map((item: any) =>
-                columnsToDownload.map(column => item[column]).join('\t')
-            );
-            const dataString = [headers.join('\t'), ...dataRows].join('\n');
-            const blob = new Blob([dataString], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'bar_chart_data.txt';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        };
-        const handleDownload = () => {
-            const element = document.getElementById('div-to-download');
-
-            if (element) {
-                // Find the element to exclude
-                const excludeElement = element.querySelector(
-                    '.exclude-from-svg'
-                ) as HTMLElement;
-                if (excludeElement) {
-                    // Hide the element to exclude
-                    excludeElement.style.display = 'none';
-                }
-
-                // Create an SVG element
-                const svg = document.createElementNS(
-                    'http://www.w3.org/2000/svg',
-                    'svg'
-                );
-                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                svg.setAttribute('width', element.offsetWidth.toString());
-                svg.setAttribute(
-                    'height',
-                    (element.offsetHeight + 150).toString()
-                );
-
-                // Create a foreignObject element to hold the HTML content
-                const foreignObject = document.createElementNS(
-                    'http://www.w3.org/2000/svg',
-                    'foreignObject'
-                );
-                foreignObject.setAttribute('width', '100%');
-                foreignObject.setAttribute('height', '100%');
-
-                // Clone the HTML content and append it to the foreignObject
-                const clonedContent = element.cloneNode(true) as HTMLElement;
-                foreignObject.appendChild(clonedContent);
-
-                // Append the foreignObject to the SVG
-                svg.appendChild(foreignObject);
-
-                // Create a blob from the SVG and trigger a download
-                const serializer = new XMLSerializer();
-                const svgBlob = new Blob([serializer.serializeToString(svg)], {
-                    type: 'image/svg+xml;charset=utf-8',
-                });
-                const url = URL.createObjectURL(svgBlob);
-
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${selectedEntity.stableId}.svg`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                // Revoke the object URL after download
-                URL.revokeObjectURL(url);
-
-                // Show the excluded element again
-                if (excludeElement) {
-                    excludeElement.style.display = '';
-                }
-            } else {
-                console.error('Element not found');
-            }
-        };
         const formattedXAxisLabels = xAxisLabels
             .filter(label => !label.startsWith('<=') && !label.startsWith('>'))
             .join(', ');
@@ -530,7 +437,13 @@ const BarChart: React.FC<BarChartProps> = observer(
                                                 transition:
                                                     'background-color 0.3s ease',
                                             }}
-                                            onClick={handleDownload}
+                                            onClick={() =>
+                                                handleDownloadSvgUtils(
+                                                    'div-to-download',
+                                                    'histogram_chart',
+                                                    'histogram'
+                                                )
+                                            }
                                             onMouseEnter={e =>
                                                 (e.currentTarget.style.backgroundColor =
                                                     '#f0f0f0')
@@ -555,7 +468,12 @@ const BarChart: React.FC<BarChartProps> = observer(
                                                 transition:
                                                     'background-color 0.3s ease',
                                             }}
-                                            onClick={handleDownloadData}
+                                            onClick={() =>
+                                                handleDownloadDataUtils(
+                                                    BarDownloadData,
+                                                    'Histogram_data.txt'
+                                                )
+                                            }
                                             onMouseEnter={e =>
                                                 (e.currentTarget.style.backgroundColor =
                                                     '#f0f0f0')

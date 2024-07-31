@@ -17,6 +17,7 @@ import {
     ChartMeta,
     ChartMetaDataTypeEnum,
     convertGenericAssayDataBinsToDataBins,
+    DataBin,
 } from 'pages/studyView/StudyViewUtils';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -65,14 +66,6 @@ interface ProfileOptions {
 
 interface Entity {
     stableId: string;
-}
-
-interface DataBin {
-    id: string;
-    count: number;
-    end?: number;
-    start?: number;
-    specialValue?: string;
 }
 
 interface HomePageProps {
@@ -294,11 +287,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
             this.retrieveAllProfiledSamples(selectedValue)
                 .then(async MolecularProfileData => {
-                    console.log(
-                        MolecularProfileData,
-                        'this is molecularProfileData'
-                    );
-
                     const extractedData: string[] = (
                         MolecularProfileData ?? []
                     ).map(({ sampleId }) => sampleId);
@@ -407,11 +395,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     { selectedEntity: newSelectedEntity },
                     async () => {
                         // Log the selected entity's stableId
-                        console.log(
-                            'Selected entity stableId:',
-                            newSelectedEntity.stableId
-                        );
-
                         // Update chartInfo with the new entity
                         this.setState(
                             prevState => ({
@@ -651,7 +634,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         );
 
         // Map filtered options to format expected by react-select
-        console.log(singleCellStore, 'here is store');
 
         const options = filteredOptions.map(option => ({
             value: option.value,

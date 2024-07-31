@@ -1,5 +1,5 @@
 import { makeAutoObservable } from 'mobx';
-
+import { DataBin } from 'pages/studyView/StudyViewUtils';
 interface Option {
     value: string;
     label: string;
@@ -22,13 +22,7 @@ interface ChartInfo {
 interface Entity {
     stableId: string;
 }
-interface DataBin {
-    id: string;
-    count: number;
-    end?: number;
-    start?: number;
-    specialValue?: string;
-}
+
 interface gaData {
     uniqueSampleKey: string;
     uniquePatientKey: string;
@@ -40,7 +34,20 @@ interface gaData {
     genericAssayStableId: string;
     stableId: string;
 }
-
+const colors = [
+    '#00BCD4', // Cyan (High contrast, good accessibility)
+    '#FF9800', // Orange (Warm, contrasting)
+    '#A52A2A', // Maroon (Deep, high contrast)
+    '#795548', // Brown (Earth tone, contrasts well with previous)
+    '#27AE60', // Pink (Light, good contrast)
+    '#E53935', // Green (Vibrant, contrasts with Pink)
+    '#9C27B0', // Violet (Rich, unique hue)
+    '#2986E2', // Blue (Calming, high contrast)
+    '#FFEB3B', // Light Yellow (Light, good contrast with Blue)
+    '#051288', // Red (Bold, contrasts well)
+    '#008080', // Teal
+    '#7a8376', // Greyish Green
+];
 class SingleCellStore {
     selectedOption: string = '';
     entityNames: string[] = [];
@@ -181,17 +188,10 @@ class SingleCellStore {
         this.heading = value;
     }
     setIsHovered(value: boolean) {
-        console.log('Setting isHovered:', value); // Add logging here
         this.isHovered = value;
     }
     setHoveredSliceIndex(value: any) {
-        console.log(
-            'Setting hoveredSliceIndex:',
-            value,
-            this.hoveredSliceIndex
-        ); // Add logging here
         this.hoveredSliceIndex = parseInt(value);
-        console.log('after setting', this.hoveredSliceIndex);
     }
     setStableIdBin(value: any) {
         this.stableIdBin = value;
@@ -216,4 +216,5 @@ class SingleCellStore {
 }
 
 const singleCellStore = new SingleCellStore();
+export { singleCellStore, colors };
 export default singleCellStore;
