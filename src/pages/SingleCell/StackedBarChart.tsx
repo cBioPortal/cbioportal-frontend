@@ -97,11 +97,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     setDropdownOptions,
     isReverse,
 }) => {
-    // const [selectedSamples, setSelectedSamples] = useState<string[]>([]);
-    // const [hoveredSampleId, setHoveredSampleId] = useState<string[]>([]);
-    // const [isVisible, setIsVisible] = useState(false);
-    // const [map, setMap] = useState<{ [key: string]: string }>({});
-    console.log(map, 'hereisMap');
     const [selectedSortingSample, setSelectedSortingSample] = useState('');
     // const [isHorizontal, setIsHorizontal] = useState(true);
     const handleSampleSelectionChange = (selectedOptions: any) => {
@@ -110,7 +105,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             : [];
         setSelectedSamples(selectedSampleIds);
         // Log selected options
-        console.log(selectedSampleIds);
     };
 
     const [isHovered, setIsHovered] = useState<boolean>(false);
@@ -133,19 +127,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
 
     let differentSampleIds: string[] = [];
     let differentStableIds: string[] = [];
-    // useEffect(() => {
-    //   if (pieChartData && pieChartData.length > 0) {
-
-    //     console.log(pieChartData,"this is piechartData sorted")
-    //     setLoading(false);
-    // }
-
-    // }, [pieChartData]);
-
-    // if (loading) {
-    //     return <div>Loading...</div>; // You can replace this with a spinner or any other loading indicator
-    // }
-    console.log(tooltipPosition.y, 'tooltipposition');
     function calculatePercentageForPieChartData(data: any) {
         const groupedData = data.reduce((acc: any, item: any) => {
             if (!acc[item.sampleId]) {
@@ -173,8 +154,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     const updatedPiechartData = calculatePercentageForPieChartData(
         pieChartData
     );
-    // console.log(updatedPiechartData, 'updatedPiechartDataupdatedPiechartData');
-
     for (let i = 0; i < pieChartData.length; i++) {
         let currentSampleId = pieChartData[i].sampleId;
         let currentStableId = pieChartData[i].stableId;
@@ -203,7 +182,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             }
         }
     }
-    // console.log(stableIdData, 'stableIdDatastableIdData');
 
     let tooltipData: { [key: string]: string } = {};
 
@@ -216,9 +194,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         });
         tooltipData[sampleId] = sampleTooltip.trim();
     });
-    // console.log(differentStableIds, 'differentSampleIds');
-
-    // const [stableIdColorMap, setStableIdColorMap] = useState<{ [key: string]: string }>({});
     const sampleOptions = differentSampleIds.map(sampleId => ({
         value: sampleId,
         label: sampleId,
@@ -324,7 +299,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 color: stableIdColorMap[stableId],
             }));
         });
-        // console.log(formattedDatastate, 'tiiktip');
         const rows = formattedDatastate.length;
         const columns = formattedDatastate[0].length;
 
@@ -338,19 +312,13 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 tooltipArray[i][j] = { [eleName]: value };
             }
         }
-        // console.log(tooltipArray, 'here is 1the tooltipArray');
-
         return tooltipArray;
     };
     const updatedTooltiparray = tooltipUtilArray();
-    // console.log(updatedTooltiparray);
-
     useEffect(() => {
         setFormattedDatastate(formattedData);
         setNoOfBars(formattedData[0].length);
         let temp = formattedData[0].length * 47;
-        console.log(formattedData[0].length, 'ilteredFormattedData.length22');
-
         setDynamicWidth(temp);
         setInitialWidth(temp - 40);
         const updatedTooltiparray = tooltipUtilArray();
@@ -360,8 +328,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
 
         setToolArraystate(updatedTooltiparray);
     }, []);
-    console.log(noOfBars, 'here are no of bars');
-
     function sortFormattedData(formattedData: any, stableIdToBeSorted: any) {
         // Step 1: Find the array corresponding to the stableIdToBeSorted
 
@@ -416,11 +382,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         }
         return tooltipArraytemp;
     }
-    // Example usage
-    // const stableIdToBeSorted = "Astrocyte";
-    // const sortedFormattedData = sortFormattedData(formattedData, stableIdToBeSorted);
-    // console.log(sortedFormattedData,"sortedFormattedData");
-    // formattedData=sortedFormattedData;
 
     const handleDownloadSVGWrapper = () => {
         if (chartRef.current) {
@@ -508,12 +469,9 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 ];
             }
 
-            console.log(sortedFormattedData, 'this is sortedData');
             setFormattedDatastate(sortedFormattedData);
         }
     }, [stackEntity, isReverse]);
-
-    console.log(formattedDatastate, stackEntity, 'this is formattedState');
 
     useEffect(() => {
         let timeout: any;
@@ -538,18 +496,9 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                   )
                 : elem
         );
-
-        // Log filteredFormattedData for debugging (optional)
-        console.log('Filtered and formatted data:', filteredFormattedData);
-
-        // Update noOfBars state to the length of filteredFormattedData
         if (filteredFormattedData && filteredFormattedData.length > 0) {
             setNoOfBars(filteredFormattedData[0].length);
-            console.log(
-                filteredFormattedData.length,
-                'filteredFormattedData.length'
-            );
-            let temp = filteredFormattedData[0].length * 47 + 160;
+            let temp = filteredFormattedData[0].length * 47 + 150;
             setDynamicWidth(temp);
             setInitialWidth(temp - 40);
         }
@@ -604,7 +553,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                     top: 10,
                                     bottom: isHorizontal ? 40 : 150,
                                     left: isHorizontal ? 190 : 60,
-                                    right: 110,
+                                    right: 80,
                                 }} // Adjust chart padding as needed
                             >
                                 {/* Y-Axis (dependentAxis) */}

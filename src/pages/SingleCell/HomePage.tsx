@@ -1158,6 +1158,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
         return (
             <>
+                {/* <span className="loader"></span> */}
                 {this.state.loader == true ? (
                     <>
                         <LoadingIndicator
@@ -1167,201 +1168,218 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         />
                     </>
                 ) : (
-                    <div className="home-page-container">
-                        {console.log(this.props.store, 'this is tore')}
-                        <div className="chart-configurations">
-                            <h2>Chart Configurations</h2>
-                            <div>
-                                {/* Dropdown for selecting molecular profile */}
-                                <div className="dropdown-container">
-                                    <ReactSelect
-                                        value={selectedOption || ''}
-                                        onChange={this.handleSelectChange}
-                                        options={options}
-                                        placeholder="Select a Molecular Profile..."
-                                        clearable={false}
-                                        searchable={true}
-                                    />
-                                </div>
-
-                                {selectedOption && (
+                    <>
+                        <div className="home-page-container">
+                            {console.log(this.props.store, 'this is tore')}
+                            <div className="chart-configurations">
+                                <h2>Chart Configurations</h2>
+                                <div>
+                                    {/* Dropdown for selecting molecular profile */}
                                     <div className="dropdown-container">
                                         <ReactSelect
-                                            id="chartTypeSelect"
-                                            onChange={
-                                                this.handleChartTypeChange
-                                            }
-                                            value={chartType}
-                                            options={chartOptions}
-                                            placeholder="Select type of chart..."
-                                            // Disable if selectedOption is falsy
+                                            value={selectedOption || ''}
+                                            onChange={this.handleSelectChange}
+                                            options={options}
+                                            placeholder="Select a Molecular Profile..."
                                             clearable={false}
                                             searchable={true}
                                         />
                                     </div>
-                                )}
 
-                                {/* Dropdown for selecting entity */}
-                                {chartType === 'bar' && (
-                                    <div className="dropdown-container">
-                                        <ReactSelect
-                                            id="entitySelect"
-                                            // className="custom-dropdown"
-                                            onChange={
-                                                this.handleEntitySelectChange
-                                            }
-                                            value={
-                                                selectedEntity
-                                                    ? {
-                                                          value:
-                                                              selectedEntity.stableId,
-                                                          label: selectedEntity.stableId.replace(
-                                                              /_/g,
-                                                              ' '
-                                                          ),
-                                                      }
-                                                    : ''
-                                            }
-                                            options={entityNames.map(
-                                                entityName => ({
-                                                    value: entityName,
-                                                    label: entityName.replace(
-                                                        /_/g,
-                                                        ' '
-                                                    ),
-                                                })
-                                            )}
-                                            placeholder="Select cell type..."
-                                            isDisabled={!selectedOption}
-                                            clearable={false}
-                                            searchable={true}
-                                        />
-
-                                        {console.log(
-                                            entityNames,
-                                            'hereareentitynames'
-                                        )}
-                                    </div>
-                                )}
-                                {chartType === 'box' && (
-                                    <div>
+                                    {selectedOption && (
                                         <div className="dropdown-container">
                                             <ReactSelect
-                                                id="geneSelect"
-                                                onChange={this.handleGeneChange}
-                                                value={
-                                                    this.state.selectedGene
-                                                        ? {
-                                                              value: this.state
-                                                                  .selectedGene,
-                                                              label: this.state
-                                                                  .selectedGene,
-                                                          }
-                                                        : null
+                                                id="chartTypeSelect"
+                                                onChange={
+                                                    this.handleChartTypeChange
                                                 }
-                                                options={geneOptions}
-                                                placeholder="Select a gene..."
-                                                isClearable={true}
-                                                isSearchable={true}
+                                                value={chartType}
+                                                options={chartOptions}
+                                                placeholder="Select type of chart..."
+                                                // Disable if selectedOption is falsy
+                                                clearable={false}
+                                                searchable={true}
                                             />
                                         </div>
-                                        {this.state.selectedGene && (
+                                    )}
+
+                                    {/* Dropdown for selecting entity */}
+                                    {chartType === 'bar' && (
+                                        <div className="dropdown-container">
+                                            <ReactSelect
+                                                id="entitySelect"
+                                                // className="custom-dropdown"
+                                                onChange={
+                                                    this
+                                                        .handleEntitySelectChange
+                                                }
+                                                value={
+                                                    selectedEntity
+                                                        ? {
+                                                              value:
+                                                                  selectedEntity.stableId,
+                                                              label: selectedEntity.stableId.replace(
+                                                                  /_/g,
+                                                                  ' '
+                                                              ),
+                                                          }
+                                                        : ''
+                                                }
+                                                options={entityNames.map(
+                                                    entityName => ({
+                                                        value: entityName,
+                                                        label: entityName.replace(
+                                                            /_/g,
+                                                            ' '
+                                                        ),
+                                                    })
+                                                )}
+                                                placeholder="Select cell type..."
+                                                isDisabled={!selectedOption}
+                                                clearable={false}
+                                                searchable={true}
+                                            />
+
+                                            {console.log(
+                                                entityNames,
+                                                'hereareentitynames'
+                                            )}
+                                        </div>
+                                    )}
+                                    {chartType === 'box' && (
+                                        <div>
                                             <div className="dropdown-container">
                                                 <ReactSelect
-                                                    id="colorBySelect"
+                                                    id="geneSelect"
                                                     onChange={
-                                                        this.handleColorChange
+                                                        this.handleGeneChange
                                                     }
                                                     value={
-                                                        this.state.scatterColor
+                                                        this.state.selectedGene
                                                             ? {
                                                                   value: this
                                                                       .state
-                                                                      .scatterColor,
-                                                                  label:
-                                                                      this.state
-                                                                          .scatterColor ==
-                                                                      'Default'
-                                                                          ? 'Default color'
-                                                                          : `Color by ${this.state.scatterColor}`,
+                                                                      .selectedGene,
+                                                                  label: this
+                                                                      .state
+                                                                      .selectedGene,
                                                               }
                                                             : null
                                                     }
-                                                    options={[
-                                                        {
-                                                            value: 'sample id',
-                                                            label:
-                                                                'Color by sample id',
-                                                        },
-                                                        {
-                                                            value:
-                                                                'tissue name',
-                                                            label:
-                                                                'Color by tissue',
-                                                        },
-                                                        {
-                                                            value: 'Default',
-                                                            label: 'Default',
-                                                        },
-                                                    ]}
-                                                    placeholder="Color by..."
-                                                    clearable={false}
-                                                    searchable={true}
+                                                    options={geneOptions}
+                                                    placeholder="Select a gene..."
+                                                    isClearable={true}
+                                                    isSearchable={true}
                                                 />
                                             </div>
-                                        )}
+                                            {this.state.selectedGene && (
+                                                <div className="dropdown-container">
+                                                    <ReactSelect
+                                                        id="colorBySelect"
+                                                        onChange={
+                                                            this
+                                                                .handleColorChange
+                                                        }
+                                                        value={
+                                                            this.state
+                                                                .scatterColor
+                                                                ? {
+                                                                      value: this
+                                                                          .state
+                                                                          .scatterColor,
+                                                                      label:
+                                                                          this
+                                                                              .state
+                                                                              .scatterColor ==
+                                                                          'Default'
+                                                                              ? 'Default color'
+                                                                              : `Color by ${this.state.scatterColor}`,
+                                                                  }
+                                                                : null
+                                                        }
+                                                        options={[
+                                                            {
+                                                                value:
+                                                                    'sample id',
+                                                                label:
+                                                                    'Color by sample id',
+                                                            },
+                                                            {
+                                                                value:
+                                                                    'tissue name',
+                                                                label:
+                                                                    'Color by tissue',
+                                                            },
+                                                            {
+                                                                value:
+                                                                    'Default',
+                                                                label:
+                                                                    'Default',
+                                                            },
+                                                        ]}
+                                                        placeholder="Color by..."
+                                                        clearable={false}
+                                                        searchable={true}
+                                                    />
+                                                </div>
+                                            )}
 
-                                        {selectedIdBox && (
-                                            <div className="dropdown-container">
-                                                <ReactSelect
-                                                    id="keySelectBox"
-                                                    onChange={
-                                                        this.handleKeyChangeBox
-                                                    }
-                                                    value={
-                                                        selectedKeyBox
-                                                            ? {
-                                                                  value: selectedKeyBox,
-                                                                  label: selectedKeyBox,
-                                                              }
-                                                            : ''
-                                                    }
-                                                    options={optionsKeyBox}
-                                                    placeholder="Select Key..."
-                                                    isDisabled={!selectedIdBox}
-                                                />
-                                            </div>
-                                        )}
+                                            {selectedIdBox && (
+                                                <div className="dropdown-container">
+                                                    <ReactSelect
+                                                        id="keySelectBox"
+                                                        onChange={
+                                                            this
+                                                                .handleKeyChangeBox
+                                                        }
+                                                        value={
+                                                            selectedKeyBox
+                                                                ? {
+                                                                      value: selectedKeyBox,
+                                                                      label: selectedKeyBox,
+                                                                  }
+                                                                : ''
+                                                        }
+                                                        options={optionsKeyBox}
+                                                        placeholder="Select Key..."
+                                                        isDisabled={
+                                                            !selectedIdBox
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
 
-                                        {selectedKeyBox && (
-                                            <div className="dropdown-container">
-                                                <ReactSelect
-                                                    id="nestedKeySelectBox"
-                                                    onChange={
-                                                        this
-                                                            .handleNestedKeyChangeBox
-                                                    }
-                                                    value={
-                                                        selectedNestedKeyBox
-                                                            ? {
-                                                                  value: selectedNestedKeyBox,
-                                                                  label: selectedNestedKeyBox,
-                                                              }
-                                                            : ''
-                                                    }
-                                                    options={
-                                                        optionsNestedKeyBox
-                                                    }
-                                                    placeholder="Select Nested Key..."
-                                                    isDisabled={!selectedKeyBox}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                {chartType === 'stack' && (
-                                    <div className="dropdown-container">
-                                        {/* <select
+                                            {selectedKeyBox && (
+                                                <div className="dropdown-container">
+                                                    <ReactSelect
+                                                        id="nestedKeySelectBox"
+                                                        onChange={
+                                                            this
+                                                                .handleNestedKeyChangeBox
+                                                        }
+                                                        value={
+                                                            selectedNestedKeyBox
+                                                                ? {
+                                                                      value: selectedNestedKeyBox,
+                                                                      label: selectedNestedKeyBox,
+                                                                  }
+                                                                : ''
+                                                        }
+                                                        options={
+                                                            optionsNestedKeyBox
+                                                        }
+                                                        placeholder="Select Nested Key..."
+                                                        isDisabled={
+                                                            !selectedKeyBox
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {chartType === 'stack' && (
+                                        <div className="dropdown-container">
+                                            {/* <select
                                     id="entitySelect"
                                     className="custom-dropdown"
                                     onChange={
@@ -1392,90 +1410,60 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         </option>
                                     ))}
                                 </select> */}
-                                        <ReactSelect
-                                            id="entitySelect"
-                                            // className="custom-dropdown"
-                                            onChange={
-                                                this
-                                                    .handleEntitySelectChangeStack
-                                            }
-                                            value={
-                                                this.state.stackEntity
-                                                    ? this.state.stackEntity
-                                                    : ''
-                                            }
-                                            options={entityNames.map(
-                                                entityName => ({
-                                                    value: entityName,
-                                                    label: entityName.replace(
-                                                        /_/g,
-                                                        ' '
-                                                    ),
-                                                })
+                                            <ReactSelect
+                                                id="entitySelect"
+                                                // className="custom-dropdown"
+                                                onChange={
+                                                    this
+                                                        .handleEntitySelectChangeStack
+                                                }
+                                                value={
+                                                    this.state.stackEntity
+                                                        ? this.state.stackEntity
+                                                        : ''
+                                                }
+                                                options={entityNames.map(
+                                                    entityName => ({
+                                                        value: entityName,
+                                                        label: entityName.replace(
+                                                            /_/g,
+                                                            ' '
+                                                        ),
+                                                    })
+                                                )}
+                                                placeholder={
+                                                    selectedOption &&
+                                                    selectedOption.includes(
+                                                        'type'
+                                                    )
+                                                        ? 'Sort by cell type...'
+                                                        : selectedOption &&
+                                                          selectedOption.includes(
+                                                              'cycle'
+                                                          )
+                                                        ? 'Sort by cycle phase...'
+                                                        : 'Sort by ...'
+                                                }
+                                                isDisabled={!selectedOption}
+                                                clearable={false}
+                                                searchable={true}
+                                            />
+                                            {console.log(
+                                                entityNames,
+                                                'hereareentitynames'
                                             )}
-                                            placeholder={
-                                                selectedOption &&
-                                                selectedOption.includes('type')
-                                                    ? 'Sort by cell type...'
-                                                    : selectedOption &&
-                                                      selectedOption.includes(
-                                                          'cycle'
-                                                      )
-                                                    ? 'Sort by cycle phase...'
-                                                    : 'Sort by ...'
-                                            }
-                                            isDisabled={!selectedOption}
-                                            clearable={false}
-                                            searchable={true}
-                                        />
-                                        {console.log(
-                                            entityNames,
-                                            'hereareentitynames'
-                                        )}
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
 
-                                {chartType === 'pie' && (
-                                    <div className="checkbox-wrapper-3">
-                                        <input
-                                            type="checkbox"
-                                            id="cbx-3"
-                                            checked={tooltipEnabled}
-                                            onChange={
-                                                this.handleTooltipCheckboxChange
-                                            }
-                                        />
-                                        <label
-                                            htmlFor="cbx-3"
-                                            className="toggle"
-                                        >
-                                            <span></span>
-                                        </label>
-                                        <label
-                                            htmlFor="cbx-3"
-                                            className="toggle-label"
-                                            style={{
-                                                fontWeight: 'normal',
-                                                fontSize: '14px',
-                                                marginLeft: '10px',
-                                            }}
-                                        >
-                                            Show the data table
-                                        </label>
-                                    </div>
-                                )}
-                                {chartType === 'stack' && (
-                                    <>
+                                    {chartType === 'pie' && (
                                         <div className="checkbox-wrapper-3">
                                             <input
                                                 type="checkbox"
                                                 id="cbx-3"
-                                                checked={
-                                                    this.state.resizeEnabled
-                                                }
+                                                checked={tooltipEnabled}
                                                 onChange={
                                                     this
-                                                        .handleResizeCheckboxChange
+                                                        .handleTooltipCheckboxChange
                                                 }
                                             />
                                             <label
@@ -1493,57 +1481,62 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                     marginLeft: '10px',
                                                 }}
                                             >
-                                                Resize Graph
+                                                Show the data table
                                             </label>
                                         </div>
-                                    </>
-                                )}
-                                {chartType == 'stack' && (
-                                    <div className="checkbox-wrapper-4">
-                                        <input
-                                            type="checkbox"
-                                            id="cbx-4"
-                                            checked={this.state.isHorizontal}
-                                            onChange={this.toggleAxes}
-                                        />
-                                        <label
-                                            htmlFor="cbx-4"
-                                            className="toggle"
-                                        >
-                                            <span></span>
-                                        </label>
-                                        <label
-                                            htmlFor="cbx-4"
-                                            className="toggle-label"
-                                            style={{
-                                                fontWeight: 'normal',
-                                                fontSize: '14px',
-                                                marginLeft: '10px',
-                                            }}
-                                        >
-                                            Toggle axes
-                                        </label>
-                                    </div>
-                                )}
-                                {chartType == 'stack' &&
-                                    this.state.stackEntity != '' && (
-                                        <div className="checkbox-wrapper-5">
+                                    )}
+                                    {chartType === 'stack' && (
+                                        <>
+                                            <div className="checkbox-wrapper-3">
+                                                <input
+                                                    type="checkbox"
+                                                    id="cbx-3"
+                                                    checked={
+                                                        this.state.resizeEnabled
+                                                    }
+                                                    onChange={
+                                                        this
+                                                            .handleResizeCheckboxChange
+                                                    }
+                                                />
+                                                <label
+                                                    htmlFor="cbx-3"
+                                                    className="toggle"
+                                                >
+                                                    <span></span>
+                                                </label>
+                                                <label
+                                                    htmlFor="cbx-3"
+                                                    className="toggle-label"
+                                                    style={{
+                                                        fontWeight: 'normal',
+                                                        fontSize: '14px',
+                                                        marginLeft: '10px',
+                                                    }}
+                                                >
+                                                    Resize Graph
+                                                </label>
+                                            </div>
+                                        </>
+                                    )}
+                                    {chartType == 'stack' && (
+                                        <div className="checkbox-wrapper-4">
                                             <input
                                                 type="checkbox"
-                                                id="cbx-5"
-                                                checked={this.state.isReverse}
-                                                onChange={
-                                                    this.handleReverseChange
+                                                id="cbx-4"
+                                                checked={
+                                                    this.state.isHorizontal
                                                 }
+                                                onChange={this.toggleAxes}
                                             />
                                             <label
-                                                htmlFor="cbx-5"
+                                                htmlFor="cbx-4"
                                                 className="toggle"
                                             >
                                                 <span></span>
                                             </label>
                                             <label
-                                                htmlFor="cbx-5"
+                                                htmlFor="cbx-4"
                                                 className="toggle-label"
                                                 style={{
                                                     fontWeight: 'normal',
@@ -1551,71 +1544,105 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                     marginLeft: '10px',
                                                 }}
                                             >
-                                                Reverse sort
+                                                Toggle axes
                                             </label>
                                         </div>
                                     )}
-                                {chartType === 'stack' &&
-                                    this.state.resizeEnabled && (
-                                        <div className="throttle-container">
-                                            <label className="throttle-label">
-                                                {this.state.isHorizontal
-                                                    ? 'Height:'
-                                                    : 'Width:'}
-                                            </label>
+                                    {chartType == 'stack' &&
+                                        this.state.stackEntity != '' && (
+                                            <div className="checkbox-wrapper-5">
+                                                <input
+                                                    type="checkbox"
+                                                    id="cbx-5"
+                                                    checked={
+                                                        this.state.isReverse
+                                                    }
+                                                    onChange={
+                                                        this.handleReverseChange
+                                                    }
+                                                />
+                                                <label
+                                                    htmlFor="cbx-5"
+                                                    className="toggle"
+                                                >
+                                                    <span></span>
+                                                </label>
+                                                <label
+                                                    htmlFor="cbx-5"
+                                                    className="toggle-label"
+                                                    style={{
+                                                        fontWeight: 'normal',
+                                                        fontSize: '14px',
+                                                        marginLeft: '10px',
+                                                    }}
+                                                >
+                                                    Reverse sort
+                                                </label>
+                                            </div>
+                                        )}
+                                    {chartType === 'stack' &&
+                                        this.state.resizeEnabled && (
+                                            <div className="throttle-container">
+                                                <label className="throttle-label">
+                                                    {this.state.isHorizontal
+                                                        ? 'Height:'
+                                                        : 'Width:'}
+                                                </label>
 
-                                            <button
-                                                className="throttle-button"
-                                                onClick={this.decreaseWidth}
-                                            >
-                                                -
-                                            </button>
-                                            <input
-                                                type="number"
-                                                className="throttle-input"
-                                                value={this.state.dynamicWidth}
-                                                onChange={
-                                                    this.handleWidthChange
-                                                }
-                                                min="10"
-                                                max="100"
-                                            />
-                                            <button
-                                                className="throttle-button"
-                                                onClick={this.increaseWidth}
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    )}
+                                                <button
+                                                    className="throttle-button"
+                                                    onClick={this.decreaseWidth}
+                                                >
+                                                    -
+                                                </button>
+                                                <input
+                                                    type="number"
+                                                    className="throttle-input"
+                                                    value={
+                                                        this.state.dynamicWidth
+                                                    }
+                                                    onChange={
+                                                        this.handleWidthChange
+                                                    }
+                                                    min="10"
+                                                    max="100"
+                                                />
+                                                <button
+                                                    className="throttle-button"
+                                                    onClick={this.increaseWidth}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        )}
+                                </div>
                             </div>
-                        </div>
 
-                        <div
-                            className={
-                                chartType == 'bar' ? 'chart-display' : ''
-                            }
-                            style={
-                                chartType == 'stack'
-                                    ? {
-                                          width: '52%',
-                                          marginLeft: '5px',
-                                          marginTop: '30px',
-                                      }
-                                    : chartType == 'pie'
-                                    ? {
-                                          width: '48%',
-                                      }
-                                    : chartType == 'box'
-                                    ? {
-                                          width: '78%',
-                                      }
-                                    : {}
-                            }
-                        >
-                            {chartType == 'stack' && (
-                                <>
-                                    {/* <h2
+                            <div
+                                className={
+                                    chartType == 'bar' ? 'chart-display' : ''
+                                }
+                                style={
+                                    chartType == 'stack'
+                                        ? {
+                                              width: '52%',
+                                              marginLeft: '5px',
+                                              marginTop: '30px',
+                                          }
+                                        : chartType == 'pie'
+                                        ? {
+                                              width: '48%',
+                                          }
+                                        : chartType == 'box'
+                                        ? {
+                                              width: '78%',
+                                          }
+                                        : {}
+                                }
+                            >
+                                {chartType == 'stack' && (
+                                    <>
+                                        {/* <h2
                                 style={{
                                     textAlign: 'center',
                                 }}
@@ -1625,335 +1652,373 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     : 'No Data'}
                             </h2> */}
 
-                                    <Select
-                                        placeholder="Select SampleId.."
-                                        options={this.state.dropdownOptions}
-                                        isMulti
-                                        onChange={
-                                            this.handleSampleSelectionChange
+                                        <Select
+                                            placeholder="Select SampleId.."
+                                            options={this.state.dropdownOptions}
+                                            isMulti
+                                            onChange={
+                                                this.handleSampleSelectionChange
+                                            }
+                                            value={this.state.selectedSamples.map(
+                                                (sampleId: any) => ({
+                                                    value: sampleId,
+                                                    label: sampleId,
+                                                })
+                                            )}
+                                            style={{
+                                                padding: '10px',
+                                                marginTop: '5px',
+                                                marginBottom: '5px',
+                                                width: '350px',
+                                            }}
+                                        />
+                                    </>
+                                )}
+
+                                {/* Display fetched data bins */}
+                                {((dataBins && chartType != 'box') ||
+                                    chartType == 'box') && (
+                                    <div
+                                        className="custom-scrollbar"
+                                        style={
+                                            chartType == 'stack'
+                                                ? {
+                                                      width: '100%',
+                                                      overflowX: this.state
+                                                          .isHorizontal
+                                                          ? 'hidden'
+                                                          : 'scroll',
+                                                      border:
+                                                          '1px dashed lightgrey',
+                                                      padding: '10px',
+                                                      marginTop: '20px',
+                                                      borderRadius: '5px',
+                                                      height: '720px',
+                                                      overflowY: this.state
+                                                          .isHorizontal
+                                                          ? 'scroll'
+                                                          : 'hidden',
+                                                  }
+                                                : chartType == 'pie'
+                                                ? {
+                                                      width: '100%',
+                                                      border:
+                                                          '1px dashed lightgrey',
+                                                      borderRadius: '5px',
+                                                      paddingRight: '5px',
+                                                      paddingBottom: '10px',
+                                                      marginLeft: '6px',
+                                                  }
+                                                : chartType == 'box'
+                                                ? {
+                                                      width: '100%',
+                                                      border:
+                                                          '1px dashed lightgrey',
+                                                      padding: '10px',
+                                                      marginTop: '20px',
+                                                      marginLeft: '10px',
+                                                      borderRadius: '5px',
+                                                      height: '700px',
+                                                      overflow: 'scroll',
+                                                  }
+                                                : {
+                                                      margin: '12px auto',
+                                                      border:
+                                                          '1px dashed lightgrey',
+                                                      borderRadius: '5px',
+                                                      padding: '10px',
+                                                      width: '600px',
+                                                  }
                                         }
-                                        value={this.state.selectedSamples.map(
-                                            (sampleId: any) => ({
-                                                value: sampleId,
-                                                label: sampleId,
-                                            })
-                                        )}
-                                        style={{
-                                            padding: '10px',
-                                            marginTop: '5px',
-                                            marginBottom: '5px',
-                                            width: '350px',
-                                        }}
-                                    />
-                                </>
-                            )}
+                                    >
+                                        {/* <PieChart dataBins={dataBins} pieChartData={pieChartData} /> */}
 
-                            {/* Display fetched data bins */}
-                            {((dataBins && chartType != 'box') ||
-                                chartType == 'box') && (
-                                <div
-                                    className="custom-scrollbar"
-                                    style={
-                                        chartType == 'stack'
-                                            ? {
-                                                  width: '100%',
-                                                  overflowX: this.state
-                                                      .isHorizontal
-                                                      ? 'hidden'
-                                                      : 'scroll',
-                                                  border:
-                                                      '1px dashed lightgrey',
-                                                  padding: '10px',
-                                                  marginTop: '20px',
-                                                  borderRadius: '5px',
-                                                  height: '700px',
-                                                  overflowY: this.state
-                                                      .isHorizontal
-                                                      ? 'scroll'
-                                                      : 'hidden',
-                                              }
-                                            : chartType == 'pie'
-                                            ? {
-                                                  width: '100%',
-                                                  border:
-                                                      '1px dashed lightgrey',
-                                                  borderRadius: '5px',
-                                                  paddingRight: '5px',
-                                                  paddingBottom: '10px',
-                                                  marginLeft: '6px',
-                                              }
-                                            : chartType == 'box'
-                                            ? {
-                                                  width: '100%',
-                                                  border:
-                                                      '1px dashed lightgrey',
-                                                  padding: '10px',
-                                                  marginTop: '20px',
-                                                  marginLeft: '10px',
-                                                  borderRadius: '5px',
-                                                  height: '700px',
-                                                  overflow: 'scroll',
-                                              }
-                                            : {
-                                                  margin: '12px auto',
-                                                  border:
-                                                      '1px dashed lightgrey',
-                                                  borderRadius: '5px',
-                                                  padding: '10px',
-                                                  width: '600px',
-                                              }
-                                    }
-                                >
-                                    {/* <PieChart dataBins={dataBins} pieChartData={pieChartData} /> */}
-
-                                    {chartType === 'bar' ? (
-                                        <BarChart
-                                            dataBins={dataBins ? dataBins : []}
-                                            selectedEntity={
-                                                this.state.selectedEntity
-                                            }
-                                            downloadData={BarDownloadData}
-                                            heading={this.state.heading}
-                                            profileTypeBin={
-                                                this.state.profileTypeBin
-                                            }
-                                            stableIdBin={this.state.stableIdBin}
-                                            store={this.props.store}
-                                            databinState={
-                                                this.state.databinState
-                                            }
-                                            setDatabinState={(value: any) =>
-                                                this.setState({
-                                                    databinState: value,
-                                                })
-                                            }
-                                        />
-                                    ) : chartType === 'pie' ? (
-                                        <PieChart
-                                            dataBins={dataBins ? dataBins : []}
-                                            pieChartData={pieChartData}
-                                            tooltipEnabled={tooltipEnabled}
-                                            downloadSvg={downloadSvg}
-                                            downloadPdf={downloadPdf}
-                                            setDownloadSvg={(value: any) =>
-                                                this.setState({
-                                                    downloadSvg: value,
-                                                })
-                                            }
-                                            setDownloadPdf={(value: any) =>
-                                                this.setState({
-                                                    downloadPdf: value,
-                                                })
-                                            }
-                                            isHovered={this.state.isHovered}
-                                            setIsHovered={(value: any) =>
-                                                this.setState({
-                                                    isHovered: value,
-                                                })
-                                            }
-                                            hoveredSliceIndex={
-                                                this.state.hoveredSliceIndex
-                                            }
-                                            setHoveredSliceIndex={(
-                                                value: any
-                                            ) =>
-                                                this.setState({
-                                                    hoveredSliceIndex: value,
-                                                })
-                                            }
-                                            heading={this.state.heading}
-                                        />
-                                    ) : chartType === 'stack' ? (
-                                        <>
-                                            <StackedBarChart
+                                        {chartType === 'bar' ? (
+                                            <BarChart
+                                                dataBins={
+                                                    dataBins ? dataBins : []
+                                                }
+                                                selectedEntity={
+                                                    this.state.selectedEntity
+                                                }
+                                                downloadData={BarDownloadData}
+                                                heading={this.state.heading}
+                                                profileTypeBin={
+                                                    this.state.profileTypeBin
+                                                }
+                                                stableIdBin={
+                                                    this.state.stableIdBin
+                                                }
+                                                store={this.props.store}
+                                                databinState={
+                                                    this.state.databinState
+                                                }
+                                                setDatabinState={(value: any) =>
+                                                    this.setState({
+                                                        databinState: value,
+                                                    })
+                                                }
+                                            />
+                                        ) : chartType === 'pie' ? (
+                                            <PieChart
                                                 dataBins={
                                                     dataBins ? dataBins : []
                                                 }
                                                 pieChartData={pieChartData}
-                                                stackEntity={
-                                                    this.state.stackEntity
+                                                tooltipEnabled={tooltipEnabled}
+                                                downloadSvg={downloadSvg}
+                                                downloadPdf={downloadPdf}
+                                                setDownloadSvg={(value: any) =>
+                                                    this.setState({
+                                                        downloadSvg: value,
+                                                    })
                                                 }
-                                                studyIdToStudy={
-                                                    this.state.studyIdToStudy
+                                                setDownloadPdf={(value: any) =>
+                                                    this.setState({
+                                                        downloadPdf: value,
+                                                    })
                                                 }
-                                                hoveredSampleId={
-                                                    this.state.hoveredSampleId
+                                                isHovered={this.state.isHovered}
+                                                setIsHovered={(value: any) =>
+                                                    this.setState({
+                                                        isHovered: value,
+                                                    })
                                                 }
-                                                setHoveredSampleId={(
+                                                hoveredSliceIndex={
+                                                    this.state.hoveredSliceIndex
+                                                }
+                                                setHoveredSliceIndex={(
                                                     value: any
                                                 ) =>
                                                     this.setState({
-                                                        hoveredSampleId: value,
+                                                        hoveredSliceIndex: value,
                                                     })
                                                 }
-                                                currentTooltipData={
-                                                    this.state
-                                                        .currentTooltipData
-                                                }
-                                                setCurrentTooltipData={(
-                                                    value: any
-                                                ) =>
-                                                    this.setState({
-                                                        currentTooltipData: value,
-                                                    })
-                                                }
-                                                map={this.state.map}
-                                                setMap={(value: any) =>
-                                                    this.setState({
-                                                        map: value,
-                                                    })
-                                                }
-                                                dynamicWidth={
-                                                    this.state.dynamicWidth
-                                                }
-                                                setDynamicWidth={(value: any) =>
-                                                    this.setState({
-                                                        dynamicWidth: value,
-                                                    })
-                                                }
-                                                setInitialWidth={(value: any) =>
-                                                    this.setState({
-                                                        initialWidth: value,
-                                                    })
-                                                }
-                                                isHorizontal={
-                                                    this.state.isHorizontal
-                                                }
-                                                setIsHorizontal={(value: any) =>
-                                                    this.setState({
-                                                        isHorizontal: value,
-                                                    })
-                                                }
-                                                isVisible={this.state.isVisible}
-                                                setIsVisible={(value: any) =>
-                                                    this.setState({
-                                                        isVisible: value,
-                                                    })
-                                                }
-                                                tooltipHovered={
-                                                    this.state.tooltipHovered
-                                                }
-                                                setTooltipHovered={(
-                                                    value: any
-                                                ) =>
-                                                    this.setState({
-                                                        tooltipHovered: value,
-                                                    })
-                                                }
-                                                selectedSamples={
-                                                    this.state.selectedSamples
-                                                }
-                                                setSelectedSamples={(
-                                                    value: any
-                                                ) => {
-                                                    this.setState({
-                                                        selectedSamples: value,
-                                                    });
-                                                }}
-                                                dropdownOptions={
-                                                    this.state.dropdownOptions
-                                                }
-                                                setDropdownOptions={(
-                                                    value: any
-                                                ) => {
-                                                    this.setState({
-                                                        dropdownOptions: value,
-                                                    });
-                                                }}
-                                                isReverse={this.state.isReverse}
+                                                heading={this.state.heading}
                                             />
-                                        </>
-                                    ) : chartType === 'box' &&
-                                      this.state.selectedGene ? (
-                                        <>
-                                            <BoxPlot
-                                                data={this.state.boxPlotData}
-                                                scatterColor={
-                                                    this.state.scatterColor
-                                                }
-                                            />
-                                        </>
-                                    ) : null}
+                                        ) : chartType === 'stack' ? (
+                                            <>
+                                                <StackedBarChart
+                                                    dataBins={
+                                                        dataBins ? dataBins : []
+                                                    }
+                                                    pieChartData={pieChartData}
+                                                    stackEntity={
+                                                        this.state.stackEntity
+                                                    }
+                                                    studyIdToStudy={
+                                                        this.state
+                                                            .studyIdToStudy
+                                                    }
+                                                    hoveredSampleId={
+                                                        this.state
+                                                            .hoveredSampleId
+                                                    }
+                                                    setHoveredSampleId={(
+                                                        value: any
+                                                    ) =>
+                                                        this.setState({
+                                                            hoveredSampleId: value,
+                                                        })
+                                                    }
+                                                    currentTooltipData={
+                                                        this.state
+                                                            .currentTooltipData
+                                                    }
+                                                    setCurrentTooltipData={(
+                                                        value: any
+                                                    ) =>
+                                                        this.setState({
+                                                            currentTooltipData: value,
+                                                        })
+                                                    }
+                                                    map={this.state.map}
+                                                    setMap={(value: any) =>
+                                                        this.setState({
+                                                            map: value,
+                                                        })
+                                                    }
+                                                    dynamicWidth={
+                                                        this.state.dynamicWidth
+                                                    }
+                                                    setDynamicWidth={(
+                                                        value: any
+                                                    ) =>
+                                                        this.setState({
+                                                            dynamicWidth: value,
+                                                        })
+                                                    }
+                                                    setInitialWidth={(
+                                                        value: any
+                                                    ) =>
+                                                        this.setState({
+                                                            initialWidth: value,
+                                                        })
+                                                    }
+                                                    isHorizontal={
+                                                        this.state.isHorizontal
+                                                    }
+                                                    setIsHorizontal={(
+                                                        value: any
+                                                    ) =>
+                                                        this.setState({
+                                                            isHorizontal: value,
+                                                        })
+                                                    }
+                                                    isVisible={
+                                                        this.state.isVisible
+                                                    }
+                                                    setIsVisible={(
+                                                        value: any
+                                                    ) =>
+                                                        this.setState({
+                                                            isVisible: value,
+                                                        })
+                                                    }
+                                                    tooltipHovered={
+                                                        this.state
+                                                            .tooltipHovered
+                                                    }
+                                                    setTooltipHovered={(
+                                                        value: any
+                                                    ) =>
+                                                        this.setState({
+                                                            tooltipHovered: value,
+                                                        })
+                                                    }
+                                                    selectedSamples={
+                                                        this.state
+                                                            .selectedSamples
+                                                    }
+                                                    setSelectedSamples={(
+                                                        value: any
+                                                    ) => {
+                                                        this.setState({
+                                                            selectedSamples: value,
+                                                        });
+                                                    }}
+                                                    dropdownOptions={
+                                                        this.state
+                                                            .dropdownOptions
+                                                    }
+                                                    setDropdownOptions={(
+                                                        value: any
+                                                    ) => {
+                                                        this.setState({
+                                                            dropdownOptions: value,
+                                                        });
+                                                    }}
+                                                    isReverse={
+                                                        this.state.isReverse
+                                                    }
+                                                />
+                                            </>
+                                        ) : chartType === 'box' &&
+                                          this.state.selectedGene ? (
+                                            <>
+                                                <BoxPlot
+                                                    data={
+                                                        this.state.boxPlotData
+                                                    }
+                                                    scatterColor={
+                                                        this.state.scatterColor
+                                                    }
+                                                />
+                                            </>
+                                        ) : null}
+                                    </div>
+                                )}
+                            </div>
+                            {chartType == 'stack' && (
+                                <div
+                                    style={{
+                                        width: '25%',
+                                        marginTop: '85px',
+                                        marginLeft: '10px',
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    <StackToolTip
+                                        studyIdToStudy={
+                                            this.state.studyIdToStudy
+                                        }
+                                        hoveredSampleId={
+                                            this.state.hoveredSampleId
+                                        }
+                                        setHoveredSampleId={(value: any) =>
+                                            this.setState({
+                                                hoveredSampleId: value,
+                                            })
+                                        }
+                                        currentTooltipData={
+                                            this.state.currentTooltipData
+                                        }
+                                        setCurrentTooltipData={(value: any) =>
+                                            this.setState({
+                                                currentTooltipData: value,
+                                            })
+                                        }
+                                        map={this.state.map}
+                                        setMap={(value: any) =>
+                                            this.setState({ map: value })
+                                        }
+                                        isVisible={this.state.isVisible}
+                                        setIsVisible={(value: any) =>
+                                            this.setState({ isVisible: value })
+                                        }
+                                        tooltipHovered={
+                                            this.state.tooltipHovered
+                                        }
+                                        setTooltipHovered={(value: any) =>
+                                            this.setState({
+                                                tooltipHovered: value,
+                                            })
+                                        }
+                                    />
+                                </div>
+                            )}
+                            {chartType == 'pie' && (
+                                <div
+                                    style={{
+                                        width: '22%',
+                                        marginTop: '60px',
+                                        marginLeft: '20px',
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    <PieToolTip
+                                        pieChartData={pieChartData}
+                                        tooltipEnabled={tooltipEnabled}
+                                        downloadSvg={downloadSvg}
+                                        downloadPdf={downloadPdf}
+                                        setDownloadSvg={(value: any) =>
+                                            this.setState({
+                                                downloadSvg: value,
+                                            })
+                                        }
+                                        setDownloadPdf={(value: any) =>
+                                            this.setState({
+                                                downloadPdf: value,
+                                            })
+                                        }
+                                        heading={this.state.heading}
+                                        isHovered={this.state.isHovered}
+                                        setIsHovered={(value: any) =>
+                                            this.setState({ isHovered: value })
+                                        }
+                                        hoveredSliceIndex={
+                                            this.state.hoveredSliceIndex
+                                        }
+                                        setHoveredSliceIndex={(value: any) =>
+                                            this.setState({
+                                                hoveredSliceIndex: value,
+                                            })
+                                        }
+                                    />
                                 </div>
                             )}
                         </div>
-                        {chartType == 'stack' && (
-                            <div
-                                style={{
-                                    width: '25%',
-                                    marginTop: '85px',
-                                    marginLeft: '10px',
-                                    textAlign: 'center',
-                                }}
-                            >
-                                <StackToolTip
-                                    studyIdToStudy={this.state.studyIdToStudy}
-                                    hoveredSampleId={this.state.hoveredSampleId}
-                                    setHoveredSampleId={(value: any) =>
-                                        this.setState({
-                                            hoveredSampleId: value,
-                                        })
-                                    }
-                                    currentTooltipData={
-                                        this.state.currentTooltipData
-                                    }
-                                    setCurrentTooltipData={(value: any) =>
-                                        this.setState({
-                                            currentTooltipData: value,
-                                        })
-                                    }
-                                    map={this.state.map}
-                                    setMap={(value: any) =>
-                                        this.setState({ map: value })
-                                    }
-                                    isVisible={this.state.isVisible}
-                                    setIsVisible={(value: any) =>
-                                        this.setState({ isVisible: value })
-                                    }
-                                    tooltipHovered={this.state.tooltipHovered}
-                                    setTooltipHovered={(value: any) =>
-                                        this.setState({ tooltipHovered: value })
-                                    }
-                                />
-                            </div>
-                        )}
-                        {chartType == 'pie' && (
-                            <div
-                                style={{
-                                    width: '22%',
-                                    marginTop: '60px',
-                                    marginLeft: '20px',
-                                    textAlign: 'center',
-                                }}
-                            >
-                                <PieToolTip
-                                    pieChartData={pieChartData}
-                                    tooltipEnabled={tooltipEnabled}
-                                    downloadSvg={downloadSvg}
-                                    downloadPdf={downloadPdf}
-                                    setDownloadSvg={(value: any) =>
-                                        this.setState({ downloadSvg: value })
-                                    }
-                                    setDownloadPdf={(value: any) =>
-                                        this.setState({ downloadPdf: value })
-                                    }
-                                    heading={this.state.heading}
-                                    isHovered={this.state.isHovered}
-                                    setIsHovered={(value: any) =>
-                                        this.setState({ isHovered: value })
-                                    }
-                                    hoveredSliceIndex={
-                                        this.state.hoveredSliceIndex
-                                    }
-                                    setHoveredSliceIndex={(value: any) =>
-                                        this.setState({
-                                            hoveredSliceIndex: value,
-                                        })
-                                    }
-                                />
-                            </div>
-                        )}
-                    </div>
+                    </>
                 )}
             </>
         );
