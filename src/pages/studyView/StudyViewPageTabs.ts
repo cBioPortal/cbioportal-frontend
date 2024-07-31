@@ -2,6 +2,7 @@ export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',
     CLINICAL_DATA = 'clinicalData',
     HEATMAPS = 'heatmaps',
+    SINGLECELL = 'singleCell',
     CN_SEGMENTS = 'cnSegments',
     FILES_AND_LINKS = 'filesAndLinks',
     PLOTS = 'plots',
