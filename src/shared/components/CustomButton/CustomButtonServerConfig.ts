@@ -1,6 +1,4 @@
 import { getServerConfig } from 'config/config';
-// TECH: parseCustomButtonConfigs() is a static factory function to create CustomButtonConfig objects.  We don't include
-//  that method here to avoid an issue importing getServerConfig in the unit tests.
 import { CustomButtonConfig } from './CustomButtonConfig';
 import { ICustomButtonConfig } from './ICustomButton';
 
@@ -18,6 +16,7 @@ export const getCustomButtonConfigs = (() => {
             customButtons = CustomButtonConfig.parseCustomButtonConfigs(
                 customButtonsJson
             );
+            // console.log('CustomButtons: ' + customButtons.map(button => button.id).join(","));
         }
         return customButtons;
     };

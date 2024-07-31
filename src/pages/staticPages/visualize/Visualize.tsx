@@ -14,7 +14,7 @@ export default class Visualize extends React.Component<{}, {}> {
      * Display the 'visualize_html' data associated with serverConfig.custom_buttons_json
      * @returns JSX.element
      */
-    externalToolsSection() {
+    customButtonsSection() {
         const displayButtons = getCustomButtonConfigs().filter(
             button => button.visualize_href
         );
@@ -181,7 +181,7 @@ export default class Visualize extends React.Component<{}, {}> {
                     </div>
                 </div>
 
-                {this.externalToolsSection()}
+                {this.customButtonsSection()}
             </PageLayout>
         );
     }

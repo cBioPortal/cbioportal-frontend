@@ -14,6 +14,10 @@ export class CustomButtonConfig implements ICustomButtonConfig {
     required_user_agent?: string;
     required_installed_font_family?: string;
     url_format: string;
+    visualize_href?: string;
+    visualize_title?: string;
+    visualize_description?: string;
+    visualize_image_src?: string;    
 
     public static parseCustomButtonConfigs(
         customButtonsJson: string
@@ -22,7 +26,7 @@ export class CustomButtonConfig implements ICustomButtonConfig {
             return [];
         } else {
             return JSON.parse(customButtonsJson).map(
-                (item: any) => new CustomButtonConfig(item)
+                (item: any) => new CustomButtonConfig(item as ICustomButtonConfig)
             );
         }
     }
@@ -31,23 +35,18 @@ export class CustomButtonConfig implements ICustomButtonConfig {
      * Creates a new instance of the CustomButtonConfig class.
      * @param config - The configuration object for the custom button.
      */
-    constructor(config: {
-        id: string;
-        name: string;
-        tooltip: string;
-        iconImageSrc: string;
-        required_platform?: string;
-        required_installed_font_family?: string;
-        url_format: string;
-    }) {
+    constructor(config : ICustomButtonConfig) {
         this.id = config.id;
         this.name = config.name;
         this.tooltip = config.tooltip;
-        this.image_src = config.iconImageSrc;
-        this.required_user_agent = config.required_platform;
-        this.required_installed_font_family =
-            config.required_installed_font_family;
+        this.image_src = config.image_src;
+        this.required_user_agent = config.required_user_agent;
+        this.required_installed_font_family = config.required_installed_font_family;
         this.url_format = config.url_format;
+        this.visualize_href = config.visualize_href;
+        this.visualize_title = config.visualize_title;
+        this.visualize_description = config.visualize_description;
+        this.visualize_image_src = config.visualize_image_src;
     }
 
     /**
