@@ -10,37 +10,36 @@
         window.frontendConfig = {
         }
 
+        /* REMOVED: This is an example of how to add custom tabs to the patient page. Enabling this will clobber localStorage.frontendConfig that is set through the browser console
         localStorage.frontendConfig = JSON.stringify(
-            {
-                serverConfig:{
-
-                       custom_tabs:[
- {
-            title: 'Sync Tab',
-            id: 'customTab1',
-            location: 'PATIENT_PAGE',
-            mountCallback: `(div)=>{
-                    $(div).html("tab for patient " + window.location.search.split("=").slice(-1))
-                }`,
-        },
         {
-            title: 'Async Tab',
-            id: 'customTab2',
-            location: 'PATIENT_PAGE',
-            hideAsync: `()=>{
-                           return new Promise((resolve)=>{
-                                setTimeout(()=>{
-                                    resolve(true);
-                                }, 2000);
-                           });
-                    }`,
-        },
-                                           ]
+            serverConfig:{
 
-                }
-
-           }
-        );
+                custom_tabs:[
+                    {
+                        title: 'Sync Tab',
+                        id: 'customTab1',
+                        location: 'PATIENT_PAGE',
+                        mountCallback: `(div)=>{
+                                $(div).html("tab for patient " + window.location.search.split("=").slice(-1))
+                            }`,
+                    },
+                    {
+                        title: 'Async Tab',
+                        id: 'customTab2',
+                        location: 'PATIENT_PAGE',
+                        hideAsync: `()=>{
+                                    return new Promise((resolve)=>{
+                                            setTimeout(()=>{
+                                                resolve(true);
+                                            }, 2000);
+                                    });
+                                }`,
+                    },
+                ]
+            }
+        });
+        */
 
     function renderCustomTab1(div, tab){
         $(div).append(`<div>this is the content for <strong>${tab.title}</strong></div>`);
