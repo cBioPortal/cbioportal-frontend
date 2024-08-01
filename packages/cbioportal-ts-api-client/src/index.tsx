@@ -89,6 +89,8 @@ export {
     SampleTreatmentFilter,
     PatientTreatmentFilter,
     PatientTreatmentRow,
+    PatientTreatmentReport,
+    PatientTreatment,
     MutationDataFilter,
     GenericAssayDataFilter,
     AlterationFilter,

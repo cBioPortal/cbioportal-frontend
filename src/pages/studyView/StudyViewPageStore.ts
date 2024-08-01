@@ -9461,9 +9461,7 @@ export class StudyViewPageStore
                 }
 
                 const calculateSampleCount = (
-                    result:
-                        | (SampleTreatmentRow | PatientTreatmentRow)[]
-                        | undefined
+                    result: SampleTreatmentRow[] | undefined
                 ) => {
                     if (!result) {
                         return 0;
@@ -9484,9 +9482,9 @@ export class StudyViewPageStore
                     );
                 }
                 if (!_.isEmpty(this.patientTreatments.result)) {
-                    ret['PATIENT_TREATMENTS'] = calculateSampleCount(
-                        this.patientTreatments.result
-                    );
+                    ret[
+                        'PATIENT_TREATMENTS'
+                    ] = this.patientTreatments.result!.totalPatients;
                 }
                 if (!_.isEmpty(this.sampleTreatmentGroups.result)) {
                     ret['SAMPLE_TREATMENT_GROUPS'] = calculateSampleCount(
@@ -9494,9 +9492,9 @@ export class StudyViewPageStore
                     );
                 }
                 if (!_.isEmpty(this.patientTreatmentGroups.result)) {
-                    ret['PATIENT_TREATMENT_GROUPS'] = calculateSampleCount(
-                        this.patientTreatmentGroups.result
-                    );
+                    ret[
+                        'PATIENT_TREATMENT_GROUPS'
+                    ] = this.patientTreatmentGroups.result!.totalPatients;
                 }
                 if (!_.isEmpty(this.sampleTreatmentTarget.result)) {
                     ret['SAMPLE_TREATMENT_TARGET'] = calculateSampleCount(
@@ -9504,9 +9502,9 @@ export class StudyViewPageStore
                     );
                 }
                 if (!_.isEmpty(this.patientTreatmentTarget.result)) {
-                    ret['PATIENT_TREATMENT_TARGET'] = calculateSampleCount(
-                        this.patientTreatmentTarget.result
-                    );
+                    ret[
+                        'PATIENT_TREATMENT_TARGET'
+                    ] = this.patientTreatmentTarget.result!.totalPatients;
                 }
                 if (!_.isEmpty(this.structuralVariantProfiles.result)) {
                     const structVarGenesUniqueKey = getUniqueKeyFromMolecularProfileIds(
@@ -10465,12 +10463,15 @@ export class StudyViewPageStore
     public readonly patientTreatments = remoteData({
         await: () => [this.shouldDisplayPatientTreatments],
         invoke: () => {
-            if (this.shouldDisplayPatientTreatments.result) {
-                return this.internalClient.getAllPatientTreatmentsUsingPOST({
-                    studyViewFilter: this.filters,
-                });
-            }
-            return Promise.resolve([]);
+            return this.internalClient.fetchPatientTreatmentCountsUsing({
+                studyViewFilter: this.filters,
+            });
+            //
+            // return this.internalClient.getAllPatientTreatmentsUsingPOST({
+            //     studyViewFilter: this.filters,
+            // });
+
+            //return Promise.resolve({});
         },
     });
 
@@ -10519,12 +10520,12 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplayPatientTreatmentGroups],
         invoke: () => {
             if (this.shouldDisplayPatientTreatmentGroups.result) {
-                return this.internalClient.getAllPatientTreatmentsUsingPOST({
+                return this.internalClient.fetchPatientTreatmentCountsUsing({
                     studyViewFilter: this.filters,
                     tier: 'AgentClass',
                 });
             }
-            return Promise.resolve([]);
+            return Promise.resolve(undefined);
         },
     });
 
@@ -10572,13 +10573,10 @@ export class StudyViewPageStore
     public readonly patientTreatmentTarget = remoteData({
         await: () => [this.shouldDisplayPatientTreatmentTarget],
         invoke: () => {
-            if (this.shouldDisplayPatientTreatmentTarget.result) {
-                return this.internalClient.getAllPatientTreatmentsUsingPOST({
-                    studyViewFilter: this.filters,
-                    tier: 'AgentTarget',
-                });
-            }
-            return Promise.resolve([]);
+            return this.internalClient.fetchPatientTreatmentCountsUsing({
+                studyViewFilter: this.filters,
+                tier: 'AgentTarget',
+            });
         },
     });
 
