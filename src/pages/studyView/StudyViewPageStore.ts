@@ -599,6 +599,41 @@ export class StudyViewPageStore
         );
     }
 
+    @action.bound
+    changePreviewDimension(uniqueKey: string, previewShown: boolean): void {
+        const dimension = previewShown
+            ? STUDY_VIEW_CONFIG.layout.dimensions[
+                  ChartTypeEnum.BAR_PREVIEW_CHART
+              ]
+            : STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART];
+        this.chartsDimension.set(uniqueKey, dimension);
+    }
+
+    @action
+    togglePreview = (uniqueKey: string): void => {
+        if (this._customDataBinFilterSet.has(uniqueKey)) {
+            const filterSet = this._customDataBinFilterSet.get(uniqueKey);
+            const newFilter = _.clone(filterSet!);
+            newFilter.showPreview = !this.isPreviewShown(uniqueKey);
+            this.changePreviewDimension(uniqueKey, newFilter.showPreview);
+            this._customDataBinFilterSet.set(uniqueKey, newFilter as any);
+        } else {
+            const filterSet = this.getDataBinFilterSet(uniqueKey);
+            const newFilter = _.clone(filterSet.get(uniqueKey)!);
+            newFilter.showPreview = !this.isPreviewShown(uniqueKey);
+            this.changePreviewDimension(uniqueKey, newFilter.showPreview);
+            filterSet.set(uniqueKey, newFilter as any);
+        }
+    };
+
+    public isPreviewShown = (uniqueKey: string): boolean => {
+        const filter = this._customDataBinFilterSet.has(uniqueKey)
+            ? this._customDataBinFilterSet.get(uniqueKey)
+            : this.getDataBinFilterSet(uniqueKey).get(uniqueKey);
+
+        return filter?.showPreview || false;
+    };
+
     constructor(
         public appStore: AppStore,
         private sessionServiceIsEnabled: boolean,
@@ -2114,19 +2149,19 @@ export class StudyViewPageStore
     >({}, { deep: false });
     @observable private _clinicalDataBinFilterSet = observable.map<
         ChartUniqueKey,
-        ClinicalDataBinFilter & { showNA?: boolean }
+        ClinicalDataBinFilter & { showNA?: boolean; showPreview?: boolean }
     >();
     @observable private _genomicDataBinFilterSet = observable.map<
         ChartUniqueKey,
-        GenomicDataBinFilter & { showNA?: boolean }
+        GenomicDataBinFilter & { showNA?: boolean; showPreview?: boolean }
     >();
     @observable private _genericAssayDataBinFilterSet = observable.map<
         ChartUniqueKey,
-        GenericAssayDataBinFilter & { showNA?: boolean }
+        GenericAssayDataBinFilter & { showNA?: boolean; showPreview?: boolean }
     >();
     @observable private _customDataBinFilterSet = observable.map<
         ChartUniqueKey,
-        ClinicalDataBinFilter & { showNA?: boolean }
+        ClinicalDataBinFilter & { showNA?: boolean; showPreview?: boolean }
     >();
     @observable.ref private _geneFilterSet = observable.map<
         string,

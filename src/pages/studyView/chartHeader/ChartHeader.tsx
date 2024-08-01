@@ -42,6 +42,7 @@ export interface IChartHeaderProps {
     toggleBoxPlot?: () => void;
     toggleViolinPlot?: () => void;
     toggleNAValue?: () => void;
+    togglePreview?: () => void;
     isLeftTruncationAvailable?: boolean;
     toggleSurvivalPlotLeftTruncation?: () => void;
     swapAxes?: () => void;
@@ -79,6 +80,9 @@ export interface ChartControls {
     violinPlotChecked?: boolean;
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
+    isShowPreviewChecked?: boolean;
+    showPreviewToggle?: boolean;
+    showPreview?: boolean;
     showSwapAxes?: boolean;
     showSurvivalPlotLeftTruncationToggle?: boolean;
     survivalPlotLeftTruncationChecked?: boolean;
@@ -594,6 +598,28 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 label={
                                     <span style={{ marginTop: -3 }}>
                                         Show NA
+                                    </span>
+                                }
+                                style={{ marginTop: 1, marginBottom: -3 }}
+                            />
+                        </a>
+                    </li>
+                );
+            }
+            if (this.props.chartControls && this.props.togglePreview) {
+                items.push(
+                    <li>
+                        <a
+                            className="dropdown-item"
+                            onClick={this.props.togglePreview}
+                        >
+                            <FlexAlignedCheckbox
+                                checked={
+                                    !!this.props.chartControls?.showPreview
+                                }
+                                label={
+                                    <span style={{ marginTop: -3 }}>
+                                        Show Zoom Preview
                                     </span>
                                 }
                                 style={{ marginTop: 1, marginBottom: -3 }}
