@@ -326,9 +326,9 @@ export interface IPlotsTabProps {
         [studyId: string]: MolecularProfile;
     }>;
     driverAnnotationSettings: DriverAnnotationSettings;
-    studyIdToStudy?: _.Dictionary<CancerStudy>;
-    structuralVariants?: StructuralVariant[];
-    hugoGeneSymbols: string[];
+    studyIdToStudy?: MobxPromiseUnionTypeWithDefault<_.Dictionary<CancerStudy>>;
+    structuralVariants?: MobxPromiseUnionType<StructuralVariant[]>;
+    hugoGeneSymbols: string[] | MobxPromiseUnionTypeWithDefault<string[]>;
     selectedGenericAssayEntitiesGroupByMolecularProfileId: {
         [molecularProfileId: string]: string[];
     };
@@ -337,7 +337,7 @@ export interface IPlotsTabProps {
     }>;
     urlWrapper: ResultsViewURLWrapper | StudyViewURLWrapper;
     hasNoQueriedGenes?: boolean;
-    genePanelDataForAllProfiles?: GenePanelData[];
+    genePanelDataForAllProfiles?: MobxPromiseUnionType<GenePanelData[]>;
     queryContainsOql?: boolean;
     includeGermlineMutations?: boolean;
     mutationsReportByGene?: MobxPromise<{
@@ -3346,7 +3346,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private scatterPlotTooltip(d: IScatterPlotData) {
         return scatterPlotTooltip(
             d,
-            this.props.studyIdToStudy || {},
+            this.props.studyIdToStudy?.result!,
             this.horzLogScaleFunction,
             this.vertLogScaleFunction,
             this.coloringMenuSelection.selectedOption &&
@@ -3358,7 +3358,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private waterfallPlotTooltip(d: IWaterfallPlotData) {
         return waterfallPlotTooltip(
             d,
-            this.props.studyIdToStudy || {},
+            this.props.studyIdToStudy?.result!,
             this.coloringMenuSelection.selectedOption &&
                 this.coloringMenuSelection.selectedOption.info.clinicalAttribute
         );
@@ -3370,7 +3370,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             if (this.boxPlotData.isComplete) {
                 content = boxPlotTooltip(
                     d,
-                    this.props.studyIdToStudy || {},
+                    this.props.studyIdToStudy?.result!,
                     this.boxPlotData.result.horizontal,
                     this.boxPlotData.result.horizontal
                         ? this.horzLogScaleFunction
@@ -3552,7 +3552,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         // we don't want to allow the data to be viewed by variantClass (Variant Type in UI) so remove
         // that from the options
         const filterStructuralVariantOptions = _.every(
-            this.props.structuralVariants,
+            this.props.structuralVariants?.result || [],
             sv => {
                 return !sv.variantClass || sv.variantClass === 'NA';
             }
@@ -3679,7 +3679,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.vertGenericAssayOptions.result,
                     selectedEntities,
                     this._vertGenericAssaySearchText,
-                    this.props.hugoGeneSymbols,
+                    Array.isArray(this.props.hugoGeneSymbols)
+                        ? this.props.hugoGeneSymbols
+                        : this.props.hugoGeneSymbols.result,
                     this.horzSelection.selectedGeneOption?.label,
                     GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
                         axisSelection.dataType!
@@ -3707,7 +3709,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.horzGenericAssayOptions.result,
                     selectedEntities,
                     this._horzGenericAssaySearchText,
-                    this.props.hugoGeneSymbols,
+                    Array.isArray(this.props.hugoGeneSymbols)
+                        ? this.props.hugoGeneSymbols
+                        : this.props.hugoGeneSymbols.result,
                     this.vertSelection.selectedGeneOption?.label,
                     GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
                         axisSelection.dataType!
@@ -3750,7 +3754,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 options = options.filter(stringCompare).slice(0, 10);
                 const genes = await fetchGenes(options.map(o => o.label));
                 const coverageInformationPromise = getCoverageInformation(
-                    this.props.genePanelDataForAllProfiles!,
+                    this.props.genePanelDataForAllProfiles?.result || [],
                     this.props.sampleKeyToSample.result!,
                     this.props.patients.result!,
                     genes
