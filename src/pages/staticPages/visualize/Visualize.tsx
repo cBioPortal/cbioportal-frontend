@@ -11,7 +11,7 @@ import { getCustomButtonConfigs } from 'shared/components/CustomButton/CustomBut
 @observer
 export default class Visualize extends React.Component<{}, {}> {
     /**
-     * Display the 'visualize_html' data associated with serverConfig.custom_buttons_json
+     * Display the 'visualize_html' data associated with serverConfig.download_custom_buttons_json
      * @returns JSX.element
      */
     customButtonsSection() {

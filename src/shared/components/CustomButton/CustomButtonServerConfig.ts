@@ -12,7 +12,7 @@ export const getCustomButtonConfigs = (() => {
     return (): ICustomButtonConfig[] => {
         if (!customButtons) {
             // Initialize
-            const customButtonsJson = getServerConfig().custom_buttons_json;
+            const customButtonsJson = getServerConfig().download_custom_buttons_json;
             customButtons = CustomButtonConfig.parseCustomButtonConfigs(
                 customButtonsJson
             );
