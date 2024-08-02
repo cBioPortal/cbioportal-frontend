@@ -730,9 +730,10 @@ describe('group comparison mutations tab tests', () => {
 
             // all protein vus badges are deselected
             assert.equal(
-                await getColorByTestHandle('badge-VUS'),
+                await getColorByTestHandle('badge-VUS', 'background-color'),
                 await getColorByTestHandle(
-                    'badge-missense_unknown_significance'
+                    'badge-missense_unknown_significance',
+                    'background-color'
                 )
             );
 
@@ -833,7 +834,9 @@ describe('group comparison mutations tab tests', () => {
             );
 
             // selecting driver badge
-            await await getNthElements('[data-test="badge-driver"]', 1).click();
+            await (
+                await getNthElements('[data-test="badge-driver"]', 1)
+            ).click();
 
             assert.equal(
                 await (

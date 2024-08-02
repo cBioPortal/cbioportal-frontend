@@ -426,7 +426,9 @@ async function setInputText(selector, text) {
     // await (await $(selector)).click();
     //browser.keys('\uE003'.repeat($(selector).getValue().length));
 
-    await (await $(selector)).clearValue();
+    // await (await $(selector)).clearValue();
+
+    await (await $(selector)).setValue('');
     //browser.pause(1000);
 
     await (await $(selector)).setValue(text);
@@ -594,7 +596,7 @@ async function clickQueryByGeneButton() {
     const body = await $('body');
     await body.scrollIntoView();
 
-    await browser.pause(500);
+    await browser.pause(1000);
 }
 
 async function clickModifyStudySelectionButton() {

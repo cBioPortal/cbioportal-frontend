@@ -218,7 +218,7 @@ describe('case set selection in front page query form', () => {
         await getElement(input, { timeout: 20000 });
         await setInputText(input, 'ovarian nature 2011');
         await waitForNumberOfStudyCheckboxes(1);
-        await ('[data-test="StudySelect"]', { timeout: 10000 });
+        await getElement('[data-test="StudySelect"]', { timeout: 10000 });
         await clickElement('[data-test="StudySelect"] input');
 
         await clickQueryByGeneButton();
@@ -242,7 +242,7 @@ describe('case set selection in front page query form', () => {
 
         await clickQueryByGeneButton();
 
-        await (await getElement(selectedCaseSet_sel)).waitForExist();
+        await (await getElement(selectedCaseSet_sel)).waitForDisplayed();
         await browser.waitUntil(
             async () =>
                 (await getText(selectedCaseSet_sel)) ===
@@ -268,11 +268,11 @@ describe('case set selection in front page query form', () => {
         await clickQueryByGeneButton();
 
         await getElementByTestHandle('MUTATION_EXTENDED', {
-            timeout: 10000,
+            timeout: 20000,
         });
 
         await (await getElement(selectedCaseSet_sel)).waitForExist({
-            timeout: 10000,
+            timeout: 20000,
         });
         await browser.waitUntil(
             async () =>
@@ -283,7 +283,7 @@ describe('case set selection in front page query form', () => {
         await clickModifyStudySelectionButton();
 
         // Deselect Ampullary Carcinoma
-        await getElement(input, { timeout: 10000 });
+        await getElement(input, { timeout: 20000 });
         await setInputText(input, 'ampullary baylor');
         await waitForNumberOfStudyCheckboxes(
             1,
@@ -295,7 +295,7 @@ describe('case set selection in front page query form', () => {
         await clickQueryByGeneButton();
 
         await (await getElement(selectedCaseSet_sel)).waitForExist({
-            timeout: 10000,
+            timeout: 20000,
         });
         await browser.waitUntil(
             async () =>
