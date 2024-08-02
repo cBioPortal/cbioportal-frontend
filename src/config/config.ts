@@ -340,7 +340,7 @@ export function initializeServerConfiguration(rawConfiguration: any) {
             );
         } catch (err) {
             // ignore
-            console.log('Error parsing localStorage.frontendConfig');
+            console.log('Error parsing localStorage.frontendConfig:' + localStorage.frontendConfig);
         }
     }
 

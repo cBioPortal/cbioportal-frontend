@@ -49,3 +49,20 @@ Available under license:
     5. Products derived from this software may not be called
     "ColorBrewer", nor may "ColorBrewer" appear in their name, without
     prior written permission of Cynthia Brewer.
+
+* JavaScript/CSS Font Detector
+
+JavaScript/CSS Font Detector
+----------------------------
+Available under license:
+
+    JavaScript code to detect available availability of a
+    particular font in a browser using JavaScript and CSS.
+ 
+    Author : Lalit Patel
+    Website: http://www.lalit.org/lab/javascript-css-font-detect/
+    License: Apache Software License 2.0
+             http://www.apache.org/licenses/LICENSE-2.0
+
+
+
